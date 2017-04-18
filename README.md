@@ -46,9 +46,12 @@ For example, for implementing user security.
 
 ## To Do
 
+- Use webpack to "compile" resources into distribution folders upon (re)deployment - allowing for the use
+  of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
 - Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
   the file system
 - Add integrated ExpressJS security to Socket.IO
+- *(Maybe compile template resources to dist folder?)*
 
 ## Pre-requisites
 
