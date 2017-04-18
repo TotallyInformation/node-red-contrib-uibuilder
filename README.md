@@ -1,6 +1,6 @@
 # node-red-contrib-uibuilder
 
-A Node-RED UI web user interface builder.
+A Node-RED web user interface builder.
 
 Designed as an *experimental* alternative to the Node-RED Dashboard. Be warned that this project is
 currently very much **alpha** quality. It should pretty much work but only in a limited way.
@@ -39,10 +39,16 @@ The order of preference is as follows:
 In addition, this node uses the httpNodeMiddleware Node-RED setting allowing for ExpressJS middleware to be used.
 For example, for implementing user security.
 
+## Known Issues
+
+- Client Socket.IO connections are not being properly terminated. This results in multiple events firing after
+  reconnection.
+
 ## To Do
 
 - Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
   the file system
+- Add integrated ExpressJS security to Socket.IO
 
 ## Pre-requisites
 
