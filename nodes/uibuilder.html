@@ -1,0 +1,148 @@
+<!--
+  Copyright (c) 2017 Julian Knight (Totally Information)
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/javascript">
+    RED.nodes.registerType( 'uibuilder', {
+        category: 'UI Builder',
+        color: 'rgb(65, 184, 131)',
+        defaults: {
+            name: { value: '' },
+            url: { value: 'uibuilder' },
+            template: { value: '<p>{{ msg }}</p>' },
+            fwdInMessages: { value: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "ui_template.png",
+        paletteLabel: 'UI Builder',
+        label: function() { return this.url || this.name || 'UI Builder'; },
+        oneditprepare: function() {
+            var that = this;
+
+            if (typeof this.fwdInMessages === 'undefined') {
+                this.fwdInMessages = true;
+                $('#node-input-fwdInMessages').prop('checked', true);
+            }
+
+            this.editor = RED.editor.createEditor({
+                id: 'node-input-template-editor',
+                mode: 'ace/mode/html',
+                value: $("#node-input-template").val()
+            });
+
+            RED.library.create({
+                url: 'uibuildertemplates',  // where to get the data from
+                type: 'uibuilder_template', // the type of object the library is for
+                editor: this.editor,    // the field name the main text body goes to
+                mode: 'ace/mode/html',
+                fields: [ 'name' ]
+            });
+            this.editor.focus();
+        },
+        oneditsave: function() {
+            var annot = this.editor.getSession().getAnnotations();
+            this.noerr = 0;
+            $("#node-input-noerr").val(0);
+            for (var k=0; k < annot.length; k++) {
+                if (annot[k].type === "error") {
+                    $("#node-input-noerr").val(annot.length);
+                    this.noerr = annot.length;
+                }
+            }
+            this.template = this.editor.getValue();
+            $("#node-input-template").val(this.template);
+            delete this.editor;
+        },
+        oneditresize: function(size) {
+            var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+            var height = $("#dialog-form").height();
+            for (var i=0;i<rows.size();i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            var editorRow = $("#dialog-form>div.node-text-editor-row");
+            height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+            $(".node-text-editor").css("height",height+"px");
+            this.editor.resize();
+        },
+        // Do any setup when node added to palette
+        onpaletteadd: function() {
+        },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="uibuilder">
+    <!-- Node Name -->
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+
+    <!-- Home "page" id - defines the URL used -->
+    <div class="form-row">
+        <label for="node-input-url"><i class="fa fa-tag"></i> URL</label>
+        <input type="text" id="node-input-url">
+    </div>
+
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-fwdInMessages" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-fwdInMessages" style="width:70%;"> Pass through messages from input.</label>
+    </div>
+
+    <!-- The actual template -->
+    <div class="form-row">
+        <label for="node-input-template"><i class="fa fa-copy"></i> Template</label>
+        <input type="hidden" id="node-input-template">
+    </div>
+    <div class="form-row node-text-editor-row">
+        <div style="height:250px;" class="node-text-editor" id="node-input-template-editor" ></div>
+    </div>
+
+</script>
+
+<script type="text/x-red" data-help-name="uibuilder">
+    <p>Creates a UI at a given URL</p>
+    <p style="border:2px solid red;color:red;margin:.5em;padding:.5em;">
+        This node is in ALPHA.
+    </p>
+    <p>
+        This node can be used to create a dynamic user interface that can recieve and send back messages to Node-RED using a websocket connection.
+        It creates a file/folder structure for you.
+    </p>
+
+    <h3>Inputs</h3>
+
+
+    <h3>Outputs</h3>
+
+
+    <h3>Node Settings</h3>
+    <h4>Name</h4>
+    <p>A short description shown in the admin interface</p>
+    <h4>Library (icon)</h4>
+    <p>Save or retrieve template from library</p>
+    <h4>URL</h4>
+    <h4>Pass through messages from input</h4>
+    <h4>Template</h4>
+
+    <h3>File/Folder Structure</h3>
+
+
+    <h3>Details</h3>
+    <p>
+        For more information, see the GitHub page for <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
+    </p>
+</script>
