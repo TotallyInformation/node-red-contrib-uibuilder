@@ -1,39 +1,49 @@
 {
-    "name": "node-red-contrib-uibuilder",
-    "version": "0.0.1",
-    "description": "A node for Node-RED to create web UI's. - ALPHA only, not ready for use.",
-    "keywords": [
-        "node-red", "ui", "gui" , "dashboard"
-    ],
-    "main": "none",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+  "name": "node-red-contrib-uibuilder",
+  "version": "0.0.1",
+  "description": "A node for Node-RED to create web UI's. - ALPHA only, not ready for use.",
+  "keywords": [
+    "node-red",
+    "ui",
+    "gui",
+    "dashboard"
+  ],
+  "main": "none",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
+  "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
+  "author": {
+    "name": "Julian Knight",
+    "url": "https://github.com/TotallyInformation"
+  },
+  "contributors": [
+    {
+      "name": "Julian Knight",
+      "url": "https://github.com/TotallyInformation"
+    }
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TotallyInformation/node-red-contrib-uibuilder.git"
+  },
+  "node-red": {
+    "version": ">=0.16.0",
+    "nodes": {
+      "vueui_template": "nodes/uibuilder.js"
     },
-    "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
-    "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
-    "author": {"name": "Julian Knight", "url": "https://github.com/TotallyInformation"},
-    "contributors": [
-        {"name": "Julian Knight", "url": "https://github.com/TotallyInformation"}
-    ],
-    "license": "Apache-2.0",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/TotallyInformation/node-red-contrib-uibuilder.git"
-    },
-    "node-red": {
-        "version": ">=0.16.0",
-        "nodes": {
-            "vueui_template": "nodes/uibuilder.js"
-        },
-        "notyetnodes": {}
-    },
-    "dependencies": {
-        "normalize.css": "*",
-        "serve-static": "^1.12.1",
-        "socket.io": "^1.7.3",
-        "webpack": "^2.4.1"
-    },
-    "devDependencies": {
-    },
-    "engines" : { "node" : ">=6" }
+    "notyetnodes": {}
+  },
+  "dependencies": {
+    "normalize.css": "*",
+    "serve-static": "^1.12.1",
+    "socket.io": "^1.7.3",
+    "webpack": "^2.4.1"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=6"
+  }
 }

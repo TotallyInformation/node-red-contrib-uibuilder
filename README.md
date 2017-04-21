@@ -24,20 +24,56 @@ currently very much **alpha** quality. It should pretty much work but only in a 
 - Any msg sent to a node instance is sent through unchanged to the UI via Socket.IO. NOTE that this may present
   security and/or performance issues. In particular, you should remove msg.res and msg.req objects as they
   are both very large and often contain circular references
+- Users can install front-end libraries using npm, these can be access in front-end code
+  via the "vendor" path, see below. The list of libraries made available is set via
+  Node-RED's settings.js file in `uibuilder.userVendorPackages`
 
 ## Preference Tree
 
-This node adds a number of resource locations (physical file-system locations) to the URL path defined.
+This node adds a number of resource locations (physical file-system locations) to the URL path (default `/uibuilder`) defined. It is up to the user to ensure that file/folder names do not clash. 
+
 The order of preference is as follows:
 
-1. The node instance URL setting (default: `uibuilder`, default physical location: `~/.node-red\uibuilder\uibuilder`)
-2. The node installations `dist` folder (default physical location: `~/.node-red\node_modules\node-red-contrib-uibuilder\nodes\dist`)
+1. The `dist` folder within the node instance URL setting (default: `uibuilder`, default physical location: `~/.node-red\uibuilder\uibuilder\dist`)
+
    *only added if index.html exists in this folder*
-3. The node installations `src` folder (default physical location: `~/.node-red\node_modules\node-red-contrib-uibuilder\nodes\src`)
+2. The `src` folder within the node instance URL setting (default: `uibuilder`, default physical location: `~/.node-red\uibuilder\uibuilder\src`)
+
    *only added if index.html DOES NOT exist in the dist folder*
 
+   In this case, an optional node configuration variable is used to provide a list of package names
+   that will be added to the `vendor` sub-path of the URL so that users can install their own
+   front-end libraries. This is only added when not using the dist folder as that is expected to have
+   all of the vendor code compiled together using webpack. 
+3. The node installations `dist` folder (default physical location: `~/.node-red\node_modules\node-red-contrib-uibuilder\nodes\dist`)
+
+   *only added if index.html exists in this folder*
+4. The node installations `src` folder (default physical location: `~/.node-red\node_modules\node-red-contrib-uibuilder\nodes\src`)
+
+   *only added if index.html DOES NOT exist in the dist folder*
+
+   In this case, the `vendor` subpath will be available with some pre-installed vendor packages.
+   Currently `normalize.css`.
 In addition, this node uses the httpNodeMiddleware Node-RED setting allowing for ExpressJS middleware to be used.
 For example, for implementing user security.
+
+### Front-end path summary
+
+Front-end files in `~/.node-red\node_modules\node-red-contrib-uibuilder\nodes\src` may use the
+url paths:
+
+- `[/<httpNodeRoot>]/<url>/` - for most things (e.g. `<script src="index.js"></script>`)
+- `vendor` - for things like normalize.css (e.g. `<link rel="stylesheet" href="vendor/normalize.css/normalize.css">`)
+- `<script src="/socket.io/socket.io.js"></script>` for socket.io
+
+### Physical file/folder location summary
+
+Folders and files for resources on the device running Node-RED are:
+
+- `<userDir>\uibuilder\<url>\src\` - local source files for front-end use (e.g. html, js, css)
+- `<userDir>\uibuilder\<url>\dist\` - local compiled files for front-end use
+- `<userDir>\node_modules\node-red-contrib-uibuilder\nodes\src\` - this modules source files for front-end use (e.g. html, js, css)
+- `<userDir>\node_modules\node-red-contrib-uibuilder\nodes\dist\` - this modules compiled files for front-end use
 
 ## Known Issues
 
@@ -46,12 +82,29 @@ For example, for implementing user security.
 
 ## To Do
 
+- Copy template files to local override folder if not already existing
+- Add edit options: 
 - Use webpack to "compile" resources into distribution folders upon (re)deployment - allowing for the use
   of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
 - Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
   the file system
 - Add integrated ExpressJS security to Socket.IO
+- Check code for [Dashboard node](https://github.com/node-red/node-red-dashboard/blob/master/ui.js) to see if 
+  there is anything useful we can include here
+- Check code for [http in node](https://github.com/node-red/node-red/blob/master/nodes/core/io/21-httpin.js) to see if 
+  there is anything useful we can include here
+- Process `httpNodeAuth`
 - *(Maybe compile template resources to dist folder?)*
+- Add a check for new file changes in local `src` folder.
+
+  For now, will rely on users creating `.recompile` flag file in
+  local `src` folder. 
+
+## Changes
+
+v0.0.1 
+
+- 
 
 ## Pre-requisites
 
@@ -70,6 +123,30 @@ Run Node-RED and add an instance of the UI Builder node. Set the required URL pa
 
 The UI should then be available at the chosen path. The default would normally be <http://localhost:1880/uibuilder> 
 (if default Node-RED and node settings are used).
+
+## Node Instance Settings
+
+Each instance of the uibuilder node has the following settings available.
+
+### `name`
+
+Only used in the Node-RED admin UI.
+
+### `url`
+
+The path used to access the user interface that this node builds. Defaults to `uibuilder`.
+So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are defined (in Node-RED's `settings.js` file), the URL of the default interface would be `http://localhost:1880/uibuilder`
+
+**It is up to the flow author to ensure that no duplicate names are used, the node
+does not check or enforce uniqueness.**
+
+### `userVendorPackages`
+
+A list of npm package names (as they appear in `node_modules`) that the node will make
+available to front-end code under the `uibuilder/vendor` path.
+
+All instances of this node will also use the `uibuilder.userVendorPAckages` attribute of
+`settings.js` unless defined in the node's settings.
 
 ## Discussions and suggestions
 

@@ -54,10 +54,14 @@ module.exports = function(RED) {
         node.url    = config.url  || 'uibuilder'
         node.fwdInMessages = config.fwdInMessages || true
         node.customFoldersReqd = config.customFoldersReqd || true
+        node.userVendorPackages = config.userVendorPackages || RED.settings.userVendorPackages || []
         // NOTE: When a node is redeployed - e.g. after the template is changed
         //       it is totally torn down and rebuilt so we cannot ever know
         //       whether the template was changed.
         node.template = config.template || '<p>{{ msg }}</p>';
+
+        var prevNodeStatus = {}
+        var nodeStatus = {}
 
         // The channel names for Socket.IO
         var ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
@@ -115,8 +119,32 @@ module.exports = function(RED) {
                     debug && RED.log.error('UIBUILDER - uibuilder local custom folder ERROR: ' + e.message)
                 }
             }
+            // Then make sure the DIST & SRC folders for this node instance exist
+            try {
+                fs.mkdirSync( path.join(customFolder, 'dist') )
+                fs.mkdirSync( path.join(customFolder, 'src') )
+                fs.accessSync(customFolder, fs.constants.W_OK)
+            } catch (e) {
+                if ( e.code !== 'EEXIST' ) {
+                    debug && RED.log.error('UIBUILDER - uibuilder local custom dist or src folder ERROR: ' + e.message)
+                }
+            }
             // Add static path for local custom files
-            app.use( urlJoin(node.url), serveStatic(customFolder) )
+            fs.stat(path.join(customFolder, 'dist', 'index.html'), function(err, stat) {
+                if (!err) {
+                    // If the ./dist/index.html exists use the dist folder... 
+                    app.use( urlJoin(node.url), serveStatic( path.join(customFolder, 'dist') ) );
+                } else {
+                    // ... otherwise, use dev resources at ./src/
+                    debug && RED.log.audit({ 'UIbuilder': node.url+' Using local development folder' });
+                    app.use( urlJoin(node.url), serveStatic( path.join(customFolder, 'src') ) );
+                    // Include vendor resource source paths if needed
+                    node.userVendorPackages.forEach(function (packageName) {
+                        //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
+                        app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', '..', packageName)) );
+                    })
+                }
+            })
         }
         // -------------------------------------------------- //
         
@@ -140,7 +168,6 @@ module.exports = function(RED) {
                     //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) );
                 })
-                // TODO: Add ~/.node-red (userDir?) level vendor packages too.
             }
         })
 
@@ -158,7 +185,9 @@ module.exports = function(RED) {
             io = socketio.listen(RED.server) // listen === attach
             io.set('transports', ['polling', 'websocket'])
             ioClientsCount = 0
-            node.status({ fill: 'blue', shape: 'dot', text: 'Socket Created' })
+            prevNodeStatus = nodeStatus
+            nodeStatus = { fill: 'blue', shape: 'dot', text: 'Socket Created' }
+            node.status(nodeStatus)
         }
         // Check that all incoming SocketIO data has the IO cookie
         // TODO: Needs a bit more work to add some real security
@@ -175,7 +204,9 @@ module.exports = function(RED) {
             debug && RED.log.audit({ 
                 'UIbuilder': node.url+' Socket connected', 'clientCount': ioClientsCount, 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
             })
-            node.status({ fill: 'green', shape: 'dot', text: 'connected '+ioClientsCount })
+            prevNodeStatus = nodeStatus
+            nodeStatus = { fill: 'green', shape: 'dot', text: 'connected '+ioClientsCount }
+            node.status(nodeStatus)
             //console.log('--socket.request.connection.remoteAddress--')
             //console.dir(socket.request.connection.remoteAddress)
             //console.log('--socket.handshake.address--')
@@ -201,7 +232,9 @@ module.exports = function(RED) {
                     'UIbuilder': node.url+' Socket disconnected', 'clientCount': ioClientsCount,
                     'reason': reason, 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
                 })
-                node.status({ fill: 'green', shape: 'ring', text: 'connected ' + ioClientsCount })
+                prevNodeStatus = nodeStatus
+                nodeStatus = { fill: 'green', shape: 'ring', text: 'connected '+ioClientsCount }
+                node.status(nodeStatus)
             })
         })
 
@@ -224,7 +257,10 @@ module.exports = function(RED) {
             // Let the clients know we are closing down
             io.of(node.url).emit( ioChannels.control, { 'type': 'shutdown' } )
 
-            node.status({})
+            prevNodeStatus = nodeStatus
+            nodeStatus = {}
+            node.status(nodeStatus)
+
             node.removeListener('input', nodeInputHandler)
 
             // Disconnect all Socket.IO clients
