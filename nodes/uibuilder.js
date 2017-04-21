@@ -267,13 +267,15 @@ module.exports = function(RED) {
             // WARNING: TODO: If we do this, a client cannot reconnect after redeployment
             //                so the user has to reload the page
             //  They have to do this at the moment anyway so might as well.
-            const MyNamespace = io.of(node.url); // Get Namespace
-            const connectedNameSpaceSockets = Object.keys(MyNamespace.connected); // Get Object with Connected SocketIds as properties
-            connectedNameSpaceSockets.forEach(socketId => {
-                MyNamespace.connected[socketId].disconnect(); // Disconnect Each socket
-            });
-            MyNamespace.removeAllListeners(); // Remove all Listeners for the event emitter
-            delete io.nsps[node.url]; // Remove from the server namespaces
+            const myNamespace = io.of(node.url); // Get Namespace
+            const connectedNameSpaceSockets = Object.keys(myNamespace.connected); // Get Object with Connected SocketIds as properties
+            if ( connectedNameSpaceSockets.length >0 ) {
+                connectedNameSpaceSockets.forEach(socketId => {
+                    myNamespace.connected[socketId].disconnect(); // Disconnect Each socket
+                })
+            }
+            myNamespace.removeAllListeners() // Remove all Listeners for the event emitter
+            delete io.nsps[node.url] // Remove from the server namespaces
 
             /*
             //console.dir(io.of('/'+node.url).connected)
