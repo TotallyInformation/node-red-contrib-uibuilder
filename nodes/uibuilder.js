@@ -19,8 +19,6 @@
 // Module name must match this nodes html file
 var moduleName = 'uibuilder'
 
-var debug = true
-
 //var inited = false;
 var settings = {}
 
@@ -50,21 +48,26 @@ module.exports = function(RED) {
 
         // Create local copies of the node configuration (as defined in the .html file)
         node.name   = config.name || ''
+        node.topic  = config.topic || ''
         // TODO: This needs to be limited to a single path element
         node.url    = config.url  || 'uibuilder'
         node.fwdInMessages = config.fwdInMessages || true
         node.customFoldersReqd = config.customFoldersReqd || true
-        node.userVendorPackages = config.userVendorPackages || RED.settings.userVendorPackages || []
+        node.userVendorPackages = config.userVendorPackages || RED.settings.uibuilder.userVendorPackages || []
         // NOTE: When a node is redeployed - e.g. after the template is changed
         //       it is totally torn down and rebuilt so we cannot ever know
         //       whether the template was changed.
         node.template = config.template || '<p>{{ msg }}</p>';
+
+        var debug = RED.settings.uibuilder.debug || true
 
         var prevNodeStatus = {}
         var nodeStatus = {}
 
         // The channel names for Socket.IO
         var ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
+        var ioNamespace = '/' + node.url
+        var ioClientsCount = 0
 
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
         var customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
@@ -73,8 +76,7 @@ module.exports = function(RED) {
         //   over those in the nodes folders (which act as defaults)
         var customFolder = path.join(customAppFolder, node.url)
 
-        var ioClientsCount = 0
-
+        
         // We need an http server to serve the page
         var app = RED.httpNode || RED.httpAdmin
 
@@ -181,28 +183,34 @@ module.exports = function(RED) {
         }
 
         // Start Socket.IO with a namespace to match the url path
-        if (!io) {
+        //if (!io) {
             io = socketio.listen(RED.server) // listen === attach
             io.set('transports', ['polling', 'websocket'])
             ioClientsCount = 0
             prevNodeStatus = nodeStatus
             nodeStatus = { fill: 'blue', shape: 'dot', text: 'Socket Created' }
             node.status(nodeStatus)
-        }
+        //}
         // Check that all incoming SocketIO data has the IO cookie
         // TODO: Needs a bit more work to add some real security
         io.use(function(socket, next){
-            if (socket.request.headers.cookie) return next()
+            if (socket.request.headers.cookie) {
+                node.debug && RED.log.info('SOCKET OK')
+                return next()
+            }
             next(new Error('UIbuilder:NodeGo:io.use - Authentication error'))
         });
+
+        var ioNs = io.of(ioNamespace)
 
         // When someone loads the page, it will try to connect over Socket.IO
         // note that the connection returns the socket instance to monitor for responses from 
         // the ui client instance
-        io.of(node.url).on('connection', function(socket) {
+        ioNs.on('connection', function(socket) {
             ioClientsCount++
-            debug && RED.log.audit({ 
-                'UIbuilder': node.url+' Socket connected', 'clientCount': ioClientsCount, 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
+            RED.log.audit({ 
+                'UIbuilder': node.url+' Socket connected', 'clientCount': ioClientsCount, 
+                'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
             })
             prevNodeStatus = nodeStatus
             nodeStatus = { fill: 'green', shape: 'dot', text: 'connected '+ioClientsCount }
@@ -217,10 +225,17 @@ module.exports = function(RED) {
 
             // if the client sends a specific msg channel...
             socket.on(ioChannels.client, function(msg) {
-                debug && RED.log.audit({ 
-                    'UIbuilder': node.url+' Data recieved from client', 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie, 'data': msg 
+                RED.log.audit({ 
+                    'UIbuilder': node.url+' Data recieved from client', 'ID': socket.id, 
+                    'Cookie': socket.handshake.headers.cookie, 'data': msg 
                 })
 
+                switch ( typeof msg ) {
+                    case 'string':
+                    case 'number':
+                    case 'boolean':
+                        msg = { 'topic': node.topic, 'payload': msg}
+                }
                 // Send out the message for downstream flows
                 // TODO: This should probably have safety validations!
                 node.send(msg)
@@ -228,7 +243,7 @@ module.exports = function(RED) {
 
             socket.on('disconnect', function(reason) {
                 ioClientsCount--
-                debug && RED.log.audit({
+                RED.log.audit({
                     'UIbuilder': node.url+' Socket disconnected', 'clientCount': ioClientsCount,
                     'reason': reason, 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
                 })
@@ -242,9 +257,18 @@ module.exports = function(RED) {
         function nodeInputHandler(msg) {
             debug && RED.log.info('UIbuilder:nodeGo:nodeInputHandler - emit received msg - Namespace: ' + node.url) //debug
 
+            if ( msg === null ) {
+                msg = {}
+            } else if ( typeof msg !== 'object' ) {
+                msg = { 'payload': msg }
+            }
+            // Add topic from node config if present and not present in msg
+            if ( !('topic' in msg) && node.topic !== '' ) {
+                msg.topic = node.topic
+            }
             // pass the complete msg object to the vue ui client
             // TODO: This should probably have some safety validation on it
-            io.of(node.url).emit(ioChannels.server, msg)
+            ioNs.emit(ioChannels.server, msg)
 
         } // -- end of msg recieved processing -- //
         node.on('input', nodeInputHandler)
@@ -267,23 +291,15 @@ module.exports = function(RED) {
             // WARNING: TODO: If we do this, a client cannot reconnect after redeployment
             //                so the user has to reload the page
             //  They have to do this at the moment anyway so might as well.
-            const myNamespace = io.of(node.url); // Get Namespace
-            const connectedNameSpaceSockets = Object.keys(myNamespace.connected); // Get Object with Connected SocketIds as properties
+            const myNamespace = ioNs // Get Namespace
+            const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
             if ( connectedNameSpaceSockets.length >0 ) {
                 connectedNameSpaceSockets.forEach(socketId => {
-                    myNamespace.connected[socketId].disconnect(); // Disconnect Each socket
+                    ioNs.connected[socketId].disconnect() // Disconnect Each socket
                 })
             }
-            myNamespace.removeAllListeners() // Remove all Listeners for the event emitter
-            delete io.nsps[node.url] // Remove from the server namespaces
-
-            /*
-            //console.dir(io.of('/'+node.url).connected)
-            Object.keys(io.of(node.url).connected).forEach(function(id){
-                console.log(id) // /someotherurl#7wHCCbdBTAFLyTOSAAAA
-                io.sockets.connected[id].disconnect(true)
-            })
-            */
+            ioNs.removeAllListeners() // Remove all Listeners for the event emitter
+            delete io.nsps[ioNamespace] // Remove from the server namespaces
             io = null
 
             // TODO Do we need to remove the app.use paths too? YES!

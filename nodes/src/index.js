@@ -26,6 +26,8 @@ console.log('ioNameSpace: '+ioNamespace)
 
 // Create the socket
 var io = io(ioNamespace, {transports: ['polling', 'websocket']})
+console.info('IO')
+console.dir(io)
 
 // send a msg back to Node-RED
 // NR will generally expect the msg to contain a payload topic
@@ -41,10 +43,12 @@ var sendMsg = function(msg) {
 io.on('connect', function() {
     debug && console.log('SOCKET CONNECTED - Namespace: ' + ioNamespace)
 
-    // When Node-RED vueui template node sends a msg over Socket.IO...
+    // When Node-RED uibuilder template node sends a msg over Socket.IO...
     io.on(ioChannels.server, function(wsMsg) {
         debug && console.info('uibuilder:io.connect:io.on.data - msg received - Namespace: ' + ioNamespace)
         //console.dir(wsMsg)
+
+        sendMsg('We got a message from you, thanks')
 
         // Only process if the msg actually contains something useful
         // TODO: Check whether msg is an object 
@@ -75,6 +79,12 @@ io.on('connect', function() {
 }) // --- End of socket connection processing ---
 
 // When the socket is disconnected ..............
+io.on('open', function() {
+    debug && console.log('SOCKET OPENED - Namespace: ' + ioNamespace)
+}) // --- End of socket disconnect processing ---
+io.on('close', function() {
+    debug && console.log('SOCKET CLOSED - Namespace: ' + ioNamespace)
+}) // --- End of socket disconnect processing ---
 io.on('disconnect', function() {
     debug && console.log('SOCKET DISCONNECTED - Namespace: ' + ioNamespace)
 }) // --- End of socket disconnect processing ---

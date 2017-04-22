@@ -77,11 +77,12 @@ Folders and files for resources on the device running Node-RED are:
 
 ## Known Issues
 
-- Client Socket.IO connections are not being properly terminated. This results in multiple events firing after
-  reconnection.
+- ws: protocol failing on Windows 10 dev - Socket.IO issue?
+- On redeploy or NR restart, existing clients do not reconnect, page as to be reloaded.
 
 ## To Do
 
+- Add topic to node config
 - Copy template files to local override folder if not already existing
 - Add edit options: 
 - Use webpack to "compile" resources into distribution folders upon (re)deployment - allowing for the use
@@ -128,11 +129,15 @@ The UI should then be available at the chosen path. The default would normally b
 
 Each instance of the uibuilder node has the following settings available.
 
-### `name`
+### `name` (optional)
 
 Only used in the Node-RED admin UI.
 
-### `url`
+### `topic` (optional)
+
+Only used if an inbound msg does not contain a topic attribute. Passed on to client UI upon receipt of a msg.
+
+### `url` (required)
 
 The path used to access the user interface that this node builds. Defaults to `uibuilder`.
 So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are defined (in Node-RED's `settings.js` file), the URL of the default interface would be `http://localhost:1880/uibuilder`
@@ -140,13 +145,18 @@ So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are d
 **It is up to the flow author to ensure that no duplicate names are used, the node
 does not check or enforce uniqueness.**
 
-### `userVendorPackages`
+### `userVendorPackages` (optional)
 
 A list of npm package names (as they appear in `node_modules`) that the node will make
 available to front-end code under the `uibuilder/vendor` path.
 
-All instances of this node will also use the `uibuilder.userVendorPAckages` attribute of
+All instances of this node will also use the `uibuilder.userVendorPackages` attribute of
 `settings.js` unless defined in the node's settings.
+
+### `debug` (optional, defalt=false)
+
+Only available using the `uibuilder.debug` attribute of
+`settings.js`. Set to `true` to output additional debugging information.
 
 ## Discussions and suggestions
 
