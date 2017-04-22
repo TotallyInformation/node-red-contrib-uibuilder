@@ -1,7 +1,7 @@
 {
   "name": "node-red-contrib-uibuilder",
   "version": "0.0.1",
-  "description": "A node for Node-RED to create web UI's. - ALPHA only, not ready for use.",
+  "description": "An experimental node for Node-RED to create web UI's. - ALPHA only, not ready for use.",
   "keywords": [
     "node-red",
     "ui",

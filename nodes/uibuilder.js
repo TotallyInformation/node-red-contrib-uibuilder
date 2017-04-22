@@ -257,15 +257,18 @@ module.exports = function(RED) {
         function nodeInputHandler(msg) {
             debug && RED.log.info('UIbuilder:nodeGo:nodeInputHandler - emit received msg - Namespace: ' + node.url) //debug
 
+            // Make sure that msg is an object & not null
             if ( msg === null ) {
                 msg = {}
             } else if ( typeof msg !== 'object' ) {
                 msg = { 'payload': msg }
             }
+
             // Add topic from node config if present and not present in msg
             if ( !('topic' in msg) && node.topic !== '' ) {
                 msg.topic = node.topic
             }
+            
             // pass the complete msg object to the vue ui client
             // TODO: This should probably have some safety validation on it
             ioNs.emit(ioChannels.server, msg)

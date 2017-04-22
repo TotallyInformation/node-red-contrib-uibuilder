@@ -26,8 +26,6 @@ console.log('ioNameSpace: '+ioNamespace)
 
 // Create the socket
 var io = io(ioNamespace, {transports: ['polling', 'websocket']})
-console.info('IO')
-console.dir(io)
 
 // send a msg back to Node-RED
 // NR will generally expect the msg to contain a payload topic
@@ -48,15 +46,21 @@ io.on('connect', function() {
         debug && console.info('uibuilder:io.connect:io.on.data - msg received - Namespace: ' + ioNamespace)
         //console.dir(wsMsg)
 
+        // Test auto-response TODO: remove for live
         sendMsg('We got a message from you, thanks')
+
+        // Make sure that msg is an object & not null
+        if ( wsMsg === null ) {
+            wsMsg = {}
+        } else if ( typeof wsMsg !== 'object' ) {
+            wsMsg = { 'payload': wsMsg }
+        }
 
         // Only process if the msg actually contains something useful
         // TODO: Check whether msg is an object 
-        if ( (wsMsg !== null) && (wsMsg !== '') ) {
-            if ( Object.getOwnPropertyNames(wsMsg).length > 0 ) {
-                // Track how many messages have been recieved
-                msgCounter.data++
-            }
+        if ( Object.getOwnPropertyNames(wsMsg).length > 0 ) {
+            // Track how many messages have been recieved
+            msgCounter.data++
         }
     }) // -- End of websocket recieve DATA msg from Node-RED -- //
 
