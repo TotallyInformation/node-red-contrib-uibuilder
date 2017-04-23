@@ -33,6 +33,7 @@ var io = io(ioNamespace, {transports: ['polling', 'websocket']})
 var sendMsg = function(msg) {
     // Track how many messages have been sent
     msgCounter.sent++
+    $('#msgsSent').text(msgCounter.sent)
 
     io.emit(ioChannels.client, msg)
 }
@@ -61,6 +62,7 @@ io.on('connect', function() {
         if ( Object.getOwnPropertyNames(wsMsg).length > 0 ) {
             // Track how many messages have been recieved
             msgCounter.data++
+            $('#msgsReceived').text(msgCounter.data)
         }
     }) // -- End of websocket recieve DATA msg from Node-RED -- //
 
@@ -69,7 +71,18 @@ io.on('connect', function() {
         debug && console.info('uibuilder:io.connect:io.on.control - msg received - Namespace: ' + ioNamespace)
         //console.dir(wsMsg)
 
-        // TODO: Check msg is an object
+        // Test auto-response TODO: remove for live
+        sendMsg('We got a control message from you, thanks')
+
+        // Make sure that msg is an object & not null
+        if ( wsMsg === null ) {
+            wsMsg = {}
+        } else if ( typeof wsMsg !== 'object' ) {
+            wsMsg = { 'payload': wsMsg }
+        }
+
+        msgCounter.control++
+        $('#msgsControl').text(msgCounter.control)
 
         switch(wsMsg.type) {
             case 'shutdown':
@@ -83,12 +96,6 @@ io.on('connect', function() {
 }) // --- End of socket connection processing ---
 
 // When the socket is disconnected ..............
-io.on('open', function() {
-    debug && console.log('SOCKET OPENED - Namespace: ' + ioNamespace)
-}) // --- End of socket disconnect processing ---
-io.on('close', function() {
-    debug && console.log('SOCKET CLOSED - Namespace: ' + ioNamespace)
-}) // --- End of socket disconnect processing ---
 io.on('disconnect', function() {
     debug && console.log('SOCKET DISCONNECTED - Namespace: ' + ioNamespace)
 }) // --- End of socket disconnect processing ---

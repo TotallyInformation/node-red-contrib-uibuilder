@@ -5,6 +5,14 @@ An EXPERIMENTAL Node-RED web user interface builder.
 Designed as an *experimental* alternative to the Node-RED Dashboard. Be warned that this project is
 currently very much **alpha** quality. It should pretty much work but only in a limited way.
 
+The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL that is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
+
+Eventually, you will be able to "compile" src files using webpack from a button in the nodes config. That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
+
+The final evolution will be to provide configuration nodes to let you define framework or html/css/js files in Node-RED itself so that you won't need access to the servers file system at all.
+
+This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of greater complexity and a need to write your own front-end code.
+
 ## Design
 
 - A single node is used to define an end-point (by its URL path)
@@ -24,9 +32,9 @@ currently very much **alpha** quality. It should pretty much work but only in a 
 - Any msg sent to a node instance is sent through unchanged to the UI via Socket.IO. NOTE that this may present
   security and/or performance issues. In particular, you should remove msg.res and msg.req objects as they
   are both very large and often contain circular references
-- Users can install front-end libraries using npm, these can be access in front-end code
+- Users can install front-end libraries using npm, these can be accessed in front-end code
   via the "vendor" path, see below. The list of libraries made available is set via
-  Node-RED's settings.js file in `uibuilder.userVendorPackages`
+  Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
 
 ## Preference Tree
 
@@ -53,13 +61,13 @@ The order of preference is as follows:
    *only added if index.html DOES NOT exist in the dist folder*
 
    In this case, the `vendor` subpath will be available with some pre-installed vendor packages.
-   Currently `normalize.css`.
+   Currently `normalize.css` and `jquery`.
 In addition, this node uses the httpNodeMiddleware Node-RED setting allowing for ExpressJS middleware to be used.
 For example, for implementing user security.
 
 ### Front-end path summary
 
-Front-end files in `~/.node-red\node_modules\node-red-contrib-uibuilder\nodes\src` may use the
+Front-end files in `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/src/` may use the
 url paths:
 
 - `[/<httpNodeRoot>]/<url>/` - for most things (e.g. `<script src="index.js"></script>`)
@@ -78,11 +86,14 @@ Folders and files for resources on the device running Node-RED are:
 ## Known Issues
 
 - ws: protocol failing on Windows 10 dev - Socket.IO issue?
-- On redeploy or NR restart, existing clients do not reconnect, page as to be reloaded.
+- On redeploy or NR restart, existing clients do not reconnect, page has to be reloaded.
 
 ## To Do
 
+- Add control msgs from server to client on closedown of server (e.g. for redeploy)
+- Add logic to client to start retrying to connect after server closedown
 - Add topic to node config
+- Add userVendorPackages to node config
 - Copy template files to local override folder if not already existing
 - Add edit options: 
 - Use webpack to "compile" resources into distribution folders upon (re)deployment - allowing for the use
@@ -103,9 +114,9 @@ Folders and files for resources on the device running Node-RED are:
 
 ## Changes
 
-v0.0.1 
+v0.1.0 
 
-- 
+- Initial release to npm. Socket.IO namespace working, src/dist folders available and working. Only the most basic front-end template included.
 
 ## Pre-requisites
 

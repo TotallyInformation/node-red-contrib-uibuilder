@@ -7,7 +7,7 @@
     <title>Node-RED UI Builder</title>
     <meta name="description" content="Node-RED UI Builder">
 
-    <link rel="icon" href="images/logo-red.png">
+    <link rel="icon" href="images/node-red.ico">
 
     <!-- See https://goo.gl/OOhYW5 -->
     <link rel="manifest" href="manifest.json">
@@ -31,15 +31,30 @@
     -->
     <link rel="stylesheet" href="vendor/normalize.css/normalize.css">
     <link rel="stylesheet" href="index.css">
-    <!-- <script src="js/vendor/modernizr-2.8.3.min.js"></script> -->
     
 </head>
 <body>
     <div id="app">
-        <i>... waiting for content ...</i>
+        <h1>
+            Welcome to UIbuilder for Node-RED
+        </h1>
+        <p>
+            This is the default web page. If you open the developer console, you will see some debug output.
+            You can also see some dynamic data updating below, thanks to JQuery.
+        </p>
+        <p>
+            Please see the README for the 
+            <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
+            node for details on how to use UIbuilder.
+        </p>
+        <h2>Dynamic Data</h2>
+        <p>Messages Received: <span id="msgsReceived"></span></p>
+        <p>Control Messages Received: <span id="msgsControl"></span></p>
+        <p>Messages Sent: <span id="msgsSent"></span></p>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/jquery/dist/jquery.min.js"></script>
     <script src="index.js"></script>
 
 </body>

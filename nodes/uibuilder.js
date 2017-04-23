@@ -163,11 +163,12 @@ module.exports = function(RED) {
                 // Include vendor resource source paths if needed
                 var vendor_packages = [
                     'normalize.css',
+                    'jquery',
                     //'sprintf-js',
-                    //'jquery', 'jquery-ui'
+                    //jquery-ui'
                 ]
                 vendor_packages.forEach(function (packageName) {
-                    //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
+                    //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) );
                 })
             }
