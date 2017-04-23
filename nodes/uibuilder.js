@@ -17,24 +17,21 @@
 'use strict'
 
 // Module name must match this nodes html file
-var moduleName = 'uibuilder'
+const moduleName = 'uibuilder'
 
-//var inited = false;
-var settings = {}
-
-var serveStatic = require('serve-static'),
-    socketio = require('socket.io'),
-    path = require('path'),
-    fs = require('fs'),
-    events = require('events'),
-    nodeVersion = require('../package.json').version
-    ;
+const serveStatic = require('serve-static'),
+      socketio = require('socket.io'),
+      path = require('path'),
+      fs = require('fs'),
+      events = require('events'),
+      nodeVersion = require('../package.json').version
+      ;
 
 var io
 
 // Why?
-var ev = new events.EventEmitter();
-ev.setMaxListeners(0);
+//var ev = new events.EventEmitter();
+//ev.setMaxListeners(0);
 
 module.exports = function(RED) {
     'use strict';
@@ -44,7 +41,7 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config)
 
         // copy 'this' object in case we need it in context of callbacks of other functions.
-        var node = this
+        const node = this
 
         // Create local copies of the node configuration (as defined in the .html file)
         node.name   = config.name || ''
@@ -59,26 +56,33 @@ module.exports = function(RED) {
         //       whether the template was changed.
         node.template = config.template || '<p>{{ msg }}</p>';
 
-        var debug = RED.settings.uibuilder.debug || true
+        // These are loaded to the /<uibuilder>/vendor URL path
+        const vendorPackages = [
+            'normalize.css',
+            'jquery',
+        ]
+
+        // Set to true if you want additional debug output to the console
+        const debug = RED.settings.uibuilder.debug || true
 
         var prevNodeStatus = {}
         var nodeStatus = {}
 
         // The channel names for Socket.IO
-        var ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
-        var ioNamespace = '/' + node.url
+        const ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
+        const ioNamespace = '/' + node.url
         var ioClientsCount = 0
 
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
-        var customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
+        const customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
         // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
         //   Files in this folder are also served to URL but take preference
         //   over those in the nodes folders (which act as defaults)
-        var customFolder = path.join(customAppFolder, node.url)
+        const customFolder = path.join(customAppFolder, node.url)
 
         
         // We need an http server to serve the page
-        var app = RED.httpNode || RED.httpAdmin
+        const app = RED.httpNode || RED.httpAdmin
 
         // Use httNodeMiddleware function which is defined in settings.js
         // as for the http in/out nodes
@@ -161,20 +165,14 @@ module.exports = function(RED) {
                 debug && RED.log.audit({ 'UIbuilder': node.url+' Using development folder' });
                 app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'src' ) ) );
                 // Include vendor resource source paths if needed
-                var vendor_packages = [
-                    'normalize.css',
-                    'jquery',
-                    //'sprintf-js',
-                    //jquery-ui'
-                ]
-                vendor_packages.forEach(function (packageName) {
+                vendorPackages.forEach(function (packageName) {
                     //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) );
                 })
             }
         })
 
-        var fullPath = urlJoin( RED.settings.httpNodeRoot, node.url );
+        const fullPath = urlJoin( RED.settings.httpNodeRoot, node.url );
         if ( node.customFoldersReqd ) {
             RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
             RED.log.info('UI Builder - Local file overrides at ' + customFolder)
@@ -183,15 +181,13 @@ module.exports = function(RED) {
             RED.log.info('UI Builder - Local file overrides not requested')
         }
 
-        // Start Socket.IO with a namespace to match the url path
-        //if (!io) {
-            io = socketio.listen(RED.server) // listen === attach
-            io.set('transports', ['polling', 'websocket'])
-            ioClientsCount = 0
-            prevNodeStatus = nodeStatus
-            nodeStatus = { fill: 'blue', shape: 'dot', text: 'Socket Created' }
-            node.status(nodeStatus)
-        //}
+        // Start Socket.IO with a namespace to match the url path, ensure using Socket.IO version from this uibuilder module (using path)
+        io = socketio.listen(RED.server, {'path': urlJoin(node.url, 'socket.io')}) // listen === attach
+        io.set('transports', ['polling', 'websocket'])
+        ioClientsCount = 0
+        prevNodeStatus = nodeStatus
+        nodeStatus = { fill: 'blue', shape: 'dot', text: 'Socket Created' }
+        node.status(nodeStatus)
         // Check that all incoming SocketIO data has the IO cookie
         // TODO: Needs a bit more work to add some real security
         io.use(function(socket, next){
@@ -222,7 +218,8 @@ module.exports = function(RED) {
             //console.dir(socket.handshake.address)
             //console.dir(io.sockets.connected)
 
-            //io.of('/'+node.url).emit( ioChannels.control, { 'type': 'initial-connection'} )
+            // Let the clients know we are connecting
+            io.of(node.url).emit( ioChannels.control, { 'type': 'connected' } )
 
             // if the client sends a specific msg channel...
             socket.on(ioChannels.client, function(msg) {
@@ -306,8 +303,7 @@ module.exports = function(RED) {
             delete io.nsps[ioNamespace] // Remove from the server namespaces
             io = null
 
-            // TODO Do we need to remove the app.use paths too? YES!
-            // This code borrowed from the http nodes
+            // We need to remove the app.use paths too. This code borrowed from the http nodes
             app._router.stack.forEach(function(route,i,routes) {
                 if ( route.route && route.route.path === node.url ) {
                     routes.splice(i,1)
@@ -327,7 +323,7 @@ module.exports = function(RED) {
 
 //from: http://stackoverflow.com/a/28592528/3016654
 function urlJoin() {
-    var trimRegex = new RegExp('^\\/|\\/$','g');
+    const trimRegex = new RegExp('^\\/|\\/$','g');
     var paths = Array.prototype.slice.call(arguments);
     return '/'+paths.map(function(e){return e.replace(trimRegex,'');}).filter(function(e){return e;}).join('/');
 }

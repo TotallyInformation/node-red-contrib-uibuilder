@@ -1,4 +1,4 @@
-/*global document */
+/*global document,$,window */
 /*
   Copyright (c) 2017 Julian Knight (Totally Information)
 
@@ -15,28 +15,25 @@
   limitations under the License.
 */
 
-var debug = true,
+var debug = false,
     ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'},
     msgCounter = {control: 0, sent: 0, data: 0},
     msg = {},
     cookies = [],
     ioNamespace = '/'+readCookie('uibuilder-namespace')
 
-console.log('ioNameSpace: '+ioNamespace)
+// Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
+var io = io(ioNamespace, {path: window.location.pathname + 'socket.io', transports: ['polling', 'websocket']})
 
-// Create the socket
-var io = io(ioNamespace, {transports: ['polling', 'websocket']})
-
-// send a msg back to Node-RED
-// NR will generally expect the msg to contain a payload topic
-// TODO: Needs a restrictor on it so it doesn't trigger on every keypress
+// send a msg back to Node-RED, NR will generally expect the msg to contain a payload topic
 var sendMsg = function(msg) {
     // Track how many messages have been sent
     msgCounter.sent++
     $('#msgsSent').text(msgCounter.sent)
+    $('#showMsgSent').text(JSON.stringify(msg))
 
     io.emit(ioChannels.client, msg)
-}
+} // --- End of Send Msg Fn --- //
 
 // When the socket is connected .................
 io.on('connect', function() {
@@ -47,9 +44,6 @@ io.on('connect', function() {
         debug && console.info('uibuilder:io.connect:io.on.data - msg received - Namespace: ' + ioNamespace)
         //console.dir(wsMsg)
 
-        // Test auto-response TODO: remove for live
-        sendMsg('We got a message from you, thanks')
-
         // Make sure that msg is an object & not null
         if ( wsMsg === null ) {
             wsMsg = {}
@@ -57,13 +51,25 @@ io.on('connect', function() {
             wsMsg = { 'payload': wsMsg }
         }
 
-        // Only process if the msg actually contains something useful
-        // TODO: Check whether msg is an object 
-        if ( Object.getOwnPropertyNames(wsMsg).length > 0 ) {
-            // Track how many messages have been recieved
-            msgCounter.data++
-            $('#msgsReceived').text(msgCounter.data)
+        // Save the msg for further processing
+        msg = wsMsg
+
+        // Track how many messages have been recieved
+        msgCounter.data++
+        $('#msgsReceived').text(msgCounter.data)
+        $('#showMsg').text(JSON.stringify(msg))
+
+        // TODO: Add a check for a pre-defined global function here
+        //       to make it easier for users to add their own code
+        //       to process reciept of new msg
+        //       OR MAYBE use msg.prototype to add a function?
+
+        // Test auto-response
+        if (debug) {
+            wsMsg.payload = 'We got a message from you, thanks'
+            sendMsg(wsMsg)
         }
+
     }) // -- End of websocket recieve DATA msg from Node-RED -- //
 
     // Recieve a CONTROL msg from Node-RED
@@ -71,8 +77,6 @@ io.on('connect', function() {
         debug && console.info('uibuilder:io.connect:io.on.control - msg received - Namespace: ' + ioNamespace)
         //console.dir(wsMsg)
 
-        // Test auto-response TODO: remove for live
-        sendMsg('We got a control message from you, thanks')
 
         // Make sure that msg is an object & not null
         if ( wsMsg === null ) {
@@ -83,14 +87,25 @@ io.on('connect', function() {
 
         msgCounter.control++
         $('#msgsControl').text(msgCounter.control)
+        $('#showMsg').text(JSON.stringify(wsMsg))
 
         switch(wsMsg.type) {
             case 'shutdown':
                 // We are shutting down
                 break
+            case 'connected':
+                // We are connected to the server
+                break
             default:
-                // ???
+                // Anything else
         }
+
+        // Test auto-response
+        if (debug) {
+            wsMsg.payload = 'We got a control message from you, thanks'
+            sendMsg(wsMsg)
+        }
+
     }) // -- End of websocket recieve CONTROL msg from Node-RED -- //
 
 }) // --- End of socket connection processing ---
@@ -99,6 +114,16 @@ io.on('connect', function() {
 io.on('disconnect', function() {
     debug && console.log('SOCKET DISCONNECTED - Namespace: ' + ioNamespace)
 }) // --- End of socket disconnect processing ---
+
+// When JQuery is ready, update
+$( document ).ready(function() {
+
+    $('#msgsReceived').text(msgCounter.data)
+    $('#msgsControl').text(msgCounter.control)
+    $('#msgsSent').text(msgCounter.sent)
+    $('#showMsg').text(JSON.stringify(msg))
+
+});
 
 // ----- UTILITY FUNCTIONS ----- //
 function readCookie(name,c,C,i){

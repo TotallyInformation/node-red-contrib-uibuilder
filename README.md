@@ -5,13 +5,30 @@ An EXPERIMENTAL Node-RED web user interface builder.
 Designed as an *experimental* alternative to the Node-RED Dashboard. Be warned that this project is
 currently very much **alpha** quality. It should pretty much work but only in a limited way.
 
-The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL that is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
+The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL that
+ is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
 
-Eventually, you will be able to "compile" src files using webpack from a button in the nodes config. That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
+Eventually, you will be able to "compile" src files using webpack from a button in the nodes config. 
+That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
 
-The final evolution will be to provide configuration nodes to let you define framework or html/css/js files in Node-RED itself so that you won't need access to the servers file system at all.
+The final evolution will be to provide configuration nodes to let you define framework or html/css/js 
+files in Node-RED itself so that you won't need access to the servers file system at all.
 
-This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of greater complexity and a need to write your own front-end code.
+This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to 
+create a UI but trades that off with some limitations, this is designed to let you do anything you can 
+think of with any framework but at the trade off of greater complexity and a need to write your own front-end code.
+
+## Out of the box
+
+Out of the box, you get a simple index.html template with matching css & JavaScript. 
+These are in the module's src folder (currently), copy them to the instance src folder if you want to override them.
+
+JQuery is used in the default JavaScript to give dynamic updates to the web page. If all you need to do
+is some simple dynamic updates of the page, JQuery is likely enough.
+
+Any msg sent to the node is forwarded directly to the front-end and is available in the global `msg` variable 
+as it would be in Node-RED, use the `msgSend` function to send a message back to Node-RED that
+will be passed downstream from the node.
 
 ## Design
 
@@ -38,7 +55,8 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
 
 ## Preference Tree
 
-This node adds a number of resource locations (physical file-system locations) to the URL path (default `/uibuilder`) defined. It is up to the user to ensure that file/folder names do not clash. 
+This node adds a number of resource locations (physical file-system locations) to the URL path 
+(default `/uibuilder`) defined. It is up to the user to ensure that file/folder names do not clash. 
 
 The order of preference is as follows:
 
@@ -85,8 +103,7 @@ Folders and files for resources on the device running Node-RED are:
 
 ## Known Issues
 
-- ws: protocol failing on Windows 10 dev - Socket.IO issue?
-- On redeploy or NR restart, existing clients do not reconnect, page has to be reloaded.
+- On redeploy, existing clients do not reconnect, page has to be reloaded. Works if NR is restarted.
 
 ## To Do
 
@@ -95,7 +112,9 @@ Folders and files for resources on the device running Node-RED are:
 - Add topic to node config
 - Add userVendorPackages to node config
 - Copy template files to local override folder if not already existing
-- Add edit options: 
+- Add FE code to enable easier integration with user-supplied function on receipt of msg.
+  Maybe a global fn name or msg.prototype?
+- Tidy front-end JS code to make integration easier
 - Use webpack to "compile" resources into distribution folders upon (re)deployment - allowing for the use
   of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
 - Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
@@ -113,6 +132,10 @@ Folders and files for resources on the device running Node-RED are:
   local `src` folder. 
 
 ## Changes
+
+v0.1.2
+
+- Simply dynamic front-end code using JQuery. Fixed typo's in docs. Fixed auto-respond test messages. Add path to Socket.IO to make sure the client loads the right version from the server.
 
 v0.1.0 
 

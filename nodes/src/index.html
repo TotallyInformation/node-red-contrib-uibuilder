@@ -47,13 +47,18 @@
             <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
             node for details on how to use UIbuilder.
         </p>
-        <h2>Dynamic Data</h2>
+        <h2>Dynamic Data (via JQuery)</h2>
         <p>Messages Received: <span id="msgsReceived"></span></p>
         <p>Control Messages Received: <span id="msgsControl"></span></p>
         <p>Messages Sent: <span id="msgsSent"></span></p>
+        <p>Last Message Received:</p>
+        <code id="showMsg"></code>
+        <p>Last Message Sent:</p>
+        <code id="showMsgSent"></code>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Note no leading / -->
+    <script src="socket.io/socket.io.js"></script>
     <script src="vendor/jquery/dist/jquery.min.js"></script>
     <script src="index.js"></script>
 
