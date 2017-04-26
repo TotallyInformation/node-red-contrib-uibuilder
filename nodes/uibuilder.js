@@ -19,6 +19,8 @@
 // Module name must match this nodes html file
 const moduleName = 'uibuilder'
 
+console.log( 'node-red-contrib-' + moduleName + ' - initialising module' )
+
 const serveStatic = require('serve-static'),
       socketio = require('socket.io'),
       path = require('path'),
@@ -27,11 +29,26 @@ const serveStatic = require('serve-static'),
       nodeVersion = require('../package.json').version
       ;
 
+// These are loaded to the /<uibuilder>/vendor URL path
+const vendorPackages = [
+    'normalize.css',
+    'jquery',
+]
+
 var io
+
+// The channel names for Socket.IO
+const ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
 
 // Why?
 //var ev = new events.EventEmitter();
 //ev.setMaxListeners(0);
+
+// Will we use "compiled" version of module front-end code?
+var useCompiledCode = false
+fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
+    useCompiledCode = true
+})
 
 module.exports = function(RED) {
     'use strict';
@@ -55,16 +72,11 @@ module.exports = function(RED) {
         //       it is totally torn down and rebuilt so we cannot ever know
         //       whether the template was changed.
         node.template = config.template || '<p>{{ msg }}</p>';
+        node.ioClientsCount = 0 // how many Socket clients connected to this intance?
 
         // NOTE that this nodes context variables are available from (node.context()).get('varname')
         //      The node's flow variables are available from (node.context().flow).get('varname')
         //      The global variables are available from (node.context().global).get('varname')
-
-        // These are loaded to the /<uibuilder>/vendor URL path
-        const vendorPackages = [
-            'normalize.css',
-            'jquery',
-        ]
 
         // Set to true if you want additional debug output to the console
         const debug = RED.settings.uibuilder.debug || true
@@ -72,18 +84,14 @@ module.exports = function(RED) {
         var prevNodeStatus = {}
         var nodeStatus = {}
 
-        // The channel names for Socket.IO
-        const ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
         const ioNamespace = '/' + node.url
-        var ioClientsCount = 0
-
+        
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
         const customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
         // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
         //   Files in this folder are also served to URL but take preference
         //   over those in the nodes folders (which act as defaults)
         const customFolder = path.join(customAppFolder, node.url)
-
         
         // We need an http server to serve the page
         const app = RED.httpNode || RED.httpAdmin
@@ -160,21 +168,19 @@ module.exports = function(RED) {
         
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
-        fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
-            if (!err) {
-                // If the ./dist/index.html exists use the dist folder... 
-                app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'dist' ) ) );
-            } else {
-                // ... otherwise, use dev resources at ./src/
-                debug && RED.log.audit({ 'UIbuilder': node.url+' Using development folder' });
-                app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'src' ) ) );
-                // Include vendor resource source paths if needed
-                vendorPackages.forEach(function (packageName) {
-                    //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
-                    app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) );
-                })
-            }
-        })
+        if (useCompiledCode) {
+            // If the ./dist/index.html exists use the dist folder... 
+            app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'dist' ) ) );
+        } else {
+            // ... otherwise, use dev resources at ./src/
+            debug && RED.log.audit({ 'UIbuilder': node.url+' Using development folder' });
+            app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'src' ) ) );
+            // Include vendor resource source paths if needed
+            vendorPackages.forEach(function (packageName) {
+                //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
+                app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) );
+            })
+        }
 
         const fullPath = urlJoin( RED.settings.httpNodeRoot, node.url );
         if ( node.customFoldersReqd ) {
@@ -188,7 +194,7 @@ module.exports = function(RED) {
         // Start Socket.IO with a namespace to match the url path, ensure using Socket.IO version from this uibuilder module (using path)
         io = socketio.listen(RED.server, {'path': urlJoin(node.url, 'socket.io')}) // listen === attach
         io.set('transports', ['polling', 'websocket'])
-        ioClientsCount = 0
+        node.ioClientsCount = 0
         prevNodeStatus = nodeStatus
         nodeStatus = { fill: 'blue', shape: 'dot', text: 'Socket Created' }
         node.status(nodeStatus)
@@ -208,13 +214,13 @@ module.exports = function(RED) {
         // note that the connection returns the socket instance to monitor for responses from 
         // the ui client instance
         ioNs.on('connection', function(socket) {
-            ioClientsCount++
+            node.ioClientsCount++
             RED.log.audit({ 
-                'UIbuilder': node.url+' Socket connected', 'clientCount': ioClientsCount, 
+                'UIbuilder': node.url+' Socket connected', 'clientCount': node.ioClientsCount, 
                 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
             })
             prevNodeStatus = nodeStatus
-            nodeStatus = { fill: 'green', shape: 'dot', text: 'connected '+ioClientsCount }
+            nodeStatus = { fill: 'green', shape: 'dot', text: 'connected '+node.ioClientsCount }
             node.status(nodeStatus)
             //console.log('--socket.request.connection.remoteAddress--')
             //console.dir(socket.request.connection.remoteAddress)
@@ -246,16 +252,61 @@ module.exports = function(RED) {
             });
 
             socket.on('disconnect', function(reason) {
-                ioClientsCount--
+                node.ioClientsCount--
                 RED.log.audit({
-                    'UIbuilder': node.url+' Socket disconnected', 'clientCount': ioClientsCount,
+                    'UIbuilder': node.url+' Socket disconnected', 'clientCount': node.ioClientsCount,
                     'reason': reason, 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
                 })
                 prevNodeStatus = nodeStatus
-                nodeStatus = { fill: 'green', shape: 'ring', text: 'connected '+ioClientsCount }
+                nodeStatus = { fill: 'green', shape: 'ring', text: 'connected '+node.ioClientsCount }
                 node.status(nodeStatus)
             })
-        })
+
+            socket.on('error', function(data) {
+                RED.log.audit({ 
+                    'UIbuilder': node.url+' ERROR recieved', 'ID': socket.id, 
+                    'data': data 
+                })                
+            })
+
+            socket.on('connect', function(data) {
+                RED.log.audit({ 
+                    'UIbuilder': node.url+' CONNECT recieved', 'ID': socket.id, 
+                    'data': data 
+                })                
+            })
+            socket.on('disconnecting', function(data) {
+                RED.log.audit({ 
+                    'UIbuilder': node.url+' DISCONNECTING recieved', 'ID': socket.id, 
+                    'data': data 
+                })                
+            })
+            socket.on('newListener', function(data) {
+                RED.log.audit({ 
+                    'UIbuilder': node.url+' NEWLISTENER recieved', 'ID': socket.id, 
+                    'data': data 
+                })                
+            })
+            socket.on('removeListener', function(data) {
+                RED.log.audit({ 
+                    'UIbuilder': node.url+' REMOVELISTENER recieved', 'ID': socket.id, 
+                    'data': data 
+                })                
+            })
+            socket.on('ping', function(data) {
+                RED.log.audit({ 
+                    'UIbuilder': node.url+' PING recieved', 'ID': socket.id, 
+                    'data': data 
+                })                
+            })
+            socket.on('pong', function(data) {
+                RED.log.audit({ 
+                    'UIbuilder': node.url+' PONG recieved', 'ID': socket.id, 
+                    'data': data 
+                })                
+            })
+
+        }) // ---- End of ioNs.on connection ---- //
 
         // handler function for node input events (when a node instance receives a msg)
         function nodeInputHandler(msg) {
