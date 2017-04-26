@@ -21,65 +21,17 @@
         defaults: {
             name: { value: '' },
             url: { value: 'uibuilder' },
-            template: { value: '<p>{{ msg }}</p>' },
-            fwdInMessages: { value: true }
         },
         inputs: 1,
         outputs: 1,
         icon: "ui_template.png",
         paletteLabel: 'UI Builder',
         label: function() { return this.url || this.name || 'UI Builder'; },
-        oneditprepare: function() {
-            var that = this;
-
-            if (typeof this.fwdInMessages === 'undefined') {
-                this.fwdInMessages = true;
-                $('#node-input-fwdInMessages').prop('checked', true);
-            }
-
-            this.editor = RED.editor.createEditor({
-                id: 'node-input-template-editor',
-                mode: 'ace/mode/html',
-                value: $("#node-input-template").val()
-            });
-
-            RED.library.create({
-                url: 'uibuildertemplates',  // where to get the data from
-                type: 'uibuilder_template', // the type of object the library is for
-                editor: this.editor,    // the field name the main text body goes to
-                mode: 'ace/mode/html',
-                fields: [ 'name' ]
-            });
-            this.editor.focus();
-        },
-        oneditsave: function() {
-            var annot = this.editor.getSession().getAnnotations();
-            this.noerr = 0;
-            $("#node-input-noerr").val(0);
-            for (var k=0; k < annot.length; k++) {
-                if (annot[k].type === "error") {
-                    $("#node-input-noerr").val(annot.length);
-                    this.noerr = annot.length;
-                }
-            }
-            this.template = this.editor.getValue();
-            $("#node-input-template").val(this.template);
-            delete this.editor;
-        },
-        oneditresize: function(size) {
-            var rows = $("#dialog-form>div:not(.node-text-editor-row)");
-            var height = $("#dialog-form").height();
-            for (var i=0;i<rows.size();i++) {
-                height -= $(rows[i]).outerHeight(true);
-            }
-            var editorRow = $("#dialog-form>div.node-text-editor-row");
-            height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
-            $(".node-text-editor").css("height",height+"px");
-            this.editor.resize();
-        },
+        //oneditprepare: function() {},
+        //oneditsave: function() { },
+        //oneditresize: function(size) { },
         // Do any setup when node added to palette
-        onpaletteadd: function() {
-        },
+        //onpaletteadd: function() { },
     });
 </script>
 
@@ -94,21 +46,6 @@
     <div class="form-row">
         <label for="node-input-url"><i class="fa fa-tag"></i> URL</label>
         <input type="text" id="node-input-url">
-    </div>
-
-    <div class="form-row">
-        <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-fwdInMessages" style="display:inline-block; width:auto; vertical-align:top;">
-        <label for="node-input-fwdInMessages" style="width:70%;"> Pass through messages from input.</label>
-    </div>
-
-    <!-- The actual template -->
-    <div class="form-row">
-        <label for="node-input-template"><i class="fa fa-copy"></i> Template</label>
-        <input type="hidden" id="node-input-template">
-    </div>
-    <div class="form-row node-text-editor-row">
-        <div style="height:250px;" class="node-text-editor" id="node-input-template-editor" ></div>
     </div>
 
 </script>
@@ -135,8 +72,6 @@
     <h4>Library (icon)</h4>
     <p>Save or retrieve template from library</p>
     <h4>URL</h4>
-    <h4>Pass through messages from input</h4>
-    <h4>Template</h4>
 
     <h3>File/Folder Structure</h3>
 

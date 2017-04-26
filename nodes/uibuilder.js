@@ -56,6 +56,10 @@ module.exports = function(RED) {
         //       whether the template was changed.
         node.template = config.template || '<p>{{ msg }}</p>';
 
+        // NOTE that this nodes context variables are available from node.context()
+        //      The node's flow variables are available from node.context().flow
+        //      The global variables are available from node.context().global
+
         // These are loaded to the /<uibuilder>/vendor URL path
         const vendorPackages = [
             'normalize.css',
