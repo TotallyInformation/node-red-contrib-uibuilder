@@ -56,9 +56,9 @@ module.exports = function(RED) {
         //       whether the template was changed.
         node.template = config.template || '<p>{{ msg }}</p>';
 
-        // NOTE that this nodes context variables are available from node.context()
-        //      The node's flow variables are available from node.context().flow
-        //      The global variables are available from node.context().global
+        // NOTE that this nodes context variables are available from (node.context()).get('varname')
+        //      The node's flow variables are available from (node.context().flow).get('varname')
+        //      The global variables are available from (node.context().global).get('varname')
 
         // These are loaded to the /<uibuilder>/vendor URL path
         const vendorPackages = [
@@ -238,6 +238,8 @@ module.exports = function(RED) {
                     case 'boolean':
                         msg = { 'topic': node.topic, 'payload': msg}
                 }
+                // Add sending client id to msg
+                msg._socketId = socket.id
                 // Send out the message for downstream flows
                 // TODO: This should probably have safety validations!
                 node.send(msg)
