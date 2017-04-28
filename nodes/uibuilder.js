@@ -61,7 +61,6 @@ module.exports = function(RED) {
         node.userVendorPackages = config.userVendorPackages || RED.settings.uibuilder.userVendorPackages || []
         node.ioClientsCount = 0 // how many Socket clients connected to this intance?
         node.rcvMsgCount = 0 // how many msg's recieved since last reset or redeploy?
-        node.status = {}
         // The channel names for Socket.IO
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
         node.ioNamespace = '/' + node.url
