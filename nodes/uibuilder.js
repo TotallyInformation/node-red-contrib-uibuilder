@@ -38,7 +38,7 @@ var io
 // Will we use "compiled" version of module front-end code?
 var useCompiledCode = false
 fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
-    useCompiledCode = true
+    if (!err) useCompiledCode = true
 })
 
 module.exports = function(RED) {
@@ -57,27 +57,23 @@ module.exports = function(RED) {
         // TODO: This needs to be limited to a single path element
         node.url    = config.url  || 'uibuilder'
         node.fwdInMessages = config.fwdInMessages || true
-        node.customFoldersReqd = config.customFoldersReqd || true
+        node.customFoldersReqd = config.customFoldersReqd || false
         node.userVendorPackages = config.userVendorPackages || RED.settings.uibuilder.userVendorPackages || []
         node.ioClientsCount = 0 // how many Socket clients connected to this intance?
         node.rcvMsgCount = 0 // how many msg's recieved since last reset or redeploy?
         // The channel names for Socket.IO
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
         node.ioNamespace = '/' + node.url
+        // Name of the fs path used to hold custom files & folders for all instances of uibuilder
+        node.customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
+        // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
+        //   Files in this folder are also served to URL but take preference
+        //   over those in the nodes folders (which act as defaults)
+        node.customFolder = path.join(node.customAppFolder, node.url)
 
         // Set to true if you want additional debug output to the console
         const debug = RED.settings.uibuilder.debug || true
 
-        debug && console.log('UIBUILDER - node instance initialising')
-
-        
-        // Name of the fs path used to hold custom files & folders for all instances of uibuilder
-        const customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
-        // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
-        //   Files in this folder are also served to URL but take preference
-        //   over those in the nodes folders (which act as defaults)
-        const customFolder = path.join(customAppFolder, node.url)
-        
         // We need an http server to serve the page
         const app = RED.httpNode || RED.httpAdmin
 
@@ -106,17 +102,17 @@ module.exports = function(RED) {
             // NOTE: May be better as async calls?
             // Make sure the global custom folder exists first
             try {
-                fs.mkdirSync(customAppFolder)
-                fs.accessSync( customAppFolder, fs.constants.W_OK )
+                fs.mkdirSync(node.customAppFolder)
+                fs.accessSync( node.customAppFolder, fs.constants.W_OK )
             } catch (e) {
                 if ( e.code !== 'EEXIST' ) {
-                    debug && RED.log.error('UIBUILDER - uibuilder custom folder ERROR, path: ' + path.join(RED.settings.userDir, customAppFolder) + ', error: ' + e.message)
+                    debug && RED.log.error('UIBUILDER - uibuilder custom folder ERROR, path: ' + path.join(RED.settings.userDir, node.customAppFolder) + ', error: ' + e.message)
                 }
             }
             // Then make sure the folder for this node instance exists
             try {
-                fs.mkdirSync(customFolder)
-                fs.accessSync(customFolder, fs.constants.W_OK)
+                fs.mkdirSync(node.customFolder)
+                fs.accessSync(node.customFolder, fs.constants.W_OK)
             } catch (e) {
                 if ( e.code !== 'EEXIST' ) {
                     debug && RED.log.error('UIBUILDER - uibuilder local custom folder ERROR: ' + e.message)
@@ -124,23 +120,23 @@ module.exports = function(RED) {
             }
             // Then make sure the DIST & SRC folders for this node instance exist
             try {
-                fs.mkdirSync( path.join(customFolder, 'dist') )
-                fs.mkdirSync( path.join(customFolder, 'src') )
-                fs.accessSync(customFolder, fs.constants.W_OK)
+                fs.mkdirSync( path.join(node.customFolder, 'dist') )
+                fs.mkdirSync( path.join(node.customFolder, 'src') )
+                fs.accessSync(node.customFolder, fs.constants.W_OK)
             } catch (e) {
                 if ( e.code !== 'EEXIST' ) {
                     debug && RED.log.error('UIBUILDER - uibuilder local custom dist or src folder ERROR: ' + e.message)
                 }
             }
             // Add static path for local custom files
-            fs.stat(path.join(customFolder, 'dist', 'index.html'), function(err, stat) {
+            fs.stat(path.join(node.customFolder, 'dist', 'index.html'), function(err, stat) {
                 if (!err) {
                     // If the ./dist/index.html exists use the dist folder... 
-                    app.use( urlJoin(node.url), serveStatic( path.join(customFolder, 'dist') ) );
+                    app.use( urlJoin(node.url), serveStatic( path.join(node.customFolder, 'dist') ) );
                 } else {
                     // ... otherwise, use dev resources at ./src/
                     debug && RED.log.audit({ 'UIbuilder': node.url+' Using local development folder' });
-                    app.use( urlJoin(node.url), serveStatic( path.join(customFolder, 'src') ) );
+                    app.use( urlJoin(node.url), serveStatic( path.join(node.customFolder, 'src') ) );
                     // Include vendor resource source paths if needed
                     node.userVendorPackages.forEach(function (packageName) {
                         //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
@@ -154,23 +150,24 @@ module.exports = function(RED) {
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
         if (useCompiledCode) {
+            debug && RED.log.audit({ 'UIbuilder': node.url+' Using production build folder' })
             // If the ./dist/index.html exists use the dist folder... 
-            app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'dist' ) ) );
+            app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'dist' ) ) )
         } else {
             // ... otherwise, use dev resources at ./src/
-            debug && RED.log.audit({ 'UIbuilder': node.url+' Using development folder' });
-            app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'src' ) ) );
+            debug && RED.log.audit({ 'UIbuilder': node.url+' Using development folder' })
+            app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'src' ) ) )
             // Include vendor resource source paths if needed
             vendorPackages.forEach(function (packageName) {
                 //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
-                app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) );
+                app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) )
             })
         }
 
         const fullPath = urlJoin( RED.settings.httpNodeRoot, node.url );
         if ( node.customFoldersReqd ) {
             RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
-            RED.log.info('UI Builder - Local file overrides at ' + customFolder)
+            RED.log.info('UI Builder - Local file overrides at ' + node.customFolder)
         } else {
             RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
             RED.log.info('UI Builder - Local file overrides not requested')
