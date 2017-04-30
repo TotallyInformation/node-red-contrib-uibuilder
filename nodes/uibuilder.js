@@ -63,7 +63,8 @@ module.exports = function(RED) {
         node.rcvMsgCount = 0 // how many msg's recieved since last reset or redeploy?
         // The channel names for Socket.IO
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
-        node.ioNamespace = '/' + node.url
+        node.ioNamespace = '/' + trimSlashes(node.url)
+        console.log(node.ioNamespace)
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
         node.customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
         // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
@@ -91,9 +92,10 @@ module.exports = function(RED) {
         // so that we can have multiple pages served
         // @see https://expressjs.com/en/guide/using-middleware.html
         function localMiddleware (req, res, next) {
-            // Tell the client what namespace to use
-            res.setHeader('x-uibuilder-namespace', node.url)
-            res.cookie('uibuilder-namespace', node.url, {path: node.url, sameSite: true})
+            // Tell the client what namespace to use, trim the leading slash because the cookie will
+            // turn into a %2F
+            res.setHeader('x-uibuilder-namespace', node.ioNamespace)
+            res.cookie('uibuilder-namespace', trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
             next()
         }
 
@@ -173,22 +175,24 @@ module.exports = function(RED) {
             RED.log.info('UI Builder - Local file overrides not requested')
         }
 
-        // Start Socket.IO with a namespace to match the url path, ensure using Socket.IO version from this uibuilder module (using path)
-        io = socketio.listen(RED.server, {'path': urlJoin(node.url, 'socket.io')}) // listen === attach
-        io.set('transports', ['polling', 'websocket'])
-        node.ioClientsCount = 0
-        setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Socket Created' }, node )
-        // Check that all incoming SocketIO data has the IO cookie
-        // TODO: Needs a bit more work to add some real security - is it even being called? should it be on ioNs?
-        io.use(function(socket, next){
-            if (socket.request.headers.cookie) {
-                node.debug && RED.log.info('SOCKET OK')
-                setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Socket Authentication OK - ID: ' + socket.id }, node )
-                return next()
-            }
-            setNodeStatus( { fill: 'red', shape: 'ring', text: 'Socket Authentication Error - ID: ' + socket.id }, node )
-            next(new Error('UIbuilder:NodeGo:io.use - Authentication error - ID: ' + socket.id ))
-        });
+        if (  (typeof io) !== 'object' ) {
+            // Start Socket.IO with a namespace to match the url path, ensure using Socket.IO version from this uibuilder module (using path)
+            io = socketio.listen(RED.server, {'path': urlJoin(node.url, 'socket.io')}) // listen === attach
+            io.set('transports', ['polling', 'websocket'])
+            node.ioClientsCount = 0
+            setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Socket Created' }, node )
+            // Check that all incoming SocketIO data has the IO cookie
+            // TODO: Needs a bit more work to add some real security - is it even being called? should it be on ioNs?
+            io.use(function(socket, next){
+                if (socket.request.headers.cookie) {
+                    node.debug && RED.log.info('SOCKET OK')
+                    setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Socket Authentication OK - ID: ' + socket.id }, node )
+                    return next()
+                }
+                setNodeStatus( { fill: 'red', shape: 'ring', text: 'Socket Authentication Error - ID: ' + socket.id }, node )
+                next(new Error('UIbuilder:NodeGo:io.use - Authentication error - ID: ' + socket.id ))
+            })
+        }
 
         var ioNs = io.of(node.ioNamespace)
 
@@ -367,7 +371,7 @@ function processClose(done = null, node, RED, ioNs, io, app) {
     }
     ioNs.removeAllListeners() // Remove all Listeners for the event emitter
     delete io.nsps[node.ioNamespace] // Remove from the server namespaces
-    io = null
+    //io = null
 
     // We need to remove the app.use paths too. This code borrowed from the http nodes
     app._router.stack.forEach(function(route,i,routes) {
@@ -390,11 +394,14 @@ function setNodeStatus( status, node ) {
     node.status(status)
 }
 
+function trimSlashes(str) {
+    return str.replace(/(^\/*)|(\/*$)/g, '')
+} // ---- End of trimSlashes ---- //
+
 //from: http://stackoverflow.com/a/28592528/3016654
 function urlJoin() {
-    const trimRegex = new RegExp('^\\/|\\/$','g');
     var paths = Array.prototype.slice.call(arguments);
-    return '/'+paths.map(function(e){return e.replace(trimRegex,'');}).filter(function(e){return e;}).join('/');
+    return '/'+paths.map(function(e){return e.replace(/^\/|\/$/g,'');}).filter(function(e){return e;}).join('/');
 }
 
 // EOF
