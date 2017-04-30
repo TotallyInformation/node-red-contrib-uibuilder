@@ -32,8 +32,8 @@ const vendorPackages = [
     'jquery',
 ]
 
-// Holder for Socket.IO
-var io
+var connectedClients = {}
+var deployments = {}
 
 // Will we use "compiled" version of module front-end code?
 var useCompiledCode = false
@@ -44,6 +44,23 @@ fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
 module.exports = function(RED) {
     'use strict';
 
+    // Holder for Socket.IO
+    // Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
+    // modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
+    RED.log.audit({'uibuilder': 'Socket.IO initialisation', 'Socket Path': urlJoin(moduleName, 'socket.io')})
+    var io = socketio.listen(RED.server, {'path': urlJoin(moduleName, 'socket.io')}) // listen === attach
+    io.set('transports', ['polling', 'websocket'])
+
+    // Check that all incoming SocketIO data has the IO cookie
+    // TODO: Needs a bit more work to add some real security - is it even being called? should it be on ioNs?
+    io.use(function(socket, next){
+        if (socket.request.headers.cookie) {
+            RED.log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
+            return next()
+        }
+        next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
+    })
+
     function nodeGo(config) {
         // Create the node
         RED.nodes.createNode(this, config)
@@ -52,19 +69,17 @@ module.exports = function(RED) {
         const node = this
 
         // Create local copies of the node configuration (as defined in the .html file)
+        // NB: node.id and node.type are also available
         node.name   = config.name || ''
         node.topic  = config.topic || ''
-        // TODO: This needs to be limited to a single path element
+        // TODO: This needs to be limited to a single path element?
         node.url    = config.url  || 'uibuilder'
         node.fwdInMessages = config.fwdInMessages || true
         node.customFoldersReqd = config.customFoldersReqd || false
+
+        // User supplied vendor packages - ONLY if curtomFoldersReqd
+        // & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
         node.userVendorPackages = config.userVendorPackages || RED.settings.uibuilder.userVendorPackages || []
-        node.ioClientsCount = 0 // how many Socket clients connected to this intance?
-        node.rcvMsgCount = 0 // how many msg's recieved since last reset or redeploy?
-        // The channel names for Socket.IO
-        node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
-        node.ioNamespace = '/' + trimSlashes(node.url)
-        console.log(node.ioNamespace)
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
         node.customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
         // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
@@ -72,8 +87,24 @@ module.exports = function(RED) {
         //   over those in the nodes folders (which act as defaults)
         node.customFolder = path.join(node.customAppFolder, node.url)
 
+        // Socket.IO config
+        node.ioClientsCount = 0 // how many Socket clients connected to this intance?
+        node.rcvMsgCount = 0 // how many msg's recieved since last reset or redeploy?
+        // The channel names for Socket.IO
+        node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
+        // Make sure each node instance uses a separate Socket.IO namespace
+        node.ioNamespace = '/' + trimSlashes(node.url)
+
         // Set to true if you want additional debug output to the console
         const debug = RED.settings.uibuilder.debug || true
+
+        // Keep track of the number of times each instance is deployed.
+        // The initial deployment = 1
+        if ( deployments.hasOwnProperty(node.id) ) deployments[node.id]++
+        else deployments[node.id] = 1
+
+        console.log( 'Deployments: ' + deployments[node.id] + ', List of connected clients: ' )
+        console.dir( connectedClients[node.id] )
 
         // We need an http server to serve the page
         const app = RED.httpNode || RED.httpAdmin
@@ -175,32 +206,28 @@ module.exports = function(RED) {
             RED.log.info('UI Builder - Local file overrides not requested')
         }
 
-        if (  (typeof io) !== 'object' ) {
-            // Start Socket.IO with a namespace to match the url path, ensure using Socket.IO version from this uibuilder module (using path)
-            io = socketio.listen(RED.server, {'path': urlJoin(node.url, 'socket.io')}) // listen === attach
-            io.set('transports', ['polling', 'websocket'])
-            node.ioClientsCount = 0
-            setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Socket Created' }, node )
-            // Check that all incoming SocketIO data has the IO cookie
-            // TODO: Needs a bit more work to add some real security - is it even being called? should it be on ioNs?
-            io.use(function(socket, next){
-                if (socket.request.headers.cookie) {
-                    node.debug && RED.log.info('SOCKET OK')
-                    setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Socket Authentication OK - ID: ' + socket.id }, node )
-                    return next()
-                }
-                setNodeStatus( { fill: 'red', shape: 'ring', text: 'Socket Authentication Error - ID: ' + socket.id }, node )
-                next(new Error('UIbuilder:NodeGo:io.use - Authentication error - ID: ' + socket.id ))
-            })
-        }
+        // We only do the following if io is not already assigned (e.g. after a redeploy)
+        setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
 
+        // Each deployed instance has it's own namespace
         var ioNs = io.of(node.ioNamespace)
+
+        if ( ! connectedClients.hasOwnProperty(node.id) ) {
+            connectedClients[node.id] = []
+        }
 
         // When someone loads the page, it will try to connect over Socket.IO
         // note that the connection returns the socket instance to monitor for responses from 
         // the ui client instance
         ioNs.on('connection', function(socket) {
             node.ioClientsCount++
+
+            // This survives a redeploy
+            connectedClients[node.id].push( { 
+                id: socket.id, 
+                address: socket.request.connection.remoteAddress
+            } )
+
             RED.log.audit({ 
                 'UIbuilder': node.url+' Socket connected', 'clientCount': node.ioClientsCount, 
                 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
@@ -371,7 +398,7 @@ function processClose(done = null, node, RED, ioNs, io, app) {
     }
     ioNs.removeAllListeners() // Remove all Listeners for the event emitter
     delete io.nsps[node.ioNamespace] // Remove from the server namespaces
-    //io = null
+    connectedClients[node.id] = []
 
     // We need to remove the app.use paths too. This code borrowed from the http nodes
     app._router.stack.forEach(function(route,i,routes) {

@@ -1,4 +1,4 @@
-/*global document,$,window */
+/*global document,$,window,io */
 /*
   Copyright (c) 2017 Julian Knight (Totally Information)
 
@@ -20,7 +20,7 @@ var debug = true,
     msgCounter = {control: 0, sent: 0, data: 0},
     msg = {},
     cookies = [],
-    ioNamespace = '/'+readCookie('uibuilder-namespace'),
+    ioNamespace = '/' + readCookie('uibuilder-namespace'),
     socket
 
 // When JQuery is ready, update
@@ -29,7 +29,7 @@ $( document ).ready(function() {
 
     // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
     socket = io(ioNamespace, {
-        path: window.location.pathname + 'socket.io', 
+        path: '/uibuilder/socket.io', 
         transports: ['polling', 'websocket']
     })
 
