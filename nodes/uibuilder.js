@@ -36,6 +36,11 @@ const vendorPackages = [
 // if OK to reset on redeployment, attach to node.xxx inside nodeGo instead.
 var deployments = {}
 
+// TODO: track instance urls here
+//  when nodeGo is run, add the node.id as a key with the value being the url
+//  then add processing to ensure that the URL's are unique.
+var instances = {}
+
 // Will we use "compiled" version of module front-end code?
 var useCompiledCode = false
 fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
