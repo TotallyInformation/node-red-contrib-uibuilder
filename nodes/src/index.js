@@ -21,7 +21,9 @@ var debug = true,
     msg = {},
     cookies = [],
     ioNamespace = '/' + readCookie('uibuilder-namespace'),
-    socket
+    socket,
+    retryMs = 2000, // retry ms period for manual socket reconnections workaround
+    timerid
 
 // When JQuery is ready, update
 $( document ).ready(function() {
@@ -41,6 +43,13 @@ $( document ).ready(function() {
     // When the socket is connected .................
     socket.on('connect', function() {
         debug && console.log('SOCKET CONNECTED - Namespace: ' + ioNamespace)
+
+        // Reset any reconnect timers
+        if (timerid) {
+            window.clearTimeout(timerid)
+            retryMs = 2000
+            timerid = null
+        }
 
         // When Node-RED uibuilder template node sends a msg over Socket.IO...
         socket.on(ioChannels.server, function(wsMsg) {
@@ -118,6 +127,16 @@ $( document ).ready(function() {
         // reason === 'io server disconnect' - redeploy of Node instance
         // reason === 'transport close' - Node-RED terminating
         debug && console.log('SOCKET DISCONNECTED - Namespace: ' + ioNamespace + ', Reason: ' + reason)
+
+        // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
+        if ( reason === 'io server disconnect' ) {
+            if (timerid) window.clearTimeout(timerid) // we only want one running at a time
+            timerid = window.setTimeout(function(){
+                debug && console.log('Manual SIO reconnect attempt, timeout: ' + retryMs)
+                socket.connect() // Try to reconnect
+                retryMs = retryMs + 1000 // extend timer for next time round
+            }, retryMs)
+        }
     }) // --- End of socket disconnect processing ---
 
     /* We really don't need these, just for interest

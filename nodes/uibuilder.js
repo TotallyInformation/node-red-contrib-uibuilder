@@ -53,17 +53,18 @@ module.exports = function(RED) {
     RED.log.audit({'uibuilder': 'Socket.IO initialisation', 'Socket Path': urlJoin(moduleName, 'socket.io')})
     var io = socketio.listen(RED.server, {'path': urlJoin(moduleName, 'socket.io')}) // listen === attach
     io.set('transports', ['polling', 'websocket'])
-
+/*
     // Check that all incoming SocketIO data has the IO cookie
-    // TODO: Needs a bit more work to add some real security - is it even being called? should it be on ioNs?
+    // TODO: Needs a bit more work to add some real security - should it be on ioNs?
     io.use(function(socket, next){
         if (socket.request.headers.cookie) {
             RED.log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
+            console.dir(socket.request.headers.cookie)  // socket.handshake.headers.cookie
             return next()
         }
         next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
     })
-
+*/
     function nodeGo(config) {
         // Create the node
         RED.nodes.createNode(this, config)
@@ -250,10 +251,8 @@ module.exports = function(RED) {
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
                 RED.log.debug( 
-                    `UIbuilder: ${node.url}, Data recieved from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
+                    `UIbuilder: ${node.url}, Data recieved from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}, Msg: ${msg.payload}`
                 )
-                RED.log.debug(msg)
-                //console.dir(msg)
 
                 switch ( typeof msg ) {
                     case 'string':
