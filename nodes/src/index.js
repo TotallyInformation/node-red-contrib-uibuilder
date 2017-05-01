@@ -39,9 +39,8 @@ $( document ).ready(function() {
     $('#showMsg').text(JSON.stringify(msg))
 
     // When the socket is connected .................
-    socket.on('connect', function(data) {
+    socket.on('connect', function() {
         debug && console.log('SOCKET CONNECTED - Namespace: ' + ioNamespace)
-        console.dir(data)
 
         // When Node-RED uibuilder template node sends a msg over Socket.IO...
         socket.on(ioChannels.server, function(wsMsg) {
@@ -115,61 +114,44 @@ $( document ).ready(function() {
     }) // --- End of socket connection processing ---
 
     // When the socket is disconnected ..............
-    socket.on('disconnect', function(data) {
-        debug && console.log('SOCKET DISCONNECTED - Namespace: ' + ioNamespace)
-        console.dir(data)
-
-        //socket = io(ioNamespace, {path: window.location.pathname + 'socket.io', transports: ['polling', 'websocket']})
+    socket.on('disconnect', function(reason) {
+        // reason === 'io server disconnect' - redeploy of Node instance
+        // reason === 'transport close' - Node-RED terminating
+        debug && console.log('SOCKET DISCONNECTED - Namespace: ' + ioNamespace + ', Reason: ' + reason)
     }) // --- End of socket disconnect processing ---
 
-    socket.on('end', function(data) {
-        debug && console.log('SOCKET END - Namespace: ' + ioNamespace)
-        console.dir(data)
-    }) // --- End of socket end processing ---
-
-    socket.on('connect_error', function(err) {
-        debug && console.log('SOCKET CONNECT ERROR - Namespace: ' + ioNamespace)
-        console.dir(err)
-    }) // --- End of socket connect error processing ---
-
-    socket.on('connect_timeout', function(data) {
-        debug && console.log('SOCKET CONNECT TIMEOUT - Namespace: ' + ioNamespace)
-        console.dir(data)
-    }) // --- End of socket connect timeout processing ---
-
-    socket.on('reconnect', function(attemptNumber) {
-        debug && console.log('SOCKET RECONNECT - Namespace: ' + ioNamespace)
-        console.dir(attemptNumber)
-    }) // --- End of socket reconnect processing ---
-
-    socket.on('reconnect_attempt', function(data) {
-        debug && console.log('SOCKET RECONNECT ATTEMPT - Namespace: ' + ioNamespace)
-        console.dir(data)
-    }) // --- End of socket reconnect_attempt processing ---
-
-    socket.on('reconnecting', function(data) {
-        debug && console.log('SOCKET RECONNECTING - Namespace: ' + ioNamespace)
-        console.dir(data)
-    }) // --- End of socket reconnecting processing ---
-
-    socket.on('reconnect_error', function(data) {
-        debug && console.log('SOCKET RECONNECT ERROR - Namespace: ' + ioNamespace)
-        console.dir(data)
-    }) // --- End of socket reconnect_error processing ---
-
-    socket.on('reconnect_failed', function(data) {
-        debug && console.log('SOCKET RECONNECT FAILED - Namespace: ' + ioNamespace)
-        console.dir(data)
-    }) // --- End of socket reconnect_failed processing ---
-
-    /*
-    socket.on('ping', function() {
-        debug && console.log('SOCKET PING - Namespace: ' + ioNamespace)
-    }) // --- End of socket ping processing ---
-
-    socket.on('pong', function(data) {
-        debug && console.log('SOCKET PONG - Namespace: ' + ioNamespace + ', Data: ' + data)
-    }) // --- End of socket pong processing ---
+    /* We really don't need these, just for interest
+        socket.on('connect_error', function(err) {
+            debug && console.log('SOCKET CONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
+            //console.dir(err)
+        }) // --- End of socket connect error processing ---
+        socket.on('connect_timeout', function(data) {
+            debug && console.log('SOCKET CONNECT TIMEOUT - Namespace: ' + ioNamespace)
+            console.dir(data)
+        }) // --- End of socket connect timeout processing ---
+        socket.on('reconnect', function(attemptNum) {
+            debug && console.log('SOCKET RECONNECTED - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
+        }) // --- End of socket reconnect processing ---
+        socket.on('reconnect_attempt', function(attemptNum) {
+            debug && console.log('SOCKET RECONNECT ATTEMPT - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
+        }) // --- End of socket reconnect_attempt processing ---
+        socket.on('reconnecting', function(attemptNum) {
+            debug && console.log('SOCKET RECONNECTING - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
+        }) // --- End of socket reconnecting processing ---
+        socket.on('reconnect_error', function(err) {
+            debug && console.log('SOCKET RECONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
+            //console.dir(err)
+        }) // --- End of socket reconnect_error processing ---
+        socket.on('reconnect_failed', function(data) {
+            debug && console.log('SOCKET RECONNECT FAILED - Namespace: ' + ioNamespace)
+            console.dir(data)
+        }) // --- End of socket reconnect_failed processing ---
+        socket.on('ping', function() {
+            debug && console.log('SOCKET PING - Namespace: ' + ioNamespace)
+        }) // --- End of socket ping processing ---
+        socket.on('pong', function(data) {
+            debug && console.log('SOCKET PONG - Namespace: ' + ioNamespace + ', Data: ' + data)
+        }) // --- End of socket pong processing ---
     */
 });
 

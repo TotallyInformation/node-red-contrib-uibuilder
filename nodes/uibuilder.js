@@ -32,6 +32,8 @@ const vendorPackages = [
     'jquery',
 ]
 
+// We want these to track across redeployments
+// if OK to reset on redeployment, attach to node.xxx inside nodeGo instead.
 var connectedClients = {}
 var deployments = {}
 
@@ -44,7 +46,8 @@ fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
 module.exports = function(RED) {
     'use strict';
 
-    // Holder for Socket.IO
+    // Holder for Socket.IO - we want this to survive redeployments of each node instance
+    // so that existing clients can be reconnected.
     // Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
     // modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
     RED.log.audit({'uibuilder': 'Socket.IO initialisation', 'Socket Path': urlJoin(moduleName, 'socket.io')})
@@ -216,6 +219,8 @@ module.exports = function(RED) {
             connectedClients[node.id] = []
         }
 
+        debug && console.log('Number of connected clients: ' + connectedClients[node.id].length)
+
         // When someone loads the page, it will try to connect over Socket.IO
         // note that the connection returns the socket instance to monitor for responses from 
         // the ui client instance
@@ -223,15 +228,15 @@ module.exports = function(RED) {
             node.ioClientsCount++
 
             // This survives a redeploy
-            connectedClients[node.id].push( { 
-                id: socket.id, 
-                address: socket.request.connection.remoteAddress
-            } )
+            connectedClients[node.id].push( socket.id )
+            //connectedClients[node.id].push( { 
+            //    id: socket.id, 
+            //    address: socket.request.connection.remoteAddress
+            //} )
 
-            RED.log.audit({ 
-                'UIbuilder': node.url+' Socket connected', 'clientCount': node.ioClientsCount, 
-                'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
-            })
+            RED.log.debug( 
+                `UIbuilder: ${node.url} Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
+            )
             setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
             //console.log('--socket.request.connection.remoteAddress--')
             //console.dir(socket.request.connection.remoteAddress)
@@ -240,14 +245,15 @@ module.exports = function(RED) {
             //console.dir(io.sockets.connected)
 
             // Let the clients know we are connecting
-            ioNs.emit( node.ioChannels.control, { 'type': 'connected' } )
+            ioNs.emit( node.ioChannels.control, { 'type': 'server connected' } )
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
-                RED.log.audit({ 
-                    'UIbuilder': node.url+' Data recieved from client', 'ID': socket.id, 
-                    'Cookie': socket.handshake.headers.cookie, 'data': msg 
-                })
+                RED.log.debug( 
+                    `UIbuilder: ${node.url}, Data recieved from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
+                )
+                RED.log.debug(msg)
+                //console.dir(msg)
 
                 switch ( typeof msg ) {
                     case 'string':
@@ -264,56 +270,51 @@ module.exports = function(RED) {
 
             socket.on('disconnect', function(reason) {
                 node.ioClientsCount--
-                RED.log.audit({
-                    'UIbuilder': node.url+' Socket disconnected', 'clientCount': node.ioClientsCount,
-                    'reason': reason, 'ID': socket.id, 'Cookie': socket.handshake.headers.cookie
-                })
+                RED.log.debug(
+                    `UIbuilder: ${node.url} Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
+                )
                 setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
             })
 
-            socket.on('error', function(data) {
+            socket.on('error', function(err) {
                 RED.log.audit({ 
                     'UIbuilder': node.url+' ERROR recieved', 'ID': socket.id, 
-                    'data': data 
+                    'Reason': err.message
                 })                
             })
 
-            socket.on('connect', function(data) {
-                RED.log.audit({ 
-                    'UIbuilder': node.url+' CONNECT recieved', 'ID': socket.id, 
-                    'data': data 
-                })                
-            })
-            socket.on('disconnecting', function(data) {
-                RED.log.audit({ 
-                    'UIbuilder': node.url+' DISCONNECTING recieved', 'ID': socket.id, 
-                    'data': data 
-                })                
-            })
-            socket.on('newListener', function(data) {
-                RED.log.audit({ 
-                    'UIbuilder': node.url+' NEWLISTENER recieved', 'ID': socket.id, 
-                    'data': data 
-                })                
-            })
-            socket.on('removeListener', function(data) {
-                RED.log.audit({ 
-                    'UIbuilder': node.url+' REMOVELISTENER recieved', 'ID': socket.id, 
-                    'data': data 
-                })                
-            })
-            socket.on('ping', function(data) {
-                RED.log.audit({ 
-                    'UIbuilder': node.url+' PING recieved', 'ID': socket.id, 
-                    'data': data 
-                })                
-            })
-            socket.on('pong', function(data) {
-                RED.log.audit({ 
-                    'UIbuilder': node.url+' PONG recieved', 'ID': socket.id, 
-                    'data': data 
-                })                
-            })
+            /* More Socket.IO events but we really don't need to monitor them
+                socket.on('disconnecting', function(reason) {
+                    RED.log.audit({ 
+                        'UIbuilder': node.url+' DISCONNECTING recieved', 'ID': socket.id, 
+                        'data': reason 
+                    })                
+                })
+                socket.on('newListener', function(data) {
+                    RED.log.audit({ 
+                        'UIbuilder': node.url+' NEWLISTENER recieved', 'ID': socket.id, 
+                        'data': data 
+                    })                
+                })
+                socket.on('removeListener', function(data) {
+                    RED.log.audit({ 
+                        'UIbuilder': node.url+' REMOVELISTENER recieved', 'ID': socket.id, 
+                        'data': data 
+                    })                
+                })
+                socket.on('ping', function(data) {
+                    RED.log.audit({ 
+                        'UIbuilder': node.url+' PING recieved', 'ID': socket.id, 
+                        'data': data 
+                    })                
+                })
+                socket.on('pong', function(data) {
+                    RED.log.audit({ 
+                        'UIbuilder': node.url+' PONG recieved', 'ID': socket.id, 
+                        'data': data 
+                    })                
+                })
+            */
 
         }) // ---- End of ioNs.on connection ---- //
 
@@ -390,16 +391,18 @@ function processClose(done = null, node, RED, ioNs, io, app) {
     // WARNING: TODO: If we do this, a client cannot reconnect after redeployment
     //                so the user has to reload the page
     //  They have to do this at the moment anyway so might as well.
+    RED.log.debug(connectedClients[node.id])
     const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
+    RED.log.debug(connectedNameSpaceSockets)
     if ( connectedNameSpaceSockets.length >0 ) {
         connectedNameSpaceSockets.forEach(socketId => {
+            RED.log.debug('Disconnecting: ' + socketId)
             ioNs.connected[socketId].disconnect() // Disconnect Each socket
         })
     }
     ioNs.removeAllListeners() // Remove all Listeners for the event emitter
     delete io.nsps[node.ioNamespace] // Remove from the server namespaces
-    connectedClients[node.id] = []
-
+    
     // We need to remove the app.use paths too. This code borrowed from the http nodes
     app._router.stack.forEach(function(route,i,routes) {
         if ( route.route && route.route.path === node.url ) {
