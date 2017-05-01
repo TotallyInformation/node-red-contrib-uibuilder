@@ -17,17 +17,22 @@
 <script type="text/javascript">
     RED.nodes.registerType( 'uibuilder', {
         category: 'UI Builder',
-        color: 'rgb(65, 184, 131)',
+        color: '#E6E0F8',
         defaults: {
             name: { value: '' },
-            url: { value: 'uibuilder' },
+            url: { value: 'uibuilder' }, // TODO: needs validation
+            fwdInMessages: { value: false },
+            customFoldersReqd: { value: true },
         },
         inputs: 1,
         outputs: 1,
         icon: "ui_template.png",
         paletteLabel: 'UI Builder',
         label: function() { return this.url || this.name || 'UI Builder'; },
-        //oneditprepare: function() {},
+        oneditprepare: function() {
+            $("#node-input-fwdInMessages").prop('checked', this.fwdInMessages)
+            $("#node-input-customFoldersReqd").prop('checked', this.customFoldersReqd)
+        },
         //oneditsave: function() { },
         //oneditresize: function(size) { },
         // Do any setup when node added to palette
@@ -48,32 +53,105 @@
         <input type="text" id="node-input-url">
     </div>
 
+    <div class="form-row">
+        <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-fwdInMessages" style="width: 70%;">Forward recieved messages direct to output?</label>
+    </div>
+
+    <div class="form-row">
+        <input type="checkbox" id="node-input-customFoldersReqd" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-customFoldersReqd" style="width: 70%;">Use resources in custom folder?</label>
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="uibuilder">
     <p>Creates a UI at a given URL</p>
     <p style="border:2px solid red;color:red;margin:.5em;padding:.5em;">
-        This node is in ALPHA.
+        This node is in ALPHA. Currently no security on Socket.IO
     </p>
     <p>
         This node can be used to create a dynamic user interface that can recieve and send back messages to Node-RED using a websocket connection.
-        It creates a file/folder structure for you.
+        It creates a file/folder structure for you that can be used to deliver static resources (html, css, js, images, etc).
     </p>
 
     <h3>Inputs</h3>
-
+    <dl class="message-properties">
+        <dt class="optional">payload <span class="property-type">(string | buffer)</span></dt>
+        <dd> Optionally, the payload of the message to publish. </dd>
+        <dt class="optional">topic <span class="property-type">(string)</span></dt>
+        <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+    </dl>
 
     <h3>Outputs</h3>
-
+    <ol class="node-ports">
+        <li>Standard output
+            <dl class="message-properties">
+                <dt>_msgcounter <span class="property-type">(integer)</span></dt>
+                <dd>
+                    The number of messages recieved by the node instance since either the last reset of Node-RED or the last deployment of the node instance.
+                </dd>
+                <dt>payload <span class="property-type">(string | buffer)</span></dt>
+                <dd>
+                    A copy of any inbound payload unless altered by the front-end page.
+                </dd>
+                <dt>topic <span class="property-type">(string)</span></dt>
+                <dd>
+                    A copy of any inbound topic if present. Otherwise, the topic from the node's settings. Could be changed by the front-end
+                    page but it really isn't recommended.
+                </dd>
+            </dl>
+        </li>
+    </ol>
 
     <h3>Node Settings</h3>
-    <h4>Name</h4>
-    <p>A short description shown in the admin interface</p>
-    <h4>Library (icon)</h4>
-    <p>Save or retrieve template from library</p>
-    <h4>URL</h4>
+    <dl>
+        <dt>Name</dt>
+        <dd>A short description shown in the admin interface</dd>
+        <dt>Topic</dt>
+        <dd>A topic name to use if the incoming msg does not contain one.</dd>
+        <dt>URL</dt>
+        <dd>
+            The URL path that the resulting page and other resources will be served from.
+            Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
+            and port. Will also be prefixed by the Node-RED setting 
+        </dd>
+        <dt>Forward recieved messages direct to output?</dt>
+        <dd>
+            Forward's a copy of every recieved message direct to the output.
+            Adds the topic from the above setting if one isn't present in the msg.
+            <p>
+                <i>Note</i> that this may result in multiple output messages if your front-end
+                code also auto-sends inbound messages.
+            </p>
+        </dd>
+        <dt>Use resources in custom folder?</dt>
+        <dd>
+            Will add the folders either from <code>&lt;userDir>/uibuider/&lt;url>/dist</code> or
+            from <code>&lt;userDir>/uibuider/&lt;url>/src</code>. Also adds any vendor modules
+            if specified in <code>settings.js</code> under the <code>uibuilder.userVendorPackages</code>
+            setting.
+        </dd>
+    </dl>
+
+    <h3>Node-RED Settings</h3>
+    <p>
+        This node is able to use some settings from <code>settings.js</code>.
+        The main setting object is <code>uibuilder</code>
+    </p>
+    <dl>
+        <dt>uibuilder.userVendorPackages <span class="property-type">(list)</span></dt>
+        <dd>
+            A list of package names that must match the folder name of an npm package
+            installed in the <code>userDir</code> of Node-RED. These will be added to
+            the list of statically served resource folders <b>if</b> the local <code>src</code>
+            folder is being used and the "Use resources in custom folder?" setting is checked.
+        </dd>
+    </dl>
 
     <h3>File/Folder Structure</h3>
+    <p>
+        For more information, see the GitHub page for <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
+    </p>
 
 
     <h3>Details</h3>

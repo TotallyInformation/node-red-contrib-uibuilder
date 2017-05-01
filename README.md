@@ -3,7 +3,8 @@
 An EXPERIMENTAL Node-RED web user interface builder.
 
 Designed as an *experimental* alternative to the Node-RED Dashboard. Be warned that this project is
-currently very much **alpha** quality. It should pretty much work but only in a limited way.
+currently very much **alpha** quality. It should pretty much work but only in a limited way. See
+the *[Known Issues](#known-issues)* and *[To Do](#to-do)* sections below for what might not yet be working.
 
 The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL that
  is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
@@ -30,88 +31,112 @@ Any msg sent to the node is forwarded directly to the front-end and is available
 as it would be in Node-RED, use the `msgSend` function to send a message back to Node-RED that
 will be passed downstream from the node.
 
+You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any recieved messages back to Node-RED (including control messages).
+
+Just make a copy of the `index.html` and `index.js` files from the mast `src` folder to the local `src` folder.
+See the *[Preference Tree](#preference-tree)* and other sections below for how to find these.
+
 ## Design
 
-- A single node is used to define an end-point (by its URL path)
-- The node can be included as many times as you like - but each **must** have a unique URL path name
-- Each node instance will have its own, dedicated Socket.IO connection (using Socket.IO namespacing)
-- The node's module contains default html, JavaScript and CSS files that are used as master templates
-- On deployment of the first instance, a new folder is created within your Node-RED user directory 
-  (typically `~/.node-red`) with a fixed name of `uibuilder`
-- On deployment of any new instance, a new sub-folder within `uibuilder` is created. The name is the same as the
-  URL path specified in the node instance's settings. (defaults to `uibuilder`)
-- Any resource (html, css, js, image, etc) placed within this sub-folder is available to the browser
-  client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above)
-- Any resource in this sub-folder that has the same name as resources in other resource paths will be
-  given preference - see *Preference Tree* below.
-- Each node instance gets its own Socket.IO namespace matching the URL path setting. Note that Socket.IO
-  will efficiently share sockets while keeping traffic separated by namespace
-- Any msg sent to a node instance is sent through unchanged to the UI via Socket.IO. NOTE that this may present
-  security and/or performance issues. In particular, you should remove msg.res and msg.req objects as they
-  are both very large and often contain circular references
-- Users can install front-end libraries using npm, these can be accessed in front-end code
-  via the "vendor" path, see below. The list of libraries made available is set via
-  Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
+- A single node is used to define an end-point (by its URL path).
+- The node can be included in flows as many times as you like - but each instance **must** have a unique
+  URL path name.
+- Each node instance gets its own Socket.IO namespace matching the URL path setting.  
+  Note that Socket.IO will efficiently share sockets while keeping traffic separated by namespace.
+- The node's module contains default html, JavaScript and CSS files that are used as master templates.
+- On deployment of the *first* instance, a new folder is created within your Node-RED user directory 
+  (typically `~/.node-red`) with a fixed name of `uibuilder`.
+- On deployment of any new instance, a new sub-folder within `uibuilder` is created. The name is the same
+  as the URL path specified in the node instance's settings. (defaults to `uibuilder`). `src` and `dist` sub-folders are also created.
+- If the `dist` folder contains an `index.html` file, the `dist` folder will be used, otherwise the `src`
+  folder will be used.
+- Any resource (html, css, js, image, etc) placed within the `dist`/`src` sub-folder is available to the
+  browser client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above).
+- Any resource in the `dist`/`src` sub-folder that has the same name as resources in other resource
+  paths (such as the master resource path) will be given preference - see *Preference Tree* below.
+- Any msg sent to a node instance is sent through to the UI via Socket.IO. If `topic` is set in settings
+  and not in the `msg`, the version from settings will be added.  
+  NOTE that this may present security and/or performance issues. In particular, you should remove msg.res and msg.req objects as they are both very large and often contain circular references.
+- Users can install front-end libraries using npm into their `userDir` folder. If using the `src`
+  sub-folder, these can be accessed in front-end code via the "vendor" path, see below. The list of user libraries made available is given via Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
+- Eventually, a link to webpack will be provided to enable packing/compiling of `src` code to `dist`.
+  This will enable front-end code to use non-native libraries such as JSX, ES6, Foundation, etc.
 
 ## Preference Tree
 
-This node adds a number of resource locations (physical file-system locations) to the URL path 
-(default `/uibuilder`) defined. It is up to the user to ensure that file/folder names do not clash. 
+The uibuilder node adds a number of statically served web resource locations (physical file-system locations) to the URL path (default `/uibuilder`) defined. It is up to the user to ensure that file/folder names do not clash. 
 
 The order of preference is as follows:
 
-1. The `dist` folder within the node instance URL setting (default: `uibuilder`, default physical location: `~/.node-red\uibuilder\uibuilder\dist`)
+1. The `dist` folder within the node instance URL setting (default: `uibuilder`, default physical location: `~/.node-red/uibuilder/uibuilder/dist`)
 
    *only added if index.html exists in this folder*
-2. The `src` folder within the node instance URL setting (default: `uibuilder`, default physical location: `~/.node-red\uibuilder\uibuilder\src`)
+
+2. The `src` folder within the node instance URL setting (default: `uibuilder`, default physical location: `~/.node-red/uibuilder/uibuilder/src`)
 
    *only added if index.html DOES NOT exist in the dist folder*
 
-   In this case, an optional node configuration variable is used to provide a list of package names
-   that will be added to the `vendor` sub-path of the URL so that users can install their own
-   front-end libraries. This is only added when not using the dist folder as that is expected to have
-   all of the vendor code compiled together using webpack. 
-3. The node installations `dist` folder (default physical location: `~/.node-red\node_modules\node-red-contrib-uibuilder\nodes\dist`)
+   In this case, an optional node configuration variable (`uibuilder.userVendorPackages`) is used to provide a list of package names that will be added to the `vendor` sub-path of the URL so that users can install their own front-end libraries. This is only added when not using the dist folder as that is expected to have all of the vendor code compiled together using webpack. 
+
+3. The node installations `dist` folder (default physical location: `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/dist`)
 
    *only added if index.html exists in this folder*
-4. The node installations `src` folder (default physical location: `~/.node-red\node_modules\node-red-contrib-uibuilder\nodes\src`)
+
+4. The node installations `src` folder (default physical location: `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/src`)
 
    *only added if index.html DOES NOT exist in the dist folder*
 
    In this case, the `vendor` subpath will be available with some pre-installed vendor packages.
    Currently `normalize.css` and `jquery`.
-In addition, this node uses the httpNodeMiddleware Node-RED setting allowing for ExpressJS middleware to be used.
-For example, for implementing user security.
+
+In addition, this node uses the httpNodeMiddleware Node-RED setting allowing for ExpressJS middleware to be used. For example, implementing user security.
 
 ### Front-end path summary
 
 Front-end files in `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/src/` may use the
 url paths:
 
-- `[/<httpNodeRoot>]/<url>/` - for most things (e.g. `<script src="index.js"></script>`)
-- `vendor` - for things like normalize.css (e.g. `<link rel="stylesheet" href="vendor/normalize.css/normalize.css">`)
-- `<script src="/socket.io/socket.io.js"></script>` for socket.io
+- `[/<httpNodeRoot>]/<url>/` - for most things  
+  e.g. `<script src="index.js"></script>`
+- `vendor` - for things like normalize.css & JQuery and other front-end libraries installed using
+  npm either by this module or as packages in your `userDir`  
+  e.g. `<link rel="stylesheet" href="vendor/normalize.css/normalize.css">`
+- `<script src="/uibuilder/socket.io/socket.io.js"></script>` - for socket.io   
+  The static /uibuilder prefix is used here to ensure all instances of clients for this node
+  use the same, correct, instance of socket.io
 
 ### Physical file/folder location summary
 
 Folders and files for resources on the device running Node-RED are:
 
-- `<userDir>\uibuilder\<url>\src\` - local source files for front-end use (e.g. html, js, css)
-- `<userDir>\uibuilder\<url>\dist\` - local compiled files for front-end use
-- `<userDir>\node_modules\node-red-contrib-uibuilder\nodes\src\` - this modules source files for front-end use (e.g. html, js, css)
-- `<userDir>\node_modules\node-red-contrib-uibuilder\nodes\dist\` - this modules compiled files for front-end use
+- `<userDir>/uibuilder/<url>/src/` - local source files for front-end use (e.g. html, js, css)
+- `<userDir>/uibuilder/<url>/dist/` - local compiled files for front-end use
+- `<userDir>/node_modules/node-red-contrib-uibuilder/nodes/src/` - this modules source files for front-end use (e.g. html, js, css)
+- `<userDir>/node_modules/node-red-contrib-uibuilder/nodes/dist/` - this modules compiled files for front-end use
+- `<userDir>/node_modules/<package-name>` - when included via the `uibuilder.userVendorPackages` global
+  setting (in `settings.js`).   
+  Note that each package will have its own folder structure that you will need to understand in order to use the package in the browser. These are often poorly documented.
 
 ## Known Issues
 
-- On redeploy, existing clients do not reconnect, page has to be reloaded. Works if NR is restarted.
+- **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care about
+  the data you are passing back and forth.
+- Workaround applied: Client tries to reconnect with increasing timeouts. ~~On redeploy, existing
+  clients do not reconnect, page has to be reloaded. Works if NR is restarted.~~
+- Uniqueness of the URL is not validated for multiple instances, could cause some "interesting" effects!
+- Currently, when you send a msg to a node instance, the msg is sent to **all** front-end clients
+  connected to that url. There is, as yet, no way to send to a single front-end client.
+- Currently the _forward_ setting does nothing.
 
 ## To Do
 
-- Add control msgs from server to client on closedown of server (e.g. for redeploy)
-- Add logic to client to start retrying to connect after server closedown
-- Add topic to node config
-- Add userVendorPackages to node config
-- Copy template files to local override folder if not already existing
+- Add validation to `url` setting   
+  Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
+- Allow websocket messages to an individual front-end instance by including the socket ID in the output msg
+- Implement forward input to output
+- Add safety validation checks to `msg` before allowing it to be sent/recieved to/from front-end
+- Add integrated ExpressJS security to Socket.IO
+- Process `httpNodeAuth`
 - Add FE code to enable easier integration with user-supplied function on receipt of msg.
   Maybe a global fn name or msg.prototype?
 - Tidy front-end JS code to make integration easier
@@ -119,19 +144,26 @@ Folders and files for resources on the device running Node-RED are:
   of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
 - Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
   the file system
-- Add integrated ExpressJS security to Socket.IO
-- Check code for [Dashboard node](https://github.com/node-red/node-red-dashboard/blob/master/ui.js) to see if 
-  there is anything useful we can include here
-- Check code for [http in node](https://github.com/node-red/node-red/blob/master/nodes/core/io/21-httpin.js) to see if 
-  there is anything useful we can include here
-- Process `httpNodeAuth`
+- *Copy template files to local override folder if not already existing*?
 - *(Maybe compile template resources to dist folder?)*
-- Add a check for new file changes in local `src` folder.
-
+- Add a check for new file changes in local `src` folder   
   For now, will rely on users creating `.recompile` flag file in
-  local `src` folder. 
+  local `src` folder. *(not yet implemented)*
+- Add additional standard front-end libraries such as: [RiotJS](http://riotjs.com/) (lightweight
+  UI library, REACT-like but only 10k), [Tachyons.IO](http://tachyons.io) (Lightweight style library, responsive, accessible, modular, readable, performant, 14k)
 
 ## Changes
+
+v0.1.4
+
+- Add logic to client to start retrying to connect after server closedown
+- Final code and text tidying ready for wider use
+
+v0.1.3
+
+- Add control msgs from server to client on closedown of server (e.g. for redeploy)
+- Add topic to node config
+- Add userVendorPackages to node config
 
 v0.1.2
 
@@ -141,10 +173,15 @@ v0.1.0
 
 - Initial release to npm. Socket.IO namespace working, src/dist folders available and working. Only the most basic front-end template included.
 
-## Pre-requisites
+## Dependencies
 
-See the package.json file. Currently Socket.IO, normalize.css, serve.static and webpack are installed along
-with the node.
+See the package.json file. Currently:
+
+- [normalize.css](https://necolas.github.io/normalize.css/) - front-end only
+- [JQuery](https://jquery.com/) - front-end only
+- [Socket.IO](https://socket.io/) - front-end and server
+- [serve.static](https://github.com/expressjs/serve-static) - server only
+- [webpack v2](https://webpack.github.io/) - server only
 
 ## Install
 
@@ -171,13 +208,27 @@ Only used in the Node-RED admin UI.
 
 Only used if an inbound msg does not contain a topic attribute. Passed on to client UI upon receipt of a msg.
 
-### `url` (required)
+### `url` (required, default = 'uibuilder')
 
-The path used to access the user interface that this node builds. Defaults to `uibuilder`.
+The path used to access the user interface that this node builds.
 So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are defined (in Node-RED's `settings.js` file), the URL of the default interface would be `http://localhost:1880/uibuilder`
 
 **It is up to the flow author to ensure that no duplicate names are used, the node
 does not check or enforce uniqueness.**
+
+### Forward recieved messages direct to output? (default = false)
+
+Forward's a copy of every recieved message direct to the output.
+Adds the topic from the above setting if one isn't present in the msg.
+
+_Note_ that this may result in multiple output messages if your front-end code also auto-sends inbound messages.
+
+### Use resources in custom folder? (default = true)
+
+Will add the folders either from <code>&lt;userDir>/uibuider/&lt;url>/dist</code> or
+from <code>&lt;userDir>/uibuider/&lt;url>/src</code>. Also adds any vendor modules
+if specified in <code>settings.js</code> under the <code>uibuilder.userVendorPackages</code>
+setting.
 
 ### `userVendorPackages` (optional)
 

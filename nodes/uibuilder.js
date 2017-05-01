@@ -34,7 +34,6 @@ const vendorPackages = [
 
 // We want these to track across redeployments
 // if OK to reset on redeployment, attach to node.xxx inside nodeGo instead.
-var connectedClients = {}
 var deployments = {}
 
 // Will we use "compiled" version of module front-end code?
@@ -53,18 +52,25 @@ module.exports = function(RED) {
     RED.log.audit({'uibuilder': 'Socket.IO initialisation', 'Socket Path': urlJoin(moduleName, 'socket.io')})
     var io = socketio.listen(RED.server, {'path': urlJoin(moduleName, 'socket.io')}) // listen === attach
     io.set('transports', ['polling', 'websocket'])
-/*
+
     // Check that all incoming SocketIO data has the IO cookie
     // TODO: Needs a bit more work to add some real security - should it be on ioNs?
     io.use(function(socket, next){
+        /* Some SIO related info that might be useful in security checks
+            //console.log('--socket.request.connection.remoteAddress--')
+            //console.dir(socket.request.connection.remoteAddress)
+            //console.log('--socket.handshake.address--')
+            //console.dir(socket.handshake.address)
+            //console.dir(io.sockets.connected)
+        */
         if (socket.request.headers.cookie) {
-            RED.log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
-            console.dir(socket.request.headers.cookie)  // socket.handshake.headers.cookie
+            //RED.log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
+            //console.dir(socket.request.headers.cookie)  // socket.handshake.headers.cookie
             return next()
         }
         next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
     })
-*/
+
     function nodeGo(config) {
         // Create the node
         RED.nodes.createNode(this, config)
@@ -76,10 +82,10 @@ module.exports = function(RED) {
         // NB: node.id and node.type are also available
         node.name   = config.name || ''
         node.topic  = config.topic || ''
-        // TODO: This needs to be limited to a single path element?
+        // TODO: Needs validation as a suitable URL path
         node.url    = config.url  || 'uibuilder'
         node.fwdInMessages = config.fwdInMessages || true
-        node.customFoldersReqd = config.customFoldersReqd || false
+        node.customFoldersReqd = config.customFoldersReqd || true
 
         // User supplied vendor packages - ONLY if curtomFoldersReqd
         // & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
@@ -100,21 +106,18 @@ module.exports = function(RED) {
         node.ioNamespace = '/' + trimSlashes(node.url)
 
         // Set to true if you want additional debug output to the console
-        const debug = RED.settings.uibuilder.debug || true
+        const debug = RED.settings.uibuilder.debug || false
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
         if ( deployments.hasOwnProperty(node.id) ) deployments[node.id]++
         else deployments[node.id] = 1
 
-        console.log( 'Deployments: ' + deployments[node.id] + ', List of connected clients: ' )
-        console.dir( connectedClients[node.id] )
-
         // We need an http server to serve the page
         const app = RED.httpNode || RED.httpAdmin
 
         // Use httNodeMiddleware function which is defined in settings.js
-        // as for the http in/out nodes
+        // as for the http in/out nodes - normally used for authentication
         var httpMiddleware = function(req,res,next) { next() }
         if (RED.settings.httpNodeMiddleware) {
             if ( typeof RED.settings.httpNodeMiddleware === 'function' ) {
@@ -122,9 +125,7 @@ module.exports = function(RED) {
             }
         }
         
-        // This ExpressJS middleware runs when the vueui page loads - we'll use it at some point
-        // maybe to pass a "room" name in custom header for IO to use
-        // so that we can have multiple pages served
+        // This ExpressJS middleware runs when the uibuilder page loads
         // @see https://expressjs.com/en/guide/using-middleware.html
         function localMiddleware (req, res, next) {
             // Tell the client what namespace to use, trim the leading slash because the cookie will
@@ -166,13 +167,15 @@ module.exports = function(RED) {
                 }
             }
             // Add static path for local custom files
+            // TODO: need a build capability for dist - nb probably keep vendor and private code separate
             fs.stat(path.join(node.customFolder, 'dist', 'index.html'), function(err, stat) {
                 if (!err) {
                     // If the ./dist/index.html exists use the dist folder... 
+                    RED.log.audit({ 'UIbuilder': node.url + ' Using local dist folder' });
                     app.use( urlJoin(node.url), serveStatic( path.join(node.customFolder, 'dist') ) );
                 } else {
                     // ... otherwise, use dev resources at ./src/
-                    debug && RED.log.audit({ 'UIbuilder': node.url+' Using local development folder' });
+                    RED.log.audit({ 'UIbuilder': node.url + ' Using local src folder and user specified vendor packages' });
                     app.use( urlJoin(node.url), serveStatic( path.join(node.customFolder, 'src') ) );
                     // Include vendor resource source paths if needed
                     node.userVendorPackages.forEach(function (packageName) {
@@ -187,12 +190,12 @@ module.exports = function(RED) {
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
         if (useCompiledCode) {
-            debug && RED.log.audit({ 'UIbuilder': node.url+' Using production build folder' })
+            debug && RED.log.audit({ 'UIbuilder': node.url+' Using master production build folder' })
             // If the ./dist/index.html exists use the dist folder... 
             app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'dist' ) ) )
         } else {
             // ... otherwise, use dev resources at ./src/
-            debug && RED.log.audit({ 'UIbuilder': node.url+' Using development folder' })
+            debug && RED.log.audit({ 'UIbuilder': node.url+' Using master src folder and master vendor packages' })
             app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'src' ) ) )
             // Include vendor resource source paths if needed
             vendorPackages.forEach(function (packageName) {
@@ -216,41 +219,23 @@ module.exports = function(RED) {
         // Each deployed instance has it's own namespace
         var ioNs = io.of(node.ioNamespace)
 
-        if ( ! connectedClients.hasOwnProperty(node.id) ) {
-            connectedClients[node.id] = []
-        }
-
-        debug && console.log('Number of connected clients: ' + connectedClients[node.id].length)
-
         // When someone loads the page, it will try to connect over Socket.IO
         // note that the connection returns the socket instance to monitor for responses from 
         // the ui client instance
         ioNs.on('connection', function(socket) {
             node.ioClientsCount++
 
-            // This survives a redeploy
-            connectedClients[node.id].push( socket.id )
-            //connectedClients[node.id].push( { 
-            //    id: socket.id, 
-            //    address: socket.request.connection.remoteAddress
-            //} )
-
-            RED.log.debug( 
+            debug && RED.log.debug( 
                 `UIbuilder: ${node.url} Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
             )
             setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
-            //console.log('--socket.request.connection.remoteAddress--')
-            //console.dir(socket.request.connection.remoteAddress)
-            //console.log('--socket.handshake.address--')
-            //console.dir(socket.handshake.address)
-            //console.dir(io.sockets.connected)
 
             // Let the clients know we are connecting
             ioNs.emit( node.ioChannels.control, { 'type': 'server connected' } )
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
-                RED.log.debug( 
+                debug && RED.log.debug( 
                     `UIbuilder: ${node.url}, Data recieved from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}, Msg: ${msg.payload}`
                 )
 
@@ -269,7 +254,7 @@ module.exports = function(RED) {
 
             socket.on('disconnect', function(reason) {
                 node.ioClientsCount--
-                RED.log.debug(
+                debug && RED.log.debug(
                     `UIbuilder: ${node.url} Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
                 )
                 setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
@@ -390,12 +375,9 @@ function processClose(done = null, node, RED, ioNs, io, app) {
     // WARNING: TODO: If we do this, a client cannot reconnect after redeployment
     //                so the user has to reload the page
     //  They have to do this at the moment anyway so might as well.
-    RED.log.debug(connectedClients[node.id])
     const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
-    RED.log.debug(connectedNameSpaceSockets)
     if ( connectedNameSpaceSockets.length >0 ) {
         connectedNameSpaceSockets.forEach(socketId => {
-            RED.log.debug('Disconnecting: ' + socketId)
             ioNs.connected[socketId].disconnect() // Disconnect Each socket
         })
     }
