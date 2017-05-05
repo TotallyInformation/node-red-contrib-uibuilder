@@ -127,6 +127,9 @@ Folders and files for resources on the device running Node-RED are:
 - Currently, when you send a msg to a node instance, the msg is sent to **all** front-end clients
   connected to that url. There is, as yet, no way to send to a single front-end client.
 - Currently the _forward_ setting does nothing.
+- Currently, it doesn't appear possible to remove routes from Express v4 dynamically.   
+  Some get removed and some don't, it's about the best I can do unless someone has a better idea.
+  This means that you get redundant routes when you redeploy the node instance. Doesn't affect running but probably uses memory.
 
 ## To Do
 
@@ -153,6 +156,10 @@ Folders and files for resources on the device running Node-RED are:
   UI library, REACT-like but only 10k), [Tachyons.IO](http://tachyons.io) (Lightweight style library, responsive, accessible, modular, readable, performant, 14k)
 
 ## Changes
+
+v0.2.0
+
+- Fixed incorrect app.use logic which meant that the tree order was incorrect. Also improved app.use removal though still not perfect, seems to be a limitation of ExpressJS v4
 
 v0.1.4
 

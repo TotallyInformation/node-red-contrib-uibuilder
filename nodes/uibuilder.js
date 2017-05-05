@@ -48,7 +48,7 @@ fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
 })
 
 module.exports = function(RED) {
-    'use strict';
+    'use strict'
 
     // Holder for Socket.IO - we want this to survive redeployments of each node instance
     // so that existing clients can be reconnected.
@@ -101,6 +101,8 @@ module.exports = function(RED) {
         //   Files in this folder are also served to URL but take preference
         //   over those in the nodes folders (which act as defaults)
         node.customFolder = path.join(node.customAppFolder, node.url)
+        // Use custom dist folder? (if not, will use custom src fldr)
+        node.customFolderDist = false
 
         // Socket.IO config
         node.ioClientsCount = 0 // how many Socket clients connected to this intance?
@@ -111,7 +113,7 @@ module.exports = function(RED) {
         node.ioNamespace = '/' + trimSlashes(node.url)
 
         // Set to true if you want additional debug output to the console
-        const debug = RED.settings.uibuilder.debug || false
+        const debug = RED.settings.uibuilder.debug || true
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
@@ -173,35 +175,36 @@ module.exports = function(RED) {
             }
             // Add static path for local custom files
             // TODO: need a build capability for dist - nb probably keep vendor and private code separate
-            fs.stat(path.join(node.customFolder, 'dist', 'index.html'), function(err, stat) {
-                if (!err) {
-                    // If the ./dist/index.html exists use the dist folder... 
-                    RED.log.audit({ 'UIbuilder': node.url + ' Using local dist folder' });
-                    app.use( urlJoin(node.url), serveStatic( path.join(node.customFolder, 'dist') ) );
-                } else {
-                    // ... otherwise, use dev resources at ./src/
-                    RED.log.audit({ 'UIbuilder': node.url + ' Using local src folder and user specified vendor packages' });
-                    app.use( urlJoin(node.url), serveStatic( path.join(node.customFolder, 'src') ) );
-                    // Include vendor resource source paths if needed
-                    node.userVendorPackages.forEach(function (packageName) {
-                        //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
-                        app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', '..', packageName)) );
-                    })
-                }
-            })
+            var customStatic = function(req,res,next) { next() }
+            var stats
+            try {
+                stats = fs.fstatSync( path.join(node.customFolder, 'dist', 'index.html') )
+                // If the ./dist/index.html exists use the dist folder... 
+                RED.log.audit({ 'UIbuilder': node.url + ' Using local dist folder' })
+                customStatic = serveStatic( path.join(node.customFolder, 'dist') )
+            } catch (e) {
+                RED.log.audit({ 'UIbuilder': node.url + ' Using local src folder and user specified vendor packages' });
+                customStatic = serveStatic( path.join(node.customFolder, 'src') )
+                // Include vendor resource source paths if needed
+                node.userVendorPackages.forEach(function (packageName) {
+                    //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
+                    app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(RED.settings.userDir, 'node_modules', packageName)) );
+                })                
+            }
         }
         // -------------------------------------------------- //
         
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
+        var masterStatic = function(req,res,next) { next() }
         if (useCompiledCode) {
             debug && RED.log.audit({ 'UIbuilder': node.url+' Using master production build folder' })
             // If the ./dist/index.html exists use the dist folder... 
-            app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'dist' ) ) )
+            masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
         } else {
             // ... otherwise, use dev resources at ./src/
             debug && RED.log.audit({ 'UIbuilder': node.url+' Using master src folder and master vendor packages' })
-            app.use( urlJoin(node.url), httpMiddleware, localMiddleware, serveStatic( path.join( __dirname, 'src' ) ) )
+            masterStatic = serveStatic( path.join( __dirname, 'src' ) )
             // Include vendor resource source paths if needed
             vendorPackages.forEach(function (packageName) {
                 //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
@@ -209,7 +212,9 @@ module.exports = function(RED) {
             })
         }
 
-        const fullPath = urlJoin( RED.settings.httpNodeRoot, node.url );
+        app.use( urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
+
+        const fullPath = urlJoin( RED.settings.httpNodeRoot, node.url )
         if ( node.customFoldersReqd ) {
             RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
             RED.log.info('UI Builder - Local file overrides at ' + node.customFolder)
@@ -217,6 +222,14 @@ module.exports = function(RED) {
             RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
             RED.log.info('UI Builder - Local file overrides not requested')
         }
+
+        //console.dir(app._router.stack)
+        //if (debug && process.env.NODE_ENV === 'development') { // Only in dev environment
+            // Absolute path to output file
+            //var filepath = path.join(__dirname, './routes.generated.txt')
+            // Invoke express-print-routes
+            //require('express-print-routes')(app, filepath)
+        //}
 
         // We only do the following if io is not already assigned (e.g. after a redeploy)
         setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
@@ -349,7 +362,7 @@ module.exports = function(RED) {
 
     // Register the node by name. This must be called before overriding any of the
     // Node functions.
-    RED.nodes.registerType(moduleName, nodeGo);
+    RED.nodes.registerType(moduleName, nodeGo)
 }
 
 // ========== UTILITY FUNCTIONS ================ //
@@ -389,12 +402,31 @@ function processClose(done = null, node, RED, ioNs, io, app) {
     ioNs.removeAllListeners() // Remove all Listeners for the event emitter
     delete io.nsps[node.ioNamespace] // Remove from the server namespaces
     
-    // We need to remove the app.use paths too. This code borrowed from the http nodes
-    app._router.stack.forEach(function(route,i,routes) {
-        if ( route.route && route.route.path === node.url ) {
-            routes.splice(i,1)
+    // We need to remove the app.use paths too. 
+    // NOTE: Nope, this works better than the original but it doesn't remove everything for some
+    //       odd reason. Looks like Express REALLY doesn't like dynamic route removal & we will
+    //       just have to live with it!
+    var urlRe = new RegExp('^' + escapeRegExp('/^\\' + urlJoin(node.url)) + '.*$');
+    //console.log(urlRe.toString())
+    app._router.stack.forEach( function(r, i, stack) {
+        //let rUrl = urlJoin( r.regexp.toString().replace(/^\/\^\\\//, '').replace(/\\\/\?\(\?\=\\\/\|\$\)\/i$/, '').replace(/\\\/vendor\\\/.*$/, '') )
+        let rUrl = r.regexp.toString().replace(urlRe, '')
+        //console.log(`${rUrl === r.regexp.toString()} :: ${r.regexp.toString() === urlRe.toString()} :: ${rUrl} :: ${r.regexp.toString()}`)
+        if ( rUrl === '' ) {
+            //console.log('GOING! ' + r.regexp.toString())
+            app._router.stack.splice(i,1)
         }
-    });
+    })
+
+    /*
+        // This code borrowed from the http nodes
+        // TODO: THIS DOESN'T ACTUALLY WORK!!! Static routes don't set route.route
+        app._router.stack.forEach(function(route,i,routes) {
+            if ( route.route && route.route.path === node.url ) {
+                routes.splice(i,1)
+            }
+        });
+    */
 
     // This should be executed last if present. `done` is the data returned from the 'close'
     // event and is used to resolve async callbacks to allow Node-RED to close
@@ -418,6 +450,11 @@ function trimSlashes(str) {
 function urlJoin() {
     var paths = Array.prototype.slice.call(arguments);
     return '/'+paths.map(function(e){return e.replace(/^\/|\/$/g,'');}).filter(function(e){return e;}).join('/');
+}
+
+//from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 // EOF
