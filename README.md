@@ -2,9 +2,8 @@
 
 An EXPERIMENTAL Node-RED web user interface builder.
 
-Designed as an *experimental* alternative to the Node-RED Dashboard. Be warned that this project is
-currently very much **alpha** quality. It should pretty much work but only in a limited way. See
-the *[Known Issues](#known-issues)* and *[To Do](#to-do)* sections below for what might not yet be working.
+Designed as an *experimental* alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)* 
+and *[To Do](#to-do)* sections below for what might still need some work.
 
 The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL that
  is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
@@ -120,12 +119,13 @@ Folders and files for resources on the device running Node-RED are:
 ## Known Issues
 
 - **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care about
-  the data you are passing back and forth.
+  the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request.
 - Workaround applied: Client tries to reconnect with increasing timeouts. ~~On redeploy, existing
   clients do not reconnect, page has to be reloaded. Works if NR is restarted.~~
 - Uniqueness of the URL is not validated for multiple instances, could cause some "interesting" effects!
 - Currently, when you send a msg to a node instance, the msg is sent to **all** front-end clients
-  connected to that url. There is, as yet, no way to send to a single front-end client.
+  connected to that url. There is, as yet, no way to send to a single front-end client. Once again, help to improve this would
+  be welcome.
 - Currently the _forward_ setting does nothing.
 - Currently, it doesn't appear possible to remove routes from Express v4 dynamically.   
   Some get removed and some don't, it's about the best I can do unless someone has a better idea.
@@ -156,6 +156,12 @@ Folders and files for resources on the device running Node-RED are:
   UI library, REACT-like but only 10k), [Tachyons.IO](http://tachyons.io) (Lightweight style library, responsive, accessible, modular, readable, performant, 14k)
 
 ## Changes
+
+v0.2.1
+
+- Tweak this readme as the node seems to work OK. Removing the _Alpha_ label. 
+  You should consider this suitable for general hobby use. Production use would need good testing before trying to rely on it.
+  Remember, this has been written just by me, I'm afraid I can provide no guarentees.
 
 v0.2.0
 
