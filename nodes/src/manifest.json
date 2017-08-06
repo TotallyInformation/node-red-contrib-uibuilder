@@ -1,7 +1,7 @@
 {
-    "name": "Node-RED VueUI",
-    "short_name": "VueUI",
-    "description": "A web template builder for Node-RED using VueJS",
+    "name": "Node-RED UI Builder",
+    "short_name": "uibuilder",
+    "description": "A web template builder for Node-RED",
     "display": "standalone",
     "lang": "en-GB",
     "start_url": "."

@@ -131,7 +131,7 @@ module.exports = function(RED) {
                 httpMiddleware = RED.settings.httpNodeMiddleware
             }
         }
-        
+
         // This ExpressJS middleware runs when the uibuilder page loads
         // @see https://expressjs.com/en/guide/using-middleware.html
         function localMiddleware (req, res, next) {
@@ -179,7 +179,7 @@ module.exports = function(RED) {
             var stats
             try {
                 stats = fs.fstatSync( path.join(node.customFolder, 'dist', 'index.html') )
-                // If the ./dist/index.html exists use the dist folder... 
+                // If the ./dist/index.html exists use the dist folder...
                 RED.log.audit({ 'UIbuilder': node.url + ' Using local dist folder' })
                 customStatic = serveStatic( path.join(node.customFolder, 'dist') )
             } catch (e) {
@@ -189,17 +189,17 @@ module.exports = function(RED) {
                 node.userVendorPackages.forEach(function (packageName) {
                     //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(RED.settings.userDir, 'node_modules', packageName)) );
-                })                
+                })
             }
         }
         // -------------------------------------------------- //
-        
+
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
         var masterStatic = function(req,res,next) { next() }
         if (useCompiledCode) {
             debug && RED.log.audit({ 'UIbuilder': node.url+' Using master production build folder' })
-            // If the ./dist/index.html exists use the dist folder... 
+            // If the ./dist/index.html exists use the dist folder...
             masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
         } else {
             // ... otherwise, use dev resources at ./src/
@@ -238,12 +238,12 @@ module.exports = function(RED) {
         var ioNs = io.of(node.ioNamespace)
 
         // When someone loads the page, it will try to connect over Socket.IO
-        // note that the connection returns the socket instance to monitor for responses from 
+        // note that the connection returns the socket instance to monitor for responses from
         // the ui client instance
         ioNs.on('connection', function(socket) {
             node.ioClientsCount++
 
-            debug && RED.log.debug( 
+            debug && RED.log.debug(
                 `UIbuilder: ${node.url} Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
             )
             setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
@@ -253,18 +253,23 @@ module.exports = function(RED) {
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
-                debug && RED.log.debug( 
+                debug && RED.log.debug(
                     `UIbuilder: ${node.url}, Data recieved from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}, Msg: ${msg.payload}`
                 )
 
+                // Make sure the incoming msg is a correctly formed Node-RED msg
                 switch ( typeof msg ) {
                     case 'string':
                     case 'number':
                     case 'boolean':
                         msg = { 'topic': node.topic, 'payload': msg}
                 }
-                // Add sending client id to msg
-                msg._socketId = socket.id
+
+                // If the sender hasn't added msg._clientId, add the Socket.id now
+                if ( ! msg.hasOwnProperty('_socketId') ) {
+                    msg._socketId = socket.id
+                }
+
                 // Send out the message for downstream flows
                 // TODO: This should probably have safety validations!
                 node.send(msg)
@@ -279,42 +284,42 @@ module.exports = function(RED) {
             })
 
             socket.on('error', function(err) {
-                RED.log.audit({ 
-                    'UIbuilder': node.url+' ERROR recieved', 'ID': socket.id, 
+                RED.log.audit({
+                    'UIbuilder': node.url+' ERROR recieved', 'ID': socket.id,
                     'Reason': err.message
-                })                
+                })
             })
 
             /* More Socket.IO events but we really don't need to monitor them
                 socket.on('disconnecting', function(reason) {
-                    RED.log.audit({ 
-                        'UIbuilder': node.url+' DISCONNECTING recieved', 'ID': socket.id, 
-                        'data': reason 
-                    })                
+                    RED.log.audit({
+                        'UIbuilder': node.url+' DISCONNECTING recieved', 'ID': socket.id,
+                        'data': reason
+                    })
                 })
                 socket.on('newListener', function(data) {
-                    RED.log.audit({ 
-                        'UIbuilder': node.url+' NEWLISTENER recieved', 'ID': socket.id, 
-                        'data': data 
-                    })                
+                    RED.log.audit({
+                        'UIbuilder': node.url+' NEWLISTENER recieved', 'ID': socket.id,
+                        'data': data
+                    })
                 })
                 socket.on('removeListener', function(data) {
-                    RED.log.audit({ 
-                        'UIbuilder': node.url+' REMOVELISTENER recieved', 'ID': socket.id, 
-                        'data': data 
-                    })                
+                    RED.log.audit({
+                        'UIbuilder': node.url+' REMOVELISTENER recieved', 'ID': socket.id,
+                        'data': data
+                    })
                 })
                 socket.on('ping', function(data) {
-                    RED.log.audit({ 
-                        'UIbuilder': node.url+' PING recieved', 'ID': socket.id, 
-                        'data': data 
-                    })                
+                    RED.log.audit({
+                        'UIbuilder': node.url+' PING recieved', 'ID': socket.id,
+                        'data': data
+                    })
                 })
                 socket.on('pong', function(data) {
-                    RED.log.audit({ 
-                        'UIbuilder': node.url+' PONG recieved', 'ID': socket.id, 
-                        'data': data 
-                    })                
+                    RED.log.audit({
+                        'UIbuilder': node.url+' PONG recieved', 'ID': socket.id,
+                        'data': data
+                    })
                 })
             */
 
@@ -401,8 +406,8 @@ function processClose(done = null, node, RED, ioNs, io, app) {
     }
     ioNs.removeAllListeners() // Remove all Listeners for the event emitter
     delete io.nsps[node.ioNamespace] // Remove from the server namespaces
-    
-    // We need to remove the app.use paths too. 
+
+    // We need to remove the app.use paths too.
     // NOTE: Nope, this works better than the original but it doesn't remove everything for some
     //       odd reason. Looks like Express REALLY doesn't like dynamic route removal & we will
     //       just have to live with it!
