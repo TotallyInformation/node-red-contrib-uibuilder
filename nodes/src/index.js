@@ -31,7 +31,7 @@ $( document ).ready(function() {
 
     // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
     socket = io(ioNamespace, {
-        path: '/uibuilder/socket.io', 
+        path: '/uibuilder/socket.io',
         transports: ['polling', 'websocket']
     })
 
@@ -52,19 +52,19 @@ $( document ).ready(function() {
         }
 
         // When Node-RED uibuilder template node sends a msg over Socket.IO...
-        socket.on(ioChannels.server, function(wsMsg) {
+        socket.on(ioChannels.server, function(recievedMsg) {
             debug && console.info('uibuilder:socket.connect:socket.on.data - msg received - Namespace: ' + ioNamespace)
             //console.dir(wsMsg)
 
             // Make sure that msg is an object & not null
-            if ( wsMsg === null ) {
-                wsMsg = {}
-            } else if ( typeof wsMsg !== 'object' ) {
-                wsMsg = { 'payload': wsMsg }
+            if ( recievedMsg === null ) {
+                recievedMsg = {}
+            } else if ( typeof recievedMsg !== 'object' ) {
+                recievedMsg = { 'payload': recievedMsg }
             }
 
             // Save the msg for further processing
-            msg = wsMsg
+            msg = recievedMsg
 
             // Track how many messages have been recieved
             msgCounter.data++
@@ -78,30 +78,29 @@ $( document ).ready(function() {
 
             // Test auto-response
             if (debug) {
-                wsMsg.payload = 'We got a message from you, thanks'
-                sendMsg(wsMsg)
+                sendMsg({payload: 'We got a message from you, thanks'})
             }
 
         }) // -- End of websocket recieve DATA msg from Node-RED -- //
 
         // Recieve a CONTROL msg from Node-RED
-        socket.on(ioChannels.control, function(wsMsg) {
+        socket.on(ioChannels.control, function(recievedCtrlMsg) {
             debug && console.info('uibuilder:socket.connect:socket.on.control - msg received - Namespace: ' + ioNamespace)
             //console.dir(wsMsg)
 
 
             // Make sure that msg is an object & not null
-            if ( wsMsg === null ) {
-                wsMsg = {}
-            } else if ( typeof wsMsg !== 'object' ) {
-                wsMsg = { 'payload': wsMsg }
+            if ( recievedCtrlMsg === null ) {
+                recievedCtrlMsg = {}
+            } else if ( typeof recievedCtrlMsg !== 'object' ) {
+                recievedCtrlMsg = { 'payload': recievedCtrlMsg }
             }
 
             msgCounter.control++
             $('#msgsControl').text(msgCounter.control)
-            $('#showMsg').text(JSON.stringify(wsMsg))
+            $('#showMsg').text(JSON.stringify(recievedCtrlMsg))
 
-            switch(wsMsg.type) {
+            switch(recievedCtrlMsg.type) {
                 case 'shutdown':
                     // We are shutting down
                     break
@@ -114,8 +113,7 @@ $( document ).ready(function() {
 
             // Test auto-response
             if (debug) {
-                wsMsg.payload = 'We got a control message from you, thanks'
-                sendMsg(wsMsg)
+                sendMsg({payload: 'We got a control message from you, thanks'})
             }
 
         }) // -- End of websocket recieve CONTROL msg from Node-RED -- //
@@ -176,13 +174,13 @@ $( document ).ready(function() {
 
 // ----- UTILITY FUNCTIONS ----- //
 // send a msg back to Node-RED, NR will generally expect the msg to contain a payload topic
-var sendMsg = function(msg) {
+var sendMsg = function(msgToSend) {
     // Track how many messages have been sent
     msgCounter.sent++
     $('#msgsSent').text(msgCounter.sent)
-    $('#showMsgSent').text(JSON.stringify(msg))
+    $('#showMsgSent').text(JSON.stringify(msgToSend))
 
-    socket.emit(ioChannels.client, msg)
+    socket.emit(ioChannels.client, msgToSend)
 } // --- End of Send Msg Fn --- //
 
 function readCookie(name,c,C,i){
