@@ -66,9 +66,6 @@
 
 <script type="text/x-red" data-help-name="uibuilder">
     <p>Creates a UI at a given URL</p>
-    <p style="border:2px solid red;color:red;margin:.5em;padding:.5em;">
-        This node is in ALPHA. Currently no security on Socket.IO
-    </p>
     <p>
         This node can be used to create a dynamic user interface that can recieve and send back messages to Node-RED using a websocket connection.
         It creates a file/folder structure for you that can be used to deliver static resources (html, css, js, images, etc).
@@ -113,7 +110,7 @@
         <dd>
             The URL path that the resulting page and other resources will be served from.
             Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
-            and port. Will also be prefixed by the Node-RED setting 
+            and port. Will also be prefixed by the Node-RED setting
         </dd>
         <dt>Forward recieved messages direct to output?</dt>
         <dd>
