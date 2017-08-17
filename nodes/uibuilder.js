@@ -1,3 +1,4 @@
+/*global RED */
 /**
  * Copyright (c) 2017 Julian Knight (Totally Information)
  *
@@ -94,7 +95,8 @@ module.exports = function(RED) {
 
         // User supplied vendor packages - ONLY if curtomFoldersReqd
         // & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
-        node.userVendorPackages = config.userVendorPackages || RED.settings.uibuilder.userVendorPackages || []
+        // JK @since 2017-08-17 fix for non-existent properties and use getProps()
+        node.userVendorPackages = getProps('userVendorPackages',config,null) || getProps('uibuilder.userVendorPackages',RED.settings,[])
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
         node.customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
         // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
@@ -112,8 +114,9 @@ module.exports = function(RED) {
         // Make sure each node instance uses a separate Socket.IO namespace
         node.ioNamespace = '/' + trimSlashes(node.url)
 
-        // Set to true if you want additional debug output to the console
-        const debug = RED.settings.uibuilder.debug || true
+        // Set to true if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
+        const debug = getProps('uibuilder.debug',RED.settings,true) // TODO: Change default answer to false
+        //console.info(debug) // TODO: replace other examples of "in" or hasOwnProperty with getProperties()
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
@@ -462,4 +465,33 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
+/**  Get property values from an object.
+ * Can list multiple properties, the first found (or the default return) will be returned
+ * @param {string|array} props - one or a list of property names to retrieve.
+ *                               Can be nested, e.g. 'prop1.prop1a'
+ *                               Stops searching when the first property is found
+ * @param {object} myObj - the parent object to search for the props
+ * @param {any} defaultAnswer - if the prop can't be found, this is returned
+ * JK @since 2017-08-17 Added
+ */
+function getProps(props,myObj,defaultAnswer = []) {
+    if ( (typeof props) === 'string' ) {
+        props = [props]
+    }
+    if ( ! Array.isArray(props) ) {
+        return undefined
+    }
+    let ans = '';
+    for (var i = 0; i < props.length; i++) {
+        try { // breaks if an intermediate property doesn't exist
+            ans = RED.util.getMessageProperty(myObj, props[i])
+            if ( typeof ans !== 'undefined' ) {
+                break
+            }
+        } catch(e) {
+            ans = defaultAnswer
+        }
+    }
+    return ans || ''
+}
 // EOF

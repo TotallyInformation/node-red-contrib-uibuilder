@@ -157,6 +157,10 @@ Folders and files for resources on the device running Node-RED are:
 
 ## Changes
 
+v0.3.1
+
+- Fixed issue when no config settings found. Added getProps() function
+
 v0.3.0
 
 - Fixed incorrect line endings. Updated front-end manifest.json. Fixed minor error in uibuilder.js. Updated dependency versions.
