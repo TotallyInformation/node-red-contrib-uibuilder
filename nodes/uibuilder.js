@@ -1,4 +1,3 @@
-/*global RED */
 /**
  * Copyright (c) 2017 Julian Knight (Totally Information)
  *
@@ -30,7 +29,7 @@ const serveStatic = require('serve-static'),
 // These are loaded to the /<uibuilder>/vendor URL path
 const vendorPackages = [
     'normalize.css',
-    'jquery',
+    'jquery'
 ]
 
 // We want these to track across redeployments
@@ -96,14 +95,14 @@ module.exports = function(RED) {
         // User supplied vendor packages - ONLY if curtomFoldersReqd
         // & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
         // JK @since 2017-08-17 fix for non-existent properties and use getProps()
-        node.userVendorPackages = getProps('userVendorPackages',config,null) || getProps('uibuilder.userVendorPackages',RED.settings,[])
+        node.userVendorPackages = getProps(RED,config,'userVendorPackages',null) || getProps(RED,RED.settings,'uibuilder.userVendorPackages',[])
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
         node.customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
         // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
         //   Files in this folder are also served to URL but take preference
         //   over those in the nodes folders (which act as defaults)
         node.customFolder = path.join(node.customAppFolder, node.url)
-        // Use custom dist folder? (if not, will use custom src fldr)
+        // Use custom dist folder? (if not, will use custom src fldr) // TODO
         node.customFolderDist = false
 
         // Socket.IO config
@@ -115,8 +114,7 @@ module.exports = function(RED) {
         node.ioNamespace = '/' + trimSlashes(node.url)
 
         // Set to true if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
-        const debug = getProps('uibuilder.debug',RED.settings,true) // TODO: Change default answer to false
-        //console.info(debug) // TODO: replace other examples of "in" or hasOwnProperty with getProperties()
+        const debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
@@ -138,8 +136,8 @@ module.exports = function(RED) {
         // This ExpressJS middleware runs when the uibuilder page loads
         // @see https://expressjs.com/en/guide/using-middleware.html
         function localMiddleware (req, res, next) {
-            // Tell the client what namespace to use, trim the leading slash because the cookie will
-            // turn into a %2F
+            // Tell the client what Socket.IO namespace to use,
+            // trim the leading slash because the cookie will turn into a %2F
             res.setHeader('x-uibuilder-namespace', node.ioNamespace)
             res.cookie('uibuilder-namespace', trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
             next()
@@ -147,7 +145,7 @@ module.exports = function(RED) {
 
         // ---- Add custom folder structure if requested ---- //
         if ( node.customFoldersReqd ) {
-            // NOTE: May be better as async calls?
+            // NOTE: May be better as async calls? TODO
             // Make sure the global custom folder exists first
             try {
                 fs.mkdirSync(node.customAppFolder)
@@ -190,7 +188,7 @@ module.exports = function(RED) {
                 customStatic = serveStatic( path.join(node.customFolder, 'src') )
                 // Include vendor resource source paths if needed
                 node.userVendorPackages.forEach(function (packageName) {
-                    //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
+                    debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  path.join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(RED.settings.userDir, 'node_modules', packageName)) );
                 })
             }
@@ -467,31 +465,34 @@ function escapeRegExp(string) {
 
 /**  Get property values from an object.
  * Can list multiple properties, the first found (or the default return) will be returned
+ * @param {object} RED - RED
+ * @param {object} myObj - the parent object to search for the props
  * @param {string|array} props - one or a list of property names to retrieve.
  *                               Can be nested, e.g. 'prop1.prop1a'
  *                               Stops searching when the first property is found
- * @param {object} myObj - the parent object to search for the props
  * @param {any} defaultAnswer - if the prop can't be found, this is returned
  * JK @since 2017-08-17 Added
+ * @todo Change instances of "in" and "hasOwnProperty" to use this function
  */
-function getProps(props,myObj,defaultAnswer = []) {
+function getProps(RED,myObj,props,defaultAnswer = []) {
     if ( (typeof props) === 'string' ) {
         props = [props]
     }
     if ( ! Array.isArray(props) ) {
         return undefined
     }
-    let ans = '';
+    let ans
     for (var i = 0; i < props.length; i++) {
-        try { // breaks if an intermediate property doesn't exist
+        try { // errors if an intermediate property doesn't exist
             ans = RED.util.getMessageProperty(myObj, props[i])
             if ( typeof ans !== 'undefined' ) {
                 break
             }
         } catch(e) {
-            ans = defaultAnswer
+            // do nothing
         }
     }
-    return ans || ''
+    return ans || defaultAnswer
 }
+
 // EOF
