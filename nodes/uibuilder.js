@@ -24,13 +24,26 @@ const serveStatic = require('serve-static'),
       socketio = require('socket.io'),
       path = require('path'),
       fs = require('fs'),
-      events = require('events')
+      events = require('events'),
+      winston = require('winston')
 
 // These are loaded to the /<uibuilder>/vendor URL path
 const vendorPackages = [
     'normalize.css',
     'jquery'
 ]
+
+// setup the logger
+const log = new winston.Logger({
+    level: 'debug', // error, warn, info, verbose, debug, silly
+    transports: [
+        new (winston.transports.Console)(),
+        //new (winston.transports.File)({ filename: path.join(RED.settings.userDir, 'uibuilder', 'uibuilder.log') })
+        new (winston.transports.File)({ filename: path.join(__dirname, 'uibuilder.log') })
+    ]
+})
+
+log.log('info','Testing Winston')
 
 // We want these to track across redeployments
 // if OK to reset on redeployment, attach to node.xxx inside nodeGo instead.
