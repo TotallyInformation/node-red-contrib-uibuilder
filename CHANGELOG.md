@@ -13,7 +13,7 @@ v0.2.1
 
 - Tweak this readme as the node seems to work OK. Removing the _Alpha_ label.
   You should consider this suitable for general hobby use. Production use would need good testing before trying to rely on it.
-  Remember, this has been written just by me, I'm afraid I can provide no guarentees.
+  Remember, this has been written just by me, I'm afraid I can provide no guarantees.
 
 v0.2.0
 

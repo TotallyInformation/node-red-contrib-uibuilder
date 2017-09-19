@@ -30,7 +30,7 @@ Any msg sent to the node is forwarded directly to the front-end and is available
 as it would be in Node-RED, use the `msgSend` function to send a message back to Node-RED that
 will be passed downstream from the node.
 
-You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any recieved messages back to Node-RED (including control messages).
+You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages).
 
 Just make a copy of the `index.html` and `index.js` files from the mast `src` folder to the local `src` folder.
 See the *[Preference Tree](#preference-tree)* and other sections below for how to find these.
@@ -171,7 +171,7 @@ v0.2.1
 
 - Tweak this readme as the node seems to work OK. Removing the _Alpha_ label.
   You should consider this suitable for general hobby use. Production use would need good testing before trying to rely on it.
-  Remember, this has been written just by me, I'm afraid I can provide no guarentees.
+  Remember, this has been written just by me, I'm afraid I can provide no guarantees.
 
 v0.2.0
 
@@ -222,17 +222,17 @@ So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are d
 **It is up to the flow author to ensure that no duplicate names are used, the node
 does not check or enforce uniqueness.**
 
-### Forward recieved messages direct to output? (default = false)
+### Forward received messages direct to output? (default = false)
 
-Forward's a copy of every recieved message direct to the output.
+Forwards a copy of every received message direct to the output.
 Adds the topic from the above setting if one isn't present in the msg.
 
 _Note_ that this may result in multiple output messages if your front-end code also auto-sends inbound messages.
 
 ### Use resources in custom folder? (default = true)
 
-Will add the folders either from <code>&lt;userDir>/uibuider/&lt;url>/dist</code> or
-from <code>&lt;userDir>/uibuider/&lt;url>/src</code>. Also adds any vendor modules
+Will add the folders either from <code>&lt;userDir>/uibuilder/&lt;url>/dist</code> or
+from <code>&lt;userDir>/uibuilder/&lt;url>/src</code>. Also adds any vendor modules
 if specified in <code>settings.js</code> under the <code>uibuilder.userVendorPackages</code>
 setting.
 
@@ -244,7 +244,7 @@ available to front-end code under the `uibuilder/vendor` path.
 All instances of this node will also use the `uibuilder.userVendorPackages` attribute of
 `settings.js` unless defined in the node's settings.
 
-### `debug` (optional, defalt=false)
+### `debug` (optional, default=false)
 
 Only available using the `uibuilder.debug` attribute of
 `settings.js`. Set to `true` to output additional debugging information.

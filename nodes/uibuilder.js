@@ -92,7 +92,7 @@ module.exports = function(RED) {
         node.fwdInMessages = config.fwdInMessages || true
         node.customFoldersReqd = config.customFoldersReqd || true
 
-        // User supplied vendor packages - ONLY if curtomFoldersReqd
+        // User supplied vendor packages - ONLY if customFoldersReqd
         // & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
         // JK @since 2017-08-17 fix for non-existent properties and use getProps()
         node.userVendorPackages = getProps(RED,config,'userVendorPackages',null) || getProps(RED,RED.settings,'uibuilder.userVendorPackages',[])
@@ -106,8 +106,8 @@ module.exports = function(RED) {
         node.customFolderDist = false
 
         // Socket.IO config
-        node.ioClientsCount = 0 // how many Socket clients connected to this intance?
-        node.rcvMsgCount = 0 // how many msg's recieved since last reset or redeploy?
+        node.ioClientsCount = 0 // how many Socket clients connected to this instance?
+        node.rcvMsgCount = 0 // how many msg's received since last reset or redeploy?
         // The channel names for Socket.IO
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
         // Make sure each node instance uses a separate Socket.IO namespace
@@ -294,31 +294,31 @@ module.exports = function(RED) {
             /* More Socket.IO events but we really don't need to monitor them
                 socket.on('disconnecting', function(reason) {
                     RED.log.audit({
-                        'UIbuilder': node.url+' DISCONNECTING recieved', 'ID': socket.id,
+                        'UIbuilder': node.url+' DISCONNECTING received', 'ID': socket.id,
                         'data': reason
                     })
                 })
                 socket.on('newListener', function(data) {
                     RED.log.audit({
-                        'UIbuilder': node.url+' NEWLISTENER recieved', 'ID': socket.id,
+                        'UIbuilder': node.url+' NEWLISTENER received', 'ID': socket.id,
                         'data': data
                     })
                 })
                 socket.on('removeListener', function(data) {
                     RED.log.audit({
-                        'UIbuilder': node.url+' REMOVELISTENER recieved', 'ID': socket.id,
+                        'UIbuilder': node.url+' REMOVELISTENER received', 'ID': socket.id,
                         'data': data
                     })
                 })
                 socket.on('ping', function(data) {
                     RED.log.audit({
-                        'UIbuilder': node.url+' PING recieved', 'ID': socket.id,
+                        'UIbuilder': node.url+' PING received', 'ID': socket.id,
                         'data': data
                     })
                 })
                 socket.on('pong', function(data) {
                     RED.log.audit({
-                        'UIbuilder': node.url+' PONG recieved', 'ID': socket.id,
+                        'UIbuilder': node.url+' PONG received', 'ID': socket.id,
                         'data': data
                     })
                 })
@@ -348,7 +348,7 @@ module.exports = function(RED) {
             // any further, more customised code to another fn
             msg = inputHandler(msg, node, RED, ioNs)
 
-        } // -- end of msg recieved processing -- //
+        } // -- end of msg received processing -- //
         node.on('input', nodeInputHandler)
 
         // Do something when Node-RED is closing down
@@ -377,7 +377,7 @@ module.exports = function(RED) {
 // Needs to return the msg object
 function inputHandler(msg, node, RED, ioNs) {
     node.rcvMsgCount++
-    //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Recieved #' + node.rcvMsgCount}, node)
+    //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + node.rcvMsgCount}, node)
 
     //debug && console.dir(msg) //debug
 
