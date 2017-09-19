@@ -25,6 +25,7 @@ const serveStatic = require('serve-static'),
       path = require('path'),
       fs = require('fs'),
       events = require('events'),
+      getInstalledPath = require('get-installed-path'),
       winston = require('winston')
 
 // These are loaded to the /<uibuilder>/vendor URL path
@@ -220,13 +221,21 @@ module.exports = function(RED) {
                 // If the ./dist/index.html exists use the dist folder...
                 log.debug('UIbuilder ', node.url, ' Using local dist folder' )
                 customStatic = serveStatic( path.join(node.customFolder, 'dist') )
+                // NOTE: You are expected to have included vendor packages in
+                //       a build process so we are not loading them here
             } catch (e) {
                 log.debug('UIbuilder', node.url, ' Using local src folder' );
                 customStatic = serveStatic( path.join(node.customFolder, 'src') )
                 // Include vendor resource source paths if needed
                 node.userVendorPackages.forEach(function (packageName) {
-                    log.debug('UIbuilder: Adding vendor paths', {'url':  path.join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)})
-                    app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(RED.settings.userDir, 'node_modules', packageName)) );
+                    // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
+                    try {
+                        let installPath = getInstalledPath.sync(packageName, {local:true})
+                        log.debug('UIbuilder: Adding user vendor path', {'url':  path.join(node.url, 'vendor', packageName), 'path': installPath})
+                        app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+                    } catch (e1) {
+                        log.error('UIbuilder: Failed to add user vendor path - no install found for ', packageName, ' Try doing npm install from <userDir>')
+                    }
                 })
             }
         }
@@ -245,8 +254,14 @@ module.exports = function(RED) {
             masterStatic = serveStatic( path.join( __dirname, 'src' ) )
             // Include vendor resource source paths if needed
             vendorPackages.forEach(function (packageName) {
-                log.debug({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
-                app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) )
+                // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
+                try {
+                    let installPath = getInstalledPath.sync(packageName, {local:true})
+                    log.debug('UIbuilder: Adding master vendor path', {'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath})
+                    app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+                } catch (e1) {
+                    log.error('UIbuilder: Failed to add master vendor path - no install found for ', packageName, ' Should have been installed by this module')
+                }
             })
         }
 
