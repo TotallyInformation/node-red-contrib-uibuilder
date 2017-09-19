@@ -33,26 +33,14 @@ const vendorPackages = [
     'jquery'
 ]
 
-// setup the logger
-const log = new winston.Logger({
-    level: 'debug', // error, warn, info, verbose, debug, silly
-    transports: [
-        new (winston.transports.Console)(),
-        //new (winston.transports.File)({ filename: path.join(RED.settings.userDir, 'uibuilder', 'uibuilder.log') })
-        new (winston.transports.File)({ filename: path.join(__dirname, 'uibuilder.log') })
-    ]
-})
-
-log.log('info','Testing Winston')
-
 // We want these to track across redeployments
 // if OK to reset on redeployment, attach to node.xxx inside nodeGo instead.
-var deployments = {}
+const deployments = {}
 
 // TODO: track instance urls here
 //  when nodeGo is run, add the node.id as a key with the value being the url
 //  then add processing to ensure that the URL's are unique.
-var instances = {}
+const instances = {}
 
 // Will we use "compiled" version of module front-end code?
 var useCompiledCode = false
@@ -61,13 +49,33 @@ fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
 })
 
 module.exports = function(RED) {
+
     'use strict'
+
+    // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
+    // @since 2017-09-19 moved to top of module.exports
+    const debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
+
+    // setup the logger - WARNING: the module folder has to be writable!
+    const log = new winston.Logger({
+        // set log level based on debug var from settings.js/uibuilder
+        level: debug ? 'silly' : 'info', // error, warn, info, verbose, debug, silly
+        // Where do we want log output to go?
+        transports: [
+            // @todo: format console output to match RED.log
+            //new (winston.transports.Console)(),
+            new (winston.transports.File)({ filename: path.join(RED.settings.userDir, 'uibuilder.log'), json:false }) // file in user folder ~/.node-red
+            //new (winston.transports.File)({filename: path.join(__dirname, 'uibuilder.log'),json: false})
+        ]
+    })
+
+    log.debug("\n\n----------------- uibuilder - module.exports -----------------")
 
     // Holder for Socket.IO - we want this to survive redeployments of each node instance
     // so that existing clients can be reconnected.
     // Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
     // modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
-    RED.log.audit({'uibuilder': 'Socket.IO initialisation', 'Socket Path': urlJoin(moduleName, 'socket.io')})
+    log.debug('uibuilder: Socket.IO initialisation - Socket Path=', urlJoin(moduleName, 'socket.io') )
     var io = socketio.listen(RED.server, {'path': urlJoin(moduleName, 'socket.io')}) // listen === attach
     io.set('transports', ['polling', 'websocket'])
 
@@ -82,14 +90,16 @@ module.exports = function(RED) {
             //console.dir(io.sockets.connected)
         */
         if (socket.request.headers.cookie) {
-            //RED.log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
-            //console.dir(socket.request.headers.cookie)  // socket.handshake.headers.cookie
+            //log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
+            //log.debug(socket.request.headers.cookie)  // socket.handshake.headers.cookie
             return next()
         }
         next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
     })
 
     function nodeGo(config) {
+        log.debug('============ uibuilder - nodeGo started ============')
+
         // Create the node
         RED.nodes.createNode(this, config)
 
@@ -105,6 +115,8 @@ module.exports = function(RED) {
         node.fwdInMessages = config.fwdInMessages || true
         node.customFoldersReqd = config.customFoldersReqd || true
 
+        log.debug( {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'custFldrs': node.customFoldersReqd })
+
         // User supplied vendor packages - ONLY if customFoldersReqd
         // & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
         // JK @since 2017-08-17 fix for non-existent properties and use getProps()
@@ -118,6 +130,8 @@ module.exports = function(RED) {
         // Use custom dist folder? (if not, will use custom src fldr) // TODO
         node.customFolderDist = false
 
+        log.debug( { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder, 'custFldrDist': node.customFolderDist } )
+
         // Socket.IO config
         node.ioClientsCount = 0 // how many Socket clients connected to this instance?
         node.rcvMsgCount = 0 // how many msg's received since last reset or redeploy?
@@ -126,8 +140,7 @@ module.exports = function(RED) {
         // Make sure each node instance uses a separate Socket.IO namespace
         node.ioNamespace = '/' + trimSlashes(node.url)
 
-        // Set to true if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
-        const debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
+        log.debug(  'io', { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
@@ -158,35 +171,46 @@ module.exports = function(RED) {
 
         // ---- Add custom folder structure if requested ---- //
         if ( node.customFoldersReqd ) {
+            let customFoldersOK = true
+
             // NOTE: May be better as async calls? TODO
             // Make sure the global custom folder exists first
             try {
-                fs.mkdirSync(node.customAppFolder)
-                fs.accessSync( node.customAppFolder, fs.constants.W_OK )
+                fs.mkdirSync(node.customAppFolder) // try to create
+                fs.accessSync( node.customAppFolder, fs.constants.W_OK ) // try to access
             } catch (e) {
-                if ( e.code !== 'EEXIST' ) {
-                    debug && RED.log.error('UIBUILDER - uibuilder custom folder ERROR, path: ' + path.join(RED.settings.userDir, node.customAppFolder) + ', error: ' + e.message)
+                if ( e.code !== 'EEXIST' ) { // ignore folder exists error
+                    log.error('uibuilder custom folder ERROR, path: ' + path.join(RED.settings.userDir, node.customAppFolder) + ', error: ' + e.message)
+                    customFoldersOK = false
                 }
             }
-            // Then make sure the folder for this node instance exists
+            // make sure the folder for this node instance exists
             try {
                 fs.mkdirSync(node.customFolder)
                 fs.accessSync(node.customFolder, fs.constants.W_OK)
             } catch (e) {
                 if ( e.code !== 'EEXIST' ) {
-                    debug && RED.log.error('UIBUILDER - uibuilder local custom folder ERROR: ' + e.message)
+                    log.error('uibuilder local custom folder ERROR: ' + e.message)
+                    customFoldersOK = false
                 }
             }
             // Then make sure the DIST & SRC folders for this node instance exist
             try {
                 fs.mkdirSync( path.join(node.customFolder, 'dist') )
                 fs.mkdirSync( path.join(node.customFolder, 'src') )
-                fs.accessSync(node.customFolder, fs.constants.W_OK)
             } catch (e) {
                 if ( e.code !== 'EEXIST' ) {
-                    debug && RED.log.error('UIBUILDER - uibuilder local custom dist or src folder ERROR: ' + e.message)
+                    log.error('uibuilder local custom dist or src folder ERROR: ' + e.message)
+                    customFoldersOK = false
                 }
             }
+
+            if ( customFoldersOK === true ) {
+                log.debug( 'uibuilder using local front-end folders in ', node.customFolder)
+            } else {
+                log.error( 'uibuilder wanted to use local front-end folders in ', node.customFolder, ' but could not')
+            }
+
             // Add static path for local custom files
             // TODO: need a build capability for dist - nb probably keep vendor and private code separate
             var customStatic = function(req,res,next) { next() }
@@ -194,14 +218,14 @@ module.exports = function(RED) {
             try {
                 stats = fs.fstatSync( path.join(node.customFolder, 'dist', 'index.html') )
                 // If the ./dist/index.html exists use the dist folder...
-                RED.log.audit({ 'UIbuilder': node.url + ' Using local dist folder' })
+                log.debug('UIbuilder ', node.url, ' Using local dist folder' )
                 customStatic = serveStatic( path.join(node.customFolder, 'dist') )
             } catch (e) {
-                RED.log.audit({ 'UIbuilder': node.url + ' Using local src folder and user specified vendor packages' });
+                log.debug('UIbuilder', node.url, ' Using local src folder' );
                 customStatic = serveStatic( path.join(node.customFolder, 'src') )
                 // Include vendor resource source paths if needed
                 node.userVendorPackages.forEach(function (packageName) {
-                    debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  path.join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)});
+                    log.debug('UIbuilder: Adding vendor paths', {'url':  path.join(node.url, 'vendor', packageName), 'path': path.join(__dirname, 'node_modules', packageName)})
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(RED.settings.userDir, 'node_modules', packageName)) );
                 })
             }
@@ -212,16 +236,16 @@ module.exports = function(RED) {
         // loading of central static resources for uibuilder
         var masterStatic = function(req,res,next) { next() }
         if (useCompiledCode) {
-            debug && RED.log.audit({ 'UIbuilder': node.url+' Using master production build folder' })
+            log.debug('UIbuilder: ', node.url, ' Using master production build folder' )
             // If the ./dist/index.html exists use the dist folder...
             masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
         } else {
             // ... otherwise, use dev resources at ./src/
-            debug && RED.log.audit({ 'UIbuilder': node.url+' Using master src folder and master vendor packages' })
+            log.debug('UIbuilder:', node.url, ' Using master src folder and master vendor packages' )
             masterStatic = serveStatic( path.join( __dirname, 'src' ) )
             // Include vendor resource source paths if needed
             vendorPackages.forEach(function (packageName) {
-                //debug && RED.log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
+                //log.audit({ 'UIbuilder': 'Adding vendor paths', 'url':  urlJoin(node.url, 'vendor', packageName), 'path': path.join(__dirname, '..', 'node_modules', packageName)});
                 app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(path.join(__dirname, '..', 'node_modules', packageName)) )
             })
         }
@@ -230,9 +254,13 @@ module.exports = function(RED) {
 
         const fullPath = urlJoin( RED.settings.httpNodeRoot, node.url )
         if ( node.customFoldersReqd ) {
+            log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
+            log.info('UI Builder - Local file overrides at ' + node.customFolder)
             RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
             RED.log.info('UI Builder - Local file overrides at ' + node.customFolder)
         } else {
+            log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
+            log.info('UI Builder - Local file overrides not requested')
             RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
             RED.log.info('UI Builder - Local file overrides not requested')
         }
@@ -257,7 +285,7 @@ module.exports = function(RED) {
         ioNs.on('connection', function(socket) {
             node.ioClientsCount++
 
-            debug && RED.log.debug(
+            log.debug(
                 `UIbuilder: ${node.url} Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
             )
             setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
@@ -267,7 +295,7 @@ module.exports = function(RED) {
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
-                debug && RED.log.debug(
+                log.debug(
                     `UIbuilder: ${node.url}, Data recieved from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}, Msg: ${msg.payload}`
                 )
 
@@ -291,7 +319,7 @@ module.exports = function(RED) {
 
             socket.on('disconnect', function(reason) {
                 node.ioClientsCount--
-                debug && RED.log.debug(
+                log.debug(
                     `UIbuilder: ${node.url} Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
                 )
                 setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
@@ -341,7 +369,7 @@ module.exports = function(RED) {
 
         // handler function for node input events (when a node instance receives a msg)
         function nodeInputHandler(msg) {
-            //debug && RED.log.info('UIbuilder:nodeGo:nodeInputHandler - emit received msg - Namespace: ' + node.url) //debug
+            log.debug('UIbuilder:nodeGo:nodeInputHandler - emit received msg - Namespace: ' + node.url) //debug
 
             // If msg is null, nothing will be sent
             if ( msg !== null ) {
@@ -367,7 +395,7 @@ module.exports = function(RED) {
         // Do something when Node-RED is closing down
         // which includes when this node instance is redeployed
         node.on('close', function() {
-            //debug && RED.log.info('VUEUI:nodeGo:on-close') //debug
+            log.debug('uibuilder:nodeGo:on-close') //debug
 
             node.removeListener('input', nodeInputHandler)
 
@@ -382,7 +410,8 @@ module.exports = function(RED) {
     // Register the node by name. This must be called before overriding any of the
     // Node functions.
     RED.nodes.registerType(moduleName, nodeGo)
-}
+
+} // ==== End of module.exports ==== //
 
 // ========== UTILITY FUNCTIONS ================ //
 
