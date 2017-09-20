@@ -54,7 +54,7 @@ $( document ).ready(function() {
         // When Node-RED uibuilder template node sends a msg over Socket.IO...
         socket.on(ioChannels.server, function(receivedMsg) {
             debug && console.info('uibuilder:socket.connect:socket.on.data - msg received - Namespace: ' + ioNamespace)
-            //console.dir(wsMsg)
+            debug && console.dir(receivedMsg)
 
             // Make sure that msg is an object & not null
             if ( receivedMsg === null ) {
@@ -86,7 +86,7 @@ $( document ).ready(function() {
         // Receive a CONTROL msg from Node-RED
         socket.on(ioChannels.control, function(receivedCtrlMsg) {
             debug && console.info('uibuilder:socket.connect:socket.on.control - msg received - Namespace: ' + ioNamespace)
-            //console.dir(wsMsg)
+            debug && console.dir(receivedCtrlMsg)
 
 
             // Make sure that msg is an object & not null

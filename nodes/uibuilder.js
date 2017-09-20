@@ -261,6 +261,7 @@ module.exports = function(RED) {
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
                 } catch (e1) {
                     log.error('UIbuilder: Failed to add master vendor path - no install found for ', packageName, ' Should have been installed by this module')
+                    log.error(e1)
                 }
             })
         }
@@ -397,12 +398,13 @@ module.exports = function(RED) {
                 // Add topic from node config if present and not present in msg
                 if ( !(msg.hasOwnProperty('topic')) || msg.topic === '' ) {
                     if ( node.topic !== '' ) msg.topic = node.topic
+                    else msg.topic = 'uibuilder'
                 }
             }
 
             // Keep this fn small for readability so offload
             // any further, more customised code to another fn
-            msg = inputHandler(msg, node, RED, ioNs)
+            msg = inputHandler(msg, node, RED, ioNs, log)
 
         } // -- end of msg received processing -- //
         node.on('input', nodeInputHandler)
@@ -432,15 +434,21 @@ module.exports = function(RED) {
 
 // Complex, custom code when processing an incoming msg should go here
 // Needs to return the msg object
-function inputHandler(msg, node, RED, ioNs) {
+function inputHandler(msg, node, RED, ioNs, log) {
     node.rcvMsgCount++
     //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + node.rcvMsgCount}, node)
 
-    //debug && console.dir(msg) //debug
-
-    // pass the complete msg object to the vue ui client
-    // TODO: This should probably have some safety validation on it
+    // pass the complete msg object to the uibuilder client
+    // TODO: This should have some safety validation on it!
     ioNs.emit(node.ioChannels.server, msg)
+
+    log.debug('uibuilder - msg sent to front-end via ws channel, ', node.ioChannels.server, ': ', msg)
+
+    if (node.fwdInMessages) {
+        // Send on the input msg to output
+        node.send(msg)
+        log.debug('uibuilder - msg passed downstream to next node: ', msg)
+    }
 
     return msg
 } // ---- End of inputHandler function ---- //
