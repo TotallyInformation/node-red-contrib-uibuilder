@@ -1,4 +1,4 @@
-v0.3.6
+v0.3.7
 
 - Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) - not finding normalize.css & JQuery front-end libraries.
   Adds the `get-installed-path` module to find out where the modules are actually loaded from.
@@ -8,7 +8,9 @@ v0.3.6
   is created in your userDir (`~./node-red` by default) containing detailed logging information.
 - The flag for forwarding the incoming msg to output is now active. If not set, the only output from the node is when something is received from a
   connected front-end client browser. Note that the default front-end web page is quite "chatty" and sends control messages as well as anything you
-  set up; this is easily disconnected.
+  set up; this is easily disconnected. Also fixed bug, see [Issue 4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/5)
+- Option to *not* use the local folders was broken. Now fixed.
+- Possible fix for loss of reconnection, see [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3)
 
 v0.3.1
 

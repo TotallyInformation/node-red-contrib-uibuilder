@@ -70,6 +70,8 @@ You might like to try some lightweight front-end libraries (in addition to the i
 
 The uibuilder node adds a number of statically served web resource locations (physical file-system locations) to the URL path (default `/uibuilder`) defined. It is up to the user to ensure that file/folder names do not clash.
 
+Note that if using the local folders (1 or 2 below), the default/master folders (3/4) are also still available. That means you can rely on files in the master folders and only need to overwrite local files as needed. For example, if you were happy with the master page & scripting but just want to change the CSS, all you need is a local copy of `index.css`
+
 The order of preference is as follows:
 
 1. The `dist` folder within the node instance URL setting (default: `uibuilder`, default physical location: `~/.node-red/uibuilder/uibuilder/dist`)
@@ -90,8 +92,14 @@ The order of preference is as follows:
 
    *only added if index.html DOES NOT exist in the dist folder*
 
-   In this case, the `vendor` subpath will be available with some pre-installed vendor packages.
-   Currently `normalize.css` and `jquery`.
+   This folder contains the following example master files: `index.html`, `index.css`, `index.js`, `manifest.json`.
+
+   There is also a sub-folder called `images` that contains: `logo-red.png`, `logo.png`, `node-red.ico`.
+
+   Override these as needed using the local folders (1/2).
+
+The `vendor` subpath will be always be available with some pre-installed vendor packages.
+Currently `normalize.css` and `jquery` are always available.
 
 In addition, this node uses the httpNodeMiddleware Node-RED setting allowing for ExpressJS middleware to be used. For example, implementing user security.
 
@@ -130,27 +138,27 @@ Folders and files for resources on the device running Node-RED are:
 - Uniqueness of the URL is not validated for multiple instances, could cause some "interesting" effects!
 - Currently, when you send a msg to a node instance, the msg is sent to **all** front-end clients
   connected to that url. There is, as yet, no way to send to a single front-end client. Once again, help to improve this would
-  be welcome.
+  be welcome. Quite possibly, including the socket ID in the output msg would fix this.
 - Currently, it doesn't appear possible to remove routes from Express v4 dynamically.
   Some get removed and some don't, it's about the best I can do unless someone has a better idea.
   This means that you get redundant routes when you redeploy the node instance. Doesn't affect running but probably uses memory.
 - Winston logging always produces a log file. If `debug:true`, the log file is detailed, otherwise only `info`, `warn` and `error` messages are output.
   It would probably be better to use standard Node-RED logging for non-debug output. Note that some key messages *are* output to the NR log as well.
-- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`. Some installs don't seem to be doing this for some reason. See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2)
-- Sometimes, the front-end code looses the namespace for Socket.IO. This prevents a connection. See [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3#issuecomment-330784499)
+- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`. Some installs don't seem to be doing this for some reason.
+  See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2)
 
 ## To Do
 
 - Add validation to `url` setting
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
 - Allow websocket messages to an individual front-end instance by including the socket ID in the output msg
-- Implement forward input to output
 - Add safety validation checks to `msg` before allowing it to be sent/recieved to/from front-end
 - Add integrated ExpressJS security to Socket.IO
 - Process `httpNodeAuth`
 - Add FE code to enable easier integration with user-supplied function on receipt of msg.
   Maybe a global fn name or msg.prototype?
 - Tidy front-end JS code to make integration easier
+- Add feature to send a refresh indicator to FE when switching local folder use on/off so that FE auto-reloads
 - Use webpack to "compile" resources into distribution folders upon (re)deployment - allowing for the use
   of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
 - Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
@@ -160,17 +168,23 @@ Folders and files for resources on the device running Node-RED are:
 - Add a check for new file changes in local `src` folder
   For now, will rely on users creating `.recompile` flag file in
   local `src` folder. *(not yet implemented)*
+- Add ability to auto-install missing modules.
 
 ## Changes
 
-v0.3.6
+v0.3.7
 
 - Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) - not finding normalize.css & JQuery front-end libraries.
+  Adds the `get-installed-path` module to find out where the modules are actually loaded from.
+- An enhancement of the above fix that uses `require.resolve()` as a backup to try and find the front-end module location if `get-installed-path` fails.
+  However, this can return a machine folder that is invalid for use as a source for adding as a static path for ExpressJS.
 - Replace native Node-RED logging with Winston. If `debug: true` is added to the uibuilder section of NR's `settings.js`, a file called `uibuilder.log`
   is created in your userDir (`~./node-red` by default) containing detailed logging information.
 - The flag for forwarding the incoming msg to output is now active. If not set, the only output from the node is when something is received from a
   connected front-end client browser. Note that the default front-end web page is quite "chatty" and sends control messages as well as anything you
-  set up; this is easily disconnected.
+  set up; this is easily disconnected. Also fixed bug, see [Issue 4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/5)
+- Option to *not* use the local folders was broken. Now fixed.
+- Possible fix for loss of reconnection, see [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3)
 
 v0.3.1
 
