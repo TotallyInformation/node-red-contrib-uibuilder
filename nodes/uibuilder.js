@@ -57,7 +57,8 @@ module.exports = function(RED) {
     // @since 2017-09-19 moved to top of module.exports
     const debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
 
-    // setup the logger - WARNING: the module folder has to be writable!
+    // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
+    // @TODO add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
     const log = new winston.Logger({
         // set log level based on debug var from settings.js/uibuilder
         level: debug ? 'silly' : 'info', // error, warn, info, verbose, debug, silly
@@ -113,7 +114,7 @@ module.exports = function(RED) {
         node.topic  = config.topic || ''
         // TODO: Needs validation as a suitable URL path
         node.url    = config.url  || 'uibuilder'
-        node.fwdInMessages = config.fwdInMessages || true
+        node.fwdInMessages = config.fwdInMessages || false // @since 2017-09-20 changed to match admin ui default
         node.customFoldersReqd = config.customFoldersReqd || true
 
         log.debug( {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'custFldrs': node.customFoldersReqd })
