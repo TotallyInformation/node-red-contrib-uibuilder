@@ -25,6 +25,15 @@ var debug = true,
     retryMs = 2000, // retry ms period for manual socket reconnections workaround
     timerid
 
+// Get the namespace from the current URL rather than a cookie which seems unreliable
+debug && console.log(ioNamespace)
+var u = window.location.pathname.split('/')
+ioNamespace = u.pop()
+if (ioNamespace === '') ioNamespace = u.pop()
+ioNamespace = '/' + ioNamespace
+// if last element is '', take [-1]
+debug && console.log(ioNamespace)
+
 // When JQuery is ready, update
 $( document ).ready(function() {
     debug && console.log('Document Ready: IO Namespace: ' + ioNamespace)
