@@ -272,3 +272,4 @@ If you would like to contribute to this node, you can contact Totally Informatio
 ## Developers/Contributors
 
 - [Julian Knight](https://github.com/TotallyInformation)
+- [Colin Law](https://github.com/colinl) - many thanks for testing and corrections
