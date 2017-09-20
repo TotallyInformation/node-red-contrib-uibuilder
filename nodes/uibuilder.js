@@ -31,7 +31,7 @@ const serveStatic = require('serve-static'),
 // These are loaded to the /<uibuilder>/vendor URL path
 const vendorPackages = [
     'normalize.css',
-    'jquery', 'fred'
+    'jquery'
 ]
 
 // We want these to track across redeployments
