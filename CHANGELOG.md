@@ -1,6 +1,9 @@
 v0.3.6
 
 - Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) - not finding normalize.css & JQuery front-end libraries.
+  Adds the `get-installed-path` module to find out where the modules are actually loaded from.
+- An enhancement of the above fix that uses `require.resolve()` as a backup to try and find the front-end module location if `get-installed-path` fails.
+  However, this can return a machine folder that is invalid for use as a source for adding as a static path for ExpressJS.
 - Replace native Node-RED logging with Winston. If `debug: true` is added to the uibuilder section of NR's `settings.js`, a file called `uibuilder.log`
   is created in your userDir (`~./node-red` by default) containing detailed logging information.
 - The flag for forwarding the incoming msg to output is now active. If not set, the only output from the node is when something is received from a

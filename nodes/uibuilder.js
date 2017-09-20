@@ -31,7 +31,7 @@ const serveStatic = require('serve-static'),
 // These are loaded to the /<uibuilder>/vendor URL path
 const vendorPackages = [
     'normalize.css',
-    'jquery'
+    'jquery', 'fred'
 ]
 
 // We want these to track across redeployments
@@ -170,7 +170,7 @@ module.exports = function(RED) {
             next()
         }
 
-        // ---- Add custom folder structure if requested ---- //
+        // ----- Add custom folder structure if requested ----- //
         if ( node.customFoldersReqd ) {
             let customFoldersOK = true
 
@@ -229,17 +229,25 @@ module.exports = function(RED) {
                 // Include vendor resource source paths if needed
                 node.userVendorPackages.forEach(function (packageName) {
                     // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
+                    // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
+                    var installPath = ''
                     try {
-                        let installPath = getInstalledPath.sync(packageName, {local:true})
-                        log.debug('UIbuilder: Adding user vendor path', {'url':  path.join(node.url, 'vendor', packageName), 'path': installPath})
-                        app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+                        installPath = getInstalledPath.sync(packageName, {local:true})
                     } catch (e1) {
-                        log.error('UIbuilder: Failed to add user vendor path - no install found for ', packageName, ' Try doing npm install from <userDir>')
+                        try {
+                            installPath = require.resolve(packageName)
+                        } catch (e2) {
+                            log.error('UIbuilder: Failed to add user vendor path - no install found for ', packageName, ' Try doing "npm install ', packageName, ' --save" from ', RED.settings.userDir)
+                            RED.log.warn('UIbuilder: Failed to add user vendor path - no install found for ' + packageName + ' Try doing "npm install ' + packageName + ' --save" from ' + RED.settings.userDir)
+                        }
+                    }
+                    if (installPath !== '') {
+                        log.debug('UIbuilder: Adding user vendor path', {'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath})
+                        app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
                     }
                 })
             }
-        }
-        // -------------------------------------------------- //
+        } // ------ End of Add custom folder structure ------- //
 
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
@@ -255,13 +263,21 @@ module.exports = function(RED) {
             // Include vendor resource source paths if needed
             vendorPackages.forEach(function (packageName) {
                 // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
+                // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
+                var installPath = ''
                 try {
-                    let installPath = getInstalledPath.sync(packageName, {local:true})
+                    installPath = getInstalledPath.sync(packageName, {local:true})
+                } catch (e1) {
+                    try {
+                        installPath = require.resolve(packageName)
+                    } catch (e2) {
+                        log.error('UIbuilder: Failed to add master vendor path - no install found for ', packageName, ' Should have been installed by this module')
+                        RED.log.warn('UIbuilder: Failed to add master vendor path - no install found for ' + packageName + ' Should have been installed by this module')
+                    }
+                }
+                if (installPath !== '') {
                     log.debug('UIbuilder: Adding master vendor path', {'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath})
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
-                } catch (e1) {
-                    log.error('UIbuilder: Failed to add master vendor path - no install found for ', packageName, ' Should have been installed by this module')
-                    log.error(e1)
                 }
             })
         }
