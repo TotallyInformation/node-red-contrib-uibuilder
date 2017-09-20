@@ -24,7 +24,8 @@ Out of the box, you get a simple index.html template with matching css & JavaScr
 These are in the module's src folder (currently), copy them to the instance src folder if you want to override them.
 
 JQuery is used in the default JavaScript to give dynamic updates to the web page. If all you need to do
-is some simple dynamic updates of the page, JQuery is likely enough.
+is some simple dynamic updates of the page, JQuery is likely enough. Normalize.css is also provided to help you with
+standard look and feel.
 
 Any msg sent to the node is forwarded directly to the front-end and is available in the global `msg` variable
 as it would be in Node-RED, use the `msgSend` function to send a message back to Node-RED that
@@ -60,6 +61,10 @@ See the *[Preference Tree](#preference-tree)* and other sections below for how t
   sub-folder, these can be accessed in front-end code via the "vendor" path, see below. The list of user libraries made available is given via Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
 - Eventually, a link to webpack will be provided to enable packing/compiling of `src` code to `dist`.
   This will enable front-end code to use non-native libraries such as JSX, ES6, Foundation, etc.
+
+You might like to try some lightweight front-end libraries (in addition to the included JQuery and Normalize.css):
+- [RiotJS](http://riotjs.com/) is a lightweight UI library, REACT-like but only 10k
+- [Tachyons.IO](http://tachyons.io) is a lightweight style library, responsive, accessible, modular, readable, performant, 14k
 
 ## Preference Tree
 
@@ -131,7 +136,7 @@ Folders and files for resources on the device running Node-RED are:
   This means that you get redundant routes when you redeploy the node instance. Doesn't affect running but probably uses memory.
 - Winston logging always produces a log file. If `debug:true`, the log file is detailed, otherwise only `info`, `warn` and `error` messages are output.
   It would probably be better to use standard Node-RED logging for non-debug output. Note that some key messages *are* output to the NR log as well.
-- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`. Some installs don't seem to be doing this for some reason. See [Issue 2]()
+- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`. Some installs don't seem to be doing this for some reason. See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2)
 - Sometimes, the front-end code looses the namespace for Socket.IO. This prevents a connection. See [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3#issuecomment-330784499)
 
 ## To Do
@@ -155,8 +160,6 @@ Folders and files for resources on the device running Node-RED are:
 - Add a check for new file changes in local `src` folder
   For now, will rely on users creating `.recompile` flag file in
   local `src` folder. *(not yet implemented)*
-- Add additional standard front-end libraries such as: [RiotJS](http://riotjs.com/) (lightweight
-  UI library, REACT-like but only 10k), [Tachyons.IO](http://tachyons.io) (Lightweight style library, responsive, accessible, modular, readable, performant, 14k)
 
 ## Changes
 
