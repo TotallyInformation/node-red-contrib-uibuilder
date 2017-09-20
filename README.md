@@ -18,6 +18,8 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
 create a UI but trades that off with some limitations, this is designed to let you do anything you can
 think of with any framework but at the trade off of greater complexity and a need to write your own front-end code.
 
+There is a little more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
+
 ## Out of the box
 
 Out of the box, you get a simple index.html template with matching css & JavaScript.
