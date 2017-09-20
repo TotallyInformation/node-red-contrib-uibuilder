@@ -126,10 +126,13 @@ Folders and files for resources on the device running Node-RED are:
 - Currently, when you send a msg to a node instance, the msg is sent to **all** front-end clients
   connected to that url. There is, as yet, no way to send to a single front-end client. Once again, help to improve this would
   be welcome.
-- Currently the _forward_ setting does nothing.
 - Currently, it doesn't appear possible to remove routes from Express v4 dynamically.
   Some get removed and some don't, it's about the best I can do unless someone has a better idea.
   This means that you get redundant routes when you redeploy the node instance. Doesn't affect running but probably uses memory.
+- Winston logging always produces a log file. If `debug:true`, the log file is detailed, otherwise only `info`, `warn` and `error` messages are output.
+  It would probably be better to use standard Node-RED logging for non-debug output. Note that some key messages *are* output to the NR log as well.
+- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`. Some installs don't seem to be doing this for some reason. See [Issue 2]()
+- Sometimes, the front-end code looses the namespace for Socket.IO. This prevents a connection. See [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3#issuecomment-330784499)
 
 ## To Do
 
@@ -157,6 +160,15 @@ Folders and files for resources on the device running Node-RED are:
 
 ## Changes
 
+v0.3.6
+
+- Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) - not finding normalize.css & JQuery front-end libraries.
+- Replace native Node-RED logging with Winston. If `debug: true` is added to the uibuilder section of NR's `settings.js`, a file called `uibuilder.log`
+  is created in your userDir (`~./node-red` by default) containing detailed logging information.
+- The flag for forwarding the incoming msg to output is now active. If not set, the only output from the node is when something is received from a
+  connected front-end client browser. Note that the default front-end web page is quite "chatty" and sends control messages as well as anything you
+  set up; this is easily disconnected.
+
 v0.3.1
 
 - Fixed issue when no config settings found. Added getProps() function
@@ -172,10 +184,6 @@ v0.2.1
 - Tweak this readme as the node seems to work OK. Removing the _Alpha_ label.
   You should consider this suitable for general hobby use. Production use would need good testing before trying to rely on it.
   Remember, this has been written just by me, I'm afraid I can provide no guarantees.
-
-v0.2.0
-
-- Fixed incorrect app.use logic which meant that the tree order was incorrect. Also improved app.use removal though still not perfect, seems to be a limitation of ExpressJS v4
 
 See [CHANGELOG](CHANGELOG.md) for more detail.
 

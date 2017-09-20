@@ -1,3 +1,12 @@
+v0.3.6
+
+- Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) - not finding normalize.css & JQuery front-end libraries.
+- Replace native Node-RED logging with Winston. If `debug: true` is added to the uibuilder section of NR's `settings.js`, a file called `uibuilder.log`
+  is created in your userDir (`~./node-red` by default) containing detailed logging information.
+- The flag for forwarding the incoming msg to output is now active. If not set, the only output from the node is when something is received from a
+  connected front-end client browser. Note that the default front-end web page is quite "chatty" and sends control messages as well as anything you
+  set up; this is easily disconnected.
+
 v0.3.1
 
 - Fixed issue when no config settings found. Added getProps() function
