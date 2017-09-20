@@ -114,8 +114,8 @@ module.exports = function(RED) {
         node.topic  = config.topic || ''
         // TODO: Needs validation as a suitable URL path
         node.url    = config.url  || 'uibuilder'
-        node.fwdInMessages = config.fwdInMessages || false // @since 2017-09-20 changed to match admin ui default
-        node.customFoldersReqd = config.customFoldersReqd || true
+        node.fwdInMessages = config.fwdInMessages // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
+        node.customFoldersReqd = config.customFoldersReqd // || true
 
         log.debug( {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'custFldrs': node.customFoldersReqd })
 
@@ -172,6 +172,7 @@ module.exports = function(RED) {
         }
 
         // ----- Add custom folder structure if requested ----- //
+        var customStatic = function(req,res,next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
         if ( node.customFoldersReqd ) {
             let customFoldersOK = true
 
@@ -215,7 +216,6 @@ module.exports = function(RED) {
 
             // Add static path for local custom files
             // TODO: need a build capability for dist - nb probably keep vendor and private code separate
-            var customStatic = function(req,res,next) { next() }
             var stats
             try {
                 stats = fs.fstatSync( path.join(node.customFolder, 'dist', 'index.html') )
@@ -248,6 +248,8 @@ module.exports = function(RED) {
                     }
                 })
             }
+        } else {
+            log.debug('uibuilder: custom folders not requested')
         } // ------ End of Add custom folder structure ------- //
 
         // Create a new, additional static http path to enable
