@@ -75,7 +75,7 @@ $( document ).ready(function() {
             // Save the msg for further processing
             msg = receivedMsg
 
-            // Track how many messages have been recieved
+            // Track how many messages have been received
             msgCounter.data++
             $('#msgsReceived').text(msgCounter.data)
             $('#showMsg').text(JSON.stringify(msg))

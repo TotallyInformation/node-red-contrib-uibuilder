@@ -55,7 +55,7 @@
 
     <div class="form-row">
         <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-fwdInMessages" style="width: 70%;">Forward recieved messages direct to output?</label>
+        <label for="node-input-fwdInMessages" style="width: 70%;">Forward received messages direct to output?</label>
     </div>
 
     <div class="form-row">
@@ -67,7 +67,7 @@
 <script type="text/x-red" data-help-name="uibuilder">
     <p>Creates a UI at a <a href="/uibuilder">given URL</a></p>
     <p>
-        This node can be used to create a dynamic user interface that can recieve and send back messages to Node-RED using a websocket connection.
+        This node can be used to create a dynamic user interface that can receive and send back messages to Node-RED using a websocket connection.
         It creates a file/folder structure for you that can be used to deliver static resources (html, css, js, images, etc).
     </p>
 
@@ -85,7 +85,7 @@
             <dl class="message-properties">
                 <dt>_msgcounter <span class="property-type">(integer)</span></dt>
                 <dd>
-                    The number of messages recieved by the node instance since either the last reset of Node-RED or the last deployment of the node instance.
+                    The number of messages received by the node instance since either the last reset of Node-RED or the last deployment of the node instance.
                 </dd>
                 <dt>payload <span class="property-type">(string | buffer)</span></dt>
                 <dd>
@@ -112,9 +112,9 @@
             Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
             and port. Will also be prefixed by the Node-RED setting
         </dd>
-        <dt>Forward recieved messages direct to output?</dt>
+        <dt>Forward received messages direct to output?</dt>
         <dd>
-            Forward's a copy of every recieved message direct to the output.
+            Forward's a copy of every received message direct to the output.
             Adds the topic from the above setting if one isn't present in the msg.
             <p>
                 <i>Note</i> that this may result in multiple output messages if your front-end

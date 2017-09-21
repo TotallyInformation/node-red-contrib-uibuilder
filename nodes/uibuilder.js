@@ -331,7 +331,7 @@ module.exports = function(RED) {
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
                 log.debug(
-                    `UIbuilder: ${node.url}, Data recieved from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}, Msg: ${msg.payload}`
+                    `UIbuilder: ${node.url}, Data received from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}, Msg: ${msg.payload}`
                 )
 
                 // Make sure the incoming msg is a correctly formed Node-RED msg
@@ -362,7 +362,7 @@ module.exports = function(RED) {
 
             socket.on('error', function(err) {
                 RED.log.audit({
-                    'UIbuilder': node.url+' ERROR recieved', 'ID': socket.id,
+                    'UIbuilder': node.url+' ERROR received', 'ID': socket.id,
                     'Reason': err.message
                 })
             })
