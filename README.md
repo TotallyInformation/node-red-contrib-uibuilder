@@ -152,7 +152,7 @@ Folders and files for resources on the device running Node-RED are:
 - Add validation to `url` setting
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
 - Allow websocket messages to an individual front-end instance by including the socket ID in the output msg
-- Add safety validation checks to `msg` before allowing it to be sent/recieved to/from front-end
+- Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
 - Add integrated ExpressJS security to Socket.IO
 - Process `httpNodeAuth`
 - Add FE code to enable easier integration with user-supplied function on receipt of msg.
