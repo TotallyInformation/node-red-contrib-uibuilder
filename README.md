@@ -133,27 +133,35 @@ Folders and files for resources on the device running Node-RED are:
 
 ## Known Issues
 
+I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up
+at some point.
+
 - **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care about
   the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request.
-- Workaround applied: Client tries to reconnect with increasing timeouts. ~~On redeploy, existing
-  clients do not reconnect, page has to be reloaded. Works if NR is restarted.~~
-- Uniqueness of the URL is not validated for multiple instances, could cause some "interesting" effects!
+- Uniqueness of the URL is not yet being validated for multiple instances, could cause some "interesting" effects!
 - Currently, when you send a msg to a node instance, the msg is sent to **all** front-end clients
-  connected to that url. There is, as yet, no way to send to a single front-end client. Once again, help to improve this would
-  be welcome. Quite possibly, including the socket ID in the output msg would fix this.
+  connected to that url. There is, as yet, no way to send to a single front-end client.
+  This is probably what you want *most* of the time anyway.
+  Once again, help to improve this would be welcome. Quite possibly, including the socket ID in the output msg would fix this.
 - Currently, it doesn't appear possible to remove routes from Express v4 dynamically.
   Some get removed and some don't, it's about the best I can do unless someone has a better idea.
   This means that you get redundant routes when you redeploy the node instance. Doesn't affect running but probably uses memory.
 - Winston logging always produces a log file. If `debug:true`, the log file is detailed, otherwise only `info`, `warn` and `error` messages are output.
   It would probably be better to use standard Node-RED logging for non-debug output. Note that some key messages *are* output to the NR log as well.
+  You should occasionally clear down the log file.
 - Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`. Some installs don't seem to be doing this for some reason.
-  See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2)
+  See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2). Added some extra code to try and deal with this but it may
+  not be 100% reliable.
 
 ## To Do
 
+These would be nice to do at some point and would make the node more robust and a bit easier to use in places.
+
+Please feel free to contribute a pull request if you would like to,
+
 - Add validation to `url` setting
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
-- Allow websocket messages to an individual front-end instance by including the socket ID in the output msg
+- Provide option for websocket messages to an individual front-end instance by including the socket ID in the output msg
 - Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
 - Add integrated ExpressJS security to Socket.IO
 - Process `httpNodeAuth`
@@ -167,9 +175,7 @@ Folders and files for resources on the device running Node-RED are:
   the file system
 - *Copy template files to local override folder if not already existing*?
 - *(Maybe compile template resources to dist folder?)*
-- Add a check for new file changes in local `src` folder
-  For now, will rely on users creating `.recompile` flag file in
-  local `src` folder. *(not yet implemented)*
+- If using `dist` code, Add a check for new file changes in local `src` folder
 - Add ability to auto-install missing modules.
 
 ## Changes
@@ -285,7 +291,9 @@ Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red
 
 If you would like to contribute to this node, you can contact Totally Information via GitHub or raise a request in the GitHub issues log.
 
+If submitting code (preferably via a pull request), please use eslint to adhere to the same standards.
+
 ## Developers/Contributors
 
 - [Julian Knight](https://github.com/TotallyInformation)
-- [Colin Law](https://github.com/colinl) - many thanks for testing and corrections
+- [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.

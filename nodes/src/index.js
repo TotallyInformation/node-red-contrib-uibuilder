@@ -14,6 +14,11 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+/**
+ * This is the default, template Front-End JavaScript for uibuilder
+ * It is usable as is though you will want to add your own code to
+ * process incoming and outgoing messages.
+ */
 
 var debug = true,
     ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'},
@@ -27,11 +32,12 @@ var debug = true,
 
 // Get the namespace from the current URL rather than a cookie which seems unreliable
 debug && console.log(ioNamespace)
+// if last element is '', take [-1]
 var u = window.location.pathname.split('/')
 ioNamespace = u.pop()
 if (ioNamespace === '') ioNamespace = u.pop()
+// Socket.IO namespace HAS to start with a leading slash
 ioNamespace = '/' + ioNamespace
-// if last element is '', take [-1]
 debug && console.log(ioNamespace)
 
 // When JQuery is ready, update
@@ -85,7 +91,7 @@ $( document ).ready(function() {
             //       to process receipt of new msg
             //       OR MAYBE use msg.prototype to add a function?
 
-            // Test auto-response
+            // Test auto-response - not really required but useful when getting started
             if (debug) {
                 sendMsg({payload: 'We got a message from you, thanks'})
             }

@@ -1,5 +1,14 @@
 <!doctype html>
 <html>
+  <!--
+    This is the default, template html for uibuilder.
+    It is only meant to demonstrate the use of JQuery to dynamically
+    update the ui based on incoming/outgoing messages from/to the
+    Node-RED server.
+
+    You will want to alter this to suite your own needs. To do so,
+    copy this file to <userDir>/uibuilder/<url>/src.
+  -->
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -14,16 +23,16 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3f51b5">
 
-    <!-- Add to homescreen for Chrome on Android. Fallback for manifest.json -->
+    <!-- Used if adding to homescreen for Chrome on Android. Fallback for manifest.json -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Node-RED UI Builder">
 
-    <!-- Add to homescreen for Safari on iOS -->
+    <!-- Used if adding to homescreen for Safari on iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Node-RED UI Builder">
 
-    <!-- Homescreen icons
+    <!-- Homescreen icons for Apple mobile use if required
         <link rel="apple-touch-icon" href="/images/manifest/icon-48x48.png">
         <link rel="apple-touch-icon" sizes="72x72" href="/images/manifest/icon-72x72.png">
         <link rel="apple-touch-icon" sizes="96x96" href="/images/manifest/icon-96x96.png">
@@ -32,7 +41,7 @@
     -->
     <link rel="stylesheet" href="vendor/normalize.css/normalize.css">
     <link rel="stylesheet" href="index.css">
-    
+
 </head>
 <body>
     <div id="app">
@@ -44,7 +53,7 @@
             You can also see some dynamic data updating below, thanks to JQuery.
         </p>
         <p>
-            Please see the README for the 
+            Please see the README for the
             <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
             node for details on how to use UIbuilder.
         </p>
