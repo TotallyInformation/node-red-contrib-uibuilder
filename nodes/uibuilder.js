@@ -232,7 +232,7 @@ module.exports = function(RED) {
                     // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
                     // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
                     var installPath = ''
-                    try {
+                    try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
                         installPath = getInstalledPath.sync(packageName, {local:true, cwd: RED.settings.userDir})
                     } catch (e1) {
                         try {
@@ -268,7 +268,7 @@ module.exports = function(RED) {
                 // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
                 // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
                 var installPath = ''
-                try {
+                try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
                     installPath = getInstalledPath.sync(packageName, {local:true, cwd: RED.settings.userDir})
                 } catch (e1) {
                     try {
