@@ -1,8 +1,8 @@
 # node-red-contrib-uibuilder
 
-An EXPERIMENTAL Node-RED web user interface builder.
+A Node-RED web user interface builder.
 
-Designed as an *experimental* alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)*
+Designed as an alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)*
 and *[To Do](#to-do)* sections below for what might still need some work.
 
 The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL that
