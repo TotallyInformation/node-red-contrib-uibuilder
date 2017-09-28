@@ -35,7 +35,7 @@ will be passed downstream from the node.
 
 You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages).
 
-Just make a copy of the `index.html` and `index.js` files from the mast `src` folder to the local `src` folder.
+Just make a copy of the `index.html`, `index.js` and `manifest.json` files from the mast `src` folder to the local `src` folder. The file `manifest.json` allows Add to Homescreen to work correctly in Chrome on Android.
 See the *[Preference Tree](#preference-tree)* and other sections below for how to find these.
 
 ## Design
