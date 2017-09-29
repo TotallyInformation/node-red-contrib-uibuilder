@@ -190,6 +190,9 @@ $( document ).ready(function() {
 // ----- UTILITY FUNCTIONS ----- //
 // send a msg back to Node-RED, NR will generally expect the msg to contain a payload topic
 var sendMsg = function(msgToSend) {
+    debug && console.info('uibuilder:msg sent - Namespace: ' + ioNamespace)
+    debug && console.dir(msgToSend)
+
     // Track how many messages have been sent
     msgCounter.sent++
     $('#msgsSent').text(msgCounter.sent)
