@@ -159,6 +159,9 @@ These would be nice to do at some point and would make the node more robust and 
 
 Please feel free to contribute a pull request if you would like to,
 
+- Add sender IP address when sending msg from browser - so that Node-RED can differentiate where things are comming from.
+  The `_socketId` obviously already identifies the originator technically but additional info might be helpful.
+  _Possibly make this optional. Maybe have other optional data too such as device_
 - Copy template files to local override folder if not already existing - this will save users having to hunt down the template files which
   exist in this module. _We might need to add some checks for updated master templates though? Not sure._
 - Add validation to `url` setting
