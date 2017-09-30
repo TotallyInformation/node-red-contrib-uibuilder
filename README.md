@@ -159,6 +159,8 @@ These would be nice to do at some point and would make the node more robust and 
 
 Please feel free to contribute a pull request if you would like to,
 
+- Copy template files to local override folder if not already existing - this will save users having to hunt down the template files which
+  exist in this module. _We might need to add some checks for updated master templates though? Not sure._
 - Add validation to `url` setting
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
 - Provide option for websocket messages to an individual front-end instance by including the socket ID in the output msg
@@ -169,14 +171,13 @@ Please feel free to contribute a pull request if you would like to,
   Maybe a global fn name or msg.prototype?
 - Tidy front-end JS code to make integration easier
 - Add feature to send a refresh indicator to FE when switching local folder use on/off so that FE auto-reloads
+- Add ability to auto-install missing modules.
+- Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
+  the file system. Ideally, we would have editors in the node that allowed HMTL, JavaScript and CSS content to be created. We would also possibly allow such content to be passed on the msg though that could be somewhat dangerous so probably should be an option.
 - Use webpack to "compile" resources into distribution folders upon (re)deployment - allowing for the use
   of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
-- Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
-  the file system
-- *Copy template files to local override folder if not already existing*?
-- *(Maybe compile template resources to dist folder?)*
+- _(Maybe compile template resources to dist folder?)_
 - If using `dist` code, Add a check for new file changes in local `src` folder
-- Add ability to auto-install missing modules.
 
 ## Changes
 
