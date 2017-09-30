@@ -27,6 +27,7 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
         - [Physical file/folder location summary](#physical-filefolder-location-summary)
     - [Known Issues](#known-issues)
     - [To Do](#to-do)
+    - [Possibilities for further thought](#possibilities-for-further-thought)
     - [Changes](#changes)
     - [Dependencies](#dependencies)
     - [Install](#install)
@@ -218,11 +219,6 @@ These would be nice to do at some point and would make the node more robust and 
 
 Please feel free to contribute a pull request if you would like to,
 
-- Add sender IP address when sending msg from browser - so that Node-RED can
-  differentiate where things are comming from.
-  The `_socketId` obviously already identifies the originator technically but additional info might be helpful.
-  _Possibly make this optional. Maybe have other optional data too such as device_
-
 - Copy template files to local override folder if not already existing - this will
   save users having to hunt down the template files which exist in this module.
   _We might need to add some checks for updated master templates though? Not sure._
@@ -252,9 +248,25 @@ Please feel free to contribute a pull request if you would like to,
 - Use webpack to "compile" resources into distribution folders upon (re)deployment -
   allowing for the use of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
 
-- _(Maybe compile template resources to dist folder?)_
-
 - If using `dist` code, Add a check for new file changes in local `src` folder
+
+## Possibilities for further thought
+These are random thoughts that might make it into the To Do list but really need more thought before committing to them.
+
+- Tidy up Socket.IO control messages so they add value. When the client receives its first
+  control msg, it should respond so that the server can track the socketID's of connected clients (see "Show Connection" flag idea below).
+
+- Add "Show Connection" flag to admin ui. Would output a message on each connection that would
+  include the socketId. Allowing for processing of messages back to a specific client instance.
+
+- Add Debug flag to admin ui. Pass throught to FE if set.
+
+- Add sender IP address when sending msg from browser - so that Node-RED can
+  differentiate where things are coming from.
+  The `_socketId` obviously already identifies the originator technically but additional info might be helpful.
+  _Possibly make this optional. Maybe have other optional data too such as device_
+
+- _(Maybe compile template resources to dist folder?)_
 
 _[back to top](#contents)_
 
@@ -264,22 +276,25 @@ v0.3.9
 
 - Enable msg's to be sent from server to a specific client instance by adding `_socketId`
   attribute to the `msg`. The ID must match the appropriate client ID of course.
+- Links to WIKI and table of contents added to README.
 
 v0.3.8
 
-- Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) - not finding normalize.css & JQuery front-end libraries.
+- Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) -
+  not finding normalize.css & JQuery front-end libraries.
   Adds the `get-installed-path` module to find out where the modules are actually loaded from.
-- An enhancement of the above fix that uses `require.resolve()` as a backup to try and find the front-end module location if `get-installed-path` fails.
+- An enhancement of the above fix that uses `require.resolve()` as a backup to try and
+  find the front-end module location if `get-installed-path` fails.
   However, this can return a machine folder that is invalid for use as a source for adding as a static path for ExpressJS.
-- Additional fix for the above - force the current working folder to be the NR `userDir` for get-installed-path as some installations of NR leave
-  the cwd point at the home folder not the userDir.
-- Replace native Node-RED logging with Winston. If `debug: true` is added to the uibuilder section of NR's `settings.js`, a file called `uibuilder.log`
-  is created in your userDir (`~./node-red` by default) containing detailed logging information.
-- The flag for forwarding the incoming msg to output is now active. If not set, the only output from the node is when something is received from a
-  connected front-end client browser. Note that the default front-end web page is quite "chatty" and sends control messages as well as anything you
-  set up; this is easily disconnected. Also fixed bug, see [Issue 4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/5)
+- Additional fix for the above - force the current working folder to be the NR `userDir`
+  for get-installed-path as some installations of NR leave the cwd point at the home folder not the userDir.
+- Replace native Node-RED logging with Winston. If `debug: true` is added to the uibuilder
+  section of NR's `settings.js`, a file called `uibuilder.log` is created in your userDir (`~./node-red` by default) containing detailed logging information.
+- The flag for forwarding the incoming msg to output is now active.
+  If not set, the only output from the node is when something is received from a connected front-end client browser. Note that the default front-end web page is quite "chatty" and sends control messages as well as anything you set up; this is easily disconnected. Also fixed bug, see [Issue 4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/5)
 - Option to *not* use the local folders was broken. Now fixed.
-- Possible fix for loss of reconnection, see [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3)
+- Possible fix for loss of reconnection,
+  see [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3)
 
 v0.2.1
 
