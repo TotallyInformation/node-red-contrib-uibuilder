@@ -423,7 +423,7 @@ module.exports = function(RED) {
 
             // Keep this fn small for readability so offload
             // any further, more customised code to another fn
-            msg = inputHandler(msg, node, RED, ioNs, log)
+            msg = inputHandler(msg, node, RED, io, ioNs, log)
 
         } // -- end of msg received processing -- //
         node.on('input', nodeInputHandler)
@@ -453,13 +453,19 @@ module.exports = function(RED) {
 
 // Complex, custom code when processing an incoming msg should go here
 // Needs to return the msg object
-function inputHandler(msg, node, RED, ioNs, log) {
+function inputHandler(msg, node, RED, io, ioNs, log) {
     node.rcvMsgCount++
     //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + node.rcvMsgCount}, node)
 
     // pass the complete msg object to the uibuilder client
     // TODO: This should have some safety validation on it!
-    ioNs.emit(node.ioChannels.server, msg)
+    let sid = ''
+    if (msg._socketId) {
+        ioNs.to(msg._socketId).emit(node.ioChannels.server, msg)
+    } else {
+        ioNs.emit(node.ioChannels.server, msg)
+    }
+
 
     log.debug('uibuilder - msg sent to front-end via ws channel, ', node.ioChannels.server, ': ', msg)
 

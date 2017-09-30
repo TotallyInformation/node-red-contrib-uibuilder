@@ -5,20 +5,46 @@ A Node-RED web user interface builder.
 Designed as an alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)*
 and *[To Do](#to-do)* sections below for what might still need some work.
 
-The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL that
- is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
+The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL (end-point) that is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
 
 Eventually, you will be able to "compile" src files using webpack from a button in the nodes config.
 That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
 
-The final evolution will be to provide configuration nodes to let you define framework or html/css/js
-files in Node-RED itself so that you won't need access to the servers file system at all.
+The final evolution will be to provide configuration nodes to let you define framework or html/css/js files in Node-RED itself so that you won't need access to the servers file system at all.
 
-This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to
-create a UI but trades that off with some limitations, this is designed to let you do anything you can
-think of with any framework but at the trade off of greater complexity and a need to write your own front-end code.
+This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of greater complexity and a need to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
+
+## Contents
+<!-- TOC -->
+
+- [node-red-contrib-uibuilder](#node-red-contrib-uibuilder)
+    - [Contents](#contents)
+    - [Additional Documentation](#additional-documentation)
+    - [Out of the box](#out-of-the-box)
+    - [Features](#features)
+    - [Preference Tree](#preference-tree)
+        - [Front-end path summary](#front-end-path-summary)
+        - [Physical file/folder location summary](#physical-filefolder-location-summary)
+    - [Known Issues](#known-issues)
+    - [To Do](#to-do)
+    - [Changes](#changes)
+    - [Dependencies](#dependencies)
+    - [Install](#install)
+    - [Node Instance Settings](#node-instance-settings)
+    - [Discussions and suggestions](#discussions-and-suggestions)
+    - [Contributing](#contributing)
+    - [Developers/Contributors](#developerscontributors)
+
+<!-- /TOC -->
+
+## Additional Documentation
 
 There is a little more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
+- [Example: Using MoonJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-MoonJS)
+- [Example: Using RiodJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-RiotJS)
+- [Sending Messages to Specific Client Instances](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances)
+- [Use on Mobile Browsers](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Use-on-Mobile-Browsers)
+- [Developing Front End Code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Developing-front-end-code)
 
 ## Out of the box
 
@@ -38,35 +64,59 @@ You will want to change the front-end code to match your requirements since, by 
 Just make a copy of the `index.html`, `index.js` and `manifest.json` files from the mast `src` folder to the local `src` folder. The file `manifest.json` allows Add to Homescreen to work correctly in Chrome on Android.
 See the *[Preference Tree](#preference-tree)* and other sections below for how to find these.
 
-## Design
+_[back to top](#contents)_
+
+## Features
 
 - A single node is used to define an end-point (by its URL path).
-- The node can be included in flows as many times as you like - but each instance **must** have a unique
-  URL path name.
+
+- The node can be included in flows as many times as you like - but each instance **must**
+  have a unique URL path name.
+
 - Each node instance gets its own Socket.IO namespace matching the URL path setting.
   Note that Socket.IO will efficiently share sockets while keeping traffic separated by namespace.
-- The node's module contains default html, JavaScript and CSS files that are used as master templates.
+
+- Including a `_socketId` attribute on messages sent from Node-RED will send to that ID only.
+  An ID is associated with a specific browser tab and is reset when the page is reloaded so this isn't too easy to use as yet (see [To Do list](to-do)).
+  The `_socketId` attribute is added to any msg sent from the client to Node-RED.
+  See [the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances) for more information.
+
+- The node's module contains default html, JavaScript and CSS files that are used as
+  master templates.
+
 - On deployment of the *first* instance, a new folder is created within your Node-RED user directory
   (typically `~/.node-red`) with a fixed name of `uibuilder`.
-- On deployment of any new instance, a new sub-folder within `uibuilder` is created. The name is the same
-  as the URL path specified in the node instance's settings. (defaults to `uibuilder`). `src` and `dist` sub-folders are also created.
-- If the `dist` folder contains an `index.html` file, the `dist` folder will be used, otherwise the `src`
-  folder will be used.
-- Any resource (html, css, js, image, etc) placed within the `dist`/`src` sub-folder is available to the
-  browser client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above).
+
+- On deployment of any new instance, a new sub-folder within `uibuilder` is created.
+  The name is the same as the URL path specified in the node instance's settings. (defaults to `uibuilder`). `src` and `dist` sub-folders are also created.
+
+- If the `dist` folder contains an `index.html` file, the `dist` folder will be used,
+  otherwise the `src` folder will be used.
+
+- Any resource (html, css, js, image, etc) placed within the `dist`/`src` sub-folder
+  is available to the browser client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above).
+
 - Any resource in the `dist`/`src` sub-folder that has the same name as resources in other resource
   paths (such as the master resource path) will be given preference - see *Preference Tree* below.
-- Any msg sent to a node instance is sent through to the UI via Socket.IO. If `topic` is set in settings
-  and not in the `msg`, the version from settings will be added.
+
+- Any msg sent to a node instance is sent through to the UI via Socket.IO.
+  If `topic` is set in settings and not in the `msg`, the version from settings will be added.
   NOTE that this may present security and/or performance issues. In particular, you should remove msg.res and msg.req objects as they are both very large and often contain circular references.
+
 - Users can install front-end libraries using npm into their `userDir` folder. If using the `src`
   sub-folder, these can be accessed in front-end code via the "vendor" path, see below. The list of user libraries made available is given via Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
-- Eventually, a link to webpack will be provided to enable packing/compiling of `src` code to `dist`.
+
+- Eventually, a link to webpack will be provided to enable packing/compiling
+  of `src` code to `dist`.
   This will enable front-end code to use non-native libraries such as JSX, ES6, Foundation, etc.
 
-You might like to try some lightweight front-end libraries (in addition to the included JQuery and Normalize.css):
-- [RiotJS](http://riotjs.com/) is a lightweight UI library, REACT-like but only 10k
-- [Tachyons.IO](http://tachyons.io) is a lightweight style library, responsive, accessible, modular, readable, performant, 14k
+You might like to try some lightweight front-end libraries (in addition to or instead of the included JQuery and Normalize.css):
+- [MoonJS](http://moonjs.ga) is a minimal, blazing fast user interface library. Only 7kb.
+  Based originally on the Vue API, uses a virtual DOM, possibly the simplest UI library to use. You can remove JQuery if you use this, it isn't needed.
+- [RiotJS](http://riotjs.com/) is a lightweight UI library, REACT-like but only 10k.
+- [Mini.CSS](http://minicss.org/index) is a minimal, responsive, style-agnostic CSS framework. Only 7kb. You can remove Normalize.css if you use this, it is built in.
+
+_[back to top](#contents)_
 
 ## Preference Tree
 
@@ -105,6 +155,8 @@ Currently `normalize.css` and `jquery` are always available.
 
 In addition, this node uses the httpNodeMiddleware Node-RED setting allowing for ExpressJS middleware to be used. For example, implementing user security.
 
+_[back to top](#contents)_
+
 ### Front-end path summary
 
 Front-end files in `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/src/` may use the
@@ -131,27 +183,34 @@ Folders and files for resources on the device running Node-RED are:
   setting (in `settings.js`).
   Note that each package will have its own folder structure that you will need to understand in order to use the package in the browser. These are often poorly documented.
 
+_[back to top](#contents)_
+
 ## Known Issues
 
 I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up
 at some point.
 
-- **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care about
-  the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request.
-- Uniqueness of the URL is not yet being validated for multiple instances, could cause some "interesting" effects!
-- Currently, when you send a msg to a node instance, the msg is sent to **all** front-end clients
-  connected to that url. There is, as yet, no way to send to a single front-end client.
-  This is probably what you want *most* of the time anyway.
-  Once again, help to improve this would be welcome. Quite possibly, including the socket ID in the output msg would fix this.
+- **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
+  about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
+
+- Uniqueness of the URL is not yet being validated for multiple instances, could cause
+  some "interesting" effects!
+
 - Currently, it doesn't appear possible to remove routes from Express v4 dynamically.
   Some get removed and some don't, it's about the best I can do unless someone has a better idea.
   This means that you get redundant routes when you redeploy the node instance. Doesn't affect running but probably uses memory.
-- Winston logging always produces a log file. If `debug:true`, the log file is detailed, otherwise only `info`, `warn` and `error` messages are output.
+
+- Winston logging always produces a log file. If `debug:true`, the log file is detailed,
+  otherwise only `info`, `warn` and `error` messages are output.
   It would probably be better to use standard Node-RED logging for non-debug output. Note that some key messages *are* output to the NR log as well.
   You should occasionally clear down the log file.
-- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`. Some installs don't seem to be doing this for some reason.
+
+- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`.
+  Some installs don't seem to be doing this for some reason.
   See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2). Added some extra code to try and deal with this but it may
   not be 100% reliable.
+
+_[back to top](#contents)_
 
 ## To Do
 
@@ -159,30 +218,52 @@ These would be nice to do at some point and would make the node more robust and 
 
 Please feel free to contribute a pull request if you would like to,
 
-- Add sender IP address when sending msg from browser - so that Node-RED can differentiate where things are comming from.
+- Add sender IP address when sending msg from browser - so that Node-RED can
+  differentiate where things are comming from.
   The `_socketId` obviously already identifies the originator technically but additional info might be helpful.
   _Possibly make this optional. Maybe have other optional data too such as device_
-- Copy template files to local override folder if not already existing - this will save users having to hunt down the template files which
-  exist in this module. _We might need to add some checks for updated master templates though? Not sure._
+
+- Copy template files to local override folder if not already existing - this will
+  save users having to hunt down the template files which exist in this module.
+  _We might need to add some checks for updated master templates though? Not sure._
+
 - Add validation to `url` setting
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
-- Provide option for websocket messages to an individual front-end instance by including the socket ID in the output msg
+
 - Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
+
 - Add integrated ExpressJS security to Socket.IO
+
 - Process `httpNodeAuth`
+
 - Add FE code to enable easier integration with user-supplied function on receipt of msg.
   Maybe a global fn name or msg.prototype?
+
 - Tidy front-end JS code to make integration easier
-- Add feature to send a refresh indicator to FE when switching local folder use on/off so that FE auto-reloads
+
+- Add feature to send a refresh indicator to FE when switching local
+  folder use on/off so that FE auto-reloads
+
 - Add ability to auto-install missing modules.
-- Add ability to create resources from the Node-RED admin UI - currently all resources have to be created in
-  the file system. Ideally, we would have editors in the node that allowed HMTL, JavaScript and CSS content to be created. We would also possibly allow such content to be passed on the msg though that could be somewhat dangerous so probably should be an option.
-- Use webpack to "compile" resources into distribution folders upon (re)deployment - allowing for the use
-  of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
+
+- Add ability to create resources from the Node-RED admin UI - currently all resources have
+  to be created in the file system. Ideally, we would have editors in the node that allowed HMTL, JavaScript and CSS content to be created. We would also possibly allow such content to be passed on the msg though that could be somewhat dangerous so probably should be an option.
+
+- Use webpack to "compile" resources into distribution folders upon (re)deployment -
+  allowing for the use of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
+
 - _(Maybe compile template resources to dist folder?)_
+
 - If using `dist` code, Add a check for new file changes in local `src` folder
 
+_[back to top](#contents)_
+
 ## Changes
+
+v0.3.9
+
+- Enable msg's to be sent from server to a specific client instance by adding `_socketId`
+  attribute to the `msg`. The ID must match the appropriate client ID of course.
 
 v0.3.8
 
@@ -200,16 +281,6 @@ v0.3.8
 - Option to *not* use the local folders was broken. Now fixed.
 - Possible fix for loss of reconnection, see [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3)
 
-v0.3.1
-
-- Fixed issue when no config settings found. Added getProps() function
-
-v0.3.0
-
-- Fixed incorrect line endings. Updated front-end manifest.json. Fixed minor error in uibuilder.js. Updated dependency versions.
-- Breaking changes due to new major version of Socket.IO ([v2](https://socket.io/blog/socket-io-2-0-0/)) and Webpack. Shouldn't impact anything since you need to restart Node-RED anyway.
-  However, you might need to force a full reload of any active clients.
-
 v0.2.1
 
 - Tweak this readme as the node seems to work OK. Removing the _Alpha_ label.
@@ -217,6 +288,8 @@ v0.2.1
   Remember, this has been written just by me, I'm afraid I can provide no guarantees.
 
 See [CHANGELOG](CHANGELOG.md) for more detail.
+
+_[back to top](#contents)_
 
 ## Dependencies
 
@@ -241,19 +314,21 @@ Run Node-RED and add an instance of the UI Builder node. Set the required URL pa
 The UI should then be available at the chosen path. The default would normally be <http://localhost:1880/uibuilder>
 (if default Node-RED and node settings are used).
 
+_[back to top](#contents)_
+
 ## Node Instance Settings
 
 Each instance of the uibuilder node has the following settings available.
 
-### `name` (optional)
+**`name` (optional)**
 
 Only used in the Node-RED admin UI.
 
-### `topic` (optional)
+**`topic` (optional)**
 
 Only used if an inbound msg does not contain a topic attribute. Passed on to client UI upon receipt of a msg.
 
-### `url` (required, default = 'uibuilder')
+**`url` (required, default = 'uibuilder')**
 
 The path used to access the user interface that this node builds.
 So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are defined (in Node-RED's `settings.js` file), the URL of the default interface would be `http://localhost:1880/uibuilder`
@@ -261,21 +336,21 @@ So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are d
 **It is up to the flow author to ensure that no duplicate names are used, the node
 does not check or enforce uniqueness.**
 
-### Forward received messages direct to output? (default = false)
+**Forward received messages direct to output? (default = false)**
 
 Forwards a copy of every received message direct to the output.
 Adds the topic from the above setting if one isn't present in the msg.
 
 _Note_ that this may result in multiple output messages if your front-end code also auto-sends inbound messages.
 
-### Use resources in custom folder? (default = true)
+**Use resources in custom folder? (default = true)**
 
 Will add the folders either from <code>&lt;userDir>/uibuilder/&lt;url>/dist</code> or
 from <code>&lt;userDir>/uibuilder/&lt;url>/src</code>. Also adds any vendor modules
 if specified in <code>settings.js</code> under the <code>uibuilder.userVendorPackages</code>
 setting.
 
-### `userVendorPackages` (optional)
+**`userVendorPackages` (optional)**
 
 A list of npm package names (as they appear in `node_modules`) that the node will make
 available to front-end code under the `uibuilder/vendor` path.
@@ -283,10 +358,12 @@ available to front-end code under the `uibuilder/vendor` path.
 All instances of this node will also use the `uibuilder.userVendorPackages` attribute of
 `settings.js` unless defined in the node's settings.
 
-### `debug` (optional, default=false)
+**`debug` (optional, default=false)**
 
 Only available using the `uibuilder.debug` attribute of
 `settings.js`. Set to `true` to output additional debugging information.
+
+_[back to top](#contents)_
 
 ## Discussions and suggestions
 
@@ -303,3 +380,5 @@ If submitting code (preferably via a pull request), please use eslint to adhere 
 
 - [Julian Knight](https://github.com/TotallyInformation)
 - [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
+
+_[back to top](#contents)_
