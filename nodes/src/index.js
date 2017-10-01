@@ -50,6 +50,7 @@ $( document ).ready(function() {
         transports: ['polling', 'websocket']
     })
 
+    $('#socketConnectedState').text("Disconnected")
     $('#msgsReceived').text(msgCounter.data)
     $('#msgsControl').text(msgCounter.control)
     $('#msgsSent').text(msgCounter.sent)
@@ -58,6 +59,7 @@ $( document ).ready(function() {
     // When the socket is connected .................
     socket.on('connect', function() {
         debug && console.log('SOCKET CONNECTED - Namespace: ' + ioNamespace)
+        $('#socketConnectedState').text("Connected")
 
         // Reset any reconnect timers
         if (timerid) {
@@ -140,6 +142,7 @@ $( document ).ready(function() {
         // reason === 'io server disconnect' - redeploy of Node instance
         // reason === 'transport close' - Node-RED terminating
         debug && console.log('SOCKET DISCONNECTED - Namespace: ' + ioNamespace + ', Reason: ' + reason)
+        $('#socketConnectedState').text("Disconnected")
 
         // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
         if ( reason === 'io server disconnect' ) {
