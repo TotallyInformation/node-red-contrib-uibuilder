@@ -50,6 +50,9 @@ $( document ).ready(function() {
         transports: ['polling', 'websocket']
     })
 
+    // Make sure we connect the first time ok, wait 2 secs first time then 3, 4.5, etc
+    checkConnect(2000, 1.5)
+
     $('#msgsReceived').text(msgCounter.data)
     $('#msgsControl').text(msgCounter.control)
     $('#msgsSent').text(msgCounter.sent)
@@ -188,6 +191,20 @@ $( document ).ready(function() {
 });
 
 // ----- UTILITY FUNCTIONS ----- //
+
+// try to reconnect after specified delay (msec) and then wait delay * factor and try again, and again...
+var checkConnect = function(delay, factor) {
+    if (timerid) window.clearTimeout(timerid) // we only want one running at a time
+    timerid = window.setTimeout(function(){
+        debug && console.log('Manual SIO reconnect attempt, timeout: ' + delay)
+        // don't need to check whether we have connected as the timer will have been cleared if we have
+        socket.close()    // this is necessary sometimes when the socket fails to connect on startup
+        socket.connect()  // Try to reconnect
+        timerid = null
+        checkConnect(delay*factor, factor) // extend timer for next time round
+    }, delay)
+} // --- End of checkConnect Fn--- //
+
 // send a msg back to Node-RED, NR will generally expect the msg to contain a payload topic
 var sendMsg = function(msgToSend) {
     // Track how many messages have been sent
