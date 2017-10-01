@@ -22,7 +22,6 @@
             name: { value: '' },
             url: { value: 'uibuilder' }, // TODO: needs validation
             fwdInMessages: { value: false },
-            customFoldersReqd: { value: true },
         },
         inputs: 1,
         outputs: 1,
@@ -56,11 +55,6 @@
     <div class="form-row">
         <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
         <label for="node-input-fwdInMessages" style="width: 70%;">Forward received messages direct to output?</label>
-    </div>
-
-    <div class="form-row">
-        <input type="checkbox" id="node-input-customFoldersReqd" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-customFoldersReqd" style="width: 70%;">Use resources in custom folder?</label>
     </div>
 </script>
 
@@ -120,13 +114,6 @@
                 <i>Note</i> that this may result in multiple output messages if your front-end
                 code also auto-sends inbound messages.
             </p>
-        </dd>
-        <dt>Use resources in custom folder?</dt>
-        <dd>
-            Will add the folders either from <code>&lt;userDir>/uibuider/&lt;url>/dist</code> or
-            from <code>&lt;userDir>/uibuider/&lt;url>/src</code>. Also adds any vendor modules
-            if specified in <code>settings.js</code> under the <code>uibuilder.userVendorPackages</code>
-            setting.
         </dd>
     </dl>
 

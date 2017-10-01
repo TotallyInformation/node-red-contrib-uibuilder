@@ -7,6 +7,8 @@ and *[To Do](#to-do)* sections below for what might still need some work.
 
 The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL (end-point) that is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
 
+*Breaking Change in 0.4.0*: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
+
 Eventually, you will be able to "compile" src files using webpack from a button in the nodes config.
 That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
 
@@ -54,16 +56,15 @@ These are in the module's src folder (currently), copy them to the instance src 
 
 JQuery is used in the default JavaScript to give dynamic updates to the web page. If all you need to do
 is some simple dynamic updates of the page, JQuery is likely enough. Normalize.css is also provided to help you with
-standard look and feel.
+standard look and feel. Just remove the references in index.html and the code from index.js if you don't want them.
 
 Any msg sent to the node is forwarded directly to the front-end and is available in the global `msg` variable
 as it would be in Node-RED, use the `msgSend` function to send a message back to Node-RED that
 will be passed downstream from the node.
 
-You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages).
+You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages). You can find this in `~/.node-red/uibuilder/<url>` by default. As a minimum, you need an `index.html` file. But you need the `index.js` file as well if you want Socket.IO communications to work. You will also need `manifest.json` for mobile use.
 
-Just make a copy of the `index.html`, `index.js` and `manifest.json` files from the mast `src` folder to the local `src` folder. The file `manifest.json` allows Add to Homescreen to work correctly in Chrome on Android.
-See the *[Preference Tree](#preference-tree)* and other sections below for how to find these.
+If you want to reset any of the front-end files back to the master template, simply delete one or more of them from your local override folder. They will be copied back from the master _when you restart Node-RED_.
 
 _[back to top](#contents)_
 
@@ -82,23 +83,20 @@ _[back to top](#contents)_
   The `_socketId` attribute is added to any msg sent from the client to Node-RED.
   See [the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances) for more information.
 
-- The node's module contains default html, JavaScript and CSS files that are used as
-  master templates.
-
 - On deployment of the *first* instance, a new folder is created within your Node-RED user directory
   (typically `~/.node-red`) with a fixed name of `uibuilder`.
 
 - On deployment of any new instance, a new sub-folder within `uibuilder` is created.
   The name is the same as the URL path specified in the node instance's settings. (defaults to `uibuilder`). `src` and `dist` sub-folders are also created.
 
-- If the `dist` folder contains an `index.html` file, the `dist` folder will be used,
+- The node's module contains default html, JavaScript and CSS files that are
+  copied to your local src folder for you to edit as required.
+
+- If the local `dist` folder contains an `index.html` file, the `dist` folder will be used,
   otherwise the `src` folder will be used.
 
 - Any resource (html, css, js, image, etc) placed within the `dist`/`src` sub-folder
-  is available to the browser client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above).
-
-- Any resource in the `dist`/`src` sub-folder that has the same name as resources in other resource
-  paths (such as the master resource path) will be given preference - see *Preference Tree* below.
+  is available to the browser client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above). That URL will load `index.html`
 
 - Any msg sent to a node instance is sent through to the UI via Socket.IO.
   If `topic` is set in settings and not in the `msg`, the version from settings will be added.
@@ -123,7 +121,7 @@ _[back to top](#contents)_
 
 The uibuilder node adds a number of statically served web resource locations (physical file-system locations) to the URL path (default `/uibuilder`) defined. It is up to the user to ensure that file/folder names do not clash.
 
-Note that if using the local folders (1 or 2 below), the default/master folders (3/4) are also still available. That means you can rely on files in the master folders and only need to overwrite local files as needed. For example, if you were happy with the master page & scripting but just want to change the CSS, all you need is a local copy of `index.css`
+Note that if using the local folders (1 or 2 below), the default/master folders (3/4) are also still available.
 
 The order of preference is as follows:
 
@@ -137,6 +135,8 @@ The order of preference is as follows:
 
    In this case, an optional node configuration variable (`uibuilder.userVendorPackages`) is used to provide a list of package names that will be added to the `vendor` sub-path of the URL so that users can install their own front-end libraries. This is only added when not using the dist folder as that is expected to have all of the vendor code compiled together using webpack.
 
+   If you want to *reset* any of the front-end files back to the master template, simply delete one or more of them from this folder. They will be copied back from the master _when you restart Node-RED_.
+
 3. The node installations `dist` folder (default physical location: `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/dist`)
 
    *only added if index.html exists in this folder*
@@ -145,9 +145,7 @@ The order of preference is as follows:
 
    *only added if index.html DOES NOT exist in the dist folder*
 
-   This folder contains the following example master files: `index.html`, `index.css`, `index.js`, `manifest.json`.
-
-   There is also a sub-folder called `images` that contains: `logo-red.png`, `logo.png`, `node-red.ico`.
+   This folder currently only contains am `images` folder that contains: `logo-red.png`, `logo.png`, `node-red.ico`.
 
    Override these as needed using the local folders (1/2).
 
@@ -219,9 +217,10 @@ These would be nice to do at some point and would make the node more robust and 
 
 Please feel free to contribute a pull request if you would like to,
 
-- Copy template files to local override folder if not already existing - this will
-  save users having to hunt down the template files which exist in this module.
-  _We might need to add some checks for updated master templates though? Not sure._
+- Separate FE core processes from library handling (e.g. JQuery)
+  So that the code is more robust when users start hacking on it.
+
+- Simplify fs handling by replacing manual code with fs-extra
 
 - Add validation to `url` setting
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
@@ -268,15 +267,30 @@ These are random thoughts that might make it into the To Do list but really need
 
 - _(Maybe compile template resources to dist folder?)_
 
+- _We might need to add some checks for updated master templates? Maybe issue a warning? Not sure._
+
+
 _[back to top](#contents)_
 
 ## Changes
 
-v0.3.9
+v0.4.0
 
+*Breaking Change*: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
+
+- Copy template files to local override folder if not already existing - this will
+  save users having to hunt down the template files which exist in this module.
+- Move master front-end files from `src` to `templates` folder.
+- Tweak front-end `index.js`, better Socket.IO reconnect logic
+  (thanks to [Colin Law](https://github.com/colinl), [Issue 9](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/9), [Pull request #11)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/11).
+  Also tidy code and start to extract JQuery specifics from core logic in preparation for a complete separation to make coding easier for users.
 - Enable msg's to be sent from server to a specific client instance by adding `_socketId`
   attribute to the `msg`. The ID must match the appropriate client ID of course.
 - Links to WIKI and table of contents added to README.
+- Switch from using fs to use fs-extra node.js module. Initially for copying the template files but later on for refactoring all fs code.
+- Remove config switch for "Use reproduces in custom folder" as this is always done now.
+- Add connected state to default page template
+  (thanks to [Colin Law](https://github.com/colinl), [Pull request #12](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/12))
 
 v0.3.8
 

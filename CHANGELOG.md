@@ -1,3 +1,21 @@
+v0.4.0
+
+*Breaking Change*: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
+
+- Copy template files to local override folder if not already existing - this will
+  save users having to hunt down the template files which exist in this module.
+- Move master front-end files from `src` to `templates` folder.
+- Tweak front-end `index.js`, better Socket.IO reconnect logic
+  (thanks to [Colin Law](https://github.com/colinl), [Issue 9](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/9), [Pull request #11)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/11).
+  Also tidy code and start to extract JQuery specifics from core logic in preparation for a complete separation to make coding easier for users.
+- Enable msg's to be sent from server to a specific client instance by adding `_socketId`
+  attribute to the `msg`. The ID must match the appropriate client ID of course.
+- Links to WIKI and table of contents added to README.
+- Switch from using fs to use fs-extra node.js module. Initially for copying the template files but later on for refactoring all fs code.
+- Remove config switch for "Use reproduces in custom folder" as this is always done now.
+- Add connected state to default page template
+  (thanks to [Colin Law](https://github.com/colinl), [Pull request #12](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/12))
+
 v0.3.8
 
 - Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) - not finding normalize.css & JQuery front-end libraries.

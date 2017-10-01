@@ -23,7 +23,7 @@ const nodeVersion = require('../package.json').version
 const serveStatic = require('serve-static'),
       socketio = require('socket.io'),
       path = require('path'),
-      fs = require('fs'),
+      fs = require('fs-extra'),
       events = require('events'),
       getInstalledPath = require('get-installed-path'),
       winston = require('winston')
@@ -71,7 +71,7 @@ module.exports = function(RED) {
         ]
     })
 
-    log.debug("\n\n----------------- uibuilder - module.exports -----------------")
+    log.debug('\n\n----------------- uibuilder - module.exports -----------------')
 
     // Holder for Socket.IO - we want this to survive redeployments of each node instance
     // so that existing clients can be reconnected.
@@ -115,11 +115,10 @@ module.exports = function(RED) {
         // TODO: Needs validation as a suitable URL path
         node.url    = config.url  || 'uibuilder'
         node.fwdInMessages = config.fwdInMessages // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
-        node.customFoldersReqd = config.customFoldersReqd // || true
 
         log.debug( {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'custFldrs': node.customFoldersReqd })
 
-        // User supplied vendor packages - ONLY if customFoldersReqd
+        // User supplied vendor packages
         // & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
         // JK @since 2017-08-17 fix for non-existent properties and use getProps()
         node.userVendorPackages = getProps(RED,config,'userVendorPackages',null) || getProps(RED,RED.settings,'uibuilder.userVendorPackages',[])
@@ -148,6 +147,7 @@ module.exports = function(RED) {
         // The initial deployment = 1
         if ( deployments.hasOwnProperty(node.id) ) deployments[node.id]++
         else deployments[node.id] = 1
+        log.debug(  'deployments', deployments[node.id] )
 
         // We need an http server to serve the page
         const app = RED.httpNode || RED.httpAdmin
@@ -171,86 +171,95 @@ module.exports = function(RED) {
             next()
         }
 
-        // ----- Add custom folder structure if requested ----- //
+        // ----- Create local folder structure ----- //
         var customStatic = function(req,res,next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
-        if ( node.customFoldersReqd ) {
-            let customFoldersOK = true
+        var customFoldersOK = true
+        // NOTE: May be better as async calls? TODO
+        // Make sure the global custom folder exists first
+        try {
+            fs.mkdirSync(node.customAppFolder) // try to create
+            fs.accessSync( node.customAppFolder, fs.constants.W_OK ) // try to access
+        } catch (e) {
+            if ( e.code !== 'EEXIST' ) { // ignore folder exists error
+                log.error('uibuilder custom folder ERROR, path: ' + path.join(RED.settings.userDir, node.customAppFolder) + ', error: ' + e.message)
+                customFoldersOK = false
+            }
+        }
+        // make sure the folder for this node instance exists
+        try {
+            fs.mkdirSync(node.customFolder)
+            fs.accessSync(node.customFolder, fs.constants.W_OK)
+        } catch (e) {
+            if ( e.code !== 'EEXIST' ) {
+                log.error('uibuilder local custom folder ERROR: ' + e.message)
+                customFoldersOK = false
+            }
+        }
+        // Then make sure the DIST & SRC folders for this node instance exist
+        try {
+            fs.mkdirSync( path.join(node.customFolder, 'dist') )
+            fs.mkdirSync( path.join(node.customFolder, 'src') )
+        } catch (e) {
+            if ( e.code !== 'EEXIST' ) {
+                log.error('uibuilder local custom dist or src folder ERROR: ' + e.message)
+                customFoldersOK = false
+            }
+        }
 
-            // NOTE: May be better as async calls? TODO
-            // Make sure the global custom folder exists first
-            try {
-                fs.mkdirSync(node.customAppFolder) // try to create
-                fs.accessSync( node.customAppFolder, fs.constants.W_OK ) // try to access
-            } catch (e) {
-                if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-                    log.error('uibuilder custom folder ERROR, path: ' + path.join(RED.settings.userDir, node.customAppFolder) + ', error: ' + e.message)
-                    customFoldersOK = false
-                }
-            }
-            // make sure the folder for this node instance exists
-            try {
-                fs.mkdirSync(node.customFolder)
-                fs.accessSync(node.customFolder, fs.constants.W_OK)
-            } catch (e) {
-                if ( e.code !== 'EEXIST' ) {
-                    log.error('uibuilder local custom folder ERROR: ' + e.message)
-                    customFoldersOK = false
-                }
-            }
-            // Then make sure the DIST & SRC folders for this node instance exist
-            try {
-                fs.mkdirSync( path.join(node.customFolder, 'dist') )
-                fs.mkdirSync( path.join(node.customFolder, 'src') )
-            } catch (e) {
-                if ( e.code !== 'EEXIST' ) {
-                    log.error('uibuilder local custom dist or src folder ERROR: ' + e.message)
-                    customFoldersOK = false
-                }
-            }
+        if ( customFoldersOK === true ) {
+            // local custom folders are there ...
+            log.debug( 'uibuilder using local front-end folders in ', node.customFolder)
 
-            if ( customFoldersOK === true ) {
-                log.debug( 'uibuilder using local front-end folders in ', node.customFolder)
-            } else {
-                log.error( 'uibuilder wanted to use local front-end folders in ', node.customFolder, ' but could not')
-            }
-
-            // Add static path for local custom files
-            // TODO: need a build capability for dist - nb probably keep vendor and private code separate
-            var stats
-            try {
-                stats = fs.fstatSync( path.join(node.customFolder, 'dist', 'index.html') )
-                // If the ./dist/index.html exists use the dist folder...
-                log.debug('UIbuilder ', node.url, ' Using local dist folder' )
-                customStatic = serveStatic( path.join(node.customFolder, 'dist') )
-                // NOTE: You are expected to have included vendor packages in
-                //       a build process so we are not loading them here
-            } catch (e) {
-                log.debug('UIbuilder', node.url, ' Using local src folder' );
-                customStatic = serveStatic( path.join(node.customFolder, 'src') )
-                // Include vendor resource source paths if needed
-                node.userVendorPackages.forEach(function (packageName) {
-                    // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
-                    // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
-                    var installPath = ''
-                    try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
-                        installPath = getInstalledPath.sync(packageName, {local:true, cwd: RED.settings.userDir})
-                    } catch (e1) {
-                        try {
-                            installPath = require.resolve(packageName)
-                        } catch (e2) {
-                            log.error('UIbuilder: Failed to add user vendor path - no install found for ', packageName, ' Try doing "npm install ', packageName, ' --save" from ', RED.settings.userDir)
-                            RED.log.warn('UIbuilder: Failed to add user vendor path - no install found for ' + packageName + ' Try doing "npm install ' + packageName + ' --save" from ' + RED.settings.userDir)
-                        }
-                    }
-                    if (installPath !== '') {
-                        log.debug('UIbuilder: Adding user vendor path', {'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath})
-                        app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
-                    }
-                })
-            }
+            // Now copy files from the master template folder @since 2017-10-01
+            const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
+            fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
+                if(err){
+                    log.error( 'uibuilder: Error copying template files from ', path.join( __dirname, 'templates'), ' to ', path.join(node.customFolder, 'src'), '. ', err)
+                } else {
+                    log.debug('UIbuilder: Copied template files to local src ', node.customFolder )
+                }
+              })
         } else {
-            log.debug('uibuilder: custom folders not requested')
-        } // ------ End of Add custom folder structure ------- //
+            // Local custom folders are not right!
+            log.error( 'uibuilder wanted to use local front-end folders in ', node.customFolder, ' but could not')
+        }
+
+        // Add static path for local custom files
+        // TODO: need a build capability for dist - nb probably keep vendor and private code separate
+        var stats
+        try {
+            stats = fs.fstatSync( path.join(node.customFolder, 'dist', 'index.html') )
+            // If the ./dist/index.html exists use the dist folder...
+            log.debug('UIbuilder ', node.url, ' Using local dist folder' )
+            customStatic = serveStatic( path.join(node.customFolder, 'dist') )
+            // NOTE: You are expected to have included vendor packages in
+            //       a build process so we are not loading them here
+        } catch (e) {
+            // dist not being used, use src
+            log.debug('UIbuilder', node.url, ' Using local src folder' );
+            customStatic = serveStatic( path.join(node.customFolder, 'src') )
+            // Include vendor resource source paths if needed
+            node.userVendorPackages.forEach(function (packageName) {
+                // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
+                // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
+                var installPath = ''
+                try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
+                    installPath = getInstalledPath.sync(packageName, {local:true, cwd: RED.settings.userDir})
+                } catch (e1) {
+                    try {
+                        installPath = require.resolve(packageName)
+                    } catch (e2) {
+                        log.error('UIbuilder: Failed to add user vendor path - no install found for ', packageName, ' Try doing "npm install ', packageName, ' --save" from ', RED.settings.userDir)
+                        RED.log.warn('UIbuilder: Failed to add user vendor path - no install found for ' + packageName + ' Try doing "npm install ' + packageName + ' --save" from ' + RED.settings.userDir)
+                    }
+                }
+                if (installPath !== '') {
+                    log.debug('UIbuilder: Adding user vendor path', {'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath})
+                    app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+                }
+            })
+        }
+        // ------ End of Create custom folder structure ------- //
 
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
@@ -288,17 +297,11 @@ module.exports = function(RED) {
         app.use( urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
 
         const fullPath = urlJoin( RED.settings.httpNodeRoot, node.url )
-        if ( node.customFoldersReqd ) {
-            log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
-            log.info('UI Builder - Local file overrides at ' + node.customFolder)
-            RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
-            RED.log.info('UI Builder - Local file overrides at ' + node.customFolder)
-        } else {
-            log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
-            log.info('UI Builder - Local file overrides not requested')
-            RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
-            RED.log.info('UI Builder - Local file overrides not requested')
-        }
+
+        log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
+        log.info('UI Builder - Local file overrides at ' + node.customFolder)
+        RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
+        RED.log.info('UI Builder - Local file overrides at ' + node.customFolder)
 
         //console.dir(app._router.stack)
         //if (debug && process.env.NODE_ENV === 'development') { // Only in dev environment
@@ -459,7 +462,6 @@ function inputHandler(msg, node, RED, io, ioNs, log) {
 
     // pass the complete msg object to the uibuilder client
     // TODO: This should have some safety validation on it!
-    let sid = ''
     if (msg._socketId) {
         ioNs.to(msg._socketId).emit(node.ioChannels.server, msg)
     } else {
