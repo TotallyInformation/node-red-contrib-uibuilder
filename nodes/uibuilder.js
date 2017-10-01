@@ -361,6 +361,9 @@ module.exports = function(RED) {
             })
 
             socket.on('error', function(err) {
+                log.debug(
+                    `UIbuilder: ${node.url} ERROR received, Reason: ${err.message}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
+                )
                 RED.log.audit({
                     'UIbuilder': node.url+' ERROR received', 'ID': socket.id,
                     'Reason': err.message
