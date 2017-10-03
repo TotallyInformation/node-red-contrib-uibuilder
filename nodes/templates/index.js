@@ -22,14 +22,15 @@
 
 const debug = true,
       ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'},
-      msgCounter = {control: 0, sent: 0, data: 0}
+      msgCounter = {control: 0, sent: 0, data: 0},
+      retryMs = 2000,   // starting retry ms period for manual socket reconnections workaround
+      retryFactor = 1.5 // starting delay factor for subsequent reconnect attempts
       //cookies = []
 
 var timerid,
     msg = {},
     ioNamespace = '', // '/' + readCookie('uibuilder-namespace'),
-    socket,
-    retryMs = 2000 // retry ms period for manual socket reconnections workaround
+    socket
 
 // Get the namespace from the current URL rather than a cookie which seems unreliable
 // if last element is '', take [-1]
@@ -47,7 +48,7 @@ socket = io(ioNamespace, {
     transports: ['polling', 'websocket']
 })
 
-checkConnect(2000, 1.5)
+checkConnect(retryMs, retryFactor)
 
 // When the socket is connected .................
 var ioConnected = false
@@ -145,7 +146,7 @@ socket.on('disconnect', function(reason) {
 
     // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
     if ( reason === 'io server disconnect' ) {
-        checkConnect(2000, 1.5)
+        checkConnect(retryMs, retryFactor)
     }
 }) // --- End of socket disconnect processing ---
 
