@@ -364,10 +364,9 @@ module.exports = function(RED) {
             })
 
             socket.on('error', function(err) {
-                RED.log.audit({
-                    'UIbuilder': node.url+' ERROR received', 'ID': socket.id,
-                    'Reason': err.message
-                })
+                log.error(
+                    `UIbuilder: ${node.url} ERROR received, ID: ${socket.id}, Reason: ${err.message}`
+                )
             })
 
             /* More Socket.IO events but we really don't need to monitor them
