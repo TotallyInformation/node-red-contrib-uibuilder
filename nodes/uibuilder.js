@@ -17,16 +17,16 @@
 'use strict'
 
 // Module name must match this nodes html file
-const moduleName = 'uibuilder'
+const moduleName  = 'uibuilder'
 const nodeVersion = require('../package.json').version
 
-const serveStatic = require('serve-static'),
-      socketio = require('socket.io'),
-      path = require('path'),
-      fs = require('fs-extra'),
-      events = require('events'),
+const serveStatic      = require('serve-static'),
+      socketio         = require('socket.io'),
+      path             = require('path'),
+      fs               = require('fs-extra'),
+      events           = require('events'),
       getInstalledPath = require('get-installed-path'),
-      winston = require('winston')
+      winston          = require('winston')
 
 // These are loaded to the /<uibuilder>/vendor URL path
 const vendorPackages = [
@@ -43,12 +43,6 @@ const deployments = {}
 //  then add processing to ensure that the URL's are unique.
 const instances = {}
 
-// Will we use "compiled" version of module front-end code?
-var useCompiledCode = false
-fs.stat(path.join(__dirname, 'dist', 'index.html'), function(err, stat) {
-    if (!err) useCompiledCode = true
-})
-
 module.exports = function(RED) {
 
     'use strict'
@@ -58,16 +52,21 @@ module.exports = function(RED) {
     const debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
 
     // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
-    // @TODO add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
+    // @TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
+    var winstonTransport
+    if (debug) {
+        // @since 2017-10-06 if debugging, log to ~/.node-red/uibuilder.log, otherwise log to console
+        winstonTransport = new (winston.transports.File)({ filename: path.join(RED.settings.userDir, 'uibuilder.log'), json:false }) // file in user folder ~/.node-red
+    } else {
+        winstonTransport = new (winston.transports.Console)()
+    }
     const log = new winston.Logger({
         // set log level based on debug var from settings.js/uibuilder
-        level: debug ? 'silly' : 'info', // error, warn, info, verbose, debug, silly
+        level: debug ? 'silly' : 'warn', // error, warn, info, verbose, debug, silly
         // Where do we want log output to go?
         transports: [
-            // @todo: format console output to match RED.log
-            //new (winston.transports.Console)(),
-            new (winston.transports.File)({ filename: path.join(RED.settings.userDir, 'uibuilder.log'), json:false }) // file in user folder ~/.node-red
-            //new (winston.transports.File)({filename: path.join(__dirname, 'uibuilder.log'),json: false})
+            // @TODO: format console output to match RED.log
+            winstonTransport
         ]
     })
 
@@ -128,10 +127,8 @@ module.exports = function(RED) {
         //   Files in this folder are also served to URL but take preference
         //   over those in the nodes folders (which act as defaults)
         node.customFolder = path.join(node.customAppFolder, node.url)
-        // Use custom dist folder? (if not, will use custom src fldr) // TODO
-        node.customFolderDist = false
 
-        log.debug( { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder, 'custFldrDist': node.customFolderDist } )
+        log.debug( { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
 
         // Socket.IO config
         node.ioClientsCount = 0 // how many Socket clients connected to this instance?
@@ -174,7 +171,7 @@ module.exports = function(RED) {
         // ----- Create local folder structure ----- //
         var customStatic = function(req,res,next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
         var customFoldersOK = true
-        // NOTE: May be better as async calls? TODO
+        // TODO: May be better as async calls - probably not, but a promisified version would be OK?
         // Make sure the global custom folder exists first
         try {
             fs.mkdirSync(node.customAppFolder) // try to create
@@ -210,13 +207,14 @@ module.exports = function(RED) {
             // local custom folders are there ...
             log.debug( 'uibuilder using local front-end folders in ', node.customFolder)
 
-            // Now copy files from the master template folder @since 2017-10-01
+            // Now copy files from the master template folder (instead of master src) @since 2017-10-01
+            // Note: We don't copy the master dist folder
             const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
             fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
                 if(err){
                     log.error( 'uibuilder: Error copying template files from ', path.join( __dirname, 'templates'), ' to ', path.join(node.customFolder, 'src'), '. ', err)
                 } else {
-                    log.debug('UIbuilder: Copied template files to local src ', node.customFolder )
+                    log.debug('UIbuilder: Copied template files to local src (not overwriting) ', node.customFolder )
                 }
               })
         } else {
@@ -226,17 +224,17 @@ module.exports = function(RED) {
 
         // Add static path for local custom files
         // TODO: need a build capability for dist - nb probably keep vendor and private code separate
-        var stats
         try {
-            stats = fs.fstatSync( path.join(node.customFolder, 'dist', 'index.html') )
+            // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
+            fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
             // If the ./dist/index.html exists use the dist folder...
-            log.debug('UIbuilder ', node.url, ' Using local dist folder' )
+            log.debug('UIbuilder:', node.url, ' Using local dist folder' )
             customStatic = serveStatic( path.join(node.customFolder, 'dist') )
             // NOTE: You are expected to have included vendor packages in
             //       a build process so we are not loading them here
         } catch (e) {
-            // dist not being used, use src
-            log.debug('UIbuilder', node.url, ' Using local src folder' );
+            // dist not being used or not accessible, use src
+            log.debug('UIbuilder:', node.url, ' dist folder not in use or not accessible. Using local src folder. ', e.message );
             customStatic = serveStatic( path.join(node.customFolder, 'src') )
             // Include vendor resource source paths if needed
             node.userVendorPackages.forEach(function (packageName) {
@@ -264,13 +262,16 @@ module.exports = function(RED) {
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
         var masterStatic = function(req,res,next) { next() }
-        if (useCompiledCode) {
-            log.debug('UIbuilder: ', node.url, ' Using master production build folder' )
+        try {
+            // Will we use "compiled" version of module front-end code?
+            fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
+            log.debug('UIbuilder:', node.url, ' Using master production build folder' )
             // If the ./dist/index.html exists use the dist folder...
             masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
-        } else {
+        } catch (e) {
             // ... otherwise, use dev resources at ./src/
             log.debug('UIbuilder:', node.url, ' Using master src folder and master vendor packages' )
+            log.debug('  Reason for not using master dist folder: ', e.message )
             masterStatic = serveStatic( path.join( __dirname, 'src' ) )
             // Include vendor resource source paths if needed
             vendorPackages.forEach(function (packageName) {
