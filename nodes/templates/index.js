@@ -18,7 +18,7 @@
  * This is the default, template Front-End JavaScript for uibuilder
  * It is usable as is though you will want to add your own code to
  * process incoming and outgoing messages.
- * 
+ *
  *   uibuilder: The main global object containing the following...
  *     Methods:
  *       .onChange(attribute, callbackFn) - listen for changes to attribute and execute callback when it changes
@@ -30,7 +30,7 @@
  *       .uiDebug(type,msg)     - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
  *     Attributes with change events (only accessible via .get method except for msg)
  *       .msg          - Copy of the last msg sent from Node-RED over Socket.IO
- *       .send         - Copy of the last msg sent by us to Node-RED
+ *       .sentMsg      - Copy of the last msg sent by us to Node-RED
  *       .ctrlMsg      - Copy of the last control msg received by us from Node-RED (Types: ['shutdown','server connected'])
  *       .msgsReceived - How many standard messages have we received
  *       .msgsSent     - How many messages have we sent
@@ -62,7 +62,7 @@ $( document ).ready(function() {
 
     // Turn on debugging (default is off)
     uibuilder.debug(true)
-    
+
     // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
     // Note that you can also listen for 'msgsReceived' as they are updated at the same time
     // but newVal relates to the attribute being listened to.
@@ -81,7 +81,7 @@ $( document ).ready(function() {
 
     // Try setting a restricted, internal attribute - see the warning in the browser console
     uibuilder.set('msg', 'You tried but failed!')
-    
+
     // Remember that onChange functions don't trigger if you haven't set them
     // up BEFORE an attribute change.
     uibuilder.onChange('msgCopy', function(newVal){
@@ -92,7 +92,7 @@ $( document ).ready(function() {
     // msg won't yet have been received
     uibuilder.set('msgCopy', uibuilder.msg)
     // Hint: Try putting this set into the onChange for 'msg'
-    
+
     // As noted, we could get the msg here too
     uibuilder.onChange('msgsReceived', function(newVal){
         console.info('New msg sent to us from Node-RED over Socket.IO. Total Count: ', newVal)

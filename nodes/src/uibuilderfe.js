@@ -35,7 +35,7 @@
  *       .uiDebug(type,msg)     - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
  *     Attributes with change events (only accessible via .get method except for msg)
  *       .msg          - Copy of the last msg sent from Node-RED over Socket.IO
- *       .send         - Copy of the last msg sent by us to Node-RED
+ *       .sentMsg      - Copy of the last msg sent by us to Node-RED
  *       .ctrlMsg      - Copy of the last control msg received by us from Node-RED (Types: ['shutdown','server connected'])
  *       .msgsReceived - How many standard messages have we received
  *       .msgsSent     - How many messages have we sent
