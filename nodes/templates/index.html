@@ -12,12 +12,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
-
-    <title>Node-RED UI Builder</title>
-    <meta name="description" content="Node-RED UI Builder">
-
-    <link rel="icon" href="images/node-red.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
 
     <!-- See https://goo.gl/OOhYW5 -->
     <link rel="manifest" href="manifest.json">
@@ -39,11 +34,19 @@
         <link rel="apple-touch-icon" sizes="144x144" href="/images/manifest/icon-144x144.png">
         <link rel="apple-touch-icon" sizes="192x192" href="/images/manifest/icon-192x192.png">
     -->
+
+    <title>Node-RED UI Builder</title>
+    <meta name="description" content="Node-RED UI Builder">
+
+    <link rel="icon" href="images/node-blue.ico">
+
+    <!-- OPTIONAL: Normalize is used to make things the same across browsers. Index is for your styles -->
     <link rel="stylesheet" href="vendor/normalize.css/normalize.css">
     <link rel="stylesheet" href="index.css">
 
 </head>
 <body>
+    <!-- The "app" element is where the code for dynamic updates is attached -->
     <div id="app">
         <h1>
             Welcome to UIbuilder for Node-RED
@@ -58,20 +61,29 @@
             node for details on how to use UIbuilder.
         </p>
         <h2>Dynamic Data (via JQuery)</h2>
+        <p>UIBuilder Front-End Version: <span id="feVersion"></span></p>
         <p>Websocket State: <span id="socketConnectedState"></span></p>
         <p>Messages Received: <span id="msgsReceived"></span></p>
         <p>Control Messages Received: <span id="msgsControl"></span></p>
         <p>Messages Sent: <span id="msgsSent"></span></p>
         <p>Last Message Received:</p>
         <code id="showMsg"></code>
+        <p>Last Control Message Received:</p>
+        <code id="showCtrlMsg"></code>
         <p>Last Message Sent:</p>
         <code id="showMsgSent"></code>
     </div>
 
-    <!-- Socket.IO is loaded only once for all instances -->
+    <!-- These MUST be in the right order. Note no leading / -->
+    <!-- REQUIRED: Socket.IO is loaded only once for all instances
+                   Without this, you don't get a websocket connection -->
     <script src="/uibuilder/socket.io/socket.io.js"></script>
     <!-- Note no leading / -->
+    <!-- OPTIONAL: JQuery can be removed if not required -->
     <script src="vendor/jquery/dist/jquery.min.js"></script>
+    <!-- REQUIRED: Sets up Socket listeners and the msg object -->
+    <script src="uibuilderfe.js"></script>
+    <!-- OPTIONAL: You probably want this. Put your custom code here -->
     <script src="index.js"></script>
 
 </body>

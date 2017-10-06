@@ -9,6 +9,8 @@ The idea is to allow users to use their own html/css/js/etc code to define a UI 
 
 *Breaking Change in 0.4.0*: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
 
+*Front-end changes in 0.4.2*: You will want the new master template files as they use a new library that makes your own custom code very much easier.
+
 Eventually, you will be able to "compile" src files using webpack from a button in the nodes config.
 That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
 
@@ -52,7 +54,7 @@ There is a little more information available in the [WIKI](https://github.com/To
 ## Out of the box
 
 Out of the box, you get a simple index.html template with matching css & JavaScript.
-These are in the module's src folder (currently), copy them to the instance src folder if you want to override them.
+These are in the module's master template folder, they are automatically copied over to the instance src folder when you first deploy so that you can override them. If you want to reset, you can simply delete your local copies and the master templates will be copied back _when you restart Node-RED_.
 
 JQuery is used in the default JavaScript to give dynamic updates to the web page. If all you need to do
 is some simple dynamic updates of the page, JQuery is likely enough. Normalize.css is also provided to help you with
@@ -64,7 +66,7 @@ will be passed downstream from the node.
 
 You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages). You can find this in `~/.node-red/uibuilder/<url>` by default. As a minimum, you need an `index.html` file. But you need the `index.js` file as well if you want Socket.IO communications to work. You will also need `manifest.json` for mobile use.
 
-If you want to reset any of the front-end files back to the master template, simply delete one or more of them from your local override folder. They will be copied back from the master _when you restart Node-RED_.
+The local `index.(html|js)` files are well documented and should show you how to get started with your own customisations. There are also some examples, with code, on the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
 
 _[back to top](#contents)_
 
@@ -78,32 +80,35 @@ _[back to top](#contents)_
 - Each node instance gets its own Socket.IO namespace matching the URL path setting.
   Note that Socket.IO will efficiently share sockets while keeping traffic separated by namespace.
 
+- There is a front-end library `uibuilderfe.js` that hides all the complexities of using Socket.IO
+  so that your own FE code is easy to write. The default `index.js` file has details and examples of use.
+
+- Users can install front-end libraries using npm into their `userDir` folder. If using the `src`
+  sub-folder, these can be accessed in front-end code via the "vendor" path, see below. The list of user libraries made available is given via Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
+
+- The node's module contains default html, JavaScript and CSS master template files that are
+  copied to your local src folder for you to edit as required.
+
+- Any msg sent to a node instance is sent through to the UI via Socket.IO.
+  If `topic` is set in settings and not in the `msg`, the version from settings will be added.
+  NOTE that this may present security and/or performance issues. In particular, you should remove msg.res and msg.req objects as they are both very large and often contain circular references.
+
 - Including a `_socketId` attribute on messages sent from Node-RED will send to that ID only.
   An ID is associated with a specific browser tab and is reset when the page is reloaded so this isn't too easy to use as yet (see [To Do list](to-do)).
   The `_socketId` attribute is added to any msg sent from the client to Node-RED.
   See [the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances) for more information.
 
-- On deployment of the *first* instance, a new folder is created within your Node-RED user directory
-  (typically `~/.node-red`) with a fixed name of `uibuilder`.
+- On deployment of the *first* instance of uibuilder,
+  a new folder is created within your Node-RED user directory (typically `~/.node-red`) with a fixed name of `uibuilder`.
 
 - On deployment of any new instance, a new sub-folder within `uibuilder` is created.
   The name is the same as the URL path specified in the node instance's settings. (defaults to `uibuilder`). `src` and `dist` sub-folders are also created.
-
-- The node's module contains default html, JavaScript and CSS files that are
-  copied to your local src folder for you to edit as required.
 
 - If the local `dist` folder contains an `index.html` file, the `dist` folder will be used,
   otherwise the `src` folder will be used.
 
 - Any resource (html, css, js, image, etc) placed within the `dist`/`src` sub-folder
   is available to the browser client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above). That URL will load `index.html`
-
-- Any msg sent to a node instance is sent through to the UI via Socket.IO.
-  If `topic` is set in settings and not in the `msg`, the version from settings will be added.
-  NOTE that this may present security and/or performance issues. In particular, you should remove msg.res and msg.req objects as they are both very large and often contain circular references.
-
-- Users can install front-end libraries using npm into their `userDir` folder. If using the `src`
-  sub-folder, these can be accessed in front-end code via the "vendor" path, see below. The list of user libraries made available is given via Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
 
 - Eventually, a link to webpack will be provided to enable packing/compiling
   of `src` code to `dist`.
@@ -114,6 +119,8 @@ You might like to try some lightweight front-end libraries (in addition to or in
   Based originally on the Vue API, uses a virtual DOM, possibly the simplest UI library to use. You can remove JQuery if you use this, it isn't needed.
 - [RiotJS](http://riotjs.com/) is a lightweight UI library, REACT-like but only 10k.
 - [Mini.CSS](http://minicss.org/index) is a minimal, responsive, style-agnostic CSS framework. Only 7kb. You can remove Normalize.css if you use this, it is built in.
+
+Examples for using some of these are available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
 
 _[back to top](#contents)_
 
@@ -158,17 +165,16 @@ _[back to top](#contents)_
 
 ### Front-end path summary
 
-Front-end files in `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/src/` may use the
-url paths:
+Front-end files in `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/src/` may use the url paths:
 
 - `[/<httpNodeRoot>]/<url>/` - for most things
   e.g. `<script src="index.js"></script>`
+
 - `vendor` - for things like normalize.css & JQuery and other front-end libraries installed using
-  npm either by this module or as packages in your `userDir`
-  e.g. `<link rel="stylesheet" href="vendor/normalize.css/normalize.css">`
+  npm either by this module or as packages in your `userDir` e.g. `<link rel="stylesheet" href="vendor/normalize.css/normalize.css">`
+
 - `<script src="/uibuilder/socket.io/socket.io.js"></script>` - for socket.io
-  The static /uibuilder prefix is used here to ensure all instances of clients for this node
-  use the same, correct, instance of socket.io
+  The static /uibuilder prefix is used here to ensure all instances of clients for this node use the same, correct, instance of socket.io
 
 ### Physical file/folder location summary
 
@@ -176,18 +182,19 @@ Folders and files for resources on the device running Node-RED are:
 
 - `<userDir>/uibuilder/<url>/src/` - local source files for front-end use (e.g. html, js, css)
 - `<userDir>/uibuilder/<url>/dist/` - local compiled files for front-end use
-- `<userDir>/node_modules/node-red-contrib-uibuilder/nodes/src/` - this modules source files for front-end use (e.g. html, js, css)
+- `<userDir>/node_modules/node-red-contrib-uibuilder/nodes/template/` -
+  this modules master template source files for front-end use - copied to local folders on deployment
+- `<userDir>/node_modules/node-red-contrib-uibuilder/nodes/src/` -
+  this modules source files for front-end use (e.g. html, js, css)
 - `<userDir>/node_modules/node-red-contrib-uibuilder/nodes/dist/` - this modules compiled files for front-end use
 - `<userDir>/node_modules/<package-name>` - when included via the `uibuilder.userVendorPackages` global
-  setting (in `settings.js`).
-  Note that each package will have its own folder structure that you will need to understand in order to use the package in the browser. These are often poorly documented.
+  setting (in `settings.js`). Note that each package will have its own folder structure that you will need to understand in order to use the package in the browser. These are often poorly documented.
 
 _[back to top](#contents)_
 
 ## Known Issues
 
-I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up
-at some point.
+I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
 
 - **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
   about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
@@ -198,11 +205,6 @@ at some point.
 - Currently, it doesn't appear possible to remove routes from Express v4 dynamically.
   Some get removed and some don't, it's about the best I can do unless someone has a better idea.
   This means that you get redundant routes when you redeploy the node instance. Doesn't affect running but probably uses memory.
-
-- Winston logging always produces a log file. If `debug:true`, the log file is detailed,
-  otherwise only `info`, `warn` and `error` messages are output.
-  It would probably be better to use standard Node-RED logging for non-debug output. Note that some key messages *are* output to the NR log as well.
-  You should occasionally clear down the log file.
 
 - Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`.
   Some installs don't seem to be doing this for some reason.
@@ -217,11 +219,6 @@ These would be nice to do at some point and would make the node more robust and 
 
 Please feel free to contribute a pull request if you would like to,
 
-- Separate FE core processes from library handling (e.g. JQuery)
-  So that the code is more robust when users start hacking on it.
-
-- Simplify fs handling by replacing manual code with fs-extra
-
 - Add validation to `url` setting
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
 
@@ -230,11 +227,6 @@ Please feel free to contribute a pull request if you would like to,
 - Add integrated ExpressJS security to Socket.IO
 
 - Process `httpNodeAuth`
-
-- Add FE code to enable easier integration with user-supplied function on receipt of msg.
-  Maybe a global fn name or msg.prototype?
-
-- Tidy front-end JS code to make integration easier
 
 - Add feature to send a refresh indicator to FE when switching local
   folder use on/off so that FE auto-reloads
@@ -273,6 +265,20 @@ These are random thoughts that might make it into the To Do list but really need
 _[back to top](#contents)_
 
 ## Changes
+
+v0.4.2
+**Note:** The master front-end template files have changed significantly in this release. It is suggested that you rename your local folder (`~/.node-red/uibuilder/uibuilder`) - and let the node rebuild it for you with the latest template. Most of the message handling code is now hidden away in a JavaScript file that you don't need to deal with `uibuilderfe.js`. The new `index.html` automatically loads that for you and the new `index.js` shows you how to use it. The old templates still work but aren't as nice and may stop working correctly in the future.
+
+- Restructure the front-end JavaScript.
+  A single global object is created by `uibuilderfe.js` called `uibuilder`. This encapsulates all of the core logic. It has an `onChange` method that lets you monitor its attributes for changes and take action as appropriate.
+  Debugging is also easier to turn on/off by the function `uibuilder.debug(true)`. It has `set` and `get` methods for writing/reading attributes; `set` disallows setting of core attributes.
+  There is also a `uibuilder.send` method that sends a message back to Node-RED - e.g. `uibuilder.send({topic:'uibuilder',payload:'Smashing!'})`
+- Fix for using `dist` folders instead of `src` ([Issue 13](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/13)). Also improved debug logs
+- Changed logging so that, if not using the debug setting,
+  produces only minimal output and that goes to the standard Node-RED log instead of the log file. Turning on debugging using the setting in `settings.js` will output to the log file `~/.node-red/uibuilder.log`
+- Added default master src/index.html which covers the situation where you delete your live, local index.html from dist or src. You get a page that tells you how to fix it.
+- Page icon changed from red to blue to help visual identification of the page amongst other Node-RED tabs
+- More tidying of the documentation. Making sure it is consistent and removing to do entries now completed
 
 v0.4.0
 

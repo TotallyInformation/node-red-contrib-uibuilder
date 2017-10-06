@@ -1,4 +1,4 @@
-/*global document,$,window,io */
+/*global document,$,window,uibuilder */
 /*
   Copyright (c) 2017 Julian Knight (Totally Information)
 
@@ -18,228 +18,115 @@
  * This is the default, template Front-End JavaScript for uibuilder
  * It is usable as is though you will want to add your own code to
  * process incoming and outgoing messages.
+ * 
+ *   uibuilder: The main global object containing the following...
+ *     Methods:
+ *       .onChange(attribute, callbackFn) - listen for changes to attribute and execute callback when it changes
+ *       .get(attribute)        - Get any available attribute
+ *       .set(attribute, value) - Set any available attribute (can't overwrite internal attributes)
+ *       .msg                   - Shortcut to get the latest value of msg. Equivalent to uibuilder.get('msg')
+ *       .send(msg)             - Shortcut to send a msg back to Node-RED manually
+ *       .debug(true/false)     - Turn on/off debugging
+ *       .uiDebug(type,msg)     - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
+ *     Attributes with change events (only accessible via .get method except for msg)
+ *       .msg          - Copy of the last msg sent from Node-RED over Socket.IO
+ *       .send         - Copy of the last msg sent by us to Node-RED
+ *       .ctrlMsg      - Copy of the last control msg received by us from Node-RED (Types: ['shutdown','server connected'])
+ *       .msgsReceived - How many standard messages have we received
+ *       .msgsSent     - How many messages have we sent
+ *       .msgsCtrl     - How many control messages have we received
+ *       .ioConnected  - Is Socket.IO connected right now? (true/false)
+ *     Attributes without change events
+ *           (only accessible via .get method, reload page to get changes, don't change unless you know what you are doing)
+ *       .debug       - true/false, controls debug console logging output
+ *       ---- You are not likely to need any of these ----
+ *       .version     - check the current version of the uibuilder code
+ *       .ioChannels  - List of the channel names in use [uiBuilderControl, uiBuilderClient, uiBuilder]
+ *       .retryMs     - starting retry ms period for manual socket reconnections workaround
+ *       .retryFactor - starting delay factor for subsequent reconnect attempts
+ *       .ioNamespace - Get the namespace from the current URL
+ *       .ioPath      - make sure client uses Socket.IO version from the uibuilder module (using path)
+ *       .ioTransport - ['polling', 'websocket']
+ *
+ *   makeMeAnObject(thing, attribute='payload') - Utility function: make sure that 'thing' is an object
  */
-
-const debug = true,
-      ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'},
-      msgCounter = {control: 0, sent: 0, data: 0},
-      retryMs = 2000,   // starting retry ms period for manual socket reconnections workaround
-      retryFactor = 1.5 // starting delay factor for subsequent reconnect attempts
-      //cookies = []
-
-var timerid,
-    msg = {},
-    ioNamespace = '', // '/' + readCookie('uibuilder-namespace'),
-    socket
-
-// Get the namespace from the current URL rather than a cookie which seems unreliable
-// if last element is '', take [-1]
-var u = window.location.pathname.split('/')
-ioNamespace = u.pop()
-if (ioNamespace === '') ioNamespace = u.pop()
-// Socket.IO namespace HAS to start with a leading slash
-ioNamespace = '/' + ioNamespace
-
-debug && console.log('IO Namespace: ' + ioNamespace)
-
-// Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
-socket = io(ioNamespace, {
-    path: '/uibuilder/socket.io',
-    transports: ['polling', 'websocket']
-})
-
-checkConnect(retryMs, retryFactor)
-
-// When the socket is connected .................
-var ioConnected = false
-socket.on('connect', function() {
-    debug && console.log('SOCKET CONNECTED - Namespace: ' + ioNamespace)
-
-    ioConnected = true
-    $('#socketConnectedState').text('Connected')
-
-    // Reset any reconnect timers
-    if (timerid) {
-        window.clearTimeout(timerid)
-        retryMs = 2000
-        timerid = null
-    }
-
-}) // --- End of socket connection processing ---
-
-// When Node-RED uibuilder node sends a msg over Socket.IO to us ...
-socket.on(ioChannels.server, function(receivedMsg) {
-    debug && console.info('uibuilder:socket.on.server - msg received - Namespace: ' + ioNamespace)
-    debug && console.dir(receivedMsg)
-
-    // Make sure that msg is an object & not null
-    if ( receivedMsg === null ) {
-        receivedMsg = {}
-    } else if ( typeof receivedMsg !== 'object' ) {
-        receivedMsg = { 'payload': receivedMsg }
-    }
-
-    // Save the msg for further processing
-    msg = receivedMsg
-
-    // Track how many messages have been received
-    msgCounter.data++
-
-    // TODO: Add a check for a pre-defined global function here
-    //       to make it easier for users to add their own code
-    //       to process receipt of new msg
-    //       OR MAYBE use msg.prototype to add a function?
-    $('#msgsReceived').text(msgCounter.data)
-    $('#showMsg').text(JSON.stringify(msg))
-
-    // Test auto-response - not really required but useful when getting started
-    if (debug) {
-        sendMsg({payload: 'We got a message from you, thanks'})
-    }
-
-}) // -- End of websocket receive DATA msg from Node-RED -- //
-
-// Receive a CONTROL msg from Node-RED
-socket.on(ioChannels.control, function(receivedCtrlMsg) {
-    debug && console.info('uibuilder:socket.on.control - msg received - Namespace: ' + ioNamespace)
-    debug && console.dir(receivedCtrlMsg)
-
-
-    // Make sure that msg is an object & not null
-    if ( receivedCtrlMsg === null ) {
-        receivedCtrlMsg = {}
-    } else if ( typeof receivedCtrlMsg !== 'object' ) {
-        receivedCtrlMsg = { 'payload': receivedCtrlMsg }
-    }
-
-    msgCounter.control++
-    $('#msgsControl').text(msgCounter.control)
-    $('#showMsg').text(JSON.stringify(receivedCtrlMsg))
-
-    switch(receivedCtrlMsg.type) {
-        case 'shutdown':
-            // Node-RED is shutting down
-            break
-        case 'server connected':
-            // We are connected to the server
-            break
-        default:
-            // Anything else
-    }
-
-    // Test auto-response
-    if (debug) {
-        sendMsg({payload: 'We got a control message from you, thanks'})
-    }
-
-}) // -- End of websocket receive CONTROL msg from Node-RED -- //
-
-// When the socket is disconnected ..............
-socket.on('disconnect', function(reason) {
-    // reason === 'io server disconnect' - redeploy of Node instance
-    // reason === 'transport close' - Node-RED terminating
-    // reason === 'ping timeout' - didn't receive a pong response?
-    debug && console.log('SOCKET DISCONNECTED - Namespace: ' + ioNamespace + ', Reason: ' + reason)
-
-    ioConnected = false
-    $('#socketConnectedState').text('Disconnected')
-
-    // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
-    if ( reason === 'io server disconnect' ) {
-        checkConnect(retryMs, retryFactor)
-    }
-}) // --- End of socket disconnect processing ---
-
-/* We really don't need these, just for interest
-    socket.on('connect_error', function(err) {
-        debug && console.log('SOCKET CONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
-        //console.dir(err)
-    }) // --- End of socket connect error processing ---
-    socket.on('connect_timeout', function(data) {
-        debug && console.log('SOCKET CONNECT TIMEOUT - Namespace: ' + ioNamespace)
-        console.dir(data)
-    }) // --- End of socket connect timeout processing ---
-    socket.on('reconnect', function(attemptNum) {
-        debug && console.log('SOCKET RECONNECTED - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
-    }) // --- End of socket reconnect processing ---
-    socket.on('reconnect_attempt', function(attemptNum) {
-        debug && console.log('SOCKET RECONNECT ATTEMPT - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
-    }) // --- End of socket reconnect_attempt processing ---
-    socket.on('reconnecting', function(attemptNum) {
-        debug && console.log('SOCKET RECONNECTING - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
-    }) // --- End of socket reconnecting processing ---
-    socket.on('reconnect_error', function(err) {
-        debug && console.log('SOCKET RECONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
-        //console.dir(err)
-    }) // --- End of socket reconnect_error processing ---
-    socket.on('reconnect_failed', function(data) {
-        debug && console.log('SOCKET RECONNECT FAILED - Namespace: ' + ioNamespace)
-        console.dir(data)
-    }) // --- End of socket reconnect_failed processing ---
-    socket.on('ping', function() {
-        debug && console.log('SOCKET PING - Namespace: ' + ioNamespace)
-    }) // --- End of socket ping processing ---
-    socket.on('pong', function(data) {
-        debug && console.log('SOCKET PONG - Namespace: ' + ioNamespace + ', Data: ' + data)
-    }) // --- End of socket pong processing ---
-*/
 
 // When JQuery is ready, update
 $( document ).ready(function() {
-    debug && console.log('Document Ready: IO Namespace: ' + ioNamespace)
+    // Initial set
+    $('#msgsReceived').text( uibuilder.get('msgsReceived') )
+    $('#msgsControl').text( uibuilder.get('msgsCtrl') )
+    $('#msgsSent').text( uibuilder.get('msgsSent') )
+    $('#socketConnectedState').text( uibuilder.get('ioConnected') )
+    $('#feVersion').text( uibuilder.get('version') )
 
-    $('#socketConnectedState').text('Disconnected')
-    $('#msgsReceived').text(msgCounter.data)
-    $('#msgsControl').text(msgCounter.control)
-    $('#msgsSent').text(msgCounter.sent)
-    $('#showMsg').text(JSON.stringify(msg))
+    // Turn on debugging (default is off)
+    uibuilder.debug(true)
+    
+    // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
+    // Note that you can also listen for 'msgsReceived' as they are updated at the same time
+    // but newVal relates to the attribute being listened to.
+    uibuilder.onChange('msg', function(newVal){
+        console.info('property msg changed!')
+        console.dir(newVal)
+        $('#showMsg').text(JSON.stringify(newVal))
+        //uibuilder.set('msgCopy', newVal)
+    })
 
+    // You can get attributes manually. Non-existent attributes return 'undefined'
+    //console.dir(uibuilder.get('msg'))
 
-})
+    // You can also set things manually. See the list of attributes top of page.
+    // You can add arbitrary attributes to the object, you cannot overwrite internal attributes
 
-// ----- UTILITY FUNCTIONS ----- //
-// try to reconnect to Socket.IO after specified delay (msec) and then wait delay * factor and try again, and again...
-function checkConnect(delay, factor) {
-    var depth = depth++ || 1
-    debug && console.log('checkConnect. Depth: ', depth, ' , Delay: ', delay, ', Factor: ', factor)
-    if (timerid) window.clearTimeout(timerid) // we only want one running at a time
-    timerid = window.setTimeout(function(){
-        debug && console.log('checkConnect timeout. SIO reconnect attempt, timeout: ' + delay + ', depth: ' + depth)
-        // don't need to check whether we have connected as the timer will have been cleared if we have
-        socket.close()    // this is necessary sometimes when the socket fails to connect on startup
-        socket.connect()  // Try to reconnect
-        timerid = null
-        checkConnect(delay*factor, factor) // extend timer for next time round
-    }, delay)
-} // --- End of checkConnect Fn--- //
+    // Try setting a restricted, internal attribute - see the warning in the browser console
+    uibuilder.set('msg', 'You tried but failed!')
+    
+    // Remember that onChange functions don't trigger if you haven't set them
+    // up BEFORE an attribute change.
+    uibuilder.onChange('msgCopy', function(newVal){
+        console.info('msgCopy changed. New value: ', newVal)
+    })
 
-// send a msg back to Node-RED, NR will generally expect the msg to contain a payload topic
-function sendMsg(msgToSend) {
-    debug && console.info('uibuilder:msg sent - Namespace: ' + ioNamespace)
-    debug && console.dir(msgToSend)
+    // Now try setting a new attribute - this will be an empty object because
+    // msg won't yet have been received
+    uibuilder.set('msgCopy', uibuilder.msg)
+    // Hint: Try putting this set into the onChange for 'msg'
+    
+    // As noted, we could get the msg here too
+    uibuilder.onChange('msgsReceived', function(newVal){
+        console.info('New msg sent to us from Node-RED over Socket.IO. Total Count: ', newVal)
+        $('#msgsReceived').text(newVal)
+        // uibuilder.msg is a shortcut for uibuilder.get('msg')
+        //$('#showMsg').text(JSON.stringify(uibuilder.msg))
+    })
 
-    // Track how many messages have been sent
-    msgCounter.sent++
-    $('#msgsSent').text(msgCounter.sent)
-    $('#showMsgSent').text(JSON.stringify(msgToSend))
+    // If Socket.IO connects/disconnects
+    uibuilder.onChange('ioConnected', function(newVal){
+        console.info('Socket.IO Connection Status Changed: ', newVal)
+        $('#socketConnectedState').text(newVal)
+    })
 
-    socket.emit(ioChannels.client, msgToSend)
-} // --- End of Send Msg Fn --- //
+    // If a message is sent back to Node-RED
+    uibuilder.onChange('msgsSent', function(newVal){
+        console.info('New msg sent to Node-RED over Socket.IO. Total Count: ', newVal)
+        $('#msgsSent').text(newVal)
+        $('#showMsgSent').text(JSON.stringify(uibuilder.get('sentMsg')))
+    })
 
-function readCookie(name,c,C,i){
-    // @see http://stackoverflow.com/questions/5639346/what-is-the-shortest-function-for-reading-a-cookie-by-name-in-javascript
-    if(cookies.length > 0){ return cookies[name]; }
+    // If we receive a control message from Node-RED
+    uibuilder.onChange('msgsCtrl', function(newVal){
+        console.info('New control msg sent to us from Node-RED over Socket.IO. Total Count: ', newVal)
+        $('#msgsControl').text(newVal)
+        $('#showCtrlMsg').text(JSON.stringify(uibuilder.get('ctrlMsg')))
+    })
 
-    c = document.cookie.split('; ');
-    cookies = {};
+    //Manually send a message back to Node-RED after 2 seconds
+    window.setTimeout(function(){
+        console.info('Sending a message back to Node-RED - after 2s delay')
+        uibuilder.send( { 'topic':'uibuilderfe', 'payload':'I am a message sent from the uibuilder front end' } )
+    }, 2000)
 
-    for(i=c.length-1; i>=0; i--){
-        C = c[i].split('=');
-        cookies[C[0]] = C[1];
-    }
-
-    return cookies[name];
-}
-// ----------------------------- //
+}) // --- End of JQuery Ready --- //
 
 // EOF
