@@ -41,10 +41,10 @@
     "get-installed-path": "^4.0.3",
     "jquery": "^3.2.1",
     "normalize.css": "*",
-    "serve-static": "^1.13.0",
+    "serve-static": "^1.13.1",
     "socket.io": "^2.0.3",
     "webpack": "^3.6.0",
-    "winston": "*"
+    "winston": "^2.4.0"
   },
   "devDependencies": {},
   "engines": {
