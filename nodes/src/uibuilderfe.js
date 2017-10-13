@@ -59,20 +59,20 @@
 const uibuilder = function () {
     // Remember that things have to be defined before they are referenced
 
-    const self  = this
+    const self = this
 
-    self.version     = '0.4.2'
-    self.debug       = false
+    self.version = '0.4.2'
+    self.debug = false
 
     /** Debugging function
      * @param {string} type One of log|error|warn|info|dir
      * @param {any} msg Msg to send to console
      */
-    self.uiDebug = function(type,msg) {
-        if ( !self.debug ) return
+    self.uiDebug = function (type, msg) {
+        if (!self.debug) return
 
         let myLog = {}
-        switch ( type ) {
+        switch (type) {
             case 'error':
                 myLog = console.error
                 break
@@ -95,7 +95,7 @@ const uibuilder = function () {
     /** Get the Socket.IO namespace from the current URL
      * @returns {string} Socket.IO namespace
      */
-    self.setIOnamespace = function() {
+    self.setIOnamespace = function () {
         var u = window.location.pathname.split('/')
 
         //if last element is '', take [-1]
@@ -108,22 +108,24 @@ const uibuilder = function () {
         return '/' + ioNamespace
     } // --- End of set IO namespace --- //
 
-    self.msg         = {}                           // msg object. Updated on receipt of a Socket.IO msg (server channel).
-    self.ctrlMsg     = {}                           // control msg object. Updated on receipt of a Socket.IO control msg (control channel).
-    self.sentMsg     = {}
+    //#region --- variables ---
+    self.msg = {}                           // msg object. Updated on receipt of a Socket.IO msg (server channel).
+    self.ctrlMsg = {}                           // control msg object. Updated on receipt of a Socket.IO control msg (control channel).
+    self.sentMsg = {}
 
-    self.msgsSent    = 0
-    self.msgsReceived= 0
-    self.msgsCtrl    = 0
+    self.msgsSent = 0
+    self.msgsReceived = 0
+    self.msgsCtrl = 0
 
-    self.ioChannels  = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
-    self.retryMs     = 2000                                                                            // starting retry ms period for manual socket reconnections workaround
+    self.ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
+    self.retryMs = 2000                                                                            // starting retry ms period for manual socket reconnections workaround
     self.retryFactor = 1.5                                                                             // starting delay factor for subsequent reconnect attempts
-    self.timerid     = null
+    self.timerid = null
     self.ioNamespace = self.setIOnamespace()       // Get the namespace from the current URL
-    self.ioPath      = '/uibuilder/socket.io'      // make sure client uses Socket.IO version from the uibuilder module (using path)
+    self.ioPath = '/uibuilder/socket.io'      // make sure client uses Socket.IO version from the uibuilder module (using path)
     self.ioTransport = ['polling', 'websocket']
     self.ioConnected = false
+    //#endregion --- variables ---
 
     /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
      * Also triggers any event listeners.
@@ -131,7 +133,7 @@ const uibuilder = function () {
      * @param {string} prop
      * @param {any} val
      */
-    self.set = function(prop, val) {
+    self.set = function (prop, val) {
         self[prop] = val
 
         // Trigger this prop's event callbacks (listeners)
@@ -140,32 +142,32 @@ const uibuilder = function () {
         //self.uiDebug('log', `uibuilderfe:uibuilder:set Property: ${prop}, Value: ${val}`)
     },
 
-    // ========== Socket.IO processing ========== //
+        // ========== Socket.IO processing ========== //
 
-    // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
-    self.socket      = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
+        // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
+        self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
 
     /** Check whether Socket.IO is connected to the server, reconnect if not (recursive)
      *
      * @param {integer} delay Initial delay before checking (ms)
      * @param {integer} factor Multiplication factor for subsequent checks (delay*factor)
      */
-    self.checkConnect = function(delay, factor) {
+    self.checkConnect = function (delay, factor) {
         var depth = depth++ || 1
         self.uiDebug('log', 'checkConnect. Depth: ', depth, ' , Delay: ', delay, ', Factor: ', factor)
         if (self.timerid) window.clearTimeout(self.timerid) // we only want one running at a time
-        self.timerid = window.setTimeout(function(){
+        self.timerid = window.setTimeout(function () {
             self.uiDebug('log', 'checkConnect timeout. SIO reconnect attempt, timeout: ' + delay + ', depth: ' + depth)
             // don't need to check whether we have connected as the timer will have been cleared if we have
             self.socket.close()    // this is necessary sometimes when the socket fails to connect on startup
             self.socket.connect()  // Try to reconnect
             self.timerid = null
-            self.checkConnect(delay*factor, factor) // extend timer for next time round
+            self.checkConnect(delay * factor, factor) // extend timer for next time round
         }, delay)
     } // --- End of checkConnect Fn--- //
 
     // When the socket is connected ...
-    self.socket.on('connect', function() {
+    self.socket.on('connect', function () {
         self.uiDebug('log', 'uibuilderfe: SOCKET CONNECTED - Namespace: ' + self.ioNamespace)
 
         self.set('ioConnected', true)
@@ -179,12 +181,12 @@ const uibuilder = function () {
     }) // --- End of socket connection processing ---
 
     // When Node-RED uibuilder node sends a msg over Socket.IO to us ...
-    self.socket.on(self.ioChannels.server, function(receivedMsg) {
+    self.socket.on(self.ioChannels.server, function (receivedMsg) {
         self.uiDebug('info', 'uibuilderfe: socket.on.server - msg received - Namespace: ' + self.ioNamespace)
         self.uiDebug('dir', receivedMsg)
 
         // Make sure that msg is an object & not null
-        receivedMsg = makeMeAnObject( receivedMsg, 'payload' )
+        receivedMsg = makeMeAnObject(receivedMsg, 'payload')
 
         // Save the msg for further processing
         self.set('msg', receivedMsg)
@@ -200,14 +202,14 @@ const uibuilder = function () {
     }) // -- End of websocket receive DATA msg from Node-RED -- //
 
     // Receive a CONTROL msg from Node-RED
-    self.socket.on(self.ioChannels.control, function(receivedCtrlMsg) {
+    self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
         self.uiDebug('info', 'uibuilder:socket.on.control - msg received - Namespace: ' + self.ioNamespace)
         self.uiDebug('dir', receivedCtrlMsg)
 
         // Make sure that msg is an object & not null
-        if ( receivedCtrlMsg === null ) {
+        if (receivedCtrlMsg === null) {
             receivedCtrlMsg = {}
-        } else if ( typeof receivedCtrlMsg !== 'object' ) {
+        } else if (typeof receivedCtrlMsg !== 'object') {
             receivedCtrlMsg = { 'payload': receivedCtrlMsg }
         }
 
@@ -235,7 +237,7 @@ const uibuilder = function () {
     }) // -- End of websocket receive CONTROL msg from Node-RED -- //
 
     // When the socket is disconnected ..............
-    self.socket.on('disconnect', function(reason) {
+    self.socket.on('disconnect', function (reason) {
         // reason === 'io server disconnect' - redeploy of Node instance
         // reason === 'transport close' - Node-RED terminating
         // reason === 'ping timeout' - didn't receive a pong response?
@@ -244,7 +246,7 @@ const uibuilder = function () {
         self.set('ioConnected', false)
 
         // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
-        if ( reason === 'io server disconnect' ) {
+        if (reason === 'io server disconnect') {
             self.checkConnect(self.retryMs, self.retryFactor)
         }
     }) // --- End of socket disconnect processing ---
@@ -287,7 +289,7 @@ const uibuilder = function () {
      * NR will generally expect the msg to contain a payload topic
      * @param {object} msgToSend The msg object to send.
      */
-    self.send = function(msgToSend) {
+    self.send = function (msgToSend) {
         self.uiDebug('info', 'uibuilderfe: msg sent - Namespace: ' + self.ioNamespace)
         self.uiDebug('dir', msgToSend)
 
@@ -332,14 +334,14 @@ const uibuilder = function () {
          * @param {string} prop
          * @param {any} val
          */
-        set : function(prop, val) {
+        set: function (prop, val) {
             // TODO: Add exclusions for protected properties
             let excluded = [
                 'version', 'msg', 'ctrlMsg', 'sentMsg', 'msgsSent', 'msgsReceived', 'msgsCtrl', 'ioChannels',
                 'retryMs', 'retryFactor', 'timerid', 'ioNamespace', 'ioPath', 'ioTransport', 'ioConnected',
                 'set', 'get', 'debug', 'send', 'onChange', 'socket', 'checkConnect', 'events', 'emit', 'uiReturn'
             ]
-            if ( excluded.indexOf(prop) !== -1 ) {
+            if (excluded.indexOf(prop) !== -1) {
                 self.uiDebug('warn', `uibuilderfe:uibuilder:set: '${prop}' is in list of excluded attributes, not set`)
                 return
             }
@@ -353,7 +355,7 @@ const uibuilder = function () {
          * @param {string} prop The name of the property to get
          * @returns {any} The current value of the property
          */
-        get : function(prop) {
+        get: function (prop) {
             //if ( prop !== 'debug' ) self.uiDebug('log', `uibuilderfe:uibuilder:get Property: ${prop}`)
             // TODO: Add warning for non-existent property?
             return self[prop]
@@ -367,13 +369,13 @@ const uibuilder = function () {
          * @param {string} prop The property of uibuilder that we want to monitor
          * @param {function} callback The function that will run when the property changes
          */
-        onChange : function(prop, callback) {
+        onChange: function (prop, callback) {
             // Note: Property does not have to exist yet
 
             //self.uiDebug('log', `uibuilderfe:uibuilder:onchange: pushing new callback (even listener) for property: ${prop}`)
 
             // Create a new array or add to the array of callback functions for the property in the events object
-            if ( self.events[prop] ) {
+            if (self.events[prop]) {
                 self.events[prop].push(callback)
             } else {
                 self.events[prop] = [callback]
@@ -386,18 +388,18 @@ const uibuilder = function () {
          *
          * @returns {object} msg
          */
-        msg : self.msg,
+        msg: self.msg,
 
         /** Helper fn, Send a message to NR
          * Example: uibuilder.sendMsg({payload:'Hello'})
          */
-        send : self.send,
+        send: self.send,
 
         /** Turn on/off debugging
          * Example: uibuilder.debug(true)
          * @param {boolean} onOff Flag
          */
-        debug: function(onOff) {
+        debug: function (onOff) {
             self.debug = onOff
         },
 
@@ -430,15 +432,11 @@ const uibuilder = function () {
  * @param {string} [attribute='payload'] Attribute that "thing" is moved to if not null and not an object
  * @returns {object}
  */
-function makeMeAnObject(thing, attribute='payload') {
-
-    if ( thing === null ) {
-        thing = {}
-    } else if ( typeof thing !== 'object' ) {
-        thing = { attribute : thing }
-    }
-
-    return thing
+function makeMeAnObject(thing, attribute = 'payload') {
+    var out = {}
+    if (typeof thing === 'object') { out = thing }
+    else if (thing !== null) { out[attribute] = thing }
+    return out
 } // --- End of make me an object --- //
 
 // EOF
