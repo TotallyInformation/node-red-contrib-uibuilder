@@ -56,12 +56,14 @@
  *   makeMeAnObject(thing, attribute='payload') - Utility function: make sure that 'thing' is an object
  */
 
-const uibuilder = function () {
-    // Remember that things have to be defined before they are referenced
+// Create a single global using "new" with an anonymous function
+// ensures that everything is isolated and only what is returned is accessible
+const uibuilder = new (function () {
+    // Remember that things have to be defined *before* they are referenced
 
     const self = this
 
-    self.version = '0.4.3'
+    self.version = '0.4.4'
     self.debug = false
 
     /** Debugging function
@@ -414,13 +416,16 @@ const uibuilder = function () {
 
     // ========== End of setup, start execution ========== //
 
+    self.uiDebug('info', 'uibuilderfe: self: Shows the internals of the uibuilder global, only uiReturn is externally accessible ...')
+    self.uiDebug('dir', self)
+
     // Repeatedly check & retry connection until connected (async)
     self.checkConnect(self.retryMs, self.retryFactor)
 
     // Make externally available the external methods
     return self.uiReturn
 
-}(); // --- End of uibuilder self-executing function --- //
+}) // --- End of uibuilder self-executing function --- //
 
 
 // ========== UTILITY FUNCTIONS ========== //
