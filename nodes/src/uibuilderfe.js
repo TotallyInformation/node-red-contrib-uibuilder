@@ -58,10 +58,10 @@
 
 // Create a single global using "new" with an anonymous function
 // ensures that everything is isolated and only what is returned is accessible
-const uibuilder = new (function () {
+var uibuilder = new (function () {
     // Remember that things have to be defined *before* they are referenced
 
-    const self = this
+    var self = this
 
     self.version = '0.4.4'
     self.debug = false
@@ -73,7 +73,7 @@ const uibuilder = new (function () {
     self.uiDebug = function (type, msg) {
         if (!self.debug) return
 
-        let myLog = {}
+        var myLog = {}
         switch (type) {
             case 'error':
                 myLog = console.error
@@ -338,13 +338,13 @@ const uibuilder = new (function () {
          */
         set: function (prop, val) {
             // TODO: Add exclusions for protected properties
-            let excluded = [
+            var excluded = [
                 'version', 'msg', 'ctrlMsg', 'sentMsg', 'msgsSent', 'msgsReceived', 'msgsCtrl', 'ioChannels',
                 'retryMs', 'retryFactor', 'timerid', 'ioNamespace', 'ioPath', 'ioTransport', 'ioConnected',
                 'set', 'get', 'debug', 'send', 'onChange', 'socket', 'checkConnect', 'events', 'emit', 'uiReturn'
             ]
             if (excluded.indexOf(prop) !== -1) {
-                self.uiDebug('warn', `uibuilderfe:uibuilder:set: '${prop}' is in list of excluded attributes, not set`)
+                self.uiDebug('warn', 'uibuilderfe:uibuilder:set: "' + prop + '" is in list of excluded attributes, not set')
                 return
             }
 
@@ -437,7 +437,11 @@ const uibuilder = new (function () {
  * @param {string} [attribute='payload'] Attribute that "thing" is moved to if not null and not an object
  * @returns {object}
  */
-function makeMeAnObject(thing, attribute = 'payload') {
+function makeMeAnObject(thing, attribute) {
+    if ( typeof attribute !== 'string' ) {
+        console.warn('makeMeAnObject:WARNING: attribute parameter must be a string and not: ' + typeof attribute)
+        attribute = 'payload'
+    }
     var out = {}
     if (typeof thing === 'object') { out = thing }
     else if (thing !== null) { out[attribute] = thing }
