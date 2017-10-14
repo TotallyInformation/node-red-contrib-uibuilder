@@ -1,4 +1,4 @@
-# node-red-contrib-uibuilder
+# node-red-contrib-uibuilder 
 
 A Node-RED web user interface builder.
 
@@ -9,7 +9,7 @@ The idea is to allow users to use their own html/css/js/etc code to define a UI 
 
 *Breaking Change in 0.4.0*: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
 
-*Front-end changes in 0.4.2*: You will want the new master template files as they use a new library that makes your own custom code very much easier.
+*Front-end changes in 0.4.2 & 0.4.5*: You will want the new master template files as they use a new library that makes your own custom code very much easier.
 
 Eventually, you will be able to "compile" src files using webpack from a button in the nodes config.
 That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
@@ -224,6 +224,8 @@ Please feel free to contribute a pull request if you would like to,
 
 - Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
 
+- Move debug flag in `settings.js` to the admin interface so that it can be turned on/off for each individual instance
+
 - Add integrated ExpressJS security to Socket.IO
 
 - Process `httpNodeAuth`
@@ -266,6 +268,17 @@ _[back to top](#contents)_
 
 ## Changes
 
+v0.4.5
+**Note:** The master front-end template files have changed again. Specifically, they now use a minimised version of `uibuilderfe.min.js` & that code is better isolated, only the `uibuilder` function is exposed.
+
+- Minimised and better isolated the front-end code.
+- Some minor issues dealt with in the FE code.
+- New FE function: `uibuilder.me()` that either returns the code version (if debug not set) or the complete function object for better debugging.
+- `uibuilder.debug()` now returns the current debug state if no boolean parameter given. Parameter validated as boolean|undefined.
+- Fixes for changes in new version of `get-installed-path`.
+- Begun to add JSDoc throughout and added `// @ts-check` to better validate code.
+- Update dependencies to latest.
+
 v0.4.2
 **Note:** The master front-end template files have changed significantly in this release. It is suggested that you rename your local folder (`~/.node-red/uibuilder/uibuilder`) - and let the node rebuild it for you with the latest template. Most of the message handling code is now hidden away in a JavaScript file that you don't need to deal with `uibuilderfe.js`. The new `index.html` automatically loads that for you and the new `index.js` shows you how to use it. The old templates still work but aren't as nice and may stop working correctly in the future.
 
@@ -297,30 +310,6 @@ v0.4.0
 - Remove config switch for "Use reproduces in custom folder" as this is always done now.
 - Add connected state to default page template
   (thanks to [Colin Law](https://github.com/colinl), [Pull request #12](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/12))
-
-v0.3.8
-
-- Fix for [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2) -
-  not finding normalize.css & JQuery front-end libraries.
-  Adds the `get-installed-path` module to find out where the modules are actually loaded from.
-- An enhancement of the above fix that uses `require.resolve()` as a backup to try and
-  find the front-end module location if `get-installed-path` fails.
-  However, this can return a machine folder that is invalid for use as a source for adding as a static path for ExpressJS.
-- Additional fix for the above - force the current working folder to be the NR `userDir`
-  for get-installed-path as some installations of NR leave the cwd point at the home folder not the userDir.
-- Replace native Node-RED logging with Winston. If `debug: true` is added to the uibuilder
-  section of NR's `settings.js`, a file called `uibuilder.log` is created in your userDir (`~./node-red` by default) containing detailed logging information.
-- The flag for forwarding the incoming msg to output is now active.
-  If not set, the only output from the node is when something is received from a connected front-end client browser. Note that the default front-end web page is quite "chatty" and sends control messages as well as anything you set up; this is easily disconnected. Also fixed bug, see [Issue 4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/5)
-- Option to *not* use the local folders was broken. Now fixed.
-- Possible fix for loss of reconnection,
-  see [Issue 3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/3)
-
-v0.2.1
-
-- Tweak this readme as the node seems to work OK. Removing the _Alpha_ label.
-  You should consider this suitable for general hobby use. Production use would need good testing before trying to rely on it.
-  Remember, this has been written just by me, I'm afraid I can provide no guarantees.
 
 See [CHANGELOG](CHANGELOG.md) for more detail.
 
@@ -378,13 +367,6 @@ Adds the topic from the above setting if one isn't present in the msg.
 
 _Note_ that this may result in multiple output messages if your front-end code also auto-sends inbound messages.
 
-**Use resources in custom folder? (default = true)**
-
-Will add the folders either from <code>&lt;userDir>/uibuilder/&lt;url>/dist</code> or
-from <code>&lt;userDir>/uibuilder/&lt;url>/src</code>. Also adds any vendor modules
-if specified in <code>settings.js</code> under the <code>uibuilder.userVendorPackages</code>
-setting.
-
 **`userVendorPackages` (optional)**
 
 A list of npm package names (as they appear in `node_modules`) that the node will make
@@ -414,6 +396,12 @@ If submitting code (preferably via a pull request), please use eslint to adhere 
 ## Developers/Contributors
 
 - [Julian Knight](https://github.com/TotallyInformation)
+
+
 - [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
+
+```
+<a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>
+```
 
 _[back to top](#contents)_

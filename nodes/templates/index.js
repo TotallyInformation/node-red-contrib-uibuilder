@@ -47,8 +47,6 @@
  *       .ioNamespace - Get the namespace from the current URL
  *       .ioPath      - make sure client uses Socket.IO version from the uibuilder module (using path)
  *       .ioTransport - ['polling', 'websocket']
- *
- *   makeMeAnObject(thing, attribute='payload') - Utility function: make sure that 'thing' is an object
  */
 
 // When JQuery is ready, update

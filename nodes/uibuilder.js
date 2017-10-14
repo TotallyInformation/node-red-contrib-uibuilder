@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-'use strict'
+// @ts-check
+"use strict";
 
 // Module name must match this nodes html file
 const moduleName  = 'uibuilder'
@@ -25,8 +25,9 @@ const serveStatic      = require('serve-static'),
       path             = require('path'),
       fs               = require('fs-extra'),
       events           = require('events'),
-      getInstalledPath = require('get-installed-path'),
       winston          = require('winston')
+
+const { getInstalledPathSync } = require('get-installed-path')
 
 // These are loaded to the /<uibuilder>/vendor URL path
 const vendorPackages = [
@@ -228,13 +229,13 @@ module.exports = function(RED) {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
             fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
             // If the ./dist/index.html exists use the dist folder...
-            log.debug('UIbuilder:', node.url, ' Using local dist folder' )
+            log.debug('UIbuilder:', node.url, ':: Using local dist folder' )
             customStatic = serveStatic( path.join(node.customFolder, 'dist') )
             // NOTE: You are expected to have included vendor packages in
             //       a build process so we are not loading them here
         } catch (e) {
             // dist not being used or not accessible, use src
-            log.debug('UIbuilder:', node.url, ' dist folder not in use or not accessible. Using local src folder. ', e.message );
+            log.debug('UIbuilder:', node.url, ':: dist folder not in use or not accessible. Using local src folder. ', e.message );
             customStatic = serveStatic( path.join(node.customFolder, 'src') )
             // Include vendor resource source paths if needed
             node.userVendorPackages.forEach(function (packageName) {

@@ -1,3 +1,14 @@
+v0.4.5
+**Note:** The master front-end template files have changed again. Specifically, they now use a minimised version of `uibuilderfe.min.js` & that code is better isolated, only the `uibuilder` function is exposed.
+
+- Minimised and better isolated the front-end code.
+- Some minor issues dealt with in the FE code.
+- New FE function: `uibuilder.me()` that either returns the code version (if debug not set) or the complete function object for better debugging.
+- `uibuilder.debug()` now returns the current debug state if no boolean parameter given. Parameter validated as boolean|undefined.
+- Fixes for changes in new version of `get-installed-path`.
+- Begun to add JSDoc throughout and added `// @ts-check` to better validate code.
+- Update dependencies to latest.
+
 v0.4.2
 **Note:** The master front-end template files have changed significantly in this release. It is suggested that you rename your local folder (`~/.node-red/uibuilder/uibuilder`) - and let the node rebuild it for you with the latest template. Most of the message handling code is now hidden away in a JavaScript file that you don't need to deal with `uibuilderfe.js`. The new `index.html` automatically loads that for you and the new `index.js` shows you how to use it. The old templates still work but aren't as nice and may stop working correctly in the future.
 
