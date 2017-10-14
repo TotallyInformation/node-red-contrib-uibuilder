@@ -128,22 +128,26 @@
         } // --- End of set IO namespace --- //
 
         //#region --- variables ---
-        self.msg = {}                           // msg object. Updated on receipt of a Socket.IO msg (server channel).
-        self.ctrlMsg = {}                           // control msg object. Updated on receipt of a Socket.IO control msg (control channel).
-        self.sentMsg = {}
+        self.msg          = {}  // msg object. Updated on receipt of a Socket.IO msg (server channel).
+        self.ctrlMsg      = {}  // control msg object. Updated on receipt of a Socket.IO control msg (control channel).
+        self.sentMsg      = {}
 
-        self.msgsSent = 0
+        self.msgsSent     = 0
         self.msgsReceived = 0
-        self.msgsCtrl = 0
+        self.msgsCtrl     = 0
 
-        self.ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
-        self.retryMs = 2000                                                                            // starting retry ms period for manual socket reconnections workaround
-        self.retryFactor = 1.5                                                                             // starting delay factor for subsequent reconnect attempts
-        self.timerid = null
-        self.ioNamespace = self.setIOnamespace()       // Get the namespace from the current URL
-        self.ioPath = '/uibuilder/socket.io'      // make sure client uses Socket.IO version from the uibuilder module (using path)
-        self.ioTransport = ['polling', 'websocket']
-        self.ioConnected = false
+        self.ioChannels   = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
+        self.retryMs      = 2000                             // starting retry ms period for manual socket reconnections workaround
+        self.retryFactor  = 1.5                              // starting delay factor for subsequent reconnect attempts
+        self.timerid      = null
+        self.ioNamespace  = self.setIOnamespace()            // Get the namespace from the current URL
+        self.ioPath       = '/uibuilder/socket.io'           // make sure client uses Socket.IO version from the uibuilder module (using path)
+        self.ioTransport  = ['polling', 'websocket']
+        self.ioConnected  = false
+        self.allowScript  = true                             // Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
+        self.allowStyle   = true                             // Allow incoming msg to contain msg.style with CSS that will be automatically executed
+        self.removeScript = true                             // Delete msg.code after inserting to DOM if it exists on incoming msg
+        self.removeStyle  = true                             // Delete msg.style after inserting to DOM if it exists on incoming msg
         //#endregion --- variables ---
 
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
@@ -208,12 +212,15 @@
             // Make sure that msg is an object & not null
             receivedMsg = makeMeAnObject(receivedMsg, 'payload')
 
-            // If the msg contains a code object
-            if ( receivedMsg.hasOwnProperty('code') ) {
-                self.newCode(receivedMsg.code)
+            // If the msg contains a code property (js), insert to DOM, remove from msg if required
+            if ( self.allowScript && receivedMsg.hasOwnProperty('script') ) {
+                self.newScript(receivedMsg.script)
+                if ( self.removeScript ) delete receivedMsg.script
             }
-            if ( receivedMsg.hasOwnProperty('style') ) {
+            // If the msg contains a style property (css), insert to DOM, remove from msg if required
+            if ( self.allowStyle && receivedMsg.hasOwnProperty('style') ) {
                 self.newStyle(receivedMsg.style)
+                if ( self.removeStyle ) delete receivedMsg.style
             }
 
             // Save the msg for further processing
@@ -222,10 +229,11 @@
             // Track how many messages have been received
             self.set('msgsReceived', self.msgsReceived + 1)
 
-            // Test auto-response - not really required but useful when getting started
-            //if (self.debug) {
-            //    self.send({payload: 'From: uibuilderfe - we got a message from you, thanks'})
-            //}
+            /** Test auto-response - not really required but useful when getting started
+                if (self.debug) {
+                    self.send({payload: 'From: uibuilderfe - we got a message from you, thanks'})
+                }
+                // */
 
         }) // -- End of websocket receive DATA msg from Node-RED -- //
 
@@ -312,7 +320,7 @@
             socket.on('pong', function(data) {
                 self.uiDebug('log', 'SOCKET PONG - Namespace: ' + ioNamespace + ', Data: ' + data)
             }) // --- End of socket pong processing ---
-        */
+         // */
 
         /** Send msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
@@ -354,25 +362,34 @@
 
         // ========== Handle incoming code via received msg ========== //
 
-        // @TODO
-        self.newCode = function(code) {
-            if ( code === '' || (typeof code === 'undefined') ) return
-            if ( typeof code === 'array' ) code.join("\n")
+        // @TODO: Add script/style allow flags to admin ui.
 
-            self.uiDebug('info', 'uibuilderfe: newCode - code: ' + code)
+        /** Add a new script block to the end of <body> from text or an array of text
+         * @param {(string[]|string)} script
+         */
+        self.newScript = function(script) {
+            if ( self.allowScript !== true ) return
+            if ( script === '' || (typeof script === 'undefined') ) return
+            //if ( script.constructor === Array ) script.join("\n")
+
+            self.uiDebug('log', 'uibuilderfe: newCode - script: ' + script)
             var newScript = document.createElement('script')
             newScript.type = 'text/javascript'
             newScript.defer = true
-            newScript.textContent = code
-            self.uiDebug('dir', newScript)
+            newScript.textContent = script
             document.getElementsByTagName('body')[0].appendChild(newScript)
         }
 
+        /** Add a new style block to end of <head> from text or an array of text
+         * @param {(string[]|string)} style
+         */
         self.newStyle = function(style) {
-            self.uiDebug('info', 'uibuilderfe: newStyle - style: ' + style)
+            if ( self.allowStyle !== true ) return
+            if ( style === '' || (typeof style === 'undefined') ) return
+
+            self.uiDebug('log', 'uibuilderfe: newStyle - style: ' + style)
             var newStyle = document.createElement('style')
             newStyle.textContent = style
-            self.uiDebug('dir', newStyle)
             document.getElementsByTagName('head')[0].appendChild(newStyle)
         }
 
