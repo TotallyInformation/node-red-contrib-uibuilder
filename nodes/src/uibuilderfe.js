@@ -69,21 +69,23 @@
     // Keep a copy of anything with a clashing name in the starting context
     var previous_uibuilder = root.uibuilder
 
-    var uibuilder = new (function () {
+    // Create a function with specific "this" context
+    // @since 2017-10-14 Replaced "new (function(){})" with "(function(){}).call(root)"
+    var uibuilder = (function () {
         // Remember that things have to be defined *before* they are referenced
-    
+
         var self = this
-    
-        self.version = '0.4.5'
+
+        self.version = '0.4.6'
         self.debug = false
-    
+
         /** Debugging function
          * @param {string} type One of log|error|warn|info|dir
          * @param {...*} msg Msg to send to console
          */
         self.uiDebug = function (type, msg) {
             if (!self.debug) return
-    
+
             this.myLog = {}
             switch (type) {
                 case 'error':
@@ -101,10 +103,10 @@
                 default:
                     this.myLog = console.log
             }
-    
+
             this.myLog(msg)
         } // --- End of debug function --- //
-    
+
         self.me = function() {
             return self.debug === true ? self : 'uibuilderfe.js Version: ' + self.version
         }
@@ -114,26 +116,26 @@
          */
         self.setIOnamespace = function () {
             var u = window.location.pathname.split('/')
-    
+
             //if last element is '', take [-1]
             var ioNamespace = u.pop()
             if (ioNamespace === '') ioNamespace = u.pop()
-    
+
             self.uiDebug('log', 'uibuilderfe: IO Namespace: /' + ioNamespace)
-    
+
             // Socket.IO namespace HAS to start with a leading slash
             return '/' + ioNamespace
         } // --- End of set IO namespace --- //
-    
+
         //#region --- variables ---
         self.msg = {}                           // msg object. Updated on receipt of a Socket.IO msg (server channel).
         self.ctrlMsg = {}                           // control msg object. Updated on receipt of a Socket.IO control msg (control channel).
         self.sentMsg = {}
-    
+
         self.msgsSent = 0
         self.msgsReceived = 0
         self.msgsCtrl = 0
-    
+
         self.ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
         self.retryMs = 2000                                                                            // starting retry ms period for manual socket reconnections workaround
         self.retryFactor = 1.5                                                                             // starting delay factor for subsequent reconnect attempts
@@ -143,7 +145,7 @@
         self.ioTransport = ['polling', 'websocket']
         self.ioConnected = false
         //#endregion --- variables ---
-    
+
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
          * Also triggers any event listeners.
          * Example: self.set('msg', {topic:'uibuilder', payload:42});
@@ -153,18 +155,18 @@
         self.set = function (prop, val) {
             self[prop] = val
             self.uiDebug('log', 'uibuilderfe: prop set - prop: ' + prop + ', val: ' + val)
-    
+
             // Trigger this prop's event callbacks (listeners)
             self.emit(prop, val)
-    
+
             //self.uiDebug('log', `uibuilderfe:uibuilder:set Property: ${prop}, Value: ${val}`)
         }
-    
+
         // ========== Socket.IO processing ========== //
-    
+
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
-    
+
         /** Check whether Socket.IO is connected to the server, reconnect if not (recursive)
          *
          * @param {number} delay Initial delay before checking (ms)
@@ -183,57 +185,65 @@
                 self.checkConnect(delay * factor, factor) // extend timer for next time round
             }, delay)
         } // --- End of checkConnect Fn--- //
-    
+
         // When the socket is connected ...
         self.socket.on('connect', function () {
             self.uiDebug('log', 'uibuilderfe: SOCKET CONNECTED - Namespace: ' + self.ioNamespace)
-    
+
             self.set('ioConnected', true)
-    
+
             // Reset any reconnect timers
             if (self.timerid) {
                 window.clearTimeout(self.timerid)
                 self.timerid = null
             }
-    
+
         }) // --- End of socket connection processing ---
-    
+
         // When Node-RED uibuilder node sends a msg over Socket.IO to us ...
         self.socket.on(self.ioChannels.server, function (receivedMsg) {
             self.uiDebug('info', 'uibuilderfe: socket.on.server - msg received - Namespace: ' + self.ioNamespace)
             self.uiDebug('dir', receivedMsg)
-    
+
             // Make sure that msg is an object & not null
             receivedMsg = makeMeAnObject(receivedMsg, 'payload')
-    
+
+            // If the msg contains a code object
+            if ( receivedMsg.hasOwnProperty('code') ) {
+                self.newCode(receivedMsg.code)
+            }
+            if ( receivedMsg.hasOwnProperty('style') ) {
+                self.newStyle(receivedMsg.style)
+            }
+
             // Save the msg for further processing
             self.set('msg', receivedMsg)
-    
+
             // Track how many messages have been received
             self.set('msgsReceived', self.msgsReceived + 1)
-    
+
             // Test auto-response - not really required but useful when getting started
             //if (self.debug) {
             //    self.send({payload: 'From: uibuilderfe - we got a message from you, thanks'})
             //}
-    
+
         }) // -- End of websocket receive DATA msg from Node-RED -- //
-    
+
         // Receive a CONTROL msg from Node-RED
         self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
             self.uiDebug('info', 'uibuilder:socket.on.control - msg received - Namespace: ' + self.ioNamespace)
             self.uiDebug('dir', receivedCtrlMsg)
-    
+
             // Make sure that msg is an object & not null
             if (receivedCtrlMsg === null) {
                 receivedCtrlMsg = {}
             } else if (typeof receivedCtrlMsg !== 'object') {
                 receivedCtrlMsg = { 'payload': receivedCtrlMsg }
             }
-    
+
             self.set('ctrlMsg', receivedCtrlMsg)
             self.set('msgsCtrl', self.msgsCtrl + 1)
-    
+
             /*
                 switch(receivedCtrlMsg.type) {
                     case 'shutdown':
@@ -246,30 +256,30 @@
                         // Anything else
                 }
             */
-    
+
             /* Test auto-response
                 if (self.debug) {
                     self.send({payload: 'We got a control message from you, thanks'})
-                } 
+                }
             // */
-    
+
         }) // -- End of websocket receive CONTROL msg from Node-RED -- //
-    
+
         // When the socket is disconnected ..............
         self.socket.on('disconnect', function (reason) {
             // reason === 'io server disconnect' - redeploy of Node instance
             // reason === 'transport close' - Node-RED terminating
             // reason === 'ping timeout' - didn't receive a pong response?
             self.uiDebug('log', 'SOCKET DISCONNECTED - Namespace: ' + self.ioNamespace + ', Reason: ' + reason)
-    
+
             self.set('ioConnected', false)
-    
+
             // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
             if (reason === 'io server disconnect') {
                 self.checkConnect(self.retryMs, self.retryFactor)
             }
         }) // --- End of socket disconnect processing ---
-    
+
         /* We really don't need these, just for interest
             socket.on('connect_error', function(err) {
                 self.uiDebug('log', 'SOCKET CONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
@@ -303,7 +313,7 @@
                 self.uiDebug('log', 'SOCKET PONG - Namespace: ' + ioNamespace + ', Data: ' + data)
             }) // --- End of socket pong processing ---
         */
-    
+
         /** Send msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
          * @param {Object} msgToSend The msg object to send.
@@ -311,20 +321,20 @@
         self.send = function (msgToSend) {
             self.uiDebug('info', 'uibuilderfe: msg sent - Namespace: ' + self.ioNamespace)
             self.uiDebug('dir', msgToSend)
-    
+
             // @TODO: Make sure msgToSend is an object
-    
+
             // Track how many messages have been sent
             self.set('sentMsg', msgToSend)
             self.set('msgsSent', self.msgsSent + 1)
-    
+
             self.socket.emit(self.ioChannels.client, msgToSend)
         } // --- End of Send Msg Fn --- //
-    
+
         // ========== Our own event handling system ========== //
-    
+
         self.events = {}  // placeholder for event listener callbacks by property name
-    
+
         /** Trigger event listener for a given property
          * Called when uibuilder.set is used
          *
@@ -341,13 +351,37 @@
                 evt[i].apply(self, args)
             }
         }
-    
+
+        // ========== Handle incoming code via received msg ========== //
+
+        // @TODO
+        self.newCode = function(code) {
+            if ( code === '' || (typeof code === 'undefined') ) return
+            if ( typeof code === 'array' ) code.join("\n")
+
+            self.uiDebug('info', 'uibuilderfe: newCode - code: ' + code)
+            var newScript = document.createElement('script')
+            newScript.type = 'text/javascript'
+            newScript.defer = true
+            newScript.textContent = code
+            self.uiDebug('dir', newScript)
+            document.getElementsByTagName('body')[0].appendChild(newScript)
+        }
+
+        self.newStyle = function(style) {
+            self.uiDebug('info', 'uibuilderfe: newStyle - style: ' + style)
+            var newStyle = document.createElement('style')
+            newStyle.textContent = style
+            self.uiDebug('dir', newStyle)
+            document.getElementsByTagName('head')[0].appendChild(newStyle)
+        }
+
         // ========== uibuilder callbacks ========== //
-    
+
         // uiReturn contains a set of functions that are returned when this function
         // self-executes (on-load)
         self.uiReturn = {
-    
+
             /** Function to set uibuilder properties to a new value. Also triggers any event listeners.
              * This version is for external use and disallows certain attributes to be set
              * Example: uibuilder.set('foo', {name:'uibuilder', data:42}); uibuilder.set('oldMsg', uibuilder.get('msg'));
@@ -365,11 +399,11 @@
                     self.uiDebug('warn', 'uibuilderfe:uibuilder:set: "' + prop + '" is in list of excluded attributes, not set')
                     return
                 }
-    
+
                 // Set & Trigger this prop's event callbacks (listeners)
                 self.set(prop, val)
             },
-    
+
             /** Function to get the value of a uibuilder property
              * Example: uibuilder.get('msg')
              * @param {string} prop The name of the property to get
@@ -380,7 +414,7 @@
                 // TODO: Add warning for non-existent property?
                 return self[prop]
             },
-    
+
             /** Register on-change event listeners
              * Make it possible to register a function that will be run when the property changes.
              * Note that you can create listeners for non-existant properties becuase
@@ -391,9 +425,9 @@
              */
             onChange: function (prop, callback) {
                 // Note: Property does not have to exist yet
-    
+
                 //self.uiDebug('log', `uibuilderfe:uibuilder:onchange: pushing new callback (event listener) for property: ${prop}`)
-    
+
                 // Create a new array or add to the array of callback functions for the property in the events object
                 if (self.events[prop]) {
                     self.events[prop].push(callback)
@@ -401,7 +435,7 @@
                     self.events[prop] = [callback]
                 }
             },
-    
+
             /** Helper fn, shortcut to return current value of msg
              * Use instead of having to do: uibuilder.get('msg')
              * Example: console.log( uibuilder.msg )
@@ -409,12 +443,12 @@
              * @return {Object} msg
              */
             msg: self.msg,
-    
+
             /** Helper fn, Send a message to NR
              * Example: uibuilder.sendMsg({payload:'Hello'})
              */
             send: self.send,
-    
+
             /** Turn on/off debugging
              * Example: uibuilder.debug(true)
              * @param {boolean} [onOff] Debug flag
@@ -424,28 +458,28 @@
                 if ( typeof onOff === 'undefined' ) return self.debug
                 if ( typeof onOff === 'boolean' ) self.debug = onOff
             },
-    
+
             /** Debugging function
              * Example: uibuilder.debug('info', 'This is an information message to console.log')
              * @param {string} type One of log|error|info|dir
              * @param {*} msg Msg to send to console
              */
             uiDebug: self.uiDebug,
-    
+
             /** Return self object (if debug true) or module version
              * Use only for debugging as: console.dir(uibuilder.me())
              * @return {object|string} Returns self object or version string
              **/
             me: self.me
-    
+
         } // --- End of return callback functions --- //
-    
+
         // ========== End of setup, start execution ========== //
-    
+
         // Make externally available the external methods
         return self.uiReturn
-    
-    }) // --- End of uibuilder function --- //    
+
+    }).call(root) // --- End of uibuilder function --- //
 
     /** Allows users to use a noConflict version in case they already have a uibuilder var in the starting context
      * In parent code, use as:
