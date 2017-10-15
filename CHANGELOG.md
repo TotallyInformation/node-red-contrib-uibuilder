@@ -2,6 +2,9 @@ v0.4.6
 
 - Added ability to include `msg.script` and `msg.style` in messages sent to the front-end from Node-RED (over Socket.IO).
   These must contain valid javascript and CSS respectively in the form of strings or arrays of strings. Currently there is minimal validation so some caution should be used. I will be adding configuration flags to allow admins to block this.
+- Added new node configuration flags to (dis-)allow scripts or styles to be input via incoming msg's.
+- Added new node configuration flag to easily turn on/off debugging information in the front-end -
+  check the browser developer console for the additional output if turned on. You can still override in `index.js` or at the browser developer console by using `uibuilder.debug(true)` etc.
 
 v0.4.5
 

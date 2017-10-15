@@ -20,8 +20,12 @@
         color: '#E6E0F8',
         defaults: {
             name: { value: '' },
+            topic: { value: '' },
             url: { value: 'uibuilder' }, // TODO: needs validation
             fwdInMessages: { value: false },
+            allowScripts: { value: false },
+            allowStyles: { value: false },
+            debugFE: { value: false },
         },
         inputs: 1,
         outputs: 1,
@@ -30,7 +34,9 @@
         label: function() { return this.url || this.name || 'UI Builder'; },
         oneditprepare: function() {
             $("#node-input-fwdInMessages").prop('checked', this.fwdInMessages)
-            $("#node-input-customFoldersReqd").prop('checked', this.customFoldersReqd)
+            $("#node-input-allowScripts").prop('checked', this.allowScripts)
+            $("#node-input-allowStyles").prop('checked', this.allowStyles)
+            $("#node-input-debugFE").prop('checked', this.debugFE)
         },
         //oneditsave: function() { },
         //oneditresize: function(size) { },
@@ -46,36 +52,73 @@
         <input type="text" id="node-input-name">
     </div>
 
+    <!-- Topic -->
+    <div class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-topic">
+    </div>
+
     <!-- Home "page" id - defines the URL used -->
-    <div class="form-row">
-        <label for="node-input-url"><i class="fa fa-tag"></i> URL</label>
+    <div class="form-row" title="Make sure this gives a unique URL">
+        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
         <input type="text" id="node-input-url">
     </div>
 
+    <!-- Forward input msgs to output -->
     <div class="form-row">
         <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
         <label for="node-input-fwdInMessages" style="width: 70%;">Forward received messages direct to output?</label>
     </div>
+
+    <!-- Allow scripts to be passed to front-end? -->
+    <div class="form-row" title="Add msg.script to the input msg">
+        <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-allowScripts" style="width: 70%;">Allow scripts to be passed to front-end?</label>
+    </div>
+    <!-- Allow styles to be passed to front-end? -->
+    <div class="form-row" title="Add msg.style to the input msg">
+        <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-allowStyles" style="width: 70%;">Allow styles to be passed to front-end?</label>
+
+    </div>
+
+    <!-- Debug Front-End? -->
+    <div class="form-row" title="See browser dev console if turned on">
+        <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-debugFE" style="width: 70%;">Debug Front-End?</label>
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="uibuilder">
-    <p>Creates a UI at a <a href="/uibuilder">given URL</a></p>
+    <p>Easily create a UI at a <a href="/uibuilder">given URL</a></p>
     <p>
         This node can be used to create a dynamic user interface that can receive and send back messages to Node-RED using a websocket connection.
         It creates a file/folder structure for you that can be used to deliver static resources (html, css, js, images, etc).
+        You can also pass some script and style information to the front-end.
     </p>
 
-    <h3>Inputs</h3>
+    <h3>Input msg</h3>
     <dl class="message-properties">
         <dt class="optional">payload <span class="property-type">(string | buffer)</span></dt>
         <dd> Optionally, the payload of the message to publish. </dd>
         <dt class="optional">topic <span class="property-type">(string)</span></dt>
         <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+
+        <dt class="optional">script <span class="property-type">(string | string[])</span></dt>
+        <dd>
+          Optionally, a string or array of strings containing valid JavaScript.
+          This will be added to the web page dynamically. Currently contains minimal validation so care is required.
+        </dd>
+        <dt class="optional">style <span class="property-type">(string | string[])</span></dt>
+        <dd>
+          Optionally, a string or array of strings containing valid CSS for styling the front-end page.
+          This will be added to the web page dynamically. Currently contains minimal validation so care is required.
+        </dd>
     </dl>
 
-    <h3>Outputs</h3>
+    <h3>Output msg</h3>
     <ol class="node-ports">
-        <li>Standard output
+        <li>Standard output msg
             <dl class="message-properties">
                 <dt>_msgcounter <span class="property-type">(integer)</span></dt>
                 <dd>
@@ -90,23 +133,29 @@
                     A copy of any inbound topic if present. Otherwise, the topic from the node's settings. Could be changed by the front-end
                     page but it really isn't recommended.
                 </dd>
+                <dt>other</dt>
+                <dd>
+                    Note that any inbound msg.script or msg.style is stripped and not sent to the output.
+                </dd>
             </dl>
         </li>
     </ol>
 
     <h3>Node Settings</h3>
-    <dl>
-        <dt>Name</dt>
+    <dl class="message-properties">
+        <dt>Name <span class="property-type">(string) node-input-name</span></dt>
         <dd>A short description shown in the admin interface</dd>
-        <dt>Topic</dt>
+        <dt>Topic <span class="property-type">(string) node-input-topic</span></dt>
         <dd>A topic name to use if the incoming msg does not contain one.</dd>
-        <dt>URL</dt>
+        <dt>URL <span class="property-type">(string) node-input-url</span></dt>
         <dd>
             The URL path that the resulting page and other resources will be served from.
             Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
-            and port. Will also be prefixed by the Node-RED setting
+            and port. Will also be prefixed by the Node-RED setting.<br>
+            <b>Note</b>: Uniqueness is not currently validated, you must make sure of this yourself for now.<br>
+            The default URL is 'uibuilder'.
         </dd>
-        <dt>Forward received messages direct to output?</dt>
+        <dt>Forward received messages direct to output? <span class="property-type">(boolean) node-input-fwdInMessages</span></dt>
         <dd>
             Forward's a copy of every received message direct to the output.
             Adds the topic from the above setting if one isn't present in the msg.
@@ -115,6 +164,25 @@
                 code also auto-sends inbound messages.
             </p>
         </dd>
+
+        <dt>Allow scripts to be passed to front-end? <span class="property-type">(boolean) allowScripts</span></dt>
+        <dd>
+            If on, any string(s) in <code>msg.script</code> will be dynamically added to the scripts of the web page.
+            Turn off to prevent scripts from being dynamically added and executed.
+        </dd>
+        <dt>Allow styles to be passed to front-end? <span class="property-type">(boolean) allowStyles</span></dt>
+        <dd>
+            If on, any string(s) in <code>msg.style</code> will be dynamically added to the styles of the web page.
+            Turn off to prevent styles from being dynamically added.
+        </dd>
+        <dt>Debug Front-End? <span class="property-type">(boolean) debugFE</span></dt>
+        <dd>
+            Turns on debugging in the front-end code. See your browser's developer tools console.
+            In your index.js front-end code, use <code>uibuilder.debug()</code> to detect whether debugging is on or off
+            and <code>uibuilder.debug(true)</code> to turn it on.<br>
+            The chosen state is sent to the Front-end in the initial connection message.<br>
+            <b>Note</b>: The flag in <code>settings.js</fe> controls debug output for the back-end (see below).
+        </dd>
     </dl>
 
     <h3>Node-RED Settings</h3>
@@ -122,13 +190,19 @@
         This node is able to use some settings from <code>settings.js</code>.
         The main setting object is <code>uibuilder</code>
     </p>
-    <dl>
-        <dt>uibuilder.userVendorPackages <span class="property-type">(list)</span></dt>
+    <dl class="message-properties">
+        <dt>uibuilder.userVendorPackages <span class="property-type">(string[])</span></dt>
         <dd>
             A list of package names that must match the folder name of an npm package
             installed in the <code>userDir</code> of Node-RED. These will be added to
             the list of statically served resource folders <b>if</b> the local <code>src</code>
             folder is being used and the "Use resources in custom folder?" setting is checked.
+        </dd>
+        <dt>uibuilder.debug <span class="property-type">(boolean)</span></dt>
+        <dd>
+            Turns on/off back-end debugging for all instances of the uibuilder node.
+            This flag is picked up earlier than the on in the node settings and so may show more information.
+            This flag is overridden by the node instance settings but at a later stage of operation so some output is still expected.
         </dd>
     </dl>
 
@@ -141,5 +215,11 @@
     <h3>Details</h3>
     <p>
         For more information, see the GitHub page for <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
+    </p>
+    <p>
+        There are also examples of how to use uibuilder in the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki">GitHub WIKI</a>.
+    </p>
+    <p>
+        uibuilder can be discussed in the <a href="https://groups.google.com/forum/#!topic/node-red">Node-RED Google Group</a> and in the <a href="https://node-red.slack.com/messages/C7K77MG06">Node-RED #uibuilder Slack channel</a>. Issues/bugs can be raised in <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues">GitHub</a>.
     </p>
 </script>

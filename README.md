@@ -1,4 +1,4 @@
-# node-red-contrib-uibuilder 
+# node-red-contrib-uibuilder
 
 A Node-RED web user interface builder.
 
@@ -53,8 +53,9 @@ There is a little more information available in the [WIKI](https://github.com/To
 
 ## Out of the box
 
-Out of the box, you get a simple index.html template with matching css & JavaScript.
-These are in the module's master template folder, they are automatically copied over to the instance src folder when you first deploy so that you can override them. If you want to reset, you can simply delete your local copies and the master templates will be copied back _when you restart Node-RED_.
+Out of the box, you get a simple `index.html` template with matching `index.css` & `index.js` JavaScript.
+These are automatically copied over from the module's master template folder to the instance's src folder when you first deploy so that you can override them.
+If you want to reset, you can simply delete your local copies and the master templates will be copied back _when you restart Node-RED_.
 
 JQuery is used in the default JavaScript to give dynamic updates to the web page. If all you need to do
 is some simple dynamic updates of the page, JQuery is likely enough. Normalize.css is also provided to help you with
@@ -63,6 +64,7 @@ standard look and feel. Just remove the references in index.html and the code fr
 Any msg sent to the node is forwarded directly to the front-end and is available in the global `msg` variable
 as it would be in Node-RED, use the `msgSend` function to send a message back to Node-RED that
 will be passed downstream from the node.
+The msg can contain script and style information that will be dynamically added to the web page if allowed by the settings.
 
 You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages). You can find this in `~/.node-red/uibuilder/<url>` by default. As a minimum, you need an `index.html` file. But you need the `index.js` file as well if you want Socket.IO communications to work. You will also need `manifest.json` for mobile use.
 
@@ -73,18 +75,16 @@ _[back to top](#contents)_
 ## Features
 
 - A single node is used to define an end-point (by its URL path).
-
-- The node can be included in flows as many times as you like - but each instance **must**
-  have a unique URL path name.
+  The node can be included in flows as many times as you like - but each instance **must** have a unique URL path name.
 
 - Each node instance gets its own Socket.IO namespace matching the URL path setting.
   Note that Socket.IO will efficiently share sockets while keeping traffic separated by namespace.
 
-- There is a front-end library `uibuilderfe.js` that hides all the complexities of using Socket.IO
+- There is a front-end library `uibuilderfe.min.js` or `uibuilderfe.js` that hides all the complexities of using Socket.IO
   so that your own FE code is easy to write. The default `index.js` file has details and examples of use.
 
-- Users can install front-end libraries using npm into their `userDir` folder. If using the `src`
-  sub-folder, these can be accessed in front-end code via the "vendor" path, see below. The list of user libraries made available is given via Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
+- Users can install front-end libraries using npm into their `userDir` folder.
+  If using the `src` sub-folder, these can be accessed in front-end code via the "vendor" path, see below. The list of user libraries made available is given via Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
 
 - The node's module contains default html, JavaScript and CSS master template files that are
   copied to your local src folder for you to edit as required.
@@ -92,6 +92,9 @@ _[back to top](#contents)_
 - Any msg sent to a node instance is sent through to the UI via Socket.IO.
   If `topic` is set in settings and not in the `msg`, the version from settings will be added.
   NOTE that this may present security and/or performance issues. In particular, you should remove msg.res and msg.req objects as they are both very large and often contain circular references.
+
+- Sent msg's can have a `msg.script` and `msg.style` property that will dynamically
+  add that code to the web page - if allowed by the settings (default is off)
 
 - Including a `_socketId` attribute on messages sent from Node-RED will send to that ID only.
   An ID is associated with a specific browser tab and is reset when the page is reloaded so this isn't too easy to use as yet (see [To Do list](to-do)).
@@ -223,8 +226,7 @@ Please feel free to contribute a pull request if you would like to,
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
 
 - Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
-
-- Move debug flag in `settings.js` to the admin interface so that it can be turned on/off for each individual instance
+  Started: script/style is removed if disallowed in settings
 
 - Add integrated ExpressJS security to Socket.IO
 
@@ -268,7 +270,16 @@ _[back to top](#contents)_
 
 ## Changes
 
+v0.4.6
+
+- Added ability to include `msg.script` and `msg.style` in messages sent to the front-end from Node-RED (over Socket.IO).
+  These must contain valid javascript and CSS respectively in the form of strings or arrays of strings. Currently there is minimal validation so some caution should be used. I will be adding configuration flags to allow admins to block this.
+- Added new node configuration flags to (dis-)allow scripts or styles to be input via incoming msg's.
+- Added new node configuration flag to easily turn on/off debugging information in the front-end -
+  check the browser developer console for the additional output if turned on. You can still override in `index.js` or at the browser developer console by using `uibuilder.debug(true)` etc.
+
 v0.4.5
+
 **Note:** The master front-end template files have changed again. Specifically, they now use a minimised version of `uibuilderfe.min.js` & that code is better isolated, only the `uibuilder` function is exposed.
 
 - Minimised and better isolated the front-end code.
@@ -280,6 +291,7 @@ v0.4.5
 - Update dependencies to latest.
 
 v0.4.2
+
 **Note:** The master front-end template files have changed significantly in this release. It is suggested that you rename your local folder (`~/.node-red/uibuilder/uibuilder`) - and let the node rebuild it for you with the latest template. Most of the message handling code is now hidden away in a JavaScript file that you don't need to deal with `uibuilderfe.js`. The new `index.html` automatically loads that for you and the new `index.js` shows you how to use it. The old templates still work but aren't as nice and may stop working correctly in the future.
 
 - Restructure the front-end JavaScript.
@@ -295,7 +307,7 @@ v0.4.2
 
 v0.4.0
 
-*Breaking Change*: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
+**Breaking Change**: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
 
 - Copy template files to local override folder if not already existing - this will
   save users having to hunt down the template files which exist in this module.

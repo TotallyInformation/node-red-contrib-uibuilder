@@ -249,21 +249,22 @@
                 receivedCtrlMsg = { 'payload': receivedCtrlMsg }
             }
 
+            // Allow incoming control msg to change debug state (usually on the connection msg)
+            if ( receivedCtrlMsg.hasOwnProperty('debug') ) self.debug = receivedCtrlMsg.debug
+
             self.set('ctrlMsg', receivedCtrlMsg)
             self.set('msgsCtrl', self.msgsCtrl + 1)
 
-            /*
-                switch(receivedCtrlMsg.type) {
-                    case 'shutdown':
-                        // Node-RED is shutting down
-                        break
-                    case 'server connected':
-                        // We are connected to the server
-                        break
-                    default:
-                        // Anything else
-                }
-            */
+            /*switch(receivedCtrlMsg.type) {
+                case 'shutdown':
+                    // Node-RED is shutting down
+                    break
+                case 'server connected':
+                    // We are connected to the server
+                    break
+                default:
+                    // Anything else
+            } // */
 
             /* Test auto-response
                 if (self.debug) {

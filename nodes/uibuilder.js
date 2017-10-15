@@ -49,8 +49,8 @@ module.exports = function(RED) {
     'use strict'
 
     // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
-    // @since 2017-09-19 moved to top of module.exports
-    const debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
+    // @since 2017-09-19 moved to top of module.exports. @since 2017-10-15 var not const as it can be overridden
+    var debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
 
     // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
     // @TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
@@ -108,25 +108,31 @@ module.exports = function(RED) {
         // copy 'this' object in case we need it in context of callbacks of other functions.
         const node = this
 
-        // Create local copies of the node configuration (as defined in the .html file)
+        //#region Create local copies of the node configuration (as defined in the .html file)
         // NB: node.id and node.type are also available
-        node.name   = config.name || ''
-        node.topic  = config.topic || ''
+        node.name          = config.name || ''
+        node.topic         = config.topic || ''
         // TODO: Needs validation as a suitable URL path
-        node.url    = config.url  || 'uibuilder'
-        node.fwdInMessages = config.fwdInMessages // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
+        node.url           = config.url  || 'uibuilder'
+        node.fwdInMessages = config.fwdInMessages        // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
+        node.allowScripts  = config.allowScripts
+        node.allowStyles   = config.allowStyles
+        node.debugFE       = config.debugFE
+        //#endregion
 
-        log.debug( {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'custFldrs': node.customFoldersReqd })
+        log.debug( {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
 
-        // User supplied vendor packages
-        // & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
-        // JK @since 2017-08-17 fix for non-existent properties and use getProps()
+        /** User supplied vendor packages
+         * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
+         * JK @since 2017-08-17 fix for non-existent properties and use getProps()
+         */
         node.userVendorPackages = getProps(RED,config,'userVendorPackages',null) || getProps(RED,RED.settings,'uibuilder.userVendorPackages',[])
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
         node.customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
-        // Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
-        //   Files in this folder are also served to URL but take preference
-        //   over those in the nodes folders (which act as defaults)
+        /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
+         *   Files in this folder are also served to URL but take preference
+         *   over those in the nodes folders (which act as defaults)
+         */
         node.customFolder = path.join(node.customAppFolder, node.url)
 
         log.debug( { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
@@ -330,8 +336,8 @@ module.exports = function(RED) {
             )
             setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
 
-            // Let the clients know we are connecting
-            ioNs.emit( node.ioChannels.control, { 'type': 'server connected' } )
+            // Let the clients know we are connecting & send the desired debug state
+            ioNs.emit( node.ioChannels.control, { 'type': 'server connected', 'debug': node.debugFE } )
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
@@ -460,6 +466,14 @@ module.exports = function(RED) {
 function inputHandler(msg, node, RED, io, ioNs, log) {
     node.rcvMsgCount++
     //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + node.rcvMsgCount}, node)
+
+    // Remove script/style content if admin settings don't allow
+    if ( node.allowScripts !== true ) {
+        if ( msg.hasOwnProperty('script') ) delete msg.script
+    }
+    if ( node.allowStyles !== true ) {
+        if ( msg.hasOwnProperty('style') ) delete msg.style
+    }
 
     // pass the complete msg object to the uibuilder client
     // TODO: This should have some safety validation on it!
