@@ -5,6 +5,7 @@ v0.4.6
 - Added new node configuration flags to (dis-)allow scripts or styles to be input via incoming msg's.
 - Added new node configuration flag to easily turn on/off debugging information in the front-end -
   check the browser developer console for the additional output if turned on. You can still override in `index.js` or at the browser developer console by using `uibuilder.debug(true)` etc.
+- FIX: Bug that didn't correctly remove/re-apply Express static routes on (re)deploy has been fixed.
 
 v0.4.5
 

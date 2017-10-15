@@ -269,6 +269,7 @@ module.exports = function(RED) {
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
         var masterStatic = function(req,res,next) { next() }
+        //Object.defineProperty(f, 'name', {value: myName, writable: false})
         try {
             // Will we use "compiled" version of module front-end code?
             fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
@@ -440,15 +441,16 @@ module.exports = function(RED) {
 
         // Do something when Node-RED is closing down
         // which includes when this node instance is redeployed
-        node.on('close', function() {
-            log.debug('uibuilder:nodeGo:on-close') //debug
+        node.on('close', function(removed,done) {
+            log.debug('uibuilder:nodeGo:on-close:', node.url, '::', removed?'Node Removed':'Node (re)deployed')
 
             node.removeListener('input', nodeInputHandler)
 
             // Do any complex close processing here if needed - MUST BE LAST
-            processClose(null, node, RED, ioNs, io, app) // swap with below if needing async
-            //processClose(done, node, RED, ioNs, io, app)
+            //processClose(null, node, RED, ioNs, io, app) // swap with below if needing async
+            processClose(done, node, RED, ioNs, io, app, log)
 
+            done()
         })
 
     } // ---- End of nodeGo (initialised node instance) ---- //
@@ -496,16 +498,15 @@ function inputHandler(msg, node, RED, io, ioNs, log) {
 } // ---- End of inputHandler function ---- //
 
 // Do any complex, custom node closure code here
-function processClose(done = null, node, RED, ioNs, io, app) {
+function processClose(done = null, node, RED, ioNs, io, app, log) {
+    log.debug('uibuilder:nodeGo:on-close:processClose', node.url)
+
     setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
     // Let the clients know we are closing down
     ioNs.emit( node.ioChannels.control, { 'type': 'shutdown' } )
 
     // Disconnect all Socket.IO clients
-    // WARNING: TODO: If we do this, a client cannot reconnect after redeployment
-    //                so the user has to reload the page
-    //  They have to do this at the moment anyway so might as well.
     const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
     if ( connectedNameSpaceSockets.length >0 ) {
         connectedNameSpaceSockets.forEach(socketId => {
@@ -515,25 +516,27 @@ function processClose(done = null, node, RED, ioNs, io, app) {
     ioNs.removeAllListeners() // Remove all Listeners for the event emitter
     delete io.nsps[node.ioNamespace] // Remove from the server namespaces
 
-    // We need to remove the app.use paths too.
-    // NOTE: Nope, this works better than the original but it doesn't remove everything for some
-    //       odd reason. Looks like Express REALLY doesn't like dynamic route removal & we will
-    //       just have to live with it!
+    // We need to remove the app.use paths too as they will be recreated on redeploy
+    // we check whether the regex string matches the current node.url, if so, we splice it out of the stack array
+    var removePath = []
     var urlRe = new RegExp('^' + escapeRegExp('/^\\' + urlJoin(node.url)) + '.*$');
-    //console.log(urlRe.toString())
     app._router.stack.forEach( function(r, i, stack) {
-        //let rUrl = urlJoin( r.regexp.toString().replace(/^\/\^\\\//, '').replace(/\\\/\?\(\?\=\\\/\|\$\)\/i$/, '').replace(/\\\/vendor\\\/.*$/, '') )
         let rUrl = r.regexp.toString().replace(urlRe, '')
-        //console.log(`${rUrl === r.regexp.toString()} :: ${r.regexp.toString() === urlRe.toString()} :: ${rUrl} :: ${r.regexp.toString()}`)
         if ( rUrl === '' ) {
-            //console.log('GOING! ' + r.regexp.toString())
-            app._router.stack.splice(i,1)
+            removePath.push( i )
+            // @since 2017-10-15 Nasty bug! Splicing changes the length of the array so the next splice is wrong!
+            //app._router.stack.splice(i,1)
         }
     })
 
+    // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
+    for (var i = removePath.length -1; i >= 0; i--) {
+        app._router.stack.splice(removePath[i],1);
+    }
+
     /*
         // This code borrowed from the http nodes
-        // TODO: THIS DOESN'T ACTUALLY WORK!!! Static routes don't set route.route
+        // THIS DOESN'T ACTUALLY WORK!!! Static routes don't set route.route
         app._router.stack.forEach(function(route,i,routes) {
             if ( route.route && route.route.path === node.url ) {
                 routes.splice(i,1)

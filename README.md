@@ -202,12 +202,10 @@ I don't believe any of the current issues make the node unusable. They are mainl
 - **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
   about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
 
+  You can work around this by using a proxy such as NGINX or HAproxy to be the TLS endpoint. Just make sure you proxy the websocket traffic as well as the standard web traffic.
+
 - Uniqueness of the URL is not yet being validated for multiple instances, could cause
   some "interesting" effects!
-
-- Currently, it doesn't appear possible to remove routes from Express v4 dynamically.
-  Some get removed and some don't, it's about the best I can do unless someone has a better idea.
-  This means that you get redundant routes when you redeploy the node instance. Doesn't affect running but probably uses memory.
 
 - Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`.
   Some installs don't seem to be doing this for some reason.
@@ -277,6 +275,7 @@ v0.4.6
 - Added new node configuration flags to (dis-)allow scripts or styles to be input via incoming msg's.
 - Added new node configuration flag to easily turn on/off debugging information in the front-end -
   check the browser developer console for the additional output if turned on. You can still override in `index.js` or at the browser developer console by using `uibuilder.debug(true)` etc.
+- FIX: Bug that didn't correctly remove/re-apply Express static routes on (re)deploy has been fixed.
 
 v0.4.5
 
