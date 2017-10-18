@@ -58,6 +58,11 @@
 
 "use strict";
 
+// tell webpack that we need socket.io client
+if (typeof require !== "undefined"  &&  typeof io === "undefined") {
+   var io = require("socket.io-client")
+}
+
  // Create a single global using "new" with an anonymous function
 // ensures that everything is isolated and only what is returned is accessible
 // Isolate everything
