@@ -494,6 +494,9 @@
 
         // ========== End of setup, start execution ========== //
 
+        // Make sure we connect the first time ok
+        self.checkConnect(self.retryMs, self.retryFactor)
+
         // Make externally available the external methods
         return self.uiReturn
 
