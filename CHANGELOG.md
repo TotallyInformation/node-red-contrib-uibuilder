@@ -1,3 +1,9 @@
+v0.4.7
+
+- CL: Added check and load Socket.IO for running via webpack.
+- CL: Reinstate missing force (re)connection to Socket.IO check on initialisation.
+- Fix typo in readme
+
 v0.4.6
 
 - Added ability to include `msg.script` and `msg.style` in messages sent to the front-end from Node-RED (over Socket.IO).

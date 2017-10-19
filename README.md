@@ -46,7 +46,7 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
 
 There is a little more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
 - [Example: Using MoonJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-MoonJS)
-- [Example: Using RiodJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-RiotJS)
+- [Example: Using RiotJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-RiotJS)
 - [Sending Messages to Specific Client Instances](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances)
 - [Use on Mobile Browsers](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Use-on-Mobile-Browsers)
 - [Developing Front End Code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Developing-front-end-code)
@@ -267,6 +267,12 @@ These are random thoughts that might make it into the To Do list but really need
 _[back to top](#contents)_
 
 ## Changes
+
+v0.4.7
+
+- CL: Added check and load Socket.IO for running via webpack.
+- CL: Reinstate missing force (re)connection to Socket.IO check on initialisation.
+- Fix typo in readme
 
 v0.4.6
 
