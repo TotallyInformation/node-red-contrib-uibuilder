@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. JQuery and normalize.css included by default but change as desired.",
   "keywords": [
     "node-red",
@@ -47,10 +47,7 @@
     "socket.io": "^2.0.3",
     "winston": "^2.4.0"
   },
-  "devDependencies": {
-    "webpack": "^3.7.1",
-    "uglifyjs-webpack-plugin": "^1.0.0-beta.3"
-  },
+  "devDependencies": { },
   "engines": {
     "node": ">=6"
   }
