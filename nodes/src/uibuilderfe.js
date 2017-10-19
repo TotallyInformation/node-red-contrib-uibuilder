@@ -58,9 +58,9 @@
 
 "use strict";
 
-// tell webpack that we need socket.io client
-if (typeof require !== "undefined"  &&  typeof io === "undefined") {
-   var io = require("socket.io-client")
+// @since 2017-10-17 CL: tell webpack that we need socket.io client if running from webpack build
+if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
+    var io = require('socket.io-client')
 }
 
  // Create a single global using "new" with an anonymous function
@@ -81,7 +81,7 @@ if (typeof require !== "undefined"  &&  typeof io === "undefined") {
 
         var self = this
 
-        self.version = '0.4.6'
+        self.version = '0.4.7'
         self.debug = false
 
         /** Debugging function
