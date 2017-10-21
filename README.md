@@ -1,18 +1,18 @@
 # node-red-contrib-uibuilder
 
-A Node-RED web user interface builder.
+A Node-RED web user interface builder. Aims to Provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
 
-Designed as an alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)*
-and *[To Do](#to-do)* sections below for what might still need some work.
+Designed as an alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)* and *[To Do](#to-do)* sections below for what might still need some work.
 
-The idea is to allow users to use their own html/css/js/etc code to define a UI on a specific URL (end-point) that is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
+This module should minimise any boilerplate that you (as a user) are forced to create, it should be lightweight and should be usable on any device (though obviously depending on what libraries you add). You shouldn't need to have in-depth knowledge of Node.JS nor npm, nor should you need access to the underlying file system. (Those last two points are aims for the future, we aren't there yet I'm afraid).
+
+Currently, this module allow users to use their own html/css/js/etc code to define a UI on a specific URL (end-point) that is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
 
 *Breaking Change in 0.4.0*: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
 
 *Front-end changes in 0.4.2 & 0.4.5*: You will want the new master template files as they use a new library that makes your own custom code very much easier.
 
-Eventually, you will be able to "compile" src files using webpack from a button in the nodes config.
-That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
+Eventually, you will be able to "compile" src files using webpack from a button in the nodes config. That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
 
 The final evolution will be to provide configuration nodes to let you define framework or html/css/js files in Node-RED itself so that you won't need access to the servers file system at all.
 
@@ -31,7 +31,6 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
         - [Physical file/folder location summary](#physical-filefolder-location-summary)
     - [Known Issues](#known-issues)
     - [To Do](#to-do)
-    - [Possibilities for further thought](#possibilities-for-further-thought)
     - [Changes](#changes)
     - [Dependencies](#dependencies)
     - [Install](#install)
@@ -208,127 +207,19 @@ I don't believe any of the current issues make the node unusable. They are mainl
   some "interesting" effects!
 
 - Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`.
-  Some installs don't seem to be doing this for some reason.
-  See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2). Added some extra code to try and deal with this but it may
-  not be 100% reliable.
+  Some installs don't seem to be doing this for some reason. See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2). Added some extra code to try and deal with this but it may not be 100% reliable.
 
 _[back to top](#contents)_
 
 ## To Do
 
-These would be nice to do at some point and would make the node more robust and a bit easier to use in places.
-
-Please feel free to contribute a pull request if you would like to,
-
-- Add validation to `url` setting
-  Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
-
-- Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
-  Started: script/style is removed if disallowed in settings
-
-- Add integrated ExpressJS security to Socket.IO
-
-- Process `httpNodeAuth`
-
-- Add feature to send a refresh indicator to FE when switching local
-  folder use on/off so that FE auto-reloads
-
-- Add ability to auto-install missing modules.
-
-- Add ability to create resources from the Node-RED admin UI - currently all resources have
-  to be created in the file system. Ideally, we would have editors in the node that allowed HMTL, JavaScript and CSS content to be created. We would also possibly allow such content to be passed on the msg though that could be somewhat dangerous so probably should be an option.
-
-- Use webpack to "compile" resources into distribution folders upon (re)deployment -
-  allowing for the use of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
-
-- If using `dist` code, Add a check for new file changes in local `src` folder
-
-## Possibilities for further thought
-These are random thoughts that might make it into the To Do list but really need more thought before committing to them.
-
-- Tidy up Socket.IO control messages so they add value. When the client receives its first
-  control msg, it should respond so that the server can track the socketID's of connected clients (see "Show Connection" flag idea below).
-
-- Add "Show Connection" flag to admin ui. Would output a message on each connection that would
-  include the socketId. Allowing for processing of messages back to a specific client instance.
-
-- Add Debug flag to admin ui. Pass throught to FE if set.
-
-- Add sender IP address when sending msg from browser - so that Node-RED can
-  differentiate where things are coming from.
-  The `_socketId` obviously already identifies the originator technically but additional info might be helpful.
-  _Possibly make this optional. Maybe have other optional data too such as device_
-
-- _(Maybe compile template resources to dist folder?)_
-
-- _We might need to add some checks for updated master templates? Maybe issue a warning? Not sure._
-
+The backlog of ideas and enhancements has now been moved to the [To Do file](TODO.md)
 
 _[back to top](#contents)_
 
 ## Changes
 
-v0.4.7
-
-- CL: Added check and load Socket.IO for running via webpack.
-- CL: Reinstate missing force (re)connection to Socket.IO check on initialisation.
-- Fix typo in readme
-
-v0.4.6
-
-- Added ability to include `msg.script` and `msg.style` in messages sent to the front-end from Node-RED (over Socket.IO).
-  These must contain valid javascript and CSS respectively in the form of strings or arrays of strings. Currently there is minimal validation so some caution should be used. I will be adding configuration flags to allow admins to block this.
-- Added new node configuration flags to (dis-)allow scripts or styles to be input via incoming msg's.
-- Added new node configuration flag to easily turn on/off debugging information in the front-end -
-  check the browser developer console for the additional output if turned on. You can still override in `index.js` or at the browser developer console by using `uibuilder.debug(true)` etc.
-- FIX: Bug that didn't correctly remove/re-apply Express static routes on (re)deploy has been fixed.
-
-v0.4.5
-
-**Note:** The master front-end template files have changed again. Specifically, they now use a minimised version of `uibuilderfe.min.js` & that code is better isolated, only the `uibuilder` function is exposed.
-
-- Minimised and better isolated the front-end code.
-- Some minor issues dealt with in the FE code.
-- New FE function: `uibuilder.me()` that either returns the code version (if debug not set) or the complete function object for better debugging.
-- `uibuilder.debug()` now returns the current debug state if no boolean parameter given. Parameter validated as boolean|undefined.
-- Fixes for changes in new version of `get-installed-path`.
-- Begun to add JSDoc throughout and added `// @ts-check` to better validate code.
-- Update dependencies to latest.
-
-v0.4.2
-
-**Note:** The master front-end template files have changed significantly in this release. It is suggested that you rename your local folder (`~/.node-red/uibuilder/uibuilder`) - and let the node rebuild it for you with the latest template. Most of the message handling code is now hidden away in a JavaScript file that you don't need to deal with `uibuilderfe.js`. The new `index.html` automatically loads that for you and the new `index.js` shows you how to use it. The old templates still work but aren't as nice and may stop working correctly in the future.
-
-- Restructure the front-end JavaScript.
-  A single global object is created by `uibuilderfe.js` called `uibuilder`. This encapsulates all of the core logic. It has an `onChange` method that lets you monitor its attributes for changes and take action as appropriate.
-  Debugging is also easier to turn on/off by the function `uibuilder.debug(true)`. It has `set` and `get` methods for writing/reading attributes; `set` disallows setting of core attributes.
-  There is also a `uibuilder.send` method that sends a message back to Node-RED - e.g. `uibuilder.send({topic:'uibuilder',payload:'Smashing!'})`
-- Fix for using `dist` folders instead of `src` ([Issue 13](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/13)). Also improved debug logs
-- Changed logging so that, if not using the debug setting,
-  produces only minimal output and that goes to the standard Node-RED log instead of the log file. Turning on debugging using the setting in `settings.js` will output to the log file `~/.node-red/uibuilder.log`
-- Added default master src/index.html which covers the situation where you delete your live, local index.html from dist or src. You get a page that tells you how to fix it.
-- Page icon changed from red to blue to help visual identification of the page amongst other Node-RED tabs
-- More tidying of the documentation. Making sure it is consistent and removing to do entries now completed
-
-v0.4.0
-
-**Breaking Change**: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
-
-- Copy template files to local override folder if not already existing - this will
-  save users having to hunt down the template files which exist in this module.
-- Move master front-end files from `src` to `templates` folder.
-- Tweak front-end `index.js`, better Socket.IO reconnect logic
-  (thanks to [Colin Law](https://github.com/colinl), [Issue 9](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/9), [Pull request #11)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/11).
-  Also tidy code and start to extract JQuery specifics from core logic in preparation for a complete separation to make coding easier for users.
-- Enable msg's to be sent from server to a specific client instance by adding `_socketId`
-  attribute to the `msg`. The ID must match the appropriate client ID of course.
-- Links to WIKI and table of contents added to README.
-- Switch from using fs to use fs-extra node.js module. Initially for copying the template files but later on for refactoring all fs code.
-- Remove config switch for "Use reproduces in custom folder" as this is always done now.
-- Add connected state to default page template
-  (thanks to [Colin Law](https://github.com/colinl), [Pull request #12](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/12))
-
-See [CHANGELOG](CHANGELOG.md) for more detail.
+See the [Change Log](CHANGELOG.md) for details of changes made.
 
 _[back to top](#contents)_
 
@@ -410,12 +301,17 @@ If you would like to contribute to this node, you can contact Totally Informatio
 
 If submitting code (preferably via a pull request), please use eslint to adhere to the same standards.
 
+When contributing code, please use the following coding standards:
+- Use ESLint:Standard settings plus the following
+- Indents must be 4 spaces
+- Strings must be single quoted not double
+- Semi-colons should not be used unless absolutely necessary (see [here](https://mislav.net/2010/05/semicolons/) for guide)
+
 ## Developers/Contributors
 
-- [Julian Knight](https://github.com/TotallyInformation)
-
-
+- [Julian Knight](https://github.com/TotallyInformation)1
 - [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
+- [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections and contributed code.
 
 
 <a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>

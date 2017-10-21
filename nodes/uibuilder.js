@@ -46,8 +46,6 @@ const instances = {}
 
 module.exports = function(RED) {
 
-    'use strict'
-
     // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
     // @since 2017-09-19 moved to top of module.exports. @since 2017-10-15 var not const as it can be overridden
     var debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
@@ -142,8 +140,8 @@ module.exports = function(RED) {
         node.rcvMsgCount = 0 // how many msg's received since last reset or redeploy?
         // The channel names for Socket.IO
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
-        // Make sure each node instance uses a separate Socket.IO namespace
-        node.ioNamespace = '/' + trimSlashes(node.url)
+        // Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
+        node.ioNamespace = '/' + trimSlashes(RED.settings.httpNodeRoot + '/' + node.url).replace(/\/\//g, '')
 
         log.debug(  'io', { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
 

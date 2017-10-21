@@ -2,7 +2,15 @@ v0.4.7
 
 - CL: Added check and load Socket.IO for running via webpack.
 - CL: Reinstate missing force (re)connection to Socket.IO check on initialisation.
-- Fix typo in readme
+- Fix typo in readme.
+- Added available URL paths and the global uibuilder settings to the admin settings ui.
+  So that you can see what modules have been loaded and made available to your front-end code.
+- FIX: Incorrectly derived Socket.IO namespace in `uibuilderfe.js`.
+  Didn't work if the web page was on a sub-path such as `/uibuilder/vega` - thanks to Steve Rickus
+- FIX: Incorrectly derived Socket.IO namespace in `uibuilder.js`.
+  Didn't work if `settings.js` `httpNodeRoot` was set to anything other than `/`
+- To Do's moved to [separate file](TODO.md)
+- Additional tidy up and clarity in README
 
 v0.4.6
 

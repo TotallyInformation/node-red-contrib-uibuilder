@@ -117,19 +117,19 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         }
 
         /** Get the Socket.IO namespace from the current URL
+         * @since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
          * @return {string} Socket.IO namespace
          */
         self.setIOnamespace = function () {
-            var u = window.location.pathname.split('/')
-
-            //if last element is '', take [-1]
-            var ioNamespace = u.pop()
-            if (ioNamespace === '') ioNamespace = u.pop()
-
-            self.uiDebug('log', 'uibuilderfe: IO Namespace: /' + ioNamespace)
+            // split url path & eliminate any blank elements, and trailing or double slashes
+            var u = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
 
             // Socket.IO namespace HAS to start with a leading slash
-            return '/' + ioNamespace
+            var ioNamespace = '/' + u.join('/')
+
+            self.uiDebug('log', 'uibuilderfe: IO Namespace: ' + ioNamespace)
+
+            return ioNamespace
         } // --- End of set IO namespace --- //
 
         //#region --- variables ---

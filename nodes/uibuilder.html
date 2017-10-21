@@ -1,28 +1,30 @@
 <!--
-  Copyright (c) 2017 Julian Knight (Totally Information)
+    Copyright (c) 2017 Julian Knight (Totally Information)
 
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 -->
 
 <script type="text/javascript">
     function buildUrlList(pkgs, url) {
         if ( !Array.isArray(pkgs) ) pkgs = [pkgs]
+        url = RED.settings.httpNodeRoot + url
+        $('#fepaths').empty()
         pkgs.forEach(function(element) {
-            var strUrl = '/' + url + '/vendor/' + element + '/'
+            var strUrl = url + '/vendor/' + element + '/'
             $('#fepaths').append('<li><i>' + strUrl + '</i></li>')
         }, this);
-        $('#fepaths').append('<li><a href="/' + url + '/vendor/jquery/dist/jquery.min.js">/' + url + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
-        $('#fepaths').append('<li><a href="/' + url + '/vendor/normalize.css/normalize.css">/' + url + '/vendor/normalize.css/normalize.css</a></li>') // always the same
+        $('#fepaths').append('<li><a href="' + url + '/vendor/jquery/dist/jquery.min.js">' + url + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
+        $('#fepaths').append('<li><a href="' + url + '/vendor/normalize.css/normalize.css">' + url + '/vendor/normalize.css/normalize.css</a></li>') // always the same
         $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
     }
     RED.nodes.registerType( 'uibuilder', {
@@ -39,23 +41,27 @@
         },
         inputs: 1,
         outputs: 1,
-        icon: "ui_template.png",
+        icon: 'ui_template.png',
         paletteLabel: 'UI Builder',
         label: function() { return this.url || this.name || 'UI Builder'; },
         oneditprepare: function() {
+            console.dir(this)
             // Set the checkbox states
-            $("#node-input-fwdInMessages").prop('checked', this.fwdInMessages)
-            $("#node-input-allowScripts").prop('checked', this.allowScripts)
-            $("#node-input-allowStyles").prop('checked', this.allowStyles)
-            $("#node-input-debugFE").prop('checked', this.debugFE)
+            $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
+            $('#node-input-allowScripts').prop('checked', this.allowScripts)
+            $('#node-input-allowStyles').prop('checked', this.allowStyles)
+            $('#node-input-debugFE').prop('checked', this.debugFE)
             // Show the uibuilder global settings from settings.js
             var pkgs = RED.settings.uibuilder.userVendorPackages
-            $("#userpackages").text(pkgs)
-            $("#bedebug").text(RED.settings.uibuilder.debug)
+            $('#userpackages').text(pkgs)
+            $('#bedebug').text(RED.settings.uibuilder.debug)
             // List the front-end url paths available
             buildUrlList(pkgs, this.url)
-            $("#node-input-url").change(function(){
-                $('#fepaths').empty()
+            // When the url changes,
+            $('#node-input-url').change(function(){
+                // Show the root URL
+                $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
+                // Update the list of available paths
                 buildUrlList(pkgs, $(this).val())
             });
         },
@@ -111,10 +117,11 @@
 
     <!-- Info -->
     <div class="form-tips node-help" title="">
+        <div>Base URL: <span id="uibuilderurl"></span></div>
         <div>
             <u>Paths available to web pages</u>
             <ul id="fepaths"></ul>
-            <p>URLs in italics may not be directly accessible. You need to know what sub-path contains something useful. Check the package documentation for what is exposed.
+            <div>URLs in italics may not be directly accessible. You need to know what sub-path contains something useful. Check the package documentation for what is exposed.</div>
         </div>
         <div title="See your settings.js file for changing these. They apply to all instances of uibuilder.">
             <u>Global Settings</u>
@@ -125,6 +132,7 @@
                 <dd id="bedebug">-</dd>
             </dl>
         </div>
+        <div>Front-end modules must be installed to your userDir folder.</div>
     </div>
 </script>
 
