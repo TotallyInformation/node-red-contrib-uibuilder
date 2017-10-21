@@ -15,6 +15,7 @@
 -->
 
 <script type="text/javascript">
+
     RED.nodes.registerType( 'uibuilder', {
         category: 'UI Builder',
         color: '#E6E0F8',
@@ -33,10 +34,24 @@
         paletteLabel: 'UI Builder',
         label: function() { return this.url || this.name || 'UI Builder'; },
         oneditprepare: function() {
+            // Set the checkbox states
             $("#node-input-fwdInMessages").prop('checked', this.fwdInMessages)
             $("#node-input-allowScripts").prop('checked', this.allowScripts)
             $("#node-input-allowStyles").prop('checked', this.allowStyles)
             $("#node-input-debugFE").prop('checked', this.debugFE)
+            // Show the uibuilder global settings from settings.js
+            var pkgs = RED.settings.uibuilder.userVendorPackages
+            $("#userpackages").text(pkgs)
+            $("#bedebug").text(RED.settings.uibuilder.debug)
+            // List the front-end url paths available
+            if ( !Array.isArray(pkgs) ) pkgs = [pkgs]
+            pkgs.forEach(function(element) {
+                var strUrl = '/' + this.url + '/vendor/' + element + '/'
+                $('#fepaths').append('<li><i>' + strUrl + '</i></li>')
+            }, this);
+            $('#fepaths').append('<li><a href="/uibuilder/vendor/jquery/dist/jquery.min.js">/uibuilder/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
+            $('#fepaths').append('<li><a href="/uibuilder/vendor/normalize.css/normalize.css">/uibuilder/vendor/normalize.css/normalize.css</a></li>') // always the same
+            $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
         },
         //oneditsave: function() { },
         //oneditresize: function(size) { },
@@ -86,6 +101,24 @@
     <div class="form-row" title="See browser dev console if turned on">
         <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
         <label for="node-input-debugFE" style="width: 70%;">Debug Front-End?</label>
+    </div>
+
+    <!-- Info -->
+    <div class="form-tips node-help" title="">
+        <div>
+            <u>Paths available to web pages</u>
+            <ul id="fepaths"></ul>
+            <p>URLs in italics may not be directly accessible. You need to know what sub-path contains something useful. Check the package documentation for what is exposed.
+        </div>
+        <div title="See your settings.js file for changing these. They apply to all instances of uibuilder.">
+            <u>Global Settings</u>
+            <dl class="message-properties">
+                <dt title="Have to be installed to userDir with npm">What modules have been loaded? <span class="property-type">(uibuilder.userVendorPackages)</span></dt>
+                <dd id="userpackages">-</dd>
+                <dt>Back-end debug <span class="property-type">(uibuilder.debug)</span></dt>
+                <dd id="bedebug">-</dd>
+            </dl>
+        </div>
     </div>
 </script>
 
