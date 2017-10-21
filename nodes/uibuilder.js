@@ -457,7 +457,18 @@ module.exports = function(RED) {
 
     // Register the node by name. This must be called before overriding any of the
     // Node functions.
-    RED.nodes.registerType(moduleName, nodeGo)
+    RED.nodes.registerType(moduleName, nodeGo, {
+        // see userDir/settings.js - makes the settings available to the admin ui
+        settings: {
+            uibuilder: {
+                value: {
+                    userVendorPackages: [],
+                    debug: false
+                },
+                exportable: true
+            }
+        }
+    })
 
 } // ==== End of module.exports ==== //
 
