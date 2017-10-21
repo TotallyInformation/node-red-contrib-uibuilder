@@ -21,8 +21,8 @@
             var strUrl = '/' + url + '/vendor/' + element + '/'
             $('#fepaths').append('<li><i>' + strUrl + '</i></li>')
         }, this);
-        $('#fepaths').append('<li><a href="/uibuilder/vendor/jquery/dist/jquery.min.js">/uibuilder/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
-        $('#fepaths').append('<li><a href="/uibuilder/vendor/normalize.css/normalize.css">/uibuilder/vendor/normalize.css/normalize.css</a></li>') // always the same
+        $('#fepaths').append('<li><a href="/' + url + '/vendor/jquery/dist/jquery.min.js">/' + url + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
+        $('#fepaths').append('<li><a href="/' + url + '/vendor/normalize.css/normalize.css">/' + url + '/vendor/normalize.css/normalize.css</a></li>') // always the same
         $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
     }
     RED.nodes.registerType( 'uibuilder', {
