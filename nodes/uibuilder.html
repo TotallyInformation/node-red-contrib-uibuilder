@@ -15,7 +15,16 @@
 -->
 
 <script type="text/javascript">
-
+    function buildUrlList(pkgs, url) {
+        if ( !Array.isArray(pkgs) ) pkgs = [pkgs]
+        pkgs.forEach(function(element) {
+            var strUrl = '/' + url + '/vendor/' + element + '/'
+            $('#fepaths').append('<li><i>' + strUrl + '</i></li>')
+        }, this);
+        $('#fepaths').append('<li><a href="/uibuilder/vendor/jquery/dist/jquery.min.js">/uibuilder/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
+        $('#fepaths').append('<li><a href="/uibuilder/vendor/normalize.css/normalize.css">/uibuilder/vendor/normalize.css/normalize.css</a></li>') // always the same
+        $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
+    }
     RED.nodes.registerType( 'uibuilder', {
         category: 'UI Builder',
         color: '#E6E0F8',
@@ -44,14 +53,11 @@
             $("#userpackages").text(pkgs)
             $("#bedebug").text(RED.settings.uibuilder.debug)
             // List the front-end url paths available
-            if ( !Array.isArray(pkgs) ) pkgs = [pkgs]
-            pkgs.forEach(function(element) {
-                var strUrl = '/' + this.url + '/vendor/' + element + '/'
-                $('#fepaths').append('<li><i>' + strUrl + '</i></li>')
-            }, this);
-            $('#fepaths').append('<li><a href="/uibuilder/vendor/jquery/dist/jquery.min.js">/uibuilder/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
-            $('#fepaths').append('<li><a href="/uibuilder/vendor/normalize.css/normalize.css">/uibuilder/vendor/normalize.css/normalize.css</a></li>') // always the same
-            $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
+            buildUrlList(pkgs, this.url)
+            $("#node-input-url").change(function(){
+                $('#fepaths').empty()
+                buildUrlList(pkgs, $(this).val())
+            });
         },
         //oneditsave: function() { },
         //oneditresize: function(size) { },
