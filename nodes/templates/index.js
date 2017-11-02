@@ -26,6 +26,7 @@
  *       .set(attribute, value) - Set any available attribute (can't overwrite internal attributes)
  *       .msg                   - Shortcut to get the latest value of msg. Equivalent to uibuilder.get('msg')
  *       .send(msg)             - Shortcut to send a msg back to Node-RED manually
+ *       .sendCtrl(msg)         - Shortcut to send a control msg back to Node-RED manually (@since v0.4.8)
  *       .debug(true/false)     - Turn on/off debugging
  *       .uiDebug(type,msg)     - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
  *     Attributes with change events (only accessible via .get method except for msg)

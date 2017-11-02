@@ -1,3 +1,13 @@
+v0.4.8
+
+- **NEW** A second output port has been added that gives access to some control messages.
+  This allows additional processing when a client connects or disconnects, an instance is (re)deployed or there is a socket error.
+  You could, for example, output some standard information when a new client connects. Or you could use the information to keep utilisation metrics.
+- **NEW** You can now send control messages from the front-end to the server using `uibuilder.sendCtrl(msg)`
+- **NEW** Exposed server control messages:
+  'server connect' (when a client connects), 'client disconnect', 'shutdown' (when Node-RED shuts down or the node is (re)deployed), 'socket error'.
+  See the [Control Message Structure](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure) page in the WIKI for details.
+
 v0.4.7
 
 - CL: Added check and load Socket.IO for running via webpack.

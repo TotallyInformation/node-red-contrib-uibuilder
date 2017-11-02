@@ -100,6 +100,11 @@ _[back to top](#contents)_
   The `_socketId` attribute is added to any msg sent from the client to Node-RED.
   See [the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances) for more information.
 
+- A second output port gives access to some control messages.
+  This allows additional processing when a client connects or disconnects, an instance is (re)deployed or there is a socket error.
+  You could, for example, output some standard information when a new client connects. Or you could use the information to keep utilisation metrics.
+  See the [Control Message Structure](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure) page in the WIKI for details.
+
 - On deployment of the *first* instance of uibuilder,
   a new folder is created within your Node-RED user directory (typically `~/.node-red`) with a fixed name of `uibuilder`.
 

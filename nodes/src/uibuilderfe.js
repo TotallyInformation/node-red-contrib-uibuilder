@@ -81,7 +81,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         var self = this
 
-        self.version = '0.4.7'
+        self.version = '0.4.8'
         self.debug = false
 
         /** Debugging function
@@ -163,7 +163,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          */
         self.set = function (prop, val) {
             self[prop] = val
-            self.uiDebug('log', 'uibuilderfe: prop set - prop: ' + prop + ', val: ' + val)
+            self.uiDebug('log', 'uibuilderfe: prop set - prop: ' + prop + ', val: ' + (typeof val === 'object') ? JSON.stringify(val) : val )
 
             // Trigger this prop's event callbacks (listeners)
             self.emit(prop, val)
@@ -328,21 +328,26 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }) // --- End of socket pong processing ---
          // */
 
-        /** Send msg back to Node-RED via Socket.IO
+        /** Send a standard msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
          * @param {Object} msgToSend The msg object to send.
+         * @param {string} [channel=uiBuilderClient] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored
          */
-        self.send = function (msgToSend) {
-            self.uiDebug('info', 'uibuilderfe: msg sent - Namespace: ' + self.ioNamespace)
+        self.send = function (msgToSend, channel=self.ioChannels.client) {
+            self.uiDebug('info', 'uibuilderfe: msg sent - Namespace: ' + self.ioNamespace + ', Channel: ' + channel)
             self.uiDebug('dir', msgToSend)
 
             // @TODO: Make sure msgToSend is an object
 
             // Track how many messages have been sent
             self.set('sentMsg', msgToSend)
-            self.set('msgsSent', self.msgsSent + 1)
+            if (channel === self.ioChannels.client) {
+                self.set('msgsSent', self.msgsSent + 1)
+            } else {
+                self.set('msgsCtrl', self.msgsCtrl + 1)
+            }
 
-            self.socket.emit(self.ioChannels.client, msgToSend)
+            self.socket.emit(channel, msgToSend)
         } // --- End of Send Msg Fn --- //
 
         // ========== Our own event handling system ========== //
@@ -471,6 +476,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              * Example: uibuilder.sendMsg({payload:'Hello'})
              */
             send: self.send,
+            sendCtrl: function(msg) {
+                self.send(msg, self.ioChannels.control)
+            },
 
             /** Turn on/off debugging
              * Example: uibuilder.debug(true)
