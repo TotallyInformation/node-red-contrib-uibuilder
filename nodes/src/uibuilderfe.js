@@ -373,8 +373,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         // ========== Handle incoming code via received msg ========== //
 
-        // @TODO: Add script/style allow flags to admin ui.
-
         /** Add a new script block to the end of <body> from text or an array of text
          * @param {(string[]|string)} script
          */
@@ -506,6 +504,18 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         } // --- End of return callback functions --- //
 
         // ========== End of setup, start execution ========== //
+
+        /** Send control msgs to the server when the DOM is loaded
+         * Allows the server to delay sending updates
+         * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
+         * load: All resources are loaded
+         */
+        document.addEventListener('DOMContentLoaded', function(){
+            self.send({'type':'DOMContentLoaded'},self.ioChannels.control)
+        })
+        window.addEventListener('load', function(){
+            self.send({'type':'page load complete'},self.ioChannels.control)
+        })
 
         // Make sure we connect the first time ok
         self.checkConnect(self.retryMs, self.retryFactor)
