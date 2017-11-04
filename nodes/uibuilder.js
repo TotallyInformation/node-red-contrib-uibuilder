@@ -341,8 +341,8 @@ module.exports = function(RED) {
             setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
 
             // Let the clients (and output #2) know we are connecting & send the desired debug state
-            sendControl({ 'type': 'server connected', 'debug': node.debugFE, '_socketId': socket.id }, ioNs, node)
-            //ioNs.emit( node.ioChannels.control, { 'type': 'server connected', 'debug': node.debugFE } )
+            sendControl({ 'uibuilderCtrl': 'server connected', 'debug': node.debugFE, '_socketId': socket.id }, ioNs, node)
+            //ioNs.emit( node.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
@@ -377,7 +377,7 @@ module.exports = function(RED) {
                     case 'string':
                     case 'number':
                     case 'boolean':
-                        msg = { 'type': msg }
+                        msg = { 'uibuilderCtrl': msg }
                 }
 
                 if ( ! msg.hasOwnProperty('topic') ) msg.topic = node.topic
@@ -399,7 +399,7 @@ module.exports = function(RED) {
                 if ( node.ioClientsCount <= 0) setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
                 else setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
                 // Let the control output port know
-                node.send([null, {'type': 'client disconnect', '_socketId': socket.id, 'reason': reason, 'topic': node.topic}])
+                node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'reason': reason, 'topic': node.topic}])
             })
 
             socket.on('error', function(err) {
@@ -407,7 +407,7 @@ module.exports = function(RED) {
                     `UIbuilder: ${node.url} ERROR received, ID: ${socket.id}, Reason: ${err.message}`
                 )
                 // Let the control output port know
-                node.send([null, {'type': 'socket error', '_socketId': socket.id, 'error': err.message, 'topic': node.topic}])
+                node.send([null, {'uibuilderCtrl': 'socket error', '_socketId': socket.id, 'error': err.message, 'topic': node.topic}])
             })
 
             /* More Socket.IO events but we really don't need to monitor them
@@ -546,7 +546,7 @@ function processClose(done = null, node, RED, ioNs, io, app, log) {
     setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
     // Let all the clients know we are closing down
-    sendControl({ 'type': 'shutdown' }, ioNs, node)
+    sendControl({ 'uibuilderCtrl': 'shutdown' }, ioNs, node)
 
     // Disconnect all Socket.IO clients
     const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
