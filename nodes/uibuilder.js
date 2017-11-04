@@ -106,7 +106,7 @@ module.exports = function(RED) {
         // copy 'this' object in case we need it in context of callbacks of other functions.
         const node = this
 
-        //#region Create local copies of the node configuration (as defined in the .html file)
+        //#region --- Create local copies of the node configuration (as defined in the .html file)
         // NB: node.id and node.type are also available
         node.name          = config.name || ''
         node.topic         = config.topic || ''
@@ -116,9 +116,10 @@ module.exports = function(RED) {
         node.allowScripts  = config.allowScripts
         node.allowStyles   = config.allowStyles
         node.debugFE       = config.debugFE
-        //#endregion
+        node.copyIndex     = config.copyIndex
+        //#endregion ----
 
-        log.debug( {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
+        log.debug( 'node settings', {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
 
         /** User supplied vendor packages
          * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
@@ -133,7 +134,7 @@ module.exports = function(RED) {
          */
         node.customFolder = path.join(node.customAppFolder, node.url)
 
-        log.debug( { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
+        log.debug( 'node pkg details', { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
 
         // Socket.IO config
         node.ioClientsCount = 0 // how many Socket clients connected to this instance?
@@ -173,7 +174,7 @@ module.exports = function(RED) {
             next()
         }
 
-        // ----- Create local folder structure ----- //
+        //#region ----- Create local folder structure ----- //
         var customStatic = function(req,res,next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
         var customFoldersOK = true
         // TODO: May be better as async calls - probably not, but a promisified version would be OK?
@@ -214,14 +215,17 @@ module.exports = function(RED) {
 
             // Now copy files from the master template folder (instead of master src) @since 2017-10-01
             // Note: We don't copy the master dist folder
-            const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-            fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
-                if(err){
-                    log.error( 'uibuilder: Error copying template files from ', path.join( __dirname, 'templates'), ' to ', path.join(node.customFolder, 'src'), '. ', err)
-                } else {
-                    log.debug('UIbuilder: Copied template files to local src (not overwriting) ', node.customFolder )
-                }
-              })
+            // Don't copy if copy turned off in admin ui @TODO: always copy index.html
+            if ( node.copyIndex ) {
+                const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
+                fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
+                    if(err){
+                        log.error( 'uibuilder: Error copying template files from ', path.join( __dirname, 'templates'), ' to ', path.join(node.customFolder, 'src'), '. ', err)
+                    } else {
+                        log.debug('UIbuilder: Copied template files to local src (not overwriting) ', node.customFolder )
+                    }
+                })
+            }
         } else {
             // Local custom folders are not right!
             log.error( 'uibuilder wanted to use local front-end folders in ', node.customFolder, ' but could not')
@@ -262,7 +266,7 @@ module.exports = function(RED) {
                 }
             })
         }
-        // ------ End of Create custom folder structure ------- //
+        //#endregion ------ End of Create custom folder structure ------- //
 
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder

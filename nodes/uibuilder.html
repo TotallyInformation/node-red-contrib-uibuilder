@@ -38,6 +38,7 @@
             allowScripts: { value: false },
             allowStyles: { value: false },
             debugFE: { value: false },
+            copyIndex:  { value: true },
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -53,6 +54,7 @@
             $('#node-input-allowScripts').prop('checked', this.allowScripts)
             $('#node-input-allowStyles').prop('checked', this.allowStyles)
             $('#node-input-debugFE').prop('checked', this.debugFE)
+            $('#node-input-copyIndex').prop('checked', this.copyIndex)
             // Show the uibuilder global settings from settings.js
             var pkgs = RED.settings.uibuilder.userVendorPackages
             $('#userpackages').text(pkgs)
@@ -111,6 +113,12 @@
 
     </div>
 
+    <!-- Copy index.(css|js) to local assets if they dont exist? -->
+    <div class="form-row">
+        <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-copyIndex" style="width: 70%;">Copy index.(css|js) from templates to local if they don't exist?</label>
+    </div>
+
     <!-- Debug Front-End? -->
     <div class="form-row" title="See browser dev console if turned on">
         <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
@@ -165,7 +173,7 @@
         </dd>
     </dl>
 
-    <h3>Output msg</h3>
+    <h3>Output msgs</h3>
     <ol class="node-ports">
         <li>Standard output msg
             <dl class="message-properties">
@@ -188,6 +196,23 @@
                 </dd>
             </dl>
         </li>
+        <li>Control output msg
+            <dl class="message-properties">
+                <dt>uibuilderCtrl <span class="property-type">(string)</span></dt>
+                <dd>
+                    The name of the control message. See the
+                    <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure">WIKI page</a>
+                    for details.
+                </dd>
+                <dt>cache-control <span class="property-type">(string)</span></dt>
+                <dd>
+                    "REPLAY". A command for the companion app
+                    <a href="https://github.com/TotallyInformation/node-red-contrib-infocache">node-red-contrib-infocache</a>.
+                    See the
+                    <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching">WIKI</a>
+                    for details.
+                </dd>
+            </dl>
     </ol>
 
     <h3>Node Settings</h3>
@@ -224,13 +249,23 @@
             If on, any string(s) in <code>msg.style</code> will be dynamically added to the styles of the web page.
             Turn off to prevent styles from being dynamically added.
         </dd>
+
+        <dt>Copy index.(css|js) from templates to local if they don't exist?
+            <span class="property-type">(boolean) node-input-copyIndex</span>
+        </dt>
+        <dd>
+            If on (default), index.css and index.js are copied from the master template folder
+            if they don't exist in the local assets folder <code>~/.node-red/uibuilder/<url>/src/</code>.
+            Turn off if you don't want this to happen (e.g. if you prefer them in a sub-folder).
+        </dd>
+
         <dt>Debug Front-End? <span class="property-type">(boolean) debugFE</span></dt>
         <dd>
             Turns on debugging in the front-end code. See your browser's developer tools console.
             In your index.js front-end code, use <code>uibuilder.debug()</code> to detect whether debugging is on or off
             and <code>uibuilder.debug(true)</code> to turn it on.<br>
             The chosen state is sent to the Front-end in the initial connection message.<br>
-            <b>Note</b>: The flag in <code>settings.js</fe> controls debug output for the back-end (see below).
+            <b>Note</b>: The flag in <code>settings.js</code> controls debug output for the back-end (see below).
         </dd>
     </dl>
 
