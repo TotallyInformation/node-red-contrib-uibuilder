@@ -10,10 +10,12 @@ v0.4.8
   **WARNING**: For existing instances, this flag is not set even though it is the default. This appears to be an issue with Node-RED.
 - **NEW** _uibuilderfe_: You can now send control messages from the front-end to the server using `uibuilder.sendCtrl(msg)`
 - **NEW** _uibuilderfe_: Added ability to send a control message of type 'ready for content'.
-  This is meant to be used to trigger sending of cached messages from the server so that new or reloaded pages receive the last message(s) from the server. By default, this is triggered from the window.load event (e.g. after the DOM and external resources have been loaded). If you are using a front-end library such as MoonJS/Riot/Vue/etc, this may be too early. In which case, use `uibuilder.autoSendReady(false)` and then use ~~`uibuilder.sendCtrl({'type':'ready for content'})`~~ `uibuilder.sendCtrl({'type':'ready for content', 'cache-control':'REPLAY'})` when your app is ready for content (e.g. perhaps at the end of the `app.mounted` event).
+  This is meant to be used to trigger sending of cached messages from the server so that new or reloaded pages receive the last message(s) from the server. By default, this is triggered from the window.load event (e.g. after the DOM and external resources have been loaded). If you are using a front-end library such as MoonJS/Riot/Vue/etc, this may be too early. In which case, use `uibuilder.autoSendReady(false)` and then use ~~`uibuilder.sendCtrl({'type':'ready for content'})`~~ `uibuilder.sendCtrl({'uibuilderCtrl':'ready for content', 'cache-control':'REPLAY'})` when your app is ready for content (e.g. perhaps at the end of the `app.mounted` event).
 - **CHANGED** _uibuilderfe v0.4.8c_: cache-control property added in readiness for integration with
   [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache).
-  Manual cache replay requires `uibuilder.sendCtrl({'type':'ready for content', 'cache-control':'REPLAY'})`
+  Manual cache replay requires `uibuilder.sendCtrl({'uibuilderCtrl':'ready for content', 'cache-control':'REPLAY'})`
+- **CHANGED** _uibuilderfe v0.4.8d_: Renamed control property `'type'` to `'uibuilderCtrl'`.
+  See [Issue #22](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/22).
 - **CHANGED** `_socketId` properties now consistent for all control messages.
   This allows Node-RED to do something and then return a msg to the originating client. If you need to broadcast to all clients, simply delete the `_socketId` property before sending.
 - **CHANGED** _uibuilderfe_: All instances of "attribute" replaced with "property".

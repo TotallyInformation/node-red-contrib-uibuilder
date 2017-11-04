@@ -38,8 +38,8 @@
  *       .uiDebug(type,msg)    - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
  *       .me()                 - Returns the self object if debugging otherwise just the current version string
  *       .autoSendReady(true/false) - If true, sends "ready for content" ctrl msg on window.load
- *                       If false, you will need to manuall do
- *                       uibuilder.sendCtrl({'type':'ready for content', 'cache-control':'REPLAY'})
+ *                       If false, you will need to manually do
+ *                       uibuilder.sendCtrl({'uibuilderCtrl':'ready for content', 'cache-control':'REPLAY'})
  *                       (e.g. in an app.mounted event)  @since v0.4.8a
  *
  *     All properties can be read using the .get method
@@ -102,7 +102,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '0.4.8c'
+        self.version = '0.4.8d'
         self.debug = false // do not change directly - use .debug method
 
         /** Debugging function
@@ -377,7 +377,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             if (channel === self.ioChannels.client) {
                 msgToSend = makeMeAnObject(msgToSend, 'payload')
             } else {
-                msgToSend = makeMeAnObject(msgToSend, 'type')
+                msgToSend = makeMeAnObject(msgToSend, 'uibuilderCtrl')
             }
 
             // Track how many messages have been sent & last msg sent
@@ -574,13 +574,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * load: All resources are loaded
          */
          //document.addEventListener('DOMContentLoaded', function(){
-         //   self.send({'type':'DOMContentLoaded'},self.ioChannels.control)
+         //   self.send({'uibuilderCtrl':'DOMContentLoaded'},self.ioChannels.control)
          //})
         window.addEventListener('load', function(){
             if ( self.autoSendReady === true ) {
-                //self.send({'type':'page load complete'},self.ioChannels.control)
+                //self.send({'uibuilderCtrl':'page load complete'},self.ioChannels.control)
                 // @since 0.4.8c Add cache-control property for use with node-red-contrib-infocache
-                self.send({'type':'ready for content', 'cache-control':'REPLAY'},self.ioChannels.control)
+                self.send({'uibuilderCtrl':'ready for content', 'cache-control':'REPLAY'},self.ioChannels.control)
             }
         })
 
