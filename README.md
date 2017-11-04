@@ -203,6 +203,9 @@ _[back to top](#contents)_
 
 I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
 
+- It is common to need to send a number of messages from Node-RED to the front-end,
+  specifically when a new client is loaded or a user refreshes the client browser. This is not catered for natively by this node. You can either handle this manually or use the companion node [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache). Simply send the control messages to an infocache node and it will resend all cached messages back to the individual client.
+
 - **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
   about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
 
@@ -230,7 +233,7 @@ _[back to top](#contents)_
 
 ## Dependencies
 
-See the package.json file. Currently:
+See the [package.json](package.json) file. Currently:
 
 - [normalize.css](https://necolas.github.io/normalize.css/) - front-end only
 - [JQuery](https://jquery.com/) - front-end only
@@ -250,6 +253,8 @@ Run Node-RED and add an instance of the UI Builder node. Set the required URL pa
 
 The UI should then be available at the chosen path. The default would normally be <http://localhost:1880/uibuilder>
 (if default Node-RED and node settings are used).
+
+For information on what to do next, see the [Getting Started](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Getting-Started) WIKI page.
 
 _[back to top](#contents)_
 

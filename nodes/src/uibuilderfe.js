@@ -38,7 +38,8 @@
  *       .uiDebug(type,msg)    - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
  *       .me()                 - Returns the self object if debugging otherwise just the current version string
  *       .autoSendReady(true/false) - If true, sends "ready for content" ctrl msg on window.load
- *                       If false, you will need to do uibuilder.sendCtrl({'type':'ready for content'}) manually
+ *                       If false, you will need to manuall do
+ *                       uibuilder.sendCtrl({'type':'ready for content', 'cache-control':'REPLAY'})
  *                       (e.g. in an app.mounted event)  @since v0.4.8a
  *
  *     All properties can be read using the .get method

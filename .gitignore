@@ -1,5 +1,3 @@
-.vscode
-
 # Logs
 logs
 *.log
@@ -85,4 +83,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
 nodes/test.js
+
+.vscode
+.vscode/cSpell.json
+.vscode/settings.json
