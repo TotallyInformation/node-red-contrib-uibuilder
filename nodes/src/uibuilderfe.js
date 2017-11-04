@@ -101,7 +101,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '0.4.8a'
+        self.version = '0.4.8b'
         self.debug = false // do not change directly - use .debug method
 
         /** Debugging function
@@ -366,7 +366,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @param {Object} msgToSend The msg object to send.
          * @param {string} [channel=uiBuilderClient] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored
          */
-        self.send = function (msgToSend, channel=self.ioChannels.client) {
+        self.send = function (msgToSend, channel) {
+            if ( channel === null || channel === undefined ) channel = self.ioChannels.client
+
             self.uiDebug('info', 'uibuilderfe: msg sent - Namespace: ' + self.ioNamespace + ', Channel: ' + channel)
             self.uiDebug('dir', msgToSend)
 
