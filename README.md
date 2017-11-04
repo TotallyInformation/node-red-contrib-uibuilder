@@ -297,12 +297,12 @@ _[back to top](#contents)_
 
 ## Discussions and suggestions
 
-Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red) for general discussion about this node. Or use the
+Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red) or the [#uibuilder](https://node-red.slack.com/messages/C7K77MG06) channel in the [Node-RED Slack](https://node-red.slack.com) for general discussion about this node. Or use the
 [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements.
 
 ## Contributing
 
-If you would like to contribute to this node, you can contact Totally Information via GitHub or raise a request in the GitHub issues log.
+If you would like to contribute to this node, you can contact [Totally Information via GitHub](https://github.com/TotallyInformation) or raise a request in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
 
 If submitting code (preferably via a pull request), please use eslint to adhere to the same standards.
 
