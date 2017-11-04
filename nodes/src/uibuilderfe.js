@@ -101,7 +101,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '0.4.8b'
+        self.version = '0.4.8c'
         self.debug = false // do not change directly - use .debug method
 
         /** Debugging function
@@ -578,7 +578,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         window.addEventListener('load', function(){
             if ( self.autoSendReady === true ) {
                 //self.send({'type':'page load complete'},self.ioChannels.control)
-                self.send({'type':'ready for content'},self.ioChannels.control)
+                // @since 0.4.8c Add cache-control property for use with node-red-contrib-infocache
+                self.send({'type':'ready for content', 'cache-control':'REPLAY'},self.ioChannels.control)
             }
         })
 
