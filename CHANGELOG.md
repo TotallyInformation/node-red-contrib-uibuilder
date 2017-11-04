@@ -1,12 +1,18 @@
 v0.4.8
 
 - **NEW** A second output port has been added that gives access to some control messages.
-  This allows additional processing when a client connects or disconnects, an instance is (re)deployed or there is a socket error.
-  You could, for example, output some standard information when a new client connects. Or you could use the information to keep utilisation metrics.
-- **NEW** You can now send control messages from the front-end to the server using `uibuilder.sendCtrl(msg)`
+  This allows additional processing when a client connects or disconnects, an instance is (re)deployed or there is a socket error. You could, for example, output some standard information when a new client connects. Or you could use the information for utilisation metrics.
 - **NEW** Exposed server control messages:
   'server connect' (when a client connects), 'client disconnect', 'shutdown' (when Node-RED shuts down or the node is (re)deployed), 'socket error'.
   See the [Control Message Structure](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure) page in the WIKI for details.
+- **NEW** _uibuilderfe_: You can now send control messages from the front-end to the server using `uibuilder.sendCtrl(msg)`
+- **NEW** _uibuilderfe_: Added ability to send a control message of type 'ready for content'.
+  This is meant to be used to trigger sending of cached messages from the server so that new or reloaded pages receive the last message(s) from the server. By default, this is triggered from the window.load event (e.g. after the DOM and external resources have been loaded). If you are using a front-end library such as MoonJS/Riot/Vue/etc, this may be too early. In which case, use `uibuilder.autoSendReady(false)` and then use `uibuilder.sendCtrl({'type':'ready for content'})` when your app is ready for content (e.g. perhaps at the end of the `app.mounted` event).
+- **CHANGED** `_socketId` properties now consistent for all control messages.
+  This allows Node-RED to do something and then return a msg to the originating client. If you need to broadcast to all clients, simply delete the `_socketId` property before sending.
+- **CHANGED** _uibuilderfe_: All instances of "attribute" replaced with "property".
+- **CHANGED** _index.js_: The `index.js` template file has been updated
+  with clarified information on available `uibuilder` methods and properties. Temporarily rename your local copy and redeploy node instances to get the latest and then swap over.
 
 v0.4.7
 

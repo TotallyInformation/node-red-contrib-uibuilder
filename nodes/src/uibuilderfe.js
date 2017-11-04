@@ -27,33 +27,53 @@
  * // @see http://www.richardrodger.com/2013/09/27/how-to-make-simple-node-js-modules-work-in-the-browser/
  *
  *   uibuilder: The main global object containing the following...
- *     Methods:
- *       .onChange(attribute, callbackFn) - listen for changes to attribute and execute callback when it changes
- *       .get(attribute)        - Get any available attribute
- *       .set(attribute, value) - Set any available attribute (can't overwrite internal attributes)
- *       .msg                   - Shortcut to get the latest value of msg. Equivalent to uibuilder.get('msg')
- *       .send(msg)             - Shortcut to send a msg back to Node-RED manually
- *       .debug(true/false)     - Turn on/off debugging
- *       .uiDebug(type,msg)     - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
- *     Attributes with change events (only accessible via .get method except for msg)
- *       .msg          - Copy of the last msg sent from Node-RED over Socket.IO
- *       .sentMsg      - Copy of the last msg sent by us to Node-RED
- *       .ctrlMsg      - Copy of the last control msg received by us from Node-RED (Types: ['shutdown','server connected'])
- *       .msgsReceived - How many standard messages have we received
- *       .msgsSent     - How many messages have we sent
- *       .msgsCtrl     - How many control messages have we received
- *       .ioConnected  - Is Socket.IO connected right now? (true/false)
- *     Attributes without change events
- *           (only accessible via .get method, reload page to get changes, don't change unless you know what you are doing)
- *       .debug       - true/false, controls debug console logging output
- *       ---- You are not likely to need any of these ----
- *       .version     - check the current version of the uibuilder code
- *       .ioChannels  - List of the channel names in use [uiBuilderControl, uiBuilderClient, uiBuilder]
- *       .retryMs     - starting retry ms period for manual socket reconnections workaround
- *       .retryFactor - starting delay factor for subsequent reconnect attempts
- *       .ioNamespace - Get the namespace from the current URL
- *       .ioPath      - make sure client uses Socket.IO version from the uibuilder module (using path)
- *       .ioTransport - ['polling', 'websocket']
+ *     External Methods:
+ *       .onChange(property, callbackFn) - listen for changes to property and execute callback when it changes
+ *       .get(property)        - Get any available property
+ *       .set(property, value) - Set any available property (can't overwrite internal properties)
+ *       .msg                  - Shortcut to get the latest value of msg. Equivalent to uibuilder.get('msg')
+ *       .send(msg)            - Shortcut to send a msg back to Node-RED manually
+ *       .sendCtrl(msg)        - Shortcut to send a control msg back to Node-RED manually (@since v0.4.8)
+ *       .debug(true/false)    - Turn on/off debugging
+ *       .uiDebug(type,msg)    - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
+ *       .me()                 - Returns the self object if debugging otherwise just the current version string
+ *       .autoSendReady(true/false) - If true, sends "ready for content" ctrl msg on window.load
+ *                       If false, you will need to do uibuilder.sendCtrl({'type':'ready for content'}) manually
+ *                       (e.g. in an app.mounted event)  @since v0.4.8a
+ *
+ *     All properties can be read using the .get method
+ *     New properties can be added via .set method as long as the property name does not clash with anything internal.
+ *     All properties (including custom) can have change events associated with them by using the .onChange method
+ *
+ *     Externally settable properties using special methods only
+ *       .autoSendReady - see .autoSendReady method
+ *       .debug         - see .debug method, also see 'server connected' control msg from server
+ *
+ *     Externally settable properties via the .set method
+ *       .allowScript   - Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
+ *       .allowStyle    - Allow incoming msg to contain msg.style with CSS that will be automatically executed
+ *       .removeScript  - Delete msg.code after inserting to DOM if it exists on incoming msg
+ *       .removeStyle   - Delete msg.style after inserting to DOM if it exists on incoming msg
+ *
+ *     Externally read only properties (may be changed internally)
+ *       .msg           - Copy of the last msg sent from Node-RED over Socket.IO
+ *       .sentMsg       - Copy of the last msg sent by us to Node-RED (both data and control)
+ *       .ctrlMsg       - Copy of the last control msg received by us from Node-RED (Types: ['shutdown','server connected'])
+ *       .msgsReceived  - How many standard messages have we received
+ *       .msgsSent      - How many messages have we sent
+ *       .msgsSentCtrl  - How many control messages have we sent
+ *       .msgsCtrl      - How many control messages have we received
+ *       .ioConnected   - Is Socket.IO connected right now? (true/false)
+ *       ---- You are not likely to need any of these, they are for internal use ----
+ *       .version       - check the current version of the uibuilder code
+ *       .ioChannels    - List of the channel names in use [uiBuilderControl, uiBuilderClient, uiBuilder]
+ *       .retryMs       - starting retry ms period for manual socket reconnections workaround
+ *       .retryFactor   - starting delay factor for subsequent reconnect attempts
+ *       .ioNamespace   - Get the namespace from the current URL
+ *       .ioPath        - make sure client uses Socket.IO version from the uibuilder module (using path)
+ *       .ioTransport   - ['polling', 'websocket']
+ *       .timerid       - internal use only
+ *       .events        - list of registered events
  */
 
 "use strict";
@@ -69,8 +89,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 (function () {
     // Keep a copy of the starting context
     var root = this
-    // Is a module loader available?
-    var has_require = typeof require !== 'undefined'
     // Keep a copy of anything with a clashing name in the starting context
     var previous_uibuilder = root.uibuilder
 
@@ -81,8 +99,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         var self = this
 
-        self.version = '0.4.8'
-        self.debug = false
+        //#region ======== Start of setup ======== //
+
+        self.version = '0.4.8a'
+        self.debug = false // do not change directly - use .debug method
 
         /** Debugging function
          * @param {string} type One of log|error|warn|info|dir
@@ -112,6 +132,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             this.myLog(msg)
         } // --- End of debug function --- //
 
+        /** Returns the self object if debugging otherwise just the current version
+         * @return {object|string} Returns self or version
+        */
         self.me = function() {
             return self.debug === true ? self : 'uibuilderfe.js Version: ' + self.version
         }
@@ -133,26 +156,36 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         } // --- End of set IO namespace --- //
 
         //#region --- variables ---
-        self.msg          = {}  // msg object. Updated on receipt of a Socket.IO msg (server channel).
-        self.ctrlMsg      = {}  // control msg object. Updated on receipt of a Socket.IO control msg (control channel).
-        self.sentMsg      = {}
+        /** Writable (via custom method. read via .get method) */
+        /** Automatically send a "ready for content" control message on window.load
+         * Set to false if you want to send this yourself (e.g. when Riot/Moon/etc mounted event triggered)
+         * see .autoSendReady method
+         */
+        self.autoSendReady= true
 
-        self.msgsSent     = 0
-        self.msgsReceived = 0
-        self.msgsCtrl     = 0
+        /** Externally Writable (via .set method, read via .get method) */
+        self.allowScript  = true   // Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
+        self.allowStyle   = true   // Allow incoming msg to contain msg.style with CSS that will be automatically executed
+        self.removeScript = true   // Delete msg.code after inserting to DOM if it exists on incoming msg
+        self.removeStyle  = true   // Delete msg.style after inserting to DOM if it exists on incoming msg
 
-        self.ioChannels   = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
-        self.retryMs      = 2000                             // starting retry ms period for manual socket reconnections workaround
-        self.retryFactor  = 1.5                              // starting delay factor for subsequent reconnect attempts
-        self.timerid      = null
-        self.ioNamespace  = self.setIOnamespace()            // Get the namespace from the current URL
-        self.ioPath       = '/uibuilder/socket.io'           // make sure client uses Socket.IO version from the uibuilder module (using path)
-        self.ioTransport  = ['polling', 'websocket']
+        /** Externally read-only (via .get method) */
+        self.msg          = {}
+        self.ctrlMsg      = {}  // copy of last control msg object received from sever
+        self.sentMsg      = {}  // copy of last msg object sent via uibuilder.send()
+        self.msgsSent     = 0   // track number of messages sent to server since page load
+        self.msgsReceived = 0   // track number of messages received from server since page load
+        self.msgsSentCtrl = 0   // track number of control messages sent to server since page load
+        self.msgsCtrl     = 0   // track number of control messages received from server since page load
         self.ioConnected  = false
-        self.allowScript  = true                             // Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
-        self.allowStyle   = true                             // Allow incoming msg to contain msg.style with CSS that will be automatically executed
-        self.removeScript = true                             // Delete msg.code after inserting to DOM if it exists on incoming msg
-        self.removeStyle  = true                             // Delete msg.style after inserting to DOM if it exists on incoming msg
+        // ---- These are unlikely to be needed externally: ----
+        self.ioChannels   = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
+        self.retryMs      = 2000                            // starting retry ms period for manual socket reconnections workaround
+        self.retryFactor  = 1.5                             // starting delay factor for subsequent reconnect attempts
+        self.timerid      = null
+        self.ioNamespace  = self.setIOnamespace()           // Get the namespace from the current URL
+        self.ioPath       = '/uibuilder/socket.io'          // make sure client uses Socket.IO version from the uibuilder module (using path)
+        self.ioTransport  = ['polling', 'websocket']
         //#endregion --- variables ---
 
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
@@ -171,7 +204,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             //self.uiDebug('log', `uibuilderfe:uibuilder:set Property: ${prop}, Value: ${val}`)
         }
 
-        // ========== Socket.IO processing ========== //
+        //#region ========== Socket.IO processing ========== //
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
@@ -337,20 +370,28 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             self.uiDebug('info', 'uibuilderfe: msg sent - Namespace: ' + self.ioNamespace + ', Channel: ' + channel)
             self.uiDebug('dir', msgToSend)
 
-            // @TODO: Make sure msgToSend is an object
+            // Make sure msgToSend is an object
+            if (channel === self.ioChannels.client) {
+                msgToSend = makeMeAnObject(msgToSend, 'payload')
+            } else {
+                msgToSend = makeMeAnObject(msgToSend, 'type')
+            }
 
-            // Track how many messages have been sent
+            // Track how many messages have been sent & last msg sent
             self.set('sentMsg', msgToSend)
             if (channel === self.ioChannels.client) {
                 self.set('msgsSent', self.msgsSent + 1)
             } else {
                 self.set('msgsCtrl', self.msgsCtrl + 1)
+
             }
 
             self.socket.emit(channel, msgToSend)
         } // --- End of Send Msg Fn --- //
 
-        // ========== Our own event handling system ========== //
+        //#endregion ======== End of Socket.IO processing ======== //
+
+        //#region ========== Our own event handling system ========== //
 
         self.events = {}  // placeholder for event listener callbacks by property name
 
@@ -371,7 +412,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
         }
 
-        // ========== Handle incoming code via received msg ========== //
+        //#endregion ========== End of event handling system ========== //
+
+        //#region ========== Handle incoming code via received msg ========== //
 
         /** Add a new script block to the end of <body> from text or an array of text
          * @param {(string[]|string)} script
@@ -402,27 +445,32 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             document.getElementsByTagName('head')[0].appendChild(newStyle)
         }
 
-        // ========== uibuilder callbacks ========== //
+        //#endregion ====== End of Handle incoming code via received msg ====== //
+
+        //#region ========== uibuilder callbacks ========== //
 
         // uiReturn contains a set of functions that are returned when this function
         // self-executes (on-load)
         self.uiReturn = {
 
             /** Function to set uibuilder properties to a new value. Also triggers any event listeners.
-             * This version is for external use and disallows certain attributes to be set
+             * This version is for external use and disallows certain properties to be set
              * Example: uibuilder.set('foo', {name:'uibuilder', data:42}); uibuilder.set('oldMsg', uibuilder.get('msg'));
              * @param {string} prop
              * @param {*} val
              */
             set: function (prop, val) {
-                // TODO: Add exclusions for protected properties
+                // Add exclusions for protected properties - can't use hasOwnProperty or use an allow list as that would exclude new properties
                 var excluded = [
-                    'version', 'msg', 'ctrlMsg', 'sentMsg', 'msgsSent', 'msgsReceived', 'msgsCtrl', 'ioChannels',
-                    'retryMs', 'retryFactor', 'timerid', 'ioNamespace', 'ioPath', 'ioTransport', 'ioConnected',
-                    'set', 'get', 'debug', 'send', 'onChange', 'socket', 'checkConnect', 'events', 'emit', 'uiReturn'
+                    'version', 'debug', 'msg', 'ctrlMsg', 'sentMsg', 'msgsSent', 'msgsSentCtrl', 'msgsReceived',
+                    'msgsCtrl', 'ioConnected', 'ioChannels', 'retryMs', 'retryFactor', 'timerid', 'ioNamespace',
+                    'ioPath', 'ioTransport', 'events', 'autoSendReady',
+                    // Ensure no clashes with internal and external method names
+                    'set', 'get', 'send', 'sendCtrl', 'onChange', 'socket', 'checkConnect', 'emit', 'uiReturn',
+                    'newScript', 'newStyle', 'uiDebug', 'me', 'self', 'setIOnamespace'
                 ]
                 if (excluded.indexOf(prop) !== -1) {
-                    self.uiDebug('warn', 'uibuilderfe:uibuilder:set: "' + prop + '" is in list of excluded attributes, not set')
+                    self.uiDebug('warn', 'uibuilderfe:uibuilder:set: "' + prop + '" is in list of excluded properties, not set')
                     return
                 }
 
@@ -478,6 +526,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 self.send(msg, self.ioChannels.control)
             },
 
+            /** Control auto sending of '' control message
+             * @param {boolean} sw True= Send ctrl msg on window.load, false=have to send manually
+             */
+            autoSendReady: function(sw) {
+                if ( sw !== true ) sw = false
+                self.autoSendReady = sw
+            },
+
             /** Turn on/off debugging
              * Example: uibuilder.debug(true)
              * @param {boolean} [onOff] Debug flag
@@ -503,22 +559,31 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         } // --- End of return callback functions --- //
 
-        // ========== End of setup, start execution ========== //
+        //#endregion ======== End of uibuilder callbacks ======== //
+
+        //#endregion ========== End of setup ========== //
+
+        //#region ======== start of execution ======== //
 
         /** Send control msgs to the server when the DOM is loaded
          * Allows the server to delay sending updates
          * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
          * load: All resources are loaded
          */
-        document.addEventListener('DOMContentLoaded', function(){
-            self.send({'type':'DOMContentLoaded'},self.ioChannels.control)
-        })
+         //document.addEventListener('DOMContentLoaded', function(){
+         //   self.send({'type':'DOMContentLoaded'},self.ioChannels.control)
+         //})
         window.addEventListener('load', function(){
-            self.send({'type':'page load complete'},self.ioChannels.control)
+            if ( self.autoSendReady === true ) {
+                //self.send({'type':'page load complete'},self.ioChannels.control)
+                self.send({'type':'ready for content'},self.ioChannels.control)
+            }
         })
 
         // Make sure we connect the first time ok
         self.checkConnect(self.retryMs, self.retryFactor)
+
+        //#endregion ======== end of execution ======== //
 
         // Make externally available the external methods
         return self.uiReturn
@@ -554,17 +619,18 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
      * If not null, moves "thing" to {payload:thing}
      *
      * @param {*} thing Thing to check
-     * @param {string} [attribute='payload'] Attribute that "thing" is moved to if not null and not an object
+     * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
      * @return {!Object}
      */
-    function makeMeAnObject(thing, attribute) {
-        if ( typeof attribute !== 'string' ) {
-            console.warn('makeMeAnObject:WARNING: attribute parameter must be a string and not: ' + typeof attribute)
-            attribute = 'payload'
+    function makeMeAnObject(thing, property) {
+        if (property === null || property === undefined) property = 'payload'
+        if ( typeof property !== 'string' ) {
+            console.warn('makeMeAnObject:WARNING: property parameter must be a string and not: ' + typeof property)
+            property = 'payload'
         }
         var out = {}
         if (typeof thing === 'object') { out = thing }
-        else if (thing !== null) { out[attribute] = thing }
+        else if (thing !== null) { out[property] = thing }
         return out
     } // --- End of make me an object --- //
 
