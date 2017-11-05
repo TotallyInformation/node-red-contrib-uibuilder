@@ -1,3 +1,15 @@
+v1.0.0
+
+All of the basic features are now complete and tested sufficiently to make this v1. Thanks to everyone that helped get this far. Watch out for node-red-contrib-infocache which will be coming shortly as a companion to handle message caching.
+
+- **CHANGED** control message property "cache-control" now changed to "cacheControl" to make it easier to use.
+- **CHANGED** _uibuilderfe_: Version bump
+- **CHANGED** _uibuilderfe_: control message property "cache-control" now changed
+  to "cacheControl" to make it easier to use.
+- **CHANGED** _uibuilderfe_: Ensure control msgs have a "uibuilderCtrl" property
+  set (defaults to "manual send" if not set)
+- **CHANGED** _index.js master template_: Instructions updated and a manual cacheControl msg added
+
 v0.4.9
 
 - **CHANGED** Rationalised control messages:

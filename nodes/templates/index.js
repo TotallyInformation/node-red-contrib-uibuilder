@@ -35,7 +35,7 @@
  *       .me()                 - Returns the self object if debugging otherwise just the current version string
  *       .autoSendReady(true/false) - If true, sends "ready for content" ctrl msg on window.load
  *                       If false, you will need to manually do
- *                       uibuilder.sendCtrl({'uibuilderCtrl':'ready for content', 'cache-control':'REPLAY'})
+ *                       uibuilder.sendCtrl({'uibuilderCtrl':'ready for content', 'cacheControl':'REPLAY'})
  *                       (e.g. in an app.mounted event)  @since v0.4.8a
  *
  *     All properties can be read using the .get method
@@ -148,6 +148,11 @@ $( document ).ready(function() {
         console.info('Sending a message back to Node-RED - after 2s delay')
         uibuilder.send( { 'topic':'uibuilderfe', 'payload':'I am a message sent from the uibuilder front end' } )
     }, 2000)
+
+    // Manually send a control message. Include cacheControl:REPLAY to test cache handling
+    // Shouldn't be needed in this example since window.load will also send cacheControl and we should
+    // be done before then.
+    uibuilder.sendCtrl({'cacheControl': 'REPLAY'})
 
 }) // --- End of JQuery Ready --- //
 

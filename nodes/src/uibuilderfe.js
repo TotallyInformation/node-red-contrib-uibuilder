@@ -39,7 +39,7 @@
  *       .me()                 - Returns the self object if debugging otherwise just the current version string
  *       .autoSendReady(true/false) - If true, sends "ready for content" ctrl msg on window.load
  *                       If false, you will need to manually do
- *                       uibuilder.sendCtrl({'uibuilderCtrl':'ready for content', 'cache-control':'REPLAY'})
+ *                       uibuilder.sendCtrl({'uibuilderCtrl':'ready for content', 'cacheControl':'REPLAY'})
  *                       (e.g. in an app.mounted event)  @since v0.4.8a
  *
  *     All properties can be read using the .get method
@@ -102,7 +102,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '0.4.9'
+        self.version = '1.0.0'
         self.debug = false // do not change directly - use .debug method
 
         /** Debugging function
@@ -376,8 +376,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // Make sure msgToSend is an object
             if (channel === self.ioChannels.client) {
                 msgToSend = makeMeAnObject(msgToSend, 'payload')
-            } else {
+            } else if (channel === self.ioChannels.control) {
                 msgToSend = makeMeAnObject(msgToSend, 'uibuilderCtrl')
+                if ( ! msgToSend.hasOwnProperty('uibuilderCtrl') ) {
+                    msgToSend.uibuilderCtrl = 'manual send'
+                }
                 // help remember where this came from as ctrl msgs can come from server or client
                 msgToSend.from = 'client'
             }
@@ -386,9 +389,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             self.set('sentMsg', msgToSend)
             if (channel === self.ioChannels.client) {
                 self.set('msgsSent', self.msgsSent + 1)
-            } else {
+            } else if (channel === self.ioChannels.control) {
                 self.set('msgsCtrl', self.msgsCtrl + 1)
-
             }
 
             self.socket.emit(channel, msgToSend)
@@ -581,8 +583,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         window.addEventListener('load', function(){
             if ( self.autoSendReady === true ) {
                 //self.send({'uibuilderCtrl':'page load complete'},self.ioChannels.control)
-                // @since 0.4.8c Add cache-control property for use with node-red-contrib-infocache
-                self.send({'uibuilderCtrl':'ready for content', 'cache-control':'REPLAY'},self.ioChannels.control)
+                // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
+                self.send({'uibuilderCtrl':'ready for content', 'cacheControl':'REPLAY'},self.ioChannels.control)
             }
         })
 

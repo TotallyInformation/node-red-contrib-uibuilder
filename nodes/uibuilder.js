@@ -343,7 +343,7 @@ module.exports = function(RED) {
             // Let the clients (and output #2) know we are connecting & send the desired debug state
             sendControl({
                 'uibuilderCtrl': 'client connect',
-                'cache-control': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
+                'cacheControl': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
                 'debug': node.debugFE,
                 '_socketId': socket.id,
                 'from': 'server'

@@ -72,7 +72,7 @@ You will want to change the front-end code to match your requirements since, by 
 
 The local `index.(html|js)` files are well documented and should show you how to get started with your own customisations. There are also some examples, with code, on the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
 
-The node also has a second output port. This is used exclusively for control messages. Control messages are sent by the server when a client connects or disconnects and by the front-end client when the websocket has connected and when the client is ready to receive messages (after window.load by default). The connect and ready messages have a `"cache-control": "REPLAY"` property which is designed to be used with [node-red-contrib-infocache]() or your own message cache so that new or reconnecting clients can receive cached information (similar to Dashboard widgets).
+The node also has a second output port. This is used exclusively for control messages. Control messages are sent by the server when a client connects or disconnects and by the front-end client when the websocket has connected and when the client is ready to receive messages (after window.load by default). The connect and ready messages have a `"cacheControl": "REPLAY"` property which is designed to be used with [node-red-contrib-infocache]() or your own message cache so that new or reconnecting clients can receive cached information (similar to Dashboard widgets).
 
 _[back to top](#contents)_
 
