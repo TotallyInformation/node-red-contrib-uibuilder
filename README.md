@@ -239,7 +239,7 @@ See the [package.json](package.json) file. Currently:
 - [JQuery](https://jquery.com/) - front-end only
 - [Socket.IO](https://socket.io/) - front-end and server
 - [serve.static](https://github.com/expressjs/serve-static) - server only
-- [webpack v2](https://webpack.github.io/) - server only
+- [winston](https://github.com/winstonjs/winston) - server only
 
 ## Install
 
