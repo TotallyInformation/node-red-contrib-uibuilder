@@ -341,7 +341,12 @@ module.exports = function(RED) {
             setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
 
             // Let the clients (and output #2) know we are connecting & send the desired debug state
-            sendControl({ 'uibuilderCtrl': 'server connected', 'debug': node.debugFE, '_socketId': socket.id }, ioNs, node)
+            sendControl({
+                'uibuilderCtrl': 'client connect',
+                'cache-control': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
+                'debug': node.debugFE,
+                '_socketId': socket.id
+            }, ioNs, node)
             //ioNs.emit( node.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
 
             // if the client sends a specific msg channel...
@@ -380,15 +385,19 @@ module.exports = function(RED) {
                         msg = { 'uibuilderCtrl': msg }
                 }
 
-                if ( ! msg.hasOwnProperty('topic') ) msg.topic = node.topic
-
                 // If the sender hasn't added msg._clientId, add the Socket.id now
                 if ( ! msg.hasOwnProperty('_socketId') ) {
                     msg._socketId = socket.id
                 }
 
+                // @since 2017-11-05 v0.4.9 If the sender hasn't added msg.from, add it now
+                if ( ! msg.hasOwnProperty('from') ) {
+                    msg.from = 'client'
+                }
+
                 // Send out the message on port #2 for downstream flows
-                node.send([null,msg])
+                sendControl(msg, ioNs, node)  // fn adds topic if needed
+                //node.send([null,msg])
             });
 
             socket.on('disconnect', function(reason) {
@@ -398,16 +407,27 @@ module.exports = function(RED) {
                 )
                 if ( node.ioClientsCount <= 0) setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
                 else setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
-                // Let the control output port know
-                node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'reason': reason, 'topic': node.topic}])
+                // Let the control output port know a client has disconnected
+                sendControl({
+                    'uibuilderCtrl': 'client disconnect',
+                    'reason': reason,
+                    '_socketId': socket.id,
+                    'from': 'server'
+                }, ioNs, node)
+                //node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'topic': node.topic}])
             })
 
             socket.on('error', function(err) {
                 log.error(
                     `UIbuilder: ${node.url} ERROR received, ID: ${socket.id}, Reason: ${err.message}`
                 )
-                // Let the control output port know
-                node.send([null, {'uibuilderCtrl': 'socket error', '_socketId': socket.id, 'error': err.message, 'topic': node.topic}])
+                // Let the control output port know there has been an error
+                sendControl({
+                    'uibuilderCtrl': 'socket error',
+                    'error': err.message,
+                    '_socketId': socket.id,
+                    'from': 'server'
+                }, ioNs, node)
             })
 
             /* More Socket.IO events but we really don't need to monitor them
@@ -546,7 +566,7 @@ function processClose(done = null, node, RED, ioNs, io, app, log) {
     setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
     // Let all the clients know we are closing down
-    sendControl({ 'uibuilderCtrl': 'shutdown' }, ioNs, node)
+    sendControl({ 'uibuilderCtrl': 'shutdown', 'from': 'server' }, ioNs, node)
 
     // Disconnect all Socket.IO clients
     const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
@@ -661,7 +681,7 @@ function sendControl(msg, ioNs, node, socketId) {
     if (msg._socketId) ioNs.to(msg._socketId).emit(node.ioChannels.control, msg)
     else ioNs.emit(node.ioChannels.control, msg)
 
-    if ( ! msg.hasOwnProperty('topic') ) msg.topic = node.topic
+    if ( (! msg.hasOwnProperty('topic')) && (node.topic !== '') ) msg.topic = node.topic
 
     // copy msg to output port #2
     node.send([null, msg])

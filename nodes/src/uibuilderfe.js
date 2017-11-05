@@ -102,7 +102,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '0.4.8d'
+        self.version = '0.4.9'
         self.debug = false // do not change directly - use .debug method
 
         /** Debugging function
@@ -276,7 +276,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         }) // -- End of websocket receive DATA msg from Node-RED -- //
 
-        // Receive a CONTROL msg from Node-RED
+        // Receive a CONTROL msg from Node-RED - see also sendCtrl()
         self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
             self.uiDebug('info', 'uibuilder:socket.on.control - msg received - Namespace: ' + self.ioNamespace)
             self.uiDebug('dir', receivedCtrlMsg)
@@ -285,7 +285,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             if (receivedCtrlMsg === null) {
                 receivedCtrlMsg = {}
             } else if (typeof receivedCtrlMsg !== 'object') {
-                receivedCtrlMsg = { 'payload': receivedCtrlMsg }
+                receivedCtrlMsg = { 'uibuilderCtrl': receivedCtrlMsg }
             }
 
             // Allow incoming control msg to change debug state (usually on the connection msg)
@@ -294,11 +294,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             self.set('ctrlMsg', receivedCtrlMsg)
             self.set('msgsCtrl', self.msgsCtrl + 1)
 
-            /*switch(receivedCtrlMsg.type) {
+            /*switch(receivedCtrlMsg.uibuilderCtrl) {
                 case 'shutdown':
                     // Node-RED is shutting down
                     break
-                case 'server connected':
+                case 'client connect':
                     // We are connected to the server
                     break
                 default:
@@ -378,6 +378,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 msgToSend = makeMeAnObject(msgToSend, 'payload')
             } else {
                 msgToSend = makeMeAnObject(msgToSend, 'uibuilderCtrl')
+                // help remember where this came from as ctrl msgs can come from server or client
+                msgToSend.from = 'client'
             }
 
             // Track how many messages have been sent & last msg sent
