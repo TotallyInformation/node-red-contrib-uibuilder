@@ -106,7 +106,7 @@ module.exports = function(RED) {
         // copy 'this' object in case we need it in context of callbacks of other functions.
         const node = this
 
-        //#region Create local copies of the node configuration (as defined in the .html file)
+        //#region --- Create local copies of the node configuration (as defined in the .html file)
         // NB: node.id and node.type are also available
         node.name          = config.name || ''
         node.topic         = config.topic || ''
@@ -116,9 +116,10 @@ module.exports = function(RED) {
         node.allowScripts  = config.allowScripts
         node.allowStyles   = config.allowStyles
         node.debugFE       = config.debugFE
-        //#endregion
+        node.copyIndex     = config.copyIndex
+        //#endregion ----
 
-        log.debug( {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
+        log.debug( 'node settings', {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
 
         /** User supplied vendor packages
          * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
@@ -133,7 +134,7 @@ module.exports = function(RED) {
          */
         node.customFolder = path.join(node.customAppFolder, node.url)
 
-        log.debug( { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
+        log.debug( 'node pkg details', { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
 
         // Socket.IO config
         node.ioClientsCount = 0 // how many Socket clients connected to this instance?
@@ -173,7 +174,7 @@ module.exports = function(RED) {
             next()
         }
 
-        // ----- Create local folder structure ----- //
+        //#region ----- Create local folder structure ----- //
         var customStatic = function(req,res,next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
         var customFoldersOK = true
         // TODO: May be better as async calls - probably not, but a promisified version would be OK?
@@ -214,14 +215,17 @@ module.exports = function(RED) {
 
             // Now copy files from the master template folder (instead of master src) @since 2017-10-01
             // Note: We don't copy the master dist folder
-            const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-            fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
-                if(err){
-                    log.error( 'uibuilder: Error copying template files from ', path.join( __dirname, 'templates'), ' to ', path.join(node.customFolder, 'src'), '. ', err)
-                } else {
-                    log.debug('UIbuilder: Copied template files to local src (not overwriting) ', node.customFolder )
-                }
-              })
+            // Don't copy if copy turned off in admin ui @TODO: always copy index.html
+            if ( node.copyIndex ) {
+                const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
+                fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
+                    if(err){
+                        log.error( 'uibuilder: Error copying template files from ', path.join( __dirname, 'templates'), ' to ', path.join(node.customFolder, 'src'), '. ', err)
+                    } else {
+                        log.debug('UIbuilder: Copied template files to local src (not overwriting) ', node.customFolder )
+                    }
+                })
+            }
         } else {
             // Local custom folders are not right!
             log.error( 'uibuilder wanted to use local front-end folders in ', node.customFolder, ' but could not')
@@ -262,7 +266,7 @@ module.exports = function(RED) {
                 }
             })
         }
-        // ------ End of Create custom folder structure ------- //
+        //#endregion ------ End of Create custom folder structure ------- //
 
         // Create a new, additional static http path to enable
         // loading of central static resources for uibuilder
@@ -331,17 +335,19 @@ module.exports = function(RED) {
             node.ioClientsCount++
 
             log.debug(
-                `UIbuilder: ${node.url} Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
+                `UIbuilder: ${node.url} Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}`
             )
+
             setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
 
-            // Let the clients know we are connecting & send the desired debug state
-            ioNs.emit( node.ioChannels.control, { 'type': 'server connected', 'debug': node.debugFE } )
+            // Let the clients (and output #2) know we are connecting & send the desired debug state
+            sendControl({ 'uibuilderCtrl': 'server connected', 'debug': node.debugFE, '_socketId': socket.id }, ioNs, node)
+            //ioNs.emit( node.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
                 log.debug(
-                    `UIbuilder: ${node.url}, Data received from client, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}, Msg: ${msg.payload}`
+                    `UIbuilder: ${node.url}, Data received from client, ID: ${socket.id}, Msg: ${msg.payload}`
                 )
 
                 // Make sure the incoming msg is a correctly formed Node-RED msg
@@ -361,19 +367,47 @@ module.exports = function(RED) {
                 // TODO: This should probably have safety validations!
                 node.send(msg)
             });
+            socket.on(node.ioChannels.control, function(msg) {
+                log.debug(
+                    `UIbuilder: ${node.url}, Control Msg from client, ID: ${socket.id}, Msg: ${msg.payload}`
+                )
+
+                // Make sure the incoming msg is a correctly formed Node-RED msg
+                switch ( typeof msg ) {
+                    case 'string':
+                    case 'number':
+                    case 'boolean':
+                        msg = { 'uibuilderCtrl': msg }
+                }
+
+                if ( ! msg.hasOwnProperty('topic') ) msg.topic = node.topic
+
+                // If the sender hasn't added msg._clientId, add the Socket.id now
+                if ( ! msg.hasOwnProperty('_socketId') ) {
+                    msg._socketId = socket.id
+                }
+
+                // Send out the message on port #2 for downstream flows
+                node.send([null,msg])
+            });
 
             socket.on('disconnect', function(reason) {
                 node.ioClientsCount--
                 log.debug(
-                    `UIbuilder: ${node.url} Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}, Cookie: ${socket.handshake.headers.cookie}`
+                    `UIbuilder: ${node.url} Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
                 )
-                setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
+                if ( node.ioClientsCount <= 0) setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
+                else setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
+                // Let the control output port know
+                node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'reason': reason, 'topic': node.topic}])
             })
 
             socket.on('error', function(err) {
                 log.error(
                     `UIbuilder: ${node.url} ERROR received, ID: ${socket.id}, Reason: ${err.message}`
                 )
+                // Let the control output port know
+                node.send([null, {'uibuilderCtrl': 'socket error', '_socketId': socket.id, 'error': err.message, 'topic': node.topic}])
             })
 
             /* More Socket.IO events but we really don't need to monitor them
@@ -494,7 +528,6 @@ function inputHandler(msg, node, RED, io, ioNs, log) {
         ioNs.emit(node.ioChannels.server, msg)
     }
 
-
     log.debug('uibuilder - msg sent to front-end via ws channel, ', node.ioChannels.server, ': ', msg)
 
     if (node.fwdInMessages) {
@@ -512,8 +545,8 @@ function processClose(done = null, node, RED, ioNs, io, app, log) {
 
     setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
-    // Let the clients know we are closing down
-    ioNs.emit( node.ioChannels.control, { 'type': 'shutdown' } )
+    // Let all the clients know we are closing down
+    sendControl({ 'uibuilderCtrl': 'shutdown' }, ioNs, node)
 
     // Disconnect all Socket.IO clients
     const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
@@ -612,6 +645,26 @@ function getProps(RED,myObj,props,defaultAnswer = []) {
         }
     }
     return ans || defaultAnswer
+}
+
+/** Output a control msg
+ * Sends to all connected clients & outputs a msg to port 2
+ * @param {object} msg The message to output
+ * @param {object} ioNs Socket.IO instance to use
+ * @param {object} node The node object
+ * @param {string=} socketId Optional. If included, only send to specific client id
+ */
+function sendControl(msg, ioNs, node, socketId) {
+    if (socketId) msg._socketId = socketId
+
+    // Send to specific client if required
+    if (msg._socketId) ioNs.to(msg._socketId).emit(node.ioChannels.control, msg)
+    else ioNs.emit(node.ioChannels.control, msg)
+
+    if ( ! msg.hasOwnProperty('topic') ) msg.topic = node.topic
+
+    // copy msg to output port #2
+    node.send([null, msg])
 }
 
 // EOF

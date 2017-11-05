@@ -100,6 +100,11 @@ _[back to top](#contents)_
   The `_socketId` attribute is added to any msg sent from the client to Node-RED.
   See [the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances) for more information.
 
+- A second output port gives access to some control messages.
+  This allows additional processing when a client connects or disconnects, an instance is (re)deployed or there is a socket error.
+  You could, for example, output some standard information when a new client connects. Or you could use the information to keep utilisation metrics.
+  See the [Control Message Structure](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure) page in the WIKI for details.
+
 - On deployment of the *first* instance of uibuilder,
   a new folder is created within your Node-RED user directory (typically `~/.node-red`) with a fixed name of `uibuilder`.
 
@@ -198,6 +203,9 @@ _[back to top](#contents)_
 
 I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
 
+- It is common to need to send a number of messages from Node-RED to the front-end,
+  specifically when a new client is loaded or a user refreshes the client browser. This is not catered for natively by this node. You can either handle this manually or use the companion node [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache). Simply send the control messages to an infocache node and it will resend all cached messages back to the individual client.
+
 - **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
   about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
 
@@ -225,7 +233,7 @@ _[back to top](#contents)_
 
 ## Dependencies
 
-See the package.json file. Currently:
+See the [package.json](package.json) file. Currently:
 
 - [normalize.css](https://necolas.github.io/normalize.css/) - front-end only
 - [JQuery](https://jquery.com/) - front-end only
@@ -245,6 +253,8 @@ Run Node-RED and add an instance of the UI Builder node. Set the required URL pa
 
 The UI should then be available at the chosen path. The default would normally be <http://localhost:1880/uibuilder>
 (if default Node-RED and node settings are used).
+
+For information on what to do next, see the [Getting Started](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Getting-Started) WIKI page.
 
 _[back to top](#contents)_
 
@@ -292,12 +302,12 @@ _[back to top](#contents)_
 
 ## Discussions and suggestions
 
-Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red) for general discussion about this node. Or use the
+Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red) or the [#uibuilder](https://node-red.slack.com/messages/C7K77MG06) channel in the [Node-RED Slack](https://node-red.slack.com) for general discussion about this node. Or use the
 [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements.
 
 ## Contributing
 
-If you would like to contribute to this node, you can contact Totally Information via GitHub or raise a request in the GitHub issues log.
+If you would like to contribute to this node, you can contact [Totally Information via GitHub](https://github.com/TotallyInformation) or raise a request in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
 
 If submitting code (preferably via a pull request), please use eslint to adhere to the same standards.
 

@@ -15,7 +15,8 @@ These are things that have been started but I'm not quite happy to fully sign of
 # Next
 This is what needs working on next.
 
-- Add ability to pass HTML and maybe library code (e.g. Vue/Riot/Moon templates) to the front-end
+- Add switch to node to allow prevention of template css/js being copied.
+- Add ability to pass HTML and maybe library code (e.g. Vue/Riot/Moon templates) to the front-end.
 
 # Enhancements
 These would be nice to do at some point and would make the node more robust and a easier to use in places.
@@ -61,3 +62,6 @@ These are random thoughts that might make it into the To Do list but really need
 - _(Maybe compile template resources to dist folder?)_
 
 - _We might need to add some checks for updated master templates? Maybe issue a warning? Not sure._
+
+- Auto-create an index page with links to each uibuilder instance
+  Could add a description field to the node.

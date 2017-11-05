@@ -19,34 +19,58 @@
  * It is usable as is though you will want to add your own code to
  * process incoming and outgoing messages.
  *
+ * uibuilderfe.js (or uibuilderfe.min.js) exposes the following global object.
+ * Note that you can use webpack or similar to bundle uibuilder with your own code.
+ *
  *   uibuilder: The main global object containing the following...
- *     Methods:
- *       .onChange(attribute, callbackFn) - listen for changes to attribute and execute callback when it changes
- *       .get(attribute)        - Get any available attribute
- *       .set(attribute, value) - Set any available attribute (can't overwrite internal attributes)
- *       .msg                   - Shortcut to get the latest value of msg. Equivalent to uibuilder.get('msg')
- *       .send(msg)             - Shortcut to send a msg back to Node-RED manually
- *       .debug(true/false)     - Turn on/off debugging
- *       .uiDebug(type,msg)     - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
- *     Attributes with change events (only accessible via .get method except for msg)
- *       .msg          - Copy of the last msg sent from Node-RED over Socket.IO
- *       .sentMsg      - Copy of the last msg sent by us to Node-RED
- *       .ctrlMsg      - Copy of the last control msg received by us from Node-RED (Types: ['shutdown','server connected'])
- *       .msgsReceived - How many standard messages have we received
- *       .msgsSent     - How many messages have we sent
- *       .msgsCtrl     - How many control messages have we received
- *       .ioConnected  - Is Socket.IO connected right now? (true/false)
- *     Attributes without change events
- *           (only accessible via .get method, reload page to get changes, don't change unless you know what you are doing)
- *       .debug       - true/false, controls debug console logging output
- *       ---- You are not likely to need any of these ----
- *       .version     - check the current version of the uibuilder code
- *       .ioChannels  - List of the channel names in use [uiBuilderControl, uiBuilderClient, uiBuilder]
- *       .retryMs     - starting retry ms period for manual socket reconnections workaround
- *       .retryFactor - starting delay factor for subsequent reconnect attempts
- *       .ioNamespace - Get the namespace from the current URL
- *       .ioPath      - make sure client uses Socket.IO version from the uibuilder module (using path)
- *       .ioTransport - ['polling', 'websocket']
+ *     External Methods:
+ *       .onChange(property, callbackFn) - listen for changes to property and execute callback when it changes
+ *       .get(property)        - Get any available property
+ *       .set(property, value) - Set any available property (can't overwrite internal properties)
+ *       .msg                  - Shortcut to get the latest value of msg. Equivalent to uibuilder.get('msg')
+ *       .send(msg)            - Shortcut to send a msg back to Node-RED manually
+ *       .sendCtrl(msg)        - Shortcut to send a control msg back to Node-RED manually (@since v0.4.8)
+ *       .debug(true/false)    - Turn on/off debugging
+ *       .uiDebug(type,msg)    - Utility function: Send debug msg to console (type=[log,info,warn,error,dir])
+ *       .me()                 - Returns the self object if debugging otherwise just the current version string
+ *       .autoSendReady(true/false) - If true, sends "ready for content" ctrl msg on window.load
+ *                       If false, you will need to manually do
+ *                       uibuilder.sendCtrl({'uibuilderCtrl':'ready for content', 'cache-control':'REPLAY'})
+ *                       (e.g. in an app.mounted event)  @since v0.4.8a
+ *
+ *     All properties can be read using the .get method
+ *     New properties can be added via .set method as long as the property name does not clash with anything internal.
+ *     All properties (including custom) can have change events associated with them by using the .onChange method
+ *
+ *     Externally settable properties using special methods only
+ *       .autoSendReady - see .autoSendReady method
+ *       .debug         - see .debug method, also see 'server connected' control msg from server
+ *
+ *     Externally settable properties via the .set method
+ *       .allowScript   - Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
+ *       .allowStyle    - Allow incoming msg to contain msg.style with CSS that will be automatically executed
+ *       .removeScript  - Delete msg.code after inserting to DOM if it exists on incoming msg
+ *       .removeStyle   - Delete msg.style after inserting to DOM if it exists on incoming msg
+ *
+ *     Externally read only properties (may be changed internally)
+ *       .msg           - Copy of the last msg sent from Node-RED over Socket.IO
+ *       .sentMsg       - Copy of the last msg sent by us to Node-RED (both data and control)
+ *       .ctrlMsg       - Copy of the last control msg received by us from Node-RED (Types: ['shutdown','server connected'])
+ *       .msgsReceived  - How many standard messages have we received
+ *       .msgsSent      - How many messages have we sent
+ *       .msgsSentCtrl  - How many control messages have we sent
+ *       .msgsCtrl      - How many control messages have we received
+ *       .ioConnected   - Is Socket.IO connected right now? (true/false)
+ *       ---- You are not likely to need any of these, they are for internal use ----
+ *       .version       - check the current version of the uibuilder code
+ *       .ioChannels    - List of the channel names in use [uiBuilderControl, uiBuilderClient, uiBuilder]
+ *       .retryMs       - starting retry ms period for manual socket reconnections workaround
+ *       .retryFactor   - starting delay factor for subsequent reconnect attempts
+ *       .ioNamespace   - Get the namespace from the current URL
+ *       .ioPath        - make sure client uses Socket.IO version from the uibuilder module (using path)
+ *       .ioTransport   - ['polling', 'websocket']
+ *       .timerid       - internal use only
+ *       .events        - list of registered events
  */
 
 // When JQuery is ready, update
