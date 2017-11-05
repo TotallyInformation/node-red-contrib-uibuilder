@@ -48,7 +48,6 @@
         paletteLabel: 'UI Builder',
         label: function() { return this.url || this.name || 'UI Builder'; },
         oneditprepare: function() {
-            console.dir(this)
             // Set the checkbox states
             $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
             $('#node-input-allowScripts').prop('checked', this.allowScripts)
