@@ -1,3 +1,11 @@
+[![npm version](https://img.shields.io/npm/v/node-red-contrib-uibuilder.svg?style=flat-square)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
+[![npm](https://img.shields.io/npm/dt/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
+[![npm downloads](https://img.shields.io/npm/dm/node-red-contrib-uibuilder.svg?style=flat-square)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
+[![GitHub repo size in bytes](https://img.shields.io/github/repo-size/badges/shields.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
+[![GitHub last commit](https://img.shields.io/github/last-commit/totallyinformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
+[![GitHub stars](https://img.shields.io/github/stars/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/stargazers)
+[![GitHub license](https://img.shields.io/github/license/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/LICENSE)
+
 # node-red-contrib-uibuilder
 
 A Node-RED web user interface builder. Aims to Provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
@@ -130,6 +138,7 @@ You might like to try some lightweight front-end libraries (in addition to or in
 - [MoonJS](http://moonjs.ga) is a minimal, blazing fast user interface library. Only 7kb.
   Based originally on the Vue API, uses a virtual DOM, possibly the simplest UI library to use. You can remove JQuery if you use this, it isn't needed.
 - [RiotJS](http://riotjs.com/) is a lightweight UI library, REACT-like but only 10k.
+- [Ractive.js](https://ractive.js.org) is a template-driven UI library. Very simple to use
 - [Mini.CSS](http://minicss.org/index) is a minimal, responsive, style-agnostic CSS framework. Only 7kb. You can remove Normalize.css if you use this, it is built in.
 
 Examples for using some of these are available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
