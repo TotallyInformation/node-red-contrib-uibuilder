@@ -15,8 +15,6 @@ These are things that have been started but I'm not quite happy to fully sign of
 # Next
 This is what needs working on next.
 
-- Add switch to node to allow prevention of template css/js being copied.
-- Add ability to pass HTML and maybe library code (e.g. Vue/Riot/Moon templates) to the front-end.
 
 # Enhancements
 These would be nice to do at some point and would make the node more robust and a easier to use in places.
@@ -27,7 +25,7 @@ Please feel free to contribute a pull request if you would like to.
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
 
 - Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
-  Started: script/style is removed if disallowed in settings
+  Started: script/style is removed if disallowed in settings, uibuilder control msgs dropped (since v1.0.0)
 
 - Add integrated ExpressJS security to Socket.IO
 
@@ -51,8 +49,16 @@ These are random thoughts that might make it into the To Do list but really need
 - Tidy up Socket.IO control messages so they add value. When the client receives its first
   control msg, it should respond so that the server can track the socketID's of connected clients (see "Show Connection" flag idea below).
 
-- Add "Show Connection" flag to admin ui. Would output a message on each connection that would
-  include the socketId. Allowing for processing of messages back to a specific client instance.
+- Investigate replacement of JQuery with something lighter
+  JQuery is included as a dependency but its use is entirely optional. So not really making a big impact.
+
+  Possible options:
+
+  - [UmbrellaJS](https://www.npmjs.com/package/umbrellajs)
+
+- Investigate replacement of Socket.IO with something lighter.
+
+  Maybe SockJS though it would probably also need some plugins to that we get unique channels for each uibuilder instance (maybe)
 
 - Add sender IP address when sending msg from browser - so that Node-RED can
   differentiate where things are coming from.
