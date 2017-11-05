@@ -345,7 +345,8 @@ module.exports = function(RED) {
                 'uibuilderCtrl': 'client connect',
                 'cache-control': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
                 'debug': node.debugFE,
-                '_socketId': socket.id
+                '_socketId': socket.id,
+                'from': 'server'
             }, ioNs, node)
             //ioNs.emit( node.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
 
@@ -530,6 +531,10 @@ module.exports = function(RED) {
 // Needs to return the msg object
 function inputHandler(msg, node, RED, io, ioNs, log) {
     node.rcvMsgCount++
+
+    // If the input msg is a uibuilder control msg, then drop it to prevent loops
+    if ( msg.hasOwnProperty('uibuilderCtrl') ) return null
+
     //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + node.rcvMsgCount}, node)
 
     // Remove script/style content if admin settings don't allow

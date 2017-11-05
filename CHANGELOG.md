@@ -1,6 +1,11 @@
 v0.4.9
 
--
+- **CHANGED** Rationalised control messages:
+  "client connect", "client disconnect", "socket error", "ready for content"* (instead of "server connect", "client disconnected", ...) - those marked with * come from the client, everything else from the server.
+- **CHANGED** Improved topic handling on control messages. Topic property only added if it is not blank.
+- **CHANGED** Added "from" property to control messages. "server" or "client". Helps understand what is generating them.
+- **CHANGED** Prevent msg loops by blocking any control messages from the node's input port.
+- **CHANGED** _uibuilderfe v0.4.9_: Version bump and control messages rationalised as above.
 
 v0.4.8
 

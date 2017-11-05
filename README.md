@@ -4,11 +4,11 @@ A Node-RED web user interface builder. Aims to Provide an easy to use way to cre
 
 Designed as an alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)* and *[To Do](#to-do)* sections below for what might still need some work.
 
-This module should minimise any boilerplate that you (as a user) are forced to create, it should be lightweight and should be usable on any device (though obviously depending on what libraries you add). You shouldn't need to have in-depth knowledge of Node.JS nor npm, nor should you need access to the underlying file system. (Those last two points are aims for the future, we aren't there yet I'm afraid).
+This module should minimise any boilerplate that you (as a user) are forced to create, it should be lightweight and should be usable on any device (though obviously depending on what libraries you add). You shouldn't need to have in-depth knowledge of Node.JS nor npm, nor should you need access to the underlying file system. (Those last two points are aims for the future, we aren't there yet I'm afraid). More information is available in the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
 
 Currently, this module allow users to use their own html/css/js/etc code to define a UI on a specific URL (end-point) that is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
 
-*Breaking Change in 0.4.0*: You must have at least `index.html` in your local override folder. For Socket.IO, you will also need to have `index.js`.
+*Breaking Change in 0.4.0*: You must have at least `index.html` in your local override folder.
 
 *Front-end changes in 0.4.2 & 0.4.5*: You will want the new master template files as they use a new library that makes your own custom code very much easier.
 
@@ -43,10 +43,13 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
 
 ## Additional Documentation
 
-There is a little more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
+There is more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
 - [Example: Using MoonJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-MoonJS)
 - [Example: Using RiotJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-RiotJS)
 - [Sending Messages to Specific Client Instances](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances)
+- [Structure and types of control messages](Control-Message-Structure)
+- [Cache & Replay Messages](Message-Caching)
+- [Use webpack to optimise front-end libraries and code](Building-app-into-dist-folder-using-webpack)
 - [Use on Mobile Browsers](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Use-on-Mobile-Browsers)
 - [Developing Front End Code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Developing-front-end-code)
 
@@ -54,7 +57,7 @@ There is a little more information available in the [WIKI](https://github.com/To
 
 Out of the box, you get a simple `index.html` template with matching `index.css` & `index.js` JavaScript.
 These are automatically copied over from the module's master template folder to the instance's src folder when you first deploy so that you can override them.
-If you want to reset, you can simply delete your local copies and the master templates will be copied back _when you restart Node-RED_.
+If you want to reset them, you can simply delete your local copies and the master templates will be copied back _when you restart Node-RED_.
 
 JQuery is used in the default JavaScript to give dynamic updates to the web page. If all you need to do
 is some simple dynamic updates of the page, JQuery is likely enough. Normalize.css is also provided to help you with
@@ -68,6 +71,8 @@ The msg can contain script and style information that will be dynamically added 
 You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages). You can find this in `~/.node-red/uibuilder/<url>` by default. As a minimum, you need an `index.html` file. But you need the `index.js` file as well if you want Socket.IO communications to work. You will also need `manifest.json` for mobile use.
 
 The local `index.(html|js)` files are well documented and should show you how to get started with your own customisations. There are also some examples, with code, on the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
+
+The node also has a second output port. This is used exclusively for control messages. Control messages are sent by the server when a client connects or disconnects and by the front-end client when the websocket has connected and when the client is ready to receive messages (after window.load by default). The connect and ready messages have a `"cache-control": "REPLAY"` property which is designed to be used with [node-red-contrib-infocache]() or your own message cache so that new or reconnecting clients can receive cached information (similar to Dashboard widgets).
 
 _[back to top](#contents)_
 
