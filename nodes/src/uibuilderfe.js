@@ -148,6 +148,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // split url path & eliminate any blank elements, and trailing or double slashes
             var u = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
 
+            // @since 2017-11-06 If the last element of the path is an .html file name, remove it
+            if (u[u.length - 1].endsWith('.html')) u.pop()
+
             // Socket.IO namespace HAS to start with a leading slash
             var ioNamespace = '/' + u.join('/')
 
