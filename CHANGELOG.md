@@ -1,3 +1,12 @@
+v1.0.1
+
+- **CHANGED** _uibuilderfe_: Socket namespace now derived from cookie first. Still uses URL as a backup.
+  Allows the use of any html pages in the front end, even from sub-directories. As long as you don't have clashing URL's. Previously, trying to use a web page from a folder would break the Socket (which will still happen if the cookie can't be read).
+
+  **WARNING**: All pages derived from a single uibuilder node instance share the _same_ Socket. It is up to you to filter out the msg's you need for any specific page.
+
+  **Note**: If using an html file in a sub-folder, don't forget to adjust the relative URL's for resource loading.
+
 v1.0.0
 
 All of the basic features are now complete and tested sufficiently to make this v1. Thanks to everyone that helped get this far. Watch out for node-red-contrib-infocache which will be coming shortly as a companion to handle message caching.

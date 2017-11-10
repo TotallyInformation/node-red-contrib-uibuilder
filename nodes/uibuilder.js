@@ -169,8 +169,9 @@ module.exports = function(RED) {
         function localMiddleware (req, res, next) {
             // Tell the client what Socket.IO namespace to use,
             // trim the leading slash because the cookie will turn into a %2F
-            res.setHeader('x-uibuilder-namespace', node.ioNamespace)
+            res.setHeader('uibuilder-namespace', node.ioNamespace)
             res.cookie('uibuilder-namespace', trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
+            //res.write( '<script>var uibuilderIOnamespace = ' + node.ioNamespace + '</script>')
             next()
         }
 
@@ -231,7 +232,7 @@ module.exports = function(RED) {
             log.error( 'uibuilder wanted to use local front-end folders in ', node.customFolder, ' but could not')
         }
 
-        // Add static path for local custom files
+        //#region Add static path for local custom files
         // TODO: need a build capability for dist - nb probably keep vendor and private code separate
         try {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
@@ -266,6 +267,7 @@ module.exports = function(RED) {
                 }
             })
         }
+        //#endregion -- Added static path for local custom files -- //
         //#endregion ------ End of Create custom folder structure ------- //
 
         // Create a new, additional static http path to enable

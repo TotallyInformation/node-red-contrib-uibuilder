@@ -1,4 +1,4 @@
-/*global document,window,io */
+/*global document,window,io,Headers */
 // @ts-check
 /*
   Copyright (c) 2017 Julian Knight (Totally Information)
@@ -142,17 +142,30 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         /** Get the Socket.IO namespace from the current URL
          * @since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
+         * @since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
          * @return {string} Socket.IO namespace
          */
         self.setIOnamespace = function () {
-            // split url path & eliminate any blank elements, and trailing or double slashes
-            var u = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
 
-            // @since 2017-11-06 If the last element of the path is an .html file name, remove it
-            if (u[u.length - 1].endsWith('.html')) u.pop()
+            var ioNamespace = ''
 
-            // Socket.IO namespace HAS to start with a leading slash
-            var ioNamespace = '/' + u.join('/')
+            // Try getting the namespace cookie
+            ioNamespace = document.cookie.replace(/(?:(?:^|.*;\s*)uibuilder-namespace\s*\=\s*([^;]*).*$)|^.*$/, '$1')
+
+            // if it wasn't available, try using the current url path
+            if (ioNamespace === '' ) {
+                // split url path & eliminate any blank elements, and trailing or double slashes
+                var u = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
+
+                // @since 2017-11-06 If the last element of the path is an .html file name, remove it
+                if (u[u.length - 1].endsWith('.html')) u.pop()
+
+                // Socket.IO namespace HAS to start with a leading slash
+                ioNamespace = u.join('/')
+            }
+
+            // Namespace HAS to start with a /
+            ioNamespace = '/' + ioNamespace
 
             self.uiDebug('log', 'uibuilderfe: IO Namespace: ' + ioNamespace)
 

@@ -46,9 +46,6 @@ Please feel free to contribute a pull request if you would like to.
 # Possibilities for further thought
 These are random thoughts that might make it into the To Do list but really need more thought before committing to them.
 
-- Tidy up Socket.IO control messages so they add value. When the client receives its first
-  control msg, it should respond so that the server can track the socketID's of connected clients (see "Show Connection" flag idea below).
-
 - Investigate replacement of JQuery with something lighter
   JQuery is included as a dependency but its use is entirely optional. So not really making a big impact.
 
@@ -71,3 +68,4 @@ These are random thoughts that might make it into the To Do list but really need
 
 - Auto-create an index page with links to each uibuilder instance
   Could add a description field to the node.
+  Could be a REST API?
