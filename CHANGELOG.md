@@ -1,3 +1,10 @@
+v1.0.2
+
+- **CHANGED** Improved logging, custom format for log to file, some debug msgs swapped to verbose.
+  You can now specify the back-end logging level you want in `settings.js`.
+
+  Log levels are: 'error', 'warn', 'info', 'verbose', 'debug', 'silly'. You can also use _true_ as before, that is equivalent to 'silly'
+
 v1.0.1
 
 - **CHANGED** _uibuilderfe_: Socket namespace now derived from cookie first. Still uses URL as a backup.
