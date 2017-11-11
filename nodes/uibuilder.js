@@ -44,6 +44,42 @@ const deployments = {}
 //  then add processing to ensure that the URL's are unique.
 const instances = {}
 
+var moduleInstance = 'uibuilder'
+
+function winstonFormatter(options) {
+    // - Return string will be passed to logger.
+    // - Optionally, use options.colorize(options.level, <string>) to colorize output based on the log level.
+    /**
+     * options = {
+     * {    colorize: false,
+            json: false,
+            level: 'info',
+            message: 'This is an information message.',
+            meta: {},
+            stringify: undefined,
+            timestamp: [Function: timestamp],
+            showLevel: true,
+            prettyPrint: false,
+            raw: false,
+            label: null,
+            logstash: false,
+            depth: null,
+            formatter: [Function: winstonFormatter],
+            align: false,
+            humanReadableUnhandledException: false }
+     */
+    return options.timestamp() + ' ' +
+        (options.level.toUpperCase()+ '          ').slice(0,7) + ' [uibuilder:' +
+        moduleInstance + '] ' +
+        (options.message ? options.message : '') +
+        (options.meta && Object.keys(options.meta).length ? ' :: '+JSON.stringify(options.meta) : '' );
+}
+
+function winstonTimestamp() {
+    return (new Date()).toISOString().slice(0,16).replace('T', ' ')
+}
+
+
 module.exports = function(RED) {
 
     // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
@@ -55,13 +91,21 @@ module.exports = function(RED) {
     var winstonTransport
     if (debug) {
         // @since 2017-10-06 if debugging, log to ~/.node-red/uibuilder.log, otherwise log to console
-        winstonTransport = new (winston.transports.File)({ filename: path.join(RED.settings.userDir, 'uibuilder.log'), json:false }) // file in user folder ~/.node-red
+        winstonTransport = new (winston.transports.File)({
+            filename: path.join(RED.settings.userDir, 'uibuilder.log'),
+            maxsize: 50000,
+            maxFiles: 10,
+            tailable: true,
+            json:false,
+            timestamp: winstonTimestamp,
+            formatter: winstonFormatter
+        }) // file in user folder ~/.node-red
     } else {
         winstonTransport = new (winston.transports.Console)()
     }
-    const log = new winston.Logger({
+    const log = new (winston.Logger)({
         // set log level based on debug var from settings.js/uibuilder
-        level: debug ? 'silly' : 'warn', // error, warn, info, verbose, debug, silly
+        level: debug === true ? 'silly' : debug, // error, warn, info, verbose, debug, silly; true=silly
         // Where do we want log output to go?
         transports: [
             // @TODO: format console output to match RED.log
@@ -69,7 +113,7 @@ module.exports = function(RED) {
         ]
     })
 
-    log.debug('\n\n----------------- uibuilder - module.exports -----------------')
+    log.verbose('----------------- uibuilder - module.exports -----------------')
 
     // Holder for Socket.IO - we want this to survive redeployments of each node instance
     // so that existing clients can be reconnected.
@@ -98,10 +142,11 @@ module.exports = function(RED) {
     })
 
     function nodeGo(config) {
-        log.debug('============ uibuilder - nodeGo started ============')
-
         // Create the node
         RED.nodes.createNode(this, config)
+
+        moduleInstance = config.url // for logging
+        log.verbose('================ instance registered ================')
 
         // copy 'this' object in case we need it in context of callbacks of other functions.
         const node = this
@@ -119,7 +164,7 @@ module.exports = function(RED) {
         node.copyIndex     = config.copyIndex
         //#endregion ----
 
-        log.debug( 'node settings', {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
+        log.verbose( 'node settings', {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
 
         /** User supplied vendor packages
          * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
@@ -134,7 +179,7 @@ module.exports = function(RED) {
          */
         node.customFolder = path.join(node.customAppFolder, node.url)
 
-        log.debug( 'node pkg details', { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
+        log.verbose( 'node pkg details', { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
 
         // Socket.IO config
         node.ioClientsCount = 0 // how many Socket clients connected to this instance?
@@ -144,7 +189,7 @@ module.exports = function(RED) {
         // Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
         node.ioNamespace = '/' + trimSlashes(RED.settings.httpNodeRoot + '/' + node.url).replace(/\/\//g, '')
 
-        log.debug(  'io', { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
+        log.verbose(  'io', { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
@@ -238,13 +283,13 @@ module.exports = function(RED) {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
             fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
             // If the ./dist/index.html exists use the dist folder...
-            log.debug('UIbuilder:', node.url, ':: Using local dist folder' )
+            log.debug('Using local dist folder' )
             customStatic = serveStatic( path.join(node.customFolder, 'dist') )
             // NOTE: You are expected to have included vendor packages in
             //       a build process so we are not loading them here
         } catch (e) {
             // dist not being used or not accessible, use src
-            log.debug('UIbuilder:', node.url, ':: dist folder not in use or not accessible. Using local src folder. ', e.message );
+            log.debug('dist folder not in use or not accessible. Using local src folder. ', e.message );
             customStatic = serveStatic( path.join(node.customFolder, 'src') )
             // Include vendor resource source paths if needed
             node.userVendorPackages.forEach(function (packageName) {
@@ -254,15 +299,19 @@ module.exports = function(RED) {
                 try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
                     installPath = getInstalledPathSync(packageName, {local:true, cwd: RED.settings.userDir})
                 } catch (e1) {
+                    // if getInstalledPath fails, try nodejs internal resolve
                     try {
-                        installPath = require.resolve(packageName)
+                        // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
+                        installPath = path.dirname( require.resolve(packageName) )
                     } catch (e2) {
-                        log.error('UIbuilder: Failed to add user vendor path - no install found for ', packageName, ' Try doing "npm install ', packageName, ' --save" from ', RED.settings.userDir)
+                        log.error('Failed to add user vendor path - no install found for ', packageName, ' Try doing "npm install ', packageName, ' --save" from ', RED.settings.userDir)
                         RED.log.warn('UIbuilder: Failed to add user vendor path - no install found for ' + packageName + ' Try doing "npm install ' + packageName + ' --save" from ' + RED.settings.userDir)
                     }
                 }
                 if (installPath !== '') {
-                    log.debug('UIbuilder: Adding user vendor path', {'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath})
+                    log.info('Adding user vendor path', {
+                        'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath
+                    })
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
                 }
             })
@@ -277,12 +326,12 @@ module.exports = function(RED) {
         try {
             // Will we use "compiled" version of module front-end code?
             fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
-            log.debug('UIbuilder:', node.url, ' Using master production build folder' )
+            log.debug('Using master production build folder' )
             // If the ./dist/index.html exists use the dist folder...
             masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
         } catch (e) {
             // ... otherwise, use dev resources at ./src/
-            log.debug('UIbuilder:', node.url, ' Using master src folder and master vendor packages' )
+            log.debug('Using master src folder and master vendor packages' )
             log.debug('  Reason for not using master dist folder: ', e.message )
             masterStatic = serveStatic( path.join( __dirname, 'src' ) )
             // Include vendor resource source paths if needed
@@ -293,15 +342,19 @@ module.exports = function(RED) {
                 try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
                     installPath = getInstalledPathSync(packageName, {local:true, cwd: RED.settings.userDir})
                 } catch (e1) {
+                    // if getInstalledPath fails, try nodejs internal resolve
                     try {
-                        installPath = require.resolve(packageName)
+                        // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
+                        installPath = path.dirname( require.resolve(packageName) )
                     } catch (e2) {
                         log.error('UIbuilder: Failed to add master vendor path - no install found for ', packageName, ' Should have been installed by this module')
                         RED.log.warn('UIbuilder: Failed to add master vendor path - no install found for ' + packageName + ' Should have been installed by this module')
                     }
                 }
                 if (installPath !== '') {
-                    log.debug('UIbuilder: Adding master vendor path', {'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath})
+                    log.info( 'UIbuilder: Adding master vendor path', {
+                        'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath
+                    } )
                     app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
                 }
             })
