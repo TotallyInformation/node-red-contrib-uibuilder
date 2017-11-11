@@ -66,6 +66,10 @@ These are random thoughts that might make it into the To Do list but really need
 
 - _We might need to add some checks for updated master templates? Maybe issue a warning? Not sure._
 
-- Auto-create an index page with links to each uibuilder instance
+- Auto-create an index page with links to each uibuilder instance.
   Could add a description field to the node.
   Could be a REST API?
+
+- Maybe create a webworker version of `uibuilderfe` -
+  That would enable reading of response headers for a more reliable pickup of the ioNamespace.
+  Would keep it as a separate version as it only works with newer browsers.

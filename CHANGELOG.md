@@ -7,6 +7,9 @@ v1.0.1
 
   **Note**: If using an html file in a sub-folder, don't forget to adjust the relative URL's for resource loading.
 
+- **CHANGED** _index.html_ Template and default. Made the relative URL's more obvious.
+  `./rel-url-...` for things relative to the current folder. So if creating a page in a sub-folder, you need to use `../rel-url-...` (2 leading dots) to reach up a level to find the other JS and image resources.
+
 v1.0.0
 
 All of the basic features are now complete and tested sufficiently to make this v1. Thanks to everyone that helped get this far. Watch out for node-red-contrib-infocache which will be coming shortly as a companion to handle message caching.
