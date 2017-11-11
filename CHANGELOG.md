@@ -1,6 +1,7 @@
 v1.0.2
 
 - **CHANGED** Improved logging, custom format for log to file, some debug msgs swapped to verbose.
+  Log files now rotate once they reach 50kb in size. Only 10 files are kept.
   You can now specify the back-end logging level you want in `settings.js`.
 
   Log levels are: 'error', 'warn', 'info', 'verbose', 'debug', 'silly'. You can also use _true_ as before, that is equivalent to 'silly'
