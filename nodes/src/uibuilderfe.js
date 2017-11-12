@@ -102,7 +102,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '1.0.1'
+        self.version = '1.0.2'
         self.debug = false // do not change directly - use .debug method
 
         /** Debugging function
@@ -149,8 +149,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             var ioNamespace = ''
 
-            // Try getting the namespace cookie
-            ioNamespace = document.cookie.replace(/(?:(?:^|.*;\s*)uibuilder-namespace\s*\=\s*([^;]*).*$)|^.*$/, '$1')
+            // Try getting the namespace cookie. @since 2017-11-12 v1.0.2 Made capture non-greedy to cope with multiple cookies of same name.
+            ioNamespace = document.cookie.replace(/(?:(?:^|.*;\s*)uibuilder-namespace\s*\=\s*([^;]*?).*$)|^.*$/, '$1')
 
             // if it wasn't available, try using the current url path
             if (ioNamespace === '' ) {
