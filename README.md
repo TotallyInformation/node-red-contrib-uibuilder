@@ -57,8 +57,8 @@ There is more information available in the [WIKI](https://github.com/TotallyInfo
 - [Example: Using RiotJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-RiotJS)
 - [Sending Messages to Specific Client Instances](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances)
 - [Structure and types of control messages](Control-Message-Structure)
-- [Cache & Replay Messages](Message-Caching)
-- [Use webpack to optimise front-end libraries and code](Building-app-into-dist-folder-using-webpack)
+- [Cache & Replay Messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching)
+- [Use webpack to optimise front-end libraries and code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Building-app-into-dist-folder-using-webpack)
 - [Use on Mobile Browsers](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Use-on-Mobile-Browsers)
 - [Developing Front End Code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Developing-front-end-code)
 
