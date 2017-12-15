@@ -200,10 +200,22 @@ module.exports = function(RED) {
         // We need an http server to serve the page
         const app = RED.httpNode || RED.httpAdmin
 
-        // Use httNodeMiddleware function which is defined in settings.js
-        // as for the http in/out nodes - normally used for authentication
+        /** Provide the ability to have a ExpressJS middleware hook.
+         * This can be used for custom authentication/authorisation or anything else.
+         * The function must be defined in settings.js
+         * @since v1.0.3 2017-12-15
+         */
         var httpMiddleware = function(req,res,next) { next() }
-        if (RED.settings.httpNodeMiddleware) {
+        if (RED.settings.uibuilder.middleware) {
+            /** Is a uibuilder specific function available? */
+            if ( typeof RED.settings.uibuilder.middleware === 'function' ) {
+                httpMiddleware = RED.settings.uibuilder.middleware
+            }
+        } else if (RED.settings.httpNodeMiddleware) {
+            /** If not, see if the Node-RED one is available and use that instead.
+             * Use httNodeMiddleware function which is defined in settings.js
+             * as for the http in/out nodes - normally used for authentication
+             */
             if ( typeof RED.settings.httpNodeMiddleware === 'function' ) {
                 httpMiddleware = RED.settings.httpNodeMiddleware
             }
