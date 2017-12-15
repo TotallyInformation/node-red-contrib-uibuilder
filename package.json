@@ -48,7 +48,7 @@
     "notyetnodes": {}
   },
   "dependencies": {
-    "fs-extra": "^4.0.2",
+    "fs-extra": "^4.0.3",
     "get-installed-path": "^4.0.8",
     "jquery": "^3.2.1",
     "normalize.css": "*",

@@ -35,18 +35,17 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
     - [Additional Documentation](#additional-documentation)
     - [Out of the box](#out-of-the-box)
     - [Features](#features)
-    - [Preference Tree](#preference-tree)
-        - [Front-end path summary](#front-end-path-summary)
-        - [Physical file/folder location summary](#physical-filefolder-location-summary)
     - [Known Issues](#known-issues)
-    - [To Do](#to-do)
-    - [Changes](#changes)
     - [Dependencies](#dependencies)
     - [Install](#install)
     - [Node Instance Settings](#node-instance-settings)
+    - [uibuilder settings.js configuration](#uibuilder-settingsjs-configuration)
     - [Discussions and suggestions](#discussions-and-suggestions)
     - [Contributing](#contributing)
     - [Developers/Contributors](#developerscontributors)
+    - [Preference Tree](#preference-tree)
+        - [Front-end path summary](#front-end-path-summary)
+        - [Physical file/folder location summary](#physical-filefolder-location-summary)
 
 <!-- /TOC -->
 
@@ -108,7 +107,7 @@ _[back to top](#contents)_
   Note that Socket.IO will efficiently share sockets while keeping traffic separated by namespace.
 
 - There is a front-end library `uibuilderfe.min.js` or `uibuilderfe.js` that hides all the complexities of using Socket.IO
-  so that your own FE code is easy to write. The default `index.js` file has details and examples of use.
+  so that your own FE code is easy to write. It provides a simple event handling system so that you can subscribe to changes and process them as they happen. The default `index.js` file has details and examples of use.
 
 - Users can install front-end libraries using npm into their `userDir` folder.
   If using the `src` sub-folder, these can be accessed in front-end code via the "vendor" path, see below. The list of user libraries made available is given via Node-RED's settings.js file in `uibuilder.userVendorPackages` (Eventually, also via the nodes settings).
@@ -143,7 +142,10 @@ _[back to top](#contents)_
   otherwise the `src` folder will be used.
 
 - Any resource (html, css, js, image, etc) placed within the `dist`/`src` sub-folder
-  is available to the browser client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above). That URL will load `index.html`
+  is available to the browser client. The default URL would be `http://localhost:1880/uibuilder` (where the path is set as per the point above). That URL will load `index.html`.
+
+- You have access to ExpressJS middleware simply by providing a function definition in `settings.js`.
+  This lets you, for example, have custom authentication/authorisation.
 
 - Eventually, a link to webpack will be provided to enable packing/compiling
   of `src` code to `dist`.
@@ -157,6 +159,142 @@ You might like to try some lightweight front-end libraries (in addition to or in
 - [Mini.CSS](http://minicss.org/index) is a minimal, responsive, style-agnostic CSS framework. Only 7kb. You can remove Normalize.css if you use this, it is built in.
 
 Examples for using some of these are available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
+
+_[back to top](#contents)_
+
+## Known Issues
+
+I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
+
+- It is common to need to send a number of messages from Node-RED to the front-end,
+  specifically when a new client is loaded or a user refreshes the client browser. This is not catered for natively by this node. You can either handle this manually or use the companion node [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache). Simply send the control messages to an infocache node (or manual equivalent - see the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)) and it will resend all cached messages back to the individual client.
+
+- **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
+  about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
+
+  You can work around this by using a proxy such as NGINX or HAproxy to be the TLS endpoint. Just make sure you proxy the websocket traffic as well as the standard web traffic.
+
+- Uniqueness of the URL is not yet being validated for multiple instances, could cause
+  some "interesting" effects!
+
+- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`.
+  Some installs don't seem to be doing this for some reason. See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2). Added some extra code to try and deal with this but it may not be 100% reliable.
+
+_[back to top](#contents)_
+
+## Dependencies
+
+See the [package.json](package.json) file, these should all be installed for you. Currently:
+
+- [normalize.css](https://necolas.github.io/normalize.css/) - front-end only
+- [JQuery](https://jquery.com/) - front-end only
+- [Socket.IO](https://socket.io/) - front-end and server
+- [serve.static](https://github.com/expressjs/serve-static) - server only
+- [winston](https://github.com/winstonjs/winston) - server only
+
+Any packages that you define in `settings.js` must currently be installed by you under your `userDir` folder prior to use.
+
+## Install
+
+It is now best to install Node-RED nodes using the Node-RED admin interface. Look for the "Manage Palette" menu item. Alternatively, Run the following command in your Node-RED user directory (typically `~/.node-red`) `npm install node-red-contrib-uibuilder`.
+
+Run Node-RED and add an instance of the UI Builder node. Set the required URL path and deploy.
+
+The UI should then be available at the chosen path. The default would normally be <http://localhost:1880/uibuilder>
+(if default Node-RED and node settings are used).
+
+For information on what to do next, see the [Getting Started](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Getting-Started) WIKI page.
+
+_[back to top](#contents)_
+
+## Node Instance Settings
+
+Each instance of the uibuilder node has the following settings available.
+
+**`name` (optional)**
+
+Only used in the Node-RED admin UI.
+
+**`topic` (optional)**
+
+Only used if an inbound msg does not contain a topic attribute. Passed on to client UI upon receipt of a msg.
+
+**`url` (required, default = 'uibuilder')**
+
+The path used to access the user interface that this node builds.
+So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are defined (in Node-RED's `settings.js` file), the URL of the default interface would be `http://localhost:1880/uibuilder`
+
+**It is up to the flow author to ensure that no duplicate names are used, the node
+does not check or enforce uniqueness.**
+
+**Forward received messages direct to output? (default = false)**
+
+Forwards a copy of every received message direct to the output.
+Adds the topic from the above setting if one isn't present in the msg.
+
+_Note_ that this may result in multiple output messages if your front-end code also auto-sends inbound messages.
+
+**`userVendorPackages` (optional)**
+
+A list of npm package names (as they appear in `node_modules`) that the node will make
+available to front-end code under the `uibuilder/vendor` path.
+
+All instances of this node will also use the `uibuilder.userVendorPackages` attribute of
+`settings.js` unless defined in the node's settings.
+
+**`debug` (optional, default=false)**
+
+Only available using the `uibuilder.debug` attribute of
+`settings.js`. Set to `true` to output additional debugging information.
+
+_[back to top](#contents)_
+
+## uibuilder settings.js configuration
+
+uibuilder has some global configuration settings available in Node-RED's `settings.js` file, typically found in `userDir` (normally `~/.node-red`).
+
+```javascript
+    uibuilder: {
+        // List of npm modules to be made available to any uibuilder instance.
+        //   The modules MUST be manually installed at present.
+        userVendorPackages: ['riot', 'moonjs', 'slim-js', 'ractive', 'picnic', 'accounting', 'date-format-lite'],
+        // Controls the amount of debug output to ~/.node-red/uibuilder.js
+        debug: 'verbose',  // error, warn, info, verbose, debug, silly; true = silly, false = none
+        // Provides an ExpressJS middleware hook. This can be used for custom authentication/authorisation
+        //   or anything else you like. If NOT provided, uibuilder instances will also check if
+        //   httpNodeMiddleware available.
+        // @see https://expressjs.com/en/guide/using-middleware.html
+        middleware: function(req,res,next) {
+            console.log('I am run whenever a web request is made to ANY of the uibuilder instances')
+            next()
+        }
+    },
+```
+
+You can miss any settings out that you don't need.
+
+_[back to top](#contents)_
+
+## Discussions and suggestions
+
+Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red) or the [#uibuilder](https://node-red.slack.com/messages/C7K77MG06) channel in the [Node-RED Slack](https://node-red.slack.com) for general discussion about this node. Or use the
+[GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements.
+
+## Contributing
+
+If you would like to contribute to this node, you can contact [Totally Information via GitHub](https://github.com/TotallyInformation) or raise a request in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
+
+Please refer to the [contributing guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/.github/CONTRIBUTING.md) for more information.
+
+## Developers/Contributors
+
+- [Julian Knight](https://github.com/TotallyInformation)1
+- [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
+- [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections and contributed code.
+
+
+<a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>
+
 
 _[back to top](#contents)_
 
@@ -225,137 +363,5 @@ Folders and files for resources on the device running Node-RED are:
 - `<userDir>/node_modules/node-red-contrib-uibuilder/nodes/dist/` - this modules compiled files for front-end use
 - `<userDir>/node_modules/<package-name>` - when included via the `uibuilder.userVendorPackages` global
   setting (in `settings.js`). Note that each package will have its own folder structure that you will need to understand in order to use the package in the browser. These are often poorly documented.
-
-_[back to top](#contents)_
-
-## Known Issues
-
-I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
-
-- It is common to need to send a number of messages from Node-RED to the front-end,
-  specifically when a new client is loaded or a user refreshes the client browser. This is not catered for natively by this node. You can either handle this manually or use the companion node [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache). Simply send the control messages to an infocache node (or manual equivalent - see the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)) and it will resend all cached messages back to the individual client.
-
-- **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
-  about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
-
-  You can work around this by using a proxy such as NGINX or HAproxy to be the TLS endpoint. Just make sure you proxy the websocket traffic as well as the standard web traffic.
-
-- Uniqueness of the URL is not yet being validated for multiple instances, could cause
-  some "interesting" effects!
-
-- Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`.
-  Some installs don't seem to be doing this for some reason. See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2). Added some extra code to try and deal with this but it may not be 100% reliable.
-
-_[back to top](#contents)_
-
-## To Do
-
-The backlog of ideas and enhancements has now been moved to the [To Do file](TODO.md)
-
-_[back to top](#contents)_
-
-## Changes
-
-See the [Change Log](CHANGELOG.md) for details of changes made.
-
-_[back to top](#contents)_
-
-## Dependencies
-
-See the [package.json](package.json) file, these should all be installed for you. Currently:
-
-- [normalize.css](https://necolas.github.io/normalize.css/) - front-end only
-- [JQuery](https://jquery.com/) - front-end only
-- [Socket.IO](https://socket.io/) - front-end and server
-- [serve.static](https://github.com/expressjs/serve-static) - server only
-- [winston](https://github.com/winstonjs/winston) - server only
-
-Any packages that you define in `settings.js` must currently be installed by you under your `userDir` folder prior to use.
-
-## Install
-
-Run the following command in your Node-RED user directory (typically `~/.node-red`):
-
-```
-npm install node-red-contrib-uibuilder
-```
-
-Run Node-RED and add an instance of the UI Builder node. Set the required URL path and deploy.
-
-The UI should then be available at the chosen path. The default would normally be <http://localhost:1880/uibuilder>
-(if default Node-RED and node settings are used).
-
-For information on what to do next, see the [Getting Started](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Getting-Started) WIKI page.
-
-_[back to top](#contents)_
-
-## Node Instance Settings
-
-Each instance of the uibuilder node has the following settings available.
-
-**`name` (optional)**
-
-Only used in the Node-RED admin UI.
-
-**`topic` (optional)**
-
-Only used if an inbound msg does not contain a topic attribute. Passed on to client UI upon receipt of a msg.
-
-**`url` (required, default = 'uibuilder')**
-
-The path used to access the user interface that this node builds.
-So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are defined (in Node-RED's `settings.js` file), the URL of the default interface would be `http://localhost:1880/uibuilder`
-
-**It is up to the flow author to ensure that no duplicate names are used, the node
-does not check or enforce uniqueness.**
-
-**Forward received messages direct to output? (default = false)**
-
-Forwards a copy of every received message direct to the output.
-Adds the topic from the above setting if one isn't present in the msg.
-
-_Note_ that this may result in multiple output messages if your front-end code also auto-sends inbound messages.
-
-**`userVendorPackages` (optional)**
-
-A list of npm package names (as they appear in `node_modules`) that the node will make
-available to front-end code under the `uibuilder/vendor` path.
-
-All instances of this node will also use the `uibuilder.userVendorPackages` attribute of
-`settings.js` unless defined in the node's settings.
-
-**`debug` (optional, default=false)**
-
-Only available using the `uibuilder.debug` attribute of
-`settings.js`. Set to `true` to output additional debugging information.
-
-_[back to top](#contents)_
-
-## Discussions and suggestions
-
-Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red) or the [#uibuilder](https://node-red.slack.com/messages/C7K77MG06) channel in the [Node-RED Slack](https://node-red.slack.com) for general discussion about this node. Or use the
-[GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements.
-
-## Contributing
-
-If you would like to contribute to this node, you can contact [Totally Information via GitHub](https://github.com/TotallyInformation) or raise a request in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
-
-If submitting code (preferably via a pull request), please use eslint to adhere to the same standards.
-
-When contributing code, please use the following coding standards:
-- Use ESLint:Standard settings plus the following
-- Indents must be 4 spaces
-- Strings must be single quoted not double
-- Semi-colons should not be used unless absolutely necessary (see [here](https://mislav.net/2010/05/semicolons/) for guide)
-
-## Developers/Contributors
-
-- [Julian Knight](https://github.com/TotallyInformation)1
-- [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
-- [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections and contributed code.
-
-
-<a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>
-
 
 _[back to top](#contents)_

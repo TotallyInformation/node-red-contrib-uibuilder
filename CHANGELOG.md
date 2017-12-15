@@ -1,3 +1,30 @@
+v1.0.3
+
+- **FIX** `uibuilderfe.js` and `uibuilder.min.js` versions were different.
+
+- **NEW** GitHub contributed and issues templates, EditorConfig file for consistent code submissions.
+
+- **CHANGED** Update WIKI links in README and Further tidy up. Added new section on `settings.js`
+
+- **CHANGED** Always force a pack of `uibuilderfe.js` before doing an `npm publish` using the `package.json` `prepublish` script.
+  Ensures that we don't get another problem with mismatched builds.
+
+- **NEW** Added optional ExpressJS middleware hook before the Node-RED one.
+
+  _NOTE_: In this first implementation, there is only a single middleware function available. So ALL instances of uibuilder get the same middleware. Future versions will get one per node instance.
+
+  This lets people have a different authentication/authorisation plugin to Node-RED's http-in/out nodes. If the uibuilder specific middleware is provided, the node-red middleware function is ignored.
+
+  In `settings.js` `uibuilder.middleware` must be a function such as:
+
+  ```javascript
+    middleware: function(req,res,next) {
+        console.log('I am run whenever a request is made to ANY of the uibuilder instances')
+        next()
+    },
+  ```
+
+
 v1.0.2
 
 - **CHANGED** Improved logging, custom format for log to file, some debug msgs swapped to verbose.

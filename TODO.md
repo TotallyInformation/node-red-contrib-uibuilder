@@ -10,16 +10,16 @@ These are things that have been started but I'm not quite happy to fully sign of
   - Passed code should _replace_ the previous.
     Currently, it is always added.
 
-  - HTML cannot yet be passed
-
 # Next
 This is what needs working on next.
-
 
 # Enhancements
 These would be nice to do at some point and would make the node more robust and a easier to use in places.
 
 Please feel free to contribute a pull request if you would like to.
+
+- Extend middleware hook feature to allow for different middleware for each node instance
+  instead of one for all instances.
 
 - Add validation to `url` setting
   Allow A-Z, a-z, 0-9, _, - and / only. Limit to 50 characters (maybe less)
