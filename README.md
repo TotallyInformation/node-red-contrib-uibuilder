@@ -7,7 +7,7 @@
 [![GitHub watchers](https://img.shields.io/github/watchers/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/stargazers)
 [![GitHub license](https://img.shields.io/github/license/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/LICENSE)
 
-# node-red-contrib-uibuilder
+# 1. node-red-contrib-uibuilder
 
 A Node-RED web user interface builder. Aims to Provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
 
@@ -27,29 +27,29 @@ The final evolution will be to provide configuration nodes to let you define fra
 
 This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of greater complexity and a need to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
 
-## Contents
+## 1.1. Contents
 <!-- TOC -->
 
-- [node-red-contrib-uibuilder](#node-red-contrib-uibuilder)
-    - [Contents](#contents)
-    - [Additional Documentation](#additional-documentation)
-    - [Out of the box](#out-of-the-box)
-    - [Features](#features)
-    - [Known Issues](#known-issues)
-    - [Dependencies](#dependencies)
-    - [Install](#install)
-    - [Node Instance Settings](#node-instance-settings)
-    - [uibuilder settings.js configuration](#uibuilder-settingsjs-configuration)
-    - [Discussions and suggestions](#discussions-and-suggestions)
-    - [Contributing](#contributing)
-    - [Developers/Contributors](#developerscontributors)
-    - [Preference Tree](#preference-tree)
-        - [Front-end path summary](#front-end-path-summary)
-        - [Physical file/folder location summary](#physical-filefolder-location-summary)
+- [1. node-red-contrib-uibuilder](#1-node-red-contrib-uibuilder)
+    - [1.1. Contents](#11-contents)
+    - [1.2. Additional Documentation](#12-additional-documentation)
+    - [1.3. Out of the box](#13-out-of-the-box)
+    - [1.4. Features](#14-features)
+    - [1.5. Known Issues](#15-known-issues)
+    - [1.6. Dependencies](#16-dependencies)
+    - [1.7. Install](#17-install)
+    - [1.8. Node Instance Settings](#18-node-instance-settings)
+    - [1.9. uibuilder settings.js configuration](#19-uibuilder-settingsjs-configuration)
+    - [1.10. Discussions and suggestions](#110-discussions-and-suggestions)
+    - [1.11. Contributing](#111-contributing)
+    - [1.12. Developers/Contributors](#112-developerscontributors)
+    - [1.13. Preference Tree](#113-preference-tree)
+        - [1.13.1. Front-end path summary](#1131-front-end-path-summary)
+        - [1.13.2. Physical file/folder location summary](#1132-physical-filefolder-location-summary)
 
 <!-- /TOC -->
 
-## Additional Documentation
+## 1.2. Additional Documentation
 
 There is more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
 - [Getting Started](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Getting-Started)
@@ -75,7 +75,7 @@ There is more information available in the [WIKI](https://github.com/TotallyInfo
   - [How to contribute & coding standards](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/How-to-Contribute-and-Coding-Standards)
 
 
-## Out of the box
+## 1.3. Out of the box
 
 Out of the box, you get a simple `index.html` template with matching `index.css` & `index.js` JavaScript.
 These are automatically copied over from the module's master template folder to the instance's src folder when you first deploy so that you can override them.
@@ -98,7 +98,7 @@ The node also has a second output port. This is used exclusively for control mes
 
 _[back to top](#contents)_
 
-## Features
+## 1.4. Features
 
 - A single node is used to define an end-point (by its URL path).
   The node can be included in flows as many times as you like - but each instance **must** have a unique URL path name.
@@ -162,7 +162,7 @@ Examples for using some of these are available in the [WIKI](https://github.com/
 
 _[back to top](#contents)_
 
-## Known Issues
+## 1.5. Known Issues
 
 I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
 
@@ -182,7 +182,7 @@ I don't believe any of the current issues make the node unusable. They are mainl
 
 _[back to top](#contents)_
 
-## Dependencies
+## 1.6. Dependencies
 
 See the [package.json](package.json) file, these should all be installed for you. Currently:
 
@@ -194,7 +194,7 @@ See the [package.json](package.json) file, these should all be installed for you
 
 Any packages that you define in `settings.js` must currently be installed by you under your `userDir` folder prior to use.
 
-## Install
+## 1.7. Install
 
 It is now best to install Node-RED nodes using the Node-RED admin interface. Look for the "Manage Palette" menu item. Alternatively, Run the following command in your Node-RED user directory (typically `~/.node-red`) `npm install node-red-contrib-uibuilder`.
 
@@ -207,7 +207,7 @@ For information on what to do next, see the [Getting Started](https://github.com
 
 _[back to top](#contents)_
 
-## Node Instance Settings
+## 1.8. Node Instance Settings
 
 Each instance of the uibuilder node has the following settings available.
 
@@ -249,7 +249,7 @@ Only available using the `uibuilder.debug` attribute of
 
 _[back to top](#contents)_
 
-## uibuilder settings.js configuration
+## 1.9. uibuilder settings.js configuration
 
 uibuilder has some global configuration settings available in Node-RED's `settings.js` file, typically found in `userDir` (normally `~/.node-red`).
 
@@ -275,18 +275,18 @@ You can miss any settings out that you don't need.
 
 _[back to top](#contents)_
 
-## Discussions and suggestions
+## 1.10. Discussions and suggestions
 
 Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red) or the [#uibuilder](https://node-red.slack.com/messages/C7K77MG06) channel in the [Node-RED Slack](https://node-red.slack.com) for general discussion about this node. Or use the
 [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements.
 
-## Contributing
+## 1.11. Contributing
 
 If you would like to contribute to this node, you can contact [Totally Information via GitHub](https://github.com/TotallyInformation) or raise a request in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
 
 Please refer to the [contributing guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/.github/CONTRIBUTING.md) for more information.
 
-## Developers/Contributors
+## 1.12. Developers/Contributors
 
 - [Julian Knight](https://github.com/TotallyInformation)1
 - [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
@@ -298,7 +298,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 
 _[back to top](#contents)_
 
-## Preference Tree
+## 1.13. Preference Tree
 
 The uibuilder node adds a number of statically served web resource locations (physical file-system locations) to the URL path (default `/uibuilder`) defined. It is up to the user to ensure that file/folder names do not clash.
 
@@ -337,7 +337,7 @@ In addition, this node uses the httpNodeMiddleware Node-RED setting allowing for
 
 _[back to top](#contents)_
 
-### Front-end path summary
+### 1.13.1. Front-end path summary
 
 Front-end files in `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/src/` may use the url paths:
 
@@ -350,7 +350,7 @@ Front-end files in `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/sr
 - `<script src="/uibuilder/socket.io/socket.io.js"></script>` - for socket.io
   The static /uibuilder prefix is used here to ensure all instances of clients for this node use the same, correct, instance of socket.io
 
-### Physical file/folder location summary
+### 1.13.2. Physical file/folder location summary
 
 Folders and files for resources on the device running Node-RED are:
 
