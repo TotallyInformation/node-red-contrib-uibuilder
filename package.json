@@ -25,8 +25,14 @@
       "name": "Julian Knight",
       "url": "https://github.com/TotallyInformation"
     },
-    { "name": "Colin Law", "url": "https://github.com/colinl" },
-    { "name": "Steve Rickus", "url": "https://github.com/shrickus" }
+    {
+      "name": "Colin Law",
+      "url": "https://github.com/colinl"
+    },
+    {
+      "name": "Steve Rickus",
+      "url": "https://github.com/shrickus"
+    }
   ],
   "license": "Apache-2.0",
   "repository": {
@@ -49,7 +55,9 @@
     "socket.io": "^2.0.4",
     "winston": "^2.4.0"
   },
-  "devDependencies": { },
+  "devDependencies": {
+    "uglify-js": "^3.2.2"
+  },
   "engines": {
     "node": ">=6"
   }
