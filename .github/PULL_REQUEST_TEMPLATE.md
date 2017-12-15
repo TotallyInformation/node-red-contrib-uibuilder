@@ -1,4 +1,4 @@
-We welcome new pull requests to this repository but please follow the [contribution guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/.github/CONTRIBUTING.md).
+We welcome new pull requests to this repository but please follow the [contribution guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/.github/CONTRIBUTING.md).
 
 Please ensure that you are happy with the license for this repository and that all of your code meets the requirements for the license.
 

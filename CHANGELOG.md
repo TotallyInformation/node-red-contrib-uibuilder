@@ -1,3 +1,7 @@
+v1.0.4
+
+- **FIX** GitHub documentation path fixes
+
 v1.0.3
 
 - **FIX** `uibuilderfe.js` and `uibuilder.min.js` versions were different.

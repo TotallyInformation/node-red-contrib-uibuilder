@@ -284,7 +284,7 @@ Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red
 
 If you would like to contribute to this node, you can contact [Totally Information via GitHub](https://github.com/TotallyInformation) or raise a request in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
 
-Please refer to the [contributing guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/.github/CONTRIBUTING.md) for more information.
+Please refer to the [contributing guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/.github/CONTRIBUTING.md) for more information.
 
 ## 1.12. Developers/Contributors
 
