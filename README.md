@@ -53,14 +53,28 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
 ## Additional Documentation
 
 There is more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
-- [Example: Using MoonJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-MoonJS)
-- [Example: Using RiotJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-RiotJS)
-- [Sending Messages to Specific Client Instances](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances)
-- [Structure and types of control messages](Control-Message-Structure)
-- [Cache & Replay Messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching)
-- [Use webpack to optimise front-end libraries and code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Building-app-into-dist-folder-using-webpack)
-- [Use on Mobile Browsers](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Use-on-Mobile-Browsers)
-- [Developing Front End Code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Developing-front-end-code)
+- [Getting Started](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Getting-Started)
+- [In Progress](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Currently-In-Development)
+- [To Do](/TotallyInformation/node-red-contrib-uibuilder/blob/master/TODO.md) What's coming up for uibuilder?
+- [Latest Changes](/TotallyInformation/node-red-contrib-uibuilder/blob/master/CHANGELOG.md)
+- [Structure and types of control messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure)
+- Examples
+  - [Basic JQuery app](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-JQuery) - Uses the built-in JQuery and Normalize.CSS libraries
+  - [Basic Riot app](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-RiotJS)
+  - [Slightly extended Riot app](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Basic-uibuilder-RIOT-example-displaying-values,-switch-and-select-box)
+  - [Basic MoonJS app](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-MoonJS)
+  - [Slightly extended MoonJS example](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example,-MoonJS-with-Mini.CSS)
+  - [Umbrella JS and Picnic CSS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example-Umbrella-JS-and-Picnic-CSS)
+  - [Example Show MQTT device info using Moon with caching](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example-Show-MQTT-device-info-using-Moon-with-caching)
+- How To
+  - [Send messages to a specific client](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances)
+  - [Cache & Replay Messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching)
+  - [Cache without a helper node](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)
+  - [Use with mobile browsers](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Use-on-Mobile-Browsers)
+  - [Create a web page on a sub-path](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Create-a-web-page-in-a-sub-path)
+  - [Use webpack to optimise front-end libraries and code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Building-app-into-dist-folder-using-webpack)
+  - [How to contribute & coding standards](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/How-to-Contribute-and-Coding-Standards)
+
 
 ## Out of the box
 
@@ -81,7 +95,7 @@ You will want to change the front-end code to match your requirements since, by 
 
 The local `index.(html|js)` files are well documented and should show you how to get started with your own customisations. There are also some examples, with code, on the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
 
-The node also has a second output port. This is used exclusively for control messages. Control messages are sent by the server when a client connects or disconnects and by the front-end client when the websocket has connected and when the client is ready to receive messages (after window.load by default). The connect and ready messages have a `"cacheControl": "REPLAY"` property which is designed to be used with [node-red-contrib-infocache]() or your own message cache so that new or reconnecting clients can receive cached information (similar to Dashboard widgets).
+The node also has a second output port. This is used exclusively for control messages. Control messages are sent by the server when a client connects or disconnects and by the front-end client when the websocket has connected and when the client is ready to receive messages (after window.load by default). The connect and ready messages have a `"cacheControl": "REPLAY"` property which is designed to be used with [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache) or your own message cache ([example](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)) so that new or reconnecting clients can receive cached information (similar to Dashboard widgets).
 
 _[back to top](#contents)_
 
@@ -219,7 +233,7 @@ _[back to top](#contents)_
 I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
 
 - It is common to need to send a number of messages from Node-RED to the front-end,
-  specifically when a new client is loaded or a user refreshes the client browser. This is not catered for natively by this node. You can either handle this manually or use the companion node [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache). Simply send the control messages to an infocache node and it will resend all cached messages back to the individual client.
+  specifically when a new client is loaded or a user refreshes the client browser. This is not catered for natively by this node. You can either handle this manually or use the companion node [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache). Simply send the control messages to an infocache node (or manual equivalent - see the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)) and it will resend all cached messages back to the individual client.
 
 - **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
   about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
@@ -248,13 +262,15 @@ _[back to top](#contents)_
 
 ## Dependencies
 
-See the [package.json](package.json) file. Currently:
+See the [package.json](package.json) file, these should all be installed for you. Currently:
 
 - [normalize.css](https://necolas.github.io/normalize.css/) - front-end only
 - [JQuery](https://jquery.com/) - front-end only
 - [Socket.IO](https://socket.io/) - front-end and server
 - [serve.static](https://github.com/expressjs/serve-static) - server only
 - [winston](https://github.com/winstonjs/winston) - server only
+
+Any packages that you define in `settings.js` must currently be installed by you under your `userDir` folder prior to use.
 
 ## Install
 
