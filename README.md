@@ -11,7 +11,7 @@
 
 A Node-RED web user interface builder. Aims to Provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
 
-Designed as an alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)* and *[To Do](#to-do)* sections below for what might still need some work.
+Designed as an alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)* section below and the *[To Do](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/To-Do)* WIKI page  for what might still need some work.
 
 This module should minimise any boilerplate that you (as a user) are forced to create, it should be lightweight and should be usable on any device (though obviously depending on what libraries you add). You shouldn't need to have in-depth knowledge of Node.JS nor npm, nor should you need access to the underlying file system. (Those last two points are aims for the future, we aren't there yet I'm afraid). More information is available in the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
 

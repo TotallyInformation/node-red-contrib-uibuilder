@@ -2,6 +2,8 @@ v1.0.4
 
 - **FIX** GitHub documentation path fixes
 
+- **CHANGED** Moved To Do list to the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/To-Do)
+
 v1.0.3
 
 - **FIX** `uibuilderfe.js` and `uibuilder.min.js` versions were different.
