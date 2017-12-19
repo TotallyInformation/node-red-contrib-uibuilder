@@ -206,7 +206,7 @@ module.exports = function(RED) {
          * @since v1.0.3 2017-12-15
          */
         var httpMiddleware = function(req,res,next) { next() }
-        if (RED.settings.uibuilder.middleware) {
+        if ( getProps(RED, RED.settings, 'uibuilder.middleware', false) ) {
             /** Is a uibuilder specific function available? */
             if ( typeof RED.settings.uibuilder.middleware === 'function' ) {
                 httpMiddleware = RED.settings.uibuilder.middleware
