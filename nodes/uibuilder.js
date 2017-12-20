@@ -30,6 +30,10 @@ const serveStatic      = require('serve-static'),
 
 const { getInstalledPathSync } = require('get-installed-path')
 
+// JWT Security variables
+let jwtSecret,
+    jwtSecurity
+
 // These are loaded to the /<uibuilder>/vendor URL path
 const vendorPackages = [
     'normalize.css',
@@ -122,44 +126,48 @@ module.exports = function(RED) {
     // modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
     log.debug('uibuilder: Socket.IO initialisation - Socket Path=', urlJoin(moduleName, 'socket.io') )
     var io = socketio.listen(RED.server, {'path': urlJoin(moduleName, 'socket.io')}) // listen === attach
+
     io.set('transports', ['polling', 'websocket'])
+    // Check that all incoming SocketIO data has the IO cookie
+    io.use(function(socket, next){
+        /* Some SIO related info that might be useful in security checks
+            //console.log('--socket.request.connection.remoteAddress--')
+            //console.dir(socket.request.connection.remoteAddress)
+            //console.log('--socket.handshake.address--')
+            //console.dir(socket.handshake.address)
+            //console.dir(io.sockets.connected)
+        */
+        
+        // If we are using JWT Security - validate the token
+        if (jwtSecurity) {
+            // Validate if JWT is passed
+            jwt.verify(socket.handshake.query.auth_token, jwtSecret, function(err, decoded) {
+                if (err) {
+                    return next(new Error('Authentication error - ID: ' + socket.id ))
+                } else {
+                    return next()
+                }
+            })
+        } else {
+            if (socket.request.headers.cookie) {
+                //log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
+                //log.debug(socket.request.headers.cookie)  // socket.handshake.headers.cookie
+                return next()
+            }
+            next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
+        }
+    })
 
     function nodeGo(config) {
         // Create the node
         RED.nodes.createNode(this, config)
 
-
-        // Check that all incoming SocketIO data has the IO cookie
-        // TODO: Needs a bit more work to add some real security - should it be on ioNs?
-        io.use(function(socket, next){
-            /* Some SIO related info that might be useful in security checks
-                //console.log('--socket.request.connection.remoteAddress--')
-                //console.dir(socket.request.connection.remoteAddress)
-                //console.log('--socket.handshake.address--')
-                //console.dir(socket.handshake.address)
-                //console.dir(io.sockets.connected)
-            */
-            // If we are using JWT Security - validate the token
-            if (config.jwtSecurity) {
-                // Validate if JWT is passed
-                jwt.verify(socket.handshake.query.auth_token, config.jwtSecret, function(err, decoded) {
-                    if (err) {
-                        return next(new Error('Authentication error - ID: ' + socket.id ))
-                    } else {
-                        return next()
-                    }
-                })
-            } else {
-                if (socket.request.headers.cookie) {
-                    //log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
-                    //log.debug(socket.request.headers.cookie)  // socket.handshake.headers.cookie
-                    return next()
-                }
-                next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
-            }
-        })        
-
         moduleInstance = config.url // for logging
+
+        // Assign jwt variables
+        jwtSecret = config.jwtSecret
+        jwtSecurity = config.jwtSecurity
+
         log.verbose('================ instance registered ================')
 
         // copy 'this' object in case we need it in context of callbacks of other functions.
