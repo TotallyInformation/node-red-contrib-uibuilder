@@ -34,11 +34,13 @@
             name: { value: '' },
             topic: { value: '' },
             url: { value: 'uibuilder' }, // TODO: needs validation
+            jwtSecret: { value: '' },
             fwdInMessages: { value: false },
             allowScripts: { value: false },
             allowStyles: { value: false },
             debugFE: { value: false },
             copyIndex:  { value: true },
+            jwtSecurity: { value: false }
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -54,6 +56,8 @@
             $('#node-input-allowStyles').prop('checked', this.allowStyles)
             $('#node-input-debugFE').prop('checked', this.debugFE)
             $('#node-input-copyIndex').prop('checked', this.copyIndex)
+            $('#node-input-jwtSecurity').prop('checked', this.jwtSecurity)
+
             // Show the uibuilder global settings from settings.js
             var pkgs = RED.settings.uibuilder.userVendorPackages
             $('#userpackages').text(pkgs)
@@ -92,6 +96,18 @@
     <div class="form-row" title="Make sure this gives a unique URL">
         <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
         <input type="text" id="node-input-url">
+    </div>
+
+    <!-- JWT Token Secret -->
+    <div class="form-row">
+        <label for="node-input-jwtSecret"><i class="fa fa-lock"></i> JWT Secret</label>
+        <input type="text" id="node-input-jwtSecret">
+    </div>
+
+    <!-- Use JWT Token Auth method for socket -->
+    <div class="form-row">
+        <input type="checkbox" id="node-input-jwtSecurity" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-jwtSecurity" style="width: 70%;">Use JWT for Socket Authorization?</label>
     </div>
 
     <!-- Forward input msgs to output -->
