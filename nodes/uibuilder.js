@@ -168,6 +168,12 @@ module.exports = function(RED) {
         jwtSecret = config.jwtSecret
         jwtSecurity = config.jwtSecurity
 
+        // Check for insecure connection
+        if (jwtSecurity && !jwtSecret) {
+            log.warn('JWT Security has been turned on, but there is no jwtSecret!')
+        }
+
+
         log.verbose('================ instance registered ================')
 
         // copy 'this' object in case we need it in context of callbacks of other functions.
