@@ -224,7 +224,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         //#region ========== Socket.IO processing ========== //
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
-        self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
+        self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport, query: 'auth_token=' + self.auth_token })
 
         /** Check whether Socket.IO is connected to the server, reconnect if not (recursive)
          *
@@ -416,7 +416,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ========== Our own event handling system ========== //
 
-        self.events = {}  // placeholder for event listener callbacks by property name
+        self.events = {
+            // Event listener for auth_token
+            auth_token: [
+                // let's change the socket auth_token
+                function() {
+                    self.socket.query = 'auth_token=' + self.auth_token
+                    self.socket.io.opts.query = 'auth_token=' + self.auth_token
+                }
+            ]
+        }  // placeholder for event listener callbacks by property name
 
         /** Trigger event listener for a given property
          * Called when uibuilder.set is used

@@ -25,6 +25,7 @@ const serveStatic      = require('serve-static'),
       path             = require('path'),
       fs               = require('fs-extra'),
       events           = require('events'),
+      jwt              = reuqire('jsonwebtoken'),
       winston          = require('winston')
 
 const { getInstalledPathSync } = require('get-installed-path')
@@ -133,6 +134,21 @@ module.exports = function(RED) {
             //console.dir(socket.handshake.address)
             //console.dir(io.sockets.connected)
         */
+        
+        // TODO: Wrap in an outer if statement, to check if token validation should be enabled at all
+        // Validate if JWT is passed
+        if (socket.handshake.query.auth_token !== '') {
+            jwt.verify(socket.handshake.query.auth_token, 'token_here_probably_from_node_config', function(err, decoded) {
+                if (err) {
+                    return next(new Error('Authentication error - ID: ' + socket.id ))
+                } else {
+                    return next()
+                }
+            })
+        } else {
+            return next(new Error('Authentication error - ID: ' + socket.id ))
+        }
+
         if (socket.request.headers.cookie) {
             //log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
             //log.debug(socket.request.headers.cookie)  // socket.handshake.headers.cookie

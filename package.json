@@ -51,6 +51,7 @@
     "fs-extra": "^4.0.3",
     "get-installed-path": "^4.0.8",
     "jquery": "^3.2.1",
+    "jsonwebtoken": "^8.1.0",
     "normalize.css": "*",
     "serve-static": "^1.13.1",
     "socket.io": "^2.0.4",
