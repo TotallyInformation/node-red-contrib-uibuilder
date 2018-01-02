@@ -142,7 +142,7 @@ module.exports = function(RED) {
         if (jwtSecurity) {
             // Validate if JWT is passed
             jwt.verify(socket.handshake.query.auth_token, jwtSecret, function(err, decoded) {
-                if (err) {
+                if (err || new Date().getTime() > decoded.exp) {
                     return next(new Error('Authentication error - ID: ' + socket.id ))
                 } else {
                     return next()
@@ -447,27 +447,59 @@ module.exports = function(RED) {
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
-                log.debug(
-                    `UIbuilder: ${node.url}, Data received from client, ID: ${socket.id}, Msg: ${msg.payload}`
-                )
+                // If we are using JWT Security - validate the token
+                if (jwtSecurity) {
+                    // Validate if JWT is passed
+                    jwt.verify(socket.handshake.query.auth_token, jwtSecret, function(err, decoded) {
+                        if (err || new Date().getTime() > decoded.exp) {
+                            ioNs.connected[socket.id].disconnect()
+                            node.send({ 'topic': node.topic, 'type': 'auth_token_error' })
+                        } else {
+                            log.debug(
+                                `UIbuilder: ${node.url}, Data received from client, ID: ${socket.id}, Msg: ${msg.payload}`
+                            )
+            
+                            // Make sure the incoming msg is a correctly formed Node-RED msg
+                            switch ( typeof msg ) {
+                                case 'string':
+                                case 'number':
+                                case 'boolean':
+                                    msg = { 'topic': node.topic, 'payload': msg}
+                            }
+            
+                            // If the sender hasn't added msg._clientId, add the Socket.id now
+                            if ( ! msg.hasOwnProperty('_socketId') ) {
+                                msg._socketId = socket.id
+                            }
+            
+                            // Send out the message for downstream flows
+                            node.send(msg)
+                        }
+                    })
+                } else {
+                    log.debug(
+                        `UIbuilder: ${node.url}, Data received from client, ID: ${socket.id}, Msg: ${msg.payload}`
+                    )
+    
+                    // Make sure the incoming msg is a correctly formed Node-RED msg
+                    switch ( typeof msg ) {
+                        case 'string':
+                        case 'number':
+                        case 'boolean':
+                            msg = { 'topic': node.topic, 'payload': msg}
+                    }
+    
+                    // If the sender hasn't added msg._clientId, add the Socket.id now
+                    if ( ! msg.hasOwnProperty('_socketId') ) {
+                        msg._socketId = socket.id
+                    }
+    
+                    // Send out the message for downstream flows
+                    // TODO: This should probably have safety validations!
+                    node.send(msg)
+                } 
+            })
 
-                // Make sure the incoming msg is a correctly formed Node-RED msg
-                switch ( typeof msg ) {
-                    case 'string':
-                    case 'number':
-                    case 'boolean':
-                        msg = { 'topic': node.topic, 'payload': msg}
-                }
-
-                // If the sender hasn't added msg._clientId, add the Socket.id now
-                if ( ! msg.hasOwnProperty('_socketId') ) {
-                    msg._socketId = socket.id
-                }
-
-                // Send out the message for downstream flows
-                // TODO: This should probably have safety validations!
-                node.send(msg)
-            });
             socket.on(node.ioChannels.control, function(msg) {
                 log.debug(
                     `UIbuilder: ${node.url}, Control Msg from client, ID: ${socket.id}, Msg: ${msg.payload}`
