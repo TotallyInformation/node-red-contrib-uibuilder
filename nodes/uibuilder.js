@@ -25,7 +25,7 @@ const serveStatic      = require('serve-static'),
       path             = require('path'),
       fs               = require('fs-extra'),
       events           = require('events'),
-      jwt              = reuqire('jsonwebtoken'),
+      jwt              = require('jsonwebtoken'),
       winston          = require('winston')
 
 const { getInstalledPathSync } = require('get-installed-path')
