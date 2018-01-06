@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 Julian Knight (Totally Information)
+ * Copyright (c) 2018 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
  * limitations under the License.
  **/
 // @ts-check
-"use strict";
+'use strict';
 
 // Module name must match this nodes html file
 const moduleName  = 'uibuilder'
+// @ts-ignore
 const nodeVersion = require('../package.json').version
+const uiblib = require('./uiblib')
 
 const serveStatic      = require('serve-static'),
       socketio         = require('socket.io'),
@@ -81,10 +83,19 @@ function winstonTimestamp() {
 
 
 module.exports = function(RED) {
+    // Get the uibuilder global settings from settings.js if available, otherwise set to empty object
+    const uib_globalSettings = RED.settings.get('uibuilder') || { 'debug': false }
+
+    // NR Bug, see issue #1543 RED.settings.get doesn't work for userDir
+    const userDir = RED.settings.userDir // folder containing settings.js
+
+    const httpNodeRoot = RED.settings.get('httpNodeRoot') // root url path for http-in/out and uibuilder nodes
+
+    console.log('global Settings', {'uib_globalSettings': uib_globalSettings, 'userDir':userDir, 'httpNodeRoot': httpNodeRoot})
 
     // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
     // @since 2017-09-19 moved to top of module.exports. @since 2017-10-15 var not const as it can be overridden
-    var debug = getProps(RED,RED.settings,'uibuilder.debug',false) // JK @since 2017-08-17, Change default answer to false
+    var debug = uib_globalSettings.debug || false // JK @since 2017-08-17, Change default answer to false
 
     // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
     // @TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
@@ -92,7 +103,7 @@ module.exports = function(RED) {
     if (debug) {
         // @since 2017-10-06 if debugging, log to ~/.node-red/uibuilder.log, otherwise log to console
         winstonTransport = new (winston.transports.File)({
-            filename: path.join(RED.settings.userDir, 'uibuilder.log'),
+            filename: path.join(userDir, 'uibuilder.log'),
             maxsize: 50000,
             maxFiles: 10,
             tailable: true,
@@ -119,12 +130,13 @@ module.exports = function(RED) {
     // so that existing clients can be reconnected.
     // Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
     // modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
-    log.debug('uibuilder: Socket.IO initialisation - Socket Path=', urlJoin(moduleName, 'socket.io') )
-    var io = socketio.listen(RED.server, {'path': urlJoin(moduleName, 'socket.io')}) // listen === attach
+    log.debug('uibuilder: Socket.IO initialisation - Socket Path=', uiblib.urlJoin(moduleName, 'socket.io') )
+    var io = socketio.listen(RED.server, {'path': uiblib.urlJoin(moduleName, 'socket.io')}) // listen === attach
+    // @ts-ignore
     io.set('transports', ['polling', 'websocket'])
 
     // Check that all incoming SocketIO data has the IO cookie
-    // TODO: Needs a bit more work to add some real security - should it be on ioNs?
+    // TODO: Needs a bit more work to add some real security - should it be on ioNs? - No! Pointless as it is only done on connection
     io.use(function(socket, next){
         /* Some SIO related info that might be useful in security checks
             //console.log('--socket.request.connection.remoteAddress--')
@@ -140,6 +152,20 @@ module.exports = function(RED) {
         }
         next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
     })
+    /** @since 2017-12-20 add optional socket middleware from settings.js
+     * Use for custom authorisation such as JWT.
+     * WARNING: This will be called ONLY when the initial connection happens,
+     *          it is NOT run on every message exchange.
+     *          This means that websocket connections can NEVER be as secure.
+     *          since token expiry and validation is only run once
+     **/
+    if ( uib_globalSettings.hasOwnProperty('socketmiddleware') ) {
+        /** Is a uibuilder specific function available? */
+        if ( typeof uib_globalSettings.socketmiddleware === 'function' ) {
+            io.use(uib_globalSettings.socketmiddleware)
+        }
+    }
+
 
     function nodeGo(config) {
         // Create the node
@@ -169,10 +195,11 @@ module.exports = function(RED) {
         /** User supplied vendor packages
          * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
          * JK @since 2017-08-17 fix for non-existent properties and use getProps()
+         * JK @since 2018-01-06 use uib_globalSettings instead of RED.settings.uibuilder. At least an empty array is returned.
          */
-        node.userVendorPackages = getProps(RED,config,'userVendorPackages',null) || getProps(RED,RED.settings,'uibuilder.userVendorPackages',[])
+        node.userVendorPackages = uiblib.getProps(RED,config,'userVendorPackages',null) || uiblib.getProps(RED,uib_globalSettings,'userVendorPackages',[])
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
-        node.customAppFolder = path.join(RED.settings.userDir, 'uibuilder')
+        node.customAppFolder = path.join(userDir, 'uibuilder')
         /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
          *   Files in this folder are also served to URL but take preference
          *   over those in the nodes folders (which act as defaults)
@@ -187,7 +214,7 @@ module.exports = function(RED) {
         // The channel names for Socket.IO
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
         // Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
-        node.ioNamespace = '/' + trimSlashes(RED.settings.httpNodeRoot + '/' + node.url).replace(/\/\//g, '')
+        node.ioNamespace = '/' + uiblib.trimSlashes(httpNodeRoot + '/' + node.url).replace(/\/\//g, '')
 
         log.verbose(  'io', { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
 
@@ -206,18 +233,19 @@ module.exports = function(RED) {
          * @since v1.0.3 2017-12-15
          */
         var httpMiddleware = function(req,res,next) { next() }
-        if ( getProps(RED, RED.settings, 'uibuilder.middleware', false) ) {
+        if ( uib_globalSettings.hasOwnProperty('middleware') ) {
             /** Is a uibuilder specific function available? */
-            if ( typeof RED.settings.uibuilder.middleware === 'function' ) {
-                httpMiddleware = RED.settings.uibuilder.middleware
+            if ( typeof uib_globalSettings.middleware === 'function' ) {
+                httpMiddleware = uib_globalSettings.middleware
             }
-        } else if (RED.settings.httpNodeMiddleware) {
+        } else {
             /** If not, see if the Node-RED one is available and use that instead.
              * Use httNodeMiddleware function which is defined in settings.js
              * as for the http in/out nodes - normally used for authentication
              */
-            if ( typeof RED.settings.httpNodeMiddleware === 'function' ) {
-                httpMiddleware = RED.settings.httpNodeMiddleware
+            let settings_httpNodeMiddleware = RED.settings.get('httpNodeMiddleware')
+            if ( typeof settings_httpNodeMiddleware === 'function' ) {
+                httpMiddleware = settings_httpNodeMiddleware
             }
         }
 
@@ -227,7 +255,7 @@ module.exports = function(RED) {
             // Tell the client what Socket.IO namespace to use,
             // trim the leading slash because the cookie will turn into a %2F
             res.setHeader('uibuilder-namespace', node.ioNamespace)
-            res.cookie('uibuilder-namespace', trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
+            res.cookie('uibuilder-namespace', uiblib.trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
             //res.write( '<script>var uibuilderIOnamespace = ' + node.ioNamespace + '</script>')
             next()
         }
@@ -242,7 +270,7 @@ module.exports = function(RED) {
             fs.accessSync( node.customAppFolder, fs.constants.W_OK ) // try to access
         } catch (e) {
             if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-                log.error('uibuilder custom folder ERROR, path: ' + path.join(RED.settings.userDir, node.customAppFolder) + ', error: ' + e.message)
+                log.error('uibuilder custom folder ERROR, path: ' + path.join(userDir, node.customAppFolder) + ', error: ' + e.message)
                 customFoldersOK = false
             }
         }
@@ -309,22 +337,22 @@ module.exports = function(RED) {
                 // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
                 var installPath = ''
                 try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
-                    installPath = getInstalledPathSync(packageName, {local:true, cwd: RED.settings.userDir})
+                    installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
                 } catch (e1) {
                     // if getInstalledPath fails, try nodejs internal resolve
                     try {
                         // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
                         installPath = path.dirname( require.resolve(packageName) )
                     } catch (e2) {
-                        log.error('Failed to add user vendor path - no install found for ', packageName, ' Try doing "npm install ', packageName, ' --save" from ', RED.settings.userDir)
-                        RED.log.warn('UIbuilder: Failed to add user vendor path - no install found for ' + packageName + ' Try doing "npm install ' + packageName + ' --save" from ' + RED.settings.userDir)
+                        log.error('Failed to add user vendor path - no install found for ', packageName, ' Try doing "npm install ', packageName, ' --save" from ', userDir)
+                        RED.log.warn('UIbuilder: Failed to add user vendor path - no install found for ' + packageName + ' Try doing "npm install ' + packageName + ' --save" from ' + userDir)
                     }
                 }
                 if (installPath !== '') {
                     log.info('Adding user vendor path', {
-                        'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath
+                        'url':  uiblib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
                     })
-                    app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+                    app.use( uiblib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
                 }
             })
         }
@@ -352,7 +380,7 @@ module.exports = function(RED) {
                 // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
                 var installPath = ''
                 try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
-                    installPath = getInstalledPathSync(packageName, {local:true, cwd: RED.settings.userDir})
+                    installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
                 } catch (e1) {
                     // if getInstalledPath fails, try nodejs internal resolve
                     try {
@@ -365,16 +393,16 @@ module.exports = function(RED) {
                 }
                 if (installPath !== '') {
                     log.info( 'UIbuilder: Adding master vendor path', {
-                        'url':  urlJoin(node.url, 'vendor', packageName), 'path': installPath
+                        'url':  uiblib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
                     } )
-                    app.use( urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+                    app.use( uiblib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
                 }
             })
         }
 
-        app.use( urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
+        app.use( uiblib.urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
 
-        const fullPath = urlJoin( RED.settings.httpNodeRoot, node.url )
+        const fullPath = uiblib.urlJoin( httpNodeRoot, node.url )
 
         log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
         log.info('UI Builder - Local file overrides at ' + node.customFolder)
@@ -390,7 +418,7 @@ module.exports = function(RED) {
         //}
 
         // We only do the following if io is not already assigned (e.g. after a redeploy)
-        setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
+        uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
 
         // Each deployed instance has it's own namespace
         var ioNs = io.of(node.ioNamespace)
@@ -405,10 +433,10 @@ module.exports = function(RED) {
                 `UIbuilder: ${node.url} Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}`
             )
 
-            setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
+            uiblib.setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
 
             // Let the clients (and output #2) know we are connecting & send the desired debug state
-            sendControl({
+            uiblib.sendControl({
                 'uibuilderCtrl': 'client connect',
                 'cacheControl': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
                 'debug': node.debugFE,
@@ -464,7 +492,7 @@ module.exports = function(RED) {
                 }
 
                 // Send out the message on port #2 for downstream flows
-                sendControl(msg, ioNs, node)  // fn adds topic if needed
+                uiblib.sendControl(msg, ioNs, node)  // fn adds topic if needed
                 //node.send([null,msg])
             });
 
@@ -473,10 +501,10 @@ module.exports = function(RED) {
                 log.debug(
                     `UIbuilder: ${node.url} Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
                 )
-                if ( node.ioClientsCount <= 0) setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
-                else setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
+                if ( node.ioClientsCount <= 0) uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
+                else uiblib.setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
                 // Let the control output port know a client has disconnected
-                sendControl({
+                uiblib.sendControl({
                     'uibuilderCtrl': 'client disconnect',
                     'reason': reason,
                     '_socketId': socket.id,
@@ -490,7 +518,7 @@ module.exports = function(RED) {
                     `UIbuilder: ${node.url} ERROR received, ID: ${socket.id}, Reason: ${err.message}`
                 )
                 // Let the control output port know there has been an error
-                sendControl({
+                uiblib.sendControl({
                     'uibuilderCtrl': 'socket error',
                     'error': err.message,
                     '_socketId': socket.id,
@@ -554,7 +582,7 @@ module.exports = function(RED) {
 
             // Keep this fn small for readability so offload
             // any further, more customised code to another fn
-            msg = inputHandler(msg, node, RED, io, ioNs, log)
+            msg = uiblib.inputHandler(msg, node, RED, io, ioNs, log)
 
         } // -- end of msg received processing -- //
         node.on('input', nodeInputHandler)
@@ -568,7 +596,7 @@ module.exports = function(RED) {
 
             // Do any complex close processing here if needed - MUST BE LAST
             //processClose(null, node, RED, ioNs, io, app) // swap with below if needing async
-            processClose(done, node, RED, ioNs, io, app, log)
+            uiblib.processClose(done, node, RED, ioNs, io, app, log)
 
             done()
         })
@@ -583,7 +611,9 @@ module.exports = function(RED) {
             uibuilder: {
                 value: {
                     userVendorPackages: [],
-                    debug: false
+                    debug: false,
+                    //middleware: function(req,res,next){next()},
+                    //socketmiddleware: function(socket,next){next()},
                 },
                 exportable: true
             }
@@ -591,172 +621,5 @@ module.exports = function(RED) {
     })
 
 } // ==== End of module.exports ==== //
-
-// ========== UTILITY FUNCTIONS ================ //
-
-// Complex, custom code when processing an incoming msg should go here
-// Needs to return the msg object
-function inputHandler(msg, node, RED, io, ioNs, log) {
-    node.rcvMsgCount++
-
-    // If the input msg is a uibuilder control msg, then drop it to prevent loops
-    if ( msg.hasOwnProperty('uibuilderCtrl') ) return null
-
-    //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + node.rcvMsgCount}, node)
-
-    // Remove script/style content if admin settings don't allow
-    if ( node.allowScripts !== true ) {
-        if ( msg.hasOwnProperty('script') ) delete msg.script
-    }
-    if ( node.allowStyles !== true ) {
-        if ( msg.hasOwnProperty('style') ) delete msg.style
-    }
-
-    // pass the complete msg object to the uibuilder client
-    // TODO: This should have some safety validation on it!
-    if (msg._socketId) {
-        ioNs.to(msg._socketId).emit(node.ioChannels.server, msg)
-    } else {
-        ioNs.emit(node.ioChannels.server, msg)
-    }
-
-    log.debug('uibuilder - msg sent to front-end via ws channel, ', node.ioChannels.server, ': ', msg)
-
-    if (node.fwdInMessages) {
-        // Send on the input msg to output
-        node.send(msg)
-        log.debug('uibuilder - msg passed downstream to next node: ', msg)
-    }
-
-    return msg
-} // ---- End of inputHandler function ---- //
-
-// Do any complex, custom node closure code here
-function processClose(done = null, node, RED, ioNs, io, app, log) {
-    log.debug('uibuilder:nodeGo:on-close:processClose', node.url)
-
-    setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
-
-    // Let all the clients know we are closing down
-    sendControl({ 'uibuilderCtrl': 'shutdown', 'from': 'server' }, ioNs, node)
-
-    // Disconnect all Socket.IO clients
-    const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
-    if ( connectedNameSpaceSockets.length >0 ) {
-        connectedNameSpaceSockets.forEach(socketId => {
-            ioNs.connected[socketId].disconnect() // Disconnect Each socket
-        })
-    }
-    ioNs.removeAllListeners() // Remove all Listeners for the event emitter
-    delete io.nsps[node.ioNamespace] // Remove from the server namespaces
-
-    // We need to remove the app.use paths too as they will be recreated on redeploy
-    // we check whether the regex string matches the current node.url, if so, we splice it out of the stack array
-    var removePath = []
-    var urlRe = new RegExp('^' + escapeRegExp('/^\\' + urlJoin(node.url)) + '.*$');
-    app._router.stack.forEach( function(r, i, stack) {
-        let rUrl = r.regexp.toString().replace(urlRe, '')
-        if ( rUrl === '' ) {
-            removePath.push( i )
-            // @since 2017-10-15 Nasty bug! Splicing changes the length of the array so the next splice is wrong!
-            //app._router.stack.splice(i,1)
-        }
-    })
-
-    // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
-    for (var i = removePath.length -1; i >= 0; i--) {
-        app._router.stack.splice(removePath[i],1);
-    }
-
-    /*
-        // This code borrowed from the http nodes
-        // THIS DOESN'T ACTUALLY WORK!!! Static routes don't set route.route
-        app._router.stack.forEach(function(route,i,routes) {
-            if ( route.route && route.route.path === node.url ) {
-                routes.splice(i,1)
-            }
-        });
-    */
-
-    // This should be executed last if present. `done` is the data returned from the 'close'
-    // event and is used to resolve async callbacks to allow Node-RED to close
-    if (done) done()
-} // ---- End of processClose function ---- //
-
-// Simple fn to set a node status in the admin interface
-// fill: red, green, yellow, blue or grey
-// shape: ring or dot
-function setNodeStatus( status, node ) {
-    if ( typeof status !== 'object' ) status = {fill: 'grey', shape: 'ring', text: status}
-
-    node.status(status)
-}
-
-function trimSlashes(str) {
-    return str.replace(/(^\/*)|(\/*$)/g, '')
-} // ---- End of trimSlashes ---- //
-
-//from: http://stackoverflow.com/a/28592528/3016654
-function urlJoin() {
-    var paths = Array.prototype.slice.call(arguments);
-    return '/'+paths.map(function(e){return e.replace(/^\/|\/$/g,'');}).filter(function(e){return e;}).join('/');
-}
-
-//from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-}
-
-/**  Get property values from an object.
- * Can list multiple properties, the first found (or the default return) will be returned
- * @param {object} RED - RED
- * @param {object} myObj - the parent object to search for the props
- * @param {string|array} props - one or a list of property names to retrieve.
- *                               Can be nested, e.g. 'prop1.prop1a'
- *                               Stops searching when the first property is found
- * @param {any} defaultAnswer - if the prop can't be found, this is returned
- * JK @since 2017-08-17 Added
- * @todo Change instances of "in" and "hasOwnProperty" to use this function
- */
-function getProps(RED,myObj,props,defaultAnswer = []) {
-    if ( (typeof props) === 'string' ) {
-        props = [props]
-    }
-    if ( ! Array.isArray(props) ) {
-        return undefined
-    }
-    let ans
-    for (var i = 0; i < props.length; i++) {
-        try { // errors if an intermediate property doesn't exist
-            ans = RED.util.getMessageProperty(myObj, props[i])
-            if ( typeof ans !== 'undefined' ) {
-                break
-            }
-        } catch(e) {
-            // do nothing
-        }
-    }
-    return ans || defaultAnswer
-}
-
-/** Output a control msg
- * Sends to all connected clients & outputs a msg to port 2
- * @param {object} msg The message to output
- * @param {object} ioNs Socket.IO instance to use
- * @param {object} node The node object
- * @param {string=} socketId Optional. If included, only send to specific client id
- */
-function sendControl(msg, ioNs, node, socketId) {
-    if (socketId) msg._socketId = socketId
-
-    // Send to specific client if required
-    if (msg._socketId) ioNs.to(msg._socketId).emit(node.ioChannels.control, msg)
-    else ioNs.emit(node.ioChannels.control, msg)
-
-    if ( (! msg.hasOwnProperty('topic')) && (node.topic !== '') ) msg.topic = node.topic
-
-    // copy msg to output port #2
-    node.send([null, msg])
-}
 
 // EOF

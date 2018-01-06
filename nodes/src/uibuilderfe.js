@@ -102,7 +102,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '1.0.4'
+        self.version = '1.0.5'
         self.debug = false // do not change directly - use .debug method
 
         /** Debugging function

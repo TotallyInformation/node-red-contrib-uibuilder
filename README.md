@@ -253,10 +253,12 @@ _[back to top](#contents)_
 
 uibuilder has some global configuration settings available in Node-RED's `settings.js` file, typically found in `userDir` (normally `~/.node-red`).
 
+Note that you do not _have_ to have this set in `settings.js` _if_ you are not using any of the entries. Also, _none_ of the properties are required and so can be missed off if you don't need them. The Vendor Package list defaults to an empty array, Debug defaults to `false`, Middleware entries default to nothing.
+
 ```javascript
     uibuilder: {
         // List of npm modules to be made available to any uibuilder instance.
-        //   The modules MUST be manually installed at present.
+        //   The modules MUST be manually preinstalled at present. e.g. `npm install slim-js` in ~/.node-red folder.
         userVendorPackages: ['riot', 'moonjs', 'slim-js', 'ractive', 'picnic', 'accounting', 'date-format-lite'],
         // Controls the amount of debug output to ~/.node-red/uibuilder.js
         debug: 'verbose',  // error, warn, info, verbose, debug, silly; true = silly, false = none
@@ -264,10 +266,25 @@ uibuilder has some global configuration settings available in Node-RED's `settin
         //   or anything else you like. If NOT provided, uibuilder instances will also check if
         //   httpNodeMiddleware available.
         // @see https://expressjs.com/en/guide/using-middleware.html
-        middleware: function(req,res,next) {
-            console.log('I am run whenever a web request is made to ANY of the uibuilder instances')
-            next()
-        }
+        // middleware: function(req,res,next) {
+        //     console.log('I am run whenever a web request is made to ANY of the uibuilder instances')
+        //     // ... do some user auth checks ...
+        //     // if auth checks fail: next(new Error('Authentication error')) otherwise:
+        //     next()
+        // },
+        // Provides a Socket.IO middleware hook. This can be used for custom authentication/authorisation or anything else you like.
+        // socketmiddleware: function(socket, next) {
+        //     /* Some SIO related info that might be useful in security checks
+        //         //console.log('--socket.request.connection.remoteAddress--', socket.request.connection.remoteAddress)
+        //         //console.log('--socket.handshake.address--', socket.handshake.address)
+        //         //console.dir('-- Sockets connected --', io.sockets.connected)
+        //     */
+        //     console.log('Socket.IO middleware: I am only run when a client FIRST connects')
+        //     console.log('Socket Middleware. ID:', socket.conn.id, ' Remote Addr:', socket.conn.remoteAddress)
+        //     // ... do some user auth checks ...
+        //     // if auth checks fail: next(new Error('Authentication error')) otherwise:
+        //     next()
+        // },
     },
 ```
 

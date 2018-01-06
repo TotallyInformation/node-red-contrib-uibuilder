@@ -1,3 +1,13 @@
+v1.0.5
+
+- **FIX** "TypeError: Cannot read property 'middleware' of undefined" - should now be fully resolved. You should _not_ require a `uibuilder` property in `settings.js`. If you do have the property, you should _not_ require a `uibuilder.middleware` property. Also switched to `RED.settings.get('prop')` instead of `RED.settings.prop`.
+
+- **CHANGED** Split back-end code, utility functions now in uiblib.js
+
+- **CHANGED** Minimum Node.JS version bumped up to 6.11
+
+- **CHANGED** Improve documentation of the `settings.js` entries, provide better example code. Ensure everyone understands it is optional.
+
 v1.0.4
 
 - **FIX** GitHub documentation path fixes
