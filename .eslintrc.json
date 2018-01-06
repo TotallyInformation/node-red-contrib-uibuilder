@@ -23,6 +23,7 @@
       "warn",
       "never"
     ],
+    "comma-dangle":"off",
     "no-unused-vars": "warn"
   }
 }
