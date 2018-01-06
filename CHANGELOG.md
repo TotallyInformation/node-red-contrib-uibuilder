@@ -1,3 +1,7 @@
+v1.0.6
+
+- No changes, problem publishing to npm.
+
 v1.0.5
 
 - **FIX** "TypeError: Cannot read property 'middleware' of undefined" - should now be fully resolved. You should _not_ require a `uibuilder` property in `settings.js`. If you do have the property, you should _not_ require a `uibuilder.middleware` property. Also switched to `RED.settings.get('prop')` instead of `RED.settings.prop`.
