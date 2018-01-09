@@ -1,3 +1,7 @@
+v1.0.7
+
+- **CHANGED** Undo use of `RED.settings.get()` for properties in `settings.js` as this is apparently not correct. See [Node-RED issue #1543](https://github.com/node-red/node-red/issues/1543) for details.
+
 v1.0.6
 
 - No changes, problem publishing to npm.

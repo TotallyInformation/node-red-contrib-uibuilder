@@ -83,15 +83,14 @@ function winstonTimestamp() {
 
 
 module.exports = function(RED) {
+    // NB: entries in settings.js are read-only and shouldn't be read using RED.settings.get, that is only for settings that can change in-flight.
+    //     see Node-RED issue #1543.
+
     // Get the uibuilder global settings from settings.js if available, otherwise set to empty object
-    const uib_globalSettings = RED.settings.get('uibuilder') || { 'debug': false }
+    const uib_globalSettings = RED.settings.uibuilder || { 'debug': false }
 
-    // NR Bug, see issue #1543 RED.settings.get doesn't work for userDir
     const userDir = RED.settings.userDir // folder containing settings.js
-
-    const httpNodeRoot = RED.settings.get('httpNodeRoot') // root url path for http-in/out and uibuilder nodes
-
-    console.log('global Settings', {'uib_globalSettings': uib_globalSettings, 'userDir':userDir, 'httpNodeRoot': httpNodeRoot})
+    const httpNodeRoot = RED.settings.httpNodeRoot // root url path for http-in/out and uibuilder nodes
 
     // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
     // @since 2017-09-19 moved to top of module.exports. @since 2017-10-15 var not const as it can be overridden
@@ -243,9 +242,8 @@ module.exports = function(RED) {
              * Use httNodeMiddleware function which is defined in settings.js
              * as for the http in/out nodes - normally used for authentication
              */
-            let settings_httpNodeMiddleware = RED.settings.get('httpNodeMiddleware')
-            if ( typeof settings_httpNodeMiddleware === 'function' ) {
-                httpMiddleware = settings_httpNodeMiddleware
+            if ( typeof RED.settings.httpNodeMiddleware === 'function' ) {
+                httpMiddleware = RED.settings.httpNodeMiddleware
             }
         }
 
