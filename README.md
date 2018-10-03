@@ -30,22 +30,22 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
 ## 1.1. Contents
 <!-- TOC -->
 
-- [1. node-red-contrib-uibuilder](#1-node-red-contrib-uibuilder)
-    - [1.1. Contents](#11-contents)
-    - [1.2. Additional Documentation](#12-additional-documentation)
-    - [1.3. Out of the box](#13-out-of-the-box)
-    - [1.4. Features](#14-features)
-    - [1.5. Known Issues](#15-known-issues)
-    - [1.6. Dependencies](#16-dependencies)
-    - [1.7. Install](#17-install)
-    - [1.8. Node Instance Settings](#18-node-instance-settings)
-    - [1.9. uibuilder settings.js configuration](#19-uibuilder-settingsjs-configuration)
-    - [1.10. Discussions and suggestions](#110-discussions-and-suggestions)
-    - [1.11. Contributing](#111-contributing)
-    - [1.12. Developers/Contributors](#112-developerscontributors)
-    - [1.13. Preference Tree](#113-preference-tree)
-        - [1.13.1. Front-end path summary](#1131-front-end-path-summary)
-        - [1.13.2. Physical file/folder location summary](#1132-physical-filefolder-location-summary)
+* [1. node-red-contrib-uibuilder](#1-node-red-contrib-uibuilder)
+    * [1.1. Contents](#11-contents)
+    * [1.2. Additional Documentation](#12-additional-documentation)
+    * [1.3. Out of the box](#13-out-of-the-box)
+    * [1.4. Features](#14-features)
+    * [1.5. Known Issues](#15-known-issues)
+    * [1.6. Dependencies](#16-dependencies)
+    * [1.7. Install](#17-install)
+    * [1.8. Node Instance Settings](#18-node-instance-settings)
+    * [1.9. uibuilder settings.js configuration](#19-uibuilder-settingsjs-configuration)
+    * [1.10. Discussions and suggestions](#110-discussions-and-suggestions)
+    * [1.11. Contributing](#111-contributing)
+    * [1.12. Developers/Contributors](#112-developerscontributors)
+    * [1.13. Preference Tree](#113-preference-tree)
+        * [1.13.1. Front-end path summary](#1131-front-end-path-summary)
+        * [1.13.2. Physical file/folder location summary](#1132-physical-filefolder-location-summary)
 
 <!-- /TOC -->
 
@@ -308,6 +308,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Julian Knight](https://github.com/TotallyInformation)1
 - [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
 - [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections and contributed code.
+- [Ellie Lee](https://github.com/ellieejlee) - many thanks for the PR fixing duplicate msgs.
 
 
 <a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>
