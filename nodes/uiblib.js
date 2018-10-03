@@ -66,10 +66,10 @@ module.exports = {
     processClose: function(done = null, node, RED, ioNs, io, app, log) {
         log.debug('uibuilder:nodeGo:on-close:processClose', node.url)
 
-        setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
+        this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
         // Let all the clients know we are closing down
-        sendControl({ 'uibuilderCtrl': 'shutdown', 'from': 'server' }, ioNs, node)
+        this.sendControl({ 'uibuilderCtrl': 'shutdown', 'from': 'server' }, ioNs, node)
 
         // Disconnect all Socket.IO clients
         const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
