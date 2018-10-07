@@ -84,9 +84,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
     var io = require('socket.io-client')
 }
 
- // Create a single global using "new" with an anonymous function
-// ensures that everything is isolated and only what is returned is accessible
-// Isolate everything
+/** Create a single global using "new" with an anonymous function
+ * ensures that everything is isolated and only what is returned is accessible
+ * Isolate everything
+ **/
 (function () {
     // Keep a copy of the starting context
     var root = this
@@ -102,7 +103,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '1.0.8'
+        self.version = '1.0.9'
         self.debug = false // do not change directly - use .debug method
 
         /** Debugging function
@@ -306,6 +307,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             // Allow incoming control msg to change debug state (usually on the connection msg)
             if ( receivedCtrlMsg.hasOwnProperty('debug') ) self.debug = receivedCtrlMsg.debug
+
+            // @since 2018-10-07 v1.0.9: Work out local time offset from server
+            //console.log( "Hello" )
+            self.uiDebug('log', 'receivedCtrlMsg')
+            if ( receivedCtrlMsg.hasOwnProperty('serverTimestamp') ) {
+                self.uiDebug('log', ((new Date()) - receivedCtrlMsg.serverTimestamp) )
+            }
 
             self.set('ctrlMsg', receivedCtrlMsg)
             self.set('msgsCtrl', self.msgsCtrl + 1)
@@ -600,7 +608,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             if ( self.autoSendReady === true ) {
                 //self.send({'uibuilderCtrl':'page load complete'},self.ioChannels.control)
                 // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
-                self.send({'uibuilderCtrl':'ready for content', 'cacheControl':'REPLAY'},self.ioChannels.control)
+                self.send({
+                    'uibuilderCtrl':'ready for content',
+                    'cacheControl':'REPLAY',
+                    'from': 'client', // @since 2018-10-07 v1.0.9
+                },self.ioChannels.control)
             }
         })
 

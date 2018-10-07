@@ -165,7 +165,10 @@ module.exports = function(RED) {
         }
     }
 
-
+    /**
+     * Run the node instance
+     * @param {*} config
+     */
     function nodeGo(config) {
         // Create the node
         RED.nodes.createNode(this, config)
@@ -439,7 +442,10 @@ module.exports = function(RED) {
                 'cacheControl': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
                 'debug': node.debugFE,
                 '_socketId': socket.id,
-                'from': 'server'
+                'from': 'server',
+                // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
+                // time difference (UTC->Local) without needing clever libraries.
+                'serverTimestamp': (new Date()),
             }, ioNs, node)
             //ioNs.emit( node.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
 
