@@ -285,6 +285,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // Track how many messages have been received
             self.set('msgsReceived', self.msgsReceived + 1)
 
+            // @since 2018-10-07 v1.0.9: Work out local time offset from server
+            if ( receivedMsg.hasOwnProperty('serverTimestamp') ) {
+                self.uiDebug('log', ((new Date()) - receivedMsg.serverTimestamp) )
+            }
+
             /** Test auto-response - not really required but useful when getting started
                 if (self.debug) {
                     self.send({payload: 'From: uibuilderfe - we got a message from you, thanks'})
@@ -307,13 +312,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             // Allow incoming control msg to change debug state (usually on the connection msg)
             if ( receivedCtrlMsg.hasOwnProperty('debug') ) self.debug = receivedCtrlMsg.debug
-
-            // @since 2018-10-07 v1.0.9: Work out local time offset from server
-            //console.log( "Hello" )
-            self.uiDebug('log', 'receivedCtrlMsg')
-            if ( receivedCtrlMsg.hasOwnProperty('serverTimestamp') ) {
-                self.uiDebug('log', ((new Date()) - receivedCtrlMsg.serverTimestamp) )
-            }
 
             self.set('ctrlMsg', receivedCtrlMsg)
             self.set('msgsCtrl', self.msgsCtrl + 1)
