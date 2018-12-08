@@ -1,11 +1,17 @@
-[![npm version](https://img.shields.io/npm/v/node-red-contrib-uibuilder.svg?style=flat-square)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
-[![npm](https://img.shields.io/npm/dt/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
-[![npm downloads](https://img.shields.io/npm/dm/node-red-contrib-uibuilder.svg?style=flat-square)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
+[![NPM Version](https://img.shields.io/npm/v/node-red-contrib-uibuilder.svg?style=flat-square)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
+[![NPM Total Downloads](https://img.shields.io/npm/dt/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
+[![NPM Downloads per month](https://img.shields.io/npm/dm/node-red-contrib-uibuilder.svg?style=flat-square)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![GitHub repo size in bytes](https://img.shields.io/github/repo-size/badges/shields.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
 [![GitHub last commit](https://img.shields.io/github/last-commit/totallyinformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
 [![GitHub stars](https://img.shields.io/github/stars/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/watchers)
 [![GitHub watchers](https://img.shields.io/github/watchers/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/stargazers)
 [![GitHub license](https://img.shields.io/github/license/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/LICENSE)
+[![Min Node Version](https://img.shields.io/node/v/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
+[![Package Quality](http://npm.packagequality.com/shield/node-red-contrib-uibuilder.png)](http://packagequality.com/#?package=node-red-contrib-uibuilder)
+[![Dependencies](https://img.shields.io/david/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
+[![Open Issues](https://img.shields.io/github/issues-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues)
+[![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
+
 
 # 1. node-red-contrib-uibuilder
 
