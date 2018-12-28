@@ -1,3 +1,8 @@
+v1.0.10
+
+- **FIX** Fixed [Issue #39](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/39) - jQuery incorrect URL
+  referenced in the html template file. Thanks to [Kevin Smets](https://github.com/kevin-smets) for reporting.
+
 v1.0.9
 
 - **CHANGED** When a client connects, it receives a control message (`msg.uibuilderCtrl` = 'client connect'). That message now contains the property `msg.serverTimestamp`. This can be used in client code to work out the difference between the server time (which should always be in UTC) and the client browser time without needing any clever (and big) libraries such as MomentJS.
