@@ -1,3 +1,10 @@
+v1.0.12
+
+- **FIX** Seems that the information given to me in [Issue 39]() wasn't quite correct. I should have done more investigation first!
+  Reverting the location of JQuery in the template back to its original, correct, location.
+
+  You won't notice unless you create a new node instance using the default jQuery `index.html` file.
+
 v1.0.11
 
 - **NEW** Add some example flows to the example libary. 
