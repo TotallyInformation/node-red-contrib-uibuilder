@@ -1,0 +1,83 @@
+[
+    {
+        "id": "3df82c5e.297e94",
+        "type": "uibuilder",
+        "z": "d480ffdb.73b02",
+        "name": "",
+        "topic": "",
+        "url": "moon",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "debugFE": true,
+        "copyIndex": true,
+        "x": 630,
+        "y": 260,
+        "wires": [
+            [
+                "47bc9ad3.5d36a4"
+            ],
+            [
+                "9a76db10.801338"
+            ]
+        ]
+    },
+    {
+        "id": "2ffb7973.e191d6",
+        "type": "inject",
+        "z": "d480ffdb.73b02",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 480,
+        "y": 260,
+        "wires": [
+            [
+                "3df82c5e.297e94"
+            ]
+        ]
+    },
+    {
+        "id": "47bc9ad3.5d36a4",
+        "type": "debug",
+        "z": "d480ffdb.73b02",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 830,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "9a76db10.801338",
+        "type": "debug",
+        "z": "d480ffdb.73b02",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 810,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "47d717a9.c2e4b8",
+        "type": "comment",
+        "z": "d480ffdb.73b02",
+        "name": "uibuilder/MoonJS Test",
+        "info": "[Front-End](/moon)\n\nDon't forget to install MoonJS and adjust the\n`settings.js` file.\n\nThen update the `~/.node-red/uibuilder/moon/src` \nfiles:\n\n* `index.html`\n* `index.js`\n* `index.css`\n\nAccording to the MoonJS example(s) in the \n[WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example,-MoonJS-with-Mini.CSS)",
+        "x": 520,
+        "y": 220,
+        "wires": []
+    }
+]

@@ -1,0 +1,117 @@
+[
+    {
+        "id": "cbbd2fec.a3984",
+        "type": "uibuilder",
+        "z": "d480ffdb.73b02",
+        "name": "",
+        "topic": "",
+        "url": "cachetest",
+        "fwdInMessages": false,
+        "allowScripts": true,
+        "allowStyles": true,
+        "debugFE": true,
+        "copyIndex": true,
+        "x": 720,
+        "y": 540,
+        "wires": [
+            [
+                "e03f7fec.cf55e"
+            ],
+            [
+                "c3276aed.503c08",
+                "6eca8237.3e054c"
+            ]
+        ]
+    },
+    {
+        "id": "e03f7fec.cf55e",
+        "type": "debug",
+        "z": "d480ffdb.73b02",
+        "name": "home data out",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 900,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "e5b2a1e4.0e37b",
+        "type": "function",
+        "z": "d480ffdb.73b02",
+        "name": "cache control",
+        "func": "// Expects input msgs with topic set\n\n// saved context\nvar homeMsgs = context.get('homeMsgs') || {}\n\n// Replay cache if requested\nif ( msg.hasOwnProperty('cacheControl') && msg.cacheControl === 'REPLAY' ) {\n    for (var topic in homeMsgs) {\n        // Only send to a single client if we can\n        if ( msg.hasOwnProperty('_socketId') )\n            node.send({\n                \"topic\": topic, \n                \"payload\": homeMsgs[topic],\n                \"_socketId\": msg._socketId\n            })\n        else\n            node.send({\n                \"topic\": topic, \n                \"payload\": homeMsgs[topic]\n            })\n    }\n    return null\n}\n\n// ignore cacheControl and uibuilder control messages\nif ( msg.hasOwnProperty('cacheControl') || msg.hasOwnProperty('uibuilderCtrl') ) return null\n\n// Keep the last msg.payload by topic\nhomeMsgs[msg.topic] = msg.payload\n\n// save context for next time\ncontext.set('homeMsgs', homeMsgs)\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 550,
+        "y": 540,
+        "wires": [
+            [
+                "cbbd2fec.a3984",
+                "e55c92af.5ef26"
+            ]
+        ]
+    },
+    {
+        "id": "c3276aed.503c08",
+        "type": "debug",
+        "z": "d480ffdb.73b02",
+        "name": "home controls",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 900,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "5a26e6f9.dcaea8",
+        "type": "link in",
+        "z": "d480ffdb.73b02",
+        "name": "home-replay",
+        "links": [
+            "6eca8237.3e054c"
+        ],
+        "x": 435,
+        "y": 540,
+        "wires": [
+            [
+                "e5b2a1e4.0e37b"
+            ]
+        ]
+    },
+    {
+        "id": "6eca8237.3e054c",
+        "type": "link out",
+        "z": "d480ffdb.73b02",
+        "name": "home-controls",
+        "links": [
+            "5a26e6f9.dcaea8"
+        ],
+        "x": 835,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "e55c92af.5ef26",
+        "type": "debug",
+        "z": "d480ffdb.73b02",
+        "name": "input messages",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 720,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "5981426b.daa55c",
+        "type": "comment",
+        "z": "d480ffdb.73b02",
+        "name": "Test Caching using simple function",
+        "info": "See https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache\nfor details.",
+        "x": 560,
+        "y": 600,
+        "wires": []
+    }
+]
