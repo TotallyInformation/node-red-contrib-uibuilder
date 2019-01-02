@@ -1,3 +1,8 @@
+v1.0.11
+
+- **NEW** Add some example flows to the example libary. 
+  Use the Node-RED administration UI's menu `Import > Examples > uibuilder` to import them.
+
 v1.0.10
 
 - **FIX** Fixed [Issue #39](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/39) - jQuery incorrect URL
