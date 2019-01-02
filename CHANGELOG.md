@@ -2,6 +2,7 @@ v1.0.11
 
 - **NEW** Add some example flows to the example libary. 
   Use the Node-RED administration UI's menu `Import > Examples > uibuilder` to import them.
+- **FIX** Bug in socket.io namespace if httpNodeRoot was set to something other than default. Also closes [Issue #30](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/30)
 
 v1.0.10
 

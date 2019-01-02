@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 // @ts-check
-'use strict';
+'use strict'
 
 module.exports = {
     // Complex, custom code when processing an incoming msg should go here
@@ -135,12 +135,19 @@ module.exports = {
 
     /** Joins all arguments as a URL string
      * @see http://stackoverflow.com/a/28592528/3016654
+     * @since v1.0.10, fixed potential double // issue
      * @augments {string} URL fragments
      * @returns {string}
      */
     urlJoin: function() {
-        var paths = Array.prototype.slice.call(arguments);
-        return '/'+paths.map(function(e){return e.replace(/^\/|\/$/g,'');}).filter(function(e){return e;}).join('/');
+        const paths = Array.prototype.slice.call(arguments)
+        const url =
+            '/'+paths.map(function(e){
+                return e.replace(/^\/|\/$/g,'')
+            }).filter(function(e){
+                return e
+            }).join('/')
+        return  url.replace('//','/')
     }, // ---- End of urlJoin ---- //
 
     /** Escape a user input string to use in a regular expression

@@ -125,10 +125,13 @@ module.exports = function(RED) {
 
     log.verbose('----------------- uibuilder - module.exports -----------------')
 
-    // Holder for Socket.IO - we want this to survive redeployments of each node instance
-    // so that existing clients can be reconnected.
-    // Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
-    // modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
+    /** Holder for Socket.IO - we want this to survive redeployments of each node instance
+     *  so that existing clients can be reconnected.
+     * Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
+     * modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
+     * NOTE: This ignores RED.settings.httpNodeRoot deliberately, it will always be /uibuilder/socket.io
+     *       otherwise it is impossible to have a standard index.html file.
+     **/
     log.debug('uibuilder: Socket.IO initialisation - Socket Path=', uiblib.urlJoin(moduleName, 'socket.io') )
     var io = socketio.listen(RED.server, {'path': uiblib.urlJoin(moduleName, 'socket.io')}) // listen === attach
     // @ts-ignore
@@ -216,7 +219,8 @@ module.exports = function(RED) {
         // The channel names for Socket.IO
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
         // Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
-        node.ioNamespace = '/' + uiblib.trimSlashes(httpNodeRoot + '/' + node.url).replace(/\/\//g, '')
+        // @since v1.0.10, changed namespace creation to correct a missing / if httpNodeRoot had been changed from the default
+        node.ioNamespace = uiblib.urlJoin(httpNodeRoot, node.url)
 
         log.verbose(  'io', { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
 
