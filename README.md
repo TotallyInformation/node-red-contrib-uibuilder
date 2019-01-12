@@ -14,43 +14,52 @@
 
 # 1. node-red-contrib-uibuilder
 
-A Node-RED web user interface builder. Aims to Provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
+A Node-RED web user interface builder. UIbuilder Aims to Provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
 
-Designed as an alternative to the Node-RED Dashboard. See the *[Known Issues](#known-issues)* section below and the *[To Do](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/To-Do)* WIKI page  for what might still need some work.
+The key features and benefits are:
 
-This module should minimise any boilerplate that you (as a user) are forced to create, it should be lightweight and should be usable on any device (though obviously depending on what libraries you add). You shouldn't need to have in-depth knowledge of Node.JS nor npm, nor should you need access to the underlying file system. (Those last two points are aims for the future, we aren't there yet I'm afraid). More information is available in the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
+* Designed as an alternative to the Node-RED official Dashboard.
+* Have as many custom user interfaces as you want. Just 1 node is needed for each entry point. Use link nodes to send data from other parts of your flows.
+* Has a control interface separate to the message interface. Know when a browser connects or disconnects, send cached data.
+* Much lighter in weight and more mobile friendly than the Node-RED official Dashboard (assuming you don't use Angular as your framework).
+* Use **any** front-end framework you like. Tested with at least [JQuery](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-JQuery), [VueJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Simple-Example-using-VueJS), [MoonJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example,-MoonJS-with-Mini.CSS), [REACT](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-ReactJS), [UmbrellaJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example-Umbrella-JS-and-Picnic-CSS) and [Riot](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Basic-uibuilder-RIOT-example-displaying-values,-switch-and-select-box).
+* Use without any front-end framework if you like. Keep it light and simple.
+* The included front-end library provides connectivity to Node-RED and msg event handling.
+* Write your own HTML, CSS and JavaScript to define the perfect front-end user interface for your needs.
+* Needs almost no boilerplate in your front-end code in order to work.
+* Simple included example works out-of-the-box, no need to install anything other than the node.
+* MoonJS extended and caching example flows included.
 
-Currently, this module allow users to use their own html/css/js/etc code to define a UI on a specific URL (end-point) that is defined in Node-RED by this node. Also to easily allow loading of external front-end libraries.
+Current limitations are:
 
-*Breaking Change in 0.4.0*: You must have at least `index.html` in your local override folder.
+* You have to write your own HTML, uibuilder doesn't (yet) do it for you. *This is by design. I hope to have a component design available at some point which will give additional options and make the UI building easier.*
+* You need access to your server's filing system to edit the front-end files. *This is due to be improved in a future release, you will then be able to edit the files from within the Node-RED admin UI.*
+* You have to remember to install any front-end libraries (e.g. Vue). Except for JQuery that Node-RED installs anyway. *I hope to provide an installer at some future point to remove this restriction.*
+* You have to know the front-end library locations for installed libraries and edit your HTML accordingly. *I hope to add known libraries at some point so that the admin UI will give you the correct entry points.*
+* You cannot (yet) compile/compress your custom front-end code (HMTL, JS, SCSS, etc.) for efficiency. *I hope to add this as a future feature.*
 
-*Front-end changes in 0.4.2 & 0.4.5*: You will want the new master template files as they use a new library that makes your own custom code very much easier.
 
-Eventually, you will be able to "compile" src files using webpack from a button in the nodes config. That will let you using all manner of frameworks such as Vue, REACT, Foundation, etc.
-
-The final evolution will be to provide configuration nodes to let you define framework or html/css/js files in Node-RED itself so that you won't need access to the servers file system at all.
-
-This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of greater complexity and a need to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
+This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of having to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
 
 ## 1.1. Contents
 <!-- TOC -->
 
 * [1. node-red-contrib-uibuilder](#1-node-red-contrib-uibuilder)
-    * [1.1. Contents](#11-contents)
-    * [1.2. Additional Documentation](#12-additional-documentation)
-    * [1.3. Out of the box](#13-out-of-the-box)
-    * [1.4. Features](#14-features)
-    * [1.5. Known Issues](#15-known-issues)
-    * [1.6. Dependencies](#16-dependencies)
-    * [1.7. Install](#17-install)
-    * [1.8. Node Instance Settings](#18-node-instance-settings)
-    * [1.9. uibuilder settings.js configuration](#19-uibuilder-settingsjs-configuration)
-    * [1.10. Discussions and suggestions](#110-discussions-and-suggestions)
-    * [1.11. Contributing](#111-contributing)
-    * [1.12. Developers/Contributors](#112-developerscontributors)
-    * [1.13. Preference Tree](#113-preference-tree)
-        * [1.13.1. Front-end path summary](#1131-front-end-path-summary)
-        * [1.13.2. Physical file/folder location summary](#1132-physical-filefolder-location-summary)
+  * [1.1. Contents](#11-contents)
+  * [1.2. Additional Documentation](#12-additional-documentation)
+  * [1.3. Out of the box](#13-out-of-the-box)
+  * [1.4. Features](#14-features)
+  * [1.5. Known Issues](#15-known-issues)
+  * [1.6. Dependencies](#16-dependencies)
+  * [1.7. Install](#17-install)
+  * [1.8. Node Instance Settings](#18-node-instance-settings)
+  * [1.9. uibuilder settings.js configuration](#19-uibuilder-settingsjs-configuration)
+  * [1.10. Discussions and suggestions](#110-discussions-and-suggestions)
+  * [1.11. Contributing](#111-contributing)
+  * [1.12. Developers/Contributors](#112-developerscontributors)
+  * [1.13. Preference Tree](#113-preference-tree)
+    * [1.13.1. Front-end path summary](#1131-front-end-path-summary)
+    * [1.13.2. Physical file/folder location summary](#1132-physical-filefolder-location-summary)
 
 <!-- /TOC -->
 
@@ -172,18 +181,17 @@ _[back to top](#contents)_
 I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
 
 - It is common to need to send a number of messages from Node-RED to the front-end,
-  specifically when a new client is loaded or a user refreshes the client browser. This is not catered for natively by this node. You can either handle this manually or use the companion node [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache). Simply send the control messages to an infocache node (or manual equivalent - see the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)) and it will resend all cached messages back to the individual client.
+  specifically when a new client is loaded or a user refreshes the client browser. This is not catered for natively by this node. You can either handle this manually ~~or use the companion node [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache)~~ (not yet written I'm afraid). Simply send the control messages to an infocache node (or manual equivalent - see the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)) and it will resend all cached messages back to the individual client.
 
-- **Socket.IO is not yet secured!** Do not use over the Internet unless you *really* don't care
-  about the data you are passing back and forth. I would love some help with this so if you know how, please issue a pull request. It should use TLS encryption if your Node-RED site uses it but this has not yet been tested.
+- **Socket.IO isn't secured by default** Use Node-RED's security features to secure things properly before considering use over the Internet.
 
-  You can work around this by using a proxy such as NGINX or HAproxy to be the TLS endpoint. Just make sure you proxy the websocket traffic as well as the standard web traffic.
+  You could also work around this by using a proxy such as NGINX or HAproxy to be the TLS endpoint. Just make sure you proxy the websocket traffic as well as the standard web traffic.
 
 - Uniqueness of the URL is not yet being validated for multiple instances, could cause
   some "interesting" effects!
 
 - Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`.
-  Some installs don't seem to be doing this for some reason. See [Issue 2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/2). Added some extra code to try and deal with this but it may not be 100% reliable.
+  Of course, you can use them direct from an Internet CDN if you like.
 
 _[back to top](#contents)_
 
@@ -191,17 +199,17 @@ _[back to top](#contents)_
 
 See the [package.json](package.json) file, these should all be installed for you. Currently:
 
-- [normalize.css](https://necolas.github.io/normalize.css/) - front-end only
-- [JQuery](https://jquery.com/) - front-end only
-- [Socket.IO](https://socket.io/) - front-end and server
-- [serve.static](https://github.com/expressjs/serve-static) - server only
-- [winston](https://github.com/winstonjs/winston) - server only
+- [JQuery](https://jquery.com/) - front-end only, remove from your index.HTML if not needed. This is already installed by Node-RED itself.
+- [normalize.css](https://necolas.github.io/normalize.css/) - front-end only. Not needed if using a CSS framework like Bootstrap or Picnic.CSS. Installed by uibuilder.
+- [Socket.IO](https://socket.io/) - front-end and server. Installed by uibuilder to ensure a known version (Node-RED installs its own version).
+- [serve.static](https://github.com/expressjs/serve-static) - server only. Installed by uibuilder.
+- [winston](https://github.com/winstonjs/winston) - server only - for more detailed debug logging if needed. Installed by uibuilder.
 
 Any packages that you define in `settings.js` must currently be installed by you under your `userDir` folder prior to use.
 
 ## 1.7. Install
 
-It is now best to install Node-RED nodes using the Node-RED admin interface. Look for the "Manage Palette" menu item. Alternatively, Run the following command in your Node-RED user directory (typically `~/.node-red`) `npm install node-red-contrib-uibuilder`.
+It is now best to install Node-RED nodes using the Node-RED admin interface. Look for the "Manage Palette" menu item. Alternatively, Run the following command in your Node-RED user directory (typically `~/.node-red`) `npm install --save node-red-contrib-uibuilder`.
 
 Run Node-RED and add an instance of the UI Builder node. Set the required URL path and deploy.
 
@@ -310,7 +318,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 
 ## 1.12. Developers/Contributors
 
-- [Julian Knight](https://github.com/TotallyInformation)1
+- [Julian Knight](https://github.com/TotallyInformation) - the designer and main author.
 - [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
 - [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections and contributed code.
 - [Ellie Lee](https://github.com/ellieejlee) - many thanks for the PR fixing duplicate msgs.
