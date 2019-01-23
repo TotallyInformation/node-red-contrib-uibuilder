@@ -56,12 +56,12 @@ module.exports = {
 
     /** Do any complex, custom node closure code here
      * @param {function|null} [done=null]
-     * @param {object} node
-     * @param {object} RED
-     * @param {object} ioNs - Instance of Socket.IO Namespace
-     * @param {object} io - Instance of Socket.IO
-     * @param {object} app - Instance of ExpressJS app
-     * @param {object} log - Winston logging instance
+     * @param {Object} node
+     * @param {Object} RED
+     * @param {Object} ioNs - Instance of Socket.IO Namespace
+     * @param {Object} io - Instance of Socket.IO
+     * @param {Object} app - Instance of ExpressJS app
+     * @param {Object} log - Winston logging instance
      */
     processClose: function(done = null, node, RED, ioNs, io, app, log) {
         log.debug('uibuilder:nodeGo:on-close:processClose', node.url)
@@ -116,8 +116,8 @@ module.exports = {
 
     /** Simple fn to set a node status in the admin interface
      * fill: red, green, yellow, blue or grey
-     * @param {object|string} status
-     * @param {object} node
+     * @param {Object|string} status
+     * @param {Object} node
      */
     setNodeStatus: function( status, node ) {
         if ( typeof status !== 'object' ) status = {fill: 'grey', shape: 'ring', text: status}
@@ -159,11 +159,11 @@ module.exports = {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
     }, // ---- End of escapeRegExp ---- //
 
-    /**  Get property values from an object.
+    /**  Get property values from an Object.
      * Can list multiple properties, the first found (or the default return) will be returned
      * Makes use of RED.util.getMessageProperty
-     * @param {object} RED - RED
-     * @param {object} myObj - the parent object to search for the props
+     * @param {Object} RED - RED
+     * @param {Object} myObj - the parent object to search for the props
      * @param {string|array} props - one or a list of property names to retrieve.
      *                               Can be nested, e.g. 'prop1.prop1a'
      *                               Stops searching when the first property is found
@@ -194,9 +194,9 @@ module.exports = {
 
     /** Output a control msg
      * Sends to all connected clients & outputs a msg to port 2
-     * @param {object} msg The message to output
-     * @param {object} ioNs Socket.IO instance to use
-     * @param {object} node The node object
+     * @param {Object} msg The message to output
+     * @param {Object} ioNs Socket.IO instance to use
+     * @param {Object} node The node object
      * @param {string=} socketId Optional. If included, only send to specific client id
      */
     sendControl: function(msg, ioNs, node, socketId) {
