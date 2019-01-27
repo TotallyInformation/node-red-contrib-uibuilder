@@ -95,7 +95,7 @@ module.exports = function(RED) {
     var debug = uib_globalSettings.debug || false // JK @since 2017-08-17, Change default answer to false
 
     // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
-    // @TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
+    // TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
     var winstonTransport
     var log = function(){} // dummy log function - replaced by Winston if debug config is set @since 2019-01-27
     if (debug) {
@@ -115,7 +115,7 @@ module.exports = function(RED) {
             level: debug === true ? 'silly' : debug, // error, warn, info, verbose, debug, silly; true=silly
             // Where do we want log output to go?
             transports: [
-                // @TODO: format console output to match RED.log
+                // TODO: format console output to match RED.log
                 winstonTransport
             ]
         })
@@ -195,6 +195,9 @@ module.exports = function(RED) {
         node.debugFE       = config.debugFE
         node.copyIndex     = config.copyIndex
         //#endregion ----
+
+        // TODO
+        console.log('uibuilder: ', config.template)
 
         log.verbose( 'node settings', {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
 
@@ -476,7 +479,7 @@ module.exports = function(RED) {
                 // Send out the message for downstream flows
                 // TODO: This should probably have safety validations!
                 node.send(msg)
-            });
+            })
             socket.on(node.ioChannels.control, function(msg) {
                 log.debug(
                     `UIbuilder: ${node.url}, Control Msg from client, ID: ${socket.id}, Msg: ${msg.payload}`
@@ -503,7 +506,7 @@ module.exports = function(RED) {
                 // Send out the message on port #2 for downstream flows
                 uiblib.sendControl(msg, ioNs, node)  // fn adds topic if needed
                 //node.send([null,msg])
-            });
+            })
 
             socket.on('disconnect', function(reason) {
                 node.ioClientsCount--
@@ -637,6 +640,7 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.get('/uibfiles', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         // Send back a JSON response body containing the list of files that can be edited
+        // TODO: Dynamic list from fs
         res.json([
             'index.html', 'index.js', 'index.css', 'manifest.json'
         ])
@@ -651,7 +655,7 @@ module.exports = function(RED) {
     RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         // TODO: validate parameters
         const fpath = path.join(userDir, moduleName, req.query.url, 'src', req.query.fname)
-        console.log(fpath, req.query.url, req.query.fname, userDir)
+        //console.log(fpath, req.query.url, req.query.fname, userDir)
 
         // Send back a plain text response body containing content of the file
         // TODO: validate path and file

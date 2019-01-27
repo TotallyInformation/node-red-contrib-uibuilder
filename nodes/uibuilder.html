@@ -39,6 +39,7 @@
             allowStyles: { value: false },
             debugFE: { value: false },
             copyIndex: { value: true },
+            template: { value: '' },
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -88,7 +89,6 @@
                 mode: 'ace/mode/html',
                 value: $("#node-input-template").val()
             })
-            //that.editor.focus();
             $("#node-input-format").change(function() {
                 const mod = "ace/mode/"+$("#node-input-format").val()
                 that.editor.getSession().setMode({
@@ -96,24 +96,43 @@
                     v: Date.now()
                 })
             })
+            // TODO: Get list of installed themes, add chooser, save current choice
+            //that.editor.setTheme("ace/theme/monokai")
+            //ace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
+            //ace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
 
             // Handle the edit button (and disable default click)
             $("#node-edit-file").click(function(e) {
                 e.preventDefault() // don't trigger normal click event
+                // TODO: change mode to match file type
                 // Get the content of the file via the admin API
                 $.get( 'uibgetfile?url=' + $('#node-input-url').val() + '&fname=' + $('#node-input-filename').val(), function(data){
-                    console.log('uibgetfile', data)
-                    //$(".node-input-template-editor").val(data)
                     $("#node-input-format").val('html')
                     that.editor.getSession().setValue(data)
-                    //that.editor.setTheme("ace/theme/monokai")
+                    that.editor.focus()
                 })
             })
         },
-        //oneditsave: function() { },
-        //oneditresize: function(size) { },
-        // Do any setup when node added to palette
-        //onpaletteadd: function() { },
+        oneditsave: function() {
+            $("#node-input-template").val(this.editor.getValue());
+            this.editor.destroy();
+            delete this.editor;
+        },
+        oneditcancel: function() {
+            this.editor.destroy();
+            delete this.editor;
+        },
+        // oneditresize: function(size) {
+        //     var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+        //     var height = $("#dialog-form").height();
+        //     for (var i=0; i<rows.size(); i++) {
+        //         height -= $(rows[i]).outerHeight(true);
+        //     }
+        //     var editorRow = $("#dialog-form>div.node-text-editor-row");
+        //     height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+        //     $(".node-text-editor").css("height",height+"px");
+        //     this.editor.resize();
+        // },
     })
 </script>
 
