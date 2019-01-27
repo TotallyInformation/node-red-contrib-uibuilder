@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2017 Julian Knight (Totally Information)
+    Copyright (c) 2019 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 <script type="text/javascript">
     function buildUrlList(pkgs, url) {
-        if ( !Array.isArray(pkgs) ) pkgs = [pkgs]
+        if (!Array.isArray(pkgs)) pkgs = [pkgs]
         url = RED.settings.httpNodeRoot + url
         $('#fepaths').empty()
-        pkgs.forEach(function(element) {
+        pkgs.forEach(function (element) {
             var strUrl = url + '/vendor/' + element + '/'
             $('#fepaths').append('<li><i>' + strUrl + '</i></li>')
         }, this);
@@ -27,7 +27,7 @@
         $('#fepaths').append('<li><a href="' + url + '/vendor/normalize.css/normalize.css">' + url + '/vendor/normalize.css/normalize.css</a></li>') // always the same
         $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
     }
-    RED.nodes.registerType( 'uibuilder', {
+    RED.nodes.registerType('uibuilder', {
         category: 'UI Builder',
         color: '#E6E0F8',
         defaults: {
@@ -38,7 +38,7 @@
             allowScripts: { value: false },
             allowStyles: { value: false },
             debugFE: { value: false },
-            copyIndex:  { value: true },
+            copyIndex: { value: true },
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -46,8 +46,10 @@
         outputLabels: ['Data', 'Control Msgs'],
         icon: 'ui_template.png',
         paletteLabel: 'UI Builder',
-        label: function() { return this.url || this.name || 'UI Builder'; },
-        oneditprepare: function() {
+        label: function () { return this.url || this.name || 'UI Builder'; },
+        oneditprepare: function () {
+            const that = this
+
             // Set the checkbox states
             $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
             $('#node-input-allowScripts').prop('checked', this.allowScripts)
@@ -61,18 +63,61 @@
             // List the front-end url paths available
             buildUrlList(pkgs, this.url)
             // When the url changes,
-            $('#node-input-url').change(function(){
+            $('#node-input-url').change(function () {
                 // Show the root URL
                 $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
                 // Update the list of available paths
                 buildUrlList(pkgs, $(this).val())
-            });
+            })
+            // @since 2019-01-27 - adding file editor
+            // Build the file list
+            $.getJSON('uibfiles',function(files) {
+                console.log(files)
+                $("#node-input-filename option").remove()
+                $.each(files, function (i, item) {
+                    $('#node-input-filename').append($('<option>', { 
+                        value: item,
+                        text : item, 
+                    }))
+                })
+            })
+
+            //
+            // that.editor = RED.editor.createEditor({
+            //     id: 'node-input-template-editor',
+            //     mode: 'ace/mode/html',
+            //     value: $("#node-input-template").val()
+            // })
+            //that.editor.focus();
+            $("#node-input-format").change(function() {
+                const mod = "ace/mode/"+$("#node-input-format").val()
+                that.editor.getSession().setMode({
+                    path: mod,
+                    v: Date.now()
+                })
+            })
+
+            // Handle the edit button (and disable default click)
+            $("#node-edit-file").click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                // Get the content of the file via the admin API
+                $.get( 'uibgetfile?url=' + $('#node-input-url').val() + '&fname=' + $('#node-input-filename').val(), function(data){
+                    console.log('uibgetfile', data)
+                    //$(".node-input-template-editor").val(data)
+                    $("#node-input-format").val('html')
+                    that.editor = RED.editor.createEditor({
+                        id: 'node-input-template-editor',
+                        mode: 'ace/mode/html',
+                        value: data
+                    })
+                })
+            })
         },
         //oneditsave: function() { },
         //oneditresize: function(size) { },
         // Do any setup when node added to palette
         //onpaletteadd: function() { },
-    });
+    })
 </script>
 
 <script type="text/x-red" data-template-name="uibuilder">
@@ -94,34 +139,72 @@
         <input type="text" id="node-input-url">
     </div>
 
-    <!-- Forward input msgs to output -->
+    <!-- Forward and debug flags -->
     <div class="form-row">
+        <!-- Forward input msgs to output -->
         <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-fwdInMessages" style="width: 70%;">Forward received messages direct to output?</label>
+        <label for="node-input-fwdInMessages" style="width: 40%;" title="forward inbound msg's direct to the output">
+            Forward input to output?
+        </label>
+        <!-- Debug Front-End? -->
+        <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-debugFE" style="width: 40%;" title="Turn on debugging in the front-end library">
+            Debug Front-End?
+        </label>
     </div>
 
-    <!-- Allow scripts to be passed to front-end? -->
-    <div class="form-row" title="Add msg.script to the input msg">
+    <!-- Allow scripts/styles to be passed to front-end? -->
+    <div class="form-row" title="Add msg.script/msg.style to the input msg">
+        Allow passing to the front-end: 
         <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-allowScripts" style="width: 70%;">Allow scripts to be passed to front-end?</label>
-    </div>
-    <!-- Allow styles to be passed to front-end? -->
-    <div class="form-row" title="Add msg.style to the input msg">
+        <label for="node-input-allowScripts" style="">Scripts? (JS)</label>
         <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-allowStyles" style="width: 70%;">Allow styles to be passed to front-end?</label>
-
+        <label for="node-input-allowStyles" style="">Styles? (CSS)</label>
     </div>
 
     <!-- Copy index.(css|js) to local assets if they dont exist? -->
     <div class="form-row">
         <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-copyIndex" style="width: 70%;">Copy index.(css|js) from templates to local if they don't exist?</label>
+        <label for="node-input-copyIndex" style="width: 90%;">Copy index.(css|js) from templates to local if they don't exist?</label>
     </div>
 
-    <!-- Debug Front-End? -->
-    <div class="form-row" title="See browser dev console if turned on">
-        <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-debugFE" style="width: 70%;">Debug Front-End?</label>
+    <!-- Drop-down for selecting file to edit -->
+    <div class="form-row">
+        <label for="node-input-filename"><i class="fa fa-code"></i> Filename</label>
+        <select id="node-input-filename" style="width: 60%;">
+            <option value="html">index.html</option>
+            <option value="js">index.js</option>
+            <option value="css">index.css</option>
+        </select>
+        <!-- Edit Button -->
+        <a class="btn" id="node-edit-file" href="#" target="_blank">Edit</span></a>
+    </div>
+
+    <!-- File Editor -->
+    <div id="file-edit">
+        <!-- Title and language selector -->
+        <div class="form-row" style="position: relative; margin-bottom: 0px;">
+            <label for="node-input-template"><i class="fa fa-file-code-o"></i> File</label>
+            <input type="hidden" id="node-input-template" autofocus="autofocus">
+            <div style="position: absolute; right:0;display:inline-block; text-align: right; font-size: 0.8em;">
+                <span data-i18n="uibuilder.label.format"></span>:
+                <select id="node-input-format" style="width:110px; font-size: 10px !important;  height: 24px; padding:0;">
+                    <option value="handlebars">mustache</option>
+                    <option value="html">HTML</option>
+                    <option value="json">JSON</option>
+                    <option value="javascript">Javascript</option>
+                    <option value="css">CSS</option>
+                    <option value="markdown">Markdown</option>
+                    <option value="yaml">YAML</option>
+                    <option value="text">Text</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Edit box -->
+        <div class="form-row node-text-editor-row">
+            <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
+        </div>
     </div>
 
     <!-- Info -->

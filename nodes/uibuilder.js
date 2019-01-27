@@ -46,8 +46,6 @@ const deployments = {}
 //  then add processing to ensure that the URL's are unique.
 const instances = {}
 
-var moduleInstance = 'uibuilder'
-
 function winstonFormatter(options) {
     // - Return string will be passed to logger.
     // - Optionally, use options.colorize(options.level, <string>) to colorize output based on the log level.
@@ -72,7 +70,7 @@ function winstonFormatter(options) {
      */
     return options.timestamp() + ' ' +
         (options.level.toUpperCase()+ '          ').slice(0,7) + ' [uibuilder:' +
-        moduleInstance + '] ' +
+        moduleName + '] ' +
         (options.message ? options.message : '') +
         (options.meta && Object.keys(options.meta).length ? ' :: '+JSON.stringify(options.meta) : '' );
 }
@@ -99,6 +97,7 @@ module.exports = function(RED) {
     // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
     // @TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
     var winstonTransport
+    var log = function(){} // dummy log function - replaced by Winston if debug config is set @since 2019-01-27
     if (debug) {
         // @since 2017-10-06 if debugging, log to ~/.node-red/uibuilder.log, otherwise log to console
         winstonTransport = new (winston.transports.File)({
@@ -110,18 +109,20 @@ module.exports = function(RED) {
             timestamp: winstonTimestamp,
             formatter: winstonFormatter
         }) // file in user folder ~/.node-red
+        // @ts-ignore
+        log = new (winston.Logger)({
+            // set log level based on debug var from settings.js/uibuilder
+            level: debug === true ? 'silly' : debug, // error, warn, info, verbose, debug, silly; true=silly
+            // Where do we want log output to go?
+            transports: [
+                // @TODO: format console output to match RED.log
+                winstonTransport
+            ]
+        })
     } else {
-        winstonTransport = new (winston.transports.Console)()
+        // @since 2019-01-27 don't log if debug not set since we output key messages to the Node-RED log anyway
+        //winstonTransport = new (winston.transports.Console)()
     }
-    const log = new (winston.Logger)({
-        // set log level based on debug var from settings.js/uibuilder
-        level: debug === true ? 'silly' : debug, // error, warn, info, verbose, debug, silly; true=silly
-        // Where do we want log output to go?
-        transports: [
-            // @TODO: format console output to match RED.log
-            winstonTransport
-        ]
-    })
 
     log.verbose('----------------- uibuilder - module.exports -----------------')
 
@@ -176,7 +177,7 @@ module.exports = function(RED) {
         // Create the node
         RED.nodes.createNode(this, config)
 
-        moduleInstance = config.url // for logging
+        //moduleInstance = config.url // for logging
         log.verbose('================ instance registered ================')
 
         // copy 'this' object in case we need it in context of callbacks of other functions.
@@ -187,7 +188,7 @@ module.exports = function(RED) {
         node.name          = config.name || ''
         node.topic         = config.topic || ''
         // TODO: Needs validation as a suitable URL path
-        node.url           = config.url  || 'uibuilder'
+        node.url           = config.url  || moduleName
         node.fwdInMessages = config.fwdInMessages        // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
         node.allowScripts  = config.allowScripts
         node.allowStyles   = config.allowStyles
@@ -204,7 +205,7 @@ module.exports = function(RED) {
          */
         node.userVendorPackages = uiblib.getProps(RED,config,'userVendorPackages',null) || uiblib.getProps(RED,uib_globalSettings,'userVendorPackages',[])
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
-        node.customAppFolder = path.join(userDir, 'uibuilder')
+        node.customAppFolder = path.join(userDir, moduleName)
         /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
          *   Files in this folder are also served to URL but take preference
          *   over those in the nodes folders (which act as defaults)
@@ -217,7 +218,7 @@ module.exports = function(RED) {
         node.ioClientsCount = 0 // how many Socket clients connected to this instance?
         node.rcvMsgCount = 0 // how many msg's received since last reset or redeploy?
         // The channel names for Socket.IO
-        node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
+        node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: moduleName}
         // Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
         // @since v1.0.10, changed namespace creation to correct a missing / if httpNodeRoot had been changed from the default
         node.ioNamespace = uiblib.urlJoin(httpNodeRoot, node.url)
@@ -628,6 +629,35 @@ module.exports = function(RED) {
         }
     })
 
+    /** Create a simple NR admin API to return the list of files in the `<userLib>/uibuilder/<url>/src` folder
+     * @since 2019-01-27 - Adding the file edit admin ui
+     * @param {string} url The admin api url to create
+     * @param {Object} permissions The permissions required for access
+     * @param {function} cb
+     **/
+    RED.httpAdmin.get('/uibfiles', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        // Send back a JSON response body containing the list of files that can be edited
+        res.json([
+            'index.html', 'index.js', 'index.css', 'manifest.json'
+        ])
+    })
+
+    /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
+     * @since 2019-01-27 - Adding the file edit admin ui
+     * @param {string} url The admin api url to create
+     * @param {Object} permissions The permissions required for access
+     * @param {function} cb
+     **/
+    RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        // TODO: validate parameters
+        const fpath = path.join(userDir, moduleName, req.query.url, 'src', req.query.fname)
+        console.log(fpath, req.query.url, req.query.fname, userDir)
+
+        // Send back a plain text response body containing content of the file
+        // TODO: validate path and file
+        res.type('text/plain').sendFile(fpath, {'lastModified': false, 'cacheControl': false})
+    })
+        
 } // ==== End of module.exports ==== //
 
 // EOF
