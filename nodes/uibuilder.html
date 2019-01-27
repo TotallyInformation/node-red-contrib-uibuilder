@@ -83,11 +83,11 @@
             })
 
             //
-            // that.editor = RED.editor.createEditor({
-            //     id: 'node-input-template-editor',
-            //     mode: 'ace/mode/html',
-            //     value: $("#node-input-template").val()
-            // })
+            that.editor = RED.editor.createEditor({
+                id: 'node-input-template-editor',
+                mode: 'ace/mode/html',
+                value: $("#node-input-template").val()
+            })
             //that.editor.focus();
             $("#node-input-format").change(function() {
                 const mod = "ace/mode/"+$("#node-input-format").val()
@@ -105,11 +105,8 @@
                     console.log('uibgetfile', data)
                     //$(".node-input-template-editor").val(data)
                     $("#node-input-format").val('html')
-                    that.editor = RED.editor.createEditor({
-                        id: 'node-input-template-editor',
-                        mode: 'ace/mode/html',
-                        value: data
-                    })
+                    that.editor.getSession().setValue(data)
+                    //that.editor.setTheme("ace/theme/monokai")
                 })
             })
         },
