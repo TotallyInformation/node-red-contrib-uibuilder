@@ -104,17 +104,23 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         //#region ======== Start of setup ======== //
 
         self.version = '1.0.12'
-        self.debug = false // do not change directly - use .debug method
+        self.debug = false // do not change directly - use .debug() method
 
         /** Debugging function
          * @param {string} type One of log|error|warn|info|dir
          * @param {...*} msg Msg to send to console
          */
         self.uiDebug = function (type, msg) {
+            // @todo Change arg handling to enable any number of args. If >1, 1st will be type.
             if (!self.debug) return
 
             this.myLog = {}
             switch (type) {
+                // assert, clear, count, countReset, debug, dir, dirxml, error, group, groupCollapsed, groupEnd,
+                // info, table, time, timeEnd, timeLog, trace, warn
+                case 'debug': //@since v1.0.13
+                    this.myLog = console.debug
+                    break
                 case 'error':
                     this.myLog = console.error
                     break
