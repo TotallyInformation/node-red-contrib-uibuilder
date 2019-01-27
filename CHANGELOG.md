@@ -1,3 +1,8 @@
+v1.1.0-beta1
+
+- **NEW** Add admin API's and start of admin property ui for editing the front-end files in Node-RED.
+
+
 v1.0.12
 
 - **FIX** Seems that the information given to me in [Issue 39]() wasn't quite correct. I should have done more investigation first!
