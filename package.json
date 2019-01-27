@@ -8,7 +8,6 @@
     "gui",
     "dashboard"
   ],
-  "main": "none",
   "scripts": {
     "build": "webpack",
     "prepush": "npm run pack",
@@ -70,5 +69,6 @@
   },
   "engines": {
     "node": ">=6.11"
-  }
+  },
+  "main": "nodes/src/uibuilderfe.js"
 }
