@@ -27,6 +27,40 @@
         $('#fepaths').append('<li><a href="' + url + '/vendor/normalize.css/normalize.css">' + url + '/vendor/normalize.css/normalize.css</a></li>') // always the same
         $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
     }
+    // Return a file type from a file name (or default to txt)
+    // ftype can be used in ACE editor modes
+    function fileType(fname) {
+        const fparts = fname.split('.')
+        if (fparts.length > 1) {
+            let ftype = 'text'
+            const fext = fparts[1].toLowerCase().trim()
+            switch (fext) {
+                case 'js':
+                    ftype = 'javascript'
+                    break;
+                case 'html':
+                case 'css':
+                case 'json':
+                    ftype = fext
+                    break;
+                case 'vue':
+                    ftype = 'html'
+                    break;
+                case 'md':
+                    ftype = 'markdown'
+                    break;
+                case 'yaml':
+                case 'yml':
+                    ftype = 'yaml'
+                    break;
+                default:
+                    // txt
+            }
+            return ftype
+        } else {
+            return 'text'
+        }
+    }
     RED.nodes.registerType('uibuilder', {
         category: 'UI Builder',
         color: '#E6E0F8',
@@ -39,7 +73,9 @@
             allowStyles: { value: false },
             debugFE: { value: false },
             copyIndex: { value: true },
-            template: { value: '' },
+            template: { value: '' },         // file content of editor
+            filename: { value: 'index.js' }, // filename being edited
+            format: { value: 'text' }        // file format being edited
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -61,6 +97,9 @@
             var pkgs = RED.settings.uibuilder.userVendorPackages
             $('#userpackages').text(pkgs)
             $('#bedebug').text(RED.settings.uibuilder.debug)
+            // Set filename for editor
+            $('#filename').text(this.filename)
+
             // List the front-end url paths available
             buildUrlList(pkgs, this.url)
             // When the url changes,
@@ -71,26 +110,29 @@
                 buildUrlList(pkgs, $(this).val())
             })
             // @since 2019-01-27 - adding file editor
-            // Build the file list
-            $.getJSON('uibfiles',function(files) {
+            // Build the file list - pass the url so the BE can find the right folder
+            $.getJSON('uibfiles?url=' + $('#node-input-url').val(), function(files) {
                 console.log(files)
-                $("#node-input-filename option").remove()
+                //$("#node-input-filename option").remove()
                 $.each(files, function (i, item) {
                     $('#node-input-filename').append($('<option>', { 
                         value: item,
                         text : item, 
                     }))
                 })
+                $("#node-input-filename").val(that.filename)
             })
 
-            //
+            // Create the ACE editor component
             that.editor = RED.editor.createEditor({
                 id: 'node-input-template-editor',
-                mode: 'ace/mode/html',
-                value: $("#node-input-template").val()
+                mode: 'ace/mode/' + that.format,
+                value: that.template
             })
-            $("#node-input-format").change(function() {
-                const mod = "ace/mode/"+$("#node-input-format").val()
+
+            // Watch for mode changes, update editor component on change
+            $('#node-input-format').change(function() {
+                const mod = 'ace/mode/' + $(this).val()
                 that.editor.getSession().setMode({
                     path: mod,
                     v: Date.now()
@@ -102,26 +144,42 @@
             //ace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
 
             // Handle the edit button (and disable default click)
-            $("#node-edit-file").click(function(e) {
+            $('#node-edit-file').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
-                // TODO: change mode to match file type
+                const fname = $('#node-input-filename').val()
+
+                // Change mode to match file type
+                const filetype = fileType(fname)
+                $("#node-input-format").val(filetype)
+
                 // Get the content of the file via the admin API
-                $.get( 'uibgetfile?url=' + $('#node-input-url').val() + '&fname=' + $('#node-input-filename').val(), function(data){
-                    $("#node-input-format").val('html')
-                    that.editor.getSession().setValue(data)
+                $.get( 'uibgetfile?url=' + $('#node-input-url').val() + '&fname=' + fname, function(data){
+                    $('#filename').text(fname)
+                    that.editor.getSession().setValue(data).setMode({
+                        path: 'ace/mode/' + filetype, v: Date.now()
+                    })
                     that.editor.focus()
                 })
             })
-        },
+        }, // ---- End of oneditprepare ---- //
+
         oneditsave: function() {
-            $("#node-input-template").val(this.editor.getValue());
-            this.editor.destroy();
-            delete this.editor;
+            // xfer the editor text back to the template var
+            $('#node-input-template').val(this.editor.getValue())
+            // Get rid of the editor
+            this.editor.destroy()
+            delete this.editor
+
+            // TODO: Check if anything actually changed - if so, mark the node as dirty
+            //this.changed = true;
+            //RED.nodes.dirty(true);
         },
+
         oneditcancel: function() {
-            this.editor.destroy();
-            delete this.editor;
+            this.editor.destroy()
+            delete this.editor
         },
+
         // oneditresize: function(size) {
         //     var rows = $("#dialog-form>div:not(.node-text-editor-row)");
         //     var height = $("#dialog-form").height();
@@ -187,11 +245,7 @@
     <!-- Drop-down for selecting file to edit -->
     <div class="form-row">
         <label for="node-input-filename"><i class="fa fa-code"></i> Filename</label>
-        <select id="node-input-filename" style="width: 60%;">
-            <option value="html">index.html</option>
-            <option value="js">index.js</option>
-            <option value="css">index.css</option>
-        </select>
+        <select id="node-input-filename" style="width: 60%;"></select>
         <!-- Edit Button -->
         <a class="btn" id="node-edit-file" href="#" target="_blank">Edit</span></a>
     </div>
@@ -203,7 +257,7 @@
             <label for="node-input-template"><i class="fa fa-file-code-o"></i> File</label>
             <input type="hidden" id="node-input-template" autofocus="autofocus">
             <div style="position: absolute; right:0;display:inline-block; text-align: right; font-size: 0.8em;">
-                <span data-i18n="uibuilder.label.format"></span>:
+                <span id="filename">...</span>
                 <select id="node-input-format" style="width:110px; font-size: 10px !important;  height: 24px; padding:0;">
                     <option value="handlebars">mustache</option>
                     <option value="html">HTML</option>

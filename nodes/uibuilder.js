@@ -194,10 +194,13 @@ module.exports = function(RED) {
         node.allowStyles   = config.allowStyles
         node.debugFE       = config.debugFE
         node.copyIndex     = config.copyIndex
+        node.filename      = config.filename
+        node.format        = config.format
+        node.template      = config.template
         //#endregion ----
 
         // TODO
-        console.log('uibuilder: ', config.template)
+        console.log('uibuilder: ', config.filename, config.format, config.template)
 
         log.verbose( 'node settings', {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
 
@@ -639,11 +642,17 @@ module.exports = function(RED) {
      * @param {function} cb
      **/
     RED.httpAdmin.get('/uibfiles', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        // Send back a JSON response body containing the list of files that can be edited
-        // TODO: Dynamic list from fs
-        res.json([
-            'index.html', 'index.js', 'index.css', 'manifest.json'
-        ])
+        // TODO: validate parameters
+
+        const srcFolder = path.join(userDir, moduleName, req.query.url, 'src')
+
+        // Get the file list - note, ignore errors for now
+        // TODO: Need to filter out folders. Or better, flatten and allow sub-folders.
+        fs.readdir(srcFolder, (err, files) => {
+            // Send back a JSON response body containing the list of files that can be edited
+            res.json(files)
+        })
+
     })
 
     /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
@@ -654,12 +663,19 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         // TODO: validate parameters
-        const fpath = path.join(userDir, moduleName, req.query.url, 'src', req.query.fname)
-        //console.log(fpath, req.query.url, req.query.fname, userDir)
 
         // Send back a plain text response body containing content of the file
         // TODO: validate path and file
-        res.type('text/plain').sendFile(fpath, {'lastModified': false, 'cacheControl': false})
+        res.type('text/plain').sendFile(
+            req.query.fname, 
+            {
+                // Prevent injected relative paths from escaping `src` folder
+                'root': path.join(userDir, moduleName, req.query.url, 'src'),
+                // Turn off caching
+                'lastModified': false, 
+                'cacheControl': false
+            }
+        )
     })
         
 } // ==== End of module.exports ==== //

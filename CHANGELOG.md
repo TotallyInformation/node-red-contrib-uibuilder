@@ -1,4 +1,4 @@
-v1.1.0-beta3
+v1.1.0-beta4
 
 - **NEW** Add admin API's and start of admin property ui for editing the front-end files in Node-RED.
 
