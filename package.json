@@ -64,7 +64,7 @@
     "winston": "^2.4.4"
   },
   "devDependencies": {
-    "rollup-plugin-uglify": "^6.0.0",
+    "rollup-plugin-uglify": "^6.0.2",
     "uglify-js": "^3.4.9"
   },
   "engines": {
