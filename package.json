@@ -16,7 +16,8 @@
     "presync": "npm run pull",
     "sync": "npm run push",
     "pack": "uglifyjs ./nodes/src/uibuilderfe.js --output ./nodes/src/uibuilderfe.min.js --compress --mangle",
-    "prepublish": "npm run pack"
+    "prepublish": "npm run pack",
+    "listbin": "ls ./node_modules/bin"
   },
   "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
