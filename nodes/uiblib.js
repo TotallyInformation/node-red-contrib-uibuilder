@@ -43,7 +43,7 @@ module.exports = {
             ioNs.emit(node.ioChannels.server, msg)
         }
 
-        log.debug('uibuilder - msg sent to front-end via ws channel, ', node.ioChannels.server, ': ', msg)
+        log.debug('msg sent to front-end via ws channel, ', node.ioChannels.server, ': ', node.url, msg)
 
         if (node.fwdInMessages) {
             // Send on the input msg to output
@@ -63,8 +63,8 @@ module.exports = {
      * @param {Object} app - Instance of ExpressJS app
      * @param {Object} log - Winston logging instance
      */
-    processClose: function(done = null, node, RED, ioNs, io, app, log) {
-        log.debug('uibuilder:nodeGo:on-close:processClose', node.url)
+    processClose: function(done = null, node, RED, ioNs, io, app, log, instances) {
+        log.debug('nodeGo:on-close:processClose', node.url)
 
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
@@ -98,6 +98,9 @@ module.exports = {
         for (var i = removePath.length -1; i >= 0; i--) {
             app._router.stack.splice(removePath[i],1);
         }
+
+        // Keep a log of the active instances @since 2019-02-02
+        instances[node.id] = undefined
 
         /*
             // This code borrowed from the http nodes
