@@ -21,6 +21,7 @@ module.exports = {
     // Needs to return the msg object
     inputHandler: function(msg, node, RED, io, ioNs, log) {
         node.rcvMsgCount++
+        log.verbose(`[${node.url}] msg received via FLOW. ${node.rcvMsgCount} messages received`, msg)
 
         // If the input msg is a uibuilder control msg, then drop it to prevent loops
         if ( msg.hasOwnProperty('uibuilderCtrl') ) return null
@@ -38,17 +39,17 @@ module.exports = {
         // pass the complete msg object to the uibuilder client
         // TODO: This should have some safety validation on it!
         if (msg._socketId) {
+            log.debug(`[${node.url}] msg sent on to client ${msg._socketId}. Channel: ${node.ioChannels.server}`, msg)
             ioNs.to(msg._socketId).emit(node.ioChannels.server, msg)
         } else {
+            log.debug(`[${node.url}] msg sent on to ALL clients. Channel: ${node.ioChannels.server}`, msg)
             ioNs.emit(node.ioChannels.server, msg)
         }
-
-        log.debug('msg sent to front-end via ws channel, ', node.ioChannels.server, ': ', node.url, msg)
 
         if (node.fwdInMessages) {
             // Send on the input msg to output
             node.send(msg)
-            log.debug('uibuilder - msg passed downstream to next node: ', msg)
+            log.debug(`[${node.url}] msg passed downstream to next node`, msg)
         }
 
         return msg
@@ -64,7 +65,7 @@ module.exports = {
      * @param {Object} log - Winston logging instance
      */
     processClose: function(done = null, node, RED, ioNs, io, app, log, instances) {
-        log.debug('nodeGo:on-close:processClose', node.url)
+        log.debug(`[${node.url}] nodeGo:on-close:processClose`)
 
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
