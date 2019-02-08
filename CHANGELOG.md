@@ -1,7 +1,18 @@
-v1.1.0-beta4
+v1.1.0-beta6
 
 - **NEW** Add admin API's and start of admin property ui for editing the front-end files in Node-RED.
 
+    * File list API (get `/uiblistfiles`) gets all files in the instances src folder and populates a select drop-down. File list is rebuilt every time the properties admin ui window is opened. Requires user to have `uibuilder.read` permissions.
+    * File read API (get `/uibgetfile`) reads the content of a file. Restricted to the node instances `src` folder. Requires user to have `uibuilder.read` permissions.
+    * File write API (post `/uibputfile`) writes the updated content of a file. Restricted to the node instances `src` folder. Requires user to have `uibuilder.write` permissions.
+
+- **NEW** The node now tracks how many instances of uibuilder have been added to your flows. It tracks by ID and retains the url used. In a future release, this will be used to ensure that unique URL's are used.
+  
+- **NEW** uibuilder index page (only prototype for now, not fully formed)
+  
+  * Index page API (get `/uibindex`) lists all of the main URL's served by all uibuilder node instances in the flows. Requires user to have `uibuilder.read` permissions.
+  
+- **CHANGED** Improved logging. Naming is more consistent, don't log to Node-RED log if Winston not used. Include instance url in Winston log line header for clarity. Increase Winston log file size. Logging also improved for debugging uibuilderfe.js.
 
 v1.0.12
 
