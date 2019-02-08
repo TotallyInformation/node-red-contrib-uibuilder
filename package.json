@@ -17,7 +17,9 @@
     "sync": "npm run push",
     "pack": "uglifyjs ./nodes/src/uibuilderfe.js --output ./nodes/src/uibuilderfe.min.js --compress --mangle",
     "prepublish": "npm run pack",
-    "listbin": "ls ./node_modules/bin"
+    "listbin": "ls ./node_modules/bin",
+    "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
+    "npmtagnext": "npm dist-tag add node-red-contrib-uibuilder@$npm_package_version next"
   },
   "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
