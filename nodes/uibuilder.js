@@ -248,8 +248,8 @@ module.exports = function(RED) {
         else deployments[node.id] = 1
         log.verbose(`[${uibInstance}] Number of Deployments`, deployments[node.id] )
 
-        // We need an http server to serve the page
-        const app = RED.httpNode || RED.httpAdmin
+        // We need an http server to serve the page. @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages
+        const app = RED.httpNode // || RED.httpAdmin
 
         /** Provide the ability to have a ExpressJS middleware hook.
          * This can be used for custom authentication/authorisation or anything else.
@@ -682,6 +682,83 @@ module.exports = function(RED) {
                 'cacheControl': false
             }
         )
+    })
+
+    /** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/src` folder
+     * @since 2019-02-04 - Adding the file edit admin ui
+     * @param {string} url The admin api url to create
+     * @param {Object} permissions The permissions required for access (Express middleware)
+     * @param {function} cb
+     **/
+    RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        // TODO: validate parameters
+        log.verbose(`[uibputfile] Admin API. File put requested for `)
+        console.dir(req)
+
+        // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+        res.statusMessage = 'File written successfully'
+        res.status(200).end()
+    })
+
+    
+
+    /** Utility function to html pretty-print JSON */
+    function syntaxHighlight(json) {
+        /*
+            pre .string { color: orange; }
+            .number { color: white; }
+            .boolean { color: rgb(20, 99, 163); }
+            .null { color: magenta; }
+            .key { color: #069fb3;}
+        */
+        json = JSON.stringify(json, undefined, 4)
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<pre style="color:white;background-color:black">' + json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number', style = 'style="color:white"'
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key'
+                    style = 'style="color:#069fb3"'
+                } else {
+                    cls = 'string'
+                    style = 'style="color:orange"'
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean'
+                style = 'style="color:rgb(20,99,163)"'
+            } else if (/null/.test(match)) {
+                cls = 'null'
+                style = 'style="color:magenta"'
+            }
+            return `<span class="${cls}" ${style}>${match}</span>`
+        }) + '</pre>'
+    }
+
+    /** Create an index web page listing all uibuilder endpoints
+     * @since 2019-02-04 v1.1.0-beta6
+     * TODO: Allow for std web page (default) AND JSON (for api)
+     */
+    RED.httpNode.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        // TODO: validate parameters
+        log.verbose(`[uibindex] User Page/API. List all available uibuilder endpoints`)
+
+        const app = RED.httpNode // RED.httpAdmin
+        const app2 = RED.httpAdmin
+
+        //console.log(app.routes) // Expresss 3.x
+        //console.log(app.router.stack) // Expresss 3.x with express.router
+        //console.log(app._router.stack) // Expresss 4.x
+        //console.log(server.router.mounts) // Restify
+
+        let page = '<h1>Index of uibuilder pages</h1>' //'<pre>'
+        page += syntaxHighlight(instances)
+        //page += '<hr>'
+        //page += syntaxHighlight(app._router.stack)
+        //page += '<hr>'
+        //page += syntaxHighlight(app2._router.stack)
+        page += '' // '</pre>'
+
+        res.send(page)
     })
 
 } // ==== End of module.exports ==== //
