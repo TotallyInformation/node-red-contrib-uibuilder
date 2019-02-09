@@ -21,7 +21,8 @@
     "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
     "npmtagnext": "npm dist-tag add node-red-contrib-uibuilder@$npm_package_version next",
     "gittags": "git tag",
-    "gittag": "git tag -a v$npm_package_version -m 'Version $npm_package_version'"
+    "gittag": "git tag -a v$npm_package_version",
+    "gitpushtags": "git push origin --tags"
   },
   "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
