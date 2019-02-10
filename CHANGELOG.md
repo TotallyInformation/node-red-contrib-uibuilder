@@ -1,4 +1,13 @@
-v1.1.0-beta6
+v1.1.0-beta8
+
+Please see [Issue #43](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/43) For the design details for this release.
+
+**WARNING** This version should certainly be considered beta quality. In particular, there are no parameter checks on the API calls so this version should **never** be exposed to potentially hostile environments (e.g. the Internet). Also, there are currently no checks to prevent you losing changes to edits if you close the admin window.
+
+- **NEW** The node properties window in the admin UI now provides an "Edit Source Files" button. If clicked, the main properties are hidden and a file editor is shown. You can currently select any existing file in the `src` folder for the current instance and edit it. You can then save, reset or close the editor.
+
+    * It is still a little too easy to lose changes by loading a different file or closing the properties window, reloading the interface, etc. More work is needed on the UI to help prevent this.
+    * The delete button doesn't currently work.
 
 - **NEW** Add admin API's and start of admin property ui for editing the front-end files in Node-RED.
 
@@ -13,6 +22,10 @@ v1.1.0-beta6
   * Index page API (get `/uibindex`) lists all of the main URL's served by all uibuilder node instances in the flows. Requires user to have `uibuilder.read` permissions.
   
 - **CHANGED** Improved logging. Naming is more consistent, don't log to Node-RED log if Winston not used. Include instance url in Winston log line header for clarity. Increase Winston log file size. Logging also improved for debugging uibuilderfe.js.
+
+- **DOCUMENTED** The front-end code for jQuery seems to move about randomly! It is in one of two places, if you get an error with the default location (the `dist` sub-path), remove `dist/` from the url.
+
+- **CHANGED** `package.json` 'pack' script changed to 'packfe' to avoid clash with npm's native pack script.
 
 v1.0.12
 

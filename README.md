@@ -11,6 +11,9 @@
 [![Open Issues](https://img.shields.io/github/issues-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues)
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
 
+**NOTE** This is the `adminui-editor` branch of uibuilder. In this branch we are exploring the best approach to enabling editing of the front-end src files for the node instance. This branch will become the next major version of uibuilder.
+
+**WARNING** Please consider this version an alpha build, do not use on live systems. See the [CHANGELOG](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/adminui-editor/CHANGELOG.md) for details of what has changed and see [Issue 43](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/43) for details of the design.
 
 # 1. node-red-contrib-uibuilder
 
