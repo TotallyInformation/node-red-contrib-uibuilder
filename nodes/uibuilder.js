@@ -668,7 +668,7 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         // TODO: validate parameters
-        log.verbose(`[uibgetfile] Admin API. File get requested for ${req.query.fname}`)
+        log.verbose(`[${req.query.url}:uibgetfile] Admin API. File get requested for ${req.query.fname}`)
 
         // Send back a plain text response body containing content of the file
         // TODO: validate path and file
@@ -690,14 +690,25 @@ module.exports = function(RED) {
      * @param {Object} permissions The permissions required for access (Express middleware)
      * @param {function} cb
      **/
-    RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+    RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
         // TODO: validate parameters
-        log.verbose(`[uibputfile] Admin API. File put requested for `)
-        console.dir(req)
+        log.verbose(`[${req.query.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
-        // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-        res.statusMessage = 'File written successfully'
-        res.status(200).end()
+        const fullname = path.join(userDir, moduleName, req.body.url, 'src', req.body.fname)
+
+        fs.writeFile(fullname, req.body.data, function (err, data) {
+            if (err) {
+                // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+                log.error(`[${req.body.url}:uibputfile] Admin API. File write FAIL for ${req.body.fname}`, err)
+                res.statusMessage = err
+                res.status(500).end()
+            } else {
+                // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+                log.verbose(`[${req.body.url}:uibputfile] Admin API. File write SUCCESS for ${req.body.fname}`)
+                res.statusMessage = 'File written successfully'
+                res.status(200).end()
+            }
+        })
     })
 
     
