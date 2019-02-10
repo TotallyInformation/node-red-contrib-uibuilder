@@ -61,7 +61,9 @@
             return 'text'
         }
     }
-    // Get the chosen file contents & set up the ACE editor
+    /** Get the chosen file contents & set up the ACE editor
+     * @param {Object} that 'this' for the oneditprepare function
+     **/
     function getFileContents(that) {
 
         // Get the chosen filename
@@ -86,6 +88,21 @@
             // Position the cursor in the edit area
             that.editor.focus()
         })
+    }
+    /** Enable/disable buttons if file has edits or not
+     * @param {boolean} isClean true = the file is clean, else there are pending edits that need saving
+     */
+    function fileIsClean(isClean) {
+        // If clean, disable the save & reset buttons
+        $('#edit-save').prop('disabled', isClean)
+        $('#edit-reset').prop('disabled', isClean)
+        // If clean, enable the delete and edit buttons
+        //$('#edit-delete').prop('disabled', !isClean)
+        $('#edit-close').prop('disabled', !isClean)
+        $('#node-edit-file').prop('disabled', !isClean)
+        $('#node-input-filename').prop('disabled', !isClean)
+        // If not clean, clear any messages
+        if ( ! isClean ) $('#file-action-message').text('Save Required')
     }
     // Register the node type, defaults and set up the edit fns
     RED.nodes.registerType('uibuilder', {
@@ -129,9 +146,12 @@
             $('#userpackages').text(pkgs)
             $('#bedebug').text(RED.settings.uibuilder.debug)
 
+            // Delete is not ready yet, so disable button by default
+            $('#edit-delete').prop('disabled', true)
             // Mark edit save/reset buttons as disabled by default
-            $('#edit-save').prop('disabled', true)
-            $('#edit-reset').prop('disabled', true)
+            fileIsClean(true)
+            //$('#edit-save').prop('disabled', true)
+            //$('#edit-reset').prop('disabled', true)
             // Show the edit section, hide the main section
             $('#show-edit-props').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
@@ -187,10 +207,7 @@
              **/
             that.editor.on("input", function() {
                 // Is the editor clean?
-                let isClean = that.editorSession.getUndoManager().isClean()
-                // If not clean, enable the save & reset buttons
-                $('#edit-save').prop('disabled', isClean)
-                $('#edit-reset').prop('disabled', isClean)
+                fileIsClean(that.editorSession.getUndoManager().isClean())
             })
             /*that.editorSession.on('change', function(delta) {
                 // delta.start, delta.end, delta.lines, delta.action
@@ -218,6 +235,7 @@
 
                 // Get the content of the file via the admin API
                 getFileContents(that)
+                fileIsClean(true)
             })
             // Handle the reset button (reload the file)
             $('#edit-reset').click(function(e) {
@@ -225,17 +243,35 @@
 
                 // Get the content of the file via the admin API
                 getFileContents(that)
+                fileIsClean(true)
+                $('#file-action-message').text('')
             })
             // Handle the save button
             $('#edit-save').click(function(e) {
-                // TODO replace jquery with native request
-                // VM13500:1 Access to XMLHttpRequest at 'node-save: uibputfile' from origin 'http://localhost:1880' has been blocked by CORS policy: Cross origin requests are only supported for protocol schemes: http, data, chrome, chrome-extension, https.
                 e.preventDefault() // don't trigger normal click event
 
                 // Post the updated content of the file via the admin API
-                $.post( 'node-save: uibputfile', {'url': $('#node-input-url').val(), 'fname': $('#node-input-filename').val()}, function(data){
-                    console.log('uibputfile: Result: ', data )
-                })
+                // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
+                var request = new XMLHttpRequest()
+                var params = 'fname=' + $('#node-input-filename').val() + '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(that.editorSession.getValue())
+                request.open('POST', 'uibputfile', true)
+                request.onreadystatechange = function() {
+                    if (this.readyState === XMLHttpRequest.DONE) {
+                        if (this.status === 200) {
+                            // Request successful
+                            // display msg - blank msg when new edits present
+                            $('#file-action-message').text('File Saved')
+                            fileIsClean(true)
+                        } else {
+                            // Request failed
+                            // display msg - blank msg when new edits present
+                            $('#file-action-message').text('File Save FAILED')
+                        }
+                    }
+                }
+                request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+                request.send(params)
+
             })
         }, // ---- End of oneditprepare ---- //
 
@@ -335,11 +371,13 @@
             <button class="btn" id="node-edit-file">Edit</button>
         </div>
 
-        <!-- Save/Cancel/Reset/Delete -->
+        <!-- Save/Cancel/Reset/(message)/Delete -->
         <div class="form-row">
             <button class="btn" id="edit-save" title="Save any changes to the file" style="font-size:0.8em;line-height:1em;">Save</button>
             <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)" style="font-size:0.8em;line-height:1em;">Reset</button>
             <button class="btn" id="edit-close" title="Close the edit window (lose any unsaved changes)" style="font-size:0.8em;line-height:1em;">Close</button>
+
+            <span id="file-action-message"></span>
 
             <div style="position: absolute;right:1.6em;display:inline-block;">
                 <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set." style="font-size:0.8em;line-height:1em;">
