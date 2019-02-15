@@ -16,7 +16,7 @@
     "presync": "npm run pull",
     "sync": "npm run push",
     "packfe": "uglifyjs ./nodes/src/uibuilderfe.js --output ./nodes/src/uibuilderfe.min.js --compress --mangle",
-    "prepublish": "npm run pack",
+    "prepublish": "npm run packfe",
     "listbin": "ls ./node_modules/bin",
     "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
     "npmtagnext": "npm dist-tag add node-red-contrib-uibuilder@$npm_package_version next",
