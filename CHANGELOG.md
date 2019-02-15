@@ -1,8 +1,8 @@
-v1.1.0-beta8
+v1.1.0
 
 Please see [Issue #43](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/43) For the design details for this release.
 
-**WARNING** This version should certainly be considered beta quality. In particular, there are no parameter checks on the API calls so this version should **never** be exposed to potentially hostile environments (e.g. the Internet). Also, there are currently no checks to prevent you losing changes to edits if you close the admin window.
+**Current Version Limitations** As yet there are no parameter checks on the API calls so the following URL's should **never** be exposed to potentially hostile environments (e.g. the Internet): `<adminurl>/uibfiles`, `<adminurl>/uibgetfile`, `<adminurl>/uibputfile`, `<adminurl>/uibindex`. Also, there are currently no checks to prevent you losing changes to edits if you close the admin window.
 
 - **NEW** The node properties window in the admin UI now provides an "Edit Source Files" button. If clicked, the main properties are hidden and a file editor is shown. You can currently select any existing file in the `src` folder for the current instance and edit it. You can then save, reset or close the editor.
 

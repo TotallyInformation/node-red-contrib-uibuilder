@@ -711,8 +711,6 @@ module.exports = function(RED) {
         })
     })
 
-    
-
     /** Utility function to html pretty-print JSON */
     function syntaxHighlight(json) {
         /*
