@@ -11,7 +11,6 @@
 [![Open Issues](https://img.shields.io/github/issues-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues)
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
 
-
 # 1. node-red-contrib-uibuilder
 
 A Node-RED web user interface builder. UIbuilder Aims to Provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
@@ -29,14 +28,14 @@ The key features and benefits are:
 * Needs almost no boilerplate in your front-end code in order to work.
 * Simple included example works out-of-the-box, no need to install anything other than the node.
 * MoonJS extended and caching example flows included.
+* Edit your front-end code (index.html|js|css, etc) directly in the Node-RED admin ui. No need for filing system access to the server any more.
 
 Current limitations are:
 
 * You have to write your own HTML, uibuilder doesn't (yet) do it for you. *This is by design. I hope to have a component design available at some point which will give additional options and make the UI building easier.*
-* You need access to your server's filing system to edit the front-end files. *This is due to be improved in a future release, you will then be able to edit the files from within the Node-RED admin UI.*
-* You have to remember to install any front-end libraries (e.g. Vue). Except for JQuery that Node-RED installs anyway. *I hope to provide an installer at some future point to remove this restriction.*
+* You have to remember to install any front-end libraries (e.g. Vue). Except for JQuery that Node-RED installs anyway. *I will be providing an installer in another release soon.*
 * You have to know the front-end library locations for installed libraries and edit your HTML accordingly. *I hope to add known libraries at some point so that the admin UI will give you the correct entry points.*
-* You cannot (yet) compile/compress your custom front-end code (HMTL, JS, SCSS, etc.) for efficiency. *I hope to add this as a future feature.*
+* You cannot (yet) compile/compress your custom front-end code (HMTL, JS, SCSS, etc.) for efficiency. *This will be added soon.*
 
 
 This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of having to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
@@ -53,6 +52,13 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
   * [1.6. Dependencies](#16-dependencies)
   * [1.7. Install](#17-install)
   * [1.8. Node Instance Settings](#18-node-instance-settings)
+    * [`name` (optional)](#name-optional)
+    * [`topic` (optional)](#topic-optional)
+    * [`url` (required, default = 'uibuilder')](#url-required-default--uibuilder)
+    * [Forward input to output? (default = false)](#forward-input-to-output-default--false)
+    * [`debug` (optional, default=false)](#debug-optional-defaultfalse)
+    * [Allow passing to the front-end](#allow-passing-to-the-front-end)
+    * [`userVendorPackages` (optional)](#uservendorpackages-optional)
   * [1.9. uibuilder settings.js configuration](#19-uibuilder-settingsjs-configuration)
   * [1.10. Discussions and suggestions](#110-discussions-and-suggestions)
   * [1.11. Contributing](#111-contributing)
@@ -71,6 +77,8 @@ There is more information available in the [WIKI](https://github.com/TotallyInfo
 - [To Do](/TotallyInformation/node-red-contrib-uibuilder/blob/master/TODO.md) What's coming up for uibuilder?
 - [Latest Changes](/TotallyInformation/node-red-contrib-uibuilder/blob/master/CHANGELOG.md)
 - [Structure and types of control messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure)
+- [Front-End Library - available properties and methods](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Front-End-Library---available-properties-and-methods)
+- [Security Design](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Security-Design)
 - Examples
   - [Basic JQuery app](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-JQuery) - Uses the built-in JQuery and Normalize.CSS libraries
   - [Basic Riot app](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-RiotJS)
@@ -79,6 +87,8 @@ There is more information available in the [WIKI](https://github.com/TotallyInfo
   - [Slightly extended MoonJS example](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example,-MoonJS-with-Mini.CSS)
   - [Umbrella JS and Picnic CSS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example-Umbrella-JS-and-Picnic-CSS)
   - [Example Show MQTT device info using Moon with caching](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example-Show-MQTT-device-info-using-Moon-with-caching)
+  - [Basic ReactJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-ReactJS)
+  - [Simple Vue.js app](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Simple-Example-using-VueJS)
 - How To
   - [Send messages to a specific client](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Sending-Messages-to-Specific-Client-Instances)
   - [Cache & Replay Messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching)
@@ -87,13 +97,15 @@ There is more information available in the [WIKI](https://github.com/TotallyInfo
   - [Create a web page on a sub-path](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Create-a-web-page-in-a-sub-path)
   - [Use webpack to optimise front-end libraries and code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Building-app-into-dist-folder-using-webpack)
   - [How to contribute & coding standards](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/How-to-Contribute-and-Coding-Standards)
+  - [Use webpack to optimise front-end libraries and code](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Building-app-into-dist-folder-using-webpack)
+  - [How to use webpack with VueJS (or other frameworks)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Using-VueJS-with-Webpack)
 
 
 ## 1.3. Out of the box
 
 Out of the box, you get a simple `index.html` template with matching `index.css` & `index.js` JavaScript.
 These are automatically copied over from the module's master template folder to the instance's src folder when you first deploy so that you can override them.
-If you want to reset them, you can simply delete your local copies and the master templates will be copied back _when you restart Node-RED_.
+If you want to reset them, you can simply delete your local copies and the master templates will be copied back _when you restart Node-RED_ (this can be turned off with a flag).
 
 JQuery is used in the default JavaScript to give dynamic updates to the web page. If all you need to do
 is some simple dynamic updates of the page, JQuery is likely enough. Normalize.css is also provided to help you with
@@ -102,13 +114,16 @@ standard look and feel. Just remove the references in index.html and the code fr
 Any msg sent to the node is forwarded directly to the front-end and is available in the global `msg` variable
 as it would be in Node-RED, use the `msgSend` function to send a message back to Node-RED that
 will be passed downstream from the node.
-The msg can contain script and style information that will be dynamically added to the web page if allowed by the settings.
 
-You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages). You can find this in `~/.node-red/uibuilder/<url>` by default. As a minimum, you need an `index.html` file. But you need the `index.js` file as well if you want Socket.IO communications to work. You will also need `manifest.json` for mobile use.
+The `msg` can contain script and style information that will be dynamically added to the web page if allowed by the settings.
+
+You will want to change the front-end code to match your requirements since, by default, it displays some rough dynamic information using JQuery and reflects any received messages back to Node-RED (including control messages). You can find this in `~/.node-red/uibuilder/<url>` by default. As a minimum, you need an `index.html` file. But you need the `index.js` (or some equivalent) file as well if you want to do anything useful. You will also want `manifest.json` and/or `uibuilder.appcache` for mobile use.
 
 The local `index.(html|js)` files are well documented and should show you how to get started with your own customisations. There are also some examples, with code, on the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
 
 The node also has a second output port. This is used exclusively for control messages. Control messages are sent by the server when a client connects or disconnects and by the front-end client when the websocket has connected and when the client is ready to receive messages (after window.load by default). The connect and ready messages have a `"cacheControl": "REPLAY"` property which is designed to be used with [node-red-contrib-infocache](https://github.com/TotallyInformation/node-red-contrib-infocache) or your own message cache ([example](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)) so that new or reconnecting clients can receive cached information (similar to Dashboard widgets).
+
+Editing your html, js and other front-end files is often best done using a proper code editor such as Microsoft's Visual Studio Code, ATOM or similar. However, that requires access to the server's filing system which can sometimes be an issue. As of v1.1, uibuilder now has the ability to edit any text-based file in the `src` folder right from within the Node-RED admin UI. It uses the excellent ACE editor to do that just like other nodes.
 
 _[back to top](#contents)_
 
@@ -161,16 +176,24 @@ _[back to top](#contents)_
 - You have access to ExpressJS middleware simply by providing a function definition in `settings.js`.
   This lets you, for example, have custom authentication/authorisation.
 
+- Edit your front-end source files directly within the Node-RED admin UI, access to the server's filing system is no longer absolutely necessary.
+
 - Eventually, a link to webpack will be provided to enable packing/compiling
   of `src` code to `dist`.
   This will enable front-end code to use non-native libraries such as JSX, ES6, Foundation, etc.
 
 You might like to try some lightweight front-end libraries (in addition to or instead of the included JQuery and Normalize.css):
+
 - [MoonJS](http://moonjs.ga) is a minimal, blazing fast user interface library. Only 7kb.
   Based originally on the Vue API, uses a virtual DOM, possibly the simplest UI library to use. You can remove JQuery if you use this, it isn't needed.
 - [RiotJS](http://riotjs.com/) is a lightweight UI library, REACT-like but only 10k.
 - [Ractive.js](https://ractive.js.org) is a template-driven UI library. Very simple to use
 - [Mini.CSS](http://minicss.org/index) is a minimal, responsive, style-agnostic CSS framework. Only 7kb. You can remove Normalize.css if you use this, it is built in.
+
+Or indeed, the heavier-weight classic frameworks such as:
+
+- [VueJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Simple-Example-using-VueJS) This is now my preferred framework. I also like to use bootstrap-vue alongside Vue itself which makes for very quick, solid and flexible development. See [this thread in the Node-RED Discourse forum](https://discourse.nodered.org/t/new-home-dashboard-using-uibuilder-and-bootstrap-vue/6764/16) for more details on using bootstrap-vue.
+- [REACT](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-ReactJS)
 
 Examples for using some of these are available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
 
@@ -188,10 +211,11 @@ I don't believe any of the current issues make the node unusable. They are mainl
   You could also work around this by using a proxy such as NGINX or HAproxy to be the TLS endpoint. Just make sure you proxy the websocket traffic as well as the standard web traffic.
 
 - Uniqueness of the URL is not yet being validated for multiple instances, could cause
-  some "interesting" effects!
+  some "interesting" effects! *This should be resolved in v1.2 or thereabouts.*
 
 - Modules to be used for front-end code (e.g. JQuery) **must** be installed under `<userDir>`.
   Of course, you can use them direct from an Internet CDN if you like.
+  *I plan to include npm install support to enable this in the admin ui after v1.1.*
 
 _[back to top](#contents)_
 
@@ -199,7 +223,7 @@ _[back to top](#contents)_
 
 See the [package.json](package.json) file, these should all be installed for you. Currently:
 
-- [JQuery](https://jquery.com/) - front-end only, remove from your index.HTML if not needed. This is already installed by Node-RED itself.
+- [JQuery](https://jquery.com/) - front-end only, remove from your index.HTML if not needed.
 - [normalize.css](https://necolas.github.io/normalize.css/) - front-end only. Not needed if using a CSS framework like Bootstrap or Picnic.CSS. Installed by uibuilder.
 - [Socket.IO](https://socket.io/) - front-end and server. Installed by uibuilder to ensure a known version (Node-RED installs its own version).
 - [serve.static](https://github.com/expressjs/serve-static) - server only. Installed by uibuilder.
@@ -224,15 +248,15 @@ _[back to top](#contents)_
 
 Each instance of the uibuilder node has the following settings available.
 
-**`name` (optional)**
+### `name` (optional)
 
 Only used in the Node-RED admin UI.
 
-**`topic` (optional)**
+### `topic` (optional)
 
 Only used if an inbound msg does not contain a topic attribute. Passed on to client UI upon receipt of a msg.
 
-**`url` (required, default = 'uibuilder')**
+### `url` (required, default = 'uibuilder')
 
 The path used to access the user interface that this node builds.
 So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are defined (in Node-RED's `settings.js` file), the URL of the default interface would be `http://localhost:1880/uibuilder`
@@ -240,25 +264,33 @@ So on `localhost`, if none of the port nor `https` nor `httpRoot` settings are d
 **It is up to the flow author to ensure that no duplicate names are used, the node
 does not check or enforce uniqueness.**
 
-**Forward received messages direct to output? (default = false)**
+### Forward input to output? (default = false)
 
 Forwards a copy of every received message direct to the output.
 Adds the topic from the above setting if one isn't present in the msg.
 
 _Note_ that this may result in multiple output messages if your front-end code also auto-sends inbound messages.
 
-**`userVendorPackages` (optional)**
+### `debug` (optional, default=false)
+
+Only available using the `uibuilder.debug` attribute of
+`settings.js`. Set to `true` to output additional debugging information.
+
+### Allow passing to the front-end
+
+Two flags that allow JavaScript and/or CSS styles to be sent via a `msg` from Node-RED to the front-end. The code is added to the browser's DOM dynamically.
+
+**Warning** Obviously, this can be a security problem if you aren't careful so use with care.
+
+
+
+### `userVendorPackages` (optional)
 
 A list of npm package names (as they appear in `node_modules`) that the node will make
 available to front-end code under the `uibuilder/vendor` path.
 
 All instances of this node will also use the `uibuilder.userVendorPackages` attribute of
 `settings.js` unless defined in the node's settings.
-
-**`debug` (optional, default=false)**
-
-Only available using the `uibuilder.debug` attribute of
-`settings.js`. Set to `true` to output additional debugging information.
 
 _[back to top](#contents)_
 
@@ -307,8 +339,9 @@ _[back to top](#contents)_
 
 ## 1.10. Discussions and suggestions
 
-Use the [Node-RED google group](https://groups.google.com/forum/#!forum/node-red) or the [#uibuilder](https://node-red.slack.com/messages/C7K77MG06) channel in the [Node-RED Slack](https://node-red.slack.com) for general discussion about this node. Or use the
-[GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements.
+Use the `Dashboard` category in the [Node-RED Discourse forum](https://discourse.nodered.org/c/dashboard) or the [#uibuilder](https://node-red.slack.com/messages/C7K77MG06) channel in the [Node-RED Slack](https://node-red.slack.com) for general discussion about this node. 
+
+Or use the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements.
 
 ## 1.11. Contributing
 

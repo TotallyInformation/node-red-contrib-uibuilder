@@ -77,7 +77,7 @@
  *       .events        - list of registered events
  */
 
-"use strict";
+'use strict'
 
 // @since 2017-10-17 CL: tell webpack that we need socket.io client if running from webpack build
 if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
@@ -103,41 +103,24 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '1.0.12'
-        self.debug = false // do not change directly - use .debug() method
+        self.version = '1.1.0'
+        self.debug = true // do not change directly - use .debug() method
 
         /** Debugging function
-         * @param {string} type One of log|error|warn|info|dir
-         * @param {...*} msg Msg to send to console
+         * @param {string} type One of log|error|warn|info|dir, etc
+         * @param {...*} msg Msg(s) to send to console
+         * WARNING: ...args is ES6, it doesn't work on IE11
+         * @since 2019-02-01 Apply any number of args
          */
-        self.uiDebug = function (type, msg) {
-            // @todo Change arg handling to enable any number of args. If >1, 1st will be type.
+        //self.uiDebug = function (type, ...args) {
+        self.uiDebug = function () {
             if (!self.debug) return
 
-            this.myLog = {}
-            switch (type) {
-                // assert, clear, count, countReset, debug, dir, dirxml, error, group, groupCollapsed, groupEnd,
-                // info, table, time, timeEnd, timeLog, trace, warn
-                case 'debug': //@since v1.0.13
-                    this.myLog = console.debug
-                    break
-                case 'error':
-                    this.myLog = console.error
-                    break
-                case 'warn':
-                    this.myLog = console.warn
-                    break
-                case 'info':
-                    this.myLog = console.info
-                    break
-                case 'dir':
-                    this.myLog = console.dir
-                    break
-                default:
-                    this.myLog = console.log
-            }
+            var type = arguments[0]
 
-            this.myLog(msg)
+            //console[type](...args)
+            console[type].apply(undefined, [].slice.call(arguments, 1))
+
         } // --- End of debug function --- //
 
         /** Returns the self object if debugging otherwise just the current version
@@ -220,17 +203,20 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          */
         self.set = function (prop, val) {
             self[prop] = val
-            self.uiDebug('log', 'uibuilderfe: prop set - prop: ' + prop + ', val: ' + (typeof val === 'object') ? JSON.stringify(val) : val )
+            //self.uiDebug('debug', `uibuilderfe: prop set - prop: ${prop}, val: ${(typeof val === 'object') ? JSON.stringify(val) : val}` )
+            self.uiDebug('debug', 'uibuilderfe: prop set - prop: ' + prop + ', val: ' + (typeof val === 'object') ? JSON.stringify(val) : val )
 
             // Trigger this prop's event callbacks (listeners)
             self.emit(prop, val)
 
-            //self.uiDebug('log', `uibuilderfe:uibuilder:set Property: ${prop}, Value: ${val}`)
+            //self.uiDebug('debug', `uibuilderfe:uibuilder:set Property: ${prop}, Value: ${val}`)
         }
 
         //#region ========== Socket.IO processing ========== //
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
+        //self.uiDebug('debug', `uibuilderfe: About to create IO. Namespace: ${self.ioNamespace}, Path: ${self.ioPath}, Transport: [${self.ioTransport.join(', ')}]`)
+        self.uiDebug('debug', 'uibuilderfe: About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
         self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
 
         /** Check whether Socket.IO is connected to the server, reconnect if not (recursive)
@@ -240,10 +226,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          */
         self.checkConnect = function (delay, factor) {
             var depth = depth++ || 1
-            self.uiDebug('log', 'checkConnect. Depth: ', depth, ' , Delay: ', delay, ', Factor: ', factor)
+            //self.uiDebug('debug', `uibuilderfe:checkConnect. Reconnect - Depth: ${depth}, Delay: ${delay}, Factor: ${factor}`)
+            self.uiDebug('debug', 'uibuilderfe:checkConnect. Reconnect - Depth: ' + depth + ', Delay: ' + delay + ', Factor: ' + factor)
             if (self.timerid) window.clearTimeout(self.timerid) // we only want one running at a time
             self.timerid = window.setTimeout(function () {
-                self.uiDebug('log', 'checkConnect timeout. SIO reconnect attempt, timeout: ' + delay + ', depth: ' + depth)
+                //self.uiDebug('debug', `uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ${delay}, depth: ${depth}`)
+                self.uiDebug('debug', 'uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ' + delay + ', depth: ' + depth)
                 // don't need to check whether we have connected as the timer will have been cleared if we have
                 self.socket.close()    // this is necessary sometimes when the socket fails to connect on startup
                 self.socket.connect()  // Try to reconnect
@@ -254,7 +242,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         // When the socket is connected ...
         self.socket.on('connect', function () {
-            self.uiDebug('log', 'uibuilderfe: SOCKET CONNECTED - Namespace: ' + self.ioNamespace)
+            self.uiDebug('info', 'uibuilderfe: SOCKET CONNECTED - Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
 
             self.set('ioConnected', true)
 
@@ -268,8 +256,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         // When Node-RED uibuilder node sends a msg over Socket.IO to us ...
         self.socket.on(self.ioChannels.server, function (receivedMsg) {
-            self.uiDebug('info', 'uibuilderfe: socket.on.server - msg received - Namespace: ' + self.ioNamespace)
-            self.uiDebug('dir', receivedMsg)
+            self.uiDebug('debug', 'uibuilderfe:' + self.ioChannels.server + ' (server): msg received - Namespace: ' + self.ioNamespace, receivedMsg)
 
             // Make sure that msg is an object & not null
             receivedMsg = makeMeAnObject(receivedMsg, 'payload')
@@ -293,27 +280,27 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             // @since 2018-10-07 v1.0.9: Work out local time offset from server
             if ( receivedMsg.hasOwnProperty('serverTimestamp') ) {
-                self.uiDebug('log', ((new Date()) - receivedMsg.serverTimestamp) )
+                self.uiDebug('log', 'uibuilderfe:' + self.ioChannels.server + ' (server): Offset is: ' + ((new Date()) - receivedMsg.serverTimestamp) )
             }
 
-            /** Test auto-response - not really required but useful when getting started
-                if (self.debug) {
-                    self.send({payload: 'From: uibuilderfe - we got a message from you, thanks'})
-                }
-                // */
+            /** Test auto-response - not really required but useful when getting started **/
+            // if (self.debug) {
+            //     self.send({payload: 'From: uibuilderfe - we got a message from you, thanks', origMsg: receivedMsg})
+            // }
 
         }) // -- End of websocket receive DATA msg from Node-RED -- //
 
         // Receive a CONTROL msg from Node-RED - see also sendCtrl()
         self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
-            self.uiDebug('info', 'uibuilder:socket.on.control - msg received - Namespace: ' + self.ioNamespace)
-            self.uiDebug('dir', receivedCtrlMsg)
+            self.uiDebug('debug', 'uibuilder:' + self.ioChannels.control + ' (control): msg received - Namespace: ' + self.ioNamespace, receivedCtrlMsg)
 
             // Make sure that msg is an object & not null
             if (receivedCtrlMsg === null) {
                 receivedCtrlMsg = {}
             } else if (typeof receivedCtrlMsg !== 'object') {
-                receivedCtrlMsg = { 'uibuilderCtrl': receivedCtrlMsg }
+                var msg = {}
+                msg['uibuilderCtrl:'+self.ioChannels.control] = receivedCtrlMsg
+                receivedCtrlMsg = msg
             }
 
             // Allow incoming control msg to change debug state (usually on the connection msg)
@@ -346,7 +333,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // reason === 'io server disconnect' - redeploy of Node instance
             // reason === 'transport close' - Node-RED terminating
             // reason === 'ping timeout' - didn't receive a pong response?
-            self.uiDebug('log', 'SOCKET DISCONNECTED - Namespace: ' + self.ioNamespace + ', Reason: ' + reason)
+            self.uiDebug('info', 'uibuilderfe:SOCKET DISCONNECTED - Namespace: ' + self.ioNamespace + ', Reason: ' + reason)
 
             self.set('ioConnected', false)
 
@@ -398,8 +385,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.send = function (msgToSend, channel) {
             if ( channel === null || channel === undefined ) channel = self.ioChannels.client
 
-            self.uiDebug('info', 'uibuilderfe: msg sent - Namespace: ' + self.ioNamespace + ', Channel: ' + channel)
-            self.uiDebug('dir', msgToSend)
+            self.uiDebug('debug', 'uibuilderfe: sending msg - Namespace: ' + self.ioNamespace + ', Channel: ' + channel, msgToSend)
 
             // Make sure msgToSend is an object
             if (channel === self.ioChannels.client) {
@@ -622,7 +608,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         // Make sure we connect the first time ok
         self.checkConnect(self.retryMs, self.retryFactor)
-
+    
         //#endregion ======== end of execution ======== //
 
         // Make externally available the external methods
@@ -641,11 +627,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         return uibuilder
     }
 
-    // Makes uibuilder function available to the browser
-    // or as a module to Node.js or bundle
+    // Makes uibuilder function available to the browser or as a module to Node.js or bundle
     if( typeof exports !== 'undefined' ) {
-        // If running bundled code or in Node.js, this exports uibuilder
-        // you would need to import or require it
+        // If running bundled code or in Node.js, this exports uibuilder you would need to import or require it
         if( typeof module !== 'undefined' && module.exports ) {
             exports = module.exports = uibuilder
         }
@@ -676,10 +660,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
 }).call(this); // Pass current context into the IIFE
 // --- End of isolation IIFE --- //
-
-
-// ========== UTILITY FUNCTIONS ========== //
-
 
 
 // EOF

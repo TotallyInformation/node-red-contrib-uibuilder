@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2017 Julian Knight (Totally Information)
+    Copyright (c) 2019 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 <script type="text/javascript">
     function buildUrlList(pkgs, url) {
-        if ( !Array.isArray(pkgs) ) pkgs = [pkgs]
+        if (!Array.isArray(pkgs)) pkgs = [pkgs]
         url = RED.settings.httpNodeRoot + url
         $('#fepaths').empty()
         pkgs.forEach(function(element) {
@@ -27,7 +27,85 @@
         $('#fepaths').append('<li><a href="' + url + '/vendor/normalize.css/normalize.css">' + url + '/vendor/normalize.css/normalize.css</a></li>') // always the same
         $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
     }
-    RED.nodes.registerType( 'uibuilder', {
+    // Return a file type from a file name (or default to txt)
+    // ftype can be used in ACE editor modes
+    function fileType(fname) {
+        const fparts = fname.split('.')
+        if (fparts.length > 1) {
+            let ftype = 'text'
+            const fext = fparts[1].toLowerCase().trim()
+            switch (fext) {
+                case 'js':
+                    ftype = 'javascript'
+                    break;
+                case 'html':
+                case 'css':
+                case 'json':
+                    ftype = fext
+                    break;
+                case 'vue':
+                    ftype = 'html'
+                    break;
+                case 'md':
+                    ftype = 'markdown'
+                    break;
+                case 'yaml':
+                case 'yml':
+                    ftype = 'yaml'
+                    break;
+                default:
+                    // txt
+            }
+            return ftype
+        } else {
+            return 'text'
+        }
+    }
+    /** Get the chosen file contents & set up the ACE editor
+     * @param {Object} that 'this' for the oneditprepare function
+     **/
+    function getFileContents(that) {
+
+        // Get the chosen filename
+        const fname = $('#node-input-filename').val()
+
+        // Change mode to match file type
+        const filetype = fileType(fname)
+        $("#node-input-format").val(filetype)
+
+        // Get the file contents via API defined in uibuilder.js
+        $.get( 'uibgetfile?url=' + $('#node-input-url').val() + '&fname=' + fname, function(data){
+            // Set the displayed filename
+            $('#filename').text(fname)
+            // Add the fetched data to the editor
+            that.editorSession.setValue(data)
+            // Set the editor file mode
+            that.editorSession.setMode({
+                path: 'ace/mode/' + filetype, v: Date.now()
+            })
+            // Mark the current session as clean
+            that.editorSession.getUndoManager().isClean()
+            // Position the cursor in the edit area
+            that.editor.focus()
+        })
+    }
+    /** Enable/disable buttons if file has edits or not
+     * @param {boolean} isClean true = the file is clean, else there are pending edits that need saving
+     */
+    function fileIsClean(isClean) {
+        // If clean, disable the save & reset buttons
+        $('#edit-save').prop('disabled', isClean)
+        $('#edit-reset').prop('disabled', isClean)
+        // If clean, enable the delete and edit buttons
+        //$('#edit-delete').prop('disabled', !isClean)
+        $('#edit-close').prop('disabled', !isClean)
+        $('#node-edit-file').prop('disabled', !isClean)
+        $('#node-input-filename').prop('disabled', !isClean)
+        // If not clean, clear any messages
+        if ( ! isClean ) $('#file-action-message').text('Save Required')
+    }
+    // Register the node type, defaults and set up the edit fns
+    RED.nodes.registerType('uibuilder', {
         category: 'UI Builder',
         color: '#E6E0F8',
         defaults: {
@@ -38,7 +116,10 @@
             allowScripts: { value: false },
             allowStyles: { value: false },
             debugFE: { value: false },
-            copyIndex:  { value: true },
+            copyIndex: { value: true },
+            template: { value: '' },         // file content of editor
+            filename: { value: 'index.js' }, // filename being edited
+            format: { value: 'text' }        // file format being edited
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -46,8 +127,14 @@
         outputLabels: ['Data', 'Control Msgs'],
         icon: 'ui_template.png',
         paletteLabel: 'UI Builder',
-        label: function() { return this.url || this.name || 'UI Builder'; },
-        oneditprepare: function() {
+        label: function () { return this.url || this.name || 'UI Builder'; },
+        oneditprepare: function () {
+            const that = this
+
+            // Start with the edit section hidden & main section visible
+            $('#main-props').show()
+            $('#edit-props').hide()
+
             // Set the checkbox states
             $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
             $('#node-input-allowScripts').prop('checked', this.allowScripts)
@@ -58,70 +145,271 @@
             var pkgs = RED.settings.uibuilder.userVendorPackages
             $('#userpackages').text(pkgs)
             $('#bedebug').text(RED.settings.uibuilder.debug)
+
+            // Delete is not ready yet, so disable button by default
+            $('#edit-delete').prop('disabled', true)
+            // Mark edit save/reset buttons as disabled by default
+            fileIsClean(true)
+            //$('#edit-save').prop('disabled', true)
+            //$('#edit-reset').prop('disabled', true)
+            // Show the edit section, hide the main section
+            $('#show-edit-props').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').toggle()
+                $('#edit-props').toggle()
+            })
+            // Close the edit section, hide the main section
+            $('#edit-close').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').show()
+                $('#edit-props').hide()
+                // TODO: cancel changes
+            })
+
+            // Set filename for editor
+            $('#filename').text(this.filename)
+            // Clear out the editor
+            if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
+
             // List the front-end url paths available
             buildUrlList(pkgs, this.url)
             // When the url changes,
-            $('#node-input-url').change(function(){
+            $('#node-input-url').change(function () {
                 // Show the root URL
                 $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
                 // Update the list of available paths
                 buildUrlList(pkgs, $(this).val())
-            });
+            })
+            // @since 2019-01-27 - adding file editor
+            // Build the file list - pass the url so the BE can find the right folder
+            $.getJSON('uibfiles?url=' + $('#node-input-url').val(), function(files) {
+                //$("#node-input-filename option").remove()
+                $.each(files, function (i, item) {
+                    $('#node-input-filename').append($('<option>', { 
+                        value: item,
+                        text : item, 
+                    }))
+                })
+                $("#node-input-filename").val(that.filename)
+            })
+
+            // Create the ACE editor component
+            that.editor = RED.editor.createEditor({
+                id: 'node-input-template-editor',
+                mode: 'ace/mode/' + that.format,
+                value: that.template
+            })
+            // Keep a reference to the current editor session
+            that.editorSession = that.editor.getSession()
+            /** If the editor has changes, enable the save & reset buttons
+             * using input event instead of change since it's called with some timeout 
+             * which is needed by the undo (which takes some time to update)
+             **/
+            that.editor.on("input", function() {
+                // Is the editor clean?
+                fileIsClean(that.editorSession.getUndoManager().isClean())
+            })
+            /*that.editorSession.on('change', function(delta) {
+                // delta.start, delta.end, delta.lines, delta.action
+                console.log('ACE Editor CHANGE Event', delta)
+            }) */
+
+            // Watch for mode changes, update editor component on change
+            $('#node-input-format').change(function() {
+                const mod = 'ace/mode/' + $(this).val()
+                that.editorSession.setMode({
+                    path: mod,
+                    v: Date.now()
+                })
+            })
+
+            /** TODO: Get list of installed themes, add chooser, save current choice
+             * that.editor.setTheme("ace/theme/monokai")
+             * ace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
+             * ace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
+             **/
+
+            // Handle the edit button (and disable default click)
+            $('#node-edit-file').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+
+                // Get the content of the file via the admin API
+                getFileContents(that)
+                fileIsClean(true)
+            })
+            // Handle the reset button (reload the file)
+            $('#edit-reset').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+
+                // Get the content of the file via the admin API
+                getFileContents(that)
+                fileIsClean(true)
+                $('#file-action-message').text('')
+            })
+            // Handle the save button
+            $('#edit-save').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+
+                // Post the updated content of the file via the admin API
+                // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
+                var request = new XMLHttpRequest()
+                var params = 'fname=' + $('#node-input-filename').val() + '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(that.editorSession.getValue())
+                request.open('POST', 'uibputfile', true)
+                request.onreadystatechange = function() {
+                    if (this.readyState === XMLHttpRequest.DONE) {
+                        if (this.status === 200) {
+                            // Request successful
+                            // display msg - blank msg when new edits present
+                            $('#file-action-message').text('File Saved')
+                            fileIsClean(true)
+                        } else {
+                            // Request failed
+                            // display msg - blank msg when new edits present
+                            $('#file-action-message').text('File Save FAILED')
+                        }
+                    }
+                }
+                request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+                request.send(params)
+
+            })
+        }, // ---- End of oneditprepare ---- //
+
+        oneditsave: function() {
+            // xfer the editor text back to the template var
+            //$('#node-input-template').val(this.editor.getValue())
+            // Get rid of the editor
+            this.editor.destroy()
+            delete this.editor
+
+            // TODO: Check if anything actually changed - if so, mark the node as dirty
+            //this.changed = true;
+            //RED.nodes.dirty(true);
         },
-        //oneditsave: function() { },
-        //oneditresize: function(size) { },
-        // Do any setup when node added to palette
-        //onpaletteadd: function() { },
-    });
+
+        oneditcancel: function() {
+            this.editor.destroy()
+            delete this.editor
+        },
+
+        // oneditresize: function(size) {
+            //     var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+            //     var height = $("#dialog-form").height();
+            //     for (var i=0; i<rows.size(); i++) {
+            //         height -= $(rows[i]).outerHeight(true);
+            //     }
+            //     var editorRow = $("#dialog-form>div.node-text-editor-row");
+            //     height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+            //     $(".node-text-editor").css("height",height+"px");
+            //     this.editor.resize();
+        // },
+    })
 </script>
 
 <script type="text/x-red" data-template-name="uibuilder">
-    <!-- Node Name -->
-    <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-        <input type="text" id="node-input-name">
+    <div id="main-props"><!-- Hideable main properties section -->
+        <!-- Node Name -->
+        <div class="form-row">
+            <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+            <input type="text" id="node-input-name">
+        </div>
+
+        <!-- Topic -->
+        <div class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+            <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+            <input type="text" id="node-input-topic">
+        </div>
+
+        <!-- Home "page" id - defines the URL used -->
+        <div class="form-row" title="Make sure this gives a unique URL">
+            <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+            <input type="text" id="node-input-url">
+        </div>
+
+        <!-- Forward and debug flags -->
+        <div class="form-row">
+            <!-- Forward input msgs to output -->
+            <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-fwdInMessages" style="width: 40%;" title="forward inbound msg's direct to the output">
+                Forward input to output?
+            </label>
+            <!-- Debug Front-End? -->
+            <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-debugFE" style="width: 40%;" title="Turn on debugging in the front-end library">
+                Debug Front-End?
+            </label>
+        </div>
+
+        <!-- Allow scripts/styles to be passed to front-end? -->
+        <div class="form-row" title="Add msg.script/msg.style to the input msg">
+            Allow passing to the front-end: 
+            <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowScripts" style="">Scripts? (JS)</label>
+            <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowStyles" style="">Styles? (CSS)</label>
+        </div>
+
+        <!-- Copy index.(css|js) to local assets if they dont exist? -->
+        <div class="form-row">
+            <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-copyIndex" style="width: 90%;">Copy index.(css|js) from templates to local if they don't exist?</label>
+        </div>
+
+        <!-- Show edit properties, hide this section -->
+        <div class="form-row">
+            <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
+        </div>
     </div>
 
-    <!-- Topic -->
-    <div class="form-row" title="Adds a msg.topic to input msgs if not already provided">
-        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
-        <input type="text" id="node-input-topic">
-    </div>
+    
+    <div id="edit-props"><!-- Hideable File Editor Section -->
+        <!-- Drop-down for selecting file to edit -->
+        <div class="form-row">
+            <label for="node-input-filename"><i class="fa fa-code"></i> Choose File</label>
+            <select id="node-input-filename" style="width: 60%;"></select>
+            <!-- Edit Button -->
+            <button class="btn" id="node-edit-file">Edit</button>
+        </div>
 
-    <!-- Home "page" id - defines the URL used -->
-    <div class="form-row" title="Make sure this gives a unique URL">
-        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-        <input type="text" id="node-input-url">
-    </div>
+        <!-- Save/Cancel/Reset/(message)/Delete -->
+        <div class="form-row">
+            <button class="btn" id="edit-save" title="Save any changes to the file" style="font-size:0.8em;line-height:1em;">Save</button>
+            <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)" style="font-size:0.8em;line-height:1em;">Reset</button>
+            <button class="btn" id="edit-close" title="Close the edit window (lose any unsaved changes)" style="font-size:0.8em;line-height:1em;">Close</button>
 
-    <!-- Forward input msgs to output -->
-    <div class="form-row">
-        <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-fwdInMessages" style="width: 70%;">Forward received messages direct to output?</label>
-    </div>
+            <span id="file-action-message"></span>
 
-    <!-- Allow scripts to be passed to front-end? -->
-    <div class="form-row" title="Add msg.script to the input msg">
-        <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-allowScripts" style="width: 70%;">Allow scripts to be passed to front-end?</label>
-    </div>
-    <!-- Allow styles to be passed to front-end? -->
-    <div class="form-row" title="Add msg.style to the input msg">
-        <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-allowStyles" style="width: 70%;">Allow styles to be passed to front-end?</label>
+            <div style="position: absolute;right:1.6em;display:inline-block;">
+                <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set." style="font-size:0.8em;line-height:1em;">
+                    Delete
+                </button>
+            </div>
+        </div>
 
-    </div>
+        <!-- Edit box  editor-tray-content -->
+        <div class="form-row node-text-editor-row">
+            <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
+        </div>
 
-    <!-- Copy index.(css|js) to local assets if they dont exist? -->
-    <div class="form-row">
-        <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-copyIndex" style="width: 70%;">Copy index.(css|js) from templates to local if they don't exist?</label>
-    </div>
-
-    <!-- Debug Front-End? -->
-    <div class="form-row" title="See browser dev console if turned on">
-        <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-debugFE" style="width: 70%;">Debug Front-End?</label>
+        <!-- File name, language selector -->
+        <div class="form-row">
+            <!-- <button id="node-function-expand-js" class="editor-button editor-button-small"><i class="fa fa-expand"></i></button>-->
+            <label for="node-input-template"><i class="fa fa-file-code-o"></i> Filename: </label>
+            <span id="filename">...</span>
+            <input type="hidden" id="node-input-template" autofocus="autofocus">
+            <div style="position: absolute; right:1.6em;display:inline-block; text-align: right; font-size: 0.8em;">
+                <select id="node-input-format" style="width:110px; font-size: 10px !important;  height: 24px; padding:0;">
+                    <option value="handlebars">mustache</option>
+                    <option value="html">HTML</option>
+                    <option value="json">JSON</option>
+                    <option value="javascript">Javascript</option>
+                    <option value="css">CSS</option>
+                    <option value="markdown">Markdown</option>
+                    <option value="yaml">YAML</option>
+                    <option value="text">Text</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- Info -->
@@ -265,6 +553,14 @@
             and <code>uibuilder.debug(true)</code> to turn it on.<br>
             The chosen state is sent to the Front-end in the initial connection message.<br>
             <b>Note</b>: The flag in <code>settings.js</code> controls debug output for the back-end (see below).
+        </dd>
+
+        <dt>Edit Source Files</dt>
+        <dd>
+            Clicking this button will hide the above settings and display a file editor allowing you
+            to edit the front-end files that define your user interface.<br>
+            All text-based files in the `<userLib>/uibuilder/<url>/src` folder on the server's filing system will
+            be available to edit.
         </dd>
     </dl>
 

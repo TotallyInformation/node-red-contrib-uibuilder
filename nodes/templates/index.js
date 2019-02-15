@@ -14,10 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-/**
- * This is the default, template Front-End JavaScript for uibuilder
- * It is usable as is though you will want to add your own code to
- * process incoming and outgoing messages.
+/** This script is usable as is though you will want to add your own code to process incoming and outgoing messages.
  *
  * uibuilderfe.js (or uibuilderfe.min.js) exposes the following global object.
  * Note that you can use webpack or similar to bundle uibuilder with your own code.
@@ -72,6 +69,7 @@
  *       .timerid       - internal use only
  *       .events        - list of registered events
  */
+'use strict'
 
 // When JQuery is ready, update
 $( document ).ready(function() {
@@ -82,15 +80,14 @@ $( document ).ready(function() {
     $('#socketConnectedState').text( uibuilder.get('ioConnected') )
     $('#feVersion').text( uibuilder.get('version') )
 
-    // Turn on debugging (default is off)
+    // Turn on debugging for uibuilderfe (default is off)
     uibuilder.debug(true)
 
     // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
     // Note that you can also listen for 'msgsReceived' as they are updated at the same time
     // but newVal relates to the attribute being listened to.
     uibuilder.onChange('msg', function(newVal){
-        console.info('property msg changed!')
-        console.dir(newVal)
+        console.info('indexjs:msg: property msg has changed! ', newVal)
         $('#showMsg').text(JSON.stringify(newVal))
         //uibuilder.set('msgCopy', newVal)
     })
@@ -102,12 +99,12 @@ $( document ).ready(function() {
     // You can add arbitrary attributes to the object, you cannot overwrite internal attributes
 
     // Try setting a restricted, internal attribute - see the warning in the browser console
-    uibuilder.set('msg', 'You tried but failed!')
+    uibuilder.set('msg', 'You tried but failed! (index.js)')
 
     // Remember that onChange functions don't trigger if you haven't set them
     // up BEFORE an attribute change.
     uibuilder.onChange('msgCopy', function(newVal){
-        console.info('msgCopy changed. New value: ', newVal)
+        console.info('indexjs:msgCopy: New value is: ', newVal)
     })
 
     // Now try setting a new attribute - this will be an empty object because
@@ -117,7 +114,7 @@ $( document ).ready(function() {
 
     // As noted, we could get the msg here too
     uibuilder.onChange('msgsReceived', function(newVal){
-        console.info('New msg sent to us from Node-RED over Socket.IO. Total Count: ', newVal)
+        console.info('indexjs:msgsReceived: New msg sent to us from Node-RED over Socket.IO. Total Count: ', newVal)
         $('#msgsReceived').text(newVal)
         // uibuilder.msg is a shortcut for uibuilder.get('msg')
         //$('#showMsg').text(JSON.stringify(uibuilder.msg))
@@ -125,7 +122,7 @@ $( document ).ready(function() {
 
     // If Socket.IO connects/disconnects
     uibuilder.onChange('ioConnected', function(newVal){
-        console.info('Socket.IO Connection Status Changed: ', newVal)
+        console.info('indexjs:ioConnected: Socket.IO Connection Status Changed: ', newVal)
         $('#socketConnectedState').text(newVal)
     })
 
@@ -138,15 +135,15 @@ $( document ).ready(function() {
 
     // If we receive a control message from Node-RED
     uibuilder.onChange('msgsCtrl', function(newVal){
-        console.info('New control msg sent to us from Node-RED over Socket.IO. Total Count: ', newVal)
+        console.info('indexjs:msgsCtrl: New control msg sent to us from Node-RED over Socket.IO. Total Count: ', newVal)
         $('#msgsControl').text(newVal)
         $('#showCtrlMsg').text(JSON.stringify(uibuilder.get('ctrlMsg')))
     })
 
     //Manually send a message back to Node-RED after 2 seconds
     window.setTimeout(function(){
-        console.info('Sending a message back to Node-RED - after 2s delay')
-        uibuilder.send( { 'topic':'uibuilderfe', 'payload':'I am a message sent from the uibuilder front end' } )
+        console.info('indexjs:setTimeout: Sending a message back to Node-RED - after 2s delay')
+        uibuilder.send( { 'topic':'uibuilderfe', 'payload':'I am a message sent from the uibuilder front end (index.js)' } )
     }, 2000)
 
     // Manually send a control message. Include cacheControl:REPLAY to test cache handling

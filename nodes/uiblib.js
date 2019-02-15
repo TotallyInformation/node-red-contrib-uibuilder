@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Julian Knight (Totally Information)
+ * Copyright (c) 2019 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ module.exports = {
     // Needs to return the msg object
     inputHandler: function(msg, node, RED, io, ioNs, log) {
         node.rcvMsgCount++
+        log.verbose(`[${node.url}] msg received via FLOW. ${node.rcvMsgCount} messages received`, msg)
 
         // If the input msg is a uibuilder control msg, then drop it to prevent loops
         if ( msg.hasOwnProperty('uibuilderCtrl') ) return null
@@ -38,17 +39,17 @@ module.exports = {
         // pass the complete msg object to the uibuilder client
         // TODO: This should have some safety validation on it!
         if (msg._socketId) {
+            log.debug(`[${node.url}] msg sent on to client ${msg._socketId}. Channel: ${node.ioChannels.server}`, msg)
             ioNs.to(msg._socketId).emit(node.ioChannels.server, msg)
         } else {
+            log.debug(`[${node.url}] msg sent on to ALL clients. Channel: ${node.ioChannels.server}`, msg)
             ioNs.emit(node.ioChannels.server, msg)
         }
-
-        log.debug('uibuilder - msg sent to front-end via ws channel, ', node.ioChannels.server, ': ', msg)
 
         if (node.fwdInMessages) {
             // Send on the input msg to output
             node.send(msg)
-            log.debug('uibuilder - msg passed downstream to next node: ', msg)
+            log.debug(`[${node.url}] msg passed downstream to next node`, msg)
         }
 
         return msg
@@ -63,8 +64,8 @@ module.exports = {
      * @param {Object} app - Instance of ExpressJS app
      * @param {Object} log - Winston logging instance
      */
-    processClose: function(done = null, node, RED, ioNs, io, app, log) {
-        log.debug('uibuilder:nodeGo:on-close:processClose', node.url)
+    processClose: function(done = null, node, RED, ioNs, io, app, log, instances) {
+        log.debug(`[${node.url}] nodeGo:on-close:processClose`)
 
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
@@ -98,6 +99,9 @@ module.exports = {
         for (var i = removePath.length -1; i >= 0; i--) {
             app._router.stack.splice(removePath[i],1);
         }
+
+        // Keep a log of the active instances @since 2019-02-02
+        instances[node.id] = undefined
 
         /*
             // This code borrowed from the http nodes

@@ -1,0 +1,37 @@
+CACHE MANIFEST
+# 2019-02-02 19:48:57
+
+# WARNING: These files will never be delivered
+# again until this file changes. If you are updating,
+# make sure you change something in this file.
+
+# The appcache isn't always good: https://alistapart.com/article/application-cache-is-a-douchebag
+
+# Resources that will be delivered from the CACHE
+# after first load.
+CACHE:
+# Required files
+images/node-blue-192x192.png
+images/node-blue.ico
+/uibuilder/socket.io/socket.io.js
+# Replace this with the non .min version if needed
+uibuilderfe.min.js
+# Specific for our app
+index.css
+index.js
+# Local vendor libraries
+vendor/normalize.css/normalize.css
+# Useful utility libraries
+#https://cdn.jsdelivr.net/npm/lodash@4/lodash.min.js
+#https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js
+
+# Resources that require the user to be online.
+NETWORK:
+*
+
+# Optional section specifying fallback pages if a resource is inaccessible
+# 1st URI is resource, 2nd is fallback if request fails or errors
+# Both must from same origin as manifest. Can use prefixes as well as file uris
+#FALLBACK:
+# e.g. display offline.html if cache is empty and we are offline
+#/ /offline.html

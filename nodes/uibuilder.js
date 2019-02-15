@@ -1,5 +1,6 @@
+/* globals log */
 /**
- * Copyright (c) 2018 Julian Knight (Totally Information)
+ * Copyright (c) 2019 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
  * limitations under the License.
  **/
 // @ts-check
-'use strict';
+'use strict'
 
 // Module name must match this nodes html file
 const moduleName  = 'uibuilder'
@@ -41,12 +42,9 @@ const vendorPackages = [
 // if OK to reset on redeployment, attach to node.xxx inside nodeGo instead.
 const deployments = {}
 
-// TODO: track instance urls here
 //  when nodeGo is run, add the node.id as a key with the value being the url
 //  then add processing to ensure that the URL's are unique.
 const instances = {}
-
-var moduleInstance = 'uibuilder'
 
 function winstonFormatter(options) {
     // - Return string will be passed to logger.
@@ -71,8 +69,7 @@ function winstonFormatter(options) {
             humanReadableUnhandledException: false }
      */
     return options.timestamp() + ' ' +
-        (options.level.toUpperCase()+ '          ').slice(0,7) + ' [uibuilder:' +
-        moduleInstance + '] ' +
+        (options.level.toUpperCase()+ '          ').slice(0,7) + 
         (options.message ? options.message : '') +
         (options.meta && Object.keys(options.meta).length ? ' :: '+JSON.stringify(options.meta) : '' );
 }
@@ -97,33 +94,42 @@ module.exports = function(RED) {
     var debug = uib_globalSettings.debug || false // JK @since 2017-08-17, Change default answer to false
 
     // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
-    // @TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
+    // TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
     var winstonTransport
+    // dummy log functions - replaced by Winston if debug config is set @since 2019-02-03
+    var log = {
+        'error': function(...s){},
+        'warn': function(...s){},
+        'info': function(...s){},
+        'verbose': function(...s){},
+        'debug': function(...s){},
+        'silly': function(...s){},
+    }
     if (debug) {
         // @since 2017-10-06 if debugging, log to ~/.node-red/uibuilder.log, otherwise log to console
         winstonTransport = new (winston.transports.File)({
             filename: path.join(userDir, 'uibuilder.log'),
-            maxsize: 50000,
+            maxsize: 500000, //@since 2019-02-03 increase max log size
             maxFiles: 10,
             tailable: true,
             json:false,
             timestamp: winstonTimestamp,
             formatter: winstonFormatter
         }) // file in user folder ~/.node-red
+        log = new (winston.Logger)({
+            // set log level based on debug var from settings.js/uibuilder
+            level: debug === true ? 'silly' : debug, // error, warn, info, verbose, debug, silly; true=silly
+            // Where do we want log output to go?
+            transports: [
+                winstonTransport
+            ]
+        })
     } else {
-        winstonTransport = new (winston.transports.Console)()
+        // @since 2019-01-27 don't log if debug not set since we output key messages to the Node-RED log anyway
+        //winstonTransport = new (winston.transports.Console)()
     }
-    const log = new (winston.Logger)({
-        // set log level based on debug var from settings.js/uibuilder
-        level: debug === true ? 'silly' : debug, // error, warn, info, verbose, debug, silly; true=silly
-        // Where do we want log output to go?
-        transports: [
-            // @TODO: format console output to match RED.log
-            winstonTransport
-        ]
-    })
 
-    log.verbose('----------------- uibuilder - module.exports -----------------')
+    log.verbose('[Module] ----------------- uibuilder - module.exports -----------------')
 
     /** Holder for Socket.IO - we want this to survive redeployments of each node instance
      *  so that existing clients can be reconnected.
@@ -132,7 +138,7 @@ module.exports = function(RED) {
      * NOTE: This ignores RED.settings.httpNodeRoot deliberately, it will always be /uibuilder/socket.io
      *       otherwise it is impossible to have a standard index.html file.
      **/
-    log.debug('uibuilder: Socket.IO initialisation - Socket Path=', uiblib.urlJoin(moduleName, 'socket.io') )
+    log.debug('[Module] Socket.IO initialisation - Socket Path=', uiblib.urlJoin(moduleName, 'socket.io') )
     var io = socketio.listen(RED.server, {'path': uiblib.urlJoin(moduleName, 'socket.io')}) // listen === attach
     // @ts-ignore
     io.set('transports', ['polling', 'websocket'])
@@ -148,8 +154,8 @@ module.exports = function(RED) {
             //console.dir(io.sockets.connected)
         */
         if (socket.request.headers.cookie) {
-            //log.info('UIbuilder:io.use - Authentication OK - ID: ' + socket.id)
-            //log.debug(socket.request.headers.cookie)  // socket.handshake.headers.cookie
+            //log.info('[Module] io.use - Authentication OK - ID: ' + socket.id)
+            //log.debug('[Module] Cookie', socket.request.headers.cookie)  // socket.handshake.headers.cookie
             return next()
         }
         next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
@@ -164,6 +170,7 @@ module.exports = function(RED) {
     if ( uib_globalSettings.hasOwnProperty('socketmiddleware') ) {
         /** Is a uibuilder specific function available? */
         if ( typeof uib_globalSettings.socketmiddleware === 'function' ) {
+            log.verbose('[Module] Using socket middleware from settings.js')
             io.use(uib_globalSettings.socketmiddleware)
         }
     }
@@ -176,11 +183,15 @@ module.exports = function(RED) {
         // Create the node
         RED.nodes.createNode(this, config)
 
-        moduleInstance = config.url // for logging
-        log.verbose('================ instance registered ================')
+        // @since 2019-02-02 - the current instance name (url)
+        var uibInstance = config.url // for logging
+
+        log.verbose(`[${uibInstance}] ================ instance registered ================`)
 
         // copy 'this' object in case we need it in context of callbacks of other functions.
         const node = this
+
+        log.verbose(`[${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
 
         //#region --- Create local copies of the node configuration (as defined in the .html file)
         // NB: node.id and node.type are also available
@@ -193,9 +204,16 @@ module.exports = function(RED) {
         node.allowStyles   = config.allowStyles
         node.debugFE       = config.debugFE
         node.copyIndex     = config.copyIndex
+        node.filename      = config.filename
+        node.format        = config.format
+        node.template      = config.template
         //#endregion ----
 
-        log.verbose( 'node settings', {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
+        log.verbose(`[${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
+
+        // Keep a log of the active instances @since 2019-02-02
+        instances[node.id] = node.url
+        log.verbose(`[${uibInstance}] Node Instances Registered`, instances)
 
         /** User supplied vendor packages
          * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
@@ -204,14 +222,14 @@ module.exports = function(RED) {
          */
         node.userVendorPackages = uiblib.getProps(RED,config,'userVendorPackages',null) || uiblib.getProps(RED,uib_globalSettings,'userVendorPackages',[])
         // Name of the fs path used to hold custom files & folders for all instances of uibuilder
-        node.customAppFolder = path.join(userDir, 'uibuilder')
+        node.customAppFolder = path.join(userDir, moduleName)
         /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
          *   Files in this folder are also served to URL but take preference
          *   over those in the nodes folders (which act as defaults)
          */
         node.customFolder = path.join(node.customAppFolder, node.url)
 
-        log.verbose( 'node pkg details', { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
+        log.verbose(`[${uibInstance}] Node package details`, { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
 
         // Socket.IO config
         node.ioClientsCount = 0 // how many Socket clients connected to this instance?
@@ -222,16 +240,16 @@ module.exports = function(RED) {
         // @since v1.0.10, changed namespace creation to correct a missing / if httpNodeRoot had been changed from the default
         node.ioNamespace = uiblib.urlJoin(httpNodeRoot, node.url)
 
-        log.verbose(  'io', { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
+        log.verbose(`[${uibInstance}] Socket.io details`, { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
         if ( deployments.hasOwnProperty(node.id) ) deployments[node.id]++
         else deployments[node.id] = 1
-        log.debug(  'deployments', deployments[node.id] )
+        log.verbose(`[${uibInstance}] Number of Deployments`, deployments[node.id] )
 
-        // We need an http server to serve the page
-        const app = RED.httpNode || RED.httpAdmin
+        // We need an http server to serve the page. @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages
+        const app = RED.httpNode // || RED.httpAdmin
 
         /** Provide the ability to have a ExpressJS middleware hook.
          * This can be used for custom authentication/authorisation or anything else.
@@ -242,6 +260,7 @@ module.exports = function(RED) {
         if ( uib_globalSettings.hasOwnProperty('middleware') ) {
             /** Is a uibuilder specific function available? */
             if ( typeof uib_globalSettings.middleware === 'function' ) {
+                log.verbose(`[${uibInstance}] Using uibuilder specific middleware from settings.js`)
                 httpMiddleware = uib_globalSettings.middleware
             }
         } else {
@@ -250,6 +269,7 @@ module.exports = function(RED) {
              * as for the http in/out nodes - normally used for authentication
              */
             if ( typeof RED.settings.httpNodeMiddleware === 'function' ) {
+                log.verbose(`[${uibInstance}] Using Node-RED middleware from settings.js`)
                 httpMiddleware = RED.settings.httpNodeMiddleware
             }
         }
@@ -258,10 +278,9 @@ module.exports = function(RED) {
         // @see https://expressjs.com/en/guide/using-middleware.html
         function localMiddleware (req, res, next) {
             // Tell the client what Socket.IO namespace to use,
-            // trim the leading slash because the cookie will turn into a %2F
+            // trim the leading slash because the cookie will turn it into a %2F
             res.setHeader('uibuilder-namespace', node.ioNamespace)
             res.cookie('uibuilder-namespace', uiblib.trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
-            //res.write( '<script>var uibuilderIOnamespace = ' + node.ioNamespace + '</script>')
             next()
         }
 
@@ -275,7 +294,7 @@ module.exports = function(RED) {
             fs.accessSync( node.customAppFolder, fs.constants.W_OK ) // try to access
         } catch (e) {
             if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-                log.error('uibuilder custom folder ERROR, path: ' + path.join(userDir, node.customAppFolder) + ', error: ' + e.message)
+                log.error(`[${uibInstance}] Custom folder ERROR, path: ${path.join(userDir, node.customAppFolder)}`, e.message)
                 customFoldersOK = false
             }
         }
@@ -285,7 +304,7 @@ module.exports = function(RED) {
             fs.accessSync(node.customFolder, fs.constants.W_OK)
         } catch (e) {
             if ( e.code !== 'EEXIST' ) {
-                log.error('uibuilder local custom folder ERROR: ' + e.message)
+                log.error(`[${uibInstance}] Local custom folder ERROR`, e.message)
                 customFoldersOK = false
             }
         }
@@ -295,14 +314,14 @@ module.exports = function(RED) {
             fs.mkdirSync( path.join(node.customFolder, 'src') )
         } catch (e) {
             if ( e.code !== 'EEXIST' ) {
-                log.error('uibuilder local custom dist or src folder ERROR: ' + e.message)
+                log.error(`[${uibInstance}] Local custom dist or src folder ERROR`, e.message)
                 customFoldersOK = false
             }
         }
 
         if ( customFoldersOK === true ) {
             // local custom folders are there ...
-            log.debug( 'uibuilder using local front-end folders in ', node.customFolder)
+            log.debug(`[${uibInstance}] Using local front-end folders in`, node.customFolder)
 
             // Now copy files from the master template folder (instead of master src) @since 2017-10-01
             // Note: We don't copy the master dist folder
@@ -311,15 +330,15 @@ module.exports = function(RED) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
                 fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
                     if(err){
-                        log.error( 'uibuilder: Error copying template files from ', path.join( __dirname, 'templates'), ' to ', path.join(node.customFolder, 'src'), '. ', err)
+                        log.error(`[${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates')} to ${path.join(node.customFolder, 'src')}`, err)
                     } else {
-                        log.debug('UIbuilder: Copied template files to local src (not overwriting) ', node.customFolder )
+                        log.debug(`[${uibInstance}] Copied template files to local src (not overwriting)`, node.customFolder )
                     }
                 })
             }
         } else {
             // Local custom folders are not right!
-            log.error( 'uibuilder wanted to use local front-end folders in ', node.customFolder, ' but could not')
+            log.error(`[${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
         }
 
         //#region Add static path for local custom files
@@ -328,13 +347,13 @@ module.exports = function(RED) {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
             fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
             // If the ./dist/index.html exists use the dist folder...
-            log.debug('Using local dist folder' )
+            log.debug(`[${uibInstance}] Using local dist folder`)
             customStatic = serveStatic( path.join(node.customFolder, 'dist') )
             // NOTE: You are expected to have included vendor packages in
             //       a build process so we are not loading them here
         } catch (e) {
             // dist not being used or not accessible, use src
-            log.debug('dist folder not in use or not accessible. Using local src folder. ', e.message );
+            log.debug(`[${uibInstance}] Dist folder not in use or not accessible. Using local src folder`, e.message )
             customStatic = serveStatic( path.join(node.customFolder, 'src') )
             // Include vendor resource source paths if needed
             node.userVendorPackages.forEach(function (packageName) {
@@ -349,12 +368,12 @@ module.exports = function(RED) {
                         // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
                         installPath = path.dirname( require.resolve(packageName) )
                     } catch (e2) {
-                        log.error('Failed to add user vendor path - no install found for ', packageName, ' Try doing "npm install ', packageName, ' --save" from ', userDir)
-                        RED.log.warn('UIbuilder: Failed to add user vendor path - no install found for ' + packageName + ' Try doing "npm install ' + packageName + ' --save" from ' + userDir)
+                        log.error(`[${uibInstance}] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`, e2.message );
+                        RED.log.warn(`uibuilder:${uibInstance}: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
                     }
                 }
                 if (installPath !== '') {
-                    log.info('Adding user vendor path', {
+                    log.info(`[${uibInstance}] Adding user vendor path`, {
                         'url':  uiblib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
                     })
                     app.use( uiblib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
@@ -371,13 +390,13 @@ module.exports = function(RED) {
         try {
             // Will we use "compiled" version of module front-end code?
             fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
-            log.debug('Using master production build folder' )
+            log.debug(`[${uibInstance}] Using master production build folder`)
             // If the ./dist/index.html exists use the dist folder...
             masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
         } catch (e) {
             // ... otherwise, use dev resources at ./src/
-            log.debug('Using master src folder and master vendor packages' )
-            log.debug('  Reason for not using master dist folder: ', e.message )
+            log.debug(`[${uibInstance}] Using master src folder and master vendor packages` )
+            log.debug('        Reason for not using master dist folder: ', e.message )
             masterStatic = serveStatic( path.join( __dirname, 'src' ) )
             // Include vendor resource source paths if needed
             vendorPackages.forEach(function (packageName) {
@@ -392,12 +411,12 @@ module.exports = function(RED) {
                         // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
                         installPath = path.dirname( require.resolve(packageName) )
                     } catch (e2) {
-                        log.error('UIbuilder: Failed to add master vendor path - no install found for ', packageName, ' Should have been installed by this module')
-                        RED.log.warn('UIbuilder: Failed to add master vendor path - no install found for ' + packageName + ' Should have been installed by this module')
+                        log.error(`[${uibInstance}] Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
+                        RED.log.warn(`uibuilder:${uibInstance}: Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
                     }
                 }
                 if (installPath !== '') {
-                    log.info( 'UIbuilder: Adding master vendor path', {
+                    log.info(`[${uibInstance}] Adding master vendor path`, {
                         'url':  uiblib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
                     } )
                     app.use( uiblib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
@@ -409,10 +428,10 @@ module.exports = function(RED) {
 
         const fullPath = uiblib.urlJoin( httpNodeRoot, node.url )
 
-        log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
-        log.info('UI Builder - Local file overrides at ' + node.customFolder)
-        RED.log.info('UI Builder - Version ' + nodeVersion + ' started at ' + fullPath)
-        RED.log.info('UI Builder - Local file overrides at ' + node.customFolder)
+        log.info(`[${uibInstance}] Version ${nodeVersion} started at URL ${fullPath}`)
+        log.info(`[${uibInstance}] UI Source files at ${node.customFolder}`)
+        RED.log.info(`uibuilder:${uibInstance}: UI Builder Version ${nodeVersion} started at URL ${fullPath}`)
+        RED.log.info(`uibuilder:${uibInstance}: UI Source files at ${node.customFolder}`)
 
         //console.dir(app._router.stack)
         //if (debug && process.env.NODE_ENV === 'development') { // Only in dev environment
@@ -434,9 +453,7 @@ module.exports = function(RED) {
         ioNs.on('connection', function(socket) {
             node.ioClientsCount++
 
-            log.debug(
-                `UIbuilder: ${node.url} Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}`
-            )
+            log.verbose(`[${uibInstance}] Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}`)
 
             uiblib.setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
 
@@ -455,9 +472,7 @@ module.exports = function(RED) {
 
             // if the client sends a specific msg channel...
             socket.on(node.ioChannels.client, function(msg) {
-                log.debug(
-                    `UIbuilder: ${node.url}, Data received from client, ID: ${socket.id}, Msg: ${msg.payload}`
-                )
+                log.debug(`[${uibInstance}] Data received from client, ID: ${socket.id}, Msg:`, msg)
 
                 // Make sure the incoming msg is a correctly formed Node-RED msg
                 switch ( typeof msg ) {
@@ -475,11 +490,9 @@ module.exports = function(RED) {
                 // Send out the message for downstream flows
                 // TODO: This should probably have safety validations!
                 node.send(msg)
-            });
+            })
             socket.on(node.ioChannels.control, function(msg) {
-                log.debug(
-                    `UIbuilder: ${node.url}, Control Msg from client, ID: ${socket.id}, Msg: ${msg.payload}`
-                )
+                log.debug(`[${uibInstance}] Control Msg from client, ID: ${socket.id}, Msg:`, msg)
 
                 // Make sure the incoming msg is a correctly formed Node-RED msg
                 switch ( typeof msg ) {
@@ -502,12 +515,12 @@ module.exports = function(RED) {
                 // Send out the message on port #2 for downstream flows
                 uiblib.sendControl(msg, ioNs, node)  // fn adds topic if needed
                 //node.send([null,msg])
-            });
+            })
 
             socket.on('disconnect', function(reason) {
                 node.ioClientsCount--
                 log.debug(
-                    `UIbuilder: ${node.url} Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
+                    `[${uibInstance}] Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
                 )
                 if ( node.ioClientsCount <= 0) uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
                 else uiblib.setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
@@ -522,9 +535,7 @@ module.exports = function(RED) {
             })
 
             socket.on('error', function(err) {
-                log.error(
-                    `UIbuilder: ${node.url} ERROR received, ID: ${socket.id}, Reason: ${err.message}`
-                )
+                log.error(`[${uibInstance}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
                 // Let the control output port know there has been an error
                 uiblib.sendControl({
                     'uibuilderCtrl': 'socket error',
@@ -571,7 +582,7 @@ module.exports = function(RED) {
 
         // handler function for node input events (when a node instance receives a msg)
         function nodeInputHandler(msg) {
-            log.debug('UIbuilder:nodeGo:nodeInputHandler - emit received msg - Namespace: ' + node.url) //debug
+            log.verbose(`[${uibInstance}] nodeGo:nodeInputHandler - emit received msg - Namespace: ${node.url}`) //debug
 
             // If msg is null, nothing will be sent
             if ( msg !== null ) {
@@ -598,13 +609,13 @@ module.exports = function(RED) {
         // Do something when Node-RED is closing down
         // which includes when this node instance is redeployed
         node.on('close', function(removed,done) {
-            log.debug('uibuilder:nodeGo:on-close:', node.url, '::', removed?'Node Removed':'Node (re)deployed')
+            log.debug(`[${uibInstance}] nodeGo:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
 
             node.removeListener('input', nodeInputHandler)
 
             // Do any complex close processing here if needed - MUST BE LAST
             //processClose(null, node, RED, ioNs, io, app) // swap with below if needing async
-            uiblib.processClose(done, node, RED, ioNs, io, app, log)
+            uiblib.processClose(done, node, RED, ioNs, io, app, log, instances)
 
             done()
         })
@@ -626,6 +637,137 @@ module.exports = function(RED) {
                 exportable: true
             }
         }
+    })
+
+    /** Create a simple NR admin API to return the list of files in the `<userLib>/uibuilder/<url>/src` folder
+     * @since 2019-01-27 - Adding the file edit admin ui
+     * @param {string} url The admin api url to create
+     * @param {Object} permissions The permissions required for access
+     * @param {function} cb
+     **/
+    RED.httpAdmin.get('/uibfiles', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        // TODO: validate parameters
+        log.verbose(`[uibfiles] Admin API. File list requested for ${req.query.url}`)
+
+        const srcFolder = path.join(userDir, moduleName, req.query.url, 'src')
+
+        // Get the file list - note, ignore errors for now
+        // TODO: Need to filter out folders. Or better, flatten and allow sub-folders.
+        fs.readdir(srcFolder, (err, files) => {
+            // Send back a JSON response body containing the list of files that can be edited
+            res.json(files)
+        })
+
+    })
+
+    /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
+     * @since 2019-01-27 - Adding the file edit admin ui
+     * @param {string} url The admin api url to create
+     * @param {Object} permissions The permissions required for access
+     * @param {function} cb
+     **/
+    RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        // TODO: validate parameters
+        log.verbose(`[${req.query.url}:uibgetfile] Admin API. File get requested for ${req.query.fname}`)
+
+        // Send back a plain text response body containing content of the file
+        // TODO: validate path and file
+        res.type('text/plain').sendFile(
+            req.query.fname, 
+            {
+                // Prevent injected relative paths from escaping `src` folder
+                'root': path.join(userDir, moduleName, req.query.url, 'src'),
+                // Turn off caching
+                'lastModified': false, 
+                'cacheControl': false
+            }
+        )
+    })
+
+    /** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/src` folder
+     * @since 2019-02-04 - Adding the file edit admin ui
+     * @param {string} url The admin api url to create
+     * @param {Object} permissions The permissions required for access (Express middleware)
+     * @param {function} cb
+     **/
+    RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+        // TODO: validate parameters
+        log.verbose(`[${req.query.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
+
+        const fullname = path.join(userDir, moduleName, req.body.url, 'src', req.body.fname)
+
+        fs.writeFile(fullname, req.body.data, function (err, data) {
+            if (err) {
+                // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+                log.error(`[${req.body.url}:uibputfile] Admin API. File write FAIL for ${req.body.fname}`, err)
+                res.statusMessage = err
+                res.status(500).end()
+            } else {
+                // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+                log.verbose(`[${req.body.url}:uibputfile] Admin API. File write SUCCESS for ${req.body.fname}`)
+                res.statusMessage = 'File written successfully'
+                res.status(200).end()
+            }
+        })
+    })
+
+    /** Utility function to html pretty-print JSON */
+    function syntaxHighlight(json) {
+        /*
+            pre .string { color: orange; }
+            .number { color: white; }
+            .boolean { color: rgb(20, 99, 163); }
+            .null { color: magenta; }
+            .key { color: #069fb3;}
+        */
+        json = JSON.stringify(json, undefined, 4)
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<pre style="color:white;background-color:black">' + json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number', style = 'style="color:white"'
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key'
+                    style = 'style="color:#069fb3"'
+                } else {
+                    cls = 'string'
+                    style = 'style="color:orange"'
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean'
+                style = 'style="color:rgb(20,99,163)"'
+            } else if (/null/.test(match)) {
+                cls = 'null'
+                style = 'style="color:magenta"'
+            }
+            return `<span class="${cls}" ${style}>${match}</span>`
+        }) + '</pre>'
+    }
+
+    /** Create an index web page listing all uibuilder endpoints
+     * @since 2019-02-04 v1.1.0-beta6
+     * TODO: Allow for std web page (default) AND JSON (for api)
+     */
+    RED.httpNode.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        // TODO: validate parameters
+        log.verbose(`[uibindex] User Page/API. List all available uibuilder endpoints`)
+
+        const app = RED.httpNode // RED.httpAdmin
+        const app2 = RED.httpAdmin
+
+        //console.log(app.routes) // Expresss 3.x
+        //console.log(app.router.stack) // Expresss 3.x with express.router
+        //console.log(app._router.stack) // Expresss 4.x
+        //console.log(server.router.mounts) // Restify
+
+        let page = '<h1>Index of uibuilder pages</h1>' //'<pre>'
+        page += syntaxHighlight(instances)
+        //page += '<hr>'
+        //page += syntaxHighlight(app._router.stack)
+        //page += '<hr>'
+        //page += syntaxHighlight(app2._router.stack)
+        page += '' // '</pre>'
+
+        res.send(page)
     })
 
 } // ==== End of module.exports ==== //
