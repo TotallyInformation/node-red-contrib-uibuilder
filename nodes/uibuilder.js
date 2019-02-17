@@ -17,7 +17,7 @@
 // @ts-check
 'use strict'
 
-// Module name must match this nodes html file
+/** Module name must match this nodes html file @constant {string} moduleName */
 const moduleName  = 'uibuilder'
 // @ts-ignore
 const nodeVersion = require('../package.json').version
@@ -32,19 +32,26 @@ const serveStatic      = require('serve-static'),
 
 const { getInstalledPathSync } = require('get-installed-path')
 
-// These are loaded to the /<uibuilder>/vendor URL path
+/** These are loaded to the /<uibuilder>/vendor URL path @constant {Object} vendorPackages */
 const vendorPackages = [
     'normalize.css',
     'jquery'
 ]
 
-// We want these to track across redeployments
-// if OK to reset on redeployment, attach to node.xxx inside nodeGo instead.
+/** We want these to track across redeployments
+ *  if OK to reset on redeployment, attach to node.xxx inside nodeGo instead. @constant {Object} deployments */
 const deployments = {}
 
-//  when nodeGo is run, add the node.id as a key with the value being the url
-//  then add processing to ensure that the URL's are unique.
+/** When nodeGo is run, add the node.id as a key with the value being the url
+ *  then add processing to ensure that the URL's are unique. 
+ * Schema: {'<node.id>': '<url>'}
+ * @constant {Object} instances */
 const instances = {}
+
+/** Track the vendor packages installed and their paths
+ * Schema: {'<npm package name>': {'url': vendorPath, 'path': installPath} }
+ * @constant {Object} vendorPaths */
+const vendorPaths = {}
 
 function winstonFormatter(options) {
     // - Return string will be passed to logger.
@@ -71,24 +78,34 @@ function winstonFormatter(options) {
     return options.timestamp() + ' ' +
         (options.level.toUpperCase()+ '          ').slice(0,7) + 
         (options.message ? options.message : '') +
-        (options.meta && Object.keys(options.meta).length ? ' :: '+JSON.stringify(options.meta) : '' );
+        (options.meta && Object.keys(options.meta).length ? ' :: '+JSON.stringify(options.meta) : '' )
 }
 
 function winstonTimestamp() {
     return (new Date()).toISOString().slice(0,16).replace('T', ' ')
 }
 
-
+/** Export the function that defines the node */
 module.exports = function(RED) {
     // NB: entries in settings.js are read-only and shouldn't be read using RED.settings.get, that is only for settings that can change in-flight.
     //     see Node-RED issue #1543.
 
-    // Get the uibuilder global settings from settings.js if available, otherwise set to empty object
+    /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
+    const userDir = RED.settings.userDir
+
+    /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
+    const httpNodeRoot = RED.settings.httpNodeRoot
+
+    /** Get the uibuilder global settings from settings.js if available, otherwise set to empty object @constant {Object} uib_globalSettings **/
     const uib_globalSettings = RED.settings.uibuilder || { 'debug': false }
 
-    const userDir = RED.settings.userDir // folder containing settings.js
-    const httpNodeRoot = RED.settings.httpNodeRoot // root url path for http-in/out and uibuilder nodes
+    /** Set the root path (on the server FS) for all uibuilder front-end data
+     *  Name of the fs path used to hold custom files & folders for all instances of uibuilder
+     * @constant {string} uib_rootPath
+     **/
+    const uib_rootPath = path.join(userDir, moduleName)
 
+    //#region ---- debugging ----
     // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
     // @since 2017-09-19 moved to top of module.exports. @since 2017-10-15 var not const as it can be overridden
     var debug = uib_globalSettings.debug || false // JK @since 2017-08-17, Change default answer to false
@@ -128,9 +145,11 @@ module.exports = function(RED) {
         // @since 2019-01-27 don't log if debug not set since we output key messages to the Node-RED log anyway
         //winstonTransport = new (winston.transports.Console)()
     }
+    //#endregion ---- ----
 
     log.verbose('[Module] ----------------- uibuilder - module.exports -----------------')
 
+    //#region ---- Set up Socket.IO ----
     /** Holder for Socket.IO - we want this to survive redeployments of each node instance
      *  so that existing clients can be reconnected.
      * Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
@@ -138,8 +157,12 @@ module.exports = function(RED) {
      * NOTE: This ignores RED.settings.httpNodeRoot deliberately, it will always be /uibuilder/socket.io
      *       otherwise it is impossible to have a standard index.html file.
      **/
-    log.debug('[Module] Socket.IO initialisation - Socket Path=', uiblib.urlJoin(moduleName, 'socket.io') )
-    var io = socketio.listen(RED.server, {'path': uiblib.urlJoin(moduleName, 'socket.io')}) // listen === attach
+
+    /** @constant {string} */
+    const uib_socketPath = uiblib.urlJoin(moduleName, 'socket.io')
+
+    log.debug('[Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
+    var io = socketio.listen(RED.server, {'path': uib_socketPath}) // listen === attach
     // @ts-ignore
     io.set('transports', ['polling', 'websocket'])
 
@@ -174,21 +197,22 @@ module.exports = function(RED) {
             io.use(uib_globalSettings.socketmiddleware)
         }
     }
+    //#endregion ---- ----
 
     /**
      * Run the node instance
-     * @param {*} config
+     * @param {Object} config The configuration object passed from the Admin interface (see the matching HTML file)
      */
     function nodeGo(config) {
         // Create the node
         RED.nodes.createNode(this, config)
 
-        // @since 2019-02-02 - the current instance name (url)
+        /** @since 2019-02-02 - the current instance name (url) */
         var uibInstance = config.url // for logging
 
         log.verbose(`[${uibInstance}] ================ instance registered ================`)
 
-        // copy 'this' object in case we need it in context of callbacks of other functions.
+        /** A copy of 'this' object in case we need it in context of callbacks of other functions. @constant {Object} node */
         const node = this
 
         log.verbose(`[${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
@@ -219,26 +243,28 @@ module.exports = function(RED) {
          * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
          * JK @since 2017-08-17 fix for non-existent properties and use getProps()
          * JK @since 2018-01-06 use uib_globalSettings instead of RED.settings.uibuilder. At least an empty array is returned.
+         * @type {Array}
          */
         node.userVendorPackages = uiblib.getProps(RED,config,'userVendorPackages',null) || uiblib.getProps(RED,uib_globalSettings,'userVendorPackages',[])
-        // Name of the fs path used to hold custom files & folders for all instances of uibuilder
-        node.customAppFolder = path.join(userDir, moduleName)
         /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
          *   Files in this folder are also served to URL but take preference
-         *   over those in the nodes folders (which act as defaults)
+         *   over those in the nodes folders (which act as defaults) @type {string}
          */
-        node.customFolder = path.join(node.customAppFolder, node.url)
+        node.customFolder = path.join(uib_rootPath, node.url)
 
-        log.verbose(`[${uibInstance}] Node package details`, { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': node.customAppFolder, 'customFldr': node.customFolder } )
+        log.verbose(`[${uibInstance}] Node package details`, { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': uib_rootPath, 'customFldr': node.customFolder } )
 
-        // Socket.IO config
-        node.ioClientsCount = 0 // how many Socket clients connected to this instance?
-        node.rcvMsgCount = 0 // how many msg's received since last reset or redeploy?
-        // The channel names for Socket.IO
+        //#region ---- Socket.IO instance configuration ----
+        /** How many Socket clients connected to this instance? @type {integer} */
+        node.ioClientsCount = 0
+        /** How many msg's received since last reset or redeploy? @type {integer} */
+        node.rcvMsgCount = 0
+        /** The channel names for Socket.IO @type {Object} */
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
-        // Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
-        // @since v1.0.10, changed namespace creation to correct a missing / if httpNodeRoot had been changed from the default
+        /** Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
+         * @since v1.0.10, changed namespace creation to correct a missing / if httpNodeRoot had been changed from the default. @type {string} */
         node.ioNamespace = uiblib.urlJoin(httpNodeRoot, node.url)
+        //#endregion ---- ----
 
         log.verbose(`[${uibInstance}] Socket.io details`, { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
 
@@ -274,8 +300,8 @@ module.exports = function(RED) {
             }
         }
 
-        // This ExpressJS middleware runs when the uibuilder page loads
-        // @see https://expressjs.com/en/guide/using-middleware.html
+        /** This ExpressJS middleware runs when the uibuilder page loads
+         * @see https://expressjs.com/en/guide/using-middleware.html */
         function localMiddleware (req, res, next) {
             // Tell the client what Socket.IO namespace to use,
             // trim the leading slash because the cookie will turn it into a %2F
@@ -290,11 +316,11 @@ module.exports = function(RED) {
         // TODO: May be better as async calls - probably not, but a promisified version would be OK?
         // Make sure the global custom folder exists first
         try {
-            fs.mkdirSync(node.customAppFolder) // try to create
-            fs.accessSync( node.customAppFolder, fs.constants.W_OK ) // try to access
+            fs.mkdirSync(uib_rootPath) // try to create
+            fs.accessSync( uib_rootPath, fs.constants.W_OK ) // try to access
         } catch (e) {
             if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-                log.error(`[${uibInstance}] Custom folder ERROR, path: ${path.join(userDir, node.customAppFolder)}`, e.message)
+                log.error(`[${uibInstance}] Custom folder ERROR, path: ${uib_rootPath}`, e.message)
                 customFoldersOK = false
             }
         }
@@ -323,9 +349,9 @@ module.exports = function(RED) {
             // local custom folders are there ...
             log.debug(`[${uibInstance}] Using local front-end folders in`, node.customFolder)
 
-            // Now copy files from the master template folder (instead of master src) @since 2017-10-01
-            // Note: We don't copy the master dist folder
-            // Don't copy if copy turned off in admin ui @TODO: always copy index.html
+            /** Now copy files from the master template folder (instead of master src) @since 2017-10-01
+             *  Note: We don't copy the master dist folder
+             *  Don't copy if copy turned off in admin ui @TODO: always copy index.html */
             if ( node.copyIndex ) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
                 fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
@@ -373,18 +399,20 @@ module.exports = function(RED) {
                     }
                 }
                 if (installPath !== '') {
+                    let vendorPath = uiblib.urlJoin(node.url, 'vendor', packageName)
                     log.info(`[${uibInstance}] Adding user vendor path`, {
-                        'url':  uiblib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
+                        'url': vendorPath, 'path': installPath
                     })
-                    app.use( uiblib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+                    app.use( vendorPath, serveStatic(installPath) )
+                    vendorPaths[packageName] = {'url': vendorPath, 'path': installPath}
                 }
-            })
+            }) // -- end of forEach vendor package -- //
         }
         //#endregion -- Added static path for local custom files -- //
         //#endregion ------ End of Create custom folder structure ------- //
 
-        // Create a new, additional static http path to enable
-        // loading of central static resources for uibuilder
+        /** Create a new, additional static http path to enable
+         * loading of central static resources for uibuilder */
         var masterStatic = function(req,res,next) { next() }
         //Object.defineProperty(f, 'name', {value: myName, writable: false})
         try {
@@ -426,7 +454,7 @@ module.exports = function(RED) {
 
         app.use( uiblib.urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
 
-        const fullPath = uiblib.urlJoin( httpNodeRoot, node.url )
+        const fullPath = uiblib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
 
         log.info(`[${uibInstance}] Version ${nodeVersion} started at URL ${fullPath}`)
         log.info(`[${uibInstance}] UI Source files at ${node.customFolder}`)
@@ -444,12 +472,12 @@ module.exports = function(RED) {
         // We only do the following if io is not already assigned (e.g. after a redeploy)
         uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
 
-        // Each deployed instance has it's own namespace
+        /** Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
         var ioNs = io.of(node.ioNamespace)
 
-        // When someone loads the page, it will try to connect over Socket.IO
-        // note that the connection returns the socket instance to monitor for responses from
-        // the ui client instance
+        /** When someone loads the page, it will try to connect over Socket.IO
+         *  note that the connection returns the socket instance to monitor for responses from
+         *  the ui client instance */
         ioNs.on('connection', function(socket) {
             node.ioClientsCount++
 
@@ -580,7 +608,9 @@ module.exports = function(RED) {
 
         }) // ---- End of ioNs.on connection ---- //
 
-        // handler function for node input events (when a node instance receives a msg)
+        /** Handler function for node input events (when a node instance receives a msg)
+         * @param {Object} msg The msg object received.
+         **/
         function nodeInputHandler(msg) {
             log.verbose(`[${uibInstance}] nodeGo:nodeInputHandler - emit received msg - Namespace: ${node.url}`) //debug
 
@@ -604,6 +634,8 @@ module.exports = function(RED) {
             msg = uiblib.inputHandler(msg, node, RED, io, ioNs, log)
 
         } // -- end of msg received processing -- //
+
+        // Process inbound messages
         node.on('input', nodeInputHandler)
 
         // Do something when Node-RED is closing down
@@ -622,8 +654,8 @@ module.exports = function(RED) {
 
     } // ---- End of nodeGo (initialised node instance) ---- //
 
-    // Register the node by name. This must be called before overriding any of the
-    // Node functions.
+    /** Register the node by name. This must be called before overriding any of the
+     *  Node functions. */
     RED.nodes.registerType(moduleName, nodeGo, {
         // see userDir/settings.js - makes the settings available to the admin ui
         settings: {
@@ -646,10 +678,41 @@ module.exports = function(RED) {
      * @param {function} cb
      **/
     RED.httpAdmin.get('/uibfiles', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        // TODO: validate parameters
+        //#region --- Parameter validation ---
+        // We have to have a url to work with
+        if ( req.query.url === undefined ) {
+            log.error('[uibfiles] Admin API. url parameter not provided')
+            res.statusMessage = 'url parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // URL must not exceed 20 characters
+        if ( req.query.url.length > 20 ) {
+            log.error('[uibfiles] Admin API. url parameter is too long (>20 characters)')
+            res.statusMessage = 'url parameter is too long. Max 20 characters'
+            res.status(500).end()
+            return
+        }
+        // URL must be more than 0 characters
+        if ( req.query.url.length < 1 ) {
+            log.error('[uibfiles] Admin API. url parameter is empty')
+            res.statusMessage = 'url parameter is empty, please provide a value'
+            res.status(500).end()
+            return
+        }
+        // URL cannot contain .. to prevent escaping sub-folder structure
+        if ( req.query.url.includes('..') ) {
+            log.error('[uibfiles] Admin API. url parameter contains ..')
+            res.statusMessage = 'url parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+        // TODO: Does the url exist?
+        //#endregion ---- ----
+
         log.verbose(`[uibfiles] Admin API. File list requested for ${req.query.url}`)
 
-        const srcFolder = path.join(userDir, moduleName, req.query.url, 'src')
+        const srcFolder = path.join(uib_rootPath, req.query.url, 'src')
 
         // Get the file list - note, ignore errors for now
         // TODO: Need to filter out folders. Or better, flatten and allow sub-folders.
@@ -667,7 +730,59 @@ module.exports = function(RED) {
      * @param {function} cb
      **/
     RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        // TODO: validate parameters
+        //#region --- Parameter validation ---
+        // We have to have a url to work with
+        if ( req.query.url === undefined ) {
+            log.error('[uibgetfile] Admin API. url parameter not provided')
+            res.statusMessage = 'url parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // URL must not exceed 20 characters
+        if ( req.query.url.length > 20 ) {
+            log.error('[uibgetfile] Admin API. url parameter is too long (>20 characters)')
+            res.statusMessage = 'url parameter is too long. Max 20 characters'
+            res.status(500).end()
+            return
+        }
+        // URL must be more than 0 characters
+        if ( req.query.url.length < 1 ) {
+            log.error('[uibfiles] Admin API. url parameter is empty')
+            res.statusMessage = 'url parameter is empty, please provide a value'
+            res.status(500).end()
+            return
+        }
+        // URL cannot contain .. to prevent escaping sub-folder structure
+        if ( req.query.url.includes('..') ) {
+            log.error('[uibgetfile] Admin API. url parameter contains ..')
+            res.statusMessage = 'url parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+
+        // We have to have an fname (file name) to work with
+        if ( req.query.fname === undefined ) {
+            log.error('[uibgetfile] Admin API. fname parameter not provided')
+            res.statusMessage = 'fname parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // fname must not exceed 255 characters
+        if ( req.query.fname.length > 255 ) {
+            log.error('[uibgetfile] Admin API. fname parameter is too long (>255 characters)')
+            res.statusMessage = 'fname parameter is too long. Max 255 characters'
+            res.status(500).end()
+            return
+        }
+        // fname cannot contain .. to prevent escaping sub-folder structure
+        if ( req.query.fname.includes('..') ) {
+            log.error('[uibgetfile] Admin API. fname parameter contains ..')
+            res.statusMessage = 'fname parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+        //#endregion ---- ----
+
         log.verbose(`[${req.query.url}:uibgetfile] Admin API. File get requested for ${req.query.fname}`)
 
         // Send back a plain text response body containing content of the file
@@ -676,7 +791,7 @@ module.exports = function(RED) {
             req.query.fname, 
             {
                 // Prevent injected relative paths from escaping `src` folder
-                'root': path.join(userDir, moduleName, req.query.url, 'src'),
+                'root': path.join(uib_rootPath, req.query.url, 'src'),
                 // Turn off caching
                 'lastModified': false, 
                 'cacheControl': false
@@ -691,10 +806,63 @@ module.exports = function(RED) {
      * @param {function} cb
      **/
     RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
-        // TODO: validate parameters
+        //#region --- Parameter validation ---
+        // We have to have a url to work with
+        if ( req.query.url === undefined ) {
+            log.error('[uibputfile] Admin API. url parameter not provided')
+            res.statusMessage = 'url parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // URL must not exceed 20 characters
+        if ( req.query.url.length > 20 ) {
+            log.error('[uibputfile] Admin API. url parameter is too long (>20 characters)')
+            res.statusMessage = 'url parameter is too long. Max 20 characters'
+            res.status(500).end()
+            return
+        }
+        // URL must be more than 0 characters
+        if ( req.query.url.length < 1 ) {
+            log.error('[uibfiles] Admin API. url parameter is empty')
+            res.statusMessage = 'url parameter is empty, please provide a value'
+            res.status(500).end()
+            return
+        }
+        // URL cannot contain .. to prevent escaping sub-folder structure
+        if ( req.query.url.includes('..') ) {
+            log.error('[uibputfile] Admin API. url parameter contains ..')
+            res.statusMessage = 'url parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+
+        // We have to have an fname (file name) to work with
+        if ( req.query.fname === undefined ) {
+            log.error('[uibputfile] Admin API. fname parameter not provided')
+            res.statusMessage = 'fname parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // fname must not exceed 255 characters
+        if ( req.query.fname.length > 255 ) {
+            log.error('[uibputfile] Admin API. fname parameter is too long (>255 characters)')
+            res.statusMessage = 'fname parameter is too long. Max 255 characters'
+            res.status(500).end()
+            return
+        }
+        // fname cannot contain .. to prevent escaping sub-folder structure
+        if ( req.query.fname.includes('..') ) {
+            log.error('[uibputfile] Admin API. fname parameter contains ..')
+            res.statusMessage = 'fname parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+        //#endregion ---- ----
+        
         log.verbose(`[${req.query.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
-        const fullname = path.join(userDir, moduleName, req.body.url, 'src', req.body.fname)
+        // TODO: Add path validation - Also, file should always exist to check that
+        const fullname = path.join(uib_rootPath, req.body.url, 'src', req.body.fname)
 
         fs.writeFile(fullname, req.body.data, function (err, data) {
             if (err) {
@@ -754,18 +922,58 @@ module.exports = function(RED) {
         const app = RED.httpNode // RED.httpAdmin
         const app2 = RED.httpAdmin
 
-        //console.log(app.routes) // Expresss 3.x
-        //console.log(app.router.stack) // Expresss 3.x with express.router
-        //console.log(app._router.stack) // Expresss 4.x
-        //console.log(server.router.mounts) // Restify
 
-        let page = '<h1>Index of uibuilder pages</h1>' //'<pre>'
-        page += syntaxHighlight(instances)
+        //console.log(app.routes) // Expresss 3.x
+            //console.log(app.router.stack) // Expresss 3.x with express.router
+            //console.log(app._router.stack) // Expresss 4.x
+            //console.log(server.router.mounts) // Restify
+
+        let page = ''
+        page += '<h1>Index of uibuilder pages</h1>'
+        page += '<table>'
+        page += '  <tr>'
+        page += '    <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>'
+        page += '    <th>URL</th>'
+        //page += '  <th>Socket Namespace</th>'
+        page += '  </tr>'
+        Object.keys(instances).forEach(key => {
+            page += '  <tr>'
+            page += `    <td>${key}</td>`
+            page += `    <td><a href="${uiblib.urlJoin(httpNodeRoot, instances[key])}">${instances[key]}</a></td>`
+            //page += `    <td>${uiblib.urlJoin(httpNodeRoot, instances[key])}</td>`
+            page += '  </tr>'
+        })
+        page += '</table>'
+        //page += syntaxHighlight(instances)
         //page += '<hr>'
-        //page += syntaxHighlight(app._router.stack)
-        //page += '<hr>'
-        //page += syntaxHighlight(app2._router.stack)
-        page += '' // '</pre>'
+            //page += syntaxHighlight(app._router.stack)
+            //page += '<hr>'
+            //page += syntaxHighlight(app2._router.stack)
+        page += '<p>Note that each instance uses its own socket.io namespace that matches <i>httpNodeRoot/url</i>. Its location on the server filing system is <i>uib_rootPath/url</i>.</p>'
+
+        page += '<h1>Settings</h1>'
+        page += '<ul>'
+        page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
+        page += `  <li><b>uib_rootPath</b>: ${uib_rootPath}</li>`
+        page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
+        page += '</ul>'
+
+        page += '<h1>Vendor Packages</h1>'
+        page += '<table>'
+        page += '  <tr>'
+        page += '    <th>Package</th>'
+        page += '    <th>URL</th>'
+        page += '    <th>Server Filing System Path</th>'
+        page += '  </tr>'
+        Object.keys(vendorPaths).forEach(packageName => {
+            page += '  <tr>'
+            page += `    <td>${packageName}</td>`
+            page += `    <td><a href="${uiblib.urlJoin(httpNodeRoot, vendorPaths[packageName].url)}">${vendorPaths[packageName].url}</a></td>`
+            page += `    <td>${vendorPaths[packageName].path}</td>`
+            page += '  </tr>'
+        })
+        page += '</table>'
+        page += "<p>Note that url's are per-instance, the one shown is the last in the list.</p>"
 
         res.send(page)
     })

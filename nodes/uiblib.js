@@ -173,7 +173,7 @@ module.exports = {
      *                               Stops searching when the first property is found
      * @param {any} defaultAnswer - if the prop can't be found, this is returned
      * JK @since 2017-08-17 Added
-     * @todo Change instances of "in" and "hasOwnProperty" to use this function
+     * TODO Change instances of "in" and "hasOwnProperty" to use this function
      */
     getProps: function(RED,myObj,props,defaultAnswer = []) {
         if ( (typeof props) === 'string' ) {

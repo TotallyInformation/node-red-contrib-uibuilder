@@ -27,8 +27,8 @@
         $('#fepaths').append('<li><a href="' + url + '/vendor/normalize.css/normalize.css">' + url + '/vendor/normalize.css/normalize.css</a></li>') // always the same
         $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
     }
-    // Return a file type from a file name (or default to txt)
-    // ftype can be used in ACE editor modes
+    /** Return a file type from a file name (or default to txt)
+     *  ftype can be used in ACE editor modes */
     function fileType(fname) {
         const fparts = fname.split('.')
         if (fparts.length > 1) {
@@ -104,6 +104,25 @@
         // If not clean, clear any messages
         if ( ! isClean ) $('#file-action-message').text('Save Required')
     }
+    /** Validate the url property
+     * @param {*} value The url value to validate
+     * @returns {boolean} true = valid
+     **/
+    function validateUrl(value){
+        // NB: `this` is the node instance configuration as at last deployment
+        // TODO: Add display comment to help user
+
+        // Max 20 chars
+        if ( value.length > 20 ) return false
+        // Cannot contain ..
+        if ( value.indexOf('..') !== -1 ) return false
+        // Cannot be 'templates' as this is a reserved value (for v2)
+        if ( value.toLowerCase().indexOf('templates') !== -1 ) return false
+
+        // TODO: Check whether the url is already in use via a call to the admin API `uibindex`
+
+        return true
+    }
     // Register the node type, defaults and set up the edit fns
     RED.nodes.registerType('uibuilder', {
         category: 'UI Builder',
@@ -111,15 +130,15 @@
         defaults: {
             name: { value: '' },
             topic: { value: '' },
-            url: { value: 'uibuilder' }, // TODO: needs validation
+            url: { value: 'uibuilder', required: true, validate: validateUrl }, // TODO: needs validation, max 20 chars
             fwdInMessages: { value: false },
             allowScripts: { value: false },
             allowStyles: { value: false },
             debugFE: { value: false },
             copyIndex: { value: true },
-            template: { value: '' },         // file content of editor
-            filename: { value: 'index.js' }, // filename being edited
-            format: { value: 'text' }        // file format being edited
+            template: { value: '' },           // file content of editor
+            filename: { value: 'index.html' }, // filename being edited @since 2019-02-16 change default to index.html as more likely to exist
+            format: { value: 'text' }          // file format being edited for the ACE editor
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -323,7 +342,7 @@
         <!-- Home "page" id - defines the URL used -->
         <div class="form-row" title="Make sure this gives a unique URL">
             <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-            <input type="text" id="node-input-url">
+            <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
         </div>
 
         <!-- Forward and debug flags -->
@@ -514,7 +533,9 @@
             Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
             and port. Will also be prefixed by the Node-RED setting.<br>
             <b>Note</b>: Uniqueness is not currently validated, you must make sure of this yourself for now.<br>
-            The default URL is 'uibuilder'.
+            The default URL is 'uibuilder'.<br>
+            The url is also used to define the server filing system path for front-end code files.<br>
+            The url must be valid as a filename as well as a url path. It may not exceed 20 characters.
         </dd>
         <dt>Forward received messages direct to output? <span class="property-type">(boolean) node-input-fwdInMessages</span></dt>
         <dd>

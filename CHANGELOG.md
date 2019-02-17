@@ -1,8 +1,19 @@
+v1.x.x
+
+**Current Version Limitations** There are currently no checks to prevent you losing changes to edits if you close the admin window. If you create sub-folders in your `src` folder, you will not be able to edit the files there.
+
+* **CHANGED** `url` property is now validated. It is required, it cannot be more than 20 characters long. It cannot be 'templates' (in preparation for a v2 improved template handling feature).
+* **CHANGED** The admin API's `<adminurl>/uibfiles`, `<adminurl>/uibgetfile`, `<adminurl>/uibputfile` and `<adminurl>/uibindex` now have parameter validation.
+* **CHANGED** Code for file/folder locations, e.g. `<userDir>/uibuilder` improved. Made to use a single variable. In preparation for better support of projects (probably in v2 as that may be a breaking change).
+* **CHANGED** Code comments improved, more use of JSDoc.
+* **CHANGED** Default file name to be edited is changed to `index.html` rather than `index.js` as it is more likely to exist.
+* **CHANGED** Improved the `uibindex` API, added additional details.
+
 v1.1.0
 
 Please see [Issue #43](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/43) For the design details for this release.
 
-**Current Version Limitations** As yet there are no parameter checks on the API calls so the following URL's should **never** be exposed to potentially hostile environments (e.g. the Internet): `<adminurl>/uibfiles`, `<adminurl>/uibgetfile`, `<adminurl>/uibputfile`, `<adminurl>/uibindex`. Also, there are currently no checks to prevent you losing changes to edits if you close the admin window.
+**Current Version Limitations** ~~As yet there are no parameter checks on the API calls so the following URL's should **never** be exposed to potentially hostile environments (e.g. the Internet): `<adminurl>/uibfiles`, `<adminurl>/uibgetfile`, `<adminurl>/uibputfile`, `<adminurl>/uibindex`.~~ There are currently no checks to prevent you losing changes to edits if you close the admin window.
 
 - **NEW** The node properties window in the admin UI now provides an "Edit Source Files" button. If clicked, the main properties are hidden and a file editor is shown. You can currently select any existing file in the `src` folder for the current instance and edit it. You can then save, reset or close the editor.
 
