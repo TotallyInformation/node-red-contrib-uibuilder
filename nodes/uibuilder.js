@@ -43,7 +43,7 @@ const vendorPackages = [
 const deployments = {}
 
 /** When nodeGo is run, add the node.id as a key with the value being the url
- *  then add processing to ensure that the URL's are unique. 
+ *  then add processing to ensure that the URL's are unique.
  * Schema: {'<node.id>': '<url>'}
  * @constant {Object} instances */
 const instances = {}
@@ -76,7 +76,7 @@ function winstonFormatter(options) {
             humanReadableUnhandledException: false }
      */
     return options.timestamp() + ' ' +
-        (options.level.toUpperCase()+ '          ').slice(0,7) + 
+        (options.level.toUpperCase()+ '          ').slice(0,7) +
         (options.message ? options.message : '') +
         (options.meta && Object.keys(options.meta).length ? ' :: '+JSON.stringify(options.meta) : '' )
 }
@@ -788,12 +788,12 @@ module.exports = function(RED) {
         // Send back a plain text response body containing content of the file
         // TODO: validate path and file
         res.type('text/plain').sendFile(
-            req.query.fname, 
+            req.query.fname,
             {
                 // Prevent injected relative paths from escaping `src` folder
                 'root': path.join(uib_rootPath, req.query.url, 'src'),
                 // Turn off caching
-                'lastModified': false, 
+                'lastModified': false,
                 'cacheControl': false
             }
         )
@@ -858,7 +858,7 @@ module.exports = function(RED) {
             return
         }
         //#endregion ---- ----
-        
+
         log.verbose(`[${req.query.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
