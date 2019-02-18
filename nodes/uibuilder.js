@@ -103,7 +103,7 @@ module.exports = function(RED) {
      *  Name of the fs path used to hold custom files & folders for all instances of uibuilder
      * @constant {string} uib_rootPath
      **/
-    const uib_rootPath = path.join(userDir, moduleName)
+    var uib_rootPath = getUibProjectPath()
 
     //#region ---- debugging ----
     // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
@@ -206,6 +206,9 @@ module.exports = function(RED) {
     function nodeGo(config) {
         // Create the node
         RED.nodes.createNode(this, config)
+
+        // Recalculate the current path to the front-end files as the user might have changed the project
+        uib_rootPath = getUibProjectPath()
 
         /** @since 2019-02-02 - the current instance name (url) */
         var uibInstance = config.url // for logging
@@ -909,6 +912,23 @@ module.exports = function(RED) {
             }
             return `<span class="${cls}" ${style}>${match}</span>`
         }) + '</pre>'
+    }
+
+    /** Utility function to produce the current path to the front-end files */
+    function getUibProjectPath(){
+        /** Folder containing the current frontend files i.e. <userDir>/<frontendDir>/uibuilder/<url> */
+        var frontendDir = ''    // Check if the project feature is enabled to change the frontendDir accordingly
+        if (RED.settings.editorTheme.projects.enabled) {
+            var projectsSettings = RED.settings.get('projects')
+            // Check wether there has already been a project created and used
+            if (typeof projectsSettings !== 'undefined') {
+                if ('activeProject' in projectsSettings){
+                    // Set the frontendDir so the uibuilder frontend source files end up in the projects repository
+                    frontendDir = path.join('projects', projectsSettings.activeProject)
+                }
+            }
+        }
+        return path.join(userDir, frontendDir, moduleName)
     }
 
     /** Create an index web page listing all uibuilder endpoints
