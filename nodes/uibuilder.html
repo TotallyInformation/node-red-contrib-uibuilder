@@ -15,17 +15,20 @@
 -->
 
 <script type="text/javascript">
+    /** Module name must match this nodes html file @constant {string} moduleName */
+    var moduleName  = 'uibuilder'
+
     function buildUrlList(pkgs, url) {
         if (!Array.isArray(pkgs)) pkgs = [pkgs]
         url = RED.settings.httpNodeRoot + url
         $('#fepaths').empty()
         pkgs.forEach(function(element) {
-            var strUrl = url + '/vendor/' + element + '/'
+            var strUrl = '/' + moduleName + '/vendor/' + element + '/'
             $('#fepaths').append('<li><i>' + strUrl + '</i></li>')
         }, this);
-        $('#fepaths').append('<li><a href="' + url + '/vendor/jquery/dist/jquery.min.js">' + url + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
-        $('#fepaths').append('<li><a href="' + url + '/vendor/normalize.css/normalize.css">' + url + '/vendor/normalize.css/normalize.css</a></li>') // always the same
-        $('#fepaths').append('<li><a href="/uibuilder/socket.io/socket.io.js">/uibuilder/socket.io/socket.io.js</a></li>') // always the same
+        $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/jquery/dist/jquery.min.js">/' + moduleName + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
+        $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/normalize.css/normalize.css">/' + moduleName + '/vendor/normalize.css/normalize.css</a></li>') // always the same
+        $('#fepaths').append('<li><a href="/' + moduleName + '/socket.io/socket.io.js">/' + moduleName + '/socket.io/socket.io.js</a></li>') // always the same
     }
     /** Return a file type from a file name (or default to txt)
      *  ftype can be used in ACE editor modes */

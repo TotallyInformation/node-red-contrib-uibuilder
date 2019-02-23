@@ -1,3 +1,11 @@
+## v2.0.0
+
+* **BREAKING CHANGE** Vendor `app.use` paths moved from instance level to module level so only done once.
+  This means that you have to change your `index.html` file.
+  Where before you might have had something like `<link rel="stylesheet" href="./vendor/normalize.css/normalize.css">`, that must now change to `<link rel="stylesheet" href="/uibuilder/vendor/normalize.css/normalize.css">`. Any link that started like `./vendor` must be changed to `/uibuilder/vendor`.
+
+
+
 ## v1.2.0
 
 * **CHANGED** `url` property is now validated. It is required, it cannot be more than 20 characters long. It cannot be 'templates' (in preparation for a v2 improved template handling feature).

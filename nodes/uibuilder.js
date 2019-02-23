@@ -161,6 +161,37 @@ module.exports = function(RED) {
 
     log.verbose('[Module] ----------------- uibuilder - module.exports -----------------')
 
+    /** We need an http server to serve the page. 
+     * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
+     * @since v2.0.0 2019-02-23 Moved from instance level (nodeGo()) to module level */
+    const app = RED.httpNode // || RED.httpAdmin
+
+    /** Include vendor resource source paths if needed
+     * @since v2.0.0 2019-02-23 moved from nodeGo() to module level */
+    vendorPackages.forEach(function (packageName) {
+        // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
+        // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
+        let installPath = ''
+        try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
+            installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
+        } catch (e1) {
+            // if getInstalledPath fails, try nodejs internal resolve
+            try {
+                // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
+                installPath = path.dirname( require.resolve(packageName) )
+            } catch (e2) {
+                log.error(`[Module] Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
+                RED.log.warn(`uibuilder:Module: Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
+            }
+        }
+        if (installPath !== '') {
+            log.info(`[Module] Adding master vendor path`, {
+                'url':  tilib.urlJoin(moduleName, 'vendor', packageName), 'path': installPath
+            } )
+            app.use( tilib.urlJoin(moduleName, 'vendor', packageName), serveStatic(installPath) )
+        }
+    })
+
     //#region ---- Set up Socket.IO ----
     /** Holder for Socket.IO - we want this to survive redeployments of each node instance
      *  so that existing clients can be reconnected.
@@ -286,9 +317,6 @@ module.exports = function(RED) {
         if ( deployments.hasOwnProperty(node.id) ) deployments[node.id]++
         else deployments[node.id] = 1
         log.verbose(`[${uibInstance}] Number of Deployments`, deployments[node.id] )
-
-        // We need an http server to serve the page. @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages
-        const app = RED.httpNode // || RED.httpAdmin
 
         /** Provide the ability to have a ExpressJS middleware hook.
          * This can be used for custom authentication/authorisation or anything else.
@@ -441,30 +469,32 @@ module.exports = function(RED) {
             log.debug(`[${uibInstance}] Using master src folder and master vendor packages` )
             log.debug('        Reason for not using master dist folder: ', e.message )
             masterStatic = serveStatic( path.join( __dirname, 'src' ) )
-            // Include vendor resource source paths if needed
-            vendorPackages.forEach(function (packageName) {
-                // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
-                // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
-                var installPath = ''
-                try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
-                    installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
-                } catch (e1) {
-                    // if getInstalledPath fails, try nodejs internal resolve
-                    try {
-                        // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
-                        installPath = path.dirname( require.resolve(packageName) )
-                    } catch (e2) {
-                        log.error(`[${uibInstance}] Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
-                        RED.log.warn(`uibuilder:${uibInstance}: Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
-                    }
-                }
-                if (installPath !== '') {
-                    log.info(`[${uibInstance}] Adding master vendor path`, {
-                        'url':  tilib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
-                    } )
-                    app.use( tilib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
-                }
-            })
+            //#region vendor paths
+            // // Include vendor resource source paths if needed
+            // vendorPackages.forEach(function (packageName) {
+            //     // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
+            //     // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
+            //     var installPath = ''
+            //     try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
+            //         installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
+            //     } catch (e1) {
+            //         // if getInstalledPath fails, try nodejs internal resolve
+            //         try {
+            //             // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
+            //             installPath = path.dirname( require.resolve(packageName) )
+            //         } catch (e2) {
+            //             log.error(`[${uibInstance}] Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
+            //             RED.log.warn(`uibuilder:${uibInstance}: Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
+            //         }
+            //     }
+            //     if (installPath !== '') {
+            //         log.info(`[${uibInstance}] Adding master vendor path`, {
+            //             'url':  tilib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
+            //         } )
+            //         app.use( tilib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+            //     }
+            // })
+            //#endregion
         }
 
         app.use( tilib.urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
@@ -822,29 +852,30 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
         //#region --- Parameter validation ---
+        console.log('POST, params', req.body)
         // We have to have a url to work with
-        if ( req.query.url === undefined ) {
+        if ( req.body.url === undefined ) {
             log.error('[uibputfile] Admin API. url parameter not provided')
             res.statusMessage = 'url parameter not provided'
             res.status(500).end()
             return
         }
         // URL must not exceed 20 characters
-        if ( req.query.url.length > 20 ) {
+        if ( req.body.url.length > 20 ) {
             log.error('[uibputfile] Admin API. url parameter is too long (>20 characters)')
             res.statusMessage = 'url parameter is too long. Max 20 characters'
             res.status(500).end()
             return
         }
         // URL must be more than 0 characters
-        if ( req.query.url.length < 1 ) {
+        if ( req.body.url.length < 1 ) {
             log.error('[uibfiles] Admin API. url parameter is empty')
             res.statusMessage = 'url parameter is empty, please provide a value'
             res.status(500).end()
             return
         }
         // URL cannot contain .. to prevent escaping sub-folder structure
-        if ( req.query.url.includes('..') ) {
+        if ( req.body.url.includes('..') ) {
             log.error('[uibputfile] Admin API. url parameter contains ..')
             res.statusMessage = 'url parameter may not contain ..'
             res.status(500).end()
@@ -852,21 +883,21 @@ module.exports = function(RED) {
         }
 
         // We have to have an fname (file name) to work with
-        if ( req.query.fname === undefined ) {
+        if ( req.body.fname === undefined ) {
             log.error('[uibputfile] Admin API. fname parameter not provided')
             res.statusMessage = 'fname parameter not provided'
             res.status(500).end()
             return
         }
         // fname must not exceed 255 characters
-        if ( req.query.fname.length > 255 ) {
+        if ( req.body.fname.length > 255 ) {
             log.error('[uibputfile] Admin API. fname parameter is too long (>255 characters)')
             res.statusMessage = 'fname parameter is too long. Max 255 characters'
             res.status(500).end()
             return
         }
         // fname cannot contain .. to prevent escaping sub-folder structure
-        if ( req.query.fname.includes('..') ) {
+        if ( req.body.fname.includes('..') ) {
             log.error('[uibputfile] Admin API. fname parameter contains ..')
             res.statusMessage = 'fname parameter may not contain ..'
             res.status(500).end()
@@ -874,7 +905,7 @@ module.exports = function(RED) {
         }
         //#endregion ---- ----
         
-        log.verbose(`[${req.query.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
+        log.verbose(`[${req.body.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
         const fullname = path.join(uib_rootPath, req.body.url, 'src', req.body.fname)
