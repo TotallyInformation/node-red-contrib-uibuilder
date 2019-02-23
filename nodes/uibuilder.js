@@ -1,6 +1,7 @@
 /* globals log */
 /**
  * Copyright (c) 2019 Julian Knight (Totally Information)
+ * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -21,7 +22,10 @@
 const moduleName  = 'uibuilder'
 // @ts-ignore
 const nodeVersion = require('../package.json').version
+// Utility library for uibuilder
 const uiblib = require('./uiblib')
+// General purpose library (by Totally Information)
+const tilib = require('./tilib')
 
 const serveStatic      = require('serve-static'),
       socketio         = require('socket.io'),
@@ -90,6 +94,7 @@ module.exports = function(RED) {
     // NB: entries in settings.js are read-only and shouldn't be read using RED.settings.get, that is only for settings that can change in-flight.
     //     see Node-RED issue #1543.
 
+    //#region ---- Constants for standard setup ----
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
     const userDir = RED.settings.userDir
 
@@ -99,11 +104,18 @@ module.exports = function(RED) {
     /** Get the uibuilder global settings from settings.js if available, otherwise set to empty object @constant {Object} uib_globalSettings **/
     const uib_globalSettings = RED.settings.uibuilder || { 'debug': false }
 
+    /** Location of master template folders (containing default front-end code) @constant {string} masterTemplateFolder */
+    const masterTemplateFolder = path.join( __dirname, 'templates' )
+
+    /** Default master template to use (copied to instance folder `uib_rootPath`) @constant {string} templateToUse */
+    const templateToUse = 'jquery'
+
     /** Set the root path (on the server FS) for all uibuilder front-end data
      *  Name of the fs path used to hold custom files & folders for all instances of uibuilder
      * @constant {string} uib_rootPath
      **/
     const uib_rootPath = path.join(userDir, moduleName)
+    //#endregion -------- --------
 
     //#region ---- debugging ----
     // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
@@ -159,7 +171,7 @@ module.exports = function(RED) {
      **/
 
     /** @constant {string} */
-    const uib_socketPath = uiblib.urlJoin(moduleName, 'socket.io')
+    const uib_socketPath = tilib.urlJoin(moduleName, 'socket.io')
 
     log.debug('[Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
     var io = socketio.listen(RED.server, {'path': uib_socketPath}) // listen === attach
@@ -239,6 +251,12 @@ module.exports = function(RED) {
         instances[node.id] = node.url
         log.verbose(`[${uibInstance}] Node Instances Registered`, instances)
 
+        /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
+         *   Files in this folder are also served to URL but take preference
+         *   over those in the nodes folders (which act as defaults) @type {string}
+         */
+        node.customFolder = path.join(uib_rootPath, node.url)
+
         /** User supplied vendor packages
          * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
          * JK @since 2017-08-17 fix for non-existent properties and use getProps()
@@ -246,11 +264,6 @@ module.exports = function(RED) {
          * @type {Array}
          */
         node.userVendorPackages = uiblib.getProps(RED,config,'userVendorPackages',null) || uiblib.getProps(RED,uib_globalSettings,'userVendorPackages',[])
-        /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
-         *   Files in this folder are also served to URL but take preference
-         *   over those in the nodes folders (which act as defaults) @type {string}
-         */
-        node.customFolder = path.join(uib_rootPath, node.url)
 
         log.verbose(`[${uibInstance}] Node package details`, { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': uib_rootPath, 'customFldr': node.customFolder } )
 
@@ -263,7 +276,7 @@ module.exports = function(RED) {
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
         /** Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
          * @since v1.0.10, changed namespace creation to correct a missing / if httpNodeRoot had been changed from the default. @type {string} */
-        node.ioNamespace = uiblib.urlJoin(httpNodeRoot, node.url)
+        node.ioNamespace = tilib.urlJoin(httpNodeRoot, node.url)
         //#endregion ---- ----
 
         log.verbose(`[${uibInstance}] Socket.io details`, { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
@@ -306,7 +319,7 @@ module.exports = function(RED) {
             // Tell the client what Socket.IO namespace to use,
             // trim the leading slash because the cookie will turn it into a %2F
             res.setHeader('uibuilder-namespace', node.ioNamespace)
-            res.cookie('uibuilder-namespace', uiblib.trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
+            res.cookie('uibuilder-namespace', tilib.trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
             next()
         }
 
@@ -345,16 +358,18 @@ module.exports = function(RED) {
             }
         }
 
+        // We've checked that the custom folder is there and has the correct structure
         if ( customFoldersOK === true ) {
             // local custom folders are there ...
             log.debug(`[${uibInstance}] Using local front-end folders in`, node.customFolder)
 
             /** Now copy files from the master template folder (instead of master src) @since 2017-10-01
              *  Note: We don't copy the master dist folder
-             *  Don't copy if copy turned off in admin ui @TODO: always copy index.html */
+             *  Don't copy if copy turned off in admin ui 
+             * TODO: always copy index.html */
             if ( node.copyIndex ) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-                fs.copy( path.join( __dirname, 'templates' ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
+                fs.copy( path.join( masterTemplateFolder, templateToUse ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
                     if(err){
                         log.error(`[${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates')} to ${path.join(node.customFolder, 'src')}`, err)
                     } else {
@@ -399,7 +414,7 @@ module.exports = function(RED) {
                     }
                 }
                 if (installPath !== '') {
-                    let vendorPath = uiblib.urlJoin(node.url, 'vendor', packageName)
+                    let vendorPath = tilib.urlJoin(node.url, 'vendor', packageName)
                     log.info(`[${uibInstance}] Adding user vendor path`, {
                         'url': vendorPath, 'path': installPath
                     })
@@ -445,16 +460,16 @@ module.exports = function(RED) {
                 }
                 if (installPath !== '') {
                     log.info(`[${uibInstance}] Adding master vendor path`, {
-                        'url':  uiblib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
+                        'url':  tilib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
                     } )
-                    app.use( uiblib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
+                    app.use( tilib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
                 }
             })
         }
 
-        app.use( uiblib.urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
+        app.use( tilib.urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
 
-        const fullPath = uiblib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
+        const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
 
         log.info(`[${uibInstance}] Version ${nodeVersion} started at URL ${fullPath}`)
         log.info(`[${uibInstance}] UI Source files at ${node.customFolder}`)
@@ -916,68 +931,77 @@ module.exports = function(RED) {
      * TODO: Allow for std web page (default) AND JSON (for api)
      */
     RED.httpNode.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        // TODO: validate parameters
         log.verbose(`[uibindex] User Page/API. List all available uibuilder endpoints`)
 
-        const app = RED.httpNode // RED.httpAdmin
-        const app2 = RED.httpAdmin
+        switch (req.query.type) {
+            case 'json':
+                res.json(instances)
+                break;
+        
+            case 'urls':
+                res.json(Object.values(instances))
+                break;
+        
+            // default to 'html' output type
+            default:
+                //console.log(app.routes) // Expresss 3.x
+                //console.log(app.router.stack) // Expresss 3.x with express.router
+                //console.log(app._router.stack) // Expresss 4.x
+                //console.log(server.router.mounts) // Restify
 
-
-        //console.log(app.routes) // Expresss 3.x
-            //console.log(app.router.stack) // Expresss 3.x with express.router
-            //console.log(app._router.stack) // Expresss 4.x
-            //console.log(server.router.mounts) // Restify
-
-        let page = ''
-        page += '<h1>Index of uibuilder pages</h1>'
-        page += '<table>'
-        page += '  <tr>'
-        page += '    <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>'
-        page += '    <th>URL</th>'
-        //page += '  <th>Socket Namespace</th>'
-        page += '  </tr>'
-        Object.keys(instances).forEach(key => {
-            page += '  <tr>'
-            page += `    <td>${key}</td>`
-            page += `    <td><a href="${uiblib.urlJoin(httpNodeRoot, instances[key])}">${instances[key]}</a></td>`
-            //page += `    <td>${uiblib.urlJoin(httpNodeRoot, instances[key])}</td>`
-            page += '  </tr>'
-        })
-        page += '</table>'
-        //page += syntaxHighlight(instances)
-        //page += '<hr>'
-            //page += syntaxHighlight(app._router.stack)
-            //page += '<hr>'
-            //page += syntaxHighlight(app2._router.stack)
-        page += '<p>Note that each instance uses its own socket.io namespace that matches <i>httpNodeRoot/url</i>. Its location on the server filing system is <i>uib_rootPath/url</i>.</p>'
-
-        page += '<h1>Settings</h1>'
-        page += '<ul>'
-        page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
-        page += `  <li><b>uib_rootPath</b>: ${uib_rootPath}</li>`
-        page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
-        page += '</ul>'
-
-        page += '<h1>Vendor Packages</h1>'
-        page += '<table>'
-        page += '  <tr>'
-        page += '    <th>Package</th>'
-        page += '    <th>URL</th>'
-        page += '    <th>Server Filing System Path</th>'
-        page += '  </tr>'
-        Object.keys(vendorPaths).forEach(packageName => {
-            page += '  <tr>'
-            page += `    <td>${packageName}</td>`
-            page += `    <td><a href="${uiblib.urlJoin(httpNodeRoot, vendorPaths[packageName].url)}">${vendorPaths[packageName].url}</a></td>`
-            page += `    <td>${vendorPaths[packageName].path}</td>`
-            page += '  </tr>'
-        })
-        page += '</table>'
-        page += "<p>Note that url's are per-instance, the one shown is the last in the list.</p>"
-
-        res.send(page)
+                let page = ''
+                page += '<h1>Index of uibuilder pages</h1>'
+                page += '<table>'
+                page += '  <tr>'
+                page += '    <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>'
+                page += '    <th>URL</th>'
+                //page += '  <th>Socket Namespace</th>'
+                page += '  </tr>'
+                Object.keys(instances).forEach(key => {
+                    page += '  <tr>'
+                    page += `    <td>${key}</td>`
+                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, instances[key])}">${instances[key]}</a></td>`
+                    //page += `    <td>${tilib.urlJoin(httpNodeRoot, instances[key])}</td>`
+                    page += '  </tr>'
+                })
+                page += '</table>'
+                //page += syntaxHighlight(instances)
+                //page += '<hr>'
+                    //page += syntaxHighlight(app._router.stack)
+                    //page += '<hr>'
+                    //page += syntaxHighlight(app2._router.stack)
+                page += '<p>Note that each instance uses its own socket.io namespace that matches <i>httpNodeRoot/url</i>. Its location on the server filing system is <i>uib_rootPath/url</i>.</p>'
+    
+                page += '<h1>Settings</h1>'
+                page += '<ul>'
+                page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
+                page += `  <li><b>uib_rootPath</b>: ${uib_rootPath}</li>`
+                page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
+                page += '</ul>'
+    
+                page += '<h1>Vendor Packages</h1>'
+                page += '<table>'
+                page += '  <tr>'
+                page += '    <th>Package</th>'
+                page += '    <th>URL</th>'
+                page += '    <th>Server Filing System Path</th>'
+                page += '  </tr>'
+                Object.keys(vendorPaths).forEach(packageName => {
+                    page += '  <tr>'
+                    page += `    <td>${packageName}</td>`
+                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, vendorPaths[packageName].url)}">${vendorPaths[packageName].url}</a></td>`
+                    page += `    <td>${vendorPaths[packageName].path}</td>`
+                    page += '  </tr>'
+                })
+                page += '</table>'
+                page += "<p>Note that url's are per-instance, the one shown is the last in the list.</p>"
+    
+                res.send(page)
+    
+                break;
+        }
     })
-
+    
 } // ==== End of module.exports ==== //
 
 // EOF
