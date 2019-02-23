@@ -823,28 +823,28 @@ module.exports = function(RED) {
     RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
         //#region --- Parameter validation ---
         // We have to have a url to work with
-        if ( req.query.url === undefined ) {
+        if ( req.body.url === undefined ) {
             log.error('[uibputfile] Admin API. url parameter not provided')
             res.statusMessage = 'url parameter not provided'
             res.status(500).end()
             return
         }
         // URL must not exceed 20 characters
-        if ( req.query.url.length > 20 ) {
+        if ( req.body.url.length > 20 ) {
             log.error('[uibputfile] Admin API. url parameter is too long (>20 characters)')
             res.statusMessage = 'url parameter is too long. Max 20 characters'
             res.status(500).end()
             return
         }
         // URL must be more than 0 characters
-        if ( req.query.url.length < 1 ) {
+        if ( req.body.url.length < 1 ) {
             log.error('[uibfiles] Admin API. url parameter is empty')
             res.statusMessage = 'url parameter is empty, please provide a value'
             res.status(500).end()
             return
         }
         // URL cannot contain .. to prevent escaping sub-folder structure
-        if ( req.query.url.includes('..') ) {
+        if ( req.body.url.includes('..') ) {
             log.error('[uibputfile] Admin API. url parameter contains ..')
             res.statusMessage = 'url parameter may not contain ..'
             res.status(500).end()
@@ -852,21 +852,21 @@ module.exports = function(RED) {
         }
 
         // We have to have an fname (file name) to work with
-        if ( req.query.fname === undefined ) {
+        if ( req.body.fname === undefined ) {
             log.error('[uibputfile] Admin API. fname parameter not provided')
             res.statusMessage = 'fname parameter not provided'
             res.status(500).end()
             return
         }
         // fname must not exceed 255 characters
-        if ( req.query.fname.length > 255 ) {
+        if ( req.body.fname.length > 255 ) {
             log.error('[uibputfile] Admin API. fname parameter is too long (>255 characters)')
             res.statusMessage = 'fname parameter is too long. Max 255 characters'
             res.status(500).end()
             return
         }
         // fname cannot contain .. to prevent escaping sub-folder structure
-        if ( req.query.fname.includes('..') ) {
+        if ( req.body.fname.includes('..') ) {
             log.error('[uibputfile] Admin API. fname parameter contains ..')
             res.statusMessage = 'fname parameter may not contain ..'
             res.status(500).end()
@@ -874,7 +874,7 @@ module.exports = function(RED) {
         }
         //#endregion ---- ----
         
-        log.verbose(`[${req.query.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
+        log.verbose(`[${req.body.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
         const fullname = path.join(uib_rootPath, req.body.url, 'src', req.body.fname)

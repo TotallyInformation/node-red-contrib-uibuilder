@@ -1,3 +1,7 @@
+## v1.2.1
+
+* **FIXED** File save wasn't working due to a parameter error, now fixed.
+
 ## v1.2.0
 
 * **CHANGED** `url` property is now validated. It is required, it cannot be more than 20 characters long. It cannot be 'templates' (in preparation for a v2 improved template handling feature).
