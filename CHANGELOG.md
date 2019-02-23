@@ -5,6 +5,9 @@
   Where before you might have had something like `<link rel="stylesheet" href="./vendor/normalize.css/normalize.css">`, that must now change to `<link rel="stylesheet" href="/uibuilder/vendor/normalize.css/normalize.css">`. Any link that started like `./vendor` must be changed to `/uibuilder/vendor`.
 
 
+## v1.2.1
+
+* **FIXED** File save wasn't working due to a parameter error, now fixed.
 
 ## v1.2.0
 
