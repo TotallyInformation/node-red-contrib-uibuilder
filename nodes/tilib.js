@@ -85,5 +85,39 @@ module.exports = {
      */
     mergeDedupe: function(...arr) {
         return [...new Set([].concat(...arr))];
-    }
+    },
+
+    /** Utility function to html pretty-print JSON */
+    syntaxHighlight: function(json) {
+        /*
+            pre .string { color: orange; }
+            .number { color: white; }
+            .boolean { color: rgb(20, 99, 163); }
+            .null { color: magenta; }
+            .key { color: #069fb3;}
+        */
+        json = JSON.stringify(json, undefined, 4)
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<pre style="color:white;background-color:black">' + json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number', style = 'style="color:white"'
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key'
+                    style = 'style="color:#069fb3"'
+                } else {
+                    cls = 'string'
+                    style = 'style="color:orange"'
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean'
+                style = 'style="color:rgb(20,99,163)"'
+            } else if (/null/.test(match)) {
+                cls = 'null'
+                style = 'style="color:magenta"'
+            }
+            return `<span class="${cls}" ${style}>${match}</span>`
+        }) + '</pre>'
+    },
+    
+    
 } // ---- End of module.exports ---- //
