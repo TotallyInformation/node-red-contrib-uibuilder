@@ -53,7 +53,7 @@ const deployments = {}
 const instances = {}
 
 /** Track the vendor packages installed and their paths
- * Schema: {'<npm package name>': {'url': vendorPath, 'path': installPath} }
+ * Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder} }
  * @constant {Object} vendorPaths */
 const vendorPaths = {}
 
@@ -178,35 +178,34 @@ module.exports = function(RED) {
 
     /** Include vendor resource source paths if needed
      * @since v2.0.0 2019-02-23 moved from nodeGo() to module level and merged with default vendor package list */
-    //TODO includes httpNodeRoot. Update /uibindex text. Update templates. Update uibuilder.html. Update docs. Update WIKI. Update close fn.
+    //TODO Update uibuilder.html. Update WIKI. Update close fn.
     userVendorPackages.forEach(function (packageName) {
         // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
         // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
-        var installPath = ''
+        var installFolder = ''
         try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
-            installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
+            installFolder = getInstalledPathSync(packageName, {local:true, cwd: userDir})
         } catch (e1) {
             // if getInstalledPath fails, try nodejs internal resolve
             try {
                 // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
-                installPath = path.dirname( require.resolve(packageName) )
+                installFolder = path.dirname( require.resolve(packageName) )
             } catch (e2) {
                 log.error(`[Module] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`, e2.message );
                 RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
             }
         }
-        if (installPath !== '') {
+        if (installFolder !== '') {
             let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
             log.info('[Module] Adding user vendor path', {
-                'url': vendorPath, 'path': installPath
+                'url': vendorPath, 'path': installFolder
             })
-            app.use( vendorPath, serveStatic(installPath) )
-            vendorPaths[packageName] = {'url': vendorPath, 'path': installPath}
+            app.use( vendorPath, serveStatic(installFolder) )
+            vendorPaths[packageName] = {'url': tilib.urlJoin(httpNodeRoot, vendorPath), 'folder': installFolder}
         }
     }) // -- end of forEach vendor package -- //
     //#endregion -------- --------
 
-    //TODO Move location of socket client library now we know how to form the url
     //#region ---- Set up Socket.IO ----
     /** Holder for Socket.IO - we want this to survive redeployments of each node instance
      *  so that existing clients can be reconnected.
@@ -662,8 +661,8 @@ module.exports = function(RED) {
         settings: {
             uibuilder: {
                 value: {
-                    userVendorPackages: [],
-                    debug: false,
+                    'userVendorPackages': userVendorPackages,
+                    'debug': false,
                     //middleware: function(req,res,next){next()},
                     //socketmiddleware: function(socket,next){next()},
                 },
@@ -880,45 +879,22 @@ module.exports = function(RED) {
         })
     })
 
-    /** Utility function to html pretty-print JSON */
-    function syntaxHighlight(json) {
-        /*
-            pre .string { color: orange; }
-            .number { color: white; }
-            .boolean { color: rgb(20, 99, 163); }
-            .null { color: magenta; }
-            .key { color: #069fb3;}
-        */
-        json = JSON.stringify(json, undefined, 4)
-        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return '<pre style="color:white;background-color:black">' + json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-            var cls = 'number', style = 'style="color:white"'
-            if (/^"/.test(match)) {
-                if (/:$/.test(match)) {
-                    cls = 'key'
-                    style = 'style="color:#069fb3"'
-                } else {
-                    cls = 'string'
-                    style = 'style="color:orange"'
-                }
-            } else if (/true|false/.test(match)) {
-                cls = 'boolean'
-                style = 'style="color:rgb(20,99,163)"'
-            } else if (/null/.test(match)) {
-                cls = 'null'
-                style = 'style="color:magenta"'
-            }
-            return `<span class="${cls}" ${style}>${match}</span>`
-        }) + '</pre>'
-    }
-
-    /** Create an index web page listing all uibuilder endpoints
+    /** Create an index web page or JSON return listing all uibuilder endpoints
+     * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
      * @since 2019-02-04 v1.1.0-beta6
-     * TODO: Correct help text - not on admin path. Update for rationalised vendor paths
      */
-    RED.httpNode.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+    RED.httpAdmin.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         log.verbose(`[uibindex] User Page/API. List all available uibuilder endpoints`)
 
+        /** If GET includes a "check" parameter, see if that uibuilder URL is in use
+         * @returns {boolean} True if the given url exists, else false
+         */
+        if (req.query.check) {
+            res.json( Object.values(instances).includes(req.query.check) )
+            return
+        }
+
+        /** If no check parameter, return full details based on type parameter */
         switch (req.query.type) {
             case 'json':
                 res.json(instances)
@@ -935,29 +911,46 @@ module.exports = function(RED) {
                 //console.log(app._router.stack) // Expresss 4.x
                 //console.log(server.router.mounts) // Restify
 
-                let page = ''
+                let page = '<!doctype html><html lang="en"><head><title>Uibuilder Index</title></head><body style="font-family: sans-serif;">'
                 page += '<h1>Index of uibuilder pages</h1>'
                 page += '<table>'
                 page += '  <tr>'
                 page += '    <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>'
                 page += '    <th>URL</th>'
-                //page += '  <th>Socket Namespace</th>'
+                page += '    <th>Server Filing System Folder</th>'
                 page += '  </tr>'
                 Object.keys(instances).forEach(key => {
                     page += '  <tr>'
                     page += `    <td>${key}</td>`
                     page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, instances[key])}">${instances[key]}</a></td>`
-                    //page += `    <td>${tilib.urlJoin(httpNodeRoot, instances[key])}</td>`
+                    page += `    <td>${path.join(uib_rootFolder, instances[key])}</td>`
                     page += '  </tr>'
                 })
                 page += '</table>'
-                //page += syntaxHighlight(instances)
-                //page += '<hr>'
-                    //page += syntaxHighlight(app._router.stack)
-                    //page += '<hr>'
-                    //page += syntaxHighlight(app2._router.stack)
-                page += '<p>Note that each instance uses its own socket.io namespace that matches <i>httpNodeRoot/url</i>. Its location on the server filing system is <i>uib_rootFolder/url</i>.</p>'
+                page += '<p>Note that each instance uses its own socket.io <i>namespace</i> that matches <code>httpNodeRoot/url</code>. Its location on the server filing system is <code>uib_rootFolder/url</code>.</p>'
     
+                page += '<h1>Vendor Client Libraries</h1>'
+                page += '<table>'
+                page += '  <tr>'
+                page += '    <th>Package</th>'
+                page += '    <th>URL</th>'
+                page += '    <th>Server Filing System Folder</th>'
+                page += '  </tr>'
+                page += '  <tr>'
+                page += `    <td>socket.io</td>`
+                page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, 'uibuilder/socket.io/socket.io.js')}">../uibuilder/socket.io/socket.io.js</a></td>`
+                page += `    <td>--</td>`
+                page += '  </tr>'
+                Object.keys(vendorPaths).forEach(packageName => {
+                    page += '  <tr>'
+                    page += `    <td>${packageName}</td>`
+                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, vendorPaths[packageName].url)}">..${vendorPaths[packageName].url}</a></td>`
+                    page += `    <td>${vendorPaths[packageName].folder}</td>`
+                    page += '  </tr>'
+                })
+                page += '</table>'
+                page += "<p>Note: Always use relative URL's. All vendor URL's start <code>../uibuilder/vendor/</code>, all uibuilder and custom file URL's start <code>./</code>.</p>"
+
                 page += '<h1>Settings</h1>'
                 page += '<ul>'
                 page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
@@ -965,29 +958,23 @@ module.exports = function(RED) {
                 page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
                 page += '</ul>'
     
-                page += '<h1>Vendor Packages</h1>'
-                page += '<table>'
-                page += '  <tr>'
-                page += '    <th>Package</th>'
-                page += '    <th>URL</th>'
-                page += '    <th>Server Filing System Path</th>'
-                page += '  </tr>'
-                Object.keys(vendorPaths).forEach(packageName => {
-                    page += '  <tr>'
-                    page += `    <td>${packageName}</td>`
-                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, vendorPaths[packageName].url)}">${vendorPaths[packageName].url}</a></td>`
-                    page += `    <td>${vendorPaths[packageName].path}</td>`
-                    page += '  </tr>'
-                })
-                page += '</table>'
-                page += "<p>Note that url's are per-instance, the one shown is the last in the list.</p>"
+                page += '</body></html>'
     
                 res.send(page)
     
                 break;
         }
-    })
-    
+    }) // ---- End of uibindex ---- //
+
+    /** Return a list of vendor packages. Schema: {name:{url,folder}}
+     * @since v2.0.0 2019-02-24
+     */
+    RED.httpAdmin.get('/uibvendorpackages', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        log.verbose(`[uibvendorpaths] User Page/API. List all available uibuilder vendor paths`)
+
+        res.json(vendorPaths)  // schema: {name:{url,folder}}
+    }) // ---- End of uibindex ---- //
+
 } // ==== End of module.exports ==== //
 
 // EOF
