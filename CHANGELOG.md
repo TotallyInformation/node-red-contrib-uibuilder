@@ -7,6 +7,18 @@
 * **BREAKING CHANGE** The socket.io client library has moved path. Previously it didn't take into account `httpNodeRoot` but now it does.
   You will need to change the `script` tag in `index.html`, it was `<script src="/uibuilder/socket.io/socket.io.js"></script>`, now it must be `<script src="../uibuilder/socket.io/socket.io.js"></script>`.
 
+* **CHANGED** Improved `<adminurl>/uibindex`, added `check` parameter, if provided will check if the value matches a uibuilder url
+  in use. If so, returns true otherwise returns false. Used in the admin ui to check for url uniqueness. Also, moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
+
+* **FIX** In uibuilderfe.js, provide a polyfill for String.prototype.endsWith to be kind to folk who are forced to live with Microsoft Internet Explorer or other outdated browsers.
+
+* **NEW** Admin API `<adminurl>/uibvendorpackages` Returns list of available vendor packages with url and folder details.
+
+* **CHANGED** In uibuilder admin ui, swap vendor path list to uibvendorpackages API
+
+* **CHANGED** Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. **NOTE** that duplicate checking is more challenging than expected, it remains a work in progress.
+  
+----
 
 ## v1.2.1
 
