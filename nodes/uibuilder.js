@@ -166,12 +166,22 @@ module.exports = function(RED) {
      * @since v2.0.0 2019-02-23 Moved from instance level (nodeGo()) to module level */
     const app = RED.httpNode // || RED.httpAdmin
 
+    /** Merge default and user supplied vendor packages
+     * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
+     * JK @since 2017-08-17 fix for non-existent properties and use getProps()
+     * JK @since 2018-01-06 use uib_globalSettings instead of RED.settings.uibuilder. At least an empty array is returned.
+     * JK @since v2.0.0 2019-02-24 Move out of nodeGo() to module level, remove config read as it isn't used (only settings.js)
+     * @type {Array}
+     */
+    let userVendorPackages = tilib.mergeDedupe(vendorPackages, uiblib.getProps(RED,uib_globalSettings,'userVendorPackages',[]))
+
     /** Include vendor resource source paths if needed
-     * @since v2.0.0 2019-02-23 moved from nodeGo() to module level */
-    vendorPackages.forEach(function (packageName) {
+     * @since v2.0.0 2019-02-23 moved from nodeGo() to module level and merged with default vendor package list */
+    //TODO includes httpNodeRoot. Update /uibindex text. Update templates. Update uibuilder.html. Update docs. Update WIKI. Update close fn.
+    userVendorPackages.forEach(function (packageName) {
         // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
         // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
-        let installPath = ''
+        var installPath = ''
         try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
             installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
         } catch (e1) {
@@ -180,17 +190,19 @@ module.exports = function(RED) {
                 // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
                 installPath = path.dirname( require.resolve(packageName) )
             } catch (e2) {
-                log.error(`[Module] Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
-                RED.log.warn(`uibuilder:Module: Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
+                log.error(`[Module] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`, e2.message );
+                RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
             }
         }
         if (installPath !== '') {
-            log.info(`[Module] Adding master vendor path`, {
-                'url':  tilib.urlJoin(moduleName, 'vendor', packageName), 'path': installPath
-            } )
-            app.use( tilib.urlJoin(moduleName, 'vendor', packageName), serveStatic(installPath) )
+            let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
+            log.info('[Module] Adding user vendor path', {
+                'url': vendorPath, 'path': installPath
+            })
+            app.use( vendorPath, serveStatic(installPath) )
+            vendorPaths[packageName] = {'url': vendorPath, 'path': installPath}
         }
-    })
+    }) // -- end of forEach vendor package -- //
 
     //#region ---- Set up Socket.IO ----
     /** Holder for Socket.IO - we want this to survive redeployments of each node instance
@@ -288,15 +300,8 @@ module.exports = function(RED) {
          */
         node.customFolder = path.join(uib_rootPath, node.url)
 
-        /** User supplied vendor packages
-         * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
-         * JK @since 2017-08-17 fix for non-existent properties and use getProps()
-         * JK @since 2018-01-06 use uib_globalSettings instead of RED.settings.uibuilder. At least an empty array is returned.
-         * @type {Array}
-         */
-        node.userVendorPackages = uiblib.getProps(RED,config,'userVendorPackages',null) || uiblib.getProps(RED,uib_globalSettings,'userVendorPackages',[])
-
-        log.verbose(`[${uibInstance}] Node package details`, { 'usrVendorPkgs': node.userVendorPackages, 'customAppFldr': uib_rootPath, 'customFldr': node.customFolder } )
+        // TODO MAy not be needed now ...
+        log.verbose(`[${uibInstance}] Node package details`, { 'vendorPkgs': vendorPackages, 'customAppFldr': uib_rootPath, 'customFldr': node.customFolder } )
 
         //#region ---- Socket.IO instance configuration ----
         /** How many Socket clients connected to this instance? @type {integer} */
@@ -424,32 +429,6 @@ module.exports = function(RED) {
             // dist not being used or not accessible, use src
             log.debug(`[${uibInstance}] Dist folder not in use or not accessible. Using local src folder`, e.message )
             customStatic = serveStatic( path.join(node.customFolder, 'src') )
-            // Include vendor resource source paths if needed
-            node.userVendorPackages.forEach(function (packageName) {
-                // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
-                // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
-                var installPath = ''
-                try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
-                    installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
-                } catch (e1) {
-                    // if getInstalledPath fails, try nodejs internal resolve
-                    try {
-                        // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
-                        installPath = path.dirname( require.resolve(packageName) )
-                    } catch (e2) {
-                        log.error(`[${uibInstance}] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`, e2.message );
-                        RED.log.warn(`uibuilder:${uibInstance}: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
-                    }
-                }
-                if (installPath !== '') {
-                    let vendorPath = tilib.urlJoin(node.url, 'vendor', packageName)
-                    log.info(`[${uibInstance}] Adding user vendor path`, {
-                        'url': vendorPath, 'path': installPath
-                    })
-                    app.use( vendorPath, serveStatic(installPath) )
-                    vendorPaths[packageName] = {'url': vendorPath, 'path': installPath}
-                }
-            }) // -- end of forEach vendor package -- //
         }
         //#endregion -- Added static path for local custom files -- //
         //#endregion ------ End of Create custom folder structure ------- //
@@ -469,32 +448,6 @@ module.exports = function(RED) {
             log.debug(`[${uibInstance}] Using master src folder and master vendor packages` )
             log.debug('        Reason for not using master dist folder: ', e.message )
             masterStatic = serveStatic( path.join( __dirname, 'src' ) )
-            //#region vendor paths
-            // // Include vendor resource source paths if needed
-            // vendorPackages.forEach(function (packageName) {
-            //     // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
-            //     // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
-            //     var installPath = ''
-            //     try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
-            //         installPath = getInstalledPathSync(packageName, {local:true, cwd: userDir})
-            //     } catch (e1) {
-            //         // if getInstalledPath fails, try nodejs internal resolve
-            //         try {
-            //             // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
-            //             installPath = path.dirname( require.resolve(packageName) )
-            //         } catch (e2) {
-            //             log.error(`[${uibInstance}] Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
-            //             RED.log.warn(`uibuilder:${uibInstance}: Failed to add master vendor path - no install found for ${packageName}. Should have been installed by this module`)
-            //         }
-            //     }
-            //     if (installPath !== '') {
-            //         log.info(`[${uibInstance}] Adding master vendor path`, {
-            //             'url':  tilib.urlJoin(node.url, 'vendor', packageName), 'path': installPath
-            //         } )
-            //         app.use( tilib.urlJoin(node.url, 'vendor', packageName), serveStatic(installPath) )
-            //     }
-            // })
-            //#endregion
         }
 
         app.use( tilib.urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
@@ -852,7 +805,6 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
         //#region --- Parameter validation ---
-        console.log('POST, params', req.body)
         // We have to have a url to work with
         if ( req.body.url === undefined ) {
             log.error('[uibputfile] Admin API. url parameter not provided')
@@ -959,7 +911,7 @@ module.exports = function(RED) {
 
     /** Create an index web page listing all uibuilder endpoints
      * @since 2019-02-04 v1.1.0-beta6
-     * TODO: Allow for std web page (default) AND JSON (for api)
+     * TODO: Correct help text - not on admin path
      */
     RED.httpNode.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         log.verbose(`[uibindex] User Page/API. List all available uibuilder endpoints`)
