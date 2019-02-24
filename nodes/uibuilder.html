@@ -139,14 +139,12 @@
         if ( value.toLowerCase().substring(0,9) === 'templates' ) return false
 
         // Is a duplicate? Set by onchange function to prevent it triggering itself
-        if ( urlIsDup ) return false
-
-        return true
+        return !urlIsDup
     }
     // TODO: Doesn't work!
     function validateUrlOnChange(value) {
         return false
-        
+
         console.log('change', value)
         // Check whether the url is already in use via a call to the admin API `uibindex`
         var exists = false
