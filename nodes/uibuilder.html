@@ -18,17 +18,26 @@
     /** Module name must match this nodes html file @constant {string} moduleName */
     var moduleName  = 'uibuilder'
 
-    function buildUrlList(pkgs, url) {
-        if (!Array.isArray(pkgs)) pkgs = [pkgs]
-        url = RED.settings.httpNodeRoot + url
-        $('#fepaths').empty()
-        pkgs.forEach(function(element) {
-            var strUrl = '/' + moduleName + '/vendor/' + element + '/'
-            $('#fepaths').append('<li><i>' + strUrl + '</i></li>')
-        }, this);
-        $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/jquery/dist/jquery.min.js">/' + moduleName + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
-        $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/normalize.css/normalize.css">/' + moduleName + '/vendor/normalize.css/normalize.css</a></li>') // always the same
-        $('#fepaths').append('<li><a href="/' + moduleName + '/socket.io/socket.io.js">/' + moduleName + '/socket.io/socket.io.js</a></li>') // always the same
+    /** placeholder for url duplicate check - marks url invalid/valid on change */
+    var urlIsDup = false
+
+    /** Get full package list via API and show in admin ui
+     * @param {string} url 
+     * @param {boolean} rebuild - Rebuild the vendorPaths list
+     */
+    //function buildUrlList(pkgs, url) {
+    function packageList(url, rebuild) {
+        $.getJSON('uibvendorpackages', function(vendorPackages) {
+            $('#userpackages').text( Object.keys(vendorPackages) )
+            $('#fepaths').empty()
+            $.each(vendorPackages, function(package, pkgInfo) {
+                $('#fepaths').append('<li><i>' + pkgInfo.url + '</i></li>')
+            })
+        })
+
+        // $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/jquery/dist/jquery.min.js">/' + moduleName + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
+        // $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/normalize.css/normalize.css">/' + moduleName + '/vendor/normalize.css/normalize.css</a></li>') // always the same
+        $('#fepaths').append('<li><a href="/' + moduleName + '/socket.io/socket.io.js">../' + moduleName + '/socket.io/socket.io.js</a></li>') // always the same
     }
     /** Return a file type from a file name (or default to txt)
      *  ftype can be used in ACE editor modes */
@@ -108,6 +117,7 @@
         if ( ! isClean ) $('#file-action-message').text('Save Required')
     }
     /** Validate the url property
+     * Max 20 chars, can't contain any of ['..', ]
      * @param {*} value The url value to validate
      * @returns {boolean} true = valid
      **/
@@ -119,12 +129,37 @@
         if ( value.length > 20 ) return false
         // Cannot contain ..
         if ( value.indexOf('..') !== -1 ) return false
+        // cannot contain / or \
+        if ( value.indexOf('/') !== -1 ) return false
+        if ( value.indexOf('\\') !== -1 ) return false
+        // Cannot start with _ or .
+        if ( value.substring(0,1) === '_' ) return false
+        if ( value.substring(0,1) === '.' ) return false
         // Cannot be 'templates' as this is a reserved value (for v2)
-        if ( value.toLowerCase().indexOf('templates') !== -1 ) return false
+        if ( value.toLowerCase().substring(0,9) === 'templates' ) return false
 
-        // TODO: Check whether the url is already in use via a call to the admin API `uibindex`
+        // Is a duplicate? Set by onchange function to prevent it triggering itself
+        if ( urlIsDup ) return false
 
         return true
+    }
+    // TODO: Doesn't work!
+    function validateUrlOnChange(value) {
+        return false
+        
+        console.log('change', value)
+        // Check whether the url is already in use via a call to the admin API `uibindex`
+        var exists = false
+        $.ajax({
+            dataType: "json", async: false, 
+            url: 'uibindex?check=' + value,
+            success: function(check) {
+                exists = check
+            }
+        })
+        console.log('exists', exists)
+
+        return exists
     }
     // Register the node type, defaults and set up the edit fns
     RED.nodes.registerType('uibuilder', {
@@ -133,7 +168,7 @@
         defaults: {
             name: { value: '' },
             topic: { value: '' },
-            url: { value: 'uibuilder', required: true, validate: validateUrl }, // TODO: needs validation, max 20 chars
+            url: { value: 'uibuilder', required: true, validate: validateUrl },
             fwdInMessages: { value: false },
             allowScripts: { value: false },
             allowStyles: { value: false },
@@ -164,8 +199,6 @@
             $('#node-input-debugFE').prop('checked', this.debugFE)
             $('#node-input-copyIndex').prop('checked', this.copyIndex)
             // Show the uibuilder global settings from settings.js
-            var pkgs = RED.settings.uibuilder.userVendorPackages
-            $('#userpackages').text(pkgs)
             $('#bedebug').text(RED.settings.uibuilder.debug)
 
             // Delete is not ready yet, so disable button by default
@@ -194,13 +227,15 @@
             if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
 
             // List the front-end url paths available
-            buildUrlList(pkgs, this.url)
+            //buildUrlList(pkgs, this.url)
+            packageList(this.url, true)
+
             // When the url changes,
             $('#node-input-url').change(function () {
                 // Show the root URL
                 $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
-                // Update the list of available paths
-                buildUrlList(pkgs, $(this).val())
+                // Is the new value already in use?
+                urlIsDup = validateUrlOnChange($(this).val())
             })
             // @since 2019-01-27 - adding file editor
             // Build the file list - pass the url so the BE can find the right folder
