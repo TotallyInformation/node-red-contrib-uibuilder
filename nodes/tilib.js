@@ -78,4 +78,12 @@ module.exports = {
         return pj
     }, // ---- End of getRedUserRunScripts ---- //
 
+    /** Merge and deduplicate multiple arrays
+     * @see https://stackoverflow.com/a/27664971/1309986
+     * @param {any[]} arr One or more arrays
+     * @returns {any[]} Deduplicated, merged single array
+     */
+    mergeDedupe: function(...arr) {
+        return [...new Set([].concat(...arr))];
+    }
 } // ---- End of module.exports ---- //
