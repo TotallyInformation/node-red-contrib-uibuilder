@@ -395,7 +395,8 @@ _[back to top](#contents)_
 
 ### 1.13.1. Front-end path summary
 
-> **NOTE** that you should always use relative paths for URLs. Also note that any vendor libraries start with `../uibuilder/vendor/` and that uibuilder's own files and your own custom code should always start with `./`. 
+> **NOTE** that you should always use relative paths for URLs. Also note that any vendor libraries start with `../uibuilder/vendor/` and that uibuilder's own files and your own custom code should always start with `./`.
+> 
 > This means that you don't need to worry about changes to `httpNodeRoot` or the protocol (http vs https) or port numbers.
 
 Front-end files in `~/.node-red/node_modules/node-red-contrib-uibuilder/nodes/src/` may use the url paths:
