@@ -164,6 +164,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region --- variables ---
         /** Writable (via custom method. read via .get method) */
+
+        self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
+
         /** Automatically send a "ready for content" control message on window.load
          * Set to false if you want to send this yourself (e.g. when Riot/Moon/etc mounted event triggered)
          * see .autoSendReady method
@@ -191,8 +194,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.retryFactor  = 1.5                             // starting delay factor for subsequent reconnect attempts
         self.timerid      = null
         self.ioNamespace  = self.setIOnamespace()           // Get the namespace from the current URL
-        self.ioPath       = '/uibuilder/socket.io'          // make sure client uses Socket.IO version from the uibuilder module (using path)
         self.ioTransport  = ['polling', 'websocket']
+        
+        /** make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot */
+        self.ioPath       = '../' + self.moduleName + '/socket.io'
+
         //#endregion --- variables ---
 
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use

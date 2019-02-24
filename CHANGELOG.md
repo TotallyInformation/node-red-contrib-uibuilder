@@ -4,6 +4,9 @@
   This means that you have to change your `index.html` file.
   Where before you might have had something like `<link rel="stylesheet" href="./vendor/normalize.css/normalize.css">`, that must now change to `<link rel="stylesheet" href="../uibuilder/vendor/normalize.css/normalize.css">`. Any link that started like `./vendor` must be changed to `../uibuilder/vendor`.
 
+* **BREAKING CHANGE** The socket.io client library has moved path. Previously it didn't take into account `httpNodeRoot` but now it does.
+  You will need to change the `script` tag in `index.html`, it was `<script src="/uibuilder/socket.io/socket.io.js"></script>`, now it must be `<script src="../uibuilder/socket.io/socket.io.js"></script>`.
+
 
 ## v1.2.1
 

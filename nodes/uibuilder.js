@@ -107,14 +107,14 @@ module.exports = function(RED) {
     /** Location of master template folders (containing default front-end code) @constant {string} masterTemplateFolder */
     const masterTemplateFolder = path.join( __dirname, 'templates' )
 
-    /** Default master template to use (copied to instance folder `uib_rootPath`) @constant {string} templateToUse */
+    /** Default master template to use (copied to instance folder `uib_rootFolder`) @constant {string} templateToUse */
     const templateToUse = 'jquery'
 
-    /** Set the root path (on the server FS) for all uibuilder front-end data
+    /** Set the root folder (on the server FS) for all uibuilder front-end data
      *  Name of the fs path used to hold custom files & folders for all instances of uibuilder
-     * @constant {string} uib_rootPath
+     * @constant {string} uib_rootFolder
      **/
-    const uib_rootPath = path.join(userDir, moduleName)
+    const uib_rootFolder = path.join(userDir, moduleName)
     //#endregion -------- --------
 
     //#region ---- debugging ----
@@ -161,11 +161,12 @@ module.exports = function(RED) {
 
     log.verbose('[Module] ----------------- uibuilder - module.exports -----------------')
 
-    /** We need an http server to serve the page. 
+    /** We need an http server to serve the page and vendor packages. 
      * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
      * @since v2.0.0 2019-02-23 Moved from instance level (nodeGo()) to module level */
     const app = RED.httpNode // || RED.httpAdmin
 
+    //#region ---- Serve up vendor packages ----
     /** Merge default and user supplied vendor packages
      * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
      * JK @since 2017-08-17 fix for non-existent properties and use getProps()
@@ -203,7 +204,9 @@ module.exports = function(RED) {
             vendorPaths[packageName] = {'url': vendorPath, 'path': installPath}
         }
     }) // -- end of forEach vendor package -- //
+    //#endregion -------- --------
 
+    //TODO Move location of socket client library now we know how to form the url
     //#region ---- Set up Socket.IO ----
     /** Holder for Socket.IO - we want this to survive redeployments of each node instance
      *  so that existing clients can be reconnected.
@@ -213,8 +216,8 @@ module.exports = function(RED) {
      *       otherwise it is impossible to have a standard index.html file.
      **/
 
-    /** @constant {string} */
-    const uib_socketPath = tilib.urlJoin(moduleName, 'socket.io')
+    /** @constant {string} uib_socketPath */
+    const uib_socketPath = tilib.urlJoin(httpNodeRoot, moduleName, 'socket.io')
 
     log.debug('[Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
     var io = socketio.listen(RED.server, {'path': uib_socketPath}) // listen === attach
@@ -298,10 +301,10 @@ module.exports = function(RED) {
          *   Files in this folder are also served to URL but take preference
          *   over those in the nodes folders (which act as defaults) @type {string}
          */
-        node.customFolder = path.join(uib_rootPath, node.url)
+        node.customFolder = path.join(uib_rootFolder, node.url)
 
         // TODO MAy not be needed now ...
-        log.verbose(`[${uibInstance}] Node package details`, { 'vendorPkgs': vendorPackages, 'customAppFldr': uib_rootPath, 'customFldr': node.customFolder } )
+        log.verbose(`[${uibInstance}] Node package details`, { 'vendorPkgs': vendorPackages, 'customAppFldr': uib_rootFolder, 'customFldr': node.customFolder } )
 
         //#region ---- Socket.IO instance configuration ----
         /** How many Socket clients connected to this instance? @type {integer} */
@@ -362,11 +365,11 @@ module.exports = function(RED) {
         // TODO: May be better as async calls - probably not, but a promisified version would be OK?
         // Make sure the global custom folder exists first
         try {
-            fs.mkdirSync(uib_rootPath) // try to create
-            fs.accessSync( uib_rootPath, fs.constants.W_OK ) // try to access
+            fs.mkdirSync(uib_rootFolder) // try to create
+            fs.accessSync( uib_rootFolder, fs.constants.W_OK ) // try to access
         } catch (e) {
             if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-                log.error(`[${uibInstance}] Custom folder ERROR, path: ${uib_rootPath}`, e.message)
+                log.error(`[${uibInstance}] Custom folder ERROR, path: ${uib_rootFolder}`, e.message)
                 customFoldersOK = false
             }
         }
@@ -710,7 +713,7 @@ module.exports = function(RED) {
 
         log.verbose(`[uibfiles] Admin API. File list requested for ${req.query.url}`)
 
-        const srcFolder = path.join(uib_rootPath, req.query.url, 'src')
+        const srcFolder = path.join(uib_rootFolder, req.query.url, 'src')
 
         // Get the file list - note, ignore errors for now
         // TODO: Need to filter out folders. Or better, flatten and allow sub-folders.
@@ -789,7 +792,7 @@ module.exports = function(RED) {
             req.query.fname, 
             {
                 // Prevent injected relative paths from escaping `src` folder
-                'root': path.join(uib_rootPath, req.query.url, 'src'),
+                'root': path.join(uib_rootFolder, req.query.url, 'src'),
                 // Turn off caching
                 'lastModified': false, 
                 'cacheControl': false
@@ -860,7 +863,7 @@ module.exports = function(RED) {
         log.verbose(`[${req.body.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
-        const fullname = path.join(uib_rootPath, req.body.url, 'src', req.body.fname)
+        const fullname = path.join(uib_rootFolder, req.body.url, 'src', req.body.fname)
 
         fs.writeFile(fullname, req.body.data, function (err, data) {
             if (err) {
@@ -911,7 +914,7 @@ module.exports = function(RED) {
 
     /** Create an index web page listing all uibuilder endpoints
      * @since 2019-02-04 v1.1.0-beta6
-     * TODO: Correct help text - not on admin path
+     * TODO: Correct help text - not on admin path. Update for rationalised vendor paths
      */
     RED.httpNode.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         log.verbose(`[uibindex] User Page/API. List all available uibuilder endpoints`)
@@ -953,12 +956,12 @@ module.exports = function(RED) {
                     //page += syntaxHighlight(app._router.stack)
                     //page += '<hr>'
                     //page += syntaxHighlight(app2._router.stack)
-                page += '<p>Note that each instance uses its own socket.io namespace that matches <i>httpNodeRoot/url</i>. Its location on the server filing system is <i>uib_rootPath/url</i>.</p>'
+                page += '<p>Note that each instance uses its own socket.io namespace that matches <i>httpNodeRoot/url</i>. Its location on the server filing system is <i>uib_rootFolder/url</i>.</p>'
     
                 page += '<h1>Settings</h1>'
                 page += '<ul>'
                 page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
-                page += `  <li><b>uib_rootPath</b>: ${uib_rootPath}</li>`
+                page += `  <li><b>uib_rootFolder</b>: ${uib_rootFolder}</li>`
                 page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
                 page += '</ul>'
     

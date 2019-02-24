@@ -3,7 +3,7 @@
      You need to amend the appcache file to meet your needs.
      Don't forget to change the appcache file if you update ANY
      of the files in it otherwise the old versions will ALWAYS be used.
-    <html lang="en" manifest="uibuilder.appcache">
+    <html lang="en" manifest="./uibuilder.appcache">
   -->
 <html lang="en">
 <!--
@@ -20,6 +20,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
 
+    <!-- URLs: Note no leading / and check for the right number of leading dots 2 for vendor libs, 1 for everything else -->
+
     <!-- See https://goo.gl/OOhYW5 -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#3f51b5">
@@ -34,11 +36,11 @@
     <meta name="apple-mobile-web-app-title" content="Node-RED UI Builder">
 
     <!-- Homescreen icons for Apple mobile use if required
-        <link rel="apple-touch-icon" href="/images/manifest/icon-48x48.png">
-        <link rel="apple-touch-icon" sizes="72x72" href="/images/manifest/icon-72x72.png">
-        <link rel="apple-touch-icon" sizes="96x96" href="/images/manifest/icon-96x96.png">
-        <link rel="apple-touch-icon" sizes="144x144" href="/images/manifest/icon-144x144.png">
-        <link rel="apple-touch-icon" sizes="192x192" href="/images/manifest/icon-192x192.png">
+        <link rel="apple-touch-icon" href="./images/manifest/icon-48x48.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="./images/manifest/icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="96x96" href="./images/manifest/icon-96x96.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="./images/manifest/icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="192x192" href="./images/manifest/icon-192x192.png">
       -->
 
     <title>Node-RED UI Builder</title>
@@ -47,7 +49,7 @@
     <link rel="icon" href="./images/node-blue.ico">
 
     <!-- OPTIONAL: Normalize is used to make things the same across browsers. Index is for your styles -->
-    <link rel="stylesheet" href="./vendor/normalize.css/normalize.css">
+    <link rel="stylesheet" href="../vendor/normalize.css/normalize.css">
     <link rel="stylesheet" href="./index.css">
 
 </head>
@@ -80,14 +82,14 @@
         <code id="showMsgSent"></code>
     </div>
 
-    <!-- These MUST be in the right order. Note no leading / -->
+    <!-- These MUST be in the right order.
+         Note no leading / and check for the right number of leading dots 2 for vendor libs, 1 for everything else -->
     <!-- REQUIRED: Socket.IO is loaded only once for all instances
                    Without this, you don't get a websocket connection -->
-    <script src="/uibuilder/socket.io/socket.io.js"></script>
-    <!-- Note no leading / -->
+    <script src="../uibuilder/socket.io/socket.io.js"></script>
     <!-- OPTIONAL: JQuery can be removed if not required 
                    (on some installations you have to remove `dist/` -->
-    <script src="./vendor/jquery/dist/jquery.min.js"></script>
+    <script src="../vendor/jquery/dist/jquery.min.js"></script>
     <!-- REQUIRED: Sets up Socket listeners and the msg object -->
     <script src="./uibuilderfe.min.js"></script>
     <!-- OPTIONAL: You probably want this. Put your custom code here -->
