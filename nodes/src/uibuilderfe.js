@@ -99,12 +99,20 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
     var uibuilder = (function () {
         // Remember that things have to be defined *before* they are referenced
 
+        // Define polyfill for endsWith for IE
+        if (!String.prototype.endsWith) {
+            String.prototype.endsWith = function(suffix) {
+                return this.indexOf(suffix, this.length - suffix.length) !== -1
+            }
+        }
+
         var self = this
 
         //#region ======== Start of setup ======== //
 
         self.version = '2.0.0'
         self.debug = true // do not change directly - use .debug() method
+        self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
 
         /** Debugging function
          * @param {string} type One of log|error|warn|info|dir, etc
@@ -165,8 +173,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         //#region --- variables ---
         /** Writable (via custom method. read via .get method) */
 
-        self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
-
         /** Automatically send a "ready for content" control message on window.load
          * Set to false if you want to send this yourself (e.g. when Riot/Moon/etc mounted event triggered)
          * see .autoSendReady method
@@ -197,7 +203,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.ioTransport  = ['polling', 'websocket']
         
         /** make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot */
-        self.ioPath       = '../' + self.moduleName + '/socket.io'
+        {
+            // split current url path, eliminate any blank elements and trailing or double slashes
+            var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
+            // handle url includes file name
+            if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
+            self.url = fullPath.pop()
+            self.httpNodeRoot = '/' + fullPath.join('/')
+            self.ioPath       = self.httpNodeRoot + '/' + self.moduleName + '/socket.io'
+            self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url: ' + self.url)
+        }
 
         //#endregion --- variables ---
 
