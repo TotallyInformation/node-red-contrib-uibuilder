@@ -2,7 +2,7 @@
 
 * **BREAKING CHANGE** Vendor `app.use` paths moved from instance level to module level so only done once.
   This means that you have to change your `index.html` file.
-  Where before you might have had something like `<link rel="stylesheet" href="./vendor/normalize.css/normalize.css">`, that must now change to `<link rel="stylesheet" href="/uibuilder/vendor/normalize.css/normalize.css">`. Any link that started like `./vendor` must be changed to `/uibuilder/vendor`.
+  Where before you might have had something like `<link rel="stylesheet" href="./vendor/normalize.css/normalize.css">`, that must now change to `<link rel="stylesheet" href="../uibuilder/vendor/normalize.css/normalize.css">`. Any link that started like `./vendor` must be changed to `../uibuilder/vendor`.
 
 
 ## v1.2.1
