@@ -368,7 +368,7 @@ module.exports = function(RED) {
 
             /** Now copy files from the master template folder (instead of master src) @since 2017-10-01
              *  Note: We don't copy the master dist folder
-             *  Don't copy if copy turned off in admin ui 
+             *  Don't copy if copy turned off in admin ui
              * TODO: always copy index.html */
             if ( node.copyIndex ) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
@@ -875,7 +875,8 @@ module.exports = function(RED) {
             res.status(500).end()
             return
         }
-        //#endregion ---- ----       
+        //#endregion ---- ----
+
         log.verbose(`[${req.body.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
@@ -956,11 +957,11 @@ module.exports = function(RED) {
             case 'json':
                 res.json(instances)
                 break;
-        
+
             case 'urls':
                 res.json(Object.values(instances))
                 break;
-        
+
             // default to 'html' output type
             default:
                 //console.log(app.routes) // Expresss 3.x
@@ -990,14 +991,14 @@ module.exports = function(RED) {
                     //page += '<hr>'
                     //page += syntaxHighlight(app2._router.stack)
                 page += '<p>Note that each instance uses its own socket.io namespace that matches <i>httpNodeRoot/url</i>. Its location on the server filing system is <i>uib_rootPath/url</i>.</p>'
-    
+
                 page += '<h1>Settings</h1>'
                 page += '<ul>'
                 page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
                 page += `  <li><b>uib_rootPath</b>: ${uib_rootPath}</li>`
                 page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
                 page += '</ul>'
-    
+
                 page += '<h1>Vendor Packages</h1>'
                 page += '<table>'
                 page += '  <tr>'
@@ -1014,13 +1015,13 @@ module.exports = function(RED) {
                 })
                 page += '</table>'
                 page += "<p>Note that url's are per-instance, the one shown is the last in the list.</p>"
-    
+
                 res.send(page)
-    
+
                 break;
         }
     })
-    
+
 } // ==== End of module.exports ==== //
 
 // EOF
