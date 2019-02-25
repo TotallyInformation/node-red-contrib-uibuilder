@@ -622,4 +622,37 @@
     <p>
         uibuilder can be discussed in the <a href="https://groups.google.com/forum/#!topic/node-red">Node-RED Google Group</a> and in the <a href="https://node-red.slack.com/messages/C7K77MG06">Node-RED #uibuilder Slack channel</a>. Issues/bugs can be raised in <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues">GitHub</a>.
     </p>
+
+    <h3>Admin API's</h3>
+    <p>The following API's are available. They are used internally. Add the following paths to the base URL you use for the Node-RED admin ui.</p>
+    <h4>/uibindex</h4>
+    <p>
+        Lists all of the uibuilder endpoints. You can use the the 'type' parameter as follows:
+    </p>
+    <ul>
+        <li>json<br>
+            Returns JSON data with both the source node ID's and matching URL's.
+        </li>
+        <li>urls<br>
+            Returns a JSON array of just the URL's in use from deployed uibuilder nodes.
+            Used internally to ensure that new nodes use unique url's.
+        </li>
+        <li>html (default)<br>
+            Also used if no type parameter is given. 
+            Returns an HTML page showing the details for all deployed uibuilder nodes.
+        </li>
+    </ul>
+    <h4>/uibfiles</h4>
+    <p>
+        Given a 'url' parameter (required), returns a list of the files in the 'src' folder that matches the deployed instance of uibuilder
+        with the given url.
+    </p>
+    <h4>/uibgetfile</h4>
+    <p>
+        Given a url and a filename parameter, returns the contents of the given file from the 'src' folder.
+    </p>
+    <h4>/uibputfile</h4>
+    <p>
+            Given a url and a filename parameter, POSTs an amended file back to the src folder.
+    </p>
 </script>

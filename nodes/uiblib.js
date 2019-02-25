@@ -1,5 +1,8 @@
 /**
+ * Utility library for uibuilder
+ * 
  * Copyright (c) 2019 Julian Knight (Totally Information)
+ * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -16,7 +19,11 @@
 // @ts-check
 'use strict'
 
+const path = require('path')
+const tilib = require('./tilib.js')
+
 module.exports = {
+
     // Complex, custom code when processing an incoming msg should go here
     // Needs to return the msg object
     inputHandler: function(msg, node, RED, io, ioNs, log) {
@@ -85,7 +92,7 @@ module.exports = {
         // We need to remove the app.use paths too as they will be recreated on redeploy
         // we check whether the regex string matches the current node.url, if so, we splice it out of the stack array
         var removePath = []
-        var urlRe = new RegExp('^' + escapeRegExp('/^\\' + urlJoin(node.url)) + '.*$');
+        var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
         app._router.stack.forEach( function(r, i, stack) {
             let rUrl = r.regexp.toString().replace(urlRe, '')
             if ( rUrl === '' ) {
@@ -117,51 +124,6 @@ module.exports = {
         // event and is used to resolve async callbacks to allow Node-RED to close
         if (done) done()
     }, // ---- End of processClose function ---- //
-
-    /** Simple fn to set a node status in the admin interface
-     * fill: red, green, yellow, blue or grey
-     * @param {Object|string} status
-     * @param {Object} node
-     */
-    setNodeStatus: function( status, node ) {
-        if ( typeof status !== 'object' ) status = {fill: 'grey', shape: 'ring', text: status}
-
-        node.status(status)
-    }, // ---- End of setNodeStatus ---- //
-
-    /** Remove leading/trailing slashes from a string
-     * @param {string} str
-     * @returns {string}
-     */
-    trimSlashes: function(str) {
-        return str.replace(/(^\/*)|(\/*$)/g, '')
-    }, // ---- End of trimSlashes ---- //
-
-    /** Joins all arguments as a URL string
-     * @see http://stackoverflow.com/a/28592528/3016654
-     * @since v1.0.10, fixed potential double // issue
-     * @augments {string} URL fragments
-     * @returns {string}
-     */
-    urlJoin: function() {
-        const paths = Array.prototype.slice.call(arguments)
-        const url =
-            '/'+paths.map(function(e){
-                return e.replace(/^\/|\/$/g,'')
-            }).filter(function(e){
-                return e
-            }).join('/')
-        return  url.replace('//','/')
-    }, // ---- End of urlJoin ---- //
-
-    /** Escape a user input string to use in a regular expression
-     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-     * @param {string} string
-     * @returns {string} Input string escaped to use in a re
-     */
-    escapeRegExp: function(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-    }, // ---- End of escapeRegExp ---- //
 
     /**  Get property values from an Object.
      * Can list multiple properties, the first found (or the default return) will be returned
@@ -214,6 +176,17 @@ module.exports = {
 
         // copy msg to output port #2
         node.send([null, msg])
-    } // ---- End of getProps ---- //
+    }, // ---- End of getProps ---- //
+
+    /** Simple fn to set a node status in the admin interface
+     * fill: red, green, yellow, blue or grey
+     * @param {Object|string} status
+     * @param {Object} node
+     */
+    setNodeStatus: function( status, node ) {
+        if ( typeof status !== 'object' ) status = {fill: 'grey', shape: 'ring', text: status}
+
+        node.status(status)
+    }, // ---- End of setNodeStatus ---- //
 
 } // ---- End of module.exports ---- //

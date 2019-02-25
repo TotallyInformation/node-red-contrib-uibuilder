@@ -1,0 +1,81 @@
+/**
+ * General utility library for Node.JS
+ * 
+ * Copyright (c) 2019 Julian Knight (Totally Information)
+ * https://it.knightnet.org.uk
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License');
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an 'AS IS' BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
+// @ts-check
+'use strict'
+
+const path = require('path')
+
+module.exports = {
+
+    /** Remove leading/trailing slashes from a string
+     * @param {string} str
+     * @returns {string}
+     */
+    trimSlashes: function(str) {
+        return str.replace(/(^\/*)|(\/*$)/g, '')
+    }, // ---- End of trimSlashes ---- //
+
+    /** Joins all arguments as a URL string
+     * @see http://stackoverflow.com/a/28592528/3016654
+     * @since v1.0.10, fixed potential double // issue
+     * @arguments {string} URL fragments
+     * @returns {string}
+     */
+    urlJoin: function() {
+        const paths = Array.prototype.slice.call(arguments)
+        const url =
+            '/'+paths.map(function(e){
+                return e.replace(/^\/|\/$/g,'')
+            }).filter(function(e){
+                return e
+            }).join('/')
+        return  url.replace('//','/')
+    }, // ---- End of urlJoin ---- //
+
+    /** Escape a user input string to use in a regular expression
+     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+     * @param {string} string
+     * @returns {string} Input string escaped to use in a re
+     */
+    escapeRegExp: function(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    }, // ---- End of escapeRegExp ---- //
+
+    /**  Get a list of all of the npm run scripts in <folder>/package.json OR
+     * Check if a specific script exists in <folder>/package.json
+     * Used to check that restart and build scripts are available.
+     * @param {string} chkPath - The path that should contain a package.json
+     * @param {string} chkScript - OPTIONAL. If present return the script text if present
+     * @returns {Object|string|undefined|null} undefined if file not found or list of script names/commands. If chkScript, null if not found or script text.
+     */
+    getNpmRunScripts: function(chkPath, chkScript='') {
+        let pj = undefined
+        try {
+            pj = require( path.join( chkPath, 'package.json' ) ).scripts
+        } catch (e) {
+            pj = undefined
+        }
+        if ( (pj !== undefined) && (chkScript !== '') ) {
+            if (pj[chkScript] === undefined) pj = null
+            else pj = pj[chkScript]
+        }
+        return pj
+    }, // ---- End of getRedUserRunScripts ---- //
+
+} // ---- End of module.exports ---- //
