@@ -178,7 +178,7 @@ module.exports = function(RED) {
 
     /** Include vendor resource source paths if needed
      * @since v2.0.0 2019-02-23 moved from nodeGo() to module level and merged with default vendor package list */
-    //TODO Update uibuilder.html. Update WIKI. Update close fn.
+    //TODO Update WIKI. Update close fn.
     userVendorPackages.forEach(function (packageName) {
         // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
         // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
@@ -285,9 +285,6 @@ module.exports = function(RED) {
         node.allowStyles   = config.allowStyles
         node.debugFE       = config.debugFE
         node.copyIndex     = config.copyIndex
-        node.filename      = config.filename
-        node.format        = config.format
-        node.template      = config.template
         //#endregion ----
 
         log.verbose(`[${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
@@ -786,7 +783,6 @@ module.exports = function(RED) {
         log.verbose(`[${req.query.url}:uibgetfile] Admin API. File get requested for ${req.query.fname}`)
 
         // Send back a plain text response body containing content of the file
-        // TODO: validate path and file
         res.type('text/plain').sendFile(
             req.query.fname, 
             {
