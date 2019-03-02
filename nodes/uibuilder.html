@@ -38,7 +38,8 @@
         // $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/jquery/dist/jquery.min.js">/' + moduleName + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
         // $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/normalize.css/normalize.css">/' + moduleName + '/vendor/normalize.css/normalize.css</a></li>') // always the same
         $('#fepaths').append('<li><a href="/' + moduleName + '/socket.io/socket.io.js">../' + moduleName + '/socket.io/socket.io.js</a></li>') // always the same
-    }
+    } // --- End of packageList --- //
+
     /** Return a file type from a file name (or default to txt)
      *  ftype can be used in ACE editor modes */
     function fileType(fname) {
@@ -72,7 +73,8 @@
         } else {
             return 'text'
         }
-    }
+    } // --- End of fileType --- //
+
     /** Get the chosen file contents & set up the ACE editor
      * @param {Object} that 'this' for the oneditprepare function
      **/
@@ -100,7 +102,8 @@
             // Position the cursor in the edit area
             that.editor.focus()
         })
-    }
+    } // --- End of getFileContents --- //
+
     /** Enable/disable buttons if file has edits or not
      * @param {boolean} isClean true = the file is clean, else there are pending edits that need saving
      */
@@ -113,16 +116,20 @@
         $('#edit-close').prop('disabled', !isClean)
         $('#node-edit-file').prop('disabled', !isClean)
         $('#node-input-filename').prop('disabled', !isClean)
-        // If not clean, clear any messages
+        // If not clean, disable main Done and Cancel buttons to prevent loss
+        $('#node-dialog-ok').prop('disabled', !isClean)
+        $('#node-dialog-cancel').prop('disabled', !isClean)
+        // If not clean, Add a user hint
         if ( ! isClean ) $('#file-action-message').text('Save Required')
-    }
+    } // --- End of fileIsClean --- //
+
     /** Validate the url property
      * Max 20 chars, can't contain any of ['..', ]
      * @param {*} value The url value to validate
      * @returns {boolean} true = valid
      **/
     function validateUrl(value){
-        // NB: `this` is the node instance configuration as at last deployment
+        // NB: `this` is the node instance configuration as at last press of Done
         // TODO: Add display comment to help user
 
         // Max 20 chars
@@ -138,14 +145,9 @@
         // Cannot be 'templates' as this is a reserved value (for v2)
         if ( value.toLowerCase().substring(0,9) === 'templates' ) return false
 
-        // Is a duplicate? Set by onchange function to prevent it triggering itself
-        return !urlIsDup
-    }
-    // TODO: Doesn't work!
-    function validateUrlOnChange(value) {
-        return false
-
-        console.log('change', value)
+        // Initial flow run and Initial load of admin config ui - don't check for dups as it always will be
+        if ( value === this.url ) return true
+        
         // Check whether the url is already in use via a call to the admin API `uibindex`
         var exists = false
         $.ajax({
@@ -156,9 +158,10 @@
             }
         })
         console.log('exists', exists)
+        return !exists
 
-        return exists
-    }
+    } // --- End of validateUrl --- //
+
     // Register the node type, defaults and set up the edit fns
     RED.nodes.registerType('uibuilder', {
         category: 'UI Builder',
@@ -179,7 +182,7 @@
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
         outputs: 2,
-        outputLabels: ['Data', 'Control Msgs'],
+        outputLabels: ['Data from front-end', 'Control Msgs from front-end'],
         icon: 'ui_template.png',
         paletteLabel: 'UI Builder',
         label: function () { return this.url || this.name || 'UI Builder'; },
@@ -199,7 +202,7 @@
             // Show the uibuilder global settings from settings.js
             $('#bedebug').text(RED.settings.uibuilder.debug)
 
-            // Delete is not ready yet, so disable button by default
+            // Delete is not ready yet, so disable button by default. TODO
             $('#edit-delete').prop('disabled', true)
             // Mark edit save/reset buttons as disabled by default
             fileIsClean(true)
@@ -216,7 +219,6 @@
                 e.preventDefault() // don't trigger normal click event
                 $('#main-props').show()
                 $('#edit-props').hide()
-                // TODO: cancel changes
             })
 
             // Set filename for editor
@@ -228,12 +230,10 @@
             //buildUrlList(pkgs, this.url)
             packageList(this.url, true)
 
-            // When the url changes,
+            // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
                 // Show the root URL
                 $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
-                // Is the new value already in use?
-                urlIsDup = validateUrlOnChange($(this).val())
             })
             // @since 2019-01-27 - adding file editor
             // Build the file list - pass the url so the BE can find the right folder
@@ -336,13 +336,10 @@
             // Get rid of the editor
             this.editor.destroy()
             delete this.editor
-
-            // TODO: Check if anything actually changed - if so, mark the node as dirty
-            //this.changed = true;
-            //RED.nodes.dirty(true);
         },
 
         oneditcancel: function() {
+            // Get rid of the editor
             this.editor.destroy()
             delete this.editor
         },
@@ -446,12 +443,12 @@
             <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
         </div>
 
-        <!-- File name, language selector -->
+        <!-- File name, file data (hidden), language selector -->
         <div class="form-row">
             <!-- <button id="node-function-expand-js" class="editor-button editor-button-small"><i class="fa fa-expand"></i></button>-->
             <label for="node-input-template"><i class="fa fa-file-code-o"></i> Filename: </label>
             <span id="filename">...</span>
-            <input type="hidden" id="node-input-template" autofocus="autofocus">
+            <input type="hidden" id="node-input-template" autofocus="autofocus" data-isClean="true">
             <div style="position: absolute; right:1.6em;display:inline-block; text-align: right; font-size: 0.8em;">
                 <select id="node-input-format" style="width:110px; font-size: 10px !important;  height: 24px; padding:0;">
                     <option value="handlebars">mustache</option>

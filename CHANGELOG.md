@@ -16,8 +16,10 @@
 
 * **CHANGED** In uibuilder admin ui, swap vendor path list to uibvendorpackages API
 
-* **CHANGED** Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. **NOTE** that duplicate checking is more challenging than expected, it remains a work in progress.
-  
+* **CHANGED** Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use).
+
+* **CHANGED** In the admin config panel, Cancel and Done buttons disabled if there are unsaved changes to a file. Either Save or reset the file to re-enable them.
+
 ----
 
 ## v1.2.1
