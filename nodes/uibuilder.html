@@ -21,11 +21,16 @@
     /** placeholder for url duplicate check - marks url invalid/valid on change */
     var urlIsDup = false
 
+    /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui */
+    var uiace = {
+        'format': 'html',
+        'fname' : 'index.html'
+    }
+
     /** Get full package list via API and show in admin ui
      * @param {string} url 
      * @param {boolean} rebuild - Rebuild the vendorPaths list
      */
-    //function buildUrlList(pkgs, url) {
     function packageList(url, rebuild) {
         $.getJSON('uibvendorpackages', function(vendorPackages) {
             $('#userpackages').text( Object.keys(vendorPackages) )
@@ -76,12 +81,13 @@
     } // --- End of fileType --- //
 
     /** Get the chosen file contents & set up the ACE editor
-     * @param {Object} that 'this' for the oneditprepare function
+     * @param {Object} that - 'this' for the oneditprepare function
      **/
     function getFileContents(that) {
-
-        // Get the chosen filename
-        const fname = $('#node-input-filename').val()
+        // Get the chosen filename - use the default/last saved on first load
+        const fname = $('#node-input-filename').val() || uiace.fname
+        // Save the filename
+        uiace.fname = fname
 
         // Change mode to match file type
         const filetype = fileType(fname)
@@ -92,15 +98,15 @@
             // Set the displayed filename
             $('#filename').text(fname)
             // Add the fetched data to the editor
-            that.editorSession.setValue(data)
+            uiace.editorSession.setValue(data)
             // Set the editor file mode
-            that.editorSession.setMode({
+            uiace.editorSession.setMode({
                 path: 'ace/mode/' + filetype, v: Date.now()
             })
             // Mark the current session as clean
-            that.editorSession.getUndoManager().isClean()
+            uiace.editorSession.getUndoManager().isClean()
             // Position the cursor in the edit area
-            that.editor.focus()
+            uiace.editor.focus()
         })
     } // --- End of getFileContents --- //
 
@@ -123,7 +129,7 @@
         if ( ! isClean ) $('#file-action-message').text('Save Required')
     } // --- End of fileIsClean --- //
 
-    /** Validate the url property
+    /** Validation Function: Validate the url property
      * Max 20 chars, can't contain any of ['..', ]
      * @param {*} value The url value to validate
      * @returns {boolean} true = valid
@@ -170,14 +176,11 @@
             name: { value: '' },
             topic: { value: '' },
             url: { value: 'uibuilder', required: true, validate: validateUrl },
-            fwdInMessages: { value: false },
-            allowScripts: { value: false },
-            allowStyles: { value: false },
-            debugFE: { value: false },
-            copyIndex: { value: true },
-            template: { value: '' },           // file content of editor
-            filename: { value: 'index.html' }, // filename being edited @since 2019-02-16 change default to index.html as more likely to exist
-            format: { value: 'text' }          // file format being edited for the ACE editor
+            fwdInMessages: { value: false },   // Should we send input msg's direct to output as well as the front-end?
+            allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
+            allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
+            debugFE: { value: false },         // Should debug be turned on in the uibuilderfe library?
+            copyIndex: { value: true },        // Should the default template files be copied to the instance src folder?
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -202,86 +205,96 @@
             // Show the uibuilder global settings from settings.js
             $('#bedebug').text(RED.settings.uibuilder.debug)
 
+            // When the url changes (NB: Also see the validation function)
+            $('#node-input-url').change(function () {
+                // Show the root URL
+                $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
+            })
+
+            // List the front-end url paths available (shown in info box)
+            packageList(this.url, true)
+
             // Delete is not ready yet, so disable button by default. TODO
             $('#edit-delete').prop('disabled', true)
             // Mark edit save/reset buttons as disabled by default
             fileIsClean(true)
-            //$('#edit-save').prop('disabled', true)
-            //$('#edit-reset').prop('disabled', true)
-            // Show the edit section, hide the main section
-            $('#show-edit-props').click(function(e) {
-                e.preventDefault() // don't trigger normal click event
-                $('#main-props').toggle()
-                $('#edit-props').toggle()
-            })
-            // Close the edit section, hide the main section
+
+            // Set filename for editor
+            $('#filename').text(this.filename)
+
+            // Hide the edit section, show the main section
             $('#edit-close').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
                 $('#main-props').show()
                 $('#edit-props').hide()
             })
 
-            // Set filename for editor
-            $('#filename').text(this.filename)
-            // Clear out the editor
-            if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
+            // Show the edit section, hide the main section
+            $('#show-edit-props').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').toggle()
+                $('#edit-props').toggle()
 
-            // List the front-end url paths available
-            //buildUrlList(pkgs, this.url)
-            packageList(this.url, true)
-
-            // When the url changes (NB: Also see the validation function)
-            $('#node-input-url').change(function () {
-                // Show the root URL
-                $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
-            })
-            // @since 2019-01-27 - adding file editor
-            // Build the file list - pass the url so the BE can find the right folder
-            $.getJSON('uibfiles?url=' + $('#node-input-url').val(), function(files) {
-                //$("#node-input-filename option").remove()
-                $.each(files, function (i, item) {
-                    $('#node-input-filename').append($('<option>', { 
-                        value: item,
-                        text : item, 
-                    }))
+                // @since 2019-01-27 - adding file editor
+                // Build the file list - pass the url so the BE can find the right folder
+                $.getJSON('uibfiles?url=' + $('#node-input-url').val(), function(files) {
+                    //$("#node-input-filename option").remove()
+                    $.each(files, function (i, item) {
+                        $('#node-input-filename').append($('<option>', { 
+                            value: item,
+                            text : item, 
+                        }))
+                    })
+                    $("#node-input-filename").val(uiace.fname)
                 })
-                $("#node-input-filename").val(that.filename)
-            })
 
-            // Create the ACE editor component
-            that.editor = RED.editor.createEditor({
-                id: 'node-input-template-editor',
-                mode: 'ace/mode/' + that.format,
-                value: that.template
+                if ( uiace.editorLoaded !== true ) {
+                    // Clear out the editor
+                    if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
+
+                    // Create the ACE editor component
+                    uiace.editor = RED.editor.createEditor({
+                        id: 'node-input-template-editor',
+                        mode: 'ace/mode/' + uiace.format,
+                        value: that.template
+                    })
+                    // Keep a reference to the current editor session
+                    uiace.editorSession = uiace.editor.getSession()
+                    /** If the editor has changes, enable the save & reset buttons
+                     * using input event instead of change since it's called with some timeout 
+                     * which is needed by the undo (which takes some time to update)
+                     **/
+                    uiace.editor.on("input", function() {
+                        // Is the editor clean?
+                        fileIsClean(uiace.editorSession.getUndoManager().isClean())
+                    })
+                    /*uiace.editorSession.on('change', function(delta) {
+                        // delta.start, delta.end, delta.lines, delta.action
+                        console.log('ACE Editor CHANGE Event', delta)
+                    }) */
+                    uiace.editorLoaded = true
+
+                    // Be friendly and auto-load the initial file via the admin API
+                    getFileContents(that)
+                    fileIsClean(true)
+                }
             })
-            // Keep a reference to the current editor session
-            that.editorSession = that.editor.getSession()
-            /** If the editor has changes, enable the save & reset buttons
-             * using input event instead of change since it's called with some timeout 
-             * which is needed by the undo (which takes some time to update)
-             **/
-            that.editor.on("input", function() {
-                // Is the editor clean?
-                fileIsClean(that.editorSession.getUndoManager().isClean())
-            })
-            /*that.editorSession.on('change', function(delta) {
-                // delta.start, delta.end, delta.lines, delta.action
-                console.log('ACE Editor CHANGE Event', delta)
-            }) */
 
             // Watch for mode changes, update editor component on change
-            $('#node-input-format').change(function() {
-                const mod = 'ace/mode/' + $(this).val()
-                that.editorSession.setMode({
-                    path: mod,
-                    v: Date.now()
-                })
-            })
+            // $('#node-input-format').change(function() {
+            //     if ( uiace.editorSession ) {
+            //         const mod = 'ace/mode/' + $(this).val()
+            //         uiace.editorSession.setMode({
+            //             path: mod,
+            //             v: Date.now()
+            //         })
+            //     }
+            // })
 
             /** TODO: Get list of installed themes, add chooser, save current choice
              * that.editor.setTheme("ace/theme/monokai")
-             * ace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
-             * ace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
+             * uiace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
+             * uiace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
              **/
 
             // Handle the edit button (and disable default click)
@@ -308,7 +321,7 @@
                 // Post the updated content of the file via the admin API
                 // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
                 var request = new XMLHttpRequest()
-                var params = 'fname=' + $('#node-input-filename').val() + '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(that.editorSession.getValue())
+                var params = 'fname=' + $('#node-input-filename').val() + '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(uiace.editorSession.getValue())
                 request.open('POST', 'uibputfile', true)
                 request.onreadystatechange = function() {
                     if (this.readyState === XMLHttpRequest.DONE) {
@@ -334,14 +347,16 @@
             // xfer the editor text back to the template var
             //$('#node-input-template').val(this.editor.getValue())
             // Get rid of the editor
-            this.editor.destroy()
-            delete this.editor
+            uiace.editor.destroy()
+            delete uiace.editor
+            uiace.editorLoaded = false
         },
 
         oneditcancel: function() {
             // Get rid of the editor
-            this.editor.destroy()
-            delete this.editor
+            uiace.editor.destroy()
+            delete uiace.editor
+            uiace.editorLoaded = false
         },
 
         // oneditresize: function(size) {

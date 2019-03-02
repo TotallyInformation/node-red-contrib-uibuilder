@@ -14,11 +14,15 @@
 
 * **NEW** Admin API `<adminurl>/uibvendorpackages` Returns list of available vendor packages with url and folder details.
 
-* **CHANGED** In uibuilder admin ui, swap vendor path list to uibvendorpackages API
+* **CHANGED** In uibuilder admin ui:
 
-* **CHANGED** Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use).
+  * Swapped vendor path list to uibvendorpackages API.
+  * Cancel and Done buttons disabled if there are unsaved changes to a file. Either Save or reset the file to re-enable them.
+  * Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use).
+  * Default/previously selected file opened for edit automatically.
+  * Improved handling of reopening the ui - last file selection retained.
 
-* **CHANGED** In the admin config panel, Cancel and Done buttons disabled if there are unsaved changes to a file. Either Save or reset the file to re-enable them.
+* **CHANGED** Several instance config variables no longer needed: filename, format, template
 
 ----
 
