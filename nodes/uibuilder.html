@@ -221,7 +221,8 @@
             $('#node-input-debugFE').prop('checked', this.debugFE)
             $('#node-input-copyIndex').prop('checked', this.copyIndex)
             // Show the uibuilder global settings from settings.js
-            $('#bedebug').text(RED.settings.uibuilder.debug)
+            // TODO Fix for updated settings
+            //$('#bedebug').text(RED.settings.uibuilder.debug)
 
             // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
