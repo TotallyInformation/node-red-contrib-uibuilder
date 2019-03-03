@@ -38,12 +38,6 @@ const serveStatic      = require('serve-static'),
 
 const { getInstalledPathSync } = require('get-installed-path')
 
-/** These are loaded to the /<uibuilder>/vendor URL path @constant {Object} vendorPackages */
-const vendorPackages = [
-    'normalize.css',
-    'jquery'
-]
-
 /** We want these to track across redeployments
  *  if OK to reset on redeployment, attach to node.xxx inside nodeGo instead. @constant {Object} deployments */
 const deployments = {}
@@ -103,27 +97,104 @@ module.exports = function(RED) {
     /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
     const httpNodeRoot = RED.settings.httpNodeRoot
 
-    /** Get the uibuilder global settings from settings.js if available, otherwise set to empty object @constant {Object} uib_globalSettings **/
-    const uib_globalSettings = RED.settings.uibuilder || { 'debug': false }
+    /** Default uibuilder global settings @constant {Object} uib_globalSettings **/
+    var uib_globalSettings = { 
+        // our default installed packages
+        'packages': [ 
+            'vue',
+            'bootstrap-vue',
+            'bootstrap',
+        ],
+        // Which template to use for default src files? Folder must exist in the master template folder
+        'template': 'vue',
+        // Back-end debug?
+        'debug': false,
+    }
 
     /** Location of master template folders (containing default front-end code) @constant {string} masterTemplateFolder */
     const masterTemplateFolder = path.join( __dirname, 'templates' )
-
-    /** Default master template to use (copied to instance folder `uib_rootFolder`) @constant {string} templateToUse */
-    const templateToUse = 'vue' //'jquery'
 
     /** Set the root folder (on the server FS) for all uibuilder front-end data
      *  Name of the fs path used to hold custom files & folders for all instances of uibuilder
      * @constant {string} uib_rootFolder
      **/
-    const uib_rootFolder = path.join(userDir, moduleName)
+    var uib_rootFolder = path.join(userDir, moduleName)
+    // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
+    const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
+    if ( currProject !== '' ) uib_rootFolder = path.join(userDir, 'projects', currProject, moduleName) 
+
     //#endregion -------- --------
 
-    //#region ---- debugging ----
-    // Set to true in settings.js/uibuilder if you want additional debug output to the console - JK @since 2017-08-17, use getProps()
-    // @since 2017-09-19 moved to top of module.exports. @since 2017-10-15 var not const as it can be overridden
-    var debug = uib_globalSettings.debug || false // JK @since 2017-08-17, Change default answer to false
+    //#region ---- Set up global configuration ----
+    /** Check uib root folder: create if needed, writable?
+     * @since v2.0.0 2019-03-03
+     */
+    var uib_rootFolder_OK = true
+    // Try to create it - ignore error if it already exists
+    try {
+        fs.mkdirSync(uib_rootFolder) // try to create
+    } catch (e) {
+        if ( e.code !== 'EEXIST' ) { // ignore folder exists error
+            RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib_rootFolder}. ${e.message}`)
+            uib_rootFolder_OK = false
+        }
+    }
+    // Try to access it (read/write)
+    try {
+        fs.accessSync( uib_rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
+    } catch (e) {
+            RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib_rootFolder}. ${e.message}`)
+            uib_rootFolder_OK = false
+    }
+    
+    /** Update global settings from <userDir>/uibuilder/.settings.json
+     * Also migrate old settings.js data if needed
+     * @since v2.0.0 2019-03-03
+     * If userDir/moduleName/.settings.json does not exist, copy from global settings (if they exist)
+     * If global settings different to new settings - log a warning
+     */
+    if (uib_rootFolder_OK === true) {
+        let newSettingsFile = path.join(uib_rootFolder, '.settings.json')
+        if ( !fs.existsSync(newSettingsFile) ) {
+            // Migrate old to new global settings
+            RED.log.warn('uibuilder: Use of Node-RED global settings for uibuilder is DEPRECATED - please remove them from settings.js')    
+            RED.log.warn('           uibuilder settings are now found in `<userDir>/uibuilder/.settings.json` (or the quivalent project folder).')    
+            
+            // Update uib_globalSettings with those from settings.json - Note settings.js now deprecated since v2
+            /** Merge default and user supplied vendor packages
+             * JK @since 2017-08-17 fix for non-existent properties and use getProps()
+             * JK @since 2018-01-06 use uib_globalSettings instead of RED.settings.uibuilder. At least an empty array is returned.
+             * JK @since v2.0.0 2019-02-24 Move out of nodeGo() to module level, remove config read as it isn't used (only settings.js)
+             * JK @since v2.0.0 2019-03-03 Rearrange to better merge with new settings - Now only used for initial migration
+             * @type {Array}
+             */
+            uib_globalSettings.packages = tilib.mergeDedupe(uib_globalSettings.packages, uiblib.getProps(RED,RED.settings,'uibuilder.userVendorPackages',[]))
+            uib_globalSettings.debug = uiblib.getProps(RED,uib_globalSettings,'debug',uib_globalSettings.debug)
+            
+            // create new settings file & copy over uib_globalSettings
+            //fs.closeSync(fs.openSync(newSettingsFile, 'w'))
+            fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
+        } else {
+            // Read the settings file into uib_globalSettings
+            try {
+                // @ts-ignore
+                uib_globalSettings = JSON.parse(fs.readFileSync(newSettingsFile))
+            } catch (e) {
+                RED.log.warn(`uibuilder: Could not read ${newSettingsFile} - invalid JSON?`)        
+            }
+        }
+    }
 
+    RED.log.info('+-----------------------------------------------------')
+    RED.log.info('| uibuilder:')
+    RED.log.info(`|   root folder: ${uib_rootFolder}`)
+    RED.log.info(`|   version . .: ${nodeVersion}`)
+    RED.log.info(`|   debug . . .: ${uib_globalSettings.debug}`)
+    RED.log.info(`|   packages . : ${uib_globalSettings.packages}`)
+    RED.log.info('+-----------------------------------------------------')
+    //#endregion ---- ----
+
+    //#region ---- back-end debugging ----
     // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
     // TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
     var winstonTransport
@@ -136,7 +207,7 @@ module.exports = function(RED) {
         'debug': function(...s){},
         'silly': function(...s){},
     }
-    if (debug) {
+    if (uib_globalSettings.debug) {
         // @since 2017-10-06 if debugging, log to ~/.node-red/uibuilder.log, otherwise log to console
         if ( !fs.existsSync(path.join(uib_rootFolder, '.logs')) ) fs.mkdirSync(path.join(uib_rootFolder, '.logs'))
         winstonTransport = new (winston.transports.File)({
@@ -151,7 +222,7 @@ module.exports = function(RED) {
         }) // file in user folder <userDir>/uibuilder/.logs
         log = new (winston.Logger)({
             // set log level based on debug var from settings.js/uibuilder
-            level: debug === true ? 'silly' : debug, // error, warn, info, verbose, debug, silly; true=silly
+            level: uib_globalSettings.debug === true ? 'silly' : uib_globalSettings.debug, // error, warn, info, verbose, debug, silly; true=silly
             // Where do we want log output to go?
             transports: [
                 winstonTransport
@@ -161,9 +232,8 @@ module.exports = function(RED) {
         // @since 2019-01-27 don't log if debug not set since we output key messages to the Node-RED log anyway
         //winstonTransport = new (winston.transports.Console)()
     }
+    log.verbose('[Module] ----------------- uibuilder - module started -----------------')
     //#endregion ---- ----
-
-    log.verbose('[Module] ----------------- uibuilder - module.exports -----------------')
 
     /** We need an http server to serve the page and vendor packages. 
      * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
@@ -171,19 +241,9 @@ module.exports = function(RED) {
     const app = RED.httpNode // || RED.httpAdmin
 
     //#region ---- Serve up vendor packages ----
-    /** Merge default and user supplied vendor packages
-     * & only if using dev folders (delete ~/.node-red/uibuilder/<url>/dist/index.html)
-     * JK @since 2017-08-17 fix for non-existent properties and use getProps()
-     * JK @since 2018-01-06 use uib_globalSettings instead of RED.settings.uibuilder. At least an empty array is returned.
-     * JK @since v2.0.0 2019-02-24 Move out of nodeGo() to module level, remove config read as it isn't used (only settings.js)
-     * @type {Array}
-     */
-    let userVendorPackages = tilib.mergeDedupe(vendorPackages, uiblib.getProps(RED,uib_globalSettings,'userVendorPackages',[]))
-
     /** Include vendor resource source paths if needed
      * @since v2.0.0 2019-02-23 moved from nodeGo() to module level and merged with default vendor package list */
-    //TODO Update WIKI. Update close fn.
-    userVendorPackages.forEach(function (packageName) {
+    uib_globalSettings.packages.forEach(function (packageName) {
         // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
         // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
         var installFolder = ''
@@ -208,6 +268,24 @@ module.exports = function(RED) {
             vendorPaths[packageName] = {'url': tilib.urlJoin(httpNodeRoot, vendorPath), 'folder': installFolder}
         }
     }) // -- end of forEach vendor package -- //
+
+    /** Create a new, additional static http path to enable loading of central static resources for uibuilder
+     * @since v2.0.0 2019-03-03 Moved out of nodeGo() only need to do once - but is applied in nodeGo
+     */
+    var masterStatic = function(req,res,next) { next() }
+    try {
+        // Will we use "compiled" version of module front-end code?
+        fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
+        log.debug(`[Module] Using master production build folder`)
+        // If the ./dist/index.html exists use the dist folder...
+        masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
+    } catch (e) {
+        // ... otherwise, use dev resources at ./src/
+        log.debug(`[Module] Using master src folder and master vendor packages` )
+        log.debug('        Reason for not using master dist folder: ', e.message )
+        masterStatic = serveStatic( path.join( __dirname, 'src' ) )
+    }
+
     //#endregion -------- --------
 
     //#region ---- Set up Socket.IO ----
@@ -280,10 +358,9 @@ module.exports = function(RED) {
 
         //#region --- Create local copies of the node configuration (as defined in the .html file)
         // NB: node.id and node.type are also available
-        node.name          = config.name || ''
+        node.name          = config.name  || ''
         node.topic         = config.topic || ''
-        // TODO: Needs validation as a suitable URL path
-        node.url           = config.url  || 'uibuilder'
+        node.url           = config.url   || 'uibuilder'
         node.fwdInMessages = config.fwdInMessages        // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
         node.allowScripts  = config.allowScripts
         node.allowStyles   = config.allowStyles
@@ -302,9 +379,6 @@ module.exports = function(RED) {
          *   over those in the nodes folders (which act as defaults) @type {string}
          */
         node.customFolder = path.join(uib_rootFolder, node.url)
-
-        // TODO MAy not be needed now ...
-        log.verbose(`[${uibInstance}] Node package details`, { 'vendorPkgs': vendorPackages, 'customAppFldr': uib_rootFolder, 'customFldr': node.customFolder } )
 
         //#region ---- Socket.IO instance configuration ----
         /** How many Socket clients connected to this instance? @type {integer} */
@@ -331,7 +405,9 @@ module.exports = function(RED) {
          * The function must be defined in settings.js
          * @since v1.0.3 2017-12-15
          */
-        var httpMiddleware = function(req,res,next) { next() }
+        // TODO Only need to do this setup once - move out of nodeGo
+        // TODO rework to fit new uib_globalSettings structure - maybe load from a file
+         var httpMiddleware = function(req,res,next) { next() }
         if ( uib_globalSettings.hasOwnProperty('middleware') ) {
             /** Is a uibuilder specific function available? */
             if ( typeof uib_globalSettings.middleware === 'function' ) {
@@ -349,7 +425,7 @@ module.exports = function(RED) {
             }
         }
 
-        /** This ExpressJS middleware runs when the uibuilder page loads
+        /** This ExpressJS middleware runs when the uibuilder page loads - can be used for setting cookies and setting headings
          * @see https://expressjs.com/en/guide/using-middleware.html */
         function localMiddleware (req, res, next) {
             // Tell the client what Socket.IO namespace to use,
@@ -359,21 +435,11 @@ module.exports = function(RED) {
             next()
         }
 
-        //#region ----- Create local folder structure ----- //
+        //#region ----- Create instance local folder structure ----- //
         var customStatic = function(req,res,next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
         var customFoldersOK = true
         // TODO: May be better as async calls - probably not, but a promisified version would be OK?
-        // Make sure the global custom folder exists first
-        try {
-            fs.mkdirSync(uib_rootFolder) // try to create
-            fs.accessSync( uib_rootFolder, fs.constants.W_OK ) // try to access
-        } catch (e) {
-            if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-                log.error(`[${uibInstance}] Custom folder ERROR, path: ${uib_rootFolder}`, e.message)
-                customFoldersOK = false
-            }
-        }
-        // make sure the folder for this node instance exists
+        // TODO make sure the folder for this node instance exists
         try {
             fs.mkdirSync(node.customFolder)
             fs.accessSync(node.customFolder, fs.constants.W_OK)
@@ -395,7 +461,7 @@ module.exports = function(RED) {
         }
 
         // We've checked that the custom folder is there and has the correct structure
-        if ( customFoldersOK === true ) {
+        if ( uib_rootFolder_OK === true && customFoldersOK === true ) {
             // local custom folders are there ...
             log.debug(`[${uibInstance}] Using local front-end folders in`, node.customFolder)
 
@@ -405,7 +471,7 @@ module.exports = function(RED) {
              * TODO: always copy index.html */
             if ( node.copyIndex ) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-                fs.copy( path.join( masterTemplateFolder, templateToUse ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
+                fs.copy( path.join( masterTemplateFolder, uib_globalSettings.template ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
                     if(err){
                         log.error(`[${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates')} to ${path.join(node.customFolder, 'src')}`, err)
                     } else {
@@ -418,7 +484,7 @@ module.exports = function(RED) {
             log.error(`[${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
         }
 
-        //#region Add static path for local custom files
+        //#region Add static path for instance local custom files
         // TODO: need a build capability for dist - nb probably keep vendor and private code separate
         try {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
@@ -436,31 +502,17 @@ module.exports = function(RED) {
         //#endregion -- Added static path for local custom files -- //
         //#endregion ------ End of Create custom folder structure ------- //
 
-        /** Create a new, additional static http path to enable
-         * loading of central static resources for uibuilder */
-        var masterStatic = function(req,res,next) { next() }
-        //Object.defineProperty(f, 'name', {value: myName, writable: false})
-        try {
-            // Will we use "compiled" version of module front-end code?
-            fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
-            log.debug(`[${uibInstance}] Using master production build folder`)
-            // If the ./dist/index.html exists use the dist folder...
-            masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
-        } catch (e) {
-            // ... otherwise, use dev resources at ./src/
-            log.debug(`[${uibInstance}] Using master src folder and master vendor packages` )
-            log.debug('        Reason for not using master dist folder: ', e.message )
-            masterStatic = serveStatic( path.join( __dirname, 'src' ) )
-        }
-
+        /** Apply all of the middleware functions to the current instance url 
+         * Must be applied in the right order with the most important first
+        */
         app.use( tilib.urlJoin(node.url), httpMiddleware, localMiddleware, customStatic, masterStatic )
 
         const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
 
         log.info(`[${uibInstance}] Version ${nodeVersion} started at URL ${fullPath}`)
         log.info(`[${uibInstance}] UI Source files at ${node.customFolder}`)
-        RED.log.info(`uibuilder:${uibInstance}: UI Builder Version ${nodeVersion} started at URL ${fullPath}`)
-        RED.log.info(`uibuilder:${uibInstance}: UI Source files at ${node.customFolder}`)
+        RED.log.info(`uibuilder:${uibInstance}: Instance started. URL: ${fullPath}`)
+        RED.log.info(`uibuilder:${uibInstance}: Source files . . . . : ${node.customFolder}`)
 
         //console.dir(app._router.stack)
         //if (debug && process.env.NODE_ENV === 'development') { // Only in dev environment
@@ -659,7 +711,7 @@ module.exports = function(RED) {
      *  Node functions. */
     RED.nodes.registerType(moduleName, nodeGo, {
         // see userDir/settings.js - makes the settings available to the admin ui
-        settings: {
+        /* settings: {
             uibuilder: {
                 value: {
                     'userVendorPackages': userVendorPackages,
@@ -669,9 +721,10 @@ module.exports = function(RED) {
                 },
                 exportable: true
             }
-        }
+        } */
     })
 
+    //#region --- Admin API's ---
     /** Create a simple NR admin API to return the list of files in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
      * @param {string} url The admin api url to create
@@ -722,7 +775,7 @@ module.exports = function(RED) {
             res.json(files)
         })
 
-    })
+    }) // ---- End of uibfiles ---- //
 
     /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
@@ -797,7 +850,7 @@ module.exports = function(RED) {
                 'cacheControl': false
             }
         )
-    })
+    }) // ---- End of uibgetfile ---- //
 
     /** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-02-04 - Adding the file edit admin ui
@@ -877,7 +930,7 @@ module.exports = function(RED) {
                 res.status(200).end()
             }
         })
-    })
+    }) // ---- End of uibputfile ---- //
 
     /** Create an index web page or JSON return listing all uibuilder endpoints
      * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
@@ -1155,6 +1208,7 @@ module.exports = function(RED) {
         }
 
     }) // ---- End of uibindex ---- //
+    //#endregion --- Admin API's ---
 
 } // ==== End of module.exports ==== //
 
