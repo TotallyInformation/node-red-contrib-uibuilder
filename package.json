@@ -61,12 +61,12 @@
     "notyetnodes": {}
   },
   "dependencies": {
+    "bootstrap-vue": "^2.0.0-rc.13",
     "fs-extra": "^7.0.1",
     "get-installed-path": "^4.0.8",
-    "jquery": "^3.3.1",
-    "normalize.css": "^8.0.1",
     "serve-static": "^1.13.2",
     "socket.io": "^2.2.0",
+    "vue": "^2.6.8",
     "winston": "^2.4.4"
   },
   "devDependencies": {
