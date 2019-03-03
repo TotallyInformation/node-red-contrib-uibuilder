@@ -18,6 +18,8 @@
 // @ts-check
 'use strict'
 
+const child_process = require('child_process')
+
 /** Module name must match this nodes html file @constant {string} moduleName */
 const moduleName  = 'uibuilder'
 // @ts-ignore
@@ -108,7 +110,7 @@ module.exports = function(RED) {
     const masterTemplateFolder = path.join( __dirname, 'templates' )
 
     /** Default master template to use (copied to instance folder `uib_rootFolder`) @constant {string} templateToUse */
-    const templateToUse = 'jquery'
+    const templateToUse = 'vue' //'jquery'
 
     /** Set the root folder (on the server FS) for all uibuilder front-end data
      *  Name of the fs path used to hold custom files & folders for all instances of uibuilder
@@ -136,15 +138,17 @@ module.exports = function(RED) {
     }
     if (debug) {
         // @since 2017-10-06 if debugging, log to ~/.node-red/uibuilder.log, otherwise log to console
+        if ( !fs.existsSync(path.join(uib_rootFolder, '.logs')) ) fs.mkdirSync(path.join(uib_rootFolder, '.logs'))
         winstonTransport = new (winston.transports.File)({
-            filename: path.join(userDir, 'uibuilder.log'),
+            /** @since 2019-03-03 Moved log location to uibuilder root folder */
+            filename: path.join(uib_rootFolder, '.logs', 'uibuilder.log'),
             maxsize: 500000, //@since 2019-02-03 increase max log size
             maxFiles: 10,
             tailable: true,
             json:false,
             timestamp: winstonTimestamp,
             formatter: winstonFormatter
-        }) // file in user folder ~/.node-red
+        }) // file in user folder <userDir>/uibuilder/.logs
         log = new (winston.Logger)({
             // set log level based on debug var from settings.js/uibuilder
             level: debug === true ? 'silly' : debug, // error, warn, info, verbose, debug, silly; true=silly
@@ -966,9 +970,190 @@ module.exports = function(RED) {
      * @since v2.0.0 2019-02-24
      */
     RED.httpAdmin.get('/uibvendorpackages', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        log.verbose(`[uibvendorpaths] User Page/API. List all available uibuilder vendor paths`)
+        log.verbose(`[uibvendorpackages] User Page/API. List all available uibuilder vendor paths`)
 
         res.json(vendorPaths)  // schema: {name:{url,folder}}
+    }) // ---- End of uibindex ---- //
+
+    /** Call npm. Schema: {name:{(url),cmd}}
+     * If url parameter not provided, cwd = <userDir>, else cwd = <userDir>/<url>
+     * Returns JSON {error} if package.json doesn't exist in the cwd
+     * Valid commands:
+     *    packages = List the installed npm packages
+     *    * = run as npm command with --json output
+     * @since v2.0.0 2019-03-02
+     * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
+     * @param {string} req.query.cmd Command to run (see notes for this function)
+     */
+    RED.httpAdmin.get('/uibnpm', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+        log.verbose(`[uibnpm] Call npm. Cmd: ${req.query.cmd}`)
+
+        const npm = 'npm' //process.platform === 'win32' ? 'npm.cmd' : 'npm'
+
+        // Set the Current Working Directory (CWD). Default to userDir.
+        let uibPath = userDir
+        if ( req.query.url ) uibPath = path.join(uib_rootFolder, req.query.url)
+
+        // console.log('[uibnpm] COMSPEC ', process.env.ComSpec) // normally will be cmd.exe for Windows
+
+        // Check if package.json exists in <uibRoot>(/<url>) - if not, return error
+
+        const output = {
+            'result': [],
+            'errResult': [],
+            'error': [],
+            'path': uibPath,
+        }
+        
+        // Validate cmd parameter
+        let cmd = '',       // command to run (if not empty string)
+            chk = true,    // Run the package.json check
+            chkWarn = true // If false, package.json check fail will prevent cmd from running
+        switch (req.query.cmd) {
+            // Check whether chosen CWD has a package.json - no command run
+            case 'check':
+                cmd = ''
+                break;
+        
+            // List the top-level packages installed
+            case 'packages':
+                cmd = `${npm} ls --depth=0 --json`
+                break;
+        
+            // Initialise a package.json file in the chosen CWD
+            case 'init':
+                cmd = `${npm} init -y --json`
+                break;
+        
+            // Install an npm package in the chosen CWD
+            case 'install':
+                /** Don't allow cmd to continue if package.json doesn't exist
+                 *  since this will install the package in a parent folder
+                 *  and that can be confusing.
+                 */
+                chkWarn = false
+                if ( req.query.package ) {
+                    cmd = `${npm} install ${req.query.package} --json`
+                } else {
+                    // No package to install
+                    cmd = ''
+                    output.error.push('No package name supplied for the install command')
+                }
+                break;
+        
+            // Update an npm package in the chosen CWD
+            case 'update':
+                /** Don't allow cmd to continue if package.json doesn't exist
+                 *  since this will update the package in a parent folder
+                 *  and that can be confusing.
+                 */
+                chkWarn = false
+                if ( req.query.package ) {
+                    cmd = `${npm} update ${req.query.package} --json`
+                } else {
+                    // No package to install
+                    cmd = ''
+                    output.error.push('No package name supplied for the update command')
+                }
+                break;
+        
+            // Remove an npm package from the chosen CWD
+            case 'remove':
+                /** Don't allow cmd to continue if package.json doesn't exist
+                 *  since this will install the package in a parent folder
+                 *  and that can be confusing.
+                 */
+                chkWarn = false
+                if ( req.query.package ) {
+                    cmd = `${npm} remove ${req.query.package} --json`
+                } else {
+                    // No package to install
+                    cmd = ''
+                    output.error.push('No package name supplied for the remove command')
+                }
+                break;
+        
+            default:
+                cmd = `${req.query.cmd} --json`
+                break;
+        }
+
+        // Check whether chosen CWD has a package.json - if not, immediately returns an error
+        if (chk) {
+            let pjPath = path.join(uibPath, 'package.json')
+            output.check = {}
+            if ( !fs.existsSync(pjPath) ) {
+                output.errResult.push(`${pjPath} does not exist`)
+                output.error.push(`package.json does not exist in folder ${uibPath}`)
+                output.check['package.json'] = false
+                // If cmd isn't sensible without package.json, stop it now
+                if (chkWarn === false) {
+                    cmd = ''
+                    output.error.push('cmd blocked because no package.json exists at this path')
+                }
+            } else {
+                output.result.push(`${pjPath} exists`)
+                output.check['package.json'] = true
+            }
+            let modPath = path.join(uibPath, 'node_modules')
+            if ( !fs.existsSync(modPath) ) {
+                output.errResult.push(`${modPath} does not exist`)
+                output.error.push(`node_modules does not exist in folder ${uibPath}`)
+                output.check['node_modules'] = false
+            } else {
+                output.result.push(`${modPath} exists`)
+                output.check['node_modules'] = true
+            }
+        }
+
+        if (cmd !== '') {
+            // Always run the cmd against the correct instance or userDir (cwd)
+            let child = child_process.exec(cmd, {'cwd': uibPath}, (error, stdout, stderr) => {
+                // try to force output to JSON (or split by newline)
+                try {
+                    output.result.push(JSON.parse(stdout))
+                } catch (error) {
+                    output.result.push(stdout.split('\n'))
+                }
+                try {
+                    output.errResult.push(JSON.parse(stderr))
+                } catch (error) {
+                    output.errResult.push(stderr.split('\n'))
+                }
+
+                if (error !== null) output.error.push(error)
+
+                switch (req.query.cmd) {
+                    // List the installed modules for this instance
+                    case 'packages':
+                        output.packages = Object.keys(output.result[output.result.length-1].dependencies)
+                        break;
+                
+                    case 'install':
+                        let lastResult = output.result[output.result.length-1]
+                        let errCode = uiblib.getProps(RED, lastResult, 'error.code', '')
+                        if ( errCode === 'E404' ) {
+                            output.error.push(`Package '${req.query.package}' not found by npm`)
+                            output.installAction = 'none'
+                        }
+                        // Note that an install make comprise many add/update/etc actions
+                        if ( uiblib.getProps(RED, lastResult, 'updated[0].action', '') === 'update' ) {
+                            output.installAction = 'update'
+                        }
+                        if ( uiblib.getProps(RED, lastResult, 'added[0].action', '') === 'add' ) {
+                            output.installAction = 'add'
+                        }
+
+                    default:
+                        break;
+                }
+
+                res.json(output)
+            }) // --- End of exec process (async) --- //
+        } else {
+            res.json(output)
+        }
+
     }) // ---- End of uibindex ---- //
 
 } // ==== End of module.exports ==== //
