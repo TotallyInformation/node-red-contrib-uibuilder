@@ -7,9 +7,16 @@
 * **BREAKING CHANGE** The socket.io client library has moved path. Previously it didn't take into account `httpNodeRoot` but now it does.
   You will need to change the `script` tag in `index.html`, it was `<script src="/uibuilder/socket.io/socket.io.js"></script>`, now it must be `<script src="../uibuilder/socket.io/socket.io.js"></script>`.
 
-* **BREAKING CHANGE** Optional server logs moved from `<userDir>` to `<userDir>/uibuilder/.logs`. Keeping things tidy.
+* **BREAKING CHANGE** If using Node-RED's "projects" feature, each project now gets its own `uibuilder` folder. Without projects, this is located at `<userDir>/uibuilder/`. With projects, it will not be located at `<userDir>/projects/<projectName>/uibuilder/`. **This location will now be referred to as `<uibRoot>`**. See below for other files and folders that have been moved to `<uibRoot>`
+  
+* **BREAKING CHANGE** Optional server logs moved from `<userDir>` to `<uibRoot>/.logs/`. Keeping things tidy. Each project (if in use) will have its own logs.
 
 * **BREAKING CHANGE** Default templates changed from jQuery+normalize.css to VueJS+bootstrap-vue. Vue and bootstrap-vue are automatically installed.
+
+* **BREAKING CHANGE** The uibuilder global settings are no longer used from `<userDir>/settings.js`. They are now found in `<uibRoot>/.settings.json`. Existing settings are automatically migrated for you. When adding/removing vendor packages manually, you must make changes to the new file, `settings.js` is ignored after the first migration. This helps pave the way for package installs from within the admin ui.
+   * **NOTE**: If using projects - each project now has its own `uibuilder` root folder. That means that each project has its own global settings
+
+* **BREAKING CHANGE** As a consequence of the above, it is no longer possible to load custom middleware via the uibuilder global settings. A newer, better approach will be reintroduced in a future version. As a workaround, the standard Node-RED custom middleware `httpNodeMiddleware` can still be used as it is loaded by uibuilder - note, however, that this is also used by http-in nodes. **Please raise an issue if you need this capability**.
 
 * **CHANGED** Improved `<adminurl>/uibindex`, added `check` parameter, if provided will check if the value matches a uibuilder url
   in use. If so, returns true otherwise returns false. Used in the admin ui to check for url uniqueness. Also, moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
@@ -30,7 +37,7 @@
 
 * **CHANGED** Several instance config variables no longer needed: filename, format, template
 
-* **NEW** Admin API `<adminurl>/uibnpm` - run some npm commands from the admin ui. Will work against against `userDir` or `<userDir>/uibuilder/<url>` locations (optional `url` parameter). Checks whether `package.json` is available in the location. Option to return the installed npm packages in that location.
+* **NEW** Admin API `<adminurl>/uibnpm` - run some npm commands from the admin ui. Will work against against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter). Checks whether `package.json` is available in the location. Option to return the installed npm packages in that location.
 
   * Commands supported - note that return output is JSON, you should always get something back. 
     * `check`: Check whether `package.json` and `node_modules` exist

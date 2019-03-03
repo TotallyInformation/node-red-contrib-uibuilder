@@ -2,9 +2,11 @@ This is the design note for part 2 of enabling source file editing from the Node
 
 Please refer to Issue #43 for the part 1 design notes that show everything implemented in uibuilder v1.1.0.
 
+**NOTE**: If using Node-RED's "projects" feature, each project now gets its own `uibuilder` folder. Without projects, this is located at `<userDir>/uibuilder/`. With projects, it will not be located at `<userDir>/projects/<projectName>/uibuilder/`. **This location will now be referred to as `<uibRoot>`**.
+
 
 - [ ] Allow change of uibuilder.url to:
-   - [x] Check url is free to use - using the uibindex api - needs to retain current url and not check that.
+   - [x] Check url is free to use - using the uibindex api
    - [x] Does not contain leading dots or underscores
    - [x] Does not contain `/` or `\`
    - [ ] Copy (or rename?) current folder to new folder
@@ -24,18 +26,23 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
    - [x] Add `<adminurl>/uibvendorpackages` admin API.
    - [x] Use `<adminurl>/uibvendorpackages` API to list available vendor package urls in admin ui.
    - [x] (v2) Move socket.io client library path to include `httpNodeRoot`.
+   - [x] Move active vendor package list from `settings.json` to `<uibRoot>/` to allow it to be updated by install handling. (Breaking change)
+   - [x] Add initial process to move settings after migration from v1 to v2.
+   - [x] Add Socket.IO path to the `<adminurl>/uibindex` API - in preparation for enabling other nodes to communicate with uibuilder front-end's.
   
-   - [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<userDir>/uibuilder/<url>` locations (optional `url` parameter).
+   - [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter).
      - [x] List all installed top-level packages
      - [x] Allow check if `package.json` and `node_modules` are present
-     - [x] Allow creation of `package.json` in `userDir` or `<userDir>/uibuilder/<url>`.
+     - [x] Allow creation of `package.json` in `userDir` or `<uibRoot>/<url>`.
      - [x] Allow package installations/updates/removals.
-     - [ ] Allow edit of `package.json` in `<userDir>/uibuilder/<url>`.
+     - [ ] Allow edit of `package.json` in `<uibRoot>/<url>`.
      - [ ] Handle npm restart scripts
   
-   - [ ] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
-   - [ ] Update close processing to use vendorPaths. Need to check whether this is actually needed.
-   - [ ] Add Socket.IO path to the `<adminurl>/uibindex` API - in preparation for enabling other nodes to communicate with uibuilder front-end's.
+   - [x] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
+     - [ ] Add advanced option to uibuilder.html - use of project folder is optional
+  
+   - [ ] Move custom middleware load from settings.js to `<uibRoot>/.mware/`. Possibly also allow for `<uibRoot>/<url>/.mware/`.
+   - [ ] *Update close processing to use vendorPaths. Need to check whether this is actually needed.*
 
 ###
 
@@ -50,16 +57,18 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
   - [x] Hide path and module info by default and allow toggle to show
 
   - [x] New _Advanced settings_ option (hidden by default)
-     - [ ] Back-end debug (remove settings.js option - breaking change) - to pave way for per-instance debug
+     - [ ] Add flag to make use of project folder optional.
      - [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - giving the ability to have extra control, use a different port and separate security.
         - [ ] Need to make use of Node-RED middleware optional.
+  
+  - [ ] Add server path to info panel `<userDir>/uibuilder/<url>` or `<userDir>/projects/<projectName>/uibuilder/<url>`.
   - [ ] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
   - [ ] Add file delete (button is in place but disabled)
   - [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
   - [ ] Add validation hints for users
 
 
-- [x] Move back-end log files from `<userDir>` to `<userDir>/uibuilder/.logs`
+- [x] Move back-end log files from `<userDir>` to `<uibRoot>/.logs`
 
    - [ ] add check for writable
    - [ ] add check for prod/dev, prod+no dev should use standard RED.log
@@ -67,7 +76,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 
 ###
 
-- [ ] Add a "Build" button, disabled by default. uibuilder will check whether there is a `package.json` file in the `<userDir>/uibuilder/<uibuilder.url>` folder and whether it contains a script called "build". If that exists, the build button will be enabled.
+- [ ] Add a "Build" button, disabled by default. uibuilder will check whether there is a `package.json` file in the `<uibRoot>/<uibuilder.url>` folder and whether it contains a script called "build". If that exists, the build button will be enabled.
 
      This will need you to have followed the [build instructions in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Using-VueJS-with-Webpack). Or to have come up with some other build process.
 
