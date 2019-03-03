@@ -7,6 +7,10 @@
 * **BREAKING CHANGE** The socket.io client library has moved path. Previously it didn't take into account `httpNodeRoot` but now it does.
   You will need to change the `script` tag in `index.html`, it was `<script src="/uibuilder/socket.io/socket.io.js"></script>`, now it must be `<script src="../uibuilder/socket.io/socket.io.js"></script>`.
 
+* **BREAKING CHANGE** Optional server logs moved from `<userDir>` to `<userDir>/uibuilder/.logs`. Keeping things tidy.
+
+* **BREAKING CHANGE** Default templates changed from jQuery+normalize.css to VueJS+bootstrap-vue. Vue and bootstrap-vue are automatically installed.
+
 * **CHANGED** Improved `<adminurl>/uibindex`, added `check` parameter, if provided will check if the value matches a uibuilder url
   in use. If so, returns true otherwise returns false. Used in the admin ui to check for url uniqueness. Also, moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
 
@@ -21,8 +25,18 @@
   * Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use).
   * Default/previously selected file opened for edit automatically.
   * Improved handling of reopening the ui - last file selection retained.
+  * Hide path and module info by default, click to toggle.
+  * New *Advanced Settings* section, hidden by default, click to toggle. Move debug flags to it.
 
 * **CHANGED** Several instance config variables no longer needed: filename, format, template
+
+* **NEW** Admin API `<adminurl>/uibnpm` - run some npm commands from the admin ui. Will work against against `userDir` or `<userDir>/uibuilder/<url>` locations (optional `url` parameter). Checks whether `package.json` is available in the location. Option to return the installed npm packages in that location.
+
+  * Commands supported - note that return output is JSON, you should always get something back. 
+    * `check`: Check whether `package.json` and `node_modules` exist
+    * `packages`: Lists all of the top-level packages installed at this location.
+    * `init`: Create a `package.json` file with default entries. You should ideally configure npm correctly on the server before running this if you want it to pick up your author details, etc.
+    * `install`, `update`, `remove`: Requires the `package` parameter. Installs/updates/removes the given package if it can. Will be blocked if the chosen location does not contain a `package.json` file since this would potentially result in packages being installed in a parent folder which, in this case, is unlikely to be helpful.
 
 ----
 
