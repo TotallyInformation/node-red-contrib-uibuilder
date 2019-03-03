@@ -1,0 +1,102 @@
+<!doctype html>
+<!-- Note that adding an appcache really speeds things up after the first load
+    You need to amend the appcache file to meet your needs.
+    Don't forget to change the appcache file if you update ANY
+    of the files in it otherwise the old versions will ALWAYS be used.
+<html lang="en" manifest="./uibuilder.appcache">
+-->
+<html lang="en">
+<!--
+    This is the default, template html for uibuilder.
+    It is meant to demonstrate the use of VueJS & bootstrap-vue to dynamically
+    update the ui based on incoming/outgoing messages from/to the
+    Node-RED server.
+
+    You will want to alter this to suite your own needs. To do so,
+    copy this file to <userDir>/uibuilder/<url>/src.
+-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>Node-RED UI Builder</title>
+    <meta name="description" content="Node-RED UI Builder - VueJS + bootstrap-vue version">
+
+    <link rel="icon" href="./images/node-blue.ico">
+
+    <!-- See https://goo.gl/OOhYW5 -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#3f51b5">
+
+    <!-- Used if adding to homescreen for Chrome on Android. Fallback for manifest.json -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Node-RED UI Builder">
+
+    <!-- Used if adding to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Node-RED UI Builder">
+
+    <!-- Homescreen icons for Apple mobile use if required
+        <link rel="apple-touch-icon" href="/images/manifest/icon-48x48.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/images/manifest/icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="96x96" href="/images/manifest/icon-96x96.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/images/manifest/icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="192x192" href="/images/manifest/icon-192x192.png">
+    -->
+    <link rel="stylesheet" href="../uibuilder/vendor/normalize.css/normalize.css">
+    <link rel="stylesheet" href="./index.css" media="all">
+</head>
+<body>
+    <div id="app">
+        <b-container id="app_container">
+            <h1>
+                UIbuilder + Vue.js + bootstrap-vue for Node-RED
+            </h1>
+            <p>
+                This is a uibuilder test using <a href="https://vuejs.org/">Vue.js</a> as a front-end library.
+                See the
+                <a
+                    href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
+                README for details on how to use UIbuilder.
+            </p>
+            <h2>Dynamic Data (via Vue)</h2>
+
+            <p>
+                Messages: Received={{msgsReceived}}, Sent: {{msgsSent}}
+            </p>
+            <p>
+                Control Messages Received: {{msgsControl}}
+            </p>
+
+            <pre v-html="hLastRcvd"></pre>
+            <pre v-html="hLastSent"></pre>
+
+            <h2>Simple input using Vue</h2>
+            <p><button v-on:click="increment">Increment</button> Click Counter: {{counterBtn}}. Click on the button to
+                increment, it sends the data back to Node-RED as well.</p>
+        </b-container>
+    </div>
+
+    <!-- These MUST be in the right order. Note no leading / -->
+    <!-- REQUIRED: Socket.IO is loaded only once for all instances
+                     Without this, you don't get a websocket connection -->
+    <script src="../uibuilder/socket.io/socket.io.js"></script>
+
+    <!-- --- Vendor Libraries - Load in the right order --- -->
+    <script src="../uibuilder/vendor/vue/dist/vue.js"></script> <!-- dev version with component compiler -->
+    <!-- <script src="../uibuilder/vendor/vue/dist/vue.min.js"></script>   prod version with component compiler -->
+    <!-- <script src="../uibuilder/vendor/vue/dist/vue.runtime.min.js"></script>   prod version without component compiler -->
+    <!-- <script src="https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script> for older browsers -->
+    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.js"></script>
+
+    <!-- REQUIRED: Sets up Socket listeners and the msg object -->
+    <!-- <script src="./uibuilderfe.js"></script>   //dev version -->
+    <script src="./uibuilderfe.min.js"></script> <!--    //prod version -->
+    <!-- OPTIONAL: You probably want this. Put your custom code here -->
+    <script src="./index.js"></script>
+
+</body>
+
+</html>

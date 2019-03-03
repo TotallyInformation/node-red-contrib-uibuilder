@@ -1,0 +1,15 @@
+{
+    "name": "Node-RED UI Builder",
+    "short_name": "uibuilder",
+    "description": "A web template builder for Node-RED",
+    "display": "standalone",
+    "lang": "en-GB",
+    "icons": [
+        {
+            "src": "./images/node-blue-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "."
+}

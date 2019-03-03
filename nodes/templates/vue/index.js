@@ -1,6 +1,6 @@
-/*global document,$,window,uibuilder */
+/*global document,Vue,window,uibuilder */
 /*
-  Copyright (c) 2017 Julian Knight (Totally Information)
+  Copyright (c) 2019 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,10 +15,12 @@
   limitations under the License.
 */
 
+/** @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Front-End-Library---available-properties-and-methods */
+
 const app1 = new Vue({
-    el: "#app",
+    el: '#app',
     data: {
-        startMsg    : "Vue has started, waiting for messages",
+        startMsg    : 'Vue has started, waiting for messages',
         feVersion   : '',
         counterBtn  : 0,
         msgsReceived: 0,
@@ -78,9 +80,9 @@ const app1 = new Vue({
 
     // Available hooks: init,mounted,updated,destroyed
     mounted: function(){
-        console.debug('app mounted - setting up uibuilder watchers')
+        console.debug('[Vue.mounted] app mounted - setting up uibuilder watchers')
 
-        vueApp = this
+        var vueApp = this
 
         vueApp.feVersion = uibuilder.get('version')
 
@@ -88,38 +90,38 @@ const app1 = new Vue({
         // Note that you can also listen for 'msgsReceived' as they are updated at the same time
         // but newVal relates to the attribute being listened to.
         uibuilder.onChange('msg', function(newVal){
-            console.info('property msg changed!', newVal)
+            console.info('[uibuilder.onChange] property msg changed!', newVal)
             vueApp.msgRecvd = newVal
         })
         // As noted, we could get the msg here too
         uibuilder.onChange('msgsReceived', function(newVal){
-            console.info('New msg sent FROM Node-RED over Socket.IO. Total Count: ', newVal)
+            console.info('[uibuilder.onChange] New msg sent FROM Node-RED over Socket.IO. Total Count: ', newVal)
             vueApp.msgsReceived = newVal
         })
 
         // If a message is sent back to Node-RED
         uibuilder.onChange('sentMsg', function(newVal){
-            console.info('property sentMsg changed!', newVal)
+            console.info('[uibuilder.onChange] property sentMsg changed!', newVal)
             vueApp.msgSent = newVal
         })
         uibuilder.onChange('msgsSent', function(newVal){
-            console.info('New msg sent TO Node-RED over Socket.IO. Total Count: ', newVal)
+            console.info('[uibuilder.onChange] New msg sent TO Node-RED over Socket.IO. Total Count: ', newVal)
             vueApp.msgsSent = newVal
         })
 
         // If we receive a control message from Node-RED
         uibuilder.onChange('ctrlMsg', function(newVal){
-            console.info('property msgCtrl changed!', newVal)
+            console.info('[uibuilder.onChange] property msgCtrl changed!', newVal)
             vueApp.msgCtrl = newVal
         })
         uibuilder.onChange('msgsCtrl', function(newVal){
-            console.info('New CONTROL msg sent FROM Node-RED over Socket.IO. Total Count: ', newVal)
+            console.info('[uibuilder.onChange] New CONTROL msg sent FROM Node-RED over Socket.IO. Total Count: ', newVal)
             vueApp.msgsControl = newVal
         })
 
         // If Socket.IO connects/disconnects
         uibuilder.onChange('ioConnected', function(newVal){
-            console.info('Socket.IO Connection Status Changed: ', newVal)
+            console.info('[uibuilder.onChange] Socket.IO Connection Status Changed: ', newVal)
             vueApp.socketConnectedState = newVal
         })
 

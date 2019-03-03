@@ -1,0 +1,49 @@
+[
+    {
+        "id": "65c207ab.b53e08",
+        "type": "debug",
+        "z": "106ba95c.ff91e7",
+        "name": "vuejs-debug",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 480,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "2283ab5e.70d5a4",
+        "type": "uibuilder",
+        "z": "106ba95c.ff91e7",
+        "name": "vuejs",
+        "url": "vue",
+        "fwdInMessages": false,
+        "customFoldersReqd": true,
+        "x": 270,
+        "y": 260,
+        "wires": [
+            [
+                "65c207ab.b53e08"
+            ]
+        ]
+    },
+    {
+        "id": "eb50e622.116878",
+        "type": "inject",
+        "z": "106ba95c.ff91e7",
+        "name": "",
+        "topic": "uibuilder-moon",
+        "payload": "{\"lib\":\"vue\", \"testNum\": 500}",
+        "payloadType": "json",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 130,
+        "y": 260,
+        "wires": [
+            [
+                "2283ab5e.70d5a4"
+            ]
+        ]
+    }
+]
