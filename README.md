@@ -347,6 +347,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
 - [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections and contributed code.
 - [Ellie Lee](https://github.com/ellieejlee) - many thanks for the PR fixing duplicate msgs.
+- [Thomas Wagner](https://github.com/Thomseeen) - thanks for the steer and PR on using projects folder if active.
 
 
 <a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>
