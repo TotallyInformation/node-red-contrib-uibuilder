@@ -126,7 +126,14 @@
         $('#node-dialog-ok').prop('disabled', !isClean)
         $('#node-dialog-cancel').prop('disabled', !isClean)
         // If not clean, Add a user hint
-        if ( ! isClean ) $('#file-action-message').text('Save Required')
+        if ( ! isClean ) {
+            $('#file-action-message').text('Save Required')
+            $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
+            $('#node-dialog-cancel').css( 'cursor', 'not-allowed' )
+        } else {
+            $('#node-dialog-ok').css( 'cursor', 'pointer' )
+            $('#node-dialog-cancel').css( 'cursor', 'pointer' )
+        }
     } // --- End of fileIsClean --- //
 
     /** Validation Function: Validate the url property
@@ -163,8 +170,17 @@
                 exists = check
             }
         })
-        console.log('exists', exists)
-        return !exists
+
+        // If the url already exists - prevent the "Done" button from being pressed.
+        if ( exists === true ) {
+            $('#node-dialog-ok').prop('disabled', true)
+            $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
+            return false
+        } else {
+            $('#node-dialog-ok').prop('disabled', false)
+            $('#node-dialog-ok').css( 'cursor', 'pointer' )
+            return true
+        }
 
     } // --- End of validateUrl --- //
 
@@ -195,6 +211,8 @@
             // Start with the edit section hidden & main section visible
             $('#main-props').show()
             $('#edit-props').hide()
+            $('#adv-props').hide()
+            $('#info-props').hide()
 
             // Set the checkbox states
             $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
@@ -209,6 +227,27 @@
             $('#node-input-url').change(function () {
                 // Show the root URL
                 $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
+            })
+
+            // Show/Hide the advanced settings
+            $('#show-adv-props').css( 'cursor', 'pointer' )
+            $('#show-adv-props').click(function(e) {
+                $('#adv-props').toggle()
+                if ( $('#adv-props').is(':visible') ) {
+                    $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Hide Advanced Settings')
+                } else {
+                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Show Advanced Settings')
+                }
+            })
+            // Show/Hide the Path & Module info
+            $('#show-info-props').css( 'cursor', 'pointer' )
+            $('#show-info-props').click(function(e) {
+                $('#info-props').toggle()
+                if ( $('#info-props').is(':visible') ) {
+                    $('#show-info-props').html('<i class="fa fa-caret-down"></i> Hide Path &amp; Module Info')
+                } else {
+                    $('#show-info-props').html('<i class="fa fa-caret-right"></i> Show Path &amp; Module Info')
+                }
             })
 
             // List the front-end url paths available (shown in info box)
@@ -280,17 +319,6 @@
                 }
             })
 
-            // Watch for mode changes, update editor component on change
-            // $('#node-input-format').change(function() {
-            //     if ( uiace.editorSession ) {
-            //         const mod = 'ace/mode/' + $(this).val()
-            //         uiace.editorSession.setMode({
-            //             path: mod,
-            //             v: Date.now()
-            //         })
-            //     }
-            // })
-
             /** TODO: Get list of installed themes, add chooser, save current choice
              * that.editor.setTheme("ace/theme/monokai")
              * uiace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
@@ -347,16 +375,20 @@
             // xfer the editor text back to the template var
             //$('#node-input-template').val(this.editor.getValue())
             // Get rid of the editor
-            uiace.editor.destroy()
-            delete uiace.editor
-            uiace.editorLoaded = false
+            if ( uiace.editorLoaded === true ) {
+                uiace.editor.destroy()
+                delete uiace.editor
+                uiace.editorLoaded = false
+            }
         },
 
         oneditcancel: function() {
             // Get rid of the editor
-            uiace.editor.destroy()
-            delete uiace.editor
-            uiace.editorLoaded = false
+            if ( uiace.editorLoaded === true ) {
+                uiace.editor.destroy()
+                delete uiace.editor
+                uiace.editorLoaded = false
+            }
         },
 
         // oneditresize: function(size) {
@@ -393,6 +425,39 @@
             <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
         </div>
 
+        <!-- Allow scripts/styles to be passed to front-end? -->
+        <div class="form-row" title="Add msg.script/msg.style to the input msg">
+            Allow passing to the front-end: 
+            <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowScripts" style="">Scripts? (JS)</label>
+            <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowStyles" style="">Styles? (CSS)</label>
+        </div>
+
+        <!-- Copy index.(html|css|js) to local assets if they dont exist? -->
+        <div class="form-row">
+            <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-copyIndex" style="width: 90%;">Copy index.(html|css|js) from templates to this instance if they don't exist?</label>
+        </div>
+
+        <!-- Show edit properties, hide this section -->
+        <div class="form-row">
+            <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
+        </div>
+
+        <!-- Show advanced edit properties -->
+        <div class="form-row">
+            <h4 id="show-adv-props" title="Show/Hide the advanced configuration settings">
+                <i class="fa fa-caret-right"></i> Show Advanced Settings
+            </h4>
+        </div>
+
+    </div>
+
+    <div id="adv-props" style="display:hidden"><!-- Hideable Advanced Settings Section -->
+        <div class="form-tips node-help" title="">
+            Warning: Most people will not need these settings.
+        </div>
         <!-- Forward and debug flags -->
         <div class="form-row">
             <!-- Forward input msgs to output -->
@@ -406,30 +471,9 @@
                 Debug Front-End?
             </label>
         </div>
-
-        <!-- Allow scripts/styles to be passed to front-end? -->
-        <div class="form-row" title="Add msg.script/msg.style to the input msg">
-            Allow passing to the front-end: 
-            <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-allowScripts" style="">Scripts? (JS)</label>
-            <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-allowStyles" style="">Styles? (CSS)</label>
-        </div>
-
-        <!-- Copy index.(css|js) to local assets if they dont exist? -->
-        <div class="form-row">
-            <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-copyIndex" style="width: 90%;">Copy index.(css|js) from templates to local if they don't exist?</label>
-        </div>
-
-        <!-- Show edit properties, hide this section -->
-        <div class="form-row">
-            <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
-        </div>
     </div>
 
-    
-    <div id="edit-props"><!-- Hideable File Editor Section -->
+    <div id="edit-props"><!-- Hideable File Editor Section  -->
         <!-- Drop-down for selecting file to edit -->
         <div class="form-row">
             <label for="node-input-filename"><i class="fa fa-code"></i> Choose File</label>
@@ -480,7 +524,10 @@
     </div>
 
     <!-- Info -->
-    <div class="form-tips node-help" title="">
+    <h4 id="show-info-props" title="Show/Hide the available paths &amp; module information">
+        <i class="fa fa-caret-right"></i> Show Path &amp; Module Info
+    </h4>
+    <div id="info-props" class="form-tips node-help" title="">
         <div>Base URL: <span id="uibuilderurl"></span></div>
         <div>
             <u>Paths available to web pages</u>
