@@ -85,7 +85,7 @@ module.exports = {
      */
     mergeDedupe: function(...arr) {
         return [...new Set([].concat(...arr))];
-    },
+    }, // ----  ---- //
 
     /** Utility function to html pretty-print JSON */
     syntaxHighlight: function(json) {
@@ -117,7 +117,6 @@ module.exports = {
             }
             return `<span class="${cls}" ${style}>${match}</span>`
         }) + '</pre>'
-    },
-    
+    }, // ----  ---- //
     
 } // ---- End of module.exports ---- //
