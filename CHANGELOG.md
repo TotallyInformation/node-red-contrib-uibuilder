@@ -18,12 +18,24 @@
 
 * **BREAKING CHANGE** As a consequence of the above, it is no longer possible to load custom middleware via the uibuilder global settings. A newer, better approach will be reintroduced in a future version. As a workaround, the standard Node-RED custom middleware `httpNodeMiddleware` can still be used as it is loaded by uibuilder - note, however, that this is also used by http-in nodes. **Please raise an issue if you need this capability**.
 
-* **CHANGED** Improved `<adminurl>/uibindex`, added `check` parameter, if provided will check if the value matches a uibuilder url
-  in use. If so, returns true otherwise returns false. Used in the admin ui to check for url uniqueness. Also, moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
-
 * **FIX** In uibuilderfe.js, provide a polyfill for String.prototype.endsWith to be kind to folk who are forced to live with Microsoft Internet Explorer or other outdated browsers.
 
+* **FIX** Sometimes, a package's location might affect the URL needed to access the front-end library. For example, jquery would sometimes require `dist/` in the URL and sometimes not. Turns out that there are some edge cases when trying to identify the physical location of packages. These have now all been dealt with by using custom code instead of a 3rd party package that didn't always work.
+
+* **FIX** Small regression bug in `uibuilderfe.js`. Prevented socket.io from communicating when `httpNodeRoot` was not set. Added `urlJoin` function to prevent.
+
 * **NEW** Admin API `<adminurl>/uibvendorpackages` Returns list of available vendor packages with url and folder details.
+
+* **NEW** Admin API `<adminurl>/uibnpm` - run some npm commands from the admin ui. Will work against against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter). Checks whether `package.json` is available in the location. Option to return the installed npm packages in that location.
+
+  * Commands supported - note that return output is JSON, you should always get something back. 
+    * `check`: Check whether `package.json` and `node_modules` exist
+    * `packages`: Lists all of the top-level packages installed at this location.
+    * `init`: Create a `package.json` file with default entries. You should ideally configure npm correctly on the server before running this if you want it to pick up your author details, etc.
+    * `install`, `update`, `remove`: Requires the `package` parameter. Installs/updates/removes the given package if it can. Will be blocked if the chosen location does not contain a `package.json` file since this would potentially result in packages being installed in a parent folder which, in this case, is unlikely to be helpful.
+
+* **CHANGED** Improved `<adminurl>/uibindex`, added `check` parameter, if provided will check if the value matches a uibuilder url
+  in use. If so, returns true otherwise returns false. Used in the admin ui to check for url uniqueness. Also, moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
 
 * **CHANGED** In uibuilder admin ui:
 
@@ -37,13 +49,6 @@
 
 * **CHANGED** Several instance config variables no longer needed: filename, format, template
 
-* **NEW** Admin API `<adminurl>/uibnpm` - run some npm commands from the admin ui. Will work against against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter). Checks whether `package.json` is available in the location. Option to return the installed npm packages in that location.
-
-  * Commands supported - note that return output is JSON, you should always get something back. 
-    * `check`: Check whether `package.json` and `node_modules` exist
-    * `packages`: Lists all of the top-level packages installed at this location.
-    * `init`: Create a `package.json` file with default entries. You should ideally configure npm correctly on the server before running this if you want it to pick up your author details, etc.
-    * `install`, `update`, `remove`: Requires the `package` parameter. Installs/updates/removes the given package if it can. Will be blocked if the chosen location does not contain a `package.json` file since this would potentially result in packages being installed in a parent folder which, in this case, is unlikely to be helpful.
 
 ----
 
@@ -62,7 +67,7 @@
 * **CHANGED** Master template folder - files moved to sub-folder to allow for multiple master templates (e.g. VueJS as well as jQuery). In readiness for future changes.
 * **CHANGED** General utility functions moved to a separate library, `tilib`.
 * **CHANGED** New tilib function added `getNpmRunScripts`. Given a path, returns a list of available scripts from the package.json file in that path - or `undefined` if the file doesn't exist. If the optional 2nd parameter is supplied, looks for a matching script name and returns the script text - or `null` if the script isn't there. In preparation for adding npm processing (install, build, etc.).
-* **CHANGED** Paramterised Master Template Folder. Preparation for more flexible template processing.
+* **CHANGED** Parametrised Master Template Folder. Preparation for more flexible template processing.
 * **FIXED** ExpressJS app.use paths were not being removed on close processing.
 
 **Current Version Limitations** 

@@ -17,6 +17,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
    - [x] (v2) Move socket.io client library path to include `httpNodeRoot`.
    - [x] Change default template from jquery + normalize.cs to VueJS + bootstrap-vue (much the same size)
       - [x] Needs to auto-install vue and boostrap-vue packages.
+   - [x] Fix regression bug preventing socket.io from communicating when `httpNodeRoot` not set. Add `urlJoin()` to fix.
 
 ###
 
@@ -29,6 +30,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
    - [x] Move active vendor package list from `settings.json` to `<uibRoot>/` to allow it to be updated by install handling. (Breaking change)
    - [x] Add initial process to move settings after migration from v1 to v2.
    - [x] Add Socket.IO path to the `<adminurl>/uibindex` API - in preparation for enabling other nodes to communicate with uibuilder front-end's.
+   - [x] Fix the folder location lookup for front-end packages. New function `findPackage` added to `tilib.js`, replaces the `get-installed-path` 3rd party package.
   
    - [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter).
      - [x] List all installed top-level packages
