@@ -36,7 +36,6 @@ const serveStatic      = require('serve-static'),
       events           = require('events'),
       winston          = require('winston')
 
-const { getInstalledPathSync } = require('get-installed-path')
 
 /** We want these to track across redeployments
  *  if OK to reset on redeployment, attach to node.xxx inside nodeGo instead. @constant {Object} deployments */
@@ -242,29 +241,24 @@ module.exports = function(RED) {
 
     //#region ---- Serve up vendor packages ----
     /** Include vendor resource source paths if needed
-     * @since v2.0.0 2019-02-23 moved from nodeGo() to module level and merged with default vendor package list */
+     * @since v2.0.0 2019-02-23 moved from nodeGo() to module level and merged with default vendor package list
+     * @since 2017-09-19 Using get-installed-path to find where a module is actually installed
+     * @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules) 
+     * @since 2017-09-21 force cwd to be NR's UserDir - Colin Law
+     * @since v2.0.0 2019-03-04 Replace path resolution with my own code - MUCH more reliable */
     uib_globalSettings.packages.forEach(function (packageName) {
-        // @since 2017-09-19 Using get-installed-path to find where a module is actually installed
-        // @since 2017-09-19 AND try require.resolve() as backup (NB this may return unusable path for linked modules)
-        var installFolder = ''
-        try { //@since 2017-09-21 force cwd to be NR's UserDir - Colin Law
-            installFolder = getInstalledPathSync(packageName, {local:true, cwd: userDir})
-        } catch (e1) {
-            // if getInstalledPath fails, try nodejs internal resolve
-            try {
-                // @since 2017-11-11 v1.0.2 resolve returns the root script not the path
-                installFolder = path.dirname( require.resolve(packageName) )
-            } catch (e2) {
-                log.error(`[Module] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`, e2.message );
-                RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
-            }
-        }
-        if (installFolder !== '') {
+        let installFolder = tilib.findPackage(packageName, userDir)
+        if (installFolder === '' ) {
+            log.error(`[Module] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}` )
+            RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
+        } else {
             let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
-            log.info('[Module] Adding user vendor path', {
-                'url': vendorPath, 'path': installFolder
-            })
-            app.use( vendorPath, serveStatic(installFolder) )
+            log.info('[Module] Adding user vendor path', {'url': vendorPath, 'path': installFolder})
+            try {
+                app.use( vendorPath, serveStatic(installFolder) )
+            } catch (e) {
+                RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`)
+            }
             vendorPaths[packageName] = {'url': tilib.urlJoin(httpNodeRoot, vendorPath), 'folder': installFolder}
         }
     }) // -- end of forEach vendor package -- //
@@ -276,12 +270,12 @@ module.exports = function(RED) {
     try {
         // Will we use "compiled" version of module front-end code?
         fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
-        log.debug(`[Module] Using master production build folder`)
+        log.debug('[Module] Using master production build folder')
         // If the ./dist/index.html exists use the dist folder...
         masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
     } catch (e) {
         // ... otherwise, use dev resources at ./src/
-        log.debug(`[Module] Using master src folder and master vendor packages` )
+        log.debug('[Module] Using master src folder and master vendor packages')
         log.debug('        Reason for not using master dist folder: ', e.message )
         masterStatic = serveStatic( path.join( __dirname, 'src' ) )
     }
@@ -937,7 +931,7 @@ module.exports = function(RED) {
      * @since 2019-02-04 v1.1.0-beta6
      */
     RED.httpAdmin.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        log.verbose(`[uibindex] User Page/API. List all available uibuilder endpoints`)
+        log.verbose('[uibindex] User Page/API. List all available uibuilder endpoints')
 
         /** If GET includes a "check" parameter, see if that uibuilder URL is in use
          * @returns {boolean} True if the given url exists, else false
@@ -949,16 +943,16 @@ module.exports = function(RED) {
 
         /** If no check parameter, return full details based on type parameter */
         switch (req.query.type) {
-            case 'json':
+            case 'json': {
                 res.json(instances)
                 break;
-        
-            case 'urls':
+            }
+            case 'urls': {
                 res.json(Object.values(instances))
                 break;
-        
+            }
             // default to 'html' output type
-            default:
+            default: {
                 //console.log(app.routes) // Expresss 3.x
                 //console.log(app.router.stack) // Expresss 3.x with express.router
                 //console.log(app._router.stack) // Expresss 4.x
@@ -990,9 +984,9 @@ module.exports = function(RED) {
                 page += '    <th>Server Filing System Folder</th>'
                 page += '  </tr>'
                 page += '  <tr>'
-                page += `    <td>socket.io</td>`
+                page += '    <td>socket.io</td>'
                 page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, 'uibuilder/socket.io/socket.io.js')}">../uibuilder/socket.io/socket.io.js</a></td>`
-                page += `    <td>--</td>`
+                page += '    <td>--</td>'
                 page += '  </tr>'
                 Object.keys(vendorPaths).forEach(packageName => {
                     page += '  <tr>'
@@ -1016,6 +1010,7 @@ module.exports = function(RED) {
                 res.send(page)
     
                 break;
+            }
         }
     }) // ---- End of uibindex ---- //
 
@@ -1023,7 +1018,7 @@ module.exports = function(RED) {
      * @since v2.0.0 2019-02-24
      */
     RED.httpAdmin.get('/uibvendorpackages', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        log.verbose(`[uibvendorpackages] User Page/API. List all available uibuilder vendor paths`)
+        log.verbose('[uibvendorpackages] User Page/API. List all available uibuilder vendor paths')
 
         res.json(vendorPaths)  // schema: {name:{url,folder}}
     }) // ---- End of uibindex ---- //
@@ -1059,27 +1054,27 @@ module.exports = function(RED) {
         }
         
         // Validate cmd parameter
-        let cmd = '',       // command to run (if not empty string)
+        let cmd = '',      // command to run (if not empty string)
             chk = true,    // Run the package.json check
             chkWarn = true // If false, package.json check fail will prevent cmd from running
         switch (req.query.cmd) {
             // Check whether chosen CWD has a package.json - no command run
-            case 'check':
+            case 'check': {
                 cmd = ''
                 break;
-        
+            }
             // List the top-level packages installed
-            case 'packages':
+            case 'packages': {
                 cmd = `${npm} ls --depth=0 --json`
                 break;
-        
+            }
             // Initialise a package.json file in the chosen CWD
-            case 'init':
+            case 'init': {
                 cmd = `${npm} init -y --json`
                 break;
-        
+            }
             // Install an npm package in the chosen CWD
-            case 'install':
+            case 'install': {
                 /** Don't allow cmd to continue if package.json doesn't exist
                  *  since this will install the package in a parent folder
                  *  and that can be confusing.
@@ -1093,9 +1088,9 @@ module.exports = function(RED) {
                     output.error.push('No package name supplied for the install command')
                 }
                 break;
-        
+            }
             // Update an npm package in the chosen CWD
-            case 'update':
+            case 'update': {
                 /** Don't allow cmd to continue if package.json doesn't exist
                  *  since this will update the package in a parent folder
                  *  and that can be confusing.
@@ -1109,9 +1104,9 @@ module.exports = function(RED) {
                     output.error.push('No package name supplied for the update command')
                 }
                 break;
-        
+            }
             // Remove an npm package from the chosen CWD
-            case 'remove':
+            case 'remove': {
                 /** Don't allow cmd to continue if package.json doesn't exist
                  *  since this will install the package in a parent folder
                  *  and that can be confusing.
@@ -1125,10 +1120,11 @@ module.exports = function(RED) {
                     output.error.push('No package name supplied for the remove command')
                 }
                 break;
-        
-            default:
+            }
+            default: {
                 cmd = `${req.query.cmd} --json`
                 break;
+            }
         }
 
         // Check whether chosen CWD has a package.json - if not, immediately returns an error
@@ -1178,11 +1174,11 @@ module.exports = function(RED) {
 
                 switch (req.query.cmd) {
                     // List the installed modules for this instance
-                    case 'packages':
+                    case 'packages': {
                         output.packages = Object.keys(output.result[output.result.length-1].dependencies)
                         break;
-                
-                    case 'install':
+                    }
+                    case 'install': {
                         let lastResult = output.result[output.result.length-1]
                         let errCode = uiblib.getProps(RED, lastResult, 'error.code', '')
                         if ( errCode === 'E404' ) {
@@ -1196,9 +1192,11 @@ module.exports = function(RED) {
                         if ( uiblib.getProps(RED, lastResult, 'added[0].action', '') === 'add' ) {
                             output.installAction = 'add'
                         }
-
-                    default:
                         break;
+                    }
+                    default: {
+                        break;
+                    }
                 }
 
                 res.json(output)
