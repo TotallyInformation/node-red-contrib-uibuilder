@@ -119,4 +119,53 @@ module.exports = {
         }) + '</pre>'
     }, // ----  ---- //
     
+    /** Find package install folder
+     * Searches in: userDir, nrc-uibuilder/node_modules, require.resolve(packageName) in that order.
+     * NOTE: require.resolve can be a little ODD! 
+     *       When run from a linked package, it uses the link root not the linked location, 
+     *       this throws out the tree search. That's why we have to try several different locations here.
+     *       Also, it finds the "main" script name which might not be in the package root.
+     * @param {string} packageName - Name of the package who's root folder we are looking for.
+     * @param {string} userDir - Home folder for Node-RED modules
+     */
+    findPackage: function(packageName, userDir) {
+        
+        let found = false, packagePath = ''
+        try {
+            packagePath = path.dirname( require.resolve(packageName, {paths: [userDir]}) )
+            //console.log(`${packageName} found from userDir`, packagePath)
+            found = true
+        } catch (e) {
+            //console.log (`${packageName} not found from userDir`)
+        }
+        if (found === false) try {
+            packagePath = path.dirname( require.resolve(packageName) )
+            //console.log(`${packageName} found`, packagePath)
+            found = true
+        } catch (e) {
+            //console.log (`${packageName} not found`)
+        }
+        if (found === false) try {
+            packagePath = path.dirname( require.resolve(packageName, {paths: [path.join(__dirname,'..')]}) )
+            //console.log(`${packageName} found from uibuilder`, packagePath)
+            found = true
+        } catch (e) {
+            //console.log (`${packageName} not found from uibuilder`)
+        }
+
+        /** require.resolve returns the "main" script, this may not be in the root folder for the package
+         *  so we change that here. We check whether the last element of the path matches the package
+         *  name. If not, we walk back up the tree until it is or we run out of tree.
+         *  If we don't do this, when it is used with serveStatic, we may not get everything we need served.
+         * NB: Only assuming 3 levels here.
+         */
+        let pathSplit = packagePath.split(path.sep)
+        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageName) ) pathSplit.pop()
+        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageName) ) pathSplit.pop()
+        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageName) ) pathSplit.pop()
+        packagePath = pathSplit.join(path.sep)
+
+        return packagePath
+    }, // ----  ---- //
+
 } // ---- End of module.exports ---- //
