@@ -235,9 +235,9 @@
             $('#show-adv-props').click(function(e) {
                 $('#adv-props').toggle()
                 if ( $('#adv-props').is(':visible') ) {
-                    $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Hide Advanced Settings')
+                    $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Advanced Settings')
                 } else {
-                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Show Advanced Settings')
+                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 }
             })
             // Show/Hide the Path & Module info
@@ -245,14 +245,14 @@
             $('#show-info-props').click(function(e) {
                 $('#info-props').toggle()
                 if ( $('#info-props').is(':visible') ) {
-                    $('#show-info-props').html('<i class="fa fa-caret-down"></i> Hide Path &amp; Module Info')
+                    $('#show-info-props').html('<i class="fa fa-caret-down"></i> Path &amp; Module Info')
                 } else {
-                    $('#show-info-props').html('<i class="fa fa-caret-right"></i> Show Path &amp; Module Info')
+                    $('#show-info-props').html('<i class="fa fa-caret-right"></i> Path &amp; Module Info')
                 }
             })
 
             // List the front-end url paths available (shown in info box)
-            packageList(this.url, true)
+            //packageList(this.url, true)
 
             // Delete is not ready yet, so disable button by default. TODO
             $('#edit-delete').prop('disabled', true)
@@ -269,11 +269,13 @@
                 $('#edit-props').hide()
             })
 
-            // Show the edit section, hide the main section
+            // Show the edit section, hide the main & adv sections
             $('#show-edit-props').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
-                $('#main-props').toggle()
-                $('#edit-props').toggle()
+                $('#main-props').hide()
+                $('#adv-props').hide()
+                $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                $('#edit-props').show()
 
                 // @since 2019-01-27 - adding file editor
                 // Build the file list - pass the url so the BE can find the right folder
@@ -449,7 +451,7 @@
         <!-- Show advanced edit properties -->
         <div class="form-row">
             <h4 id="show-adv-props" title="Show/Hide the advanced configuration settings">
-                <i class="fa fa-caret-right"></i> Show Advanced Settings
+                <i class="fa fa-caret-right"></i> Advanced Settings
             </h4>
         </div>
 
@@ -526,25 +528,17 @@
 
     <!-- Info -->
     <h4 id="show-info-props" title="Show/Hide the available paths &amp; module information">
-        <i class="fa fa-caret-right"></i> Show Path &amp; Module Info
+        <i class="fa fa-caret-right"></i> Path &amp; Module Info
     </h4>
     <div id="info-props" class="form-tips node-help" title="">
-        <div>Base URL: <span id="uibuilderurl"></span></div>
+        <div>Web Page URL: <span id="uibuilderurl"></span></div>
+        <div><a href="uibindex" target="_blank" title="Opens in a new tab">Detailed Information</a></div>
         <div>
-            <u>Paths available to web pages</u>
-            <ul id="fepaths"></ul>
-            <div>URLs in italics may not be directly accessible. You need to know what sub-path contains something useful. Check the package documentation for what is exposed.</div>
+            Click on the detailed info link to see details of what front-end libraries
+            are available to your web pages. It also shows a list of all uibuilder web pages
+            and some detailed uibuilder information.
         </div>
-        <div title="See your settings.js file for changing these. They apply to all instances of uibuilder.">
-            <u>Global Settings</u>
-            <dl class="message-properties">
-                <dt title="Have to be installed to userDir with npm">What modules have been loaded? <span class="property-type">(uibuilder.userVendorPackages)</span></dt>
-                <dd id="userpackages">-</dd>
-                <dt>Back-end debug <span class="property-type">(uibuilder.debug)</span></dt>
-                <dd id="bedebug">-</dd>
-            </dl>
-        </div>
-        <div>Front-end modules must be installed to your userDir folder.</div>
+        <div>Front-end modules must be installed to your <i id="showuserdir">userDir</i> folder.</div>
     </div>
 </script>
 
