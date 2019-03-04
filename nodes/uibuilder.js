@@ -960,6 +960,7 @@ module.exports = function(RED) {
 
                 let page = '<!doctype html><html lang="en"><head><title>Uibuilder Index</title></head><body style="font-family: sans-serif;">'
                 page += '<h1>Index of uibuilder pages</h1>'
+                page += "<p>'Folders' refer to locations on your Node-RED's server. 'Paths' refer to URL's in the browser.</p>"
                 page += '<table>'
                 page += '  <tr>'
                 page += '    <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>'
@@ -974,35 +975,50 @@ module.exports = function(RED) {
                     page += '  </tr>'
                 })
                 page += '</table>'
-                page += '<p>Note that each instance uses its own socket.io <i>namespace</i> that matches <code>httpNodeRoot/url</code>. Its location on the server filing system is <code>uib_rootFolder/url</code>.</p>'
+                page += '<p>Note that each instance uses its own socket.io <i>namespace</i> that matches <code>httpNodeRoot/url</code>. You can use this to manually send messages to your user interface.</p>'
+                page += '<p>Paste the Source Node Instance into the search feature in the Node-RED admin ui to find the instance.'
+                page += 'The "Filing System Folder" shows you where the front-end (client browser) code lives.</p>'
     
                 page += '<h1>Vendor Client Libraries</h1>'
+                page += '<p>You can include these libraries in any uibuilder served web page.'
+                page += 'Note though that you need to find out the correct file and relative folder either by looking on your Node-RED server in the location shown or by looking at the packages source online. </p>'
                 page += '<table>'
                 page += '  <tr>'
                 page += '    <th>Package</th>'
                 page += '    <th>URL</th>'
+                page += '    <th>Main Entry Point</th>'
                 page += '    <th>Server Filing System Folder</th>'
                 page += '  </tr>'
                 page += '  <tr>'
-                page += '    <td>socket.io</td>'
+                page += '    <td><a href="https://socket.io/">socket.io</a></td>'
+                page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, 'uibuilder/socket.io/socket.io.js')}">../uibuilder/socket.io/socket.io.js</a></td>`
                 page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, 'uibuilder/socket.io/socket.io.js')}">../uibuilder/socket.io/socket.io.js</a></td>`
                 page += '    <td>--</td>'
                 page += '  </tr>'
                 Object.keys(vendorPaths).forEach(packageName => {
+                    let pj = require(path.join(vendorPaths[packageName].folder,'package.json'))
                     page += '  <tr>'
-                    page += `    <td>${packageName}</td>`
+                    page += `    <td><a href="${pj.homepage}">${packageName}</a></td>`
                     page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, vendorPaths[packageName].url)}">..${vendorPaths[packageName].url}</a></td>`
+                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, vendorPaths[packageName].url, pj.main)}">..${vendorPaths[packageName].url}/${pj.main}</a></td>`
                     page += `    <td>${vendorPaths[packageName].folder}</td>`
+                    console.dir()
                     page += '  </tr>'
                 })
                 page += '</table>'
                 page += "<p>Note: Always use relative URL's. All vendor URL's start <code>../uibuilder/vendor/</code>, all uibuilder and custom file URL's start <code>./</code>.</p>"
+                page += "<p>The 'Main Entry Point' shown is <i>usually</i> a JavaScript file that you will want in your index.html. However, because this is reported"
+                page += "by the authors of the package, it may refer to something completely different, uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation for the correct library files to load.</p>"
 
                 page += '<h1>Settings</h1>'
                 page += '<ul>'
-                page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
+                page += `  <li><b>uibuilder Version</b>: ${nodeVersion}</li>`
+                page += `  <li><b>Global Settings File</b>: ${path.join(uib_rootFolder, '.settings.json')}</li>`
+                page += `  <li><b>Backend Debug</b>: ${uib_globalSettings.debug}</li>`
+                page += `  <li><b>Backend Debug Logs</b>: ${path.join(uib_rootFolder, '.logs')}</li>`
                 page += `  <li><b>uib_rootFolder</b>: ${uib_rootFolder}</li>`
                 page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
+                page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
                 page += '</ul>'
     
                 page += '</body></html>'
