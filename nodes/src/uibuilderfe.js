@@ -1,4 +1,4 @@
-/*global document,window,io,Headers */
+/*global document,window */
 // @ts-check
 /*
   Copyright (c) 2017 Julian Knight (Totally Information)
@@ -210,7 +210,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
             self.url = fullPath.pop()
             self.httpNodeRoot = '/' + fullPath.join('/')
-            self.ioPath       = self.httpNodeRoot + '/' + self.moduleName + '/socket.io'
+            self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'socket.io')
             self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url: ' + self.url)
         }
 
@@ -678,6 +678,23 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         else if (thing !== null) { out[property] = thing }
         return out
     } // --- End of make me an object --- //
+
+    /** Joins all arguments as a URL string
+     * @see http://stackoverflow.com/a/28592528/3016654
+     * @since v1.0.10, fixed potential double // issue
+     * @arguments {string} URL fragments
+     * @returns {string}
+     */
+    function urlJoin() {
+        var paths = Array.prototype.slice.call(arguments)
+        var url =
+            '/'+paths.map(function(e){
+                return e.replace(/^\/|\/$/g,'')
+            }).filter(function(e){
+                return e
+            }).join('/')
+        return  url.replace('//','/')
+    } // ---- End of urlJoin ---- //
 
 }).call(this); // Pass current context into the IIFE
 // --- End of isolation IIFE --- //
