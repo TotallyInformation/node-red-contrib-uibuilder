@@ -34,8 +34,10 @@
     * `init`: Create a `package.json` file with default entries. You should ideally configure npm correctly on the server before running this if you want it to pick up your author details, etc.
     * `install`, `update`, `remove`: Requires the `package` parameter. Installs/updates/removes the given package if it can. Will be blocked if the chosen location does not contain a `package.json` file since this would potentially result in packages being installed in a parent folder which, in this case, is unlikely to be helpful.
 
-* **CHANGED** Improved `<adminurl>/uibindex`, added `check` parameter, if provided will check if the value matches a uibuilder url
-  in use. If so, returns true otherwise returns false. Used in the admin ui to check for url uniqueness. Also, moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
+* **CHANGED** Improved `<adminurl>/uibindex`: 
+  * added `check` parameter, if provided will check if the value matches a uibuilder url in use. If so, returns true otherwise returns false. Used in the admin ui to check for url uniqueness. 
+  * Moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
+  * Expanded output. Included links to vendor homepages for each package, included link to "main" entrypoint.
 
 * **CHANGED** In uibuilder admin ui:
 
@@ -46,9 +48,11 @@
   * Improved handling of reopening the ui - last file selection retained.
   * Hide path and module info by default, click to toggle.
   * New *Advanced Settings* section, hidden by default, click to toggle. Move debug flags to it.
+  * Path and module info section now simplified - added link to `<adminurl>/uibindex` for detailed information.
 
 * **CHANGED** Several instance config variables no longer needed: filename, format, template
 
+* **CHANGED** Admin configuration panel now redirects to the uibuilder index admin page `<adminurl>/uibindex` instead of recreating its own detailed information.
 
 ----
 

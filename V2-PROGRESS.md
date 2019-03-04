@@ -57,13 +57,13 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
   - [x] Add input parameter and path validation
   - [x] ~~(uibuilder.html) Mark node as "dirty" if file not saved. (`RED.nodes.dirty(true)`).~~ Disable Done/Cancel buttons instead, a lot easier.
   - [x] Hide path and module info by default and allow toggle to show
+  - [x] ~~Add server path to info panel `<userDir>/uibuilder/<url>` or `<userDir>/projects/<projectName>/uibuilder/<url>`.~~ Redirecting to the index page instead.
 
   - [x] New _Advanced settings_ option (hidden by default)
      - [ ] Add flag to make use of project folder optional.
      - [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - giving the ability to have extra control, use a different port and separate security.
         - [ ] Need to make use of Node-RED middleware optional.
   
-  - [ ] Add server path to info panel `<userDir>/uibuilder/<url>` or `<userDir>/projects/<projectName>/uibuilder/<url>`.
   - [ ] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
   - [ ] Add file delete (button is in place but disabled)
   - [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
