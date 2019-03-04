@@ -104,7 +104,7 @@ module.exports = {
 
         // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
         for (var i = removePath.length -1; i >= 0; i--) {
-            app._router.stack.splice(removePath[i],1);
+            app._router.stack.splice(removePath[i],1)
         }
 
         // Keep a log of the active instances @since 2019-02-02
