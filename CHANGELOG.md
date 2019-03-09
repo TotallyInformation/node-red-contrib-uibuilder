@@ -24,6 +24,8 @@
 
 * **FIX** Small regression bug in `uibuilderfe.js`. Prevented socket.io from communicating when `httpNodeRoot` was not set. Added `urlJoin` function to prevent.
 
+* **FIX** Moved examples folder to the right place so that Node-RED admin ui will pick it up.
+
 * **NEW** Admin API `<adminurl>/uibvendorpackages` Returns list of available vendor packages with url and folder details.
 
 * **NEW** Admin API `<adminurl>/uibnpm` - run some npm commands from the admin ui. Will work against against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter). Checks whether `package.json` is available in the location. Option to return the installed npm packages in that location.
