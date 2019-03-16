@@ -20,6 +20,7 @@
 'use strict'
 
 const path = require('path')
+const fs = require('fs')
 
 module.exports = {
 
@@ -41,7 +42,7 @@ module.exports = {
         const paths = Array.prototype.slice.call(arguments)
         const url =
             '/'+paths.map(function(e){
-                return e.replace(/^\/|\/$/g,'')
+                return e !== undefined ? e.replace(/^\/|\/$/g,'') : ''
             }).filter(function(e){
                 return e
             }).join('/')
@@ -166,6 +167,20 @@ module.exports = {
         packagePath = pathSplit.join(path.sep)
 
         return packagePath
+    }, // ----  ---- //
+
+    /** Read the contents of a package.json file 
+     * @param {string} folder The folder containing a package.json file
+     * @returns {Object|null} Object representation of JSON if found otherwise null
+    */
+    readPackageJson: function(folder) {
+        var file = null
+        try {
+            file = JSON.parse( fs.readFileSync( path.join(folder, 'package.json'), 'utf8' ) )
+        } catch (err) {
+            //console.error('[uibuilder] tilib.readPackageJson - failed to read ', folder, 'package.json', err)
+        }
+        return file
     }, // ----  ---- //
 
 } // ---- End of module.exports ---- //
