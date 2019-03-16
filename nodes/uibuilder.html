@@ -24,6 +24,7 @@
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui */
     var uiace = {
         'format': 'html',
+        'folder': 'src',
         'fname' : 'index.html'
     }
 
@@ -80,23 +81,68 @@
         }
     } // --- End of fileType --- //
 
+    /** Get the list of files for the chosen url & folder */
+    function getFileList() {
+        $("#node-input-filename option").remove()
+
+        var url = $('#node-input-url').val()
+        var folder = $('#node-input-folder').val()
+
+        // Build the file list - pass the url so the BE can find the right folder
+        $.getJSON('uibfiles?url=' + url + '&folder=' + folder, function(files) {
+            var firstFile = ''
+
+            $.each(files, function (i, fname) {
+                // Choose the default file
+                if ( i === 0 ) firstFile = fname
+                if ( fname === 'index.html' ) firstFile = fname
+                // Build the drop-down
+                $('#node-input-filename').append($('<option>', { 
+                    value: fname,
+                    text : fname, 
+                }))
+            })
+
+            console.log( '[uibuilder:getFileList:getJSON] Got files ', files, firstFile, folder, url )
+
+            // Set default file name/type
+            uiace.fname = firstFile
+            $("#node-input-filename").val(uiace.fname)
+            uiace.format = firstFile === '' ? 'text' : fileType(firstFile)
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
+            uiace.fname = ''
+            uiace.format = 'text'
+        }).always(function() {
+            getFileContents()
+            fileIsClean(true)
+        })
+    }
+
     /** Get the chosen file contents & set up the ACE editor
      * @param {Object} that - 'this' for the oneditprepare function
      **/
-    function getFileContents(that) {
+    function getFileContents() {
+        // Get the chosen folder name - use the default/last saved on first load
+        const folder = $('#node-input-folder').val() || uiace.folder
         // Get the chosen filename - use the default/last saved on first load
         const fname = $('#node-input-filename').val() || uiace.fname
-        // Save the filename
+        // Get the current url
+        const url = $('#node-input-url').val()
+
+        console.log( '[uibuilder:getFileContents] ', url, folder, fname )
+
+        // Save the file & folder names
+        uiace.folder = folder
         uiace.fname = fname
 
         // Change mode to match file type
-        const filetype = fileType(fname)
+        const filetype = fname === '' ? 'text' : fileType(fname)
         $("#node-input-format").val(filetype)
 
         // Get the file contents via API defined in uibuilder.js
-        $.get( 'uibgetfile?url=' + $('#node-input-url').val() + '&fname=' + fname, function(data){
-            // Set the displayed filename
-            $('#filename').text(fname)
+        $.get( 'uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data){
+            console.log( '[uibuilder:getFileContents:get] Success. ', url, folder, fname )
             // Add the fetched data to the editor
             uiace.editorSession.setValue(data)
             // Set the editor file mode
@@ -107,6 +153,9 @@
             uiace.editorSession.getUndoManager().isClean()
             // Position the cursor in the edit area
             uiace.editor.focus()
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( '[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
+            uiace.editorSession.setValue('')
         })
     } // --- End of getFileContents --- //
 
@@ -205,6 +254,7 @@
         icon: 'ui_template.png',
         paletteLabel: 'UI Builder',
         label: function () { return this.url || this.name || 'UI Builder'; },
+
         oneditprepare: function () {
             const that = this
 
@@ -259,8 +309,8 @@
             // Mark edit save/reset buttons as disabled by default
             fileIsClean(true)
 
-            // Set filename for editor
-            $('#filename').text(this.filename)
+            //// Set filename for editor
+            ////$('#filename').text(this.filename)
 
             // Hide the edit section, show the main section
             $('#edit-close').click(function(e) {
@@ -278,17 +328,8 @@
                 $('#edit-props').show()
 
                 // @since 2019-01-27 - adding file editor
-                // Build the file list - pass the url so the BE can find the right folder
-                $.getJSON('uibfiles?url=' + $('#node-input-url').val(), function(files) {
-                    //$("#node-input-filename option").remove()
-                    $.each(files, function (i, item) {
-                        $('#node-input-filename').append($('<option>', { 
-                            value: item,
-                            text : item, 
-                        }))
-                    })
-                    $("#node-input-filename").val(uiace.fname)
-                })
+                // Build the file list
+                getFileList()
 
                 if ( uiace.editorLoaded !== true ) {
                     // Clear out the editor
@@ -317,23 +358,28 @@
                     uiace.editorLoaded = true
 
                     // Be friendly and auto-load the initial file via the admin API
-                    getFileContents(that)
+                    getFileContents()
                     fileIsClean(true)
                 }
             })
 
-            /** TODO: Get list of installed themes, add chooser, save current choice
+            /** TODO: Get list of installed ACE themes, add chooser, save current choice
              * that.editor.setTheme("ace/theme/monokai")
              * uiace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
              * uiace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
              **/
 
             // Handle the edit button (and disable default click)
-            $('#node-edit-file').click(function(e) {
-                e.preventDefault() // don't trigger normal click event
+            $('#node-input-folder').change(function(e) {
+                // Rebuild the file list
+                getFileList()
 
+                // Force change event on filename
+                //$('#node-input-filename').change()
+            })
+            $('#node-input-filename').change(function(e) {
                 // Get the content of the file via the admin API
-                getFileContents(that)
+                getFileContents()
                 fileIsClean(true)
             })
             // Handle the reset button (reload the file)
@@ -341,7 +387,7 @@
                 e.preventDefault() // don't trigger normal click event
 
                 // Get the content of the file via the admin API
-                getFileContents(that)
+                getFileContents()
                 fileIsClean(true)
                 $('#file-action-message').text('')
             })
@@ -372,6 +418,25 @@
                 request.send(params)
 
             })
+
+            // Handle the expander button (show full screen editor) - from core function node
+            $("#node-function-expand-js").click(function(e) {
+                e.preventDefault();
+                var value = uiace.editor.getValue();
+                RED.editor.editJavaScript({
+                    value: value,
+                    width: "Infinity",
+                    cursor: uiace.editor.getCursorPosition(),
+                    mode: 'ace/mode/' + uiace.format,
+                    complete: function(v,cursor) {
+                        uiace.editor.setValue(v, -1);
+                        uiace.editor.gotoLine(cursor.row+1,cursor.column,false);
+                        setTimeout(function() {
+                            uiace.editor.focus();
+                        },300);
+                    }
+                })
+            })
         }, // ---- End of oneditprepare ---- //
 
         oneditsave: function() {
@@ -394,17 +459,21 @@
             }
         },
 
-        // oneditresize: function(size) {
-            //     var rows = $("#dialog-form>div:not(.node-text-editor-row)");
-            //     var height = $("#dialog-form").height();
-            //     for (var i=0; i<rows.size(); i++) {
-            //         height -= $(rows[i]).outerHeight(true);
-            //     }
-            //     var editorRow = $("#dialog-form>div.node-text-editor-row");
-            //     height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
-            //     $(".node-text-editor").css("height",height+"px");
-            //     this.editor.resize();
-        // },
+        /** Handle window resizing for the editor */
+        oneditresize: function(size) {
+            //console.log('RESIZE', size)
+            if ( uiace.editorLoaded === true ) {
+                var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+                var height = $("#dialog-form").height();
+                for (var i=0; i<rows.size(); i++) {
+                    height -= $(rows[i]).outerHeight(true);
+                }
+                var editorRow = $("#dialog-form>div.node-text-editor-row");
+                height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+                $(".node-text-editor").css("height",height+"px");
+                uiace.editor.resize();
+            }
+        },
     })
 </script>
 
@@ -457,7 +526,8 @@
 
     </div>
 
-    <div id="adv-props" style="display:hidden"><!-- Hideable Advanced Settings Section -->
+    <!-- ---- Hideable Advanced Settings Section ---- -->
+    <div id="adv-props" style="display:hidden">
         <div class="form-tips node-help" title="">
             Warning: Most people will not need these settings.
         </div>
@@ -476,13 +546,21 @@
         </div>
     </div>
 
-    <div id="edit-props"><!-- Hideable File Editor Section  -->
+    <!-- ---- Hideable File Editor Section ---- -->
+    <div id="edit-props">
+        <!-- Drop-down for selecting folder -->
+        <div class="form-row">
+            <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Folder:</label>
+            <select id="node-input-folder" style="width: 75%;">
+                <option value="src">src</option>
+                <option value="dist">dest</option>
+                <option value="root">root</option>
+            </select>
+        </div>
         <!-- Drop-down for selecting file to edit -->
         <div class="form-row">
-            <label for="node-input-filename"><i class="fa fa-code"></i> Choose File</label>
-            <select id="node-input-filename" style="width: 60%;"></select>
-            <!-- Edit Button -->
-            <button class="btn" id="node-edit-file">Edit</button>
+            <label for="node-input-filename"><i class="fa fa-file-code-o"></i> File:</label>
+            <select id="node-input-filename" style="width: 75%;"></select>
         </div>
 
         <!-- Save/Cancel/Reset/(message)/Delete -->
@@ -501,15 +579,13 @@
         </div>
 
         <!-- Edit box  editor-tray-content -->
-        <div class="form-row node-text-editor-row">
+        <div class="form-row node-text-editor-row" style="position:relative">
             <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
         </div>
 
-        <!-- File name, file data (hidden), language selector -->
+        <!-- file data (hidden), language selector -->
         <div class="form-row">
-            <!-- <button id="node-function-expand-js" class="editor-button editor-button-small"><i class="fa fa-expand"></i></button>-->
-            <label for="node-input-template"><i class="fa fa-file-code-o"></i> Filename: </label>
-            <span id="filename">...</span>
+            <button id="node-function-expand-js" class="editor-button editor-button-small"><i class="fa fa-expand"></i></button>
             <input type="hidden" id="node-input-template" autofocus="autofocus" data-isClean="true">
             <div style="position: absolute; right:1.6em;display:inline-block; text-align: right; font-size: 0.8em;">
                 <select id="node-input-format" style="width:110px; font-size: 10px !important;  height: 24px; padding:0;">
@@ -545,9 +621,10 @@
 <script type="text/x-red" data-help-name="uibuilder">
     <p>Easily create a UI at a <a href="/uibuilder">given URL</a></p>
     <p>
-        This node can be used to create a dynamic user interface that can receive and send back messages to Node-RED using a websocket connection.
-        It creates a file/folder structure for you that can be used to deliver static resources (html, css, js, images, etc).
-        You can also pass some script and style information to the front-end.
+        Create dynamic user interfaces that send and receive messages to/from Node-RED.
+        Creates a file/folder structure that is used to deliver static resources (html, css, js, images, etc) and
+        manages the delivery of vendor library resources (VueJS, jQuery, etc).
+        You can also pass script and style information to the front-end in a message.
     </p>
 
     <h3>Input msg</h3>
@@ -622,8 +699,7 @@
             The URL path that the resulting page and other resources will be served from.
             Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
             and port. Will also be prefixed by the Node-RED setting.<br>
-            <b>Note</b>: Uniqueness is not currently validated, you must make sure of this yourself for now.<br>
-            The default URL is 'uibuilder'.<br>
+            The default URL is <a href="/uibuilder">/uibuilder</a>.<br>
             The url is also used to define the server filing system path for front-end code files.<br>
             The url must be valid as a filename as well as a url path. It may not exceed 20 characters.
         </dd>
@@ -652,7 +728,7 @@
             <span class="property-type">(boolean) node-input-copyIndex</span>
         </dt>
         <dd>
-            If on (default), index.css and index.js are copied from the master template folder
+            If on (default), index.(css|html|js) files are copied from the master template folder
             if they don't exist in the local assets folder <code>~/.node-red/uibuilder/<url>/src/</code>.
             Turn off if you don't want this to happen (e.g. if you prefer them in a sub-folder).
         </dd>
@@ -666,29 +742,28 @@
             <b>Note</b>: The flag in <code>settings.js</code> controls debug output for the back-end (see below).
         </dd>
 
-        <dt>Edit Source Files</dt>
+        <dt>Edit Source Files (button)</dt>
         <dd>
             Clicking this button will hide the above settings and display a file editor allowing you
             to edit the front-end files that define your user interface.<br>
-            All text-based files in the `<userLib>/uibuilder/<url>/src` folder on the server's filing system will
+            All text-based files in the `<userDir>/uibuilder/<url>/src` folder on the server's filing system will
             be available to edit.
         </dd>
     </dl>
 
     <h3>Node-RED Settings</h3>
     <p>
-        This node is able to use some settings from <code>settings.js</code>.
-        The main setting object is <code>uibuilder</code>
+        Some global settings are taken from `&lt;userDir&gt;/uibuilder/.settings.js`
     </p>
     <dl class="message-properties">
-        <dt>uibuilder.userVendorPackages <span class="property-type">(string[])</span></dt>
+        <dt>userVendorPackages <span class="property-type">(string[])</span></dt>
         <dd>
             A list of package names that must match the folder name of an npm package
             installed in the <code>userDir</code> of Node-RED. These will be added to
             the list of statically served resource folders <b>if</b> the local <code>src</code>
             folder is being used and the "Use resources in custom folder?" setting is checked.
         </dd>
-        <dt>uibuilder.debug <span class="property-type">(boolean)</span></dt>
+        <dt>debug <span class="property-type">(boolean)</span></dt>
         <dd>
             Turns on/off back-end debugging for all instances of the uibuilder node.
             This flag is picked up earlier than the on in the node settings and so may show more information.
@@ -713,36 +788,40 @@
         uibuilder can be discussed in the <a href="https://groups.google.com/forum/#!topic/node-red">Node-RED Google Group</a> and in the <a href="https://node-red.slack.com/messages/C7K77MG06">Node-RED #uibuilder Slack channel</a>. Issues/bugs can be raised in <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues">GitHub</a>.
     </p>
 
-    <h3>Admin API's</h3>
-    <p>The following API's are available. They are used internally. Add the following paths to the base URL you use for the Node-RED admin ui.</p>
-    <h4>/uibindex</h4>
+    <h3><a href="uibindex">&lt;admin url&gt;/uibindex</a> page</h3>
     <p>
-        Lists all of the uibuilder endpoints. You can use the the 'type' parameter as follows:
+        Lists all of the uibuilder endpoints. You can use the following parameters:
     </p>
+    <dl class="message-properties">
+        <dt>type <span class="property-type">(string)</span></dt>
+        <dd>
+            The type of the data returned.
+            <dl class="message-properties">
+                <dt>html <span class="property-type">(default)</span></dt>
+                <dd>
+                    Also used if no type parameter is given. 
+                    Returns an HTML page showing the details for all deployed uibuilder nodes.
+                    Shows the server file locations of the instance and for vendor libraries.
+                </dd>
+                <dt>json</dt>
+                <dd>
+                    Returns JSON data with both the source node ID's and matching URL's.
+                </dd>
+                <dt>urls</dt>
+                <dd>
+                    Returns a JSON array of just the URL's in use from deployed uibuilder nodes.
+                    Used internally to ensure that new nodes use unique url's.
+                </dd>
+            </dl>
+        </dd>
+
+        <dt>check <span class="property-type">(string)</span></dt>
+        <dd>
+            Passing a uibuilder instance name to the check parameter will result in a boolean (true/false)
+            return. True if it is being delivered by a uibuilder instance,
+            false otherwise. e.g. <code>?check=uibuilder</code>
+        </dd>
+    </dl>
     <ul>
-        <li>json<br>
-            Returns JSON data with both the source node ID's and matching URL's.
-        </li>
-        <li>urls<br>
-            Returns a JSON array of just the URL's in use from deployed uibuilder nodes.
-            Used internally to ensure that new nodes use unique url's.
-        </li>
-        <li>html (default)<br>
-            Also used if no type parameter is given. 
-            Returns an HTML page showing the details for all deployed uibuilder nodes.
-        </li>
     </ul>
-    <h4>/uibfiles</h4>
-    <p>
-        Given a 'url' parameter (required), returns a list of the files in the 'src' folder that matches the deployed instance of uibuilder
-        with the given url.
-    </p>
-    <h4>/uibgetfile</h4>
-    <p>
-        Given a url and a filename parameter, returns the contents of the given file from the 'src' folder.
-    </p>
-    <h4>/uibputfile</h4>
-    <p>
-            Given a url and a filename parameter, POSTs an amended file back to the src folder.
-    </p>
 </script>
