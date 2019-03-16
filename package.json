@@ -2,7 +2,12 @@
   "name": "node-red-contrib-uibuilder",
   "version": "2.0.0",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. JQuery and normalize.css included by default but change as desired.",
-  "keywords": [ "node-red", "ui", "gui", "dashboard" ],
+  "keywords": [
+    "node-red",
+    "ui",
+    "gui",
+    "dashboard"
+  ],
   "scripts": {
     "build": "webpack",
     "prepush": "npm run packfe",
@@ -20,14 +25,32 @@
     "gitpushtags": "git push origin --tags"
   },
   "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
-  "bugs":     "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
-  "author":   { "name": "Julian Knight", "url": "https://github.com/TotallyInformation" },
+  "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
+  "author": {
+    "name": "Julian Knight",
+    "url": "https://github.com/TotallyInformation"
+  },
   "contributors": [
-    { "name": "Julian Knight", "url": "https://github.com/TotallyInformation" },
-    { "name": "Colin Law",     "url": "https://github.com/colinl" },
-    { "name": "Steve Rickus",  "url": "https://github.com/shrickus" },
-    { "name": "Ellie Lee",     "url": "https://github.com/ellieejlee" },
-    { "name": "Thomas Wagner", "url": "https://github.com/Thomseeen" }
+    {
+      "name": "Julian Knight",
+      "url": "https://github.com/TotallyInformation"
+    },
+    {
+      "name": "Colin Law",
+      "url": "https://github.com/colinl"
+    },
+    {
+      "name": "Steve Rickus",
+      "url": "https://github.com/shrickus"
+    },
+    {
+      "name": "Ellie Lee",
+      "url": "https://github.com/ellieejlee"
+    },
+    {
+      "name": "Thomas Wagner",
+      "url": "https://github.com/Thomseeen"
+    }
   ],
   "license": "Apache-2.0",
   "repository": {
@@ -42,17 +65,17 @@
     "notyetnodes": {}
   },
   "dependencies": {
-    "bootstrap-vue": "^2.0.0-rc.13",
+    "bootstrap-vue": "^2.0.0-rc.14",
     "fs-extra": "^7.0.1",
     "get-installed-path": "^4.0.8",
     "serve-static": "^1.13.2",
     "socket.io": "^2.2.0",
-    "vue": "^2.6.8",
+    "vue": "^2.6.9",
     "winston": "^2.4.4"
   },
   "devDependencies": {
     "rollup-plugin-uglify": "^6.0.2",
-    "uglify-js": "^3.4.9"
+    "uglify-js": "^3.4.10"
   },
   "engines": {
     "node": ">=6.11"
