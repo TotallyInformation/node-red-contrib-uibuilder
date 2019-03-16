@@ -36,6 +36,8 @@ const serveStatic      = require('serve-static'),
       events           = require('events'),
       winston          = require('winston')
 
+// Placeholder - set in export
+var userDir = ''
 
 /** We want these to track across redeployments
  *  if OK to reset on redeployment, attach to node.xxx inside nodeGo instead. @constant {Object} deployments */
@@ -51,6 +53,47 @@ const instances = {}
  * Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder} }
  * @constant {Object} vendorPaths */
 const vendorPaths = {}
+
+/** Update the vendorPaths object for a given package 
+ * NOTE: We assume that vendorPaths already has the physical path and served url
+ *       for each package referenced in <uibRoot>/.settings.js
+ * @param {string} packageName The npm name of the package
+*/
+function updateVendorPaths(packageName) {
+    //console.log('[uibuilder] updateVendorPaths - '+packageName, userDir)
+
+    if ( userDir === '' ) return
+
+    // Check if package exists in userDir/package.json
+    const userDirPackageInfo = tilib.readPackageJson( userDir )
+
+    //console.log('[uibuilder] updateVendorPaths - userDirPackageInfo', userDirPackageInfo)
+
+    // Update the package details
+    if ( packageName in vendorPaths ) {
+        try {
+            // does this package exist in <userDir>/package.json?
+            vendorPaths[packageName].userDirRequired = false
+            if ( packageName in userDirPackageInfo.dependencies ) {
+                vendorPaths[packageName].userDirRequired = true
+            }
+            // version of package installed
+            vendorPaths[packageName].userDirWanted = userDirPackageInfo.dependencies[packageName] || ''
+
+            // Get the package.json for the install package
+            const packageInfo = tilib.readPackageJson( vendorPaths[packageName].folder )
+            // homepage of package installed
+            //if ( homepage in packageInfo )
+            vendorPaths[packageName].homepage = packageInfo.homepage || ''
+            // Main entrypoint of package installed
+            vendorPaths[packageName].main = packageInfo.main || ''
+            // Installed Version
+            vendorPaths[packageName].version = packageInfo.version || ''
+        } catch (err) {
+            //console.error('[uibuilder] updateVendorPaths - ERROR: '+packageName, err)
+        }
+    }
+}
 
 function winstonFormatter(options) {
     // - Return string will be passed to logger.
@@ -91,7 +134,7 @@ module.exports = function(RED) {
 
     //#region ---- Constants for standard setup ----
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
-    const userDir = RED.settings.userDir
+    userDir = RED.settings.userDir
 
     /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
     const httpNodeRoot = RED.settings.httpNodeRoot
@@ -259,7 +302,8 @@ module.exports = function(RED) {
             } catch (e) {
                 RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`)
             }
-            vendorPaths[packageName] = {'url': tilib.urlJoin(httpNodeRoot, vendorPath), 'folder': installFolder}
+            vendorPaths[packageName] = {'url': '..'+vendorPath, 'folder': installFolder}
+            updateVendorPaths(packageName)
         }
     }) // -- end of forEach vendor package -- //
 
@@ -979,55 +1023,62 @@ module.exports = function(RED) {
                 //console.log(app._router.stack) // Expresss 4.x
                 //console.log(server.router.mounts) // Restify
 
-                let page = '<!doctype html><html lang="en"><head><title>Uibuilder Index</title></head><body style="font-family: sans-serif;">'
+                let page = '<!doctype html><html lang="en"><head><title>Uibuilder Index</title><link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen"></head><body><div class="container">'
                 page += '<h1>Index of uibuilder pages</h1>'
                 page += "<p>'Folders' refer to locations on your Node-RED's server. 'Paths' refer to URL's in the browser.</p>"
-                page += '<table>'
+                page += '<table class="table"><thead>'
                 page += '  <tr>'
-                page += '    <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>'
                 page += '    <th>URL</th>'
+                page += '    <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>'
                 page += '    <th>Server Filing System Folder</th>'
-                page += '  </tr>'
+                page += '  </tr></thead><tbody>'
                 Object.keys(instances).forEach(key => {
                     page += '  <tr>'
-                    page += `    <td>${key}</td>`
                     page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, instances[key])}">${instances[key]}</a></td>`
+                    page += `    <td>${key}</td>`
                     page += `    <td>${path.join(uib_rootFolder, instances[key])}</td>`
                     page += '  </tr>'
                 })
-                page += '</table>'
+                page += '</tbody></table>'
                 page += '<p>Note that each instance uses its own socket.io <i>namespace</i> that matches <code>httpNodeRoot/url</code>. You can use this to manually send messages to your user interface.</p>'
                 page += '<p>Paste the Source Node Instance into the search feature in the Node-RED admin ui to find the instance.'
                 page += 'The "Filing System Folder" shows you where the front-end (client browser) code lives.</p>'
     
                 page += '<h1>Vendor Client Libraries</h1>'
-                page += '<p>You can include these libraries in any uibuilder served web page.'
+                page += '<p>You can include these libraries in any uibuilder served web page. '
                 page += 'Note though that you need to find out the correct file and relative folder either by looking on your Node-RED server in the location shown or by looking at the packages source online. </p>'
-                page += '<table>'
+                page += '<table class="table"><thead>'
                 page += '  <tr>'
                 page += '    <th>Package</th>'
-                page += '    <th>URL</th>'
+                page += '    <th>Version</th>'
+                page += '    <th>uibuilder URL</th>'
                 page += '    <th>Main Entry Point</th>'
                 page += '    <th>Server Filing System Folder</th>'
-                page += '  </tr>'
+                page += '  </tr></thead><tbody>'
+
                 page += '  <tr>'
+                let sioFolder = tilib.findPackage('socket.io', userDir)
+                let sioVersion = tilib.readPackageJson( sioFolder ).version
                 page += '    <td><a href="https://socket.io/">socket.io</a></td>'
+                page += `    <td>${sioVersion}</td>`
+                page += `    <td>../uibuilder/socket.io/socket.io.js</td>`
                 page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, 'uibuilder/socket.io/socket.io.js')}">../uibuilder/socket.io/socket.io.js</a></td>`
-                page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, 'uibuilder/socket.io/socket.io.js')}">../uibuilder/socket.io/socket.io.js</a></td>`
-                page += '    <td>--</td>'
+                page += `    <td>${sioFolder}</td>`
                 page += '  </tr>'
+
                 Object.keys(vendorPaths).forEach(packageName => {
-                    let pj = require(path.join(vendorPaths[packageName].folder,'package.json'))
+                    updateVendorPaths(packageName)
+                    let pj = vendorPaths[packageName]
                     page += '  <tr>'
                     page += `    <td><a href="${pj.homepage}">${packageName}</a></td>`
-                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, vendorPaths[packageName].url)}">..${vendorPaths[packageName].url}</a></td>`
-                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, vendorPaths[packageName].url, pj.main)}">..${vendorPaths[packageName].url}/${pj.main}</a></td>`
-                    page += `    <td>${vendorPaths[packageName].folder}</td>`
-                    console.dir()
+                    page += `    <td>${pj.version}</a></td>`
+                    page += `    <td>${pj.url}</td>`
+                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.main)}">${pj.url}/${pj.main}</a></td>`
+                    page += `    <td>${pj.folder}</td>`
                     page += '  </tr>'
                 })
-                page += '</table>'
-                page += "<p>Note: Always use relative URL's. All vendor URL's start <code>../uibuilder/vendor/</code>, all uibuilder and custom file URL's start <code>./</code>.</p>"
+                page += '</tbody></table>'
+                page += "<blockquote><p><em>Note</em>: Always use relative URL's. All vendor URL's start <code>../uibuilder/vendor/</code>, all uibuilder and custom file URL's start <code>./</code>.</p></blockquote>"
                 page += "<p>The 'Main Entry Point' shown is <i>usually</i> a JavaScript file that you will want in your index.html. However, because this is reported"
                 page += "by the authors of the package, it may refer to something completely different, uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation for the correct library files to load.</p>"
 
@@ -1041,8 +1092,16 @@ module.exports = function(RED) {
                 page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
                 page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
                 page += '</ul>'
-    
-                page += '</body></html>'
+
+                // page += '<h1>userDir/package.json</h1><pre>'
+                // page += tilib.syntaxHighlight( readPackageJson(userDir) )
+                // page += '</pre>'
+
+                page += '<h1>vendorPaths</h1><pre>'
+                page += tilib.syntaxHighlight( vendorPaths )
+                page += '</pre>'
+
+                page += '</div></body></html>'
     
                 res.send(page)
     
