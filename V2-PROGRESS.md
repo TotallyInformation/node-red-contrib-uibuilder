@@ -58,6 +58,14 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
   - [x] ~~(uibuilder.html) Mark node as "dirty" if file not saved. (`RED.nodes.dirty(true)`).~~ Disable Done/Cancel buttons instead, a lot easier.
   - [x] Hide path and module info by default and allow toggle to show
   - [x] ~~Add server path to info panel `<userDir>/uibuilder/<url>` or `<userDir>/projects/<projectName>/uibuilder/<url>`.~~ Redirecting to the index page instead.
+  - [x] Remove edit button - swap file on file selection change.
+  - [x] Add folder selector before file selector - enables files in different folders to be edited. Folders are pre-selected.
+    - [x] Rebuild file list on change of folder
+    - [x] Add all instance folders (`<uibRoot>/<url>/src|dist|root`)
+    - ~~Add uibuilder root folder & config file~~ No, as this would require Node-RED to be reloaded anyway, decided not to do this. npm functions will manage content.
+    - [ ] Add all instances endpoint folders
+    - How to rebuild list if the file list changes outside of Node-RED?
+  - [ ] Add new file button
 
   - [x] New _Advanced settings_ option (hidden by default)
      - [ ] Add flag to make use of project folder optional.
@@ -65,7 +73,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
         - [ ] Need to make use of Node-RED middleware optional.
   
   - [ ] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
-  - [ ] Add file delete (button is in place but disabled)
+  - [ ] Add file delete (button is in place but disabled) - needs a confirm dialogue
   - [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
   - [ ] Add validation hints for users
 

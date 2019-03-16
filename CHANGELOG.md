@@ -41,20 +41,28 @@
   * Moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
   * Expanded output. Included links to vendor homepages for each package, included link to "main" entrypoint.
 
-* **CHANGED** In uibuilder admin ui:
+* **CHANGED** In uibuilder admin node configuration panel:
 
-  * Swapped vendor path list to uibvendorpackages API.
-  * Cancel and Done buttons disabled if there are unsaved changes to a file. Either Save or reset the file to re-enable them.
+  * File editor improvements:
+  
+    * File switches automatically on selection change - no need for an edit button any more.
+    * Cancel and Done buttons disabled if there are unsaved changes to a file. Either Save or reset the file to re-enable them.
+    * Expander button added - similar to the function and other core nodes - expands the edit area to full screen.
+    * Default/previously selected file opened for edit automatically.
+    * Improved handling of reopening the ui - last file selection retained.
+    * Added folder selector. Now you can edit files (and copy from) in the current instances `src`, `dist` and root folder.
+  
   * Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use).
-  * Default/previously selected file opened for edit automatically.
-  * Improved handling of reopening the ui - last file selection retained.
   * Hide path and module info by default, click to toggle.
   * New *Advanced Settings* section, hidden by default, click to toggle. Move debug flags to it.
+  
+  * Swapped vendor path list to `<adminurl>/uibvendorpackages` API.
   * Path and module info section now simplified - added link to `<adminurl>/uibindex` for detailed information.
+  * Now redirects to the uibuilder index admin page `<adminurl>/uibindex` instead of recreating its own detailed information.
 
 * **CHANGED** Several instance config variables no longer needed: filename, format, template
 
-* **CHANGED** Admin configuration panel now redirects to the uibuilder index admin page `<adminurl>/uibindex` instead of recreating its own detailed information.
+* **CHANGED** In uibuilder admin help panel - help text simplified and improved. Added description of the parameters accepted by `<adminurl>/uibindex`.
 
 ----
 
