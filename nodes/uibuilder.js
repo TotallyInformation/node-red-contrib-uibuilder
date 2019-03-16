@@ -756,17 +756,38 @@ module.exports = function(RED) {
             return
         }
         // TODO: Does the url exist?
+
+        var folder = req.query.folder || 'src'
+        if ( folder !== 'src' && folder !== 'dist' && folder !== 'root' ) {
+            log.error('[uibfiles] Admin API. folder parameter is not one of src|dest|root')
+            res.statusMessage = 'folder parameter must be one of src|dest|root'
+            res.status(500).end()
+            return
+        }
+        if ( folder === 'root' ) folder = ''
         //#endregion ---- ----
 
-        log.verbose(`[uibfiles] Admin API. File list requested for ${req.query.url}`)
+        log.verbose(`[uibfiles] Admin API. File list requested for uibuilder/${req.query.url}/${req.query.folder}/`)
 
-        const srcFolder = path.join(uib_rootFolder, req.query.url, 'src')
+        const srcFolder = path.join(uib_rootFolder, req.query.url, folder)
 
         // Get the file list - note, ignore errors for now
         // TODO: Need to filter out folders. Or better, flatten and allow sub-folders.
-        fs.readdir(srcFolder, (err, files) => {
+        // @ts-ignore
+        fs.readdir(srcFolder, {withFileTypes: true}, (err, files) => {
+            if ( err ) {
+                log.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
+                console.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
+                res.statusMessage = err
+                res.status(500).end()
+                return
+            }
             // Send back a JSON response body containing the list of files that can be edited
-            res.json(files)
+            res.json(
+                files
+                    .filter(dirent => !dirent.isDirectory())
+                    .map(dirent => dirent.name)
+            )
         })
 
     }) // ---- End of uibfiles ---- //
