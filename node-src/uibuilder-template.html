@@ -1,0 +1,173 @@
+    <div id="main-props"><!-- Hideable main properties section -->
+        <!-- Node Name -->
+        <div class="form-row">
+            <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+            <input type="text" id="node-input-name">
+        </div>
+
+        <!-- Topic -->
+        <div class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+            <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+            <input type="text" id="node-input-topic">
+        </div>
+
+        <!-- Home "page" id - defines the URL used -->
+        <div class="form-row" title="Make sure this gives a unique URL">
+            <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+            <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
+        </div>
+
+        <!-- Allow scripts/styles to be passed to front-end? -->
+        <div class="form-row" title="Add msg.script/msg.style to the input msg">
+            Allow passing to the front-end: 
+            <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowScripts" style="">Scripts? (JS)</label>
+            <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowStyles" style="">Styles? (CSS)</label>
+        </div>
+
+        <!-- Copy index.(html|css|js) to local assets if they dont exist? -->
+        <div class="form-row">
+            <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-copyIndex" style="width: 90%;">Copy index.(html|css|js) from templates to this instance if they don't exist?</label>
+        </div>
+
+        <!-- Show edit properties, hide this section -->
+        <div class="form-row">
+            <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
+            <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">Manage front-end libraries</button>
+        </div>
+
+        <!-- Show advanced edit properties -->
+        <div class="form-row">
+            <h4 id="show-adv-props" title="Show/Hide the advanced configuration settings">
+                <i class="fa fa-caret-right"></i> Advanced Settings
+            </h4>
+        </div>
+
+    </div>
+
+    <!-- ---- Hideable Advanced Settings Section ---- -->
+    <div id="adv-props" style="display:hidden">
+        <div class="form-tips node-help" title="">
+            Warning: Most people will not need these settings.
+        </div>
+        <!-- Forward and debug flags -->
+        <div class="form-row">
+            <!-- Forward input msgs to output -->
+            <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-fwdInMessages" style="width: 40%;" title="forward inbound msg's direct to the output">
+                Forward input to output?
+            </label>
+            <!-- Debug Front-End? -->
+            <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-debugFE" style="width: 40%;" title="Turn on debugging in the front-end library">
+                Debug Front-End?
+            </label>
+        </div>
+    </div>
+
+    <!-- ---- Hideable File Editor Section ---- -->
+    <div id="edit-props">
+        <!-- Drop-down for selecting folder -->
+        <div class="form-row">
+            <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Folder:</label>
+            <select id="node-input-folder" style="width: 75%;">
+                <option value="src">src</option>
+                <option value="dist">dest</option>
+                <option value="root">root</option>
+            </select>
+        </div>
+        <!-- Drop-down for selecting file to edit -->
+        <div class="form-row">
+            <label for="node-input-filename"><i class="fa fa-file-code-o"></i> File:</label>
+            <select id="node-input-filename" style="width: 75%;"></select>
+        </div>
+
+        <!-- Save/Cancel/Reset/(message)/Delete -->
+        <div class="form-row">
+            <button class="btn" id="edit-save" title="Save any changes to the file" style="font-size:0.8em;line-height:1em;">Save</button>
+            <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)" style="font-size:0.8em;line-height:1em;">Reset</button>
+            <button class="btn" id="edit-close" title="Close the edit window (lose any unsaved changes)" style="font-size:0.8em;line-height:1em;">Close</button>
+
+            <span id="file-action-message"></span>
+
+            <div style="position: absolute;right:1.6em;display:inline-block;">
+                <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set." style="font-size:0.8em;line-height:1em;">
+                    Delete
+                </button>
+            </div>
+        </div>
+
+        <!-- Edit box  editor-tray-content -->
+        <div class="form-row node-text-editor-row" style="position:relative">
+            <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
+        </div>
+
+        <!-- file data (hidden), language selector -->
+        <div class="form-row">
+            <button id="node-function-expand-js" class="editor-button editor-button-small"><i class="fa fa-expand"></i></button>
+            <input type="hidden" id="node-input-template" autofocus="autofocus" data-isClean="true">
+            <div style="position: absolute; right:1.6em;display:inline-block; text-align: right; font-size: 0.8em;">
+                <select id="node-input-format" style="width:110px; font-size: 10px !important;  height: 24px; padding:0;">
+                    <option value="handlebars">mustache</option>
+                    <option value="html">HTML</option>
+                    <option value="json">JSON</option>
+                    <option value="javascript">Javascript</option>
+                    <option value="css">CSS</option>
+                    <option value="markdown">Markdown</option>
+                    <option value="yaml">YAML</option>
+                    <option value="text">Text</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---- Hideable NPM Section ---- -->
+    <div id="npm-props">
+        <h3>Manage Front-End Libraries</h3>
+        <p>
+            Install, remove or update npm packages that provide front-end libraries such as
+            VueJS, jQuery, MoonJS, etc.
+        </p>
+        <p>
+            You can search for packages on the 
+            <a href="https://www.npmjs.com/" target="_blank">official npm site</a> 
+            or on <a href="https://npms.io/" target="_blank">npms.io</a>.
+            Take the name and paste it below then use one of the buttons.
+        </p>
+        <!-- npm package name -->
+        <div class="form-row">
+            <label for="npm-package-name"><i class="fa fa-cube"></i> Package:</label>
+            <input type="text" id="npm-package-name">
+        </div>
+
+        <!-- Install/Remove/Update -->
+        <div class="form-row">
+            <button class="btn" id="npm-install">Install</button>
+            <button class="btn" id="npm-update">Update</button>
+            <button class="btn" id="npm-remove">Remove</button>
+            <button class="btn" id="npm-close">Close</button>
+        </div>
+
+        <!-- Installed packages -->
+        <div>
+            <h4>Installed Packages</h4>
+            <ul class="inline" id="installed-packages"></ul>
+        </div>
+    </div>
+
+    <!-- Info -->
+    <h4 id="show-info-props" title="Show/Hide the available paths &amp; module information">
+        <i class="fa fa-caret-right"></i> Path &amp; Module Details
+    </h4>
+    <div id="info-props" class="form-tips node-help" title="">
+        <div>Web Page URL: <span id="uibuilderurl"></span></div>
+        <div><a href="uibindex" target="_blank" title="Opens in a new tab">Detailed Information</a></div>
+        <div>
+            Click on the detailed info link to see details of what front-end libraries
+            are available to your web pages. It also shows a list of all uibuilder web pages
+            and some detailed uibuilder information.
+        </div>
+        <div>Front-end modules must be installed to your <i id="showuserdir">userDir</i> folder.</div>
+    </div>
