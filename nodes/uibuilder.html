@@ -269,6 +269,8 @@
             $('#edit-save').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
 
+                var authTokens = RED.settings.get('auth-tokens')
+
                 // Post the updated content of the file via the admin API
                 // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
                 var request = new XMLHttpRequest()
@@ -289,6 +291,7 @@
                     }
                 }
                 request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+                if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
                 request.send(params)
 
             })

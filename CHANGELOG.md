@@ -1,3 +1,9 @@
+## v1.2.2
+
+* **FIXED** POST API call was not adding bearer authorisation token so not working if adminAuth used. Now working. Fixes [Issue #51](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/51), many thanks to [ElGranLoky](https://github.com/ElGranLoky) for reporting.
+* **FIXED** Move examples folder to the right place so that Node-RED admin ui will pick it up.
+* **FIXED** In uibuilderfe.js, provide a polyfill for String.prototype.endsWith to be kind to folk who are forced to live with Microsoft Internet Explorer or other outdated browsers. Referenced in [Issue #49](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/49)
+
 ## v1.2.1
 
 * **FIXED** File save wasn't working due to a parameter error, now fixed.

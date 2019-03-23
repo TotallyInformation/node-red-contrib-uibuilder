@@ -99,6 +99,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
     var uibuilder = (function () {
         // Remember that things have to be defined *before* they are referenced
 
+        // Define polyfill for endsWith for IE
+        if (!String.prototype.endsWith) {
+            String.prototype.endsWith = function(suffix) {
+                return this.indexOf(suffix, this.length - suffix.length) !== -1
+            }
+        }
+        
         var self = this
 
         //#region ======== Start of setup ======== //
