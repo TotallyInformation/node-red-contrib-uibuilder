@@ -1,10 +1,21 @@
+    /* eslint-env browser */
+    /* global $,RED */
+    // @ts-check
+    'use strict'
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     var moduleName  = 'uibuilder'
 
     /** placeholder for url duplicate check - marks url invalid/valid on change */
     var urlIsDup = false
 
-    /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui */
+    /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
+     * @typedef uiace
+     * @type {Object}
+     * @property {string} format
+     * @property {string} folder
+     * @property {string} fname
+     */
     var uiace = {
         'format': 'html',
         'folder': 'src',
@@ -12,16 +23,16 @@
     }
 
     /** Get full package list via API and show in admin ui
-     * @param {string} url 
-     * @param {boolean} rebuild - Rebuild the vendorPaths list
+     * param {string} url 
+     * param {boolean} rebuild - Rebuild the vendorPaths list
      */
     function packageList() {
         $.getJSON('uibvendorpackages', function(vendorPackages) {
             console.log('uibuilder:packageList:uibvendorpackages', vendorPackages)
             //$('#installed-packages').text( Object.keys(vendorPackages) )
             $('#installed-packages').empty()
-            $.each(vendorPackages, function(package, pkgInfo) {
-                $('#installed-packages').append('<li><i>' + package + '</i></li>')
+            $.each(vendorPackages, function(npmpackage, pkgInfo) {
+                $('#installed-packages').append('<li><i>' + npmpackage + '</i></li>')
             })
         })
     } // --- End of packageList --- //
@@ -36,22 +47,22 @@
             switch (fext) {
                 case 'js':
                     ftype = 'javascript'
-                    break;
+                    break
                 case 'html':
                 case 'css':
                 case 'json':
                     ftype = fext
-                    break;
+                    break
                 case 'vue':
                     ftype = 'html'
-                    break;
+                    break
                 case 'md':
                     ftype = 'markdown'
-                    break;
+                    break
                 case 'yaml':
                 case 'yml':
                     ftype = 'yaml'
-                    break;
+                    break
                 default:
                     // txt
             }
@@ -63,7 +74,7 @@
 
     /** Get the list of files for the chosen url & folder */
     function getFileList() {
-        $("#node-input-filename option").remove()
+        $('#node-input-filename option').remove()
 
         var url = $('#node-input-url').val()
         var folder = $('#node-input-folder').val()
@@ -87,7 +98,7 @@
 
             // Set default file name/type
             uiace.fname = firstFile
-            $("#node-input-filename").val(uiace.fname)
+            $('#node-input-filename').val(uiace.fname)
             uiace.format = firstFile === '' ? 'text' : fileType(firstFile)
         }).fail(function(jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
@@ -99,13 +110,15 @@
         })
     }
 
-    /** Get the chosen file contents & set up the ACE editor
-     * @param {Object} that - 'this' for the oneditprepare function
-     **/
+    /** Get the chosen file contents & set up the ACE editor */
     function getFileContents() {
-        // Get the chosen folder name - use the default/last saved on first load
-        const folder = $('#node-input-folder').val() || uiace.folder
-        // Get the chosen filename - use the default/last saved on first load
+        /** Get the chosen folder name - use the default/last saved on first load 
+         * @type {string} */ 
+         // @ts-ignore
+        const folder = $('#node-input-folder').val() || uiace.folder 
+        /** Get the chosen filename - use the default/last saved on first load 
+         * @type {string} */
+         // @ts-ignore
         const fname = $('#node-input-filename').val() || uiace.fname
         // Get the current url
         const url = $('#node-input-url').val()
@@ -193,14 +206,15 @@
         // Check whether the url is already in use via a call to the admin API `uibindex`
         var exists = false
         $.ajax({
-            dataType: "json", async: false, 
+            dataType: 'json', async: false, 
             url: 'uibindex?check=' + value,
             success: function(check) {
                 exists = check
             }
         })
 
-        // If the url already exists - prevent the "Done" button from being pressed.
+        /** If the url already exists - prevent the "Done" button from being pressed. */
+         // @ts-ignore ts(2367)
         if ( exists === true ) {
             $('#node-dialog-ok').prop('disabled', true)
             $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
@@ -213,7 +227,8 @@
 
     } // --- End of validateUrl --- //
 
-    // Register the node type, defaults and set up the edit fns
+    // Register the node type, defaults and set up the edit fns 
+     //@ts-ignore 
     RED.nodes.registerType('uibuilder', {
         category: 'UI Builder',
         color: '#E6E0F8',
@@ -258,6 +273,7 @@
             // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
                 // Show the root URL
+                 // @ts-ignore Cannot find name 'RED'.ts(2304)
                 $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
             })
 
@@ -286,151 +302,167 @@
             //packageList(this.url, true)
 
             //#region ---- File Editor ---- //
-                // Delete is not ready yet, so disable button by default. TODO
-                $('#edit-delete').prop('disabled', true)
-                // Mark edit save/reset buttons as disabled by default
-                fileIsClean(true)
+            // Delete is not ready yet, so disable button by default. TODO
+            $('#edit-delete').prop('disabled', true)
+            // Mark edit save/reset buttons as disabled by default
+            fileIsClean(true)
 
-                // Show the edit section, hide the main & adv sections
-                $('#show-edit-props').click(function(e) {
-                    e.preventDefault() // don't trigger normal click event
-                    $('#main-props').hide()
-                    $('#adv-props').hide()
-                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                    $('#edit-props').show()
+            // Show the edit section, hide the main & adv sections
+            $('#show-edit-props').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').hide()
+                $('#adv-props').hide()
+                $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                $('#edit-props').show()
 
-                    // @since 2019-01-27 - adding file editor
-                    // Build the file list
-                    getFileList()
-
-                    if ( uiace.editorLoaded !== true ) {
-                        // Clear out the editor
-                        if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
-
-                        // Create the ACE editor component
-                        uiace.editor = RED.editor.createEditor({
-                            id: 'node-input-template-editor',
-                            mode: 'ace/mode/' + uiace.format,
-                            value: that.template
-                        })
-                        // Keep a reference to the current editor session
-                        uiace.editorSession = uiace.editor.getSession()
-                        /** If the editor has changes, enable the save & reset buttons
-                         * using input event instead of change since it's called with some timeout 
-                         * which is needed by the undo (which takes some time to update)
-                         **/
-                        uiace.editor.on("input", function() {
-                            // Is the editor clean?
-                            fileIsClean(uiace.editorSession.getUndoManager().isClean())
-                        })
-                        /*uiace.editorSession.on('change', function(delta) {
-                            // delta.start, delta.end, delta.lines, delta.action
-                            console.log('ACE Editor CHANGE Event', delta)
-                        }) */
-                        uiace.editorLoaded = true
-
-                        // Be friendly and auto-load the initial file via the admin API
-                        getFileContents()
-                        fileIsClean(true)
-                    }
+                // Make the horizontal separator draggable
+                $('#node-input-template-editor').resizable({
+                    'handles': 's'
                 })
+                $('#node-input-template-editor > div.ui-resizable-handle.ui-resizable-s').css({
+                    'height': '25px',
+                    'bottom': '-25px'
+                }
+                )
 
-                // Hide the edit section, show the main section
-                $('#edit-close').click(function(e) {
-                    e.preventDefault() // don't trigger normal click event
-                    $('#main-props').show()
-                    $('#edit-props').hide()
-                })
+                // @since 2019-01-27 - adding file editor
+                // Build the file list
+                getFileList()
 
-                // Handle the file editor change of folder/file
-                $('#node-input-folder').change(function(e) {
-                    // Rebuild the file list
-                    getFileList()
+                if ( uiace.editorLoaded !== true ) {
+                    // Clear out the editor
+                        // @ts-ignore ts(2367)
+                    if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
 
-                    // Force change event on filename
-                    //$('#node-input-filename').change()
-                })
-                $('#node-input-filename').change(function(e) {
-                    // Get the content of the file via the admin API
-                    getFileContents()
-                    fileIsClean(true)
-                })
-                // Handle the file editor reset button (reload the file)
-                $('#edit-reset').click(function(e) {
-                    e.preventDefault() // don't trigger normal click event
-
-                    // Get the content of the file via the admin API
-                    getFileContents()
-                    fileIsClean(true)
-                    $('#file-action-message').text('')
-                })
-                // Handle the file editor save button
-                $('#edit-save').click(function(e) {
-                    e.preventDefault() // don't trigger normal click event
-
-                    // Post the updated content of the file via the admin API
-                    // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
-                    var request = new XMLHttpRequest()
-                    var params = 'fname=' + $('#node-input-filename').val() + '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(uiace.editorSession.getValue())
-                    request.open('POST', 'uibputfile', true)
-                    request.onreadystatechange = function() {
-                        if (this.readyState === XMLHttpRequest.DONE) {
-                            if (this.status === 200) {
-                                // Request successful
-                                // display msg - blank msg when new edits present
-                                $('#file-action-message').text('File Saved')
-                                fileIsClean(true)
-                            } else {
-                                // Request failed
-                                // display msg - blank msg when new edits present
-                                $('#file-action-message').text('File Save FAILED')
-                            }
-                        }
-                    }
-                    request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
-                    request.send(params)
-
-                })
-
-                // Handle the expander button (show full screen editor) - from core function node
-                $("#node-function-expand-js").click(function(e) {
-                    e.preventDefault();
-                    var value = uiace.editor.getValue();
-                    RED.editor.editJavaScript({
-                        value: value,
-                        width: "Infinity",
-                        cursor: uiace.editor.getCursorPosition(),
+                    // Create the ACE editor component
+                        //@ts-ignore Cannot find name 'RED'.ts(2304)
+                    uiace.editor = RED.editor.createEditor({
+                        id: 'node-input-template-editor',
                         mode: 'ace/mode/' + uiace.format,
-                        complete: function(v,cursor) {
-                            uiace.editor.setValue(v, -1);
-                            uiace.editor.gotoLine(cursor.row+1,cursor.column,false);
-                            setTimeout(function() {
-                                uiace.editor.focus();
-                            },300);
-                        }
+                        value: that.template
                     })
+                    // Keep a reference to the current editor session
+                    uiace.editorSession = uiace.editor.getSession()
+                    /** If the editor has changes, enable the save & reset buttons
+                     * using input event instead of change since it's called with some timeout 
+                     * which is needed by the undo (which takes some time to update)
+                     **/
+                    uiace.editor.on("input", function() {
+                        // Is the editor clean?
+                        fileIsClean(uiace.editorSession.getUndoManager().isClean())
+                    })
+                    /*uiace.editorSession.on('change', function(delta) {
+                        // delta.start, delta.end, delta.lines, delta.action
+                        console.log('ACE Editor CHANGE Event', delta)
+                    }) */
+                    uiace.editorLoaded = true
+
+                    // Be friendly and auto-load the initial file via the admin API
+                    getFileContents()
+                    fileIsClean(true)
+                }
+            })
+
+            // Hide the edit section, show the main section
+            $('#edit-close').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').show()
+                $('#edit-props').hide()
+            })
+
+            // Handle the file editor change of folder/file
+            $('#node-input-folder').change(function(e) {
+                // Rebuild the file list
+                getFileList()
+
+                // Force change event on filename
+                //$('#node-input-filename').change()
+            })
+            $('#node-input-filename').change(function(e) {
+                // Get the content of the file via the admin API
+                getFileContents()
+                fileIsClean(true)
+            })
+            // Handle the file editor reset button (reload the file)
+            $('#edit-reset').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+
+                // Get the content of the file via the admin API
+                getFileContents()
+                fileIsClean(true)
+                $('#file-action-message').text('')
+            })
+            // Handle the file editor save button
+            $('#edit-save').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+
+                var authTokens = RED.settings.get('auth-tokens')
+                console.log(RED.settings.get("auth-tokens"))
+
+                // Post the updated content of the file via the admin API
+                // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
+                var request = new XMLHttpRequest()
+                var params = 'fname=' + $('#node-input-filename').val() + '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(uiace.editorSession.getValue())
+                request.open('POST', 'uibputfile', true)
+                request.onreadystatechange = function() {
+                    if (this.readyState === XMLHttpRequest.DONE) {
+                        if (this.status === 200) {
+                            // Request successful
+                            // display msg - blank msg when new edits present
+                            $('#file-action-message').text('File Saved')
+                            fileIsClean(true)
+                        } else {
+                            // Request failed
+                            // display msg - blank msg when new edits present
+                            $('#file-action-message').text('File Save FAILED')
+                        }
+                    }
+                }
+                request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+                if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                request.send(params)
+
+            })
+
+            // Handle the expander button (show full screen editor) - from core function node
+            $('#node-function-expand-js').click(function(e) {
+                e.preventDefault()
+                var value = uiace.editor.getValue()
+                //@ts-ignore Cannot find name 'RED'.ts(2304)
+                RED.editor.editJavaScript({
+                    value: value,
+                    width: 'Infinity',
+                    cursor: uiace.editor.getCursorPosition(),
+                    mode: 'ace/mode/' + uiace.format,
+                    complete: function(v,cursor) {
+                        uiace.editor.setValue(v, -1)
+                        uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
+                        setTimeout(function() {
+                            uiace.editor.focus()
+                        },300)
+                    }
                 })
+            })
             //#endregion ----  ---- //
 
             //#region ---- npm ---- //
-                // NB: Assuming that the edit section is closed
-                // Show the npm section, hide the main & adv sections
-                $('#show-npm-props').click(function(e) {
-                    e.preventDefault() // don't trigger normal click event
-                    $('#main-props').hide()
-                    $('#adv-props').hide()
-                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                    $('#npm-props').show()
+            // NB: Assuming that the edit section is closed
+            // Show the npm section, hide the main & adv sections
+            $('#show-npm-props').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').hide()
+                $('#adv-props').hide()
+                $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                $('#npm-props').show()
 
-                    packageList()
-                })
-                // Hide the npm section, show the main section
-                $('#npm-close').click(function(e) {
-                    e.preventDefault() // don't trigger normal click event
-                    $('#main-props').show()
-                    $('#npm-props').hide()
-                })
-
+                packageList()
+            })
+            // Hide the npm section, show the main section
+            $('#npm-close').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').show()
+                $('#npm-props').hide()
+            })
             //#endregion ----  ---- //
 
             /** TODO: Get list of installed ACE themes, add chooser, save current choice
@@ -465,15 +497,24 @@
         oneditresize: function(size) {
             //console.log('RESIZE', size)
             if ( uiace.editorLoaded === true ) {
-                var rows = $("#dialog-form>div:not(.node-text-editor-row)");
-                var height = $("#dialog-form").height();
-                for (var i=0; i<rows.size(); i++) {
-                    height -= $(rows[i]).outerHeight(true);
+                /**
+                 * #node-input-template-editor
+                 * #editor-stack > div > div.editor-tray-body-wrapper > div > div:nth-child(2) > div:nth-child(1)
+                 *    .editor-tray-content
+                 */
+                /** Tries to make sure the editor+other visible components don't overflow (cause scroll) 
+                 * Limited by min-height.
+                */
+                var rows = $('#dialog-form>div:not(.node-text-editor-row)')
+                var height = $('#dialog-form').height()
+                for (var i=0; i<rows.length; i++) {
+                    height -= $(rows[i]).outerHeight(true)
                 }
-                var editorRow = $("#dialog-form>div.node-text-editor-row");
-                height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
-                $(".node-text-editor").css("height",height+"px");
-                uiace.editor.resize();
+                var editorRow = $("#dialog-form>div.node-text-editor-row")
+                height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")))
+                //$('.node-text-editor').css('height',height+'px')
+                $('#node-input-template-editor').css('height',height+'px')
+                uiace.editor.resize()
             }
         },
     })

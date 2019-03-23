@@ -15,13 +15,24 @@
 -->
 
 <script type="text/javascript">
+    /* eslint-env browser */
+    /* global $,RED */
+    // @ts-check
+    'use strict'
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     var moduleName  = 'uibuilder'
 
     /** placeholder for url duplicate check - marks url invalid/valid on change */
     var urlIsDup = false
 
-    /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui */
+    /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
+     * @typedef uiace
+     * @type {Object}
+     * @property {string} format
+     * @property {string} folder
+     * @property {string} fname
+     */
     var uiace = {
         'format': 'html',
         'folder': 'src',
@@ -29,21 +40,18 @@
     }
 
     /** Get full package list via API and show in admin ui
-     * @param {string} url 
-     * @param {boolean} rebuild - Rebuild the vendorPaths list
+     * param {string} url 
+     * param {boolean} rebuild - Rebuild the vendorPaths list
      */
-    function packageList(url, rebuild) {
+    function packageList() {
         $.getJSON('uibvendorpackages', function(vendorPackages) {
-            $('#userpackages').text( Object.keys(vendorPackages) )
-            $('#fepaths').empty()
-            $.each(vendorPackages, function(package, pkgInfo) {
-                $('#fepaths').append('<li><i>' + pkgInfo.url + '</i></li>')
+            console.log('uibuilder:packageList:uibvendorpackages', vendorPackages)
+            //$('#installed-packages').text( Object.keys(vendorPackages) )
+            $('#installed-packages').empty()
+            $.each(vendorPackages, function(npmpackage, pkgInfo) {
+                $('#installed-packages').append('<li><i>' + npmpackage + '</i></li>')
             })
         })
-
-        // $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/jquery/dist/jquery.min.js">/' + moduleName + '/vendor/jquery/dist/jquery.min.js</a></li>') // always the same
-        // $('#fepaths').append('<li><a href="/' + moduleName + '/vendor/normalize.css/normalize.css">/' + moduleName + '/vendor/normalize.css/normalize.css</a></li>') // always the same
-        $('#fepaths').append('<li><a href="/' + moduleName + '/socket.io/socket.io.js">../' + moduleName + '/socket.io/socket.io.js</a></li>') // always the same
     } // --- End of packageList --- //
 
     /** Return a file type from a file name (or default to txt)
@@ -56,22 +64,22 @@
             switch (fext) {
                 case 'js':
                     ftype = 'javascript'
-                    break;
+                    break
                 case 'html':
                 case 'css':
                 case 'json':
                     ftype = fext
-                    break;
+                    break
                 case 'vue':
                     ftype = 'html'
-                    break;
+                    break
                 case 'md':
                     ftype = 'markdown'
-                    break;
+                    break
                 case 'yaml':
                 case 'yml':
                     ftype = 'yaml'
-                    break;
+                    break
                 default:
                     // txt
             }
@@ -83,7 +91,7 @@
 
     /** Get the list of files for the chosen url & folder */
     function getFileList() {
-        $("#node-input-filename option").remove()
+        $('#node-input-filename option').remove()
 
         var url = $('#node-input-url').val()
         var folder = $('#node-input-folder').val()
@@ -103,11 +111,11 @@
                 }))
             })
 
-            console.log( '[uibuilder:getFileList:getJSON] Got files ', files, firstFile, folder, url )
+            //console.log( '[uibuilder:getFileList:getJSON] Got files ', files, firstFile, folder, url )
 
             // Set default file name/type
             uiace.fname = firstFile
-            $("#node-input-filename").val(uiace.fname)
+            $('#node-input-filename').val(uiace.fname)
             uiace.format = firstFile === '' ? 'text' : fileType(firstFile)
         }).fail(function(jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
@@ -119,18 +127,20 @@
         })
     }
 
-    /** Get the chosen file contents & set up the ACE editor
-     * @param {Object} that - 'this' for the oneditprepare function
-     **/
+    /** Get the chosen file contents & set up the ACE editor */
     function getFileContents() {
-        // Get the chosen folder name - use the default/last saved on first load
-        const folder = $('#node-input-folder').val() || uiace.folder
-        // Get the chosen filename - use the default/last saved on first load
+        /** Get the chosen folder name - use the default/last saved on first load 
+         * @type {string} */ 
+         // @ts-ignore
+        const folder = $('#node-input-folder').val() || uiace.folder 
+        /** Get the chosen filename - use the default/last saved on first load 
+         * @type {string} */
+         // @ts-ignore
         const fname = $('#node-input-filename').val() || uiace.fname
         // Get the current url
         const url = $('#node-input-url').val()
 
-        console.log( '[uibuilder:getFileContents] ', url, folder, fname )
+        //console.log( '[uibuilder:getFileContents] ', url, folder, fname )
 
         // Save the file & folder names
         uiace.folder = folder
@@ -142,7 +152,7 @@
 
         // Get the file contents via API defined in uibuilder.js
         $.get( 'uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data){
-            console.log( '[uibuilder:getFileContents:get] Success. ', url, folder, fname )
+            //console.log( '[uibuilder:getFileContents:get] Success. ', url, folder, fname )
             // Add the fetched data to the editor
             uiace.editorSession.setValue(data)
             // Set the editor file mode
@@ -213,14 +223,15 @@
         // Check whether the url is already in use via a call to the admin API `uibindex`
         var exists = false
         $.ajax({
-            dataType: "json", async: false, 
+            dataType: 'json', async: false, 
             url: 'uibindex?check=' + value,
             success: function(check) {
                 exists = check
             }
         })
 
-        // If the url already exists - prevent the "Done" button from being pressed.
+        /** If the url already exists - prevent the "Done" button from being pressed. */
+         // @ts-ignore ts(2367)
         if ( exists === true ) {
             $('#node-dialog-ok').prop('disabled', true)
             $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
@@ -233,7 +244,8 @@
 
     } // --- End of validateUrl --- //
 
-    // Register the node type, defaults and set up the edit fns
+    // Register the node type, defaults and set up the edit fns 
+     //@ts-ignore 
     RED.nodes.registerType('uibuilder', {
         category: 'UI Builder',
         color: '#E6E0F8',
@@ -261,6 +273,7 @@
             // Start with the edit section hidden & main section visible
             $('#main-props').show()
             $('#edit-props').hide()
+            $('#npm-props').hide()
             $('#adv-props').hide()
             $('#info-props').hide()
 
@@ -277,6 +290,7 @@
             // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
                 // Show the root URL
+                 // @ts-ignore Cannot find name 'RED'.ts(2304)
                 $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
             })
 
@@ -304,20 +318,11 @@
             // List the front-end url paths available (shown in info box)
             //packageList(this.url, true)
 
+            //#region ---- File Editor ---- //
             // Delete is not ready yet, so disable button by default. TODO
             $('#edit-delete').prop('disabled', true)
             // Mark edit save/reset buttons as disabled by default
             fileIsClean(true)
-
-            //// Set filename for editor
-            ////$('#filename').text(this.filename)
-
-            // Hide the edit section, show the main section
-            $('#edit-close').click(function(e) {
-                e.preventDefault() // don't trigger normal click event
-                $('#main-props').show()
-                $('#edit-props').hide()
-            })
 
             // Show the edit section, hide the main & adv sections
             $('#show-edit-props').click(function(e) {
@@ -327,15 +332,27 @@
                 $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#edit-props').show()
 
+                // Make the horizontal separator draggable
+                $('#node-input-template-editor').resizable({
+                    'handles': 's'
+                })
+                $('#node-input-template-editor > div.ui-resizable-handle.ui-resizable-s').css({
+                    'height': '25px',
+                    'bottom': '-25px'
+                }
+                )
+
                 // @since 2019-01-27 - adding file editor
                 // Build the file list
                 getFileList()
 
                 if ( uiace.editorLoaded !== true ) {
                     // Clear out the editor
+                        // @ts-ignore ts(2367)
                     if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
 
                     // Create the ACE editor component
+                        //@ts-ignore Cannot find name 'RED'.ts(2304)
                     uiace.editor = RED.editor.createEditor({
                         id: 'node-input-template-editor',
                         mode: 'ace/mode/' + uiace.format,
@@ -363,13 +380,14 @@
                 }
             })
 
-            /** TODO: Get list of installed ACE themes, add chooser, save current choice
-             * that.editor.setTheme("ace/theme/monokai")
-             * uiace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
-             * uiace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
-             **/
+            // Hide the edit section, show the main section
+            $('#edit-close').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').show()
+                $('#edit-props').hide()
+            })
 
-            // Handle the edit button (and disable default click)
+            // Handle the file editor change of folder/file
             $('#node-input-folder').change(function(e) {
                 // Rebuild the file list
                 getFileList()
@@ -382,7 +400,7 @@
                 getFileContents()
                 fileIsClean(true)
             })
-            // Handle the reset button (reload the file)
+            // Handle the file editor reset button (reload the file)
             $('#edit-reset').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
 
@@ -391,9 +409,12 @@
                 fileIsClean(true)
                 $('#file-action-message').text('')
             })
-            // Handle the save button
+            // Handle the file editor save button
             $('#edit-save').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
+
+                var authTokens = RED.settings.get('auth-tokens')
+                console.log(RED.settings.get("auth-tokens"))
 
                 // Post the updated content of the file via the admin API
                 // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
@@ -415,28 +436,58 @@
                     }
                 }
                 request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+                if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
                 request.send(params)
 
             })
 
             // Handle the expander button (show full screen editor) - from core function node
-            $("#node-function-expand-js").click(function(e) {
-                e.preventDefault();
-                var value = uiace.editor.getValue();
+            $('#node-function-expand-js').click(function(e) {
+                e.preventDefault()
+                var value = uiace.editor.getValue()
+                //@ts-ignore Cannot find name 'RED'.ts(2304)
                 RED.editor.editJavaScript({
                     value: value,
-                    width: "Infinity",
+                    width: 'Infinity',
                     cursor: uiace.editor.getCursorPosition(),
                     mode: 'ace/mode/' + uiace.format,
                     complete: function(v,cursor) {
-                        uiace.editor.setValue(v, -1);
-                        uiace.editor.gotoLine(cursor.row+1,cursor.column,false);
+                        uiace.editor.setValue(v, -1)
+                        uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
                         setTimeout(function() {
-                            uiace.editor.focus();
-                        },300);
+                            uiace.editor.focus()
+                        },300)
                     }
                 })
             })
+            //#endregion ----  ---- //
+
+            //#region ---- npm ---- //
+            // NB: Assuming that the edit section is closed
+            // Show the npm section, hide the main & adv sections
+            $('#show-npm-props').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').hide()
+                $('#adv-props').hide()
+                $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                $('#npm-props').show()
+
+                packageList()
+            })
+            // Hide the npm section, show the main section
+            $('#npm-close').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+                $('#main-props').show()
+                $('#npm-props').hide()
+            })
+            //#endregion ----  ---- //
+
+            /** TODO: Get list of installed ACE themes, add chooser, save current choice
+             * that.editor.setTheme("ace/theme/monokai")
+             * uiace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
+             * uiace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
+             **/
+
         }, // ---- End of oneditprepare ---- //
 
         oneditsave: function() {
@@ -463,18 +514,28 @@
         oneditresize: function(size) {
             //console.log('RESIZE', size)
             if ( uiace.editorLoaded === true ) {
-                var rows = $("#dialog-form>div:not(.node-text-editor-row)");
-                var height = $("#dialog-form").height();
-                for (var i=0; i<rows.size(); i++) {
-                    height -= $(rows[i]).outerHeight(true);
+                /**
+                 * #node-input-template-editor
+                 * #editor-stack > div > div.editor-tray-body-wrapper > div > div:nth-child(2) > div:nth-child(1)
+                 *    .editor-tray-content
+                 */
+                /** Tries to make sure the editor+other visible components don't overflow (cause scroll) 
+                 * Limited by min-height.
+                */
+                var rows = $('#dialog-form>div:not(.node-text-editor-row)')
+                var height = $('#dialog-form').height()
+                for (var i=0; i<rows.length; i++) {
+                    height -= $(rows[i]).outerHeight(true)
                 }
-                var editorRow = $("#dialog-form>div.node-text-editor-row");
-                height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
-                $(".node-text-editor").css("height",height+"px");
-                uiace.editor.resize();
+                var editorRow = $("#dialog-form>div.node-text-editor-row")
+                height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")))
+                //$('.node-text-editor').css('height',height+'px')
+                $('#node-input-template-editor').css('height',height+'px')
+                uiace.editor.resize()
             }
         },
     })
+
 </script>
 
 <script type="text/x-red" data-template-name="uibuilder">
@@ -515,6 +576,7 @@
         <!-- Show edit properties, hide this section -->
         <div class="form-row">
             <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
+            <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">Manage front-end libraries</button>
         </div>
 
         <!-- Show advanced edit properties -->
@@ -576,11 +638,13 @@
                     Delete
                 </button>
             </div>
+
         </div>
 
         <!-- Edit box  editor-tray-content -->
-        <div class="form-row node-text-editor-row" style="position:relative">
+        <div id="edit-outer" class="form-row node-text-editor-row" style="position:relative">
             <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
+            <div id="edit-drag-y" class="red-ui-panels-separator" style="position: relative;"></div>
         </div>
 
         <!-- file data (hidden), language selector -->
@@ -602,9 +666,43 @@
         </div>
     </div>
 
+    <!-- ---- Hideable NPM Section ---- -->
+    <div id="npm-props">
+        <h3>Manage Front-End Libraries</h3>
+        <p>
+            Install, remove or update npm packages that provide front-end libraries such as
+            VueJS, jQuery, MoonJS, etc.
+        </p>
+        <p>
+            You can search for packages on the 
+            <a href="https://www.npmjs.com/" target="_blank">official npm site</a> 
+            or on <a href="https://npms.io/" target="_blank">npms.io</a>.
+            Take the name and paste it below then use one of the buttons.
+        </p>
+        <!-- npm package name -->
+        <div class="form-row">
+            <label for="npm-package-name"><i class="fa fa-cube"></i> Package:</label>
+            <input type="text" id="npm-package-name">
+        </div>
+
+        <!-- Install/Remove/Update -->
+        <div class="form-row">
+            <button class="btn" id="npm-install">Install</button>
+            <button class="btn" id="npm-update">Update</button>
+            <button class="btn" id="npm-remove">Remove</button>
+            <button class="btn" id="npm-close">Close</button>
+        </div>
+
+        <!-- Installed packages -->
+        <div>
+            <h4>Installed Packages</h4>
+            <ul class="inline" id="installed-packages"></ul>
+        </div>
+    </div>
+
     <!-- Info -->
     <h4 id="show-info-props" title="Show/Hide the available paths &amp; module information">
-        <i class="fa fa-caret-right"></i> Path &amp; Module Info
+        <i class="fa fa-caret-right"></i> Path &amp; Module Details
     </h4>
     <div id="info-props" class="form-tips node-help" title="">
         <div>Web Page URL: <span id="uibuilderurl"></span></div>
@@ -636,13 +734,13 @@
 
         <dt class="optional">script <span class="property-type">(string | string[])</span></dt>
         <dd>
-          Optionally, a string or array of strings containing valid JavaScript.
-          This will be added to the web page dynamically. Currently contains minimal validation so care is required.
+        Optionally, a string or array of strings containing valid JavaScript.
+        This will be added to the web page dynamically. Currently contains minimal validation so care is required.
         </dd>
         <dt class="optional">style <span class="property-type">(string | string[])</span></dt>
         <dd>
-          Optionally, a string or array of strings containing valid CSS for styling the front-end page.
-          This will be added to the web page dynamically. Currently contains minimal validation so care is required.
+        Optionally, a string or array of strings containing valid CSS for styling the front-end page.
+        This will be added to the web page dynamically. Currently contains minimal validation so care is required.
         </dd>
     </dl>
 
@@ -824,4 +922,5 @@
     </dl>
     <ul>
     </ul>
+
 </script>
