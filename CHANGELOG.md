@@ -1,5 +1,11 @@
 ## v2.0.0
 
+* **IN PROGRESS**
+  * .settings.json dynamic reload - allow package list to be changed without reloading Node-RED
+
+* **BROKEN FOR NOW**
+  * Security middleware - has to be moved to `<uibRoot>/.config.js`
+
 * **BREAKING CHANGE** Vendor `app.use` paths moved from instance level to module level so only done once.
   This means that you have to change your `index.html` file.
   Where before you might have had something like `<link rel="stylesheet" href="./vendor/normalize.css/normalize.css">`, that must now change to `<link rel="stylesheet" href="../uibuilder/vendor/normalize.css/normalize.css">`. Any link that started like `./vendor` must be changed to `../uibuilder/vendor`.
@@ -18,6 +24,8 @@
 
 * **BREAKING CHANGE** As a consequence of the above, it is no longer possible to load custom middleware via the uibuilder global settings. A newer, better approach will be reintroduced in a future version. As a workaround, the standard Node-RED custom middleware `httpNodeMiddleware` can still be used as it is loaded by uibuilder - note, however, that this is also used by http-in nodes. **Please raise an issue if you need this capability**.
 
+* **BREAKING CHANGE** The minimum supported version of Node.JS is now v8.5
+  
 * **FIX** In uibuilderfe.js, provide a polyfill for String.prototype.endsWith to be kind to folk who are forced to live with Microsoft Internet Explorer or other outdated browsers.
 
 * **FIX** Sometimes, a package's location might affect the URL needed to access the front-end library. For example, jquery would sometimes require `dist/` in the URL and sometimes not. Turns out that there are some edge cases when trying to identify the physical location of packages. These have now all been dealt with by using custom code instead of a 3rd party package that didn't always work.
@@ -40,8 +48,10 @@
   * added `check` parameter, if provided will check if the value matches a uibuilder url in use. If so, returns true otherwise returns false. Used in the admin ui to check for url uniqueness. 
   * Moved from standard app server to admin server so that the start of the url path has to be the same as Node-RED's admin ui - for better security.
   * Expanded output. Included links to vendor homepages for each package, included link to "main" entrypoint.
+  * Added package version.
+  * Added bootstrap (2.3.2 used by Node-RED admin ui), improved layout
 
-* **CHANGED** In uibuilder admin node configuration panel:
+* **CHANGED** In uibuilder admin node configuration panel (`uibuilder.html`):
 
   * File editor improvements:
   
@@ -63,7 +73,14 @@
 * **CHANGED** Several instance config variables no longer needed: filename, format, template
 
 * **CHANGED** In uibuilder admin help panel - help text simplified and improved. Added description of the parameters accepted by `<adminurl>/uibindex`.
+  
+* **CHANGED** In uibuilder helper library `tilib.js`:
+  * New function `readPackageJson`: Returns an object of the package.json file in a given folder.
+  * New function `findPackage`: Replaces 3rd party package to find the root folder of an installed package.
+  * Improved `urlJoin` function: Handle arguments containing `undefined`
 
+* **CHANGED** The nodes admin html file is now split in 3, see the `node-src` folder. A build script has been added `npm run build` to assemble the actual file from the components.
+  
 ----
 
 ## v1.2.1

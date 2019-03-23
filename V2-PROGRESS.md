@@ -31,6 +31,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
    - [x] Add initial process to move settings after migration from v1 to v2.
    - [x] Add Socket.IO path to the `<adminurl>/uibindex` API - in preparation for enabling other nodes to communicate with uibuilder front-end's.
    - [x] Fix the folder location lookup for front-end packages. New function `findPackage` added to `tilib.js`, replaces the `get-installed-path` 3rd party package.
+   - [x] Add extra info to the `vendorPaths` variable. Including whether the package is include in the `<userDir>/package.json` dependencies & information from the packages own package.json file including homepage, main entry point and version string.
   
    - [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter).
      - [x] List all installed top-level packages
@@ -59,6 +60,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
   - [x] Hide path and module info by default and allow toggle to show
   - [x] ~~Add server path to info panel `<userDir>/uibuilder/<url>` or `<userDir>/projects/<projectName>/uibuilder/<url>`.~~ Redirecting to the index page instead.
   - [x] Remove edit button - swap file on file selection change.
+  - [x] Split uibuilder.html into 3 files for ease of editing. Add a build step to assemble. `npm run build`.
   - [x] Add folder selector before file selector - enables files in different folders to be edited. Folders are pre-selected.
     - [x] Rebuild file list on change of folder
     - [x] Add all instance folders (`<uibRoot>/<url>/src|dist|root`)
@@ -76,6 +78,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
   - [ ] Add file delete (button is in place but disabled) - needs a confirm dialogue
   - [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
   - [ ] Add validation hints for users
+  - [ ] Use https://api.npms.io/v2/package/node-red-contrib-uibuilder to highlight installed modules that have updates
 
 
 - [x] Move back-end log files from `<userDir>` to `<uibRoot>/.logs`
@@ -130,3 +133,4 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 * [Official docs for creating nodes](https://nodered.org/docs/creating-nodes/)
 * [How the deploy button works](https://github.com/node-red/node-red/blob/a6ef755139613a7261372c692189f21115b2d0c6/editor/js/ui/deploy.js#L260)
 * [CORS failure when using jQuery POST](https://stackoverflow.com/questions/5584923/a-cors-post-request-works-from-plain-javascript-but-why-not-with-jquery))
+* [Notifications in the admin ui (RED.notify(msg,type))](https://github.com/node-red/node-red/wiki/API-Reference#ui)
