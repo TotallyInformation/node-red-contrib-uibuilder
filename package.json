@@ -10,13 +10,14 @@
   ],
   "scripts": {
     "build": "node ./bin/mergehtml",
-    "prepush": "npm run packfe",
+    "watchbuild": "node ./bin/watchhtml",
+    "prepush": "npm run packfe && npm run build",
     "push": "git push origin",
     "pull": "git pull origin",
     "presync": "npm run pull",
     "sync": "npm run push",
     "packfe": "uglifyjs ./nodes/src/uibuilderfe.js --output ./nodes/src/uibuilderfe.min.js --compress --mangle",
-    "prepublish": "npm run packfe",
+    "prepublishOnly": "npm run packfe && npm run build",
     "listbin": "ls ./node_modules/bin",
     "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
     "npmtagnext": "npm dist-tag add node-red-contrib-uibuilder@$npm_package_version next",
@@ -74,6 +75,7 @@
     "winston": "^2.4.4"
   },
   "devDependencies": {
+    "@types/jquery": "^3.3.29",
     "replace-in-file": "^3.4.4",
     "uglify-js": "^3.4.10"
   },
@@ -92,7 +94,8 @@
     "example": "./nodes/examples"
   },
   "main": "./nodes/src/uibuilderfe.js",
-  "bin":          {
-    "mergehtml":     "./bin/mergehtml"
+  "bin": {
+    "mergehtml": "./bin/mergehtml",
+    "watchhtml": "./bin/watchhtml"
   }
 }
