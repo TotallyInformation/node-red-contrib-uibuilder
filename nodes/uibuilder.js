@@ -1,4 +1,3 @@
-/* globals log */
 /**
  * Copyright (c) 2019 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
@@ -164,6 +163,9 @@ module.exports = function(RED) {
     // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
     const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
     if ( currProject !== '' ) uib_rootFolder = path.join(userDir, 'projects', currProject, moduleName) 
+    
+    // Location of the global settings file
+    const newSettingsFile = path.join(uib_rootFolder, '.settings.json')
 
     //#endregion -------- --------
 
@@ -196,7 +198,6 @@ module.exports = function(RED) {
      * If global settings different to new settings - log a warning
      */
     if (uib_rootFolder_OK === true) {
-        let newSettingsFile = path.join(uib_rootFolder, '.settings.json')
         if ( !fs.existsSync(newSettingsFile) ) {
             // Migrate old to new global settings
             RED.log.warn('uibuilder: Use of Node-RED global settings for uibuilder is DEPRECATED - please remove them from settings.js')    
@@ -210,20 +211,20 @@ module.exports = function(RED) {
              * JK @since v2.0.0 2019-03-03 Rearrange to better merge with new settings - Now only used for initial migration
              * @type {Array}
              */
-            uib_globalSettings.packages = tilib.mergeDedupe(uib_globalSettings.packages, uiblib.getProps(RED,RED.settings,'uibuilder.userVendorPackages',[]))
-            uib_globalSettings.debug = uiblib.getProps(RED,uib_globalSettings,'debug',uib_globalSettings.debug)
+            uib_globalSettings.packages = tilib.mergeDedupe(
+                uib_globalSettings.packages, // Make sure that the default packages are included
+                uiblib.getProps(RED,RED.settings,'uibuilder.userVendorPackages',[])
+            )
+            uib_globalSettings.debug = uiblib.getProps(
+                RED, uib_globalSettings, 'debug', uib_globalSettings.debug
+            )
             
             // create new settings file & copy over uib_globalSettings
             //fs.closeSync(fs.openSync(newSettingsFile, 'w'))
             fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
         } else {
             // Read the settings file into uib_globalSettings
-            try {
-                // @ts-ignore
-                uib_globalSettings = JSON.parse(fs.readFileSync(newSettingsFile))
-            } catch (e) {
-                RED.log.warn(`uibuilder: Could not read ${newSettingsFile} - invalid JSON?`)        
-            }
+            uib_globalSettings = uiblib.readGlobalSettings(newSettingsFile, RED)
         }
     }
 
@@ -262,7 +263,7 @@ module.exports = function(RED) {
             timestamp: winstonTimestamp,
             formatter: winstonFormatter
         }) // file in user folder <userDir>/uibuilder/.logs
-        log = new (winston.Logger)({
+        log = new (winston.Logger)({  // v2
             // set log level based on debug var from settings.js/uibuilder
             level: uib_globalSettings.debug === true ? 'silly' : uib_globalSettings.debug, // error, warn, info, verbose, debug, silly; true=silly
             // Where do we want log output to go?
@@ -290,21 +291,26 @@ module.exports = function(RED) {
      * @since 2017-09-21 force cwd to be NR's UserDir - Colin Law
      * @since v2.0.0 2019-03-04 Replace path resolution with my own code - MUCH more reliable */
     uib_globalSettings.packages.forEach(function (packageName) {
-        let installFolder = tilib.findPackage(packageName, userDir)
-        if (installFolder === '' ) {
-            log.error(`[Module] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}` )
-            RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
-        } else {
-            let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
-            log.info('[Module] Adding user vendor path', {'url': vendorPath, 'path': installFolder})
-            try {
-                app.use( vendorPath, serveStatic(installFolder) )
-            } catch (e) {
-                RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`)
-            }
-            vendorPaths[packageName] = {'url': '..'+vendorPath, 'folder': installFolder}
+        let temp = uiblib.addVendorPath(packageName, moduleName, userDir, log, app, serveStatic, RED)
+        if ( temp !== undefined ) {
+            vendorPaths[packageName] = temp
             updateVendorPaths(packageName)
         }
+        // let installFolder = tilib.findPackage(packageName, userDir)
+        // if (installFolder === '' ) {
+        //     log.error(`[Module] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}` )
+        //     RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
+        // } else {
+        //     let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
+        //     log.info('[Module] Adding user vendor path', {'url': vendorPath, 'path': installFolder})
+        //     try {
+        //         app.use( vendorPath, serveStatic(installFolder) )
+        //     } catch (e) {
+        //         RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
+        //     }
+        //     vendorPaths[packageName] = {'url': '..'+vendorPath, 'folder': installFolder}
+        //     updateVendorPaths(packageName)
+        // }
     }) // -- end of forEach vendor package -- //
 
     /** Create a new, additional static http path to enable loading of central static resources for uibuilder
@@ -331,7 +337,7 @@ module.exports = function(RED) {
      *  so that existing clients can be reconnected.
      * Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
      * modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
-     * NOTE: This ignores RED.settings.httpNodeRoot deliberately, it will always be /uibuilder/socket.io
+     * NOTE: This ignores RED.settings.httpNodeRoot deliberately, it will always be ../uibuilder/socket.io
      *       otherwise it is impossible to have a standard index.html file.
      **/
 
@@ -366,6 +372,7 @@ module.exports = function(RED) {
      *          it is NOT run on every message exchange.
      *          This means that websocket connections can NEVER be as secure.
      *          since token expiry and validation is only run once
+     * TODO Could be mitigated with custom function in msg send and receive functions
      **/
     if ( uib_globalSettings.hasOwnProperty('socketmiddleware') ) {
         /** Is a uibuilder specific function available? */
@@ -445,7 +452,7 @@ module.exports = function(RED) {
          */
         // TODO Only need to do this setup once - move out of nodeGo
         // TODO rework to fit new uib_globalSettings structure - maybe load from a file
-         var httpMiddleware = function(req,res,next) { next() }
+        var httpMiddleware = function(req,res,next) { next() }
         if ( uib_globalSettings.hasOwnProperty('middleware') ) {
             /** Is a uibuilder specific function available? */
             if ( typeof uib_globalSettings.middleware === 'function' ) {
@@ -1115,6 +1122,30 @@ module.exports = function(RED) {
      */
     RED.httpAdmin.get('/uibvendorpackages', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         log.verbose('[uibvendorpackages] User Page/API. List all available uibuilder vendor paths')
+
+        // Reload the settings file into uib_globalSettings in case it has changed
+        const settings = uiblib.readGlobalSettings(newSettingsFile, RED)
+        // Check if package list has changed, update vendorPaths if needed
+        if ( uib_globalSettings.packages.toString() !== settings.packages.toString() ) {
+            //console.log('uib_globalSettings changing', uib_globalSettings.packages, settings.packages)
+            let temp = tilib.compareArrays(settings.packages, uib_globalSettings.packages)
+            console.log('\n\n---------\nTEMP', temp, '\n--------\n\n')
+            uib_globalSettings = settings
+
+            // Additions
+            temp[0].forEach( (packageName) => {
+                let temp = uiblib.addVendorPath(packageName, moduleName, userDir, log, app, serveStatic, RED)
+                if ( temp !== undefined ) {
+                    vendorPaths[packageName] = temp
+                    updateVendorPaths(packageName)
+                }
+            } )
+
+            // Deletions
+            temp[1].forEach( (val) => {
+                //
+            } )
+        }
 
         res.json(vendorPaths)  // schema: {name:{url,folder}}
     }) // ---- End of uibindex ---- //
