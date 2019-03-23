@@ -183,4 +183,26 @@ module.exports = {
         return file
     }, // ----  ---- //
 
+    /** Compare 2 simple arrays, return array of arrays - additions and deletions
+     * @param {array} a1 First array
+     * @param {array} a2 Second array
+     * @returns {[string[],string[]]} Array of 2 arrays. Inner array 1: Additions, 2: Deletions
+     */
+    compareArrays: function(a1, a2) {
+        let temp = [ [], [] ]
+
+        // for each a1 entry, if not in a2 then push to temp[0]
+        for (let i = 0, len = a1.length; i < len; ++i) {
+            if(a2.indexOf(a1[i]) === -1) temp[0].push(a1[i])
+        }
+
+        // for each a2 entry, if not in a1 then push to temp[1]
+        for (let i = 0, len = a2.length; i < len; ++i) {
+            if(a1.indexOf(a2[i]) === -1) temp[1].push(a2[i])
+        }
+
+        // @ts-ignore
+        return temp
+    }, // ----  ---- //
+    
 } // ---- End of module.exports ---- //
