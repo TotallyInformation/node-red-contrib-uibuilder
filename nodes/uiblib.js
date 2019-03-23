@@ -20,6 +20,7 @@
 'use strict'
 
 const path = require('path')
+const fs = require('fs')
 const tilib = require('./tilib.js')
 
 module.exports = {
@@ -188,5 +189,43 @@ module.exports = {
 
         node.status(status)
     }, // ---- End of setNodeStatus ---- //
+
+    /** Read uibuilder .settings.json file & update uib_globalSettings var 
+     * @param {string} newSettingsFile Server location of the uibuilder settings file
+     * param {Object} uib_globalSettings Settings variable to update
+     * @param {Object} RED RED object (for error logging)
+    */
+    readGlobalSettings: function(newSettingsFile, RED) {
+        try {
+            return JSON.parse(fs.readFileSync(newSettingsFile, 'utf8'))
+        } catch (e) {
+            RED.log.error(`uibuilder: Could not read ${newSettingsFile} - invalid JSON?`, e)
+            return null
+        }
+    }, // ---- End of readGlobalSettings ---- //
+
+    /** Add a package to the vendorPaths var
+     * @param {string} newSettingsFile Server location of the uibuilder settings file
+     * param {Object} uib_globalSettings Settings variable to update
+     * @param {Object} RED RED object (for error logging)
+    */
+    addVendorPath: function(packageName, moduleName, userDir, log, app, serveStatic, RED) {
+        let installFolder = tilib.findPackage(packageName, userDir)
+        if (installFolder === '' ) {
+            log.error(`[Module] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}` )
+            RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
+            return undefined
+        } else {
+            let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
+            log.info('[Module] Adding user vendor path', {'url': vendorPath, 'path': installFolder})
+            try {
+                app.use( vendorPath, serveStatic(installFolder) )
+            } catch (e) {
+                RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
+            }
+            return {'url': '..'+vendorPath, 'folder': installFolder}
+            //updateVendorPaths(packageName)
+        }
+    }, // ---- End of addVendorPath ---- //
 
 } // ---- End of module.exports ---- //
