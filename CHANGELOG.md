@@ -1,4 +1,4 @@
-## v1.2.3
+## v1.2.4
 
 * **FIXED** Added fix to `uibuilderfe.js` from v2 branch to allow correct use of httpNodeRoot. Previously, it would fail if `httpNodeRoot` was set.
   Now it will correctly work out the root url.
