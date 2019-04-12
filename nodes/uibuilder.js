@@ -1017,11 +1017,11 @@ module.exports = function(RED) {
         switch (req.query.type) {
             case 'json': {
                 res.json(instances)
-                break;
+                break
             }
             case 'urls': {
                 res.json(Object.values(instances))
-                break;
+                break
             }
             // default to 'html' output type
             default: {
@@ -1032,7 +1032,7 @@ module.exports = function(RED) {
 
                 let page = '<!doctype html><html lang="en"><head><title>Uibuilder Index</title><link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen"></head><body><div class="container">'
                 page += '<h1>Index of uibuilder pages</h1>'
-                page += "<p>'Folders' refer to locations on your Node-RED's server. 'Paths' refer to URL's in the browser.</p>"
+                page += '<p>\'Folders\' refer to locations on your Node-RED\'s server. \'Paths\' refer to URL\'s in the browser.</p>'
                 page += '<table class="table"><thead>'
                 page += '  <tr>'
                 page += '    <th>URL</th>'
@@ -1068,7 +1068,7 @@ module.exports = function(RED) {
                 let sioVersion = tilib.readPackageJson( sioFolder ).version
                 page += '    <td><a href="https://socket.io/">socket.io</a></td>'
                 page += `    <td>${sioVersion}</td>`
-                page += `    <td>../uibuilder/socket.io/socket.io.js</td>`
+                page += '    <td>../uibuilder/socket.io/socket.io.js</td>'
                 page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, 'uibuilder/socket.io/socket.io.js')}">../uibuilder/socket.io/socket.io.js</a></td>`
                 page += `    <td>${sioFolder}</td>`
                 page += '  </tr>'
@@ -1085,9 +1085,9 @@ module.exports = function(RED) {
                     page += '  </tr>'
                 })
                 page += '</tbody></table>'
-                page += "<blockquote><p><em>Note</em>: Always use relative URL's. All vendor URL's start <code>../uibuilder/vendor/</code>, all uibuilder and custom file URL's start <code>./</code>.</p></blockquote>"
-                page += "<p>The 'Main Entry Point' shown is <i>usually</i> a JavaScript file that you will want in your index.html. However, because this is reported"
-                page += "by the authors of the package, it may refer to something completely different, uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation for the correct library files to load.</p>"
+                page += '<blockquote><p><em>Note</em>: Always use relative URL\'s. All vendor URL\'s start <code>../uibuilder/vendor/</code>, all uibuilder and custom file URL\'s start <code>./</code>.</p></blockquote>'
+                page += '<p>The \'Main Entry Point\' shown is <i>usually</i> a JavaScript file that you will want in your index.html. However, because this is reported'
+                page += 'by the authors of the package, it may refer to something completely different, uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation for the correct library files to load.</p>'
 
                 page += '<h1>Settings</h1>'
                 page += '<ul>'
@@ -1112,7 +1112,7 @@ module.exports = function(RED) {
     
                 res.send(page)
     
-                break;
+                break
             }
         }
     }) // ---- End of uibindex ---- //
@@ -1141,7 +1141,7 @@ module.exports = function(RED) {
                 }
             } )
 
-            // Deletions
+            // TODO Deletions
             temp[1].forEach( (val) => {
                 //
             } )
@@ -1188,17 +1188,17 @@ module.exports = function(RED) {
             // Check whether chosen CWD has a package.json - no command run
             case 'check': {
                 cmd = ''
-                break;
+                break
             }
             // List the top-level packages installed
             case 'packages': {
                 cmd = `${npm} ls --depth=0 --json`
-                break;
+                break
             }
             // Initialise a package.json file in the chosen CWD
             case 'init': {
                 cmd = `${npm} init -y --json`
-                break;
+                break
             }
             // Install an npm package in the chosen CWD
             case 'install': {
@@ -1214,7 +1214,7 @@ module.exports = function(RED) {
                     cmd = ''
                     output.error.push('No package name supplied for the install command')
                 }
-                break;
+                break
             }
             // Update an npm package in the chosen CWD
             case 'update': {
@@ -1230,7 +1230,7 @@ module.exports = function(RED) {
                     cmd = ''
                     output.error.push('No package name supplied for the update command')
                 }
-                break;
+                break
             }
             // Remove an npm package from the chosen CWD
             case 'remove': {
@@ -1246,11 +1246,11 @@ module.exports = function(RED) {
                     cmd = ''
                     output.error.push('No package name supplied for the remove command')
                 }
-                break;
+                break
             }
             default: {
                 cmd = `${req.query.cmd} --json`
-                break;
+                break
             }
         }
 
@@ -1303,7 +1303,7 @@ module.exports = function(RED) {
                     // List the installed modules for this instance
                     case 'packages': {
                         output.packages = Object.keys(output.result[output.result.length-1].dependencies)
-                        break;
+                        break
                     }
                     case 'install': {
                         let lastResult = output.result[output.result.length-1]
@@ -1319,10 +1319,10 @@ module.exports = function(RED) {
                         if ( uiblib.getProps(RED, lastResult, 'added[0].action', '') === 'add' ) {
                             output.installAction = 'add'
                         }
-                        break;
+                        break
                     }
                     default: {
-                        break;
+                        break
                     }
                 }
 

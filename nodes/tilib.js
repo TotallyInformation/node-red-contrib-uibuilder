@@ -55,7 +55,7 @@ module.exports = {
      * @returns {string} Input string escaped to use in a re
      */
     escapeRegExp: function(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
     }, // ---- End of escapeRegExp ---- //
 
     /**  Get a list of all of the npm run scripts in <folder>/package.json OR
@@ -85,7 +85,7 @@ module.exports = {
      * @returns {any[]} Deduplicated, merged single array
      */
     mergeDedupe: function(...arr) {
-        return [...new Set([].concat(...arr))];
+        return [...new Set([].concat(...arr))]
     }, // ----  ---- //
 
     /** Utility function to html pretty-print JSON */
@@ -98,7 +98,7 @@ module.exports = {
             .key { color: #069fb3;}
         */
         json = JSON.stringify(json, undefined, 4)
-        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         return '<pre style="color:white;background-color:black">' + json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
             var cls = 'number', style = 'style="color:white"'
             if (/^"/.test(match)) {
