@@ -68,6 +68,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
     - [ ] Add all instances endpoint folders
     - How to rebuild list if the file list changes outside of Node-RED?
   - [ ] Add new file button
+  - [ ] Add option to keep backups for edited files + button to reset to backup + hide backup files
 
   - [x] New _Advanced settings_ option (hidden by default)
      - [ ] Add flag to make use of project folder optional.
