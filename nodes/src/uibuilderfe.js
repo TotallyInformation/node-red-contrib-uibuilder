@@ -110,7 +110,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '1.2.2'
+        self.version = '1.2.3'
+        self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         self.debug = true // do not change directly - use .debug() method
 
         /** Debugging function
@@ -198,8 +199,20 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.retryFactor  = 1.5                             // starting delay factor for subsequent reconnect attempts
         self.timerid      = null
         self.ioNamespace  = self.setIOnamespace()           // Get the namespace from the current URL
-        self.ioPath       = '/uibuilder/socket.io'          // make sure client uses Socket.IO version from the uibuilder module (using path)
         self.ioTransport  = ['polling', 'websocket']
+
+        /** make sure client uses Socket.IO version from the uibuilder module (using path) @since v1.2.3 2019-04-12 allows for httpNodeRoot */
+        {
+            // split current url path, eliminate any blank elements and trailing or double slashes
+            var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
+            // handle url includes file name
+            if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
+            self.url = fullPath.pop()
+            self.httpNodeRoot = '/' + fullPath.join('/')
+            self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'socket.io')
+            self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url: ' + self.url)
+        }
+
         //#endregion --- variables ---
 
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
@@ -664,6 +677,23 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         else if (thing !== null) { out[property] = thing }
         return out
     } // --- End of make me an object --- //
+
+    /** Joins all arguments as a URL string
+     * @see http://stackoverflow.com/a/28592528/3016654
+     * @since v1.0.10, fixed potential double // issue
+     * @arguments {string} URL fragments
+     * @returns {string}
+     */
+    function urlJoin() {
+        var paths = Array.prototype.slice.call(arguments)
+        var url =
+            '/'+paths.map(function(e){
+                return e.replace(/^\/|\/$/g,'')
+            }).filter(function(e){
+                return e
+            }).join('/')
+        return  url.replace('//','/')
+    } // ---- End of urlJoin ---- //
 
 }).call(this); // Pass current context into the IIFE
 // --- End of isolation IIFE --- //
