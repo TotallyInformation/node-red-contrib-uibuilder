@@ -40,11 +40,13 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
      - [x] Allow package installations/updates/removals.
      - [ ] Allow edit of `package.json` in `<uibRoot>/<url>`.
      - [ ] Handle npm restart scripts
+     - [ ] Use `POST /nodes` API instead of npm? https://nodered.org/docs/api/admin/methods/post/nodes/
   
    - [x] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
      - [ ] Add advanced option to uibuilder.html - use of project folder is optional
   
    - [ ] Move custom middleware load from settings.js to `<uibRoot>/.mware/`. Possibly also allow for `<uibRoot>/<url>/.mware/`.
+   - [ ] Remove Winston and replace with native `new Console()` instead? https://nodejs.org/docs/latest-v8.x/api/console.html#console_new_console_stdout_stderr
    - [ ] *Update close processing to use vendorPaths. Need to check whether this is actually needed.*
 
 ###
@@ -69,6 +71,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
     - How to rebuild list if the file list changes outside of Node-RED?
   - [ ] Add new file button
   - [ ] Add option to keep backups for edited files + button to reset to backup + hide backup files
+  - [ ] ?? Can we add the current nodes URL to the info panel? ?? [See 'Read node data from node-info panel'](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
 
   - [x] New _Advanced settings_ option (hidden by default)
      - [ ] Add flag to make use of project folder optional.
@@ -135,3 +138,4 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 * [How the deploy button works](https://github.com/node-red/node-red/blob/a6ef755139613a7261372c692189f21115b2d0c6/editor/js/ui/deploy.js#L260)
 * [CORS failure when using jQuery POST](https://stackoverflow.com/questions/5584923/a-cors-post-request-works-from-plain-javascript-but-why-not-with-jquery))
 * [Notifications in the admin ui (RED.notify(msg,type))](https://github.com/node-red/node-red/wiki/API-Reference#ui)
+* [Read node data from node-info panel](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
