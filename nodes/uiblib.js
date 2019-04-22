@@ -192,8 +192,9 @@ module.exports = {
 
     /** Read uibuilder .settings.json file & update uib_globalSettings var 
      * @param {string} newSettingsFile Server location of the uibuilder settings file
-     * param {Object} uib_globalSettings Settings variable to update
+     * @param {Object} uib_globalSettings Settings variable to update
      * @param {Object} RED RED object (for error logging)
+     * @returns {Object|null} The settings read from the given file
     */
     readGlobalSettings: function(newSettingsFile, RED) {
         try {
