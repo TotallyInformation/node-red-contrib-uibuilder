@@ -1,0 +1,10 @@
+{
+    "packages": [
+        "vue",
+        "bootstrap-vue",
+        "bootstrap"
+    ],
+    "template": "vue",
+    "logging": "error",
+    "debug": false
+}
