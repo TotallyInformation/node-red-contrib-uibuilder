@@ -68,7 +68,6 @@
   "dependencies": {
     "bootstrap-vue": "^2.0.0-rc.14",
     "fs-extra": "^7.0.1",
-    "get-installed-path": "^4.0.8",
     "serve-static": "^1.13.2",
     "socket.io": "^2.2.0",
     "vue": "^2.6.9"
