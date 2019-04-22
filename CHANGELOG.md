@@ -26,7 +26,7 @@
 
 * **BREAKING CHANGE** The minimum supported version of Node.JS is now v8.5
 
-* **BREAKING CHANGE** Settings for detailed logging have changed. Instead of a single setting, two settings are now available. `debug` is now just true/false - true turns on debug output only. `logging` controls the log level ['none','error','warn','info','log','verbose','all'].
+* **BREAKING CHANGE** Settings for detailed logging have changed. Instead of a single setting, two settings are now available. `debug` is now just true/false - true turns on debug output only. `logging` controls the log level ['none','error','warn','info','log','verbose','all']. The system tries to sensibly translate from the old settings in Node-RED's `settings.js` file but if you already have the new `.settings.json` file, please update it.
   
 * **FIX** In uibuilderfe.js, provide a polyfill for String.prototype.endsWith to be kind to folk who are forced to live with Microsoft Internet Explorer or other outdated browsers.
 
