@@ -26,7 +26,7 @@
 
 * **BREAKING CHANGE** The minimum supported version of Node.JS is now v8.5
 
-* **BREAKING CHANGE** Settings for detailed logging have changed. Instead of a single setting, two settings are now available. `debug` is now just true/false - true turns on debug output only. `logging` controls the log level ['none','error','warn','info','log','verbose','all']. The system tries to sensibly translate from the old settings in Node-RED's `settings.js` file but if you already have the new `.settings.json` file, please update it.
+* **BREAKING CHANGE** Settings for detailed logging have changed. `debug` must now be either `true` or `false`. If true, extended logging goes to Node-RED's log, there is no separate, dedicated uibuilder log file now. Set Node-RED's logging level to `debug` or `trace` to see detailed logging. Set `debug` to false if you want to use Node-RED's detailed logs but don't want the uibuilder stuff cluttering things up. Default is `false`.
   
 * **FIX** In uibuilderfe.js, provide a polyfill for String.prototype.endsWith to be kind to folk who are forced to live with Microsoft Internet Explorer or other outdated browsers.
 
@@ -83,7 +83,10 @@
 
 * **CHANGED** The nodes admin html file is now split in 3, see the `node-src` folder. A build script has been added `npm run build` to assemble the actual file from the components.
   
-* **CHANGED** The npm package `winston` is no longer required for logging. A custom, simpler logging module is used instead.
+* **CHANGED** The following npm packages are no longer required and may be removed:
+  
+  *  `winston` is no longer required for logging. Logging now uses Node-RED's logger.
+  *  `get-installed-path` wasn't working reliably, now replaced with custom code.
   
 ----
 
