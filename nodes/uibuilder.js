@@ -117,8 +117,10 @@ module.exports = function(RED) {
         // Which template to use for default src files? Folder must exist in the master template folder
         'template': 'vue',
         // Back-end debug?
+        'logging': 'none',
         'debug': false,
     }
+    // TODO Replace with master template?
 
     /** Location of master template folders (containing default front-end code) @constant {string} masterTemplateFolder */
     const masterTemplateFolder = path.join( __dirname, 'templates' )
@@ -181,11 +183,18 @@ module.exports = function(RED) {
              */
             uib_globalSettings.packages = tilib.mergeDedupe(
                 uib_globalSettings.packages, // Make sure that the default packages are included
-                uiblib.getProps(RED,RED.settings,'uibuilder.userVendorPackages',[])
+                uiblib.getProps(RED,RED.settings,'uibuilder.userVendorPackages',uib_globalSettings.packages)
             )
-            uib_globalSettings.debug = uiblib.getProps(
-                RED, uib_globalSettings, 'debug', uib_globalSettings.debug
+            let mydebug = uiblib.getProps(
+                RED, RED.settings, 'uibuilder.debug', uib_globalSettings.debug
             )
+            if (typeof mydebug === 'boolean') {
+                uib_globalSettings.debug = mydebug
+                uib_globalSettings.logging = mydebug === true ? 'all': uib_globalSettings.logging
+            } else {
+                uib_globalSettings.debug = mydebug === 'none' ? false : true
+                uib_globalSettings.logging = mydebug
+            }
             
             // create new settings file & copy over uib_globalSettings
             //fs.closeSync(fs.openSync(newSettingsFile, 'w'))
@@ -193,6 +202,7 @@ module.exports = function(RED) {
         } else {
             // Read the settings file into uib_globalSettings
             uib_globalSettings = uiblib.readGlobalSettings(newSettingsFile, RED)
+            // TODO Merge file to default settings to help ensure all settings are present.
         }
     }
 
