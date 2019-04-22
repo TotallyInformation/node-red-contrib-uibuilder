@@ -5,6 +5,6 @@
         "bootstrap"
     ],
     "template": "vue",
-    "logging": "error",
+    "logging": "none",
     "debug": false
 }
