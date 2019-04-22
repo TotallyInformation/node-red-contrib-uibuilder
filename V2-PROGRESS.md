@@ -41,12 +41,13 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
      - [ ] Allow edit of `package.json` in `<uibRoot>/<url>`.
      - [ ] Handle npm restart scripts
      - [ ] Use `POST /nodes` API instead of npm? https://nodered.org/docs/api/admin/methods/post/nodes/
+
+   - [x] Remove Winston and replace with native `new Console()` instead? https://nodejs.org/docs/latest-v8.x/api/console.html#console_new_console_stdout_stderr
   
    - [x] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
      - [ ] Add advanced option to uibuilder.html - use of project folder is optional
   
    - [ ] Move custom middleware load from settings.js to `<uibRoot>/.mware/`. Possibly also allow for `<uibRoot>/<url>/.mware/`.
-   - [ ] Remove Winston and replace with native `new Console()` instead? https://nodejs.org/docs/latest-v8.x/api/console.html#console_new_console_stdout_stderr
    - [ ] *Update close processing to use vendorPaths. Need to check whether this is actually needed.*
 
 ###

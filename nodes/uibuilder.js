@@ -33,7 +33,8 @@ const serveStatic      = require('serve-static'),
       path             = require('path'),
       fs               = require('fs-extra'),
       events           = require('events'),
-      winston          = require('winston')
+      winston          = require('winston'),
+      logger           = require('./tilogger.js')
 
 // Placeholder - set in export
 var userDir = ''
@@ -92,38 +93,6 @@ function updateVendorPaths(packageName) {
             //console.error('[uibuilder] updateVendorPaths - ERROR: '+packageName, err)
         }
     }
-}
-
-function winstonFormatter(options) {
-    // - Return string will be passed to logger.
-    // - Optionally, use options.colorize(options.level, <string>) to colorize output based on the log level.
-    /**
-     * options = {
-     * {    colorize: false,
-            json: false,
-            level: 'info',
-            message: 'This is an information message.',
-            meta: {},
-            stringify: undefined,
-            timestamp: [Function: timestamp],
-            showLevel: true,
-            prettyPrint: false,
-            raw: false,
-            label: null,
-            logstash: false,
-            depth: null,
-            formatter: [Function: winstonFormatter],
-            align: false,
-            humanReadableUnhandledException: false }
-     */
-    return options.timestamp() + ' ' +
-        (options.level.toUpperCase()+ '          ').slice(0,7) + 
-        (options.message ? options.message : '') +
-        (options.meta && Object.keys(options.meta).length ? ' :: '+JSON.stringify(options.meta) : '' )
-}
-
-function winstonTimestamp() {
-    return (new Date()).toISOString().slice(0,16).replace('T', ' ')
 }
 
 /** Export the function that defines the node */
@@ -238,42 +207,17 @@ module.exports = function(RED) {
     //#endregion ---- ----
 
     //#region ---- back-end debugging ----
-    // @since 2017-09-19 setup the logger - WARNING: the module folder has to be writable!
-    // TODO: add check for writable, add check for prod/dev, prod+no dev should use standard RED.log
-    var winstonTransport
-    // dummy log functions - replaced by Winston if debug config is set @since 2019-02-03
-    var log = {
-        'error': function(...s){},
-        'warn': function(...s){},
-        'info': function(...s){},
-        'verbose': function(...s){},
-        'debug': function(...s){},
-        'silly': function(...s){},
+    if ( !fs.existsSync(path.join(uib_rootFolder, '.logs')) ) fs.mkdirSync(path.join(uib_rootFolder, '.logs'))
+    var log = logger.console(path.join(uib_rootFolder, '.logs', 'uibuilder.log'))
+    if (uib_globalSettings.logging) {
+        log.level = uib_globalSettings.logging
+    } else {
+        log.level = 'none'
     }
     if (uib_globalSettings.debug) {
-        // @since 2017-10-06 if debugging, log to ~/.node-red/uibuilder.log, otherwise log to console
-        if ( !fs.existsSync(path.join(uib_rootFolder, '.logs')) ) fs.mkdirSync(path.join(uib_rootFolder, '.logs'))
-        winstonTransport = new (winston.transports.File)({
-            /** @since 2019-03-03 Moved log location to uibuilder root folder */
-            filename: path.join(uib_rootFolder, '.logs', 'uibuilder.log'),
-            maxsize: 500000, //@since 2019-02-03 increase max log size
-            maxFiles: 10,
-            tailable: true,
-            json:false,
-            timestamp: winstonTimestamp,
-            formatter: winstonFormatter
-        }) // file in user folder <userDir>/uibuilder/.logs
-        log = new (winston.Logger)({  // v2
-            // set log level based on debug var from settings.js/uibuilder
-            level: uib_globalSettings.debug === true ? 'silly' : uib_globalSettings.debug, // error, warn, info, verbose, debug, silly; true=silly
-            // Where do we want log output to go?
-            transports: [
-                winstonTransport
-            ]
-        })
+        log.debugging = uib_globalSettings.debug === true ? true : false
     } else {
-        // @since 2019-01-27 don't log if debug not set since we output key messages to the Node-RED log anyway
-        //winstonTransport = new (winston.transports.Console)()
+        log.debugging = false
     }
     log.verbose('[Module] ----------------- uibuilder - module started -----------------')
     //#endregion ---- ----

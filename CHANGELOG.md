@@ -25,6 +25,8 @@
 * **BREAKING CHANGE** As a consequence of the above, it is no longer possible to load custom middleware via the uibuilder global settings. A newer, better approach will be reintroduced in a future version. As a workaround, the standard Node-RED custom middleware `httpNodeMiddleware` can still be used as it is loaded by uibuilder - note, however, that this is also used by http-in nodes. **Please raise an issue if you need this capability**.
 
 * **BREAKING CHANGE** The minimum supported version of Node.JS is now v8.5
+
+* **BREAKING CHANGE** Settings for detailed logging have changed. Instead of a single setting, two settings are now available. `debug` is now just true/false - true turns on debug output only. `logging` controls the log level ['none','error','warn','info','log','verbose','all'].
   
 * **FIX** In uibuilderfe.js, provide a polyfill for String.prototype.endsWith to be kind to folk who are forced to live with Microsoft Internet Explorer or other outdated browsers.
 
@@ -80,6 +82,8 @@
   * Improved `urlJoin` function: Handle arguments containing `undefined`
 
 * **CHANGED** The nodes admin html file is now split in 3, see the `node-src` folder. A build script has been added `npm run build` to assemble the actual file from the components.
+  
+* **CHANGED** The npm package `winston` is no longer required for logging. A custom, simpler logging module is used instead.
   
 ----
 
