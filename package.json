@@ -71,8 +71,7 @@
     "get-installed-path": "^4.0.8",
     "serve-static": "^1.13.2",
     "socket.io": "^2.2.0",
-    "vue": "^2.6.9",
-    "winston": "^2.4.4"
+    "vue": "^2.6.9"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.29",

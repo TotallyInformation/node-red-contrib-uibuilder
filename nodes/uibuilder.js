@@ -33,7 +33,6 @@ const serveStatic      = require('serve-static'),
       path             = require('path'),
       fs               = require('fs-extra'),
       events           = require('events'),
-      winston          = require('winston'),
       logger           = require('./tilogger.js')
 
 // Placeholder - set in export
