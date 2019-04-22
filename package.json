@@ -66,16 +66,16 @@
     "notyetnodes": {}
   },
   "dependencies": {
-    "bootstrap-vue": "^2.0.0-rc.14",
+    "bootstrap-vue": "^2.0.0-rc.19",
     "fs-extra": "^7.0.1",
     "serve-static": "^1.13.2",
     "socket.io": "^2.2.0",
-    "vue": "^2.6.9"
+    "vue": "^2.6.10"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.29",
     "replace-in-file": "^3.4.4",
-    "uglify-js": "^3.4.10"
+    "uglify-js": "^3.5.6"
   },
   "engines": {
     "node": ">=8.5"
