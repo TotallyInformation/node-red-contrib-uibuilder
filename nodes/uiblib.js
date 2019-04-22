@@ -19,9 +19,9 @@
 // @ts-check
 'use strict'
 
-const path = require('path')
-const fs = require('fs')
+const fs = require('fs-extra')
 const tilib = require('./tilib.js')
+const util = require('util')
 
 module.exports = {
 
@@ -29,7 +29,7 @@ module.exports = {
     // Needs to return the msg object
     inputHandler: function(msg, node, RED, io, ioNs, log) {
         node.rcvMsgCount++
-        log.verbose(`[${node.url}] msg received via FLOW. ${node.rcvMsgCount} messages received`, msg)
+        log.trace(`[uiblib:${node.url}] msg received via FLOW. ${node.rcvMsgCount} messages received`, msg)
 
         // If the input msg is a uibuilder control msg, then drop it to prevent loops
         if ( msg.hasOwnProperty('uibuilderCtrl') ) return null
@@ -218,7 +218,7 @@ module.exports = {
             return undefined
         } else {
             let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
-            log.info('[Module] Adding user vendor path', {'url': vendorPath, 'path': installFolder})
+            log.debug(`[uibuilder:uiblib] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
             try {
                 app.use( vendorPath, serveStatic(installFolder) )
             } catch (e) {
