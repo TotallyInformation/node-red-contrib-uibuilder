@@ -1,8 +1,3 @@
-## v1.2.3
-
-* **FIXED** Added fix to `uibuilderfe.js` from v2 branch to allow correct use of httpNodeRoot. Previously, it would fail if `httpNodeRoot` was set.
-  Now it will correctly work out the root url.
-
 ## v1.2.2
 
 * **FIXED** POST API call was not adding bearer authorisation token so not working if adminAuth used. Now working. Fixes [Issue #51](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/51), many thanks to [ElGranLoky](https://github.com/ElGranLoky) for reporting.
