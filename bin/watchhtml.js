@@ -74,6 +74,19 @@ function mergehtml() {
     console.log('MERGEHELP: Completed')
 }
 
+/*
+//v4 code
+replace(options)
+        .then(results => {
+            const changes = results.filter(result => result.hasChanged).map(result => result.file);
+            console.log('MERGEHELP: Modified files:', changes.join(', '))
+            restartNR()
+        })
+        .catch(error => {
+            console.error('MERGEHELP: Error occurred:', error)
+        })
+*/
+
 function restartNR() {
     // force a restart
     //app.send('restart')
