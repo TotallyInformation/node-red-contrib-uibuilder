@@ -1,11 +1,3 @@
-## v1.2.6
-
-* **FIXED** Updated fix for `httpNodeRoot`. Should actually be fixed now! 
-  
-  **Note** If you use `httpNodeRoot`, you need to **CHANGE** your reference to the socket.io front-end library in `index.html` - it must now be a relative URL starting with double dots:
-
-  `<script src="../uibuilder/socket.io/socket.io.js"></script>`
-
 ## v1.2.4
 
 * **FIXED** Added fix to `uibuilderfe.js` from v2 branch to allow correct use of httpNodeRoot. Previously, it would fail if `httpNodeRoot` was set.
