@@ -223,12 +223,13 @@ module.exports = function(RED) {
     // } else {
     //     log.level = 'none'
     // }
+    var log
     if (uib_globalSettings.debug) {
         // log.debugging = uib_globalSettings.debug === true ? true : false
-        var log = RED.log
+        log = RED.log
     } else {
         // log.debugging = false
-        var log = function(){}
+        log = function(){}
     }
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
     //#endregion ---- ----
@@ -1112,8 +1113,8 @@ module.exports = function(RED) {
     }) // ---- End of uibindex ---- //
 
     /** Call npm. Schema: {name:{(url),cmd}}
-     * If url parameter not provided, cwd = <userDir>, else cwd = <userDir>/<url>
-     * Returns JSON {error} if package.json doesn't exist in the cwd
+     * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib_rootFolder>/<url>
+     * ~~Returns JSON {error} if package.json doesn't exist in the cwd~~
      * Valid commands:
      *    packages = List the installed npm packages
      *    * = run as npm command with --json output
@@ -1126,34 +1127,64 @@ module.exports = function(RED) {
 
         const npm = 'npm' //process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
-        // Set the Current Working Directory (CWD). Default to userDir.
+        // Set the Current Working Directory (CWD). Default to userDir ...
         let uibPath = userDir
+        // ... but if the url param exists, use the uib root folder+url
         if ( req.query.url ) uibPath = path.join(uib_rootFolder, req.query.url)
 
         // console.log('[uibnpm] COMSPEC ', process.env.ComSpec) // normally will be cmd.exe for Windows
+        console.log(`[uibnpm] Command: ${req.query.cmd}. Package: ${req.query.package}. Path: ${uibPath}`)
 
-        // Check if package.json exists in <uibRoot>(/<url>) - if not, return error
-
+        /** results object */
         const output = {
             'result': [],
             'errResult': [],
             'error': [],
+            'package': req.query.package || '',
+            // Path to be used for npm operations
             'path': uibPath,
+            'check': {
+                // Check if package.json exists in uibPath
+                'package.json': fs.pathExistsSync(path.join(uibPath, 'package.json')),
+                // check if node_modules folder exists in uibPath
+                'node_modules': fs.pathExistsSync(path.join(uibPath, 'node_modules')),
+                // if package param provided, check whether that package folder exists in uibPath
+                'package_exists': req.query.package !== '' ? fs.pathExistsSync(path.join(uibPath, 'node_modules', req.query.package)): 'N/A',
+            },
         }
         
         // Validate cmd parameter
         let cmd = '',      // command to run (if not empty string)
             chk = true,    // Run the package.json check
             chkWarn = true // If false, package.json check fail will prevent cmd from running
+
         switch (req.query.cmd) {
-            // Check whether chosen CWD has a package.json - no command run
+            // Check whether chosen uibPath has a package.json - no command run
             case 'check': {
                 cmd = ''
                 break
             }
-            // List the top-level packages installed
+            // List the top-level packages installed in uibPath
             case 'packages': {
-                cmd = `${npm} ls --depth=0 --json`
+                if ( req.query.package ) {
+                    cmd = ''
+                    // IF uibPath = userDir ...
+                    //    Read .settings.json, extract package list, replace uib_globalSettings.packages
+                    //    foreach package, Check node_modules, remove any that aren't actually installed
+                    //    if uib_globalSettings.packages has changed, write back to .settings.json
+                    // ELSE
+                    //    List the top-level packages installed in uibPath
+                    //    cmd = `${npm} ls ${uibPath} --depth=0 --json`
+                    /*
+                            λ  npm ls C:\src\nr\data\uibuilder\uib --depth=0
+                            node-red-project@0.0.4 C:\src\nr\data
+                            `-- (empty)
+                    */
+                } else {
+                    cmd = ''
+                    output.error.push('No package name supplied for the package list command')
+                }
+
                 break
             }
             // Initialise a package.json file in the chosen CWD
@@ -1195,15 +1226,16 @@ module.exports = function(RED) {
             }
             // Remove an npm package from the chosen CWD
             case 'remove': {
-                /** Don't allow cmd to continue if package.json doesn't exist
-                 *  since this will install the package in a parent folder
-                 *  and that can be confusing.
-                 */
-                chkWarn = false
                 if ( req.query.package ) {
-                    cmd = `${npm} remove ${req.query.package} --json`
+                    if ( output.check.package_exists === true) {
+                        cmd = `${npm} remove ${req.query.package} --json`
+                    } else {
+                        // Package doesn't exist in uibLib/node_modules
+                        cmd = ''
+                        output.error.push('Package does not exist in node_modules for the remove command')                      
+                    }
                 } else {
-                    // No package to install
+                    // No package to remove
                     cmd = ''
                     output.error.push('No package name supplied for the remove command')
                 }
@@ -1217,29 +1249,28 @@ module.exports = function(RED) {
 
         // Check whether chosen CWD has a package.json - if not, immediately returns an error
         if (chk) {
-            let pjPath = path.join(uibPath, 'package.json')
-            output.check = {}
-            if ( !fs.existsSync(pjPath) ) {
-                output.errResult.push(`${pjPath} does not exist`)
+            if ( output.check['package.json'] === false ) {
+                output.errResult.push(`${uibPath}/package.json does not exist`)
                 output.error.push(`package.json does not exist in folder ${uibPath}`)
-                output.check['package.json'] = false
                 // If cmd isn't sensible without package.json, stop it now
                 if (chkWarn === false) {
                     cmd = ''
                     output.error.push('cmd blocked because no package.json exists at this path')
                 }
             } else {
-                output.result.push(`${pjPath} exists`)
-                output.check['package.json'] = true
+                output.result.push(`${uibPath}/package.json exists`)
             }
             let modPath = path.join(uibPath, 'node_modules')
-            if ( !fs.existsSync(modPath) ) {
+            if ( output.check['node_modules'] === false ) {
                 output.errResult.push(`${modPath} does not exist`)
                 output.error.push(`node_modules does not exist in folder ${uibPath}`)
-                output.check['node_modules'] = false
+                // If cmd isn't sensible without node_modules folder, stop it now
+                if (chkWarn === false) {
+                    cmd = ''
+                    output.error.push('cmd blocked because no node_modules folder exists at this path')
+                }
             } else {
                 output.result.push(`${modPath} exists`)
-                output.check['node_modules'] = true
             }
         }
 
@@ -1282,16 +1313,45 @@ module.exports = function(RED) {
                         }
                         break
                     }
+                    case 'remove': {
+                        console.log(`[uibnpm] Command: ${cmd}. Output: `, output)
+                        let lastResult = output.result[output.result.length-1]
+                        let errCode = uiblib.getProps(RED, lastResult, 'error.code', '')
+                        if ( errCode === 'E404' ) {
+                            output.error.push(`Package '${req.query.package}' not found by npm`)
+                            //output.installAction = 'none'
+                        }
+                        break
+                    }
                     default: {
                         break
                     }
                 }
 
+                if ( output.package !== '' ) {
+                    // Recheck whether package is actually installed
+                    output.check.package_exists = fs.pathExistsSync(path.join(uibPath, 'node_modules', req.query.package))
+                    if ( output.check.package_exists === true ) {
+                        // If it is, update the global settings & the .settings.json file
+                        uib_globalSettings.packages = tilib.mergeDedupe(uib_globalSettings.packages, [output.package])
+                        fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
+                    } else {
+                        // Otherwise, remove from the global settings & the .settings.json file
+                        let index
+                        while ((index = uib_globalSettings.packages.indexOf(output.package)) > -1) {
+                            uib_globalSettings.packages.splice(index, 1)
+                            fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
+                        }
+                    }
+                }
+                
                 res.json(output)
             }) // --- End of exec process (async) --- //
         } else {
             res.json(output)
         }
+
+        console.log(`[uibnpm] Command: ${cmd}. Output: `, output)
 
     }) // ---- End of uibindex ---- //
     //#endregion --- Admin API's ---
