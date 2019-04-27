@@ -170,8 +170,8 @@ module.exports = function(RED) {
      *       otherwise it is impossible to have a standard index.html file.
      **/
 
-    /** @constant {string} uib_socketPath */
-    const uib_socketPath = tilib.urlJoin(httpNodeRoot, moduleName, 'socket.io')
+    /** @constant {string} */
+    const uib_socketPath = tilib.urlJoin(moduleName, 'socket.io')
 
     log.debug('[Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
     var io = socketio.listen(RED.server, {'path': uib_socketPath}) // listen === attach
