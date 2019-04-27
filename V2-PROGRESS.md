@@ -2,7 +2,21 @@ This is the design note for part 2 of enabling source file editing from the Node
 
 Please refer to Issue #43 for the part 1 design notes that show everything implemented in uibuilder v1.1.0.
 
-**NOTE**: If using Node-RED's "projects" feature, each project now gets its own `uibuilder` folder. Without projects, this is located at `<userDir>/uibuilder/`. With projects, it will not be located at `<userDir>/projects/<projectName>/uibuilder/`. **This location will now be referred to as `<uibRoot>`**.
+**NOTE**: If using Node-RED's "projects" feature, each project now gets its own `uibuilder` folder. Without projects, this is located at `<userDir>/uibuilder/`. With projects, it will be located at `<userDir>/projects/<projectName>/uibuilder/`. **This location will now be referred to as `<uibRoot>`**.
+
+----
+## IN PROGRESS
+
+npm install/remove - has to trigger a change that updates uib_globalSettings, changes .settings.json and adds/removes vendor packages
+
+currently uibuilder-script.js/packageList() calls uibuilder.js/uibvendorpackages API - probably needs to be folded into the uibnpm API
+which has more comprehensive checks on whether something is installed or not.
+
+Either way, whenever the packages are checked, uib_globalSettings, .settings.json and the served vendor packages all need updating.
+Remember that updates could happen outside Node-RED so excess checking is worth it here.
+
+----
+
 
 
 - [ ] Allow change of uibuilder.url to:
@@ -87,11 +101,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
   - [ ] Use https://api.npms.io/v2/package/node-red-contrib-uibuilder to highlight installed modules that have updates
 
 
-- [x] Move back-end log files from `<userDir>` to `<uibRoot>/.logs`
-
-   - [ ] add check for writable
-   - [ ] add check for prod/dev, prod+no dev should use standard RED.log
-   - [ ] Find a way to have different logs per instance.
+- [x] ~~Move back-end log files from `<userDir>` to `<uibRoot>/.logs`~~ Logging now integrated to Node-RED logs.
 
 ###
 
