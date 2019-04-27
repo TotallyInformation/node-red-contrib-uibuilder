@@ -443,9 +443,12 @@
                     }
                 })
             })
-            //#endregion ----  ---- //
+            //#endregion ---- File Editor ---- //
 
             //#region ---- npm ---- //
+            $('#npm-response').hide()
+            /** @type {string[]} */
+            var npmMsg = []
             // NB: Assuming that the edit section is closed
             // Show the npm section, hide the main & adv sections
             $('#show-npm-props').click(function(e) {
@@ -460,10 +463,67 @@
             // Hide the npm section, show the main section
             $('#npm-close').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
+
+                // Empty the msgbox & hide it
+                $('#npm-response').html('').hide()
+
                 $('#main-props').show()
                 $('#npm-props').hide()
             })
-            //#endregion ----  ---- //
+            // Run the install command
+            $('#npm-install').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+
+                // Empty the msgbox & hide it
+                $('#npm-response').html('').hide(); npmMsg = []
+
+                // If packagename empty, don't bother
+                var packageName = $('#npm-package-name').val()
+                if ( packageName !== '' ) {
+                    $.get( 'uibnpm?cmd=install&package=' + packageName , function(data){ // + '&url=' + url
+                        console.log( '[uibuilder:npm-install:get] Success. Package: ', packageName, data )
+                        if (data.check.package_exists === false) {
+                            npmMsg.push('Requested package could not be installed.')
+                        } else {
+                            npmMsg.push('Package added.')
+                        }
+                        // TODO Add to .settings.json
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        console.error( '[uibuilder:npm-remove:get] Package:' + packageName + '. Error ' + textStatus, errorThrown )
+                        npmMsg.push('Error returned: ' + textStatus)
+                    }).always(function(){
+                        $('#npm-response').html('<p>' + npmMsg.join('<br>') + '</p>').show()
+                        packageList() // refresh the package list    
+                    })
+            }
+            })
+            // Run the remove command
+            $('#npm-remove').click(function(e) {
+                e.preventDefault() // don't trigger normal click event
+
+                // Empty the msgbox & hide it
+                $('#npm-response').html('').hide(); npmMsg = []
+
+                // If packagename empty, don't bother
+                var packageName = $('#npm-package-name').val()
+                if ( packageName !== '' ) {
+                    $.get( 'uibnpm?cmd=remove&package=' + packageName , function(data){ // + '&url=' + url
+                        console.log( '[uibuilder:npm-remove:get] Success. Package: ', packageName, data )
+                        if (data.check.package_exists === false) {
+                            npmMsg.push('Requested package does not exist.')
+                        } else {
+                            npmMsg.push('Package removed.')
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        console.error( '[uibuilder:npm-remove:get] Package:' + packageName + '. Error ' + textStatus, errorThrown )
+                        npmMsg.push('Error returned: ' + textStatus)
+                    }).always(function(){
+                        $('#npm-response').html('<p>' + npmMsg.join('<br>') + '</p>').show()
+                        packageList() // refresh the package list    
+                    })
+            }
+            })
+            //#endregion ---- npm ---- //
 
             /** TODO: Get list of installed ACE themes, add chooser, save current choice
              * that.editor.setTheme("ace/theme/monokai")
