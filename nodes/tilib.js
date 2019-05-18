@@ -20,10 +20,9 @@
 'use strict'
 
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs-extra')
 
 module.exports = {
-
     /** Remove leading/trailing slashes from a string
      * @param {string} str
      * @returns {string}
@@ -127,7 +126,8 @@ module.exports = {
      *       this throws out the tree search. That's why we have to try several different locations here.
      *       Also, it finds the "main" script name which might not be in the package root.
      * @param {string} packageName - Name of the package who's root folder we are looking for.
-     * @param {string} userDir - Home folder for Node-RED modules
+     * @param {string} userDir - Home folder for Node-RED modules - needed to allow search for installation
+     * @return {null|string} Actual filing system path to the installed package
      */
     findPackage: function(packageName, userDir) {
         
@@ -154,6 +154,8 @@ module.exports = {
             //console.log (`${packageName} not found from uibuilder`)
         }
 
+        if ( found === false ) return null
+
         /** require.resolve returns the "main" script, this may not be in the root folder for the package
          *  so we change that here. We check whether the last element of the path matches the package
          *  name. If not, we walk back up the tree until it is or we run out of tree.
@@ -168,6 +170,32 @@ module.exports = {
 
         return packagePath
     }, // ----  ---- //
+
+    /** Return an updated list of installed front-end library packages
+     * @param {string[]} masterPackageList Array of installed package names
+     * @param {string} userDir Home folder for Node-RED modules - needed to allow search for installation
+     * @return {string[]} Updated array of installed packages
+     */
+    updatePackageList: function(masterPackageList, userDir) {
+        // TODO DEPRECATE and change references to uiblib.updVendorPaths()
+        // Clone the current package list
+        const packageList = [...masterPackageList]
+        // Walk the cloned list and find any that are no longer actally there - changes the original list
+        packageList.forEach(function(packageName,index){
+            // call check function
+            const qPackage = this.findPackage(packageName, userDir)
+            // If not found, remove from global list
+            if ( qPackage === null ) {
+                masterPackageList = masterPackageList.filter(function(pName, index){
+                    return pName != packageName
+                })
+            }
+            // TODO ?Remove served references? Is this necessary?
+        })
+        // Find common FE packages and add them to the list if not already there - changes the original list
+
+        return masterPackageList
+    }, // ---- End of updatePackageList ---- //
 
     /** Read the contents of a package.json file 
      * @param {string} folder The folder containing a package.json file
