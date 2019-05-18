@@ -287,6 +287,60 @@
             // TODO Fix for updated settings
             //$('#bedebug').text(RED.settings.uibuilder.debug)
 
+            // TODO Move to top
+            /** AddItem function for package list
+             * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
+             * @param {number} index the index of the row
+             * @param {*} data data object for the row. {} if add button pressed, else data passed to addItem method
+             */
+            function addPackageRow(element,index,data) {
+                var hRow = ''
+                if (Object.entries(data).length === 0) {
+                    // Add button was pressed so we have no packageName, create an input form instead
+                    hRow='<input type="text" id="packageList-input-' + index + '"> <button id="packageList-button-' + index + '">Install</button>'
+                } else {
+                    // addItem method was called with a packageName passed
+                    hRow = data
+                }
+                // Build the output row
+                $('<div class="packageList-row-data">'+hRow+'</div>').appendTo(element)
+                // Create a button click listener for the install button for this row
+                $('#packageList-button-' + index).click(function(){
+                    console.log('.packageList-row-data button::click', $('#packageList-input-' + index).val() )
+                    // TODO Call the npm installPackage API (it updates the package list)
+                    // TODO If successful, 
+                    //   TODO change the row, remove input field & button
+                    //   TODO Add to local package list (saves a call to the api)
+                    // TODO otherwise highlight input
+                })
+            }
+
+            // Setup the package list
+            $('#node-input-packageList').editableList({
+                addItem: addPackageRow,
+                removeItem: function(data){},
+                resizeItem: function(row,index) {},
+                header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
+                height: 'auto',
+                addButton: true,
+                removable: true,
+                scrollOnAdd: true,
+                sortable: false,
+            })
+
+            /** Initialise default values for package list
+             * NOTE: This is build dynamically each time the edit panel is opened
+             *       we are not saving this since external changes would result in
+             *       users having being prompted to deploy even when they've made
+             *       no changes themselves to a node instance.
+             */
+            // TODO Check for installed packages first to build the local package list
+            var pl = ['vue','bootstrap-vue','bootstrap']
+            pl.forEach((packageName,i,array) => {
+                packageName = pl[i]
+                $('#node-input-packageList').editableList('addItem',packageName)
+            })
+
             // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
                 // Show the root URL
@@ -616,6 +670,11 @@
         <div class="form-row" title="Make sure this gives a unique URL">
             <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
             <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
+        </div>
+
+        <!-- Package List -->
+        <div class="form-row">
+            <ol id="node-input-packageList"></ol>
         </div>
 
         <!-- Allow scripts/styles to be passed to front-end? -->
