@@ -7,13 +7,10 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 ----
 ## IN PROGRESS
 
-npm install/remove - has to trigger a change that updates uib_globalSettings, changes .settings.json and adds/removes vendor packages
-
-currently uibuilder-script.js/packageList() calls uibuilder.js/uibvendorpackages API - probably needs to be folded into the uibnpm API
-which has more comprehensive checks on whether something is installed or not.
-
-Either way, whenever the packages are checked, uib_globalSettings, .settings.json and the served vendor packages all need updating.
-Remember that updates could happen outside Node-RED so excess checking is worth it here.
+* common folder not working.
+* npm processing needs changing.
+* need to remove old settings code & matching update code - replace with new
+* Add new middleware processing
 
 ----
 
@@ -151,3 +148,4 @@ Remember that updates could happen outside Node-RED so excess checking is worth 
 * [CORS failure when using jQuery POST](https://stackoverflow.com/questions/5584923/a-cors-post-request-works-from-plain-javascript-but-why-not-with-jquery))
 * [Notifications in the admin ui (RED.notify(msg,type))](https://github.com/node-red/node-red/wiki/API-Reference#ui)
 * [Read node data from node-info panel](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
+* Creating an eventlog display in the admin ui: See `RED.eventLog` in `red.js` - uses the ACE editor.
