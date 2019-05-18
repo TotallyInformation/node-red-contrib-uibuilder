@@ -201,7 +201,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.timerid      = null
         self.ioNamespace  = self.setIOnamespace()           // Get the namespace from the current URL
         self.ioTransport  = ['polling', 'websocket']
-        
+
         /** make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot */
         {
             // split current url path, eliminate any blank elements and trailing or double slashes
@@ -210,7 +210,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
             self.url = fullPath.pop()
             self.httpNodeRoot = '/' + fullPath.join('/')
-            self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'socket.io')
+            self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')
             self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url: ' + self.url)
         }
 
@@ -629,7 +629,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         // Make sure we connect the first time ok
         self.checkConnect(self.retryMs, self.retryFactor)
-    
+
         //#endregion ======== end of execution ======== //
 
         // Make externally available the external methods
