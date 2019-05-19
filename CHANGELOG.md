@@ -2,7 +2,7 @@
 
 This release has some breaking changes over the previous v2.0.0 so I've changed the version number.
 
-Since the URI's for uibuilder have changed between v1 and v2, I've created [a WIKI page summarising the new ones](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths).
+Since the URI's for uibuilder have changed between v1 and v2, I've created [a WIKI page summarising the new ones](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths). Note: `<uibRoot>` = `<userDir>/uibuilder` or `<userDir>/projects/<projectName>/uibuilder` if using projects.
 
 
 * **BREAKING CHANGE** No more settings files! Neither the old settings in `<userDir>/settings.js` nor the "new" ones in `<uibRoot>/.settings.json` are needed any more. _This greatly simplifies configuration_.

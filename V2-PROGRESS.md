@@ -1,15 +1,17 @@
 This is the design note for part 2 of enabling source file editing from the Node-RED admin ui.
 
-Please refer to Issue #43 for the part 1 design notes that show everything implemented in uibuilder v1.1.0.
+**NOTES**: 
 
-**NOTE**: If using Node-RED's "projects" feature, each project now gets its own `uibuilder` folder. Without projects, this is located at `<userDir>/uibuilder/`. With projects, it will be located at `<userDir>/projects/<projectName>/uibuilder/`. **This location will now be referred to as `<uibRoot>`**.
+* Developer documentation is now included in the `docs` folder of this repository.
+* Please refer to Issue #43 for the part 1 design notes that show everything implemented in uibuilder v1.1.0.
+* Since the URI's for uibuilder have changed between v1 and v2, I've created [a WIKI page summarising the new ones](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths).
+* If using Node-RED's "projects" feature, each project now gets its own `uibuilder` folder. Without projects, this is located at `<userDir>/uibuilder/`. With projects, it will be located at `<userDir>/projects/<projectName>/uibuilder/`. **This location will now be referred to as `<uibRoot>`**.
 
 ----
 ## IN PROGRESS
 
-* common folder not working.
-* npm processing needs changing.
-* need to remove old settings code & matching update code - replace with new
+* npm processing.
+* need to remove old settings code & matching update code - replace with new. Partially complete.
 * Add new middleware processing
 
 ----
@@ -25,7 +27,8 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 ###
 
 - Improvements to front-end (`uibuilderfe.js` and templates)
-   - [x] (v2) Move socket.io client library path to include `httpNodeRoot`.
+   - [x] Move socket.io client library path to include `httpNodeRoot`.
+   - [x] Move socket.io client library path to include `vendor`. Path is now `../uibuilder/vendor/socket.io/socket.io.js` to match other vendor paths.
    - [x] Change default template from jquery + normalize.cs to VueJS + bootstrap-vue (much the same size)
       - [x] Needs to auto-install vue and boostrap-vue packages.
    - [x] Fix regression bug preventing socket.io from communicating when `httpNodeRoot` not set. Add `urlJoin()` to fix.
@@ -33,16 +36,16 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 ###
 
 - Improvements to back-end (`uibuilder.js`)
-   - [x] (v2) Move vendor file serving from instance level to module level so it is only ever done once. Also rationalise.
-   - [x] Move uibindex API from standard to admin web interfaces.
+   - [x] Move vendor file serving from instance level to module level so it is only ever done once. Also rationalise.
+   - [x] Move uibindex API from standard to admin web interfaces for better security.
    - [x] Add `<adminurl>/uibvendorpackages` admin API.
    - [x] Use `<adminurl>/uibvendorpackages` API to list available vendor package urls in admin ui.
-   - [x] (v2) Move socket.io client library path to include `httpNodeRoot`.
-   - [x] Move active vendor package list from `settings.json` to `<uibRoot>/` to allow it to be updated by install handling. (Breaking change)
-   - [x] Add initial process to move settings after migration from v1 to v2.
+   - [x] Move socket.io client library path to include `httpNodeRoot` & `vendor`.
+   - [x] ~~Move active vendor package list from `settings.json` to `<uibRoot>/` to allow it to be updated by install handling.~~ No settings file now needed. (Breaking change - if uncommon library used, will need to add it using the admin ui, common libraries will be picked up automatically)
+   - [x] ~~Add initial process to move settings after migration from v1 to v2.~~ Settings no longer required.
    - [x] Add Socket.IO path to the `<adminurl>/uibindex` API - in preparation for enabling other nodes to communicate with uibuilder front-end's.
-   - [x] Fix the folder location lookup for front-end packages. New function `findPackage` added to `tilib.js`, replaces the `get-installed-path` 3rd party package.
-   - [x] Add extra info to the `vendorPaths` variable. Including whether the package is include in the `<userDir>/package.json` dependencies & information from the packages own package.json file including homepage, main entry point and version string.
+   - [x] ~~Fix the folder location lookup for front-end packages. New function `findPackage` added to `tilib.js`, replaces the `get-installed-path` 3rd party package.~~ Completely rewritten
+   - [x] ~~Add extra info to the `vendorPaths` variable. Including whether the package is include in the `<userDir>/package.json` dependencies & information from the packages own package.json file including homepage, main entry point and version string.~~ Completely rewritten.
   
    - [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter).
      - [x] List all installed top-level packages
@@ -55,6 +58,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 
    - [x] Remove Winston ~~and replace with native `new Console()` instead? https://nodejs.org/docs/latest-v8.x/api/console.html#console_new_console_stdout_stderr~~
    - [x] Integrate logging back into standard Node-RED log output. Set Node-RED's logging level to `debug` or `trace` to see details.
+   - [x] With move of npm package installations into the admin ui, settings are no longer required. Common front-end packages will be found and added to the vendor list automatically. Others have to be added via the admin ui. `vendorPaths` variable is now used to contain the list of available packages and their metadata. See docs for details.
   
    - [x] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
      - [ ] Add advanced option to uibuilder.html - use of project folder is optional
@@ -67,7 +71,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 - Improvements to admin config ui (`uibuilder.html`)
   - [x] Swap vendor path list to uibvendorpackages API
   - [x] Cancel and Done buttons disabled if there are unsaved changes to a file. Either Save or reset the file to re-enable them.
-  - [x] Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use).
+  - [x] Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use). `instances` module variable now used to track all active instances of uibuilder.
   - [x] Default/previously selected file opened for edit automatically.
   - [x] Improved handling of reopening the ui - last file selection retained.
   - [x] Add input parameter and path validation
@@ -91,11 +95,11 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
      - [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - giving the ability to have extra control, use a different port and separate security.
         - [ ] Need to make use of Node-RED middleware optional.
   
-  - [ ] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
+  - [x] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
   - [ ] Add file delete (button is in place but disabled) - needs a confirm dialogue
   - [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
   - [ ] Add validation hints for users
-  - [ ] Use https://api.npms.io/v2/package/node-red-contrib-uibuilder to highlight installed modules that have updates
+  - [ ] Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates
 
 
 - [x] ~~Move back-end log files from `<userDir>` to `<uibRoot>/.logs`~~ Logging now integrated to Node-RED logs.
@@ -110,7 +114,7 @@ Please refer to Issue #43 for the part 1 design notes that show everything imple
 
 ###
 
-- [ ] (v2) Update WIKI and examples for new paths
+- [x] Update WIKI and examples for new paths
 
 
 ## Maybe
