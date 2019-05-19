@@ -16,7 +16,8 @@ This is the design note for part 2 of enabling source file editing from the Node
 
 ### To Fix
 
-* Admin ui default text for advanced is "Path & Module Details", it should be "Path & Module Info"
+* [Minor] Admin ui default text for advanced is "Path & Module Details", it should be "Path & Module Info"
+* [Minor] When a client connects, both control msgs contain msg.cacheControl = "REPLAY". Only 1 of them needs that.
 
 ----
 
@@ -24,15 +25,16 @@ This is the design note for part 2 of enabling source file editing from the Node
 
 These are an overview of what I really need/want to get working before release.
 
+* [ ] Admin UI: Move Installed Packages editable list into the "Manage Front-End Libraries" section.
 * [ ] Add/Remove/Update npm packages in userDir (for front-end library management).
-* [ ] File editor needs new file and delete file handling.
+* [ ] Admin UI: File editor needs new file and delete file handling.
 * [ ] Allow for middleware to be loaded from files in `<uibRoot>` both for http and for websockets
 
 These are what I'd like to also squeeze in but they might have to wait to v2.1
 
-* [ ] File editor needs to handle file uploads.
-* [ ] File editor needs to handle folders.
-* [ ] File editor needs to handle common folder not just the instance folder.
+* [ ] Admin UI: File editor needs to handle file uploads.
+* [ ] Admin UI: File editor needs to handle folders.
+* [ ] Admin UI: File editor needs to handle common folder not just the instance folder.
 * [ ] Deal with instance folders build script if found.
 * [ ] Build script processing needs the ability to do npm handling for the instance folder not just for userDir.
 
