@@ -47,17 +47,17 @@ module.exports = {
         // pass the complete msg object to the uibuilder client
         // TODO: This should have some safety validation on it!
         if (msg._socketId) {
-            log.debug(`[${node.url}] msg sent on to client ${msg._socketId}. Channel: ${node.ioChannels.server}`, msg)
+            log.trace(`[${node.url}] msg sent on to client ${msg._socketId}. Channel: ${node.ioChannels.server}`, msg)
             ioNs.to(msg._socketId).emit(node.ioChannels.server, msg)
         } else {
-            log.debug(`[${node.url}] msg sent on to ALL clients. Channel: ${node.ioChannels.server}`, msg)
+            log.trace(`[${node.url}] msg sent on to ALL clients. Channel: ${node.ioChannels.server}`, msg)
             ioNs.emit(node.ioChannels.server, msg)
         }
 
         if (node.fwdInMessages) {
             // Send on the input msg to output
             node.send(msg)
-            log.debug(`[${node.url}] msg passed downstream to next node`, msg)
+            log.trace(`[${node.url}] msg passed downstream to next node`, msg)
         }
 
         return msg
@@ -73,7 +73,7 @@ module.exports = {
      * @param {Object} log - Winston logging instance
      */
     processClose: function(done = null, node, RED, ioNs, io, app, log, instances) {
-        log.debug(`[${node.url}] nodeGo:on-close:processClose`)
+        log.trace(`[${node.url}] nodeGo:on-close:processClose`)
 
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
@@ -190,43 +190,136 @@ module.exports = {
         node.status(status)
     }, // ---- End of setNodeStatus ---- //
 
-    /** Read uibuilder .settings.json file & update uib_globalSettings var 
-     * @param {string} newSettingsFile Server location of the uibuilder settings file
-     * @param {Object} uib_globalSettings Settings variable to update
-     * @param {Object} RED RED object (for error logging)
-     * @returns {Object|null} The settings read from the given file
-    */
-    readGlobalSettings: function(newSettingsFile, RED) {
-        try {
-            return JSON.parse(fs.readFileSync(newSettingsFile, 'utf8'))
-        } catch (e) {
-            RED.log.error(`uibuilder: Could not read ${newSettingsFile} - invalid JSON?`, e)
-            return null
+    /** Add an ExpressJS url for an already npm installed package (doesn't update vendorPaths var)
+     * @param {string} packageName Name of the front-end npm package we are trying to add
+     * @param {string} installFolder The filing system location of the package (if '', will use findPackage() to search for it)
+     * @param {string} moduleName Name of the uibuilder module ('uibuilder')
+     * @param {string} userDir Reference to the Node-RED userDir folder
+     * @param {Object} log Custom logger instance
+     * @param {Object} app ExpressJS web server app instance
+     * @param {Object} serveStatic ExpressJS static serving middleware instance
+     * @param {Object} RED RED object instance (for error logging)
+     * @returns {null|{url:string,folder:string}} Vendor url & fs path
+     */
+    addPackage: function(packageName, installFolder='', moduleName, userDir, log, app, serveStatic, RED) {
+        if ( installFolder === '' ) {
+            installFolder = tilib.findPackage(packageName, userDir)
         }
-    }, // ---- End of readGlobalSettings ---- //
 
-    /** Add a package to the vendorPaths var
-     * @param {string} newSettingsFile Server location of the uibuilder settings file
-     * param {Object} uib_globalSettings Settings variable to update
-     * @param {Object} RED RED object (for error logging)
-    */
-    addVendorPath: function(packageName, moduleName, userDir, log, app, serveStatic, RED) {
-        let installFolder = tilib.findPackage(packageName, userDir)
         if (installFolder === '' ) {
-            log.error(`[Module] Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}` )
             RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
-            return undefined
+            return null
         } else {
             let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
-            log.debug(`[uibuilder:uiblib] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
+            log.trace(`[uibuilder:uiblib:addPackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
             try {
-                app.use( vendorPath, serveStatic(installFolder) )
+                app.use( vendorPath, /**function (req, res, next) {
+                    // TODO Allow for a test to turn this off
+                    // if (true !== true) {
+                    //     next('router')
+                    // }
+                    next() // pass control to the next handler
+                }, */ serveStatic(installFolder) )
+                return {'url': '..'+vendorPath, 'folder': installFolder}
             } catch (e) {
                 RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
+                return null
             }
-            return {'url': '..'+vendorPath, 'folder': installFolder}
-            //updateVendorPaths(packageName)
         }
-    }, // ---- End of addVendorPath ---- //
+    }, // ---- End of addPackage ---- //
+
+    /** Check/add/remove packages in vendorPaths & static server
+     * @param {Object} vendorPaths Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
+     * @param {string} moduleName Name of the uibuilder module ('uibuilder' by default)
+     * @param {string} userDir Name of the Node-RED userDir folder currently in use
+     * @param {Object} log Custom logger instance
+     * @param {Object} app ExpressJS web server app instance
+     * @param {Object} serveStatic ExpressJS static serving middleware instance
+     * @param {Object} RED RED object instance (for error logging)
+     * @returns {Object} Updated vendorPaths object
+     */
+    updVendorPaths: function(vendorPaths, moduleName, userDir, log, app, serveStatic, RED) {
+        if ( userDir === '' ) return null
+
+        // Check for known, common packages and add them if found & not already in vendorPaths
+        const commonFePackages = [
+            // TODO Move this to the main module - or maybe to its own object in this library
+            'vue','bootstrap','bootstrap-vue','jquery','moonjs','reactjs','riot','angular',
+            'picnic','umbrellajs',
+        ]
+        commonFePackages.forEach(packageName => {
+            let fp = tilib.findPackage(packageName, userDir)
+            if ( (fp !== null) && (! vendorPaths.hasOwnProperty(packageName)) ) {
+                // Add package
+                let fp2 = this.addPackage(packageName, fp, moduleName, userDir, log, app, serveStatic, RED)
+                //findPackage = null
+                if ( (fp2 !== null) ) {
+                    vendorPaths[packageName] = fp2
+                }
+            }
+        })
+        
+        if ( Object.values(vendorPaths).length === 0 ) return null
+
+        const packageList = Object.keys(vendorPaths)
+
+        packageList.forEach(function(packageName,index){
+            /** RE-Check if package exists in userDir/node_modules (tilib.findPackage) (in case it was removed via command line)
+             * @type {string|null} pkgFolder
+             */
+            const pkgFolder = tilib.findPackage(packageName, userDir)
+            if ( pkgFolder === null ) {
+                // If it doesn't, remove from list (will disable static serve route)
+                delete vendorPaths[packageName]
+            } else {
+                // If it does, re-read package.json for any updated details
+
+                // Get the package.json
+                const pj = tilib.readPackageJson( pkgFolder )
+                // Find installed version
+                vendorPaths[packageName].version = pj.version
+                // Find main entry point (or null)
+                vendorPaths[packageName].main = pj.main
+                // Find homepage
+                vendorPaths[packageName].homepage = pj.homepage
+
+                // TODO (maybe) check if it exists in userDir/package.json
+            }
+        })
+
+        return vendorPaths
+
+        // Check if package exists in userDir/package.json
+        //const userDirPackageInfo = tilib.readPackageJson( userDir )
+
+/*         //console.log('[uibuilder] updateVendorPaths - userDirPackageInfo', userDirPackageInfo)
+
+        // Update the package details
+        if ( packageName in vendorPaths ) {
+            try {
+                // does this package exist in <userDir>/package.json?
+                vendorPaths[packageName].userDirRequired = false
+                if ( packageName in userDirPackageInfo.dependencies ) {
+                    vendorPaths[packageName].userDirRequired = true
+                }
+                // version of package installed
+                vendorPaths[packageName].userDirWanted = userDirPackageInfo.dependencies[packageName] || ''
+
+                // Get the package.json for the install package
+                const packageInfo = tilib.readPackageJson( vendorPaths[packageName].folder )
+                // homepage of package installed
+                //if ( homepage in packageInfo )
+                vendorPaths[packageName].homepage = packageInfo.homepage || ''
+                // Main entrypoint of package installed
+                vendorPaths[packageName].main = packageInfo.main || ''
+                // Installed Version
+                vendorPaths[packageName].version = packageInfo.version || ''
+            } catch (err) {
+                //console.error('[uibuilder] updateVendorPaths - ERROR: '+packageName, err)
+            }
+        } */
+
+        //return vendorPaths
+    }, // ---- End of updVendorPaths ---- //
 
 } // ---- End of module.exports ---- //
