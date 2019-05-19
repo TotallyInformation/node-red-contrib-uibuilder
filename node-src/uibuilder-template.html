@@ -17,11 +17,28 @@
             <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
         </div>
 
+        <!-- Buttons to show "edit src files" & "mng front-end libs", hide this section -->
+        <div class="form-row">
+            <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
+            <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">Manage front-end libraries</button>
+        </div>
+
         <!-- Package List -->
         <div class="form-row">
             <ol id="node-input-packageList"></ol>
         </div>
 
+        <!-- Show advanced edit properties -->
+        <div class="form-row">
+            <h4 id="show-adv-props" title="Show/Hide the advanced configuration settings">
+                <i class="fa fa-caret-right"></i> Advanced Settings
+            </h4>
+        </div>
+
+    </div>
+
+    <!-- ---- Hideable Advanced Settings Section ---- -->
+    <div id="adv-props" style="display:hidden">
         <!-- Allow scripts/styles to be passed to front-end? -->
         <div class="form-row" title="Add msg.script/msg.style to the input msg">
             Allow passing to the front-end: 
@@ -37,23 +54,6 @@
             <label for="node-input-copyIndex" style="width: 90%;">Copy index.(html|css|js) from templates to this instance if they don't exist?</label>
         </div>
 
-        <!-- Show edit properties, hide this section -->
-        <div class="form-row">
-            <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
-            <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">Manage front-end libraries</button>
-        </div>
-
-        <!-- Show advanced edit properties -->
-        <div class="form-row">
-            <h4 id="show-adv-props" title="Show/Hide the advanced configuration settings">
-                <i class="fa fa-caret-right"></i> Advanced Settings
-            </h4>
-        </div>
-
-    </div>
-
-    <!-- ---- Hideable Advanced Settings Section ---- -->
-    <div id="adv-props" style="display:hidden">
         <div class="form-tips node-help" title="">
             Warning: Most people will not need these settings.
         </div>
