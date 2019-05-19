@@ -14,9 +14,31 @@ This is the design note for part 2 of enabling source file editing from the Node
 * need to remove old settings code & matching update code - replace with new. Partially complete.
 * Add new middleware processing
 
+### To Fix
+
+* Admin ui default text for advanced is "Path & Module Details", it should be "Path & Module Info"
+
 ----
 
+## Focus
 
+These are an overview of what I really need/want to get working before release.
+
+* [ ] Add/Remove/Update npm packages in userDir (for front-end library management).
+* [ ] File editor needs new file and delete file handling.
+* [ ] Allow for middleware to be loaded from files in `<uibRoot>` both for http and for websockets
+
+These are what I'd like to also squeeze in but they might have to wait to v2.1
+
+* [ ] File editor needs to handle file uploads.
+* [ ] File editor needs to handle folders.
+* [ ] File editor needs to handle common folder not just the instance folder.
+* [ ] Deal with instance folders build script if found.
+* [ ] Build script processing needs the ability to do npm handling for the instance folder not just for userDir.
+
+----
+
+## The Details
 
 - [ ] Allow change of uibuilder.url to:
    - [x] Check url is free to use - using the uibindex api
@@ -53,8 +75,8 @@ This is the design note for part 2 of enabling source file editing from the Node
      - [x] Allow creation of `package.json` in `userDir` or `<uibRoot>/<url>`.
      - [x] Allow package installations/updates/removals.
      - [ ] Allow edit of `package.json` in `<uibRoot>/<url>`.
-     - [ ] Handle npm restart scripts
-     - [ ] Use `POST /nodes` API instead of npm? https://nodered.org/docs/api/admin/methods/post/nodes/
+     - ~~Handle npm restart scripts~~
+     - ~~Use `POST /nodes` API instead of npm? https://nodered.org/docs/api/admin/methods/post/nodes/~~
 
    - [x] Remove Winston ~~and replace with native `new Console()` instead? https://nodejs.org/docs/latest-v8.x/api/console.html#console_new_console_stdout_stderr~~
    - [x] Integrate logging back into standard Node-RED log output. Set Node-RED's logging level to `debug` or `trace` to see details.
@@ -119,23 +141,23 @@ This is the design note for part 2 of enabling source file editing from the Node
 
 ## Maybe
 
-* [ ] FE - special control msg to create a new channel - to be used for components
+* FE - special control msg to create a new channel - to be used for components
 
-* [ ] BE - new node - "component" - Define a component to load {name, file/url, (schema)}. Trigger FE to lazy load the component on new (re)connection. Create socket.io channel
+* BE - new node - "component" - Define a component to load {name, file/url, (schema)}. Trigger FE to lazy load the component on new (re)connection. Create socket.io channel
 
-* [ ] FE - add function to reload the page - allow for a control msg to do so.
+* FE - add function to reload the page - allow for a control msg to do so.
 
-- [ ] Allow folder name to be independent of uibuilder.url?
+- Allow folder name to be independent of uibuilder.url?
 
-- [ ] Consider option to expose both `src` and `dist` folders to the web server.
+- Consider option to expose both `src` and `dist` folders to the web server.
 
     Not directly related to this feature set but probably quite useful anyway as it would allow admins to switch between them. 
 
-- [ ] Add GIT processing?
-   - [ ] Is git command available?
-   - [ ] is front-end src folder a git repository?
-   - [ ] git commit
-   - [ ] git push
+- Add GIT processing?
+   - Is git command available?
+   - is front-end src folder a git repository?
+   - git commit
+   - git push
 
 
 ## References

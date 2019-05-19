@@ -36,9 +36,9 @@ Since the URI's for uibuilder have changed between v1 and v2, I've created [a WI
 
 * ~~**BREAKING CHANGE** The uibuilder global settings are no longer used from `<userDir>/settings.js`. They are now found in `<uibRoot>/.settings.json`. Existing settings are automatically migrated for you. When adding/removing vendor packages manually, you must make changes to the new file, `settings.js` is ignored after the first migration. This helps pave the way for package installs from within the admin ui.~~ Changed again in v2.0.0-dev, see above no settings files are needed any more.
 
-* **CHANGE**: If using projects - each project now has its own `uibuilder` root folder. That means that each project has its own global settings
+* **CHANGE**: If using projects - each project now has its own `uibuilder` root folder.
 
-* **BREAKING CHANGE** As a consequence of the above, it is no longer possible to load custom middleware via the uibuilder global settings. A newer, better approach will be reintroduced in a future version. As a workaround, the standard Node-RED custom middleware `httpNodeMiddleware` can still be used as it is loaded by uibuilder - note, however, that this is also used by http-in nodes. **Please raise an issue if you need this capability**.
+* **BREAKING CHANGE** As a consequence of the above, it is no longer possible to load custom middleware via the uibuilder global settings. A newer, better approach will be reintroduced ~~in a future version. As a workaround~~ before release. ~~the standard Node-RED custom middleware `httpNodeMiddleware` can still be used as it is loaded by uibuilder - note, however, that this is also used by http-in nodes.~~
 
 * **BREAKING CHANGE** The minimum supported version of Node.JS is now v8.5
 
