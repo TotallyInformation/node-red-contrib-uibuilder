@@ -172,12 +172,13 @@ module.exports = {
     }, // ----  ---- //
 
     /** Return an updated list of installed front-end library packages
+     * TODO DEPRECATE and change references to uiblib.updVendorPaths()
      * @param {string[]} masterPackageList Array of installed package names
      * @param {string} userDir Home folder for Node-RED modules - needed to allow search for installation
      * @return {string[]} Updated array of installed packages
      */
     updatePackageList: function(masterPackageList, userDir) {
-        // TODO DEPRECATE and change references to uiblib.updVendorPaths()
+        console.warn('uibuilder warning: tilib.updatePackageList is DEPRECATED, please remove from code')
         // Clone the current package list
         const packageList = [...masterPackageList]
         // Walk the cloned list and find any that are no longer actally there - changes the original list
