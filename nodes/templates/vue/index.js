@@ -1,4 +1,5 @@
 /*global document,Vue,window,uibuilder */
+// @ts-nocheck
 /*
   Copyright (c) 2019 Julian Knight (Totally Information)
 
