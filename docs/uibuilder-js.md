@@ -6,44 +6,77 @@ Note that uibuilder [URI paths are documented in the WIKI](https://github.com/To
 
 ## Global/Module Variables
 
-### `vendorPaths` {'<npm package name>': {'url': <vendorPath>, 'path': <installFolder>, userDirRequired: bool} }
+### `vendorPaths` {Object}
+
+```json
+{
+    "<npm package name>": {
+        "url": <vendorPath>, 
+        "folder": <installFolder>,
+        "homepage": <packageHomePage>,
+        "version": <packageVersion>, 
+        "main": <mainEntryScript>
+    } 
+}
+```
 
 Default: `{}`
 
-Object who's primary keys are each installed front-end vendor package. Also contains a sub-object showing the applied root URL for accessing the package resources from front-end (browser) code and the server filing system path to the root folder.
+*Object who's primary keys are each installed front-end vendor package. Also contains a sub-object showing the applied root URL for accessing the package resources from front-end (browser) code and the server filing system path to the root folder.*
 
 Created when module is activated. Updated by `uiblib.updVendorPaths`.
 
 All URI paths start `../uibuilder/vendor/<packageName>/` - starting with `..` automatically includes the correct scheme (http[s]), (sub)domain, port and `httpNodeRoot` prefix.
 
+NB: socket.io is not included.
+
 ### `uib_rootFolder` {string} 
 
-Default: `<userDir>/<moduleName>` or `<userDir>/projects/<activeProject>/<moduleName>` if Node-RED projects are in use. `<moduleName>` = 'uibuilder'
+*The root folder that contains all of the folders for each instance of uibuilder nodes.*
 
-The root folder that contains all of the folders for each instance of uibuilder nodes.
+Default: `<userDir>/<moduleName>` or `<userDir>/projects/<activeProject>/<moduleName>` if Node-RED projects are in use. 
+
+`<moduleName>` = 'uibuilder'
 
 ### `masterTemplateFolder` {string} 
 
 Default: `__dirname/templates`
 
-Holds a set of master templates to use. These are copied over to the instance src folder when needed.
+*Holds a set of master templates to use. These are copied over to the instance src folder when needed.*
 
 ### `httpNodeRoot` {string} 
 
 Default: `RED.settings.httpNodeRoot`
 
-The URL path Node-RED will prefix to all user urls (e.g. non-admin urls).
+*The URL path Node-RED will prefix to all user urls (e.g. non-admin urls).*
 
 ### `module` {string} 
 
 Default: `'uibuilder'`
 
-Name of the uibuilder module/node. Set at global module level.
+*Name of the uibuilder module/node. Set at global module level.*
 
-### instances[node.id] = node.url
+### instances {Object}
 
+```json
+{"node.id": <url>}
+```
 
-### `uib_GlobalSettings` {packages:string[],debug:string,template:string} _DEPRECATED in v2.0_
+*Map of all instantiated instances of uibuilder along with their URLs.*
+
+instances[node.id] = node.url
+
+### `uib_GlobalSettings` {Object}
+
+```json
+{
+    "packages":string[],
+    "debug":string,
+    "template":string
+}
+```
+
+**_DEPRECATED in v2.0_**
 
 Default (v2.0): `{packages:[vue,bootstrap,vue-bootstrap],debug:false,template='vue'}`
 
@@ -67,7 +100,7 @@ Originally read from the Node-RED `settings.json` file. No longer required.
   
 * const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
 * const ioNs = io.of(node.ioNamespace)
- 
+
 
 
 ## Functions/Methods
