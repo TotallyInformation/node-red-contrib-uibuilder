@@ -93,7 +93,7 @@
   },
   "main": "./nodes/src/uibuilderfe.js",
   "bin": {
-    "mergehtml": "./bin/mergehtml",
-    "watchhtml": "./bin/watchhtml"
+    "mergehtml": "./bin/mergehtml.js",
+    "watchhtml": "./bin/watchhtml.js"
   }
 }
