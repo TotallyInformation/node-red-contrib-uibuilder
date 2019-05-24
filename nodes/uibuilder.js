@@ -243,7 +243,6 @@ module.exports = function(RED) {
     RED.log.info(`| ${moduleName} initialised:`)
     RED.log.info(`|   root folder: ${uib_rootFolder}`)
     RED.log.info(`|   version . .: ${nodeVersion}`)
-    RED.log.info(`|   debug . . .: ${uib_globalSettings.debug}`)
     RED.log.info(`|   packages . : ${Object.keys(vendorPaths)},socket.io`)
     RED.log.info('+-----------------------------------------------------')
 
