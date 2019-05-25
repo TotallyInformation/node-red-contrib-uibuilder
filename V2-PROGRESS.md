@@ -16,8 +16,14 @@ This is the design note for part 2 of enabling source file editing from the Node
 
 ### To Fix
 
+* [Major] Admin ui: copy index flag not set to true by default
+* [Minor] fe: server time offset not working even though the 'client connect' control message from the server includes `msg.serverTimestamp`
+* [Minor] Admin ui: remove front-end debug flag as it doesn't really do anything useful
 * [Minor] Admin ui default text for advanced is "Path & Module Details", it should be "Path & Module Info"
 * [Minor] When a client connects, both control msgs contain msg.cacheControl = "REPLAY". Only 1 of them needs that.
+
+* [~~Major~~ Fixed] Admin ui: Deploy causes vendor paths (except socket.io) to disappear
+  Bug introduced by moving vendor path processing to outside of the instance process. So we have to exclude the vendor paths when killing the instance paths during the close event.
 
 ----
 
@@ -38,97 +44,100 @@ These are what I'd like to also squeeze in but they might have to wait to v2.1
 * [ ] Deal with instance folders build script if found.
 * [ ] Build script processing needs the ability to do npm handling for the instance folder not just for userDir.
 
+New Ideas
+
+* [ ] New node: allowing a socket.io "room" to be defined. Will need to pick a current main instance from a dropdown (using API)
+   * [ ] Change FE to allow for rooms.
+* [ ] New node: cache - see WIKI cache page for details.
+* [ ] 
+
 ----
 
 ## The Details
 
-- [ ] Allow change of uibuilder.url to:
-   - [x] Check url is free to use - using the uibindex api
-   - [x] Does not contain leading dots or underscores
-   - [x] Does not contain `/` or `\`
-   - [ ] Copy (or rename?) current folder to new folder
+### Improvements to front-end (`uibuilderfe.js` and templates)
 
-###
+- [x] Move socket.io client library path to include `httpNodeRoot`.
+- [x] Move socket.io client library path to include `vendor`. Path is now `../uibuilder/vendor/socket.io/socket.io.js` to match other vendor paths.
+- [x] Change default template from jquery + normalize.cs to VueJS + bootstrap-vue (much the same size)
+   - [x] Needs to auto-install vue and boostrap-vue packages.
+- [x] Fix regression bug preventing socket.io from communicating when `httpNodeRoot` not set. Add `urlJoin()` to fix.
+- [x] FE: Ability to manually set the ioNamespace & ioPath so that uibuilderfe can be used from other servers and sub-paths without issues.
+   Will need to have users start socket.io in their own code though since you cannot change the namespace/path once started.
+   The alternative would be to create a new middleware path that returned the right data but that wouldn't allow cross-server use.
+   We might have to enable CORS config?
+   - [x] Add new user function uibuilder.start(namespace,ioPath) - where params are optional and will default to the existing settings
 
-- Improvements to front-end (`uibuilderfe.js` and templates)
-   - [x] Move socket.io client library path to include `httpNodeRoot`.
-   - [x] Move socket.io client library path to include `vendor`. Path is now `../uibuilder/vendor/socket.io/socket.io.js` to match other vendor paths.
-   - [x] Change default template from jquery + normalize.cs to VueJS + bootstrap-vue (much the same size)
-      - [x] Needs to auto-install vue and boostrap-vue packages.
-   - [x] Fix regression bug preventing socket.io from communicating when `httpNodeRoot` not set. Add `urlJoin()` to fix.
+### Improvements to back-end (`uibuilder.js`)
 
-###
+- [x] Move vendor file serving from instance level to module level so it is only ever done once. Also rationalise.
+- [x] Move uibindex API from standard to admin web interfaces for better security.
+- [x] Add `<adminurl>/uibvendorpackages` admin API.
+- [x] Use `<adminurl>/uibvendorpackages` API to list available vendor package urls in admin ui.
+- [x] Move socket.io client library path to include `httpNodeRoot` & `vendor`.
+- [x] ~~Move active vendor package list from `settings.json` to `<uibRoot>/` to allow it to be updated by install handling.~~ No settings file now needed. (Breaking change - if uncommon library used, will need to add it using the admin ui, common libraries will be picked up automatically)
+- [x] ~~Add initial process to move settings after migration from v1 to v2.~~ Settings no longer required.
+- [x] Add Socket.IO path to the `<adminurl>/uibindex` API - in preparation for enabling other nodes to communicate with uibuilder front-end's.
+- [x] ~~Fix the folder location lookup for front-end packages. New function `findPackage` added to `tilib.js`, replaces the `get-installed-path` 3rd party package.~~ Completely rewritten
+- [x] ~~Add extra info to the `vendorPaths` variable. Including whether the package is include in the `<userDir>/package.json` dependencies & information from the packages own package.json file including homepage, main entry point and version string.~~ Completely rewritten.
+- [x] Remove Winston ~~and replace with native `new Console()` instead? https://nodejs.org/docs/latest-v8.x/api/console.html#console_new_console_stdout_stderr~~
+- [x] Integrate logging back into standard Node-RED log output. Set Node-RED's logging level to `debug` or `trace` to see details.
+- [x] With move of npm package installations into the admin ui, settings are no longer required. Common front-end packages will be found and added to the vendor list automatically. Others have to be added via the admin ui. `vendorPaths` variable is now used to contain the list of available packages and their metadata. See docs for details.
+- [x] Remove debug setting from initialised console output
+- [x] Remove FE/BE debug flags from admin ui config
 
-- Improvements to back-end (`uibuilder.js`)
-   - [x] Move vendor file serving from instance level to module level so it is only ever done once. Also rationalise.
-   - [x] Move uibindex API from standard to admin web interfaces for better security.
-   - [x] Add `<adminurl>/uibvendorpackages` admin API.
-   - [x] Use `<adminurl>/uibvendorpackages` API to list available vendor package urls in admin ui.
-   - [x] Move socket.io client library path to include `httpNodeRoot` & `vendor`.
-   - [x] ~~Move active vendor package list from `settings.json` to `<uibRoot>/` to allow it to be updated by install handling.~~ No settings file now needed. (Breaking change - if uncommon library used, will need to add it using the admin ui, common libraries will be picked up automatically)
-   - [x] ~~Add initial process to move settings after migration from v1 to v2.~~ Settings no longer required.
-   - [x] Add Socket.IO path to the `<adminurl>/uibindex` API - in preparation for enabling other nodes to communicate with uibuilder front-end's.
-   - [x] ~~Fix the folder location lookup for front-end packages. New function `findPackage` added to `tilib.js`, replaces the `get-installed-path` 3rd party package.~~ Completely rewritten
-   - [x] ~~Add extra info to the `vendorPaths` variable. Including whether the package is include in the `<userDir>/package.json` dependencies & information from the packages own package.json file including homepage, main entry point and version string.~~ Completely rewritten.
-  
-   - [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter).
-     - [x] List all installed top-level packages
-     - [x] Allow check if `package.json` and `node_modules` are present
-     - [x] Allow creation of `package.json` in `userDir` or `<uibRoot>/<url>`.
-     - [x] Allow package installations/updates/removals.
-     - [ ] Allow edit of `package.json` in `<uibRoot>/<url>`.
-     - ~~Handle npm restart scripts~~
-     - ~~Use `POST /nodes` API instead of npm? https://nodered.org/docs/api/admin/methods/post/nodes/~~
+- [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter).
+    - ~~Handle npm restart scripts~~
+    - ~~Use `POST /nodes` API instead of npm? https://nodered.org/docs/api/admin/methods/post/nodes/~~
+    - [x] List all installed top-level packages
+    - [x] Allow check if `package.json` and `node_modules` are present
+    - [x] Allow creation of `package.json` in `userDir` or `<uibRoot>/<url>`.
+    - [x] Allow package installations/updates/removals.
+    - [ ] Allow edit of `package.json` in `<uibRoot>/<url>`.
 
-   - [x] Remove Winston ~~and replace with native `new Console()` instead? https://nodejs.org/docs/latest-v8.x/api/console.html#console_new_console_stdout_stderr~~
-   - [x] Integrate logging back into standard Node-RED log output. Set Node-RED's logging level to `debug` or `trace` to see details.
-   - [x] With move of npm package installations into the admin ui, settings are no longer required. Common front-end packages will be found and added to the vendor list automatically. Others have to be added via the admin ui. `vendorPaths` variable is now used to contain the list of available packages and their metadata. See docs for details.
-  
-   - [x] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
-     - [ ] Add advanced option to uibuilder.html - use of project folder is optional
-  
-   - [ ] Move custom middleware load from settings.js to `<uibRoot>/.mware/`. Possibly also allow for `<uibRoot>/<url>/.mware/`.
-   - [ ] *Update close processing to use vendorPaths. Need to check whether this is actually needed.*
+- [x] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
+    - [ ] Add advanced option to uibuilder.html - use of project folder is optional
 
-###
+- [ ] Move custom middleware load from settings.js to `<uibRoot>/.mware/`. Possibly also allow for `<uibRoot>/<url>/.mware/`.
+- [ ] *Update close processing to use vendorPaths. Need to check whether this is actually needed.*
 
-- Improvements to admin config ui (`uibuilder.html`)
-  - [x] Swap vendor path list to uibvendorpackages API
-  - [x] Cancel and Done buttons disabled if there are unsaved changes to a file. Either Save or reset the file to re-enable them.
-  - [x] Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use). `instances` module variable now used to track all active instances of uibuilder.
-  - [x] Default/previously selected file opened for edit automatically.
-  - [x] Improved handling of reopening the ui - last file selection retained.
-  - [x] Add input parameter and path validation
-  - [x] ~~(uibuilder.html) Mark node as "dirty" if file not saved. (`RED.nodes.dirty(true)`).~~ Disable Done/Cancel buttons instead, a lot easier.
-  - [x] Hide path and module info by default and allow toggle to show
-  - [x] ~~Add server path to info panel `<userDir>/uibuilder/<url>` or `<userDir>/projects/<projectName>/uibuilder/<url>`.~~ Redirecting to the index page instead.
-  - [x] Remove edit button - swap file on file selection change.
-  - [x] Split uibuilder.html into 3 files for ease of editing. Add a build step to assemble. `npm run build`.
-  - [x] Add folder selector before file selector - enables files in different folders to be edited. Folders are pre-selected.
-    - [x] Rebuild file list on change of folder
-    - [x] Add all instance folders (`<uibRoot>/<url>/src|dist|root`)
-    - ~~Add uibuilder root folder & config file~~ No, as this would require Node-RED to be reloaded anyway, decided not to do this. npm functions will manage content.
-    - [ ] Add all instances endpoint folders
-    - How to rebuild list if the file list changes outside of Node-RED?
-  - [ ] Add new file button
-  - [ ] Add option to keep backups for edited files + button to reset to backup + hide backup files
-  - [ ] ?? Can we add the current nodes URL to the info panel? ?? [See 'Read node data from node-info panel'](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
+### Improvements to admin config ui (`uibuilder.html`)
 
-  - [x] New _Advanced settings_ option (hidden by default)
-     - [ ] Add flag to make use of project folder optional.
-     - [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - giving the ability to have extra control, use a different port and separate security.
-        - [ ] Need to make use of Node-RED middleware optional.
-  
-  - [x] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
-  - [ ] Add file delete (button is in place but disabled) - needs a confirm dialogue
-  - [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
-  - [ ] Add validation hints for users
-  - [ ] Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates
-
-
+- [x] Swap vendor path list to uibvendorpackages API
+- [x] Cancel and Done buttons disabled if there are unsaved changes to a file. Either Save or reset the file to re-enable them.
+- [x] Improved validation for url setting. It must not be more than 20 characters, must not equal 'template'. Must not contain '..', '/' or '\'. Must not start with '_', '.'. It must also be unique (e.g. not already in use). `instances` module variable now used to track all active instances of uibuilder.
+- [x] Default/previously selected file opened for edit automatically.
+- [x] Improved handling of reopening the ui - last file selection retained.
+- [x] Add input parameter and path validation
+- [x] ~~(uibuilder.html) Mark node as "dirty" if file not saved. (`RED.nodes.dirty(true)`).~~ Disable Done/Cancel buttons instead, a lot easier.
+- [x] Hide path and module info by default and allow toggle to show
+- [x] ~~Add server path to info panel `<userDir>/uibuilder/<url>` or `<userDir>/projects/<projectName>/uibuilder/<url>`.~~ Redirecting to the index page instead.
+- [x] Remove edit button - swap file on file selection change.
+- [x] Split uibuilder.html into 3 files for ease of editing. Add a build step to assemble. `npm run build`.
 - [x] ~~Move back-end log files from `<userDir>` to `<uibRoot>/.logs`~~ Logging now integrated to Node-RED logs.
+- [x] Remove FE/BE debug flags from admin ui config
+  
+- [x] Add folder selector before file selector - enables files in different folders to be edited. Folders are pre-selected.
+   - [x] Rebuild file list on change of folder
+   - [x] Add all instance folders (`<uibRoot>/<url>/src|dist|root`)
+   - ~~Add uibuilder root folder & config file~~ No, as this would require Node-RED to be reloaded anyway, decided not to do this. npm functions will manage content.
+   - [ ] Add all instances endpoint folders
+   - How to rebuild list if the file list changes outside of Node-RED?
+- [ ] Add new file button
+- [ ] Add option to keep backups for edited files + button to reset to backup + hide backup files
+- [ ] ?? Can we add the current nodes URL to the info panel? ?? [See 'Read node data from node-info panel'](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
 
-###
+- [x] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
+
+- [x] New _Advanced settings_ option (hidden by default)
+   - [ ] Add flag to make use of project folder optional.
+   - [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - giving the ability to have extra control, use a different port and separate security.
+      - [ ] Need to make use of Node-RED middleware optional.
+  
+- [ ] Add file delete (button is in place but disabled) - needs a confirm dialogue
+- [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
+- [ ] Add validation hints for users
+- [ ] Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates
 
 - [ ] Add a "Build" button, disabled by default. uibuilder will check whether there is a `package.json` file in the `<uibRoot>/<uibuilder.url>` folder and whether it contains a script called "build". If that exists, the build button will be enabled.
 
@@ -136,7 +145,15 @@ These are what I'd like to also squeeze in but they might have to wait to v2.1
 
     - [ ] Add example webpack build file.
 
-###
+### Other
+
+- [ ] Allow change of uibuilder.url to:
+   - [x] Check url is free to use - using the uibindex api
+   - [x] Does not contain leading dots or underscores
+   - [x] Does not contain `/` or `\`
+   - [ ] Copy (or rename?) current folder to new folder
+
+### Docs
 
 - [x] Update WIKI and examples for new paths
 
@@ -177,3 +194,4 @@ These are what I'd like to also squeeze in but they might have to wait to v2.1
 * [Notifications in the admin ui (RED.notify(msg,type))](https://github.com/node-red/node-red/wiki/API-Reference#ui)
 * [Read node data from node-info panel](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
 * Creating an eventlog display in the admin ui: See `RED.eventLog` in `red.js` - uses the ACE editor.
+* [socketio-jwt-auth](https://www.npmjs.com/package/socketio-jwt-auth)

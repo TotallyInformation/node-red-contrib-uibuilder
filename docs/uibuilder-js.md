@@ -4,6 +4,46 @@
 
 Note that uibuilder [URI paths are documented in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths).
 
+## Key processing elements
+
+### Adding staticServer paths for vendor packages
+
+Call uiblib.updVendorPaths. This calls uiblib.addPackage for each found package. addPackage attempts to create a staticServer path.
+
+### Client Connection
+
+A client connection is any browser tab that loads and starts the uibuilderfe.js code. So a single device/user can have many connections.
+
+When a client loads and starts processing using `uibuilder.start()`, The client socket.io library handshakes with the server.
+
+**Note**: that this process also happens when a client _**re**connects_.
+
+The server sends back a message:
+
+```json
+{"uibuilderCtrl":"client connect","cacheControl":"REPLAY","debug":false,"_socketId":"/nr/uib#9qYqdW79Y7t9gvVtAAAA","from":"server","serverTimestamp":"2019-05-25T19:42:15.979Z","_msgid":"11547966.4e5bc7"}
+```
+
+The client then responds with a message:
+
+```json
+{"uibuilderCtrl":"ready for content","cacheControl":"REPLAY","from":"client","_socketId":"/nr/uib#9qYqdW79Y7t9gvVtAAAA","_msgid":"779d7aca.e2e904"}
+```
+
+Both of these messages will appear on port 2 of the uibuilder node. The `msg.from` property indicates which direction the message is coming from/to.
+
+The second message may be fed into a caching function/node to trigger a data dump to the client.
+
+### Client Disconnection
+
+When a client disconnects for any reason (page reload, tab closed, browser crash, laptop closed, etc.), The _server_ issues a "client disconnect message" to port 2 of the uibuilder node:
+
+```json
+{"uibuilderCtrl":"client disconnect","reason":"transport close","_socketId":"/nr/uib#qWaT5gj1iMamw9OeAAAD","from":"server","_msgid":"783a6d61.408254"}
+```
+
+Note that if a client disconnects then reconnects it will have a different `_socketId` property.
+
 ## Global/Module Variables
 
 ### `vendorPaths` {Object}
@@ -104,3 +144,8 @@ Originally read from the Node-RED `settings.json` file. No longer required.
 
 
 ## Functions/Methods
+
+
+
+## Admin API's
+

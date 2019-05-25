@@ -24,52 +24,51 @@ Internally to the library, all variable access should be via `self.get()` and `s
 
 ## Public Variables
 
-* `version`
-
-* `debug`
-
-* `moduleName`
-
-* `autoSendReady` [true]
-
 ### Externally Writable (via .set method, read via .get method)
 
-* `allowScript`  [true] Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
-* `allowStyle`  [true] Allow incoming msg to contain msg.style with CSS that will be automatically executed
-* `removeScript` [true] Delete msg.code after inserting to DOM if it exists on incoming msg
-* `removeStyle`  [true] Delete msg.style after inserting to DOM if it exists on incoming msg
+* `allowScript`  {boolean} [true] Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
+* `allowStyle`  {boolean} [true] Allow incoming msg to contain msg.style with CSS that will be automatically executed
+* `removeScript` {boolean} [true] Delete msg.code after inserting to DOM if it exists on incoming msg
+* `removeStyle`  {boolean} [true] Delete msg.style after inserting to DOM if it exists on incoming msg
+* `autoSendReady` {boolean} [true] If true, a REPLAY control message is sent once the client receives a "client connected" control message from the server.
 
 ### Externally read-only (via .get method)
 
-* `msg` Copy of the last standard message received from the server
+* `msg` {Object} Copy of the last standard message received from the server
 
-* `msgsReceived` Number of messages received from server since page load
-
-  
-
-* `ctrlMsg` Copy of last control msg object received from sever
-
-* `msgsCtrl` Track number of control messages received from server since page load
+* `msgsReceived` {integer} Number of messages received from server since page load
 
   
 
-* `sentMsg` Copy of last standard msg object sent via `uibuilder.send()`
+* `ctrlMsg` {Object} Copy of last control msg object received from sever
 
-* `msgsSent` Number of messages sent to server since page load
-
-  
-
-* `msgsCtrlSent` Number of control messages sent to server since page load
-
-* `sentCtrlMsg` Copy of the last control message sent via `uibuilder.send()`
+* `msgsCtrl` {integer} Track number of control messages received from server since page load
 
   
 
-* `ioConnected` [false]
+* `sentMsg` {Object} Copy of last standard msg object sent via `uibuilder.send()`
 
-* `serverTimeOffset` [null]
+* `msgsSent` {integer} Number of messages sent to server since page load
 
-These are unlikely to be needed externally:
+  
+
+* `sentCtrlMsg` {Object} Copy of the last control message sent via `uibuilder.send()`
+
+* `msgsCtrlSent` {integer} Number of control messages sent to server since page load
+
+  
+
+* `ioConnected` {boolean} [false]
+
+* `serverTimeOffset` {null|Date} [null]
+
+* `debug` {boolean} [false] Do not set directly.  Set using `uibuilder.debug(true/false)`. Query using `uibuilder.debug()`.
+
+* `moduleName` {string} ['uibuilder'] The module name in use, `uibuilder`. Must match the module name in use on the server node.
+
+* `version` {string} The version number of the uibuilderfe library.
+
+These are unlikely to be needed externally but can be accessed:
 
 * `ioChannels` [{control: 'uiBuilderControl', client:'uiBuilderClient', server:'uiBuilder' }]
 * `retryMs` [2000] Starting retry ms period for manual socket reconnections workaround
@@ -77,7 +76,7 @@ These are unlikely to be needed externally:
 * `timerid` [null] Holder for the socket reconnection timer
 * `ioNamespace` [calculated] The socket.io namespace. Must match that of the node instance you want to talk to. Tries to calculate automatically based on the hosting web pages URL. However, can be overridden using the options object in `uibuilder.start()`
 * `ioTransport` [['polling', 'websocket']]
-* `loaded` Are all browser resources loaded?
+* `loaded` {boolean} Are all browser resources loaded?
 
 ## Private Variables
 

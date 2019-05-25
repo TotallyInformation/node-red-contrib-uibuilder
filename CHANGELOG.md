@@ -1,3 +1,21 @@
+## v2.0.0-dev3
+
+* **BREAKING CHANGE** In uibuilderfe.js. Previously, it was quite hard to trace incoming/outgoing messages, especially between control and standard messages. This change aims to improve that.
+
+  The variable `sentMsg` now only contains a copy of the last standard message sent back to the Node-RED server. `sentCtrlMsg` is a new varible that contains a copy of the last control message sent.
+  
+  In addition, the variable `msgsSentCtrl` is now actually being updated.
+
+  This has a knock-on impact to the default `index.js` file.
+
+* **CHANGE** The front-end template files `index.html` and `index.js` have changed. Delete or rename your current ones, the new ones will be copied over unless you have turned off the copy flag in the admin ui. Alternateively, manually review the code changes.
+  
+* **CHANGE** Admin UI: Flag to control front-end library debugging has been removed as it wasn't very effective anyway. To turn on debug output for the front-end library (`uibuilderfe.js`), set `uibuilder.debug(true)` in your `index.js` file.
+
+* **FIXED** * Deploy causes vendor paths (except socket.io) to disappear
+  Bug introduced by moving vendor path processing to outside of the instance process. So we have to exclude the vendor paths when killing the instance paths during the close event.
+
+
 ## v2.0.0-dev2
 
 This release has some breaking changes over the previous v2.0.0 so I've changed the version number.
