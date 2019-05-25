@@ -278,8 +278,6 @@ module.exports = function(RED) {
         node.fwdInMessages = config.fwdInMessages        // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
         node.allowScripts  = config.allowScripts
         node.allowStyles   = config.allowStyles
-        node.debugFE       = config.debugFE
-        node.debugBE       = config.debugBE
         node.copyIndex     = config.copyIndex
         //#endregion ----- Local node config copy ----- //
 

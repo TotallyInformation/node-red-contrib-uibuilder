@@ -66,7 +66,6 @@
         })
     }
 
-
     /** Get full package list via API and show in admin ui
      * param {string} url 
      * param {boolean} rebuild - Rebuild the vendorPaths list
@@ -286,7 +285,6 @@
             fwdInMessages: { value: false },   // Should we send input msg's direct to output as well as the front-end?
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
-            debugFE: { value: false },         // Should debug be turned on in the uibuilderfe library?
             copyIndex: { value: true },        // Should the default template files be copied to the instance src folder?
         },
         inputs: 1,
@@ -716,11 +714,6 @@
             <label for="node-input-fwdInMessages" style="width: 40%;" title="forward inbound msg's direct to the output">
                 Forward input to output?
             </label>
-            <!-- Debug Front-End? -->
-            <input type="checkbox" id="node-input-debugFE" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-debugFE" style="width: 40%;" title="Turn on debugging in the front-end library">
-                Debug Front-End?
-            </label>
         </div>
     </div>
 
@@ -974,13 +967,6 @@
                     <i>Note</i> that this may result in multiple output messages if your front-end
                     code also auto-sends inbound messages.
                 </p>
-            </dd>
-            <dt>Debug Front-End? <span class="property-type">(boolean) debugFE</span></dt>
-            <dd>
-                Turns on debugging in the front-end code. See your browser's developer tools console.
-                In your index.js front-end code, use <code>uibuilder.debug()</code> to detect whether debugging is on or off
-                and <code>uibuilder.debug(true)</code> to turn it on.<br>
-                The chosen state is sent to the Front-end in the initial connection message.
             </dd>
         </dl>
 

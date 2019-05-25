@@ -49,7 +49,6 @@
         })
     }
 
-
     /** Get full package list via API and show in admin ui
      * param {string} url 
      * param {boolean} rebuild - Rebuild the vendorPaths list
@@ -269,7 +268,6 @@
             fwdInMessages: { value: false },   // Should we send input msg's direct to output as well as the front-end?
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
-            debugFE: { value: false },         // Should debug be turned on in the uibuilderfe library?
             copyIndex: { value: true },        // Should the default template files be copied to the instance src folder?
         },
         inputs: 1,
