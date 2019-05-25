@@ -68,6 +68,14 @@ module.exports = function(RED) {
     // NB: entries in settings.js are read-only and shouldn't be read using RED.settings.get, that is only for settings that can change in-flight.
     //     see Node-RED issue #1543.
 
+    /*  RED.events.on('nodes-started',function() {
+            console.log('****** All nodes have started ******')
+        })
+        RED.events.on('nodes-stopped',function() {
+            console.log('****** All nodes have stopped ******')
+        }) 
+    */
+
     //#region ----- Constants (& logging) for standard setup ----- //
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
     userDir = RED.settings.userDir
@@ -231,7 +239,7 @@ module.exports = function(RED) {
         masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
     } catch (e) {
         // ... otherwise, use dev resources at ./src/
-        log.trace('[uibuilder:Module] Using master src folder and master vendor packages')
+        log.trace('[uibuilder:Module] Using master src folder')
         log.trace('                   Reason for not using master dist folder: ', e.message )
         masterStatic = serveStatic( path.join( __dirname, 'src' ) )
     }
