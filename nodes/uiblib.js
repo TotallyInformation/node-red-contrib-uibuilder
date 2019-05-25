@@ -94,13 +94,24 @@ module.exports = {
         // we check whether the regex string matches the current node.url, if so, we splice it out of the stack array
         var removePath = []
         var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
+        var urlReVendor = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
+        // For each entry on ExpressJS's server stack...
         app._router.stack.forEach( function(r, i, stack) {
-            let rUrl = r.regexp.toString().replace(urlRe, '')
-            if ( rUrl === '' ) {
-                removePath.push( i )
-                // @since 2017-10-15 Nasty bug! Splicing changes the length of the array so the next splice is wrong!
-                //app._router.stack.splice(i,1)
+            // Check whether the URL matches a vendor path...
+            let rUrlVendor = r.regexp.toString().replace(urlReVendor, '')
+            // If it DOES NOT, then...
+            if (rUrlVendor !== '') {
+                // Check whether the URL is a uibuilder one...
+                let rUrl = r.regexp.toString().replace(urlRe, '')
+                // If it IS ...
+                if ( rUrl === '' ) {
+                    // Mark it for removal because it will be re-created by nodeGo() when the nodes restart
+                    removePath.push( i )
+                    // @since 2017-10-15 Nasty bug! Splicing changes the length of the array so the next splice is wrong!
+                    //app._router.stack.splice(i,1)
+                }
             }
+            // NB: We do not want to remove the vendor URL's because they are only created ONCE when Node-RED initialises
         })
 
         // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
@@ -220,6 +231,7 @@ module.exports = {
                     // }
                     next() // pass control to the next handler
                 }, */ serveStatic(installFolder) )
+                
                 return {'url': '..'+vendorPath, 'folder': installFolder}
             } catch (e) {
                 RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
