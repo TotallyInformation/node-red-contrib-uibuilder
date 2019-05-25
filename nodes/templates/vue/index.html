@@ -66,19 +66,28 @@
             </p>
             <h2>Dynamic Data (via Vue)</h2>
 
-            <p>
-                Messages: Received={{msgsReceived}}, Sent: {{msgsSent}}
-            </p>
-            <p>
-                Control Messages: {{msgsControl}}
-            </p>
+            <p>Socket.io Connection Status: <b>{{socketConnectedState}}</b></p>
+            <p>Time offset between browser and server: <b>{{serverTimeOffset}}</b></p>
 
+            <h3>Normal Messages</h3>
+            <p>
+                Messages: Received=<b>{{msgsReceived}}</b>, Sent=<b>{{msgsSent}}</b>
+            </p>
             <pre v-html="hLastRcvd"></pre>
             <pre v-html="hLastSent"></pre>
 
+            <h3>Control Messages</h3>
+            <p>
+                Control Messages: Received=<b>{{msgsControl}}</b>, Sent=<b>{{msgsCtrlSent}}</b>
+            </p>
+            <pre v-html="hLastCtrlRcvd"></pre>
+            <pre v-html="hLastCtrlSent"></pre>
+
             <h2>Simple input using Vue</h2>
-            <p><button v-on:click="increment">Increment</button> Click Counter: {{counterBtn}}. Click on the button to
-                increment, it sends the data back to Node-RED as well.</p>
+            <p>
+                <button v-on:click="increment">Increment</button> Click Counter: <b>{{counterBtn}}</b>.<br>
+                Click on the button to increment the counter. It sends the data back to Node-RED as well.
+            </p>
         </b-container>
     </div>
 
