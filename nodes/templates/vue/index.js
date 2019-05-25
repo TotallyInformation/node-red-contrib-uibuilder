@@ -24,13 +24,18 @@ const app1 = new Vue({
         startMsg    : 'Vue has started, waiting for messages',
         feVersion   : '',
         counterBtn  : 0,
-        msgsReceived: 0,
-        msgsControl : 0,
-        msgsSent    : 0,
+        socketConnectedState : false,
+        serverTimeOffset     : '[unknown]',
+
         msgRecvd    : '[Nothing]',
-        msgSent     : '[Nothing]',
+        msgsReceived: 0,
         msgCtrl     : '[Nothing]',
-        inputText   : ''
+        msgsControl : 0,
+
+        msgSent     : '[Nothing]',
+        msgsSent    : 0,
+        msgCtrlSent : '[Nothing]',
+        msgsCtrlSent: 0,
     }, // --- End of data --- //
     computed: {
         hLastRcvd: function() {
@@ -43,12 +48,17 @@ const app1 = new Vue({
             if (typeof msgSent === 'string') return 'Last Message Sent = ' + msgSent
             else return 'Last Message Sent = ' + this.syntaxHighlight(msgSent)
         },
-        hMsgCtrl: function() {
+        hLastCtrlRcvd: function() {
             const msgCtrl = this.msgCtrl
-            if (typeof msgCtrl === 'string') return 'Last Control Message Sent = ' + msgCtrl
-            //else return 'Last Message Sent = ' + this.callMethod('syntaxHighlight', [msgCtrl])
-            else return 'Last Message Sent = ' + JSON.stringify(msgCtrl)
-        }
+            if (typeof msgCtrl === 'string') return 'Last Control Message Received = ' + msgCtrl
+            else return 'Last Control Message Received = ' + this.syntaxHighlight(msgCtrl)
+        },
+        hLastCtrlSent: function() {
+            const msgCtrlSent = this.msgCtrlSent
+            if (typeof msgCtrlSent === 'string') return 'Last Control Message Sent = ' + msgCtrlSent
+            //else return 'Last Message Sent = ' + this.callMethod('syntaxHighlight', [msgCtrlSent])
+            else return 'Last Control Message Sent = ' + this.syntaxHighlight(msgCtrlSent)
+        },
     }, // --- End of computed --- //
     methods: {
         increment: function() {
@@ -84,49 +94,80 @@ const app1 = new Vue({
         console.debug('[Vue.mounted] app mounted - setting up uibuilder watchers')
 
         var vueApp = this
-        
-        // Start uibuilder comms with Node-RED
+
+        /** **REQUIRED** Start uibuilder comms with Node-RED @since v2.0.0-dev3
+         * Pass the namespace and ioPath variables if hosting page is not in the instance root folder
+         * e.g. If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages.
+         * e.g. uibuilder.start('/nr/uib', '/nr/uibuilder/vendor/socket.io') // change to use your paths/names
+         */
         uibuilder.start()
 
+        // Example of retrieving data from uibuilder
         vueApp.feVersion = uibuilder.get('version')
 
+        /** You can use the following to help trace how messages flow back and forth.
+         * You can then amend this processing to suite your requirements.
+         */
+
+        //#region ---- Trace Received Messages ---- //
         // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
-        // Note that you can also listen for 'msgsReceived' as they are updated at the same time
-        // but newVal relates to the attribute being listened to.
+        // newVal relates to the attribute being listened to.
         uibuilder.onChange('msg', function(newVal){
-            console.info('[uibuilder.onChange] property msg changed!', newVal)
+            console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', newVal)
             vueApp.msgRecvd = newVal
         })
-        // As noted, we could get the msg here too
+        // As we receive new messages, we get an updated count as well
         uibuilder.onChange('msgsReceived', function(newVal){
-            console.info('[uibuilder.onChange] New msg sent FROM Node-RED over Socket.IO. Total Count: ', newVal)
+            console.info('[indexjs:uibuilder.onChange] Updated count of received msgs:', newVal)
             vueApp.msgsReceived = newVal
         })
 
-        // If a message is sent back to Node-RED
+        // If we receive a control message from Node-RED, we can get the new data here - we pass it to a Vue variable
+        uibuilder.onChange('ctrlMsg', function(newVal){
+            console.info('[indexjs:uibuilder.onChange:ctrlMsg] CONTROL msg received from Node-RED server:', newVal)
+            vueApp.msgCtrl = newVal
+        })
+        // Updated count of control messages received
+        uibuilder.onChange('msgsCtrl', function(newVal){
+            console.info('[indexjs:uibuilder.onChange:msgsCtrl] Updated count of received CONTROL msgs:', newVal)
+            vueApp.msgsControl = newVal
+        })
+        //#endregion ---- End of Trace Received Messages ---- //
+
+        //#region ---- Trace Sent Messages ---- //
+        // You probably only need these to help you understand the order of processing //
+        // If a message is sent back to Node-RED, we can grab a copy here if we want to
         uibuilder.onChange('sentMsg', function(newVal){
-            console.info('[uibuilder.onChange] property sentMsg changed!', newVal)
+            console.info('[indexjs:uibuilder.onChange:sentMsg] msg sent to Node-RED server:', newVal)
             vueApp.msgSent = newVal
         })
+        // Updated count of sent messages
         uibuilder.onChange('msgsSent', function(newVal){
-            console.info('[uibuilder.onChange] New msg sent TO Node-RED over Socket.IO. Total Count: ', newVal)
+            console.info('[indexjs:uibuilder.onChange:msgsSent] Updated count of msgs sent:', newVal)
             vueApp.msgsSent = newVal
         })
 
-        // If we receive a control message from Node-RED
-        uibuilder.onChange('ctrlMsg', function(newVal){
-            console.info('[uibuilder.onChange] property msgCtrl changed!', newVal)
-            vueApp.msgCtrl = newVal
+        // If we send a control message to Node-RED, we can get a copy of it here
+        uibuilder.onChange('sentCtrlMsg', function(newVal){
+            console.info('[indexjs:uibuilder.onChange:sentCtrlMsg] Control message sent to Node-RED server:', newVal)
+            vueApp.msgCtrlSent = newVal
         })
-        uibuilder.onChange('msgsCtrl', function(newVal){
-            console.info('[uibuilder.onChange] New CONTROL msg sent FROM Node-RED over Socket.IO. Total Count: ', newVal)
-            vueApp.msgsControl = newVal
+        // And we can get an updated count
+        uibuilder.onChange('msgsSentCtrl', function(newVal){
+            console.info('[indexjs:uibuilder.onChange:msgsSentCtrl] Updated count of CONTROL msgs sent:', newVal)
+            vueApp.msgsCtrlSent = newVal
         })
+        //#endregion ---- End of Trace Sent Messages ---- //
 
-        // If Socket.IO connects/disconnects
+        // If Socket.IO connects/disconnects, we get true/false here
         uibuilder.onChange('ioConnected', function(newVal){
-            console.info('[uibuilder.onChange] Socket.IO Connection Status Changed: ', newVal)
+            console.info('[indexjs:uibuilder.onChange:ioConnected] Socket.IO Connection Status Changed to:', newVal)
             vueApp.socketConnectedState = newVal
+        })
+        // If Server Time Offset changes
+        uibuilder.onChange('serverTimeOffset', function(newVal){
+            console.info('[indexjs:uibuilder.onChange:serverTimeOffset] Offset of time between the browser and the server has changed to:', newVal)
+            vueApp.serverTimeOffset = newVal
         })
 
     } // --- End of mounted hook --- //
