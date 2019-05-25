@@ -45,7 +45,7 @@ const app1 = new Vue({
         },
         hMsgCtrl: function() {
             const msgCtrl = this.msgCtrl
-            if (typeof msgCtrl === 'string') return 'Last Message Sent = ' + msgCtrl
+            if (typeof msgCtrl === 'string') return 'Last Control Message Sent = ' + msgCtrl
             //else return 'Last Message Sent = ' + this.callMethod('syntaxHighlight', [msgCtrl])
             else return 'Last Message Sent = ' + JSON.stringify(msgCtrl)
         }
@@ -84,6 +84,9 @@ const app1 = new Vue({
         console.debug('[Vue.mounted] app mounted - setting up uibuilder watchers')
 
         var vueApp = this
+        
+        // Start uibuilder comms with Node-RED
+        uibuilder.start()
 
         vueApp.feVersion = uibuilder.get('version')
 
