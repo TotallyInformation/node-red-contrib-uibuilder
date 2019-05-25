@@ -110,8 +110,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '2.0.0'
-        self.debug = true // do not change directly - use .debug() method
+        self.version = '2.0.0-dev3'
+        self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
 
         /** Debugging function
@@ -138,7 +138,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             return self.debug === true ? self : 'uibuilderfe.js Version: ' + self.version
         }
 
-        /** Get the Socket.IO namespace from the current URL
+        /** Try to get the Socket.IO namespace from the current URL - won't work if page is in a sub-folder
          * @since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
          * @since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
          * @return {string} Socket.IO namespace
@@ -189,11 +189,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.msg          = {}
         self.ctrlMsg      = {}  // copy of last control msg object received from sever
         self.sentMsg      = {}  // copy of last msg object sent via uibuilder.send()
+        self.sentCtrlMsg  = {}  // copy of last control msg object sent via uibuilder.send() @since v2.0.0-dev3
         self.msgsSent     = 0   // track number of messages sent to server since page load
         self.msgsReceived = 0   // track number of messages received from server since page load
         self.msgsSentCtrl = 0   // track number of control messages sent to server since page load
         self.msgsCtrl     = 0   // track number of control messages received from server since page load
         self.ioConnected  = false
+        self.serverTimeOffset = null // placeholder to track time offset from server, see fn self.socket.on(self.ioChannels.server ...)
         // ---- These are unlikely to be needed externally: ----
         self.ioChannels   = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
         self.retryMs      = 2000                            // starting retry ms period for manual socket reconnections workaround
@@ -201,17 +203,18 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.timerid      = null
         self.ioNamespace  = self.setIOnamespace()           // Get the namespace from the current URL
         self.ioTransport  = ['polling', 'websocket']
+        self.loaded       = false                           // Are all browser resources loaded?
 
-        /** make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot */
+        /** Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot */
         {
             // split current url path, eliminate any blank elements and trailing or double slashes
             var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
             // handle url includes file name
             if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
-            self.url = fullPath.pop()
+            self.url = fullPath.pop() // not actually used and only gives the last path section of the url anyway
             self.httpNodeRoot = '/' + fullPath.join('/')
             self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')
-            self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url: ' + self.url)
+            self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url (not used): ' + self.url)
         }
 
         //#endregion --- variables ---
@@ -233,26 +236,18 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             //self.uiDebug('debug', `uibuilderfe:uibuilder:set Property: ${prop}, Value: ${val}`)
         }
 
-        //#region ========== Socket.IO processing ========== //
-
-        // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
-        //self.uiDebug('debug', `uibuilderfe: About to create IO. Namespace: ${self.ioNamespace}, Path: ${self.ioPath}, Transport: [${self.ioTransport.join(', ')}]`)
-        self.uiDebug('debug', 'uibuilderfe: About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
-        self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
-
-        /** Check whether Socket.IO is connected to the server, reconnect if not (recursive)
-         *
+        /** Function used to check whether Socket.IO is connected to the server, reconnect if not (recursive)
          * @param {number} delay Initial delay before checking (ms)
          * @param {number} factor Multiplication factor for subsequent checks (delay*factor)
          */
         self.checkConnect = function (delay, factor) {
             var depth = depth++ || 1
             //self.uiDebug('debug', `uibuilderfe:checkConnect. Reconnect - Depth: ${depth}, Delay: ${delay}, Factor: ${factor}`)
-            self.uiDebug('debug', 'uibuilderfe:checkConnect. Reconnect - Depth: ' + depth + ', Delay: ' + delay + ', Factor: ' + factor)
+            self.uiDebug('debug', 'uibuilderfe:checkConnect. Reconnect - Depth: ' + depth + ', Delay: ' + delay + ', Factor: ' + factor, self.ioNamespace, self.ioPath)
             if (self.timerid) window.clearTimeout(self.timerid) // we only want one running at a time
             self.timerid = window.setTimeout(function () {
                 //self.uiDebug('debug', `uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ${delay}, depth: ${depth}`)
-                self.uiDebug('debug', 'uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ' + delay + ', depth: ' + depth)
+                self.uiDebug('debug', 'uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ' + delay + ', depth: ' + depth, self.ioNamespace, self.ioPath)
                 // don't need to check whether we have connected as the timer will have been cleared if we have
                 self.socket.close()    // this is necessary sometimes when the socket fails to connect on startup
                 self.socket.connect()  // Try to reconnect
@@ -261,143 +256,178 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }, delay)
         } // --- End of checkConnect Fn--- //
 
-        // When the socket is connected ...
-        self.socket.on('connect', function () {
-            self.uiDebug('info', 'uibuilderfe: SOCKET CONNECTED - Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
+        /** Setup Socket.io
+         * @since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
+         * @returns {void} Attaches socket.io manager to self.socket and updates self.ioNamespace & self.ioPath as needed
+         */
+        self.ioSetup = function () {
 
-            self.set('ioConnected', true)
+            // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
+            self.uiDebug('debug', 'uibuilderfe:ioSetup: About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
+            self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
 
-            // Reset any reconnect timers
-            if (self.timerid) {
-                window.clearTimeout(self.timerid)
-                self.timerid = null
-            }
+            // When the socket is connected ...
+            self.socket.on('connect', function () {
+                self.uiDebug('info', 'uibuilderfe:ioSetup: SOCKET CONNECTED - Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
 
-        }) // --- End of socket connection processing ---
+                self.set('ioConnected', true)
 
-        // When Node-RED uibuilder node sends a msg over Socket.IO to us ...
-        self.socket.on(self.ioChannels.server, function (receivedMsg) {
-            self.uiDebug('debug', 'uibuilderfe:' + self.ioChannels.server + ' (server): msg received - Namespace: ' + self.ioNamespace, receivedMsg)
-
-            // Make sure that msg is an object & not null
-            receivedMsg = makeMeAnObject(receivedMsg, 'payload')
-
-            // If the msg contains a code property (js), insert to DOM, remove from msg if required
-            if ( self.allowScript && receivedMsg.hasOwnProperty('script') ) {
-                self.newScript(receivedMsg.script)
-                if ( self.removeScript ) delete receivedMsg.script
-            }
-            // If the msg contains a style property (css), insert to DOM, remove from msg if required
-            if ( self.allowStyle && receivedMsg.hasOwnProperty('style') ) {
-                self.newStyle(receivedMsg.style)
-                if ( self.removeStyle ) delete receivedMsg.style
-            }
-
-            // Save the msg for further processing
-            self.set('msg', receivedMsg)
-
-            // Track how many messages have been received
-            self.set('msgsReceived', self.msgsReceived + 1)
-
-            // @since 2018-10-07 v1.0.9: Work out local time offset from server
-            if ( receivedMsg.hasOwnProperty('serverTimestamp') ) {
-                self.uiDebug('log', 'uibuilderfe:' + self.ioChannels.server + ' (server): Offset is: ' + ((new Date()) - receivedMsg.serverTimestamp) )
-            }
-
-            /** Test auto-response - not really required but useful when getting started **/
-            // if (self.debug) {
-            //     self.send({payload: 'From: uibuilderfe - we got a message from you, thanks', origMsg: receivedMsg})
-            // }
-
-        }) // -- End of websocket receive DATA msg from Node-RED -- //
-
-        // Receive a CONTROL msg from Node-RED - see also sendCtrl()
-        self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
-            self.uiDebug('debug', 'uibuilder:' + self.ioChannels.control + ' (control): msg received - Namespace: ' + self.ioNamespace, receivedCtrlMsg)
-
-            // Make sure that msg is an object & not null
-            if (receivedCtrlMsg === null) {
-                receivedCtrlMsg = {}
-            } else if (typeof receivedCtrlMsg !== 'object') {
-                var msg = {}
-                msg['uibuilderCtrl:'+self.ioChannels.control] = receivedCtrlMsg
-                receivedCtrlMsg = msg
-            }
-
-            // Allow incoming control msg to change debug state (usually on the connection msg)
-            if ( receivedCtrlMsg.hasOwnProperty('debug') ) self.debug = receivedCtrlMsg.debug
-
-            self.set('ctrlMsg', receivedCtrlMsg)
-            self.set('msgsCtrl', self.msgsCtrl + 1)
-
-            /*switch(receivedCtrlMsg.uibuilderCtrl) {
-                case 'shutdown':
-                    // Node-RED is shutting down
-                    break
-                case 'client connect':
-                    // We are connected to the server
-                    break
-                default:
-                    // Anything else
-            } // */
-
-            /* Test auto-response
-                if (self.debug) {
-                    self.send({payload: 'We got a control message from you, thanks'})
+                // Reset any reconnect timers
+                if (self.timerid) {
+                    window.clearTimeout(self.timerid)
+                    self.timerid = null
                 }
-            // */
 
-        }) // -- End of websocket receive CONTROL msg from Node-RED -- //
+            }) // --- End of socket connection processing ---
 
-        // When the socket is disconnected ..............
-        self.socket.on('disconnect', function (reason) {
-            // reason === 'io server disconnect' - redeploy of Node instance
-            // reason === 'transport close' - Node-RED terminating
-            // reason === 'ping timeout' - didn't receive a pong response?
-            self.uiDebug('info', 'uibuilderfe:SOCKET DISCONNECTED - Namespace: ' + self.ioNamespace + ', Reason: ' + reason)
+            // When Node-RED uibuilder node sends a msg over Socket.IO to us ...
+            self.socket.on(self.ioChannels.server, function (receivedMsg) {
+                self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.server + ' (server): msg received - Namespace: ' + self.ioNamespace, receivedMsg)
 
-            self.set('ioConnected', false)
+                // Make sure that msg is an object & not null
+                receivedMsg = makeMeAnObject(receivedMsg, 'payload')
 
-            // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
-            if (reason === 'io server disconnect') {
-                self.checkConnect(self.retryMs, self.retryFactor)
-            }
-        }) // --- End of socket disconnect processing ---
+                // If the msg contains a code property (js), insert to DOM, remove from msg if required
+                if ( self.allowScript && receivedMsg.hasOwnProperty('script') ) {
+                    self.newScript(receivedMsg.script)
+                    if ( self.removeScript ) delete receivedMsg.script
+                }
+                // If the msg contains a style property (css), insert to DOM, remove from msg if required
+                if ( self.allowStyle && receivedMsg.hasOwnProperty('style') ) {
+                    self.newStyle(receivedMsg.style)
+                    if ( self.removeStyle ) delete receivedMsg.style
+                }
 
-        /* We really don't need these, just for interest
-            socket.on('connect_error', function(err) {
-                self.uiDebug('log', 'SOCKET CONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
+                // Save the msg for further processing
+                self.set('msg', receivedMsg)
+
+                // Track how many messages have been received
+                self.set('msgsReceived', self.msgsReceived + 1)
+
+                // @since 2018-10-07 v1.0.9: Work out local time offset from server
+                if ( receivedMsg.hasOwnProperty('serverTimestamp') ) {
+                    var offset = (new Date()) - receivedMsg.serverTimestamp
+                    if ( offset !== self.serverTimeOffset ) {
+                        self.set('serverTimeOffset', offset )
+                        self.uiDebug('log', 'uibuilderfe:' + self.ioChannels.server + ' (server): Offset changed to: ' + offset )
+                    }
+                }
+
+                /** Test auto-response - not really required but useful when getting started **/
+                /* if (self.debug) {
+                    self.send({payload: 'From: uibuilderfe - we got a message from you, thanks', origMsg: receivedMsg})
+                } */
+
+            }) // -- End of websocket receive DATA msg from Node-RED -- //
+
+            // Receive a CONTROL msg from Node-RED - see also sendCtrl()
+            self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
+                self.uiDebug('debug', 'uibuilder:ioSetup:' + self.ioChannels.control + ' (control): msg received - Namespace: ' + self.ioNamespace, receivedCtrlMsg)
+
+                // Make sure that msg is an object & not null
+                if (receivedCtrlMsg === null) {
+                    receivedCtrlMsg = {}
+                } else if (typeof receivedCtrlMsg !== 'object') {
+                    var msg = {}
+                    msg['uibuilderCtrl:'+self.ioChannels.control] = receivedCtrlMsg
+                    receivedCtrlMsg = msg
+                }
+
+                // Allow incoming control msg to change debug state (usually on the connection msg)
+                if ( receivedCtrlMsg.hasOwnProperty('debug') ) self.debug = receivedCtrlMsg.debug
+
+                self.set('ctrlMsg', receivedCtrlMsg)
+                self.set('msgsCtrl', self.msgsCtrl + 1)
+
+                switch(receivedCtrlMsg.uibuilderCtrl) {
+                    case 'ready for content':
+                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "ready for content" from server')
+                        break
+                    case 'shutdown':
+                        // Node-RED is shutting down
+                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "shutdown" from server')
+                        break
+                    case 'client connect':
+                        // We are connected to the server
+                        if ( self.autoSendReady === true ) {
+                            self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "client connect" from server, auto-sending REPLAY control msg')
+            
+                            // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
+                            self.send({
+                                'uibuilderCtrl':'ready for content',
+                                'cacheControl':'REPLAY',
+                                'from': 'client', // @since 2018-10-07 v1.0.9
+                            },self.ioChannels.control)
+                        }
+                        break
+                    default:
+                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
+                        // Anything else
+                } // */
+
+                /* Test auto-response
+                    if (self.debug) {
+                        self.send({payload: 'We got a control message from you, thanks'})
+                    }
+                // */
+
+            }) // -- End of websocket receive CONTROL msg from Node-RED -- //
+
+            // When the socket is disconnected ..............
+            self.socket.on('disconnect', function (reason) {
+                // reason === 'io server disconnect' - redeploy of Node instance
+                // reason === 'transport close' - Node-RED terminating
+                // reason === 'ping timeout' - didn't receive a pong response?
+                self.uiDebug('info', 'uibuilderfe:ioSetup: SOCKET DISCONNECTED - Namespace: ' + self.ioNamespace + ', Reason: ' + reason)
+
+                self.set('ioConnected', false)
+
+                // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
+                if (reason === 'io server disconnect') {
+                    self.checkConnect(self.retryMs, self.retryFactor)
+                }
+            }) // --- End of socket disconnect processing ---
+
+            // Socket.io connection error - probably the wrong ioPath
+            self.socket.on('connect_error', function(err) {
+                self.uiDebug('error', 'uibuilderfe:ioSetup: SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
                 //console.dir(err)
             }) // --- End of socket connect error processing ---
-            socket.on('connect_timeout', function(data) {
-                self.uiDebug('log', 'SOCKET CONNECT TIMEOUT - Namespace: ' + ioNamespace)
-                console.dir(data)
-            }) // --- End of socket connect timeout processing ---
-            socket.on('reconnect', function(attemptNum) {
-                self.uiDebug('log', 'SOCKET RECONNECTED - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
-            }) // --- End of socket reconnect processing ---
-            socket.on('reconnect_attempt', function(attemptNum) {
-                self.uiDebug('log', 'SOCKET RECONNECT ATTEMPT - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
-            }) // --- End of socket reconnect_attempt processing ---
-            socket.on('reconnecting', function(attemptNum) {
-                self.uiDebug('log', 'SOCKET RECONNECTING - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
-            }) // --- End of socket reconnecting processing ---
-            socket.on('reconnect_error', function(err) {
-                self.uiDebug('log', 'SOCKET RECONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
-                //console.dir(err)
-            }) // --- End of socket reconnect_error processing ---
-            socket.on('reconnect_failed', function(data) {
-                self.uiDebug('log', 'SOCKET RECONNECT FAILED - Namespace: ' + ioNamespace)
-                console.dir(data)
-            }) // --- End of socket reconnect_failed processing ---
-            socket.on('ping', function() {
-                self.uiDebug('log', 'SOCKET PING - Namespace: ' + ioNamespace)
-            }) // --- End of socket ping processing ---
-            socket.on('pong', function(data) {
-                self.uiDebug('log', 'SOCKET PONG - Namespace: ' + ioNamespace + ', Data: ' + data)
-            }) // --- End of socket pong processing ---
-         // */
+            
+            // Ensure we are connected, retry if not
+            self.checkConnect(self.retryMs, self.retryFactor)
 
+            /* We really don't need these, just for interest
+                socket.on('connect_timeout', function(data) {
+                    self.uiDebug('log', 'SOCKET CONNECT TIMEOUT - Namespace: ' + ioNamespace)
+                    console.dir(data)
+                }) // --- End of socket connect timeout processing ---
+                socket.on('reconnect', function(attemptNum) {
+                    self.uiDebug('log', 'SOCKET RECONNECTED - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
+                }) // --- End of socket reconnect processing ---
+                socket.on('reconnect_attempt', function(attemptNum) {
+                    self.uiDebug('log', 'SOCKET RECONNECT ATTEMPT - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
+                }) // --- End of socket reconnect_attempt processing ---
+                socket.on('reconnecting', function(attemptNum) {
+                    self.uiDebug('log', 'SOCKET RECONNECTING - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
+                }) // --- End of socket reconnecting processing ---
+                socket.on('reconnect_error', function(err) {
+                    self.uiDebug('log', 'SOCKET RECONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
+                    //console.dir(err)
+                }) // --- End of socket reconnect_error processing ---
+                socket.on('reconnect_failed', function(data) {
+                    self.uiDebug('log', 'SOCKET RECONNECT FAILED - Namespace: ' + ioNamespace)
+                    console.dir(data)
+                }) // --- End of socket reconnect_failed processing ---
+                socket.on('ping', function() {
+                    self.uiDebug('log', 'SOCKET PING - Namespace: ' + ioNamespace)
+                }) // --- End of socket ping processing ---
+                socket.on('pong', function(data) {
+                    self.uiDebug('log', 'SOCKET PONG - Namespace: ' + ioNamespace + ', Data: ' + data)
+                }) // --- End of socket pong processing ---
+            // */
+        } // ---- End of ioSetup ---- //
+        
         /** Send a standard msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
          * @param {Object} msgToSend The msg object to send.
@@ -421,17 +451,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
 
             // Track how many messages have been sent & last msg sent
-            self.set('sentMsg', msgToSend)
             if (channel === self.ioChannels.client) {
+                self.set('sentMsg', msgToSend)
                 self.set('msgsSent', self.msgsSent + 1)
             } else if (channel === self.ioChannels.control) {
-                self.set('msgsCtrl', self.msgsCtrl + 1)
+                self.set('sentCtrlMsg', msgToSend)
+                self.set('msgsSentCtrl', self.msgsSentCtrl + 1)
             }
 
             self.socket.emit(channel, msgToSend)
         } // --- End of Send Msg Fn --- //
-
-        //#endregion ======== End of Socket.IO processing ======== //
 
         //#region ========== Our own event handling system ========== //
 
@@ -597,7 +626,19 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              * Use only for debugging as: console.dir(uibuilder.me())
              * @return {object|string} Returns self object or version string
              **/
-            me: self.me
+            me: self.me,
+
+            /** Startup socket.io comms - must be done manually by user to allow for changes to namespace/path 
+             * @param {string=} namespace If not blank, changes self.ioNamespace from the default
+             * @param {string=} ioPath If not blank, changes self.ioPath from the default
+             */
+            start: function(namespace,ioPath) {
+                //TODO change to options object? What other options would we want?
+                if (namespace !== undefined) self.ioNamespace = namespace
+                if (ioPath !== undefined) self.ioPath = ioPath
+
+                self.ioSetup()
+            },
 
         } // --- End of return callback functions --- //
 
@@ -607,28 +648,17 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== start of execution ======== //
 
-        /** Send control msgs to the server when the DOM is loaded
-         * Allows the server to delay sending updates
+        /** Are all browser resources loaded?
          * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
          * load: All resources are loaded
          */
-         //document.addEventListener('DOMContentLoaded', function(){
-         //   self.send({'uibuilderCtrl':'DOMContentLoaded'},self.ioChannels.control)
-         //})
+         /* document.addEventListener('DOMContentLoaded', function(){
+           self.send({'uibuilderCtrl':'DOMContentLoaded'},self.ioChannels.control)
+          }) */
         window.addEventListener('load', function(){
-            if ( self.autoSendReady === true ) {
-                //self.send({'uibuilderCtrl':'page load complete'},self.ioChannels.control)
-                // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
-                self.send({
-                    'uibuilderCtrl':'ready for content',
-                    'cacheControl':'REPLAY',
-                    'from': 'client', // @since 2018-10-07 v1.0.9
-                },self.ioChannels.control)
-            }
+            self.uiDebug('debug', 'uibuilderfe:load: All resources loaded')
+            self.loaded = true
         })
-
-        // Make sure we connect the first time ok
-        self.checkConnect(self.retryMs, self.retryFactor)
 
         //#endregion ======== end of execution ======== //
 
