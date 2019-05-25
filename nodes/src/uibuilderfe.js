@@ -555,7 +555,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             /** Turn on/off debugging
              * Example: uibuilder.debug(true)
              * @param {boolean} [onOff] Debug flag
-             * @return {*boolean} If no parameter given, returns current debug state
+             * @return {boolean|void} If no parameter given, returns current debug state
              */
             debug: function (onOff) {
                 if ( typeof onOff === 'undefined' ) return self.debug
