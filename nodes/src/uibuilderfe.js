@@ -41,7 +41,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
     // Keep a copy of anything with a clashing name in the starting context
     var previous_uibuilder = root.uibuilder
 
-    // Create a function with specific "this" context
+    // Create a function with specific "this" context - this is the main code
     // @since 2017-10-14 Replaced "new (function(){})" with "(function(){}).call(root)"
     var uibuilder = (function () {
         // Remember that things have to be defined *before* they are referenced
@@ -203,6 +203,22 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }, delay)
         } // --- End of checkConnect Fn--- //
 
+        /** Check supplied msg from server for a timestamp - if received, work out & store difference to browser time
+         * @param {Object} receivedMsg A message object recieved from Node-RED
+         * @returns {void} Updates self.serverTimeOffset if different to previous value
+         */
+        self.checkTimestamp = function (receivedMsg) {
+            if ( receivedMsg.hasOwnProperty('serverTimestamp') ) {
+                var serverTimestamp = new Date(receivedMsg.serverTimestamp)
+                // @ts-ignore
+                var offset = Math.round( ( (new Date()) - serverTimestamp ) / 3600000 ) // in ms / 3.6m to get hours
+                if ( offset !== self.serverTimeOffset ) {
+                    self.set('serverTimeOffset', offset )
+                    self.uiDebug('log', 'uibuilderfe:' + self.ioChannels.server + ' (server): Offset changed to: ' + offset )
+                }
+            }
+        }
+
         /** Setup Socket.io
          * @since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
          * @returns {void} Attaches socket.io manager to self.socket and updates self.ioNamespace & self.ioPath as needed
@@ -234,6 +250,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 // Make sure that msg is an object & not null
                 receivedMsg = makeMeAnObject(receivedMsg, 'payload')
 
+                // @since 2018-10-07 v1.0.9: Work out local time offset from server
+                self.checkTimestamp(receivedMsg)
+
                 // If the msg contains a code property (js), insert to DOM, remove from msg if required
                 if ( self.allowScript && receivedMsg.hasOwnProperty('script') ) {
                     self.newScript(receivedMsg.script)
@@ -250,15 +269,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                 // Track how many messages have been received
                 self.set('msgsReceived', self.msgsReceived + 1)
-
-                // @since 2018-10-07 v1.0.9: Work out local time offset from server
-                if ( receivedMsg.hasOwnProperty('serverTimestamp') ) {
-                    var offset = (new Date()) - receivedMsg.serverTimestamp
-                    if ( offset !== self.serverTimeOffset ) {
-                        self.set('serverTimeOffset', offset )
-                        self.uiDebug('log', 'uibuilderfe:' + self.ioChannels.server + ' (server): Offset changed to: ' + offset )
-                    }
-                }
 
                 /** Test auto-response - not really required but useful when getting started **/
                 /* if (self.debug) {
@@ -282,6 +292,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                 // Allow incoming control msg to change debug state (usually on the connection msg)
                 if ( receivedCtrlMsg.hasOwnProperty('debug') ) self.debug = receivedCtrlMsg.debug
+
+                // @since 2018-10-07 v1.0.9: Work out local time offset from server
+                self.checkTimestamp(receivedCtrlMsg)
 
                 self.set('ctrlMsg', receivedCtrlMsg)
                 self.set('msgsCtrl', self.msgsCtrl + 1)
