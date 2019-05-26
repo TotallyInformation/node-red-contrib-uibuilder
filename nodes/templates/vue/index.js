@@ -24,6 +24,8 @@ const app1 = new Vue({
         startMsg    : 'Vue has started, waiting for messages',
         feVersion   : '',
         counterBtn  : 0,
+        inputText   : null,
+        inputChkBox : false,
         socketConnectedState : false,
         serverTimeOffset     : '[unknown]',
 
@@ -65,13 +67,22 @@ const app1 = new Vue({
             // Increment the count by one
             this.counterBtn = this.counterBtn + 1
             let topic = this.msgRecvd.topic || 'uibuilder/vue'
-            uibuilder.send( { 'topic': topic, 'payload': { 'type': 'counterBtn', 'btnCount': this.counterBtn, 'message': this.inputText } } )
-        },
+            uibuilder.send( {
+                'topic': topic,
+                'payload': {
+                    'type': 'counterBtn',
+                    'btnCount': this.counterBtn,
+                    'message': this.inputText,
+                    'inputChkBox': this.inputChkBox
+                }
+            } )
+        }, // --- End of increment --- //
+
         // return formatted HTML version of JSON object
         syntaxHighlight: function(json) {
             json = JSON.stringify(json, undefined, 4)
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
                 var cls = 'number'
                 if (/^"/.test(match)) {
                     if (/:$/.test(match)) {
@@ -86,7 +97,8 @@ const app1 = new Vue({
                 }
                 return '<span class="' + cls + '">' + match + '</span>'
             })
-        } // --- End of syntaxHighlight --- //
+            return json
+        }, // --- End of syntaxHighlight --- //
     }, // --- End of methods --- //
 
     // Available hooks: init,mounted,updated,destroyed

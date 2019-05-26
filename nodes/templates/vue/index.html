@@ -73,20 +73,25 @@
             <p>
                 Messages: Received=<b>{{msgsReceived}}</b>, Sent=<b>{{msgsSent}}</b>
             </p>
-            <pre v-html="hLastRcvd"></pre>
-            <pre v-html="hLastSent"></pre>
+            <pre v-html="hLastRcvd" class="syntax-highlight"></pre>
+            <pre v-html="hLastSent" class="syntax-highlight"></pre>
 
             <h3>Control Messages</h3>
             <p>
                 Control Messages: Received=<b>{{msgsControl}}</b>, Sent=<b>{{msgsCtrlSent}}</b>
             </p>
-            <pre v-html="hLastCtrlRcvd"></pre>
-            <pre v-html="hLastCtrlSent"></pre>
+            <pre v-html="hLastCtrlRcvd" class="syntax-highlight"></pre>
+            <pre v-html="hLastCtrlSent" class="syntax-highlight"></pre>
 
             <h2>Simple input using Vue</h2>
             <p>
-                <button v-on:click="increment">Increment</button> Click Counter: <b>{{counterBtn}}</b>.<br>
-                Click on the button to increment the counter. It sends the data back to Node-RED as well.
+                <b-form-input v-model="inputText" type="text" placeholder="Enter some text to send to Node-RED"></b-form-input><br>
+                <b-form-checkbox v-model="inputChkBox">
+                    To tick or not to tick? That is the question
+                </b-form-checkbox><br>
+                <b-button pill variant="primary" v-on:click="increment">Increment</b-button>
+                    Click Counter: <b>{{counterBtn}}</b>.<br>
+                Click on the button to increment the counter. It sends the data back to Node-RED as well.<br>
             </p>
         </b-container>
     </div>
