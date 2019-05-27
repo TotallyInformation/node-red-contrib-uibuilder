@@ -20,8 +20,10 @@
   
 * **CHANGE** Templates: index.html, index.js and index.css have all been improved in this release. If you are using the default page & js, please delete them and allow uibuilder to create them.
 
-* **FIXED** * Deploy causes vendor paths (except socket.io) to disappear
+* **FIXED** Deploy causes vendor paths (except socket.io) to disappear
   Bug introduced by moving vendor path processing to outside of the instance process. So we have to exclude the vendor paths when killing the instance paths during the close event.
+
+* **FIXED** uibuilderfe: Issue with some browsers and the debugging function. See [Issue #49](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/49) for details.
 
 
 

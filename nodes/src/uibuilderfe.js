@@ -73,8 +73,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             var type = arguments[0]
 
+            /** @since v2.0.0-dev3 2019-05-27 changed from ...apply(undefined,...) to ...apply(console,...) Fixes Issue #49 */
             //console[type](...args)
-            console[type].apply(undefined, [].slice.call(arguments, 1))
+            console[type].apply(console, [].slice.call(arguments, 1))
 
         } // --- End of debug function --- //
 
