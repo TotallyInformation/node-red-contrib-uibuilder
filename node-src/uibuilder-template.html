@@ -70,11 +70,11 @@
     <!-- ---- Hideable File Editor Section ---- -->
     <div id="edit-props">
         <!-- Drop-down for selecting folder -->
-        <div class="form-row">
+        <div class="form-row" title="Choose between the src, dist (built src) or root folders">
             <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Folder:</label>
             <select id="node-input-folder" style="width: 75%;">
                 <option value="src">src</option>
-                <option value="dist">dest</option>
+                <option value="dist">dist</option>
                 <option value="root">root</option>
             </select>
         </div>
@@ -93,9 +93,21 @@
             <span id="file-action-message"></span>
 
             <div style="position: absolute;right:1.6em;display:inline-block;">
+                <button class="btn" id="edit-new" title="Add a new file." style="font-size:0.8em;line-height:1em;">
+                    New
+                </button>
+                <div id="edit_new_dialog" title="Create a new file" dialog>
+                    <label for="edit-input-newname">New File Name</label>
+                    <input type="text" id="edit-input-newname">
+                </div>                  
                 <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set." style="font-size:0.8em;line-height:1em;">
                     Delete
                 </button>
+                <div id="edit_delete_dialog" title="Delete the currently selected file" dialog>
+                    <h5>File to be deleted</h5>
+                    <p id="edit-delete-name"></p>
+                    <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">Warning: This action cannot be undone.</p>
+                </div>                  
             </div>
 
         </div>

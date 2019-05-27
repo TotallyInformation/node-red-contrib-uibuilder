@@ -101,8 +101,10 @@
         }
     } // --- End of fileType --- //
 
-    /** Get the list of files for the chosen url & folder */
-    function getFileList() {
+    /** Get the list of files for the chosen url & folder
+     * @param {string} [selectedFile] Optional. If present will select this filename after refresh, otherwise 1st file is selected.
+     */
+    function getFileList(selectedFile) {
         $('#node-input-filename option').remove()
 
         var url = $('#node-input-url').val()
@@ -110,12 +112,13 @@
 
         // Build the file list - pass the url so the BE can find the right folder
         $.getJSON('uibfiles?url=' + url + '&folder=' + folder, function(files) {
-            var firstFile = ''
+            var firstFile = '', indexHtml = false, selected = false
 
             $.each(files, function (i, fname) {
-                // Choose the default file
+                // Choose the default file. In order: selectedFile param, index.html, 1st returned
                 if ( i === 0 ) firstFile = fname
-                if ( fname === 'index.html' ) firstFile = fname
+                if ( fname === 'index.html' ) indexHtml = true
+                if ( fname === selectedFile ) selected = true
                 // Build the drop-down
                 $('#node-input-filename').append($('<option>', { 
                     value: fname,
@@ -125,8 +128,10 @@
 
             //console.log( '[uibuilder:getFileList:getJSON] Got files ', files, firstFile, folder, url )
 
-            // Set default file name/type
-            uiace.fname = firstFile
+            // Set default file name/type. In order: selectedFile param, index.html, 1st returned
+            if ( selected === true ) uiace.fname = selectedFile
+            else if ( indexHtml === true ) uiace.fname = 'index.html'
+            else uiace.fname = firstFile
             $('#node-input-filename').val(uiace.fname)
             uiace.format = firstFile === '' ? 'text' : fileType(firstFile)
         }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -180,6 +185,51 @@
             uiace.editorSession.setValue('')
         })
     } // --- End of getFileContents --- //
+
+    /** Call admin API to create a new file 
+     * @param {string} fname Name of new file to create (combines with current selected folder and the current uibuilder url)
+     * @return {string} Status message
+     * 
+     */
+    function createNewFile(fname) {
+        // Also get the current folder & url
+        const folder = $('#node-input-folder').val() || uiace.folder
+        const url = $('#node-input-url').val()
+
+        const apiUrl = 'uibnewfile?url=' + url + '&fname=' + fname + '&folder=' + folder
+
+        $.get( apiUrl, function(data){
+            // Rebuild the file list & select the file
+            getFileList(fname)
+
+            return 'Create file succeeded'
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( '[uibuilder:createNewFile:get] Error ' + textStatus, errorThrown )
+            return 'Create file failed'
+        })
+    } // --- End of createNewFile --- //
+
+    /** Call admin API to delete the currently selected file 
+     * @return {string} Status message
+     */
+    function deleteFile() {
+        // Get the current file, folder & url
+        const fname = $('#node-input-filename').val()
+        const folder = $('#node-input-folder').val()
+        const url = $('#node-input-url').val()
+
+        const apiUrl = 'uibdeletefile?url=' + url + '&fname=' + fname + '&folder=' + folder
+
+        $.get( apiUrl, function(data){
+            // Rebuild the file list & select the file
+            getFileList(fname)
+
+            return 'Delete file succeeded'
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( '[uibuilder:deleteFile:get] Error ' + textStatus, errorThrown )
+            return 'Delete file failed'
+        })
+    } // --- End of deleteFile --- //
 
     /** Enable/disable buttons if file has edits or not
      * @param {boolean} isClean true = the file is clean, else there are pending edits that need saving
@@ -281,14 +331,15 @@
         oneditprepare: function () {
             const that = this
 
-            // Start with the edit section hidden & main section visible
+            //#region Start with the edit section hidden & main section visible
             $('#main-props').show()
             $('#edit-props').hide()
             $('#npm-props').hide()
             $('#adv-props').hide()
             $('#info-props').hide()
+            //#endregion
 
-            // Set the checkbox states
+            //#region Set the checkbox states
             $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
             $('#node-input-allowScripts').prop('checked', this.allowScripts)
             $('#node-input-allowStyles').prop('checked', this.allowStyles)
@@ -297,8 +348,9 @@
             // Show the uibuilder global settings from settings.js
             // TODO Fix for updated settings
             //$('#bedebug').text(RED.settings.uibuilder.debug)
+            //#endregion checkbox states
 
-            // Setup the package list
+            //#region Setup the package list
             $('#node-input-packageList').editableList({
                 addItem: addPackageRow,
                 removeItem: function(data){},
@@ -318,6 +370,7 @@
              *       no changes themselves to a node instance.
              */
             packageList()
+            //#endregion
 
             // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
@@ -336,23 +389,18 @@
                     $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 }
             })
-            // Show/Hide the Path & Module info
+            // Show/Hide the Path & Module details
             $('#show-info-props').css( 'cursor', 'pointer' )
             $('#show-info-props').click(function(e) {
                 $('#info-props').toggle()
                 if ( $('#info-props').is(':visible') ) {
-                    $('#show-info-props').html('<i class="fa fa-caret-down"></i> Path &amp; Module Info')
+                    $('#show-info-props').html('<i class="fa fa-caret-down"></i> Path &amp; Module Details')
                 } else {
-                    $('#show-info-props').html('<i class="fa fa-caret-right"></i> Path &amp; Module Info')
+                    $('#show-info-props').html('<i class="fa fa-caret-right"></i> Path &amp; Module Details')
                 }
             })
 
-            // List the front-end url paths available (shown in info box)
-            //packageList(this.url, true)
-
             //#region ---- File Editor ---- //
-            // Delete is not ready yet, so disable button by default. TODO
-            $('#edit-delete').prop('disabled', true)
             // Mark edit save/reset buttons as disabled by default
             fileIsClean(true)
 
@@ -423,9 +471,6 @@
             $('#node-input-folder').change(function(e) {
                 // Rebuild the file list
                 getFileList()
-
-                // Force change event on filename
-                //$('#node-input-filename').change()
             })
             $('#node-input-filename').change(function(e) {
                 // Get the content of the file via the admin API
@@ -451,7 +496,8 @@
                 // Post the updated content of the file via the admin API
                 // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
                 var request = new XMLHttpRequest()
-                var params = 'fname=' + $('#node-input-filename').val() + '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(uiace.editorSession.getValue())
+                var params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
+                    '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(uiace.editorSession.getValue())
                 request.open('POST', 'uibputfile', true)
                 request.onreadystatechange = function() {
                     if (this.readyState === XMLHttpRequest.DONE) {
@@ -468,10 +514,78 @@
                     }
                 }
                 request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+                // If admin ui is protected with a login, we need to send the access token
                 if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
                 request.send(params)
 
             })
+
+            //#region Handle the Delete file button
+            $('#edit_delete_dialog').dialog({
+                autoOpen:false, modal:true, closeOnEscape:true,
+                buttons: [
+                    {
+                        text: 'Delete',
+                        id: 'edit_del_dialog_del',
+                        click: function() {
+                            // Call the delete file API (uses the current file)
+                            deleteFile()
+                            $( this ).dialog( 'close' )
+                        }
+                    },{
+                        text: 'Cancel',
+                        click: function() {
+                            $( this ).dialog( 'close' )
+                        }
+                    },
+                ]
+            })
+            $('#edit-delete').click(function(e) {
+                $('#edit_del_dialog_del').addClass('input-error').css('color','brown')
+                $('#edit-delete-name').text($('#node-input-folder').val() + '/' + $('#node-input-filename').val())
+                $('#edit_delete_dialog').dialog('open')  
+            })
+            //#endregion
+
+            //#region Handle the New file button
+            $('#edit_new_dialog_new').addClass('input-error').prop('disabled',true)
+            $('#edit-input-newname').addClass('input-error').on('input', function(){
+                if ( $('#edit-input-newname').val().length === 0) {
+                    $('#edit-input-newname').addClass('input-error')
+                    $('#edit_new_dialog_new').addClass('input-error').prop('disabled',true)
+                } else {
+                    $('#edit-input-newname').removeClass('input-error')
+                    $('#edit_new_dialog_new').removeClass('input-error').prop('disabled',false)
+                }
+            })
+            $('#edit_new_dialog').dialog({
+                autoOpen:false, modal:true, closeOnEscape:true,
+                buttons: [
+                    {
+                        text: 'New',
+                        id: 'edit_new_dialog_new',
+                        click: function() {
+                            // NB: Button is disabled unless name.length > 0 so don't need to check here
+                            // Call the new file API
+                            createNewFile($('#edit-input-newname').val())
+                            $('#edit-input-newname').val(null).addClass('input-error')
+                            $('#edit_new_dialog_new').addClass('input-error').prop('disabled',true)
+                            $( this ).dialog( 'close' )
+                        }
+                    },{
+                        text: 'Cancel',
+                        click: function() {
+                            $('#edit-input-newname').val(null).addClass('input-error')
+                            $('#edit_new_dialog_new').addClass('input-error').prop('disabled',true)
+                            $( this ).dialog( 'close' )
+                        }
+                    },
+                ]
+            })
+            $('#edit-new').click(function(e) {
+                $('#edit_new_dialog').dialog('open')  
+            })
+            //#endregion
 
             // Handle the expander button (show full screen editor) - from core function node
             $('#node-function-expand-js').click(function(e) {
