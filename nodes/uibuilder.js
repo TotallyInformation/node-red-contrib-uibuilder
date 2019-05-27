@@ -103,11 +103,7 @@ module.exports = function(RED) {
     }
 
     //#region ----- back-end debugging ----- //
-    // TODO do this again once we have the instance settings
-    if (uib_globalSettings.debug) {
-        // log.debugging = uib_globalSettings.debug === true ? true : false
-        log = RED.log
-    }
+    log = RED.log
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
 
@@ -208,7 +204,7 @@ module.exports = function(RED) {
             //console.dir(io.sockets.connected)
         */
         if (socket.request.headers.cookie) {
-            //log.info('[uibuilder:Module] io.use - Authentication OK - ID: ' + socket.id)
+            //log.debug('[uibuilder:Module] io.use - Authentication OK - ID: ' + socket.id)
             //log.trace('[uibuilder:Module] Cookie', socket.request.headers.cookie)  // socket.handshake.headers.cookie
             return next()
         }
@@ -280,9 +276,6 @@ module.exports = function(RED) {
         node.allowStyles   = config.allowStyles
         node.copyIndex     = config.copyIndex
         //#endregion ----- Local node config copy ----- //
-
-        // back-end debugging (again)
-        if (node.debugBE === true) log = RED.log
 
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
 
@@ -426,8 +419,8 @@ module.exports = function(RED) {
 
         const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
 
-        log.info(`uibuilder : ${uibInstance} : URL . . . . .  : ${fullPath}`)
-        log.info(`uibuilder : ${uibInstance} : Source files . : ${node.customFolder}`)
+        log.debug(`uibuilder : ${uibInstance} : URL . . . . .  : ${fullPath}`)
+        log.debug(`uibuilder : ${uibInstance} : Source files . : ${node.customFolder}`)
 
         // We only do the following if io is not already assigned (e.g. after a redeploy)
         uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
