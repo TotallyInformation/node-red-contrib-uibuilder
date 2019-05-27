@@ -1,5 +1,5 @@
-/*global document,window */
-// @ts-check
+/* jshint browser: true, esversion: 5 */
+/* globals document,window */
 /*
   Copyright (c) 2017 Julian Knight (Totally Information)
 
@@ -459,6 +459,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             var newScript = document.createElement('script')
             newScript.type = 'text/javascript'
             newScript.defer = true
+            // @ts-ignore
             newScript.textContent = script
             document.getElementsByTagName('body')[0].appendChild(newScript)
         }
@@ -472,6 +473,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             self.uiDebug('log', 'uibuilderfe: newStyle - style: ' + style)
             var newStyle = document.createElement('style')
+            // @ts-ignore
             newStyle.textContent = style
             document.getElementsByTagName('head')[0].appendChild(newStyle)
         }
@@ -686,6 +688,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         return  url.replace('//','/')
     } // ---- End of urlJoin ---- //
 
+// eslint-disable-next-line semi
 }).call(this); // Pass current context into the IIFE
 // --- End of isolation IIFE --- //
 
