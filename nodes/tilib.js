@@ -172,7 +172,7 @@ module.exports = {
         return packagePath
     }, // ----  ---- //
 
-    /** Return an updated list of installed front-end library packages
+    /** DEPRECATED. Return an updated list of installed front-end library packages
      * TODO DEPRECATE and change references to uiblib.updVendorPaths()
      * @param {string[]} masterPackageList Array of installed package names
      * @param {string} userDir Home folder for Node-RED modules - needed to allow search for installation
