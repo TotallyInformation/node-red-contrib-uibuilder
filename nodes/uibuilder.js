@@ -713,7 +713,12 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         //#region --- Parameter validation ---
-        // We have to have a url to work with
+        /** req.query parameters
+         * url
+         * fname
+         * folder
+         */
+        // We have to have a url (uibuilder url) to work with
         if ( req.query.url === undefined ) {
             log.error('[uibgetfile] Admin API. url parameter not provided')
             res.statusMessage = 'url parameter not provided'
@@ -769,16 +774,46 @@ module.exports = function(RED) {
             res.status(500).end()
             return
         }
+
+        //we have to have a folder name
+        let folder = req.query.folder
+        if ( folder === undefined ) {
+            log.error('[uibgetfile] Admin API. folder parameter not provided')
+            res.statusMessage = 'folder parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // folder cannot contain .. to prevent escaping sub-folder structure
+        if ( folder.includes('..') ) {
+            log.error('[uibgetfile] Admin API. folder parameter contains ..')
+            res.statusMessage = 'folder parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+        // folder can only be one of: 'src', 'dist', 'root'
+        switch ( folder ) {
+            case 'src':
+            case 'dist':
+                break
+            case 'root':
+                folder = ''
+                break
+            default:
+                log.error('[uibgetfile] Admin API. folder parameter is not one of src, dist, root', folder)
+                res.statusMessage = 'folder parameter must be one of src, dist, root'
+                res.status(500).end()
+                return
+        }
         //#endregion ---- ----
 
-        log.trace(`[uibgetfile:${req.query.url}] Admin API. File get requested for ${req.query.fname}`)
+        log.trace(`[uibgetfile:${req.query.url}] Admin API. File get requested for ${folder}/${req.query.fname}`)
 
         // Send back a plain text response body containing content of the file
         res.type('text/plain').sendFile(
             req.query.fname, 
             {
                 // Prevent injected relative paths from escaping `src` folder
-                'root': path.join(uib_rootFolder, req.query.url, 'src'),
+                'root': path.join(uib_rootFolder, req.query.url, folder),
                 // Turn off caching
                 'lastModified': false, 
                 'cacheControl': false
@@ -786,7 +821,7 @@ module.exports = function(RED) {
         )
     }) // ---- End of uibgetfile ---- //
 
-    /** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/src` folder
+    /** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/<folder>` folder
      * @since 2019-02-04 - Adding the file edit admin ui
      * @param {string} url The admin api url to create
      * @param {Object} permissions The permissions required for access (Express middleware)
@@ -810,7 +845,7 @@ module.exports = function(RED) {
         }
         // URL must be more than 0 characters
         if ( req.body.url.length < 1 ) {
-            log.error('[uibfiles] Admin API. url parameter is empty')
+            log.error('[uibputfile] Admin API. url parameter is empty')
             res.statusMessage = 'url parameter is empty, please provide a value'
             res.status(500).end()
             return
@@ -844,12 +879,42 @@ module.exports = function(RED) {
             res.status(500).end()
             return
         }
+
+        //we have to have a folder name
+        let folder = req.body.folder
+        if ( folder === undefined ) {
+            log.error('[uibputfile] Admin API. folder parameter not provided')
+            res.statusMessage = 'folder parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // folder cannot contain .. to prevent escaping sub-folder structure
+        if ( folder.includes('..') ) {
+            log.error('[uibputfile] Admin API. folder parameter contains ..')
+            res.statusMessage = 'folder parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+        // folder can only be one of: 'src', 'dist', 'root'
+        switch ( folder ) {
+            case 'src':
+            case 'dist':
+                break
+            case 'root':
+                folder = ''
+                break
+            default:
+                log.error('[uibputfile] Admin API. folder parameter is not one of src, dist, root', folder)
+                res.statusMessage = 'folder parameter must be one of src, dist, root'
+                res.status(500).end()
+                return
+        }        
         //#endregion ---- ----
         
         log.trace(`[${req.body.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
-        const fullname = path.join(uib_rootFolder, req.body.url, 'src', req.body.fname)
+        const fullname = path.join(uib_rootFolder, req.body.url, folder, req.body.fname)
 
         fs.writeFile(fullname, req.body.data, function (err, data) {
             if (err) {
@@ -865,6 +930,228 @@ module.exports = function(RED) {
             }
         })
     }) // ---- End of uibputfile ---- //
+
+    /** Create a simple NR admin API to CREATE a new file in the `<userLib>/uibuilder/<url>/<folder>` folder
+     * @param {string} url The admin api url to create
+     * @param {Object} permissions The permissions required for access (Express middleware)
+     * @param {function} cb
+     **/
+    RED.httpAdmin.get('/uibnewfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+        //#region --- Parameter validation ---
+        // TODO standardise param validation, move to functions
+        const params = req.query
+        // We have to have a url to work with
+        if ( params.url === undefined ) {
+            log.error('[uibnewfile] Admin API. url parameter not provided')
+            res.statusMessage = 'url parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // URL must not exceed 20 characters
+        if ( params.url.length > 20 ) {
+            log.error('[uibnewfile] Admin API. url parameter is too long (>20 characters)')
+            res.statusMessage = 'url parameter is too long. Max 20 characters'
+            res.status(500).end()
+            return
+        }
+        // URL must be more than 0 characters
+        if ( params.url.length < 1 ) {
+            log.error('[uibnewfile] Admin API. url parameter is empty')
+            res.statusMessage = 'url parameter is empty, please provide a value'
+            res.status(500).end()
+            return
+        }
+        // URL cannot contain .. to prevent escaping sub-folder structure
+        if ( params.url.includes('..') ) {
+            log.error('[uibnewfile] Admin API. url parameter contains ..')
+            res.statusMessage = 'url parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+
+        // We have to have an fname (file name) to work with
+        if ( params.fname === undefined ) {
+            log.error('[uibnewfile] Admin API. fname parameter not provided')
+            res.statusMessage = 'fname parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // fname must not exceed 255 characters
+        if ( params.fname.length > 255 ) {
+            log.error('[uibnewfile] Admin API. fname parameter is too long (>255 characters)')
+            res.statusMessage = 'fname parameter is too long. Max 255 characters'
+            res.status(500).end()
+            return
+        }
+        // fname cannot contain .. to prevent escaping sub-folder structure
+        if ( params.fname.includes('..') ) {
+            log.error('[uibnewfile] Admin API. fname parameter contains ..')
+            res.statusMessage = 'fname parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+
+        //we have to have a folder name
+        let folder = params.folder
+        if ( folder === undefined ) {
+            log.error('[uibnewfile] Admin API. folder parameter not provided')
+            res.statusMessage = 'folder parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // folder cannot contain .. to prevent escaping sub-folder structure
+        if ( folder.includes('..') ) {
+            log.error('[uibnewfile] Admin API. folder parameter contains ..')
+            res.statusMessage = 'folder parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+        // folder can only be one of: 'src', 'dist', 'root'
+        // TODO: Allow for sub-folders in src & dist
+        switch ( folder ) {
+            case 'src':
+            case 'dist':
+                break
+            case 'root':
+                folder = ''
+                break
+            default:
+                log.error('[uibnewfile] Admin API. folder parameter is not one of src, dist, root', folder)
+                res.statusMessage = 'folder parameter must be one of src, dist, root'
+                res.status(500).end()
+                return
+        }        
+        //#endregion ---- ----
+        
+        log.trace(`[${params.url}:uibnewfile] Admin API. File create requested for ${folder}/${params.fname}`)
+
+        // TODO: Add path validation - Also, file should always exist to check that
+        const fullname = path.join(uib_rootFolder, params.url, folder, params.fname)
+
+        try {
+            fs.ensureFileSync(fullname)
+            // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+            log.trace(`[${params.url}:uibnewfile] Admin API. File create SUCCESS for ${folder}/${params.fname}`)
+            res.statusMessage = 'File created successfully'
+            res.status(200).end()
+        } catch (err) {
+            // Send back a response message and code 500 (Internal Server Error)=Create failed
+            log.error(`[${params.url}:uibnewfile] Admin API. File create FAILED for ${folder}/${params.fname}`, err)
+            res.statusMessage = err
+            res.status(500).end()
+        }
+    }) // ---- End of uibnewfile ---- //
+
+    /** A simple NR admin API to DELETE a file in the `<userLib>/uibuilder/<url>/<folder>` folder
+     * @param {string} url The admin api url to create
+     * @param {Object} permissions The permissions required for access (Express middleware)
+     * @param {function} cb
+     **/
+    RED.httpAdmin.get('/uibdeletefile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+        //#region --- Parameter validation ---
+        // TODO standardise param validation, move to functions
+        const params = req.query
+        // We have to have a url to work with
+        if ( params.url === undefined ) {
+            log.error('[uibdeletefile] Admin API. url parameter not provided')
+            res.statusMessage = 'url parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // URL must not exceed 20 characters
+        if ( params.url.length > 20 ) {
+            log.error('[uibdeletefile] Admin API. url parameter is too long (>20 characters)')
+            res.statusMessage = 'url parameter is too long. Max 20 characters'
+            res.status(500).end()
+            return
+        }
+        // URL must be more than 0 characters
+        if ( params.url.length < 1 ) {
+            log.error('[uibdeletefile] Admin API. url parameter is empty')
+            res.statusMessage = 'url parameter is empty, please provide a value'
+            res.status(500).end()
+            return
+        }
+        // URL cannot contain .. to prevent escaping sub-folder structure
+        if ( params.url.includes('..') ) {
+            log.error('[uibdeletefile] Admin API. url parameter contains ..')
+            res.statusMessage = 'url parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+
+        // We have to have an fname (file name) to work with
+        if ( params.fname === undefined ) {
+            log.error('[uibdeletefile] Admin API. fname parameter not provided')
+            res.statusMessage = 'fname parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // fname must not exceed 255 characters
+        if ( params.fname.length > 255 ) {
+            log.error('[uibdeletefile] Admin API. fname parameter is too long (>255 characters)')
+            res.statusMessage = 'fname parameter is too long. Max 255 characters'
+            res.status(500).end()
+            return
+        }
+        // fname cannot contain .. to prevent escaping sub-folder structure
+        if ( params.fname.includes('..') ) {
+            log.error('[uibdeletefile] Admin API. fname parameter contains ..')
+            res.statusMessage = 'fname parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+
+        //we have to have a folder name
+        let folder = params.folder
+        if ( folder === undefined ) {
+            log.error('[uibdeletefile] Admin API. folder parameter not provided')
+            res.statusMessage = 'folder parameter not provided'
+            res.status(500).end()
+            return
+        }
+        // folder cannot contain .. to prevent escaping sub-folder structure
+        if ( folder.includes('..') ) {
+            log.error('[uibdeletefile] Admin API. folder parameter contains ..')
+            res.statusMessage = 'folder parameter may not contain ..'
+            res.status(500).end()
+            return
+        }
+        // folder can only be one of: 'src', 'dist', 'root'
+        // TODO: Allow for sub-folders in src & dist
+        switch ( folder ) {
+            case 'src':
+            case 'dist':
+                break
+            case 'root':
+                folder = ''
+                break
+            default:
+                log.error('[uibdeletefile] Admin API. folder parameter is not one of src, dist, root', folder)
+                res.statusMessage = 'folder parameter must be one of src, dist, root'
+                res.status(500).end()
+                return
+        }        
+        //#endregion ---- ----
+        
+        log.trace(`[${params.url}:uibdeletefile] Admin API. File delete requested for ${folder}/${params.fname}`)
+
+        // TODO: Add path validation - Also, file should always exist to check that
+        const fullname = path.join(uib_rootFolder, params.url, folder, params.fname)
+
+        try {
+            fs.removeSync(fullname)
+            // Send back a response message and code 200 = OK
+            log.trace(`[${params.url}:uibdeletefile] Admin API. File delete SUCCESS for ${folder}/${params.fname}`)
+            res.statusMessage = 'File created successfully'
+            res.status(200).end()
+        } catch (err) {
+            // Send back a response message and code 500 (Internal Server Error)=Create failed
+            log.error(`[${params.url}:uibdeletefile] Admin API. File delete FAILED for ${folder}/${params.fname}`, err)
+            res.statusMessage = err
+            res.status(500).end()
+        }
+    }) // ---- End of uibdeletefile ---- //
 
     /** Create an index web page or JSON return listing all uibuilder endpoints
      * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
