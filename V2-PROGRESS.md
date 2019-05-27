@@ -11,6 +11,7 @@ This is the design note for part 2 of enabling source file editing from the Node
 ## IN PROGRESS
 
 * npm processing.
+   * How to retain the installed/discovered package list?
 * Add new middleware processing
 
 ### To Fix
