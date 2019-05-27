@@ -138,4 +138,4 @@ The ioPath will be something like `/<httpNodeRoot>/uibuilder/vendor/socket.io`
 
 You can find these out by looking at a normal, default uibuilder page or by looking  at the details admin page which is accessible from the admin ui for any uibuilder node under the "Path & Module Details" section.
 
-To serve a uibuilder page from a different web server, in addition to the change above, simply load the socket.io client from the one provided by uibuilder.
+To serve a uibuilder page from a different web server, in addition to the change above, simply load the socket.io client from the one provided by uibuilder. (**NOTE** not yet tested, sorry).
