@@ -12,8 +12,17 @@
   
 * **CHANGE** Admin UI: Flag to control front-end library debugging has been removed as it wasn't very effective anyway. To turn on debug output for the front-end library (`uibuilderfe.js`), set `uibuilder.debug(true)` in your `index.js` file.
 
+* **CHANGE** Admin UI - edit files: New files can now be created. Files can also be deleted.
+
+* **CHANGE** uibuilderfe: `uibuilder.get('serverTimeOffset')` now returns the difference in hours between the servers time and the browser time. Useful if you need to process date/time values from the server.
+  
+* **CHANGE** Docs: Continuing to improve the in-repo technical documentation. Some coverage now for the two back-end helper libraries, the main uibuilder.js and uibuilderfe.js. In addition, a new regression-tests.md document. The v1 changelog and readme are also in the `./docs` folder for historical reference.
+  
+* **CHANGE** Templates: index.html, index.js and index.css have all been improved in this release. If you are using the default page & js, please delete them and allow uibuilder to create them.
+
 * **FIXED** * Deploy causes vendor paths (except socket.io) to disappear
   Bug introduced by moving vendor path processing to outside of the instance process. So we have to exclude the vendor paths when killing the instance paths during the close event.
+
 
 
 ## v2.0.0-dev2

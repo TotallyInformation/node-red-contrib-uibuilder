@@ -60,7 +60,7 @@ Internally to the library, all variable access should be via `self.get()` and `s
 
 * `ioConnected` {boolean} [false]
 
-* `serverTimeOffset` {null|Date} [null]
+* `serverTimeOffset` {null|number} [null] Difference in hours between the Node-RED servers time and the browser time. Useful if you need to process date/time values from the server. The uibuilder node sends a timestamp in control messages so just reloading the page will force an update.
 
 * `debug` {boolean} [false] Do not set directly.  Set using `uibuilder.debug(true/false)`. Query using `uibuilder.debug()`.
 

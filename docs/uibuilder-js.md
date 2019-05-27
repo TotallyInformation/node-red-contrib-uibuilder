@@ -124,22 +124,22 @@ Default (v1.x): `{packages:[jquery,normalize.css],debug:false}`
 
 Originally read from the Node-RED `settings.json` file. No longer required.
 
-
 ## Instance Variables
 
-* node.name          = config.name  || ''
-* node.topic         = config.topic || ''
-* node.url           = config.url   || 'uibuilder'
-* node.fwdInMessages = config.fwdInMessages        // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
-* node.allowScripts  = config.allowScripts
-* node.allowStyles   = config.allowStyles
-* node.debugFE       = config.debugFE
-* node.debugBE       = config.debugBE
-* node.copyIndex     = config.copyIndex
-* node.customFolder  = path.join(uib_rootFolder, node.url)
-  
-* const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
-* const ioNs = io.of(node.ioNamespace)
+Each instance of the uibuilder node has the following variables that are configured via the admin ui.
+
+* `node.name`
+* `node.topic`
+* `node.url` ['uibuilder']
+* `node.fwdInMessages`
+* `node.allowScripts`
+* `node.allowStyles`
+* `node.copyIndex`
+
+And some additional, locally configured instance variables:
+
+* `node.customFolder ` [path.join(uib_rootFolder, node.url)]
+* `fullPath` [tilib.urlJoin( httpNodeRoot, node.url )] Same as `node.ioNamespace`
 
 
 

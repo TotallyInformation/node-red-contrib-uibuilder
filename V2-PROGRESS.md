@@ -3,7 +3,7 @@ This is the design note for part 2 of enabling source file editing from the Node
 **NOTES**: 
 
 * Developer documentation is now included in the `docs` folder of this repository.
-* Please refer to Issue #43 for the part 1 design notes that show everything implemented in uibuilder v1.1.0.
+* Please refer to Issue #43 on GitHub for the part 1 design notes that show everything implemented in uibuilder v1.1.0.
 * Since the URI's for uibuilder have changed between v1 and v2, I've created [a WIKI page summarising the new ones](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths).
 * If using Node-RED's "projects" feature, each project now gets its own `uibuilder` folder. Without projects, this is located at `<userDir>/uibuilder/`. With projects, it will be located at `<userDir>/projects/<projectName>/uibuilder/`. **This location will now be referred to as `<uibRoot>`**.
 
@@ -11,19 +11,19 @@ This is the design note for part 2 of enabling source file editing from the Node
 ## IN PROGRESS
 
 * npm processing.
-* need to remove old settings code & matching update code - replace with new. Partially complete.
 * Add new middleware processing
 
 ### To Fix
 
-* [Major] Admin ui: copy index flag not set to true by default
-* [Minor] fe: server time offset not working even though the 'client connect' control message from the server includes `msg.serverTimestamp`
-* [Minor] Admin ui: remove front-end debug flag as it doesn't really do anything useful
-* [Minor] Admin ui default text for advanced is "Path & Module Details", it should be "Path & Module Info"
-* [Minor] When a client connects, both control msgs contain msg.cacheControl = "REPLAY". Only 1 of them needs that.
+* [Major] Admin ui: copy index flag not set to true by default?
+* [Minor] Admin ui: In file editor, cannot currently edit files in sub-folders of src/dist. Also cannot create/delete/rename sub-folders.
+* [Minor] Admin ui: In file editor, cannot currently rename files.
+* [Minor] Admin ui: In file editor, none-text files cannot be handled but we want them so we can upload/rename/delete them.
 
 * [~~Major~~ Fixed] Admin ui: Deploy causes vendor paths (except socket.io) to disappear
   Bug introduced by moving vendor path processing to outside of the instance process. So we have to exclude the vendor paths when killing the instance paths during the close event.
+* [~~Minor~~ Fixed] fe: server time offset not working even though the 'client connect' control message from the server includes `msg.serverTimestamp`
+* [~~Minor~~ Fixed] Admin ui default text for advanced is "Path & Module Details", code sets it to "Path & Module Info"
 
 ----
 
@@ -33,13 +33,12 @@ These are an overview of what I really need/want to get working before release.
 
 * [ ] Admin UI: Move Installed Packages editable list into the "Manage Front-End Libraries" section.
 * [ ] Add/Remove/Update npm packages in userDir (for front-end library management).
-* [ ] Admin UI: File editor needs new file and delete file handling.
 * [ ] Allow for middleware to be loaded from files in `<uibRoot>` both for http and for websockets
 
 These are what I'd like to also squeeze in but they might have to wait to v2.1
 
 * [ ] Admin UI: File editor needs to handle file uploads.
-* [ ] Admin UI: File editor needs to handle folders.
+* [ ] Admin UI: File editor needs to handle sub-folders for src & dist only.
 * [ ] Admin UI: File editor needs to handle common folder not just the instance folder.
 * [ ] Deal with instance folders build script if found.
 * [ ] Build script processing needs the ability to do npm handling for the instance folder not just for userDir.
@@ -67,6 +66,14 @@ New Ideas
    The alternative would be to create a new middleware path that returned the right data but that wouldn't allow cross-server use.
    We might have to enable CORS config?
    - [x] Add new user function uibuilder.start(namespace,ioPath) - where params are optional and will default to the existing settings
+- [x] Default Vue template improvements
+   - [x] Better syntax highlighting (css)
+   - [x] Additional inputs: text & checkbox to augment the counter button + change button to bootstrap-vue button.
+   - [x] Highlight message count numbers
+   - [x] Add socket.io connection status and time offset from server
+   - [x] Fix header image
+   - [x] Shuffle layout
+   - [x] Add more bootstrap-vue formatting to make things pretier.
 
 ### Improvements to back-end (`uibuilder.js`)
 
@@ -85,6 +92,7 @@ New Ideas
 - [x] With move of npm package installations into the admin ui, settings are no longer required. Common front-end packages will be found and added to the vendor list automatically. Others have to be added via the admin ui. `vendorPaths` variable is now used to contain the list of available packages and their metadata. See docs for details.
 - [x] Remove debug setting from initialised console output
 - [x] Remove FE/BE debug flags from admin ui config
+- [x] Update close processing to EXCLUDE vendorPaths. Because they are used across all instances.
 
 - [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter).
     - ~~Handle npm restart scripts~~
@@ -99,7 +107,6 @@ New Ideas
     - [ ] Add advanced option to uibuilder.html - use of project folder is optional
 
 - [ ] Move custom middleware load from settings.js to `<uibRoot>/.mware/`. Possibly also allow for `<uibRoot>/<url>/.mware/`.
-- [ ] *Update close processing to use vendorPaths. Need to check whether this is actually needed.*
 
 ### Improvements to admin config ui (`uibuilder.html`)
 
@@ -116,25 +123,28 @@ New Ideas
 - [x] Split uibuilder.html into 3 files for ease of editing. Add a build step to assemble. `npm run build`.
 - [x] ~~Move back-end log files from `<userDir>` to `<uibRoot>/.logs`~~ Logging now integrated to Node-RED logs.
 - [x] Remove FE/BE debug flags from admin ui config
+- [x] Add new file button
+- [x] Add file delete ~~(button is in place but disabled)~~ - needs a confirm dialogue
+- [x] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
   
 - [x] Add folder selector before file selector - enables files in different folders to be edited. Folders are pre-selected.
    - [x] Rebuild file list on change of folder
    - [x] Add all instance folders (`<uibRoot>/<url>/src|dist|root`)
    - ~~Add uibuilder root folder & config file~~ No, as this would require Node-RED to be reloaded anyway, decided not to do this. npm functions will manage content.
+   - ~~How to rebuild list if the file list changes outside of Node-RED?~~ Just change to another folder and back.
+   - [ ] Add subfolder support for dist and src, possible for root
    - [ ] Add all instances endpoint folders
-   - How to rebuild list if the file list changes outside of Node-RED?
-- [ ] Add new file button
+  
 - [ ] Add option to keep backups for edited files + button to reset to backup + hide backup files
-- [ ] ?? Can we add the current nodes URL to the info panel? ?? [See 'Read node data from node-info panel'](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
-
-- [x] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
+- [ ] ?? Can we add the current nodes URL to the info panel? ?? 
+      [See 'Read node data from node-info panel'](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
 
 - [x] New _Advanced settings_ option (hidden by default)
    - [ ] Add flag to make use of project folder optional.
-   - [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - giving the ability to have extra control, use a different port and separate security.
+   - [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - 
+         giving the ability to have extra control, use a different port and separate security.
       - [ ] Need to make use of Node-RED middleware optional.
   
-- [ ] Add file delete (button is in place but disabled) - needs a confirm dialogue
 - [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
 - [ ] Add validation hints for users
 - [ ] Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates
@@ -160,15 +170,14 @@ New Ideas
 
 ## Maybe
 
-* FE - special control msg to create a new channel - to be used for components
+- FE - special control msg to create a new channel or room - to be used for components. Could be a separate node.
+- FE - add function to reload the page - allow for a control msg to do so.
 
-* BE - new node - "component" - Define a component to load {name, file/url, (schema)}. Trigger FE to lazy load the component on new (re)connection. Create socket.io channel
-
-* FE - add function to reload the page - allow for a control msg to do so.
+- BE - new node - "component" - Define a component to load {name, file/url, (schema)}. Trigger FE to lazy load the component on new (re)connection. Create socket.io channel
 
 - Allow folder name to be independent of uibuilder.url?
 
-- Consider option to expose both `src` and `dist` folders to the web server.
+- Consider option to expose both `src` and `dist` folders to the web server. Switchable.
 
     Not directly related to this feature set but probably quite useful anyway as it would allow admins to switch between them. 
 
@@ -195,3 +204,4 @@ New Ideas
 * [Read node data from node-info panel](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
 * Creating an eventlog display in the admin ui: See `RED.eventLog` in `red.js` - uses the ACE editor.
 * [socketio-jwt-auth](https://www.npmjs.com/package/socketio-jwt-auth)
+* [node-red-contrib-socketio](https://github.com/wperw/node-red-contrib-socketio)
