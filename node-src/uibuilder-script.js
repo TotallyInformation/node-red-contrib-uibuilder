@@ -110,8 +110,13 @@
         var url = $('#node-input-url').val()
         var folder = $('#node-input-folder').val()
 
+        // Whether or not to force the index.(html|js|css) files to be copied over if missing
+        var nodeInputCopyIndex = $('#node-input-copyIndex').is(':checked')
+
         // Build the file list - pass the url so the BE can find the right folder
-        $.getJSON('uibfiles?url=' + url + '&folder=' + folder, function(files) {
+        $.getJSON('uibfiles?url=' + url + '&folder=' + folder + '&cpyIdx=' + nodeInputCopyIndex, function(files) {
+            console.log('uibfiles?url=' + url + '&folder=' + folder + '&cpyIdx=' + nodeInputCopyIndex)
+
             var firstFile = '', indexHtml = false, selected = false
 
             $.each(files, function (i, fname) {
@@ -343,11 +348,7 @@
             $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
             $('#node-input-allowScripts').prop('checked', this.allowScripts)
             $('#node-input-allowStyles').prop('checked', this.allowStyles)
-            $('#node-input-debugFE').prop('checked', this.debugFE)
             $('#node-input-copyIndex').prop('checked', this.copyIndex)
-            // Show the uibuilder global settings from settings.js
-            // TODO Fix for updated settings
-            //$('#bedebug').text(RED.settings.uibuilder.debug)
             //#endregion checkbox states
 
             //#region Setup the package list
@@ -543,6 +544,15 @@
             $('#edit-delete').click(function(e) {
                 $('#edit_del_dialog_del').addClass('input-error').css('color','brown')
                 $('#edit-delete-name').text($('#node-input-folder').val() + '/' + $('#node-input-filename').val())
+                if ( $('#node-input-folder').val() === 'src' ) {
+                    if ( $('#node-input-copyIndex').is(':checked') ) {
+                        $('#edit-delete-recopy').css('color','').text('Copy flag is set so index.(html|js|css) files will be recopied from master template.')
+                    } else {
+                        $('#edit-delete-recopy').css('color','brown').text('Copy flag is NOT set so index.(html|js|css) files will NOT be recopied from master template.')
+                    }    
+                } else {
+                    $('#edit-delete-recopy').css('color','').text('')
+                }
                 $('#edit_delete_dialog').dialog('open')  
             })
             //#endregion

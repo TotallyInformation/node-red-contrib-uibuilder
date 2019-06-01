@@ -633,6 +633,7 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.get('/uibfiles', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         //#region --- Parameter validation ---
+        var params = req.query
         // We have to have a url to work with
         if ( req.query.url === undefined ) {
             log.error('[uibfiles] Admin API. url parameter not provided')
@@ -663,7 +664,7 @@ module.exports = function(RED) {
         }
         // TODO: Does the url exist?
 
-        var folder = req.query.folder || 'src'
+        var folder = params.folder || 'src'
         if ( folder !== 'src' && folder !== 'dist' && folder !== 'root' ) {
             log.error('[uibfiles] Admin API. folder parameter is not one of src|dest|root')
             res.statusMessage = 'folder parameter must be one of src|dest|root'
@@ -671,11 +672,29 @@ module.exports = function(RED) {
             return
         }
         if ( folder === 'root' ) folder = ''
+
+        // cpyIdx - force the index.(html|css|js) files to be present in the src folder if not there
+        var cpyIdx = params.cpyIdx === 'true' ? true : false
         //#endregion ---- ----
 
         log.trace(`[uibfiles] Admin API. File list requested for uibuilder/${req.query.url}/${req.query.folder}/`)
 
         const srcFolder = path.join(uib_rootFolder, req.query.url, folder)
+
+        /** If requested, copy files from the master template folder
+         *  Note: We don't copy the master dist folder
+         *  Don't copy if copy turned off in admin ui 
+         */
+        if ( (folder === 'src') && (cpyIdx === true) ) {
+            const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
+            const fromTemplateFolder = path.join( masterTemplateFolder, uib_globalSettings.template )
+            try {
+                fs.copySync( fromTemplateFolder, srcFolder, cpyOpts)
+                log.trace(`[uibuilder:uibfiles] Copied template files from ${fromTemplateFolder} to ${srcFolder} (not overwriting)` )
+            } catch (err) {
+                log.error(`[uibuilder:uibfiles] Error copying template files from ${fromTemplateFolder} to ${srcFolder}`, err)
+            }
+        }
 
         // Get the file list - note, ignore errors for now
         // TODO: Need to filter out folders. Or better, flatten and allow sub-folders.
