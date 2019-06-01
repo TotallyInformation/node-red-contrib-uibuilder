@@ -115,8 +115,6 @@
 
         // Build the file list - pass the url so the BE can find the right folder
         $.getJSON('uibfiles?url=' + url + '&folder=' + folder + '&cpyIdx=' + nodeInputCopyIndex, function(files) {
-            console.log('uibfiles?url=' + url + '&folder=' + folder + '&cpyIdx=' + nodeInputCopyIndex)
-
             var firstFile = '', indexHtml = false, selected = false
 
             $.each(files, function (i, fname) {
