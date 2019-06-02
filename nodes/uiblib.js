@@ -16,9 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// @ts-check
+
+
 'use strict'
 
+const path = require('path')
 const fs = require('fs-extra')
 const tilib = require('./tilib.js')
 const util = require('util')
@@ -250,7 +252,10 @@ module.exports = {
      * @param {Object} RED RED object instance (for error logging)
      * @returns {Object} Updated vendorPaths object
      */
+    // TODO DEPRECATE. Replaced with checkInstalledPackages
     updVendorPaths: function(vendorPaths, moduleName, userDir, log, app, serveStatic, RED) {
+        log.warn(`[uibuilder:uiblib.updVendorPaths] DEPRECATED. Shouldn't be in use now. Please raise an issue`)
+
         if ( userDir === '' ) return null
 
         // Check for known, common packages and add them if found & not already in vendorPaths
@@ -304,34 +309,159 @@ module.exports = {
         // Check if package exists in userDir/package.json
         //const userDirPackageInfo = tilib.readPackageJson( userDir )
 
-/*         //console.log('[uibuilder] updateVendorPaths - userDirPackageInfo', userDirPackageInfo)
+        /*         //console.log('[uibuilder] updateVendorPaths - userDirPackageInfo', userDirPackageInfo)
 
-        // Update the package details
-        if ( packageName in vendorPaths ) {
-            try {
-                // does this package exist in <userDir>/package.json?
-                vendorPaths[packageName].userDirRequired = false
-                if ( packageName in userDirPackageInfo.dependencies ) {
-                    vendorPaths[packageName].userDirRequired = true
+            // Update the package details
+            if ( packageName in vendorPaths ) {
+                try {
+                    // does this package exist in <userDir>/package.json?
+                    vendorPaths[packageName].userDirRequired = false
+                    if ( packageName in userDirPackageInfo.dependencies ) {
+                        vendorPaths[packageName].userDirRequired = true
+                    }
+                    // version of package installed
+                    vendorPaths[packageName].userDirWanted = userDirPackageInfo.dependencies[packageName] || ''
+
+                    // Get the package.json for the install package
+                    const packageInfo = tilib.readPackageJson( vendorPaths[packageName].folder )
+                    // homepage of package installed
+                    //if ( homepage in packageInfo )
+                    vendorPaths[packageName].homepage = packageInfo.homepage || ''
+                    // Main entrypoint of package installed
+                    vendorPaths[packageName].main = packageInfo.main || ''
+                    // Installed Version
+                    vendorPaths[packageName].version = packageInfo.version || ''
+                } catch (err) {
+                    //console.error('[uibuilder] updateVendorPaths - ERROR: '+packageName, err)
                 }
-                // version of package installed
-                vendorPaths[packageName].userDirWanted = userDirPackageInfo.dependencies[packageName] || ''
+            } */
 
-                // Get the package.json for the install package
-                const packageInfo = tilib.readPackageJson( vendorPaths[packageName].folder )
-                // homepage of package installed
-                //if ( homepage in packageInfo )
-                vendorPaths[packageName].homepage = packageInfo.homepage || ''
-                // Main entrypoint of package installed
-                vendorPaths[packageName].main = packageInfo.main || ''
-                // Installed Version
-                vendorPaths[packageName].version = packageInfo.version || ''
-            } catch (err) {
-                //console.error('[uibuilder] updateVendorPaths - ERROR: '+packageName, err)
-            }
-        } */
-
-        //return vendorPaths
+            //return vendorPaths
     }, // ---- End of updVendorPaths ---- //
+
+    /** Compare the in-memory package list against packages actually installed.
+     * Also check common packages installed against the master package list in case any new ones have been added.
+     * Updates the package list file and uib.installedPackages
+     * param {Object} vendorPaths Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
+     * @param {Object} uib Name of the uibuilder module ('uibuilder' by default)
+     * @param {string} userDir Name of the Node-RED userDir folder currently in use
+     * @param {Object} log Custom logger instance
+     * @return {Object} uib.installedPackages
+     */
+    checkInstalledPackages: function (uib, userDir, log) {
+        let installedPackages = {}
+        let pkgList = []
+        let masterPkgList = []
+        let merged = []
+        let oK = false
+
+        // Merge/dedupe packageList and masterPackageList from their files
+        try {
+            pkgList = fs.readJsonSync(path.join(uib.configFolder, uib.packageListFilename))
+            masterPkgList = fs.readJsonSync(path.join(uib.configFolder, uib.masterPackageListFilename))
+            oK = true
+        } catch (err) {
+            log.error(`[uibuilder:uiblib.checkInstalledPackages] Could not read either packageList or masterPackageList from: ${uib.configFolder} ${err}`, err)
+        }
+
+        if ( oK !== true ) {
+            return null
+        }
+
+        // Make sure we have socket.io in the list
+        masterPkgList.push('socket.io')
+
+        merged = tilib.mergeDedupe(pkgList, masterPkgList)
+
+        // For each
+        merged.forEach( (pkgName, i) => {
+            // Check combined list to see if folder names present in <userDir>/node_modules
+            const pkgFolder = tilib.findPackage(pkgName, userDir)
+            // If so, update path, version installed, etc.
+            if ( pkgFolder !== null ) {
+                // Get the package.json
+                const pj = tilib.readPackageJson( pkgFolder )
+
+                if (pj.hasOwnProperty('ERROR')) {
+                    //log.error(`[uibuilder:uiblib.checkInstalledPackages] package.json not found for ${pkgName} in ${pkgFolder}`, pj.ERROR)
+                } else {
+                    /** Looks like the folder delete for npm remove happens async so it may
+                     *  still exist when we recheck. But the package.json will have been removed
+                     *  so we don't create the entry unless package.json actually exists
+                     */
+                    installedPackages[pkgName] = {}
+
+                    installedPackages[pkgName].folder = pkgFolder
+                    installedPackages[pkgName].url = ['..', uib.moduleName, 'vendor', pkgName].join('/')
+    
+                    // Find installed version
+                    installedPackages[pkgName].version = pj.version
+                    // Find main entry point (or null)
+                    installedPackages[pkgName].main = pj.main
+                    // Find homepage
+                    installedPackages[pkgName].homepage = pj.homepage
+                }
+
+                // Replace generic with specific entries if we know them
+                if ( pkgName === 'socket.io' ) {
+                    //installedPackages[pkgName].url  = '../uibuilder/socket.io/socket.io.js'
+                    installedPackages[pkgName].main = 'socket.io.js'
+                }
+
+                // TODO (maybe) check if it exists in userDir/package.json
+            }
+        })
+
+        // Write packageList back to file
+        uib.installedPackages = installedPackages
+        try {
+            fs.writeJsonSync(path.join(uib.configFolder,uib.packageListFilename), Object.keys(installedPackages), {spaces:2})
+        } catch(e) {
+            log.error(`[uibuilder:uiblib.checkInstalledPackages] Could not write ${uib.packageListFilename} in ${uib.configFolder}`, e)
+        }
+
+        return uib.installedPackages
+
+    }, // ---- End of checkInstalledPackages ---- //
+
+    /** Validate a url query parameter
+     * @param {string} url uibuilder URL to check (not a full url, the name used by uibuilder)
+     * @param {Object} res The ExpressJS response variable
+     * @param {string} caller A string indicating the calling function - used for logging only
+     * @param {Object} log The uibuilder log Object
+     * @return {boolean} True if the url is valid, false otherwise (having set the response object)
+     */
+    checkUrl: function (url, res, caller, log) {
+        // We have to have a url to work with
+        if ( url === undefined ) {
+            log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter not provided`)
+            res.statusMessage = 'url parameter not provided'
+            res.status(500).end()
+            return false
+        }
+        // URL must not exceed 20 characters
+        if ( url.length > 20 ) {
+            log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter is too long (>20 characters)`)
+            res.statusMessage = 'url parameter is too long. Max 20 characters'
+            res.status(500).end()
+            return false 
+        }
+        // URL must be more than 0 characters
+        if ( url.length < 1 ) {
+            log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter is empty`)
+            res.statusMessage = 'url parameter is empty, please provide a value'
+            res.status(500).end()
+            return false
+        }
+        // URL cannot contain .. to prevent escaping sub-folder structure
+        if ( url.includes('..') ) {
+            log.error('[uibdeletefile] Admin API. url parameter contains ..')
+            res.statusMessage = 'url parameter may not contain ..'
+            res.status(500).end()
+            return false
+        }
+
+        return true
+    }, // ---- End of checkUrl ---- //
 
 } // ---- End of module.exports ---- //
