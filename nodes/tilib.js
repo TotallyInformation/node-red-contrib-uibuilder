@@ -206,9 +206,11 @@ module.exports = {
     readPackageJson: function(folder) {
         var file = null
         try {
+            // TODO replace with fs-extra readJsonSync
             file = JSON.parse( fs.readFileSync( path.join(folder, 'package.json'), 'utf8' ) )
         } catch (err) {
             //console.error('[uibuilder] tilib.readPackageJson - failed to read ', folder, 'package.json', err)
+            file = {'ERROR': err}
         }
         return file
     }, // ----  ---- //
@@ -233,6 +235,25 @@ module.exports = {
 
         // @ts-ignore
         return temp
+    }, // ----  ---- //
+
+    /** Compare 2 simple arrays, return false as soon as a difference is found
+     * @param {array} a1 First array
+     * @param {array} a2 Second array
+     * @returns {boolean} False if arrays are differnt, else True
+     */
+    quickCompareArrays: function(a1, a2) {
+        // for each a1 entry, if not in a2 then push to temp[0]
+        for (let i = 0, len = a1.length; i < len; ++i) {
+            if(a2.indexOf(a1[i]) === -1) return false
+        }
+
+        // for each a2 entry, if not in a1 then push to temp[1]
+        for (let i = 0, len = a2.length; i < len; ++i) {
+            if(a1.indexOf(a2[i]) === -1) return false
+        }
+
+        return true
     }, // ----  ---- //
     
 } // ---- End of module.exports ---- //
