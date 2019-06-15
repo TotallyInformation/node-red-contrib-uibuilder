@@ -16,13 +16,10 @@
  **/
 'use strict'
 
-// @ts-ignore
-const nodeVersion = require('../package.json').version
 // Utility library for uibuilder
-const uiblib = require('./uiblib')
+const uiblib        = require('./uiblib')
 // General purpose library (by Totally Information)
-const tilib = require('./tilib')
-
+const tilib         = require('./tilib')
 const serveStatic   = require('serve-static')
 const socketio      = require('socket.io')
 const path          = require('path')
@@ -30,8 +27,40 @@ const fs            = require('fs-extra')
 //const events        = require('events')
 const child_process = require('child_process')
 
-/** Module name must match this nodes html file @constant {string} moduleName */
-const moduleName  = 'uibuilder'
+// uibuilder module-level globals
+const uib = {
+    me: fs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
+    /** Module name must match this nodes html file @constant {string} uib.moduleName */
+    moduleName: 'uibuilder',
+    /** Track across redeployments @constant {Object} uib.deployments */
+    deployments: {},
+    /** When nodeGo is run, add the node.id as a key with the value being the url
+     *  then add processing to ensure that the URL's are unique. 
+     * Schema: {'<node.id>': '<url>'}
+     * @constant {Object} uib.uib.instances
+     */
+    instances: {},
+    masterPackageListFilename: 'masterPackageList.json',
+    packageListFilename: 'packageList.json',
+    /** Track the vendor packages installed and their paths
+     * Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
+     * @type {Object.<string, Object>} uib.packageList */
+    installedPackages: {},
+    /** Location of master template folders (containing default front-end code) @constant {string} uib.uib.masterTemplateFolder */
+    masterTemplateFolder: path.join( __dirname, 'templates' ),
+    /** root folder (on the server FS) for all uibuilder front-end data
+     *  Cannot be set until we have the RED object and know if projects are being used
+     *  Name of the fs path used to hold custom files & folders for all uib.instances of uibuilder
+     * @constant {string} uib.rootFolder
+     * @default <userDir>/<uib.moduleName> or <userDir>/projects/<currProject>/<uib.moduleName>
+     **/
+    rootFolder: null,
+    /** Locations for uib config can common folders - set once rootFolder is finalised */
+    configFolder: null,
+    commonFolder: null,
+}
+/** Current module version (taken from package.json) @constant {string} uib.version */
+uib.version = uib.me.version
 
 /** Dummy logging 
  * @type {Object.<string, function>} */
@@ -48,17 +77,7 @@ var log = dummyLog // reset to RED.log or anything else you fancy at any point
 // Placeholder - set in export
 var userDir = ''
 
-/** We want these to track across redeployments
- *  if OK to reset on redeployment, attach to node.xxx inside nodeGo instead. @constant {Object} deployments */
-const deployments = {}
-
-/** When nodeGo is run, add the node.id as a key with the value being the url
- *  then add processing to ensure that the URL's are unique. 
- * Schema: {'<node.id>': '<url>'}
- * @constant {Object} instances */
-const instances = {}
-
-/** Track the vendor packages installed and their paths
+/** DEPRECATED Track the vendor packages installed and their paths
  * Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
  * @type {Object.<string, Object>} vendorPaths */
 var vendorPaths = {}
@@ -80,9 +99,20 @@ module.exports = function(RED) {
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
     userDir = RED.settings.userDir
 
+    // Set the root folder
+    uib.rootFolder = path.join(userDir, uib.moduleName)
+    // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
+    const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
+    if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
+
+    /** Locations for uib config can common folders */
+    uib.configFolder = path.join(uib.rootFolder, '.config') 
+    uib.commonFolder = path.join(uib.rootFolder, 'common')
+    
     /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
     const httpNodeRoot = RED.settings.httpNodeRoot
 
+    // TODO remove all references
     /** Default uibuilder global settings - DEPRECATED - to be removed
      * @typedef {Object} globalSettings
      * @prop {string[]} packages List of packages made available globally to the front-end (npm package name)
@@ -107,22 +137,9 @@ module.exports = function(RED) {
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
 
-    /** Location of master template folders (containing default front-end code) @constant {string} masterTemplateFolder */
-    const masterTemplateFolder = path.join( __dirname, 'templates' )
-
-    /** Set the root folder (on the server FS) for all uibuilder front-end data
-     *  Name of the fs path used to hold custom files & folders for all instances of uibuilder
-     * @constant {string} uib_rootFolder
-     * @default <userDir>/<moduleName>
-     **/
-    var uib_rootFolder = path.join(userDir, moduleName)
-
-    // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
-    const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
-    if ( currProject !== '' ) uib_rootFolder = path.join(userDir, 'projects', currProject, moduleName) 
-    
-    /** @constant {string} newSettingsFile Location of the global settings file default: <uib_rootFolder>/.settings.json {@link uib_rootFolder} */
-    const newSettingsFile = path.join(uib_rootFolder, '.settings.json')
+    // TODO DEPRECATED - remove
+    /** @constant {string} newSettingsFile Location of the global settings file default: <uib.rootFolder>/.settings.json {@link uib.rootFolder} */
+    //const newSettingsFile = path.join(uib.rootFolder, '.settings.json')
 
     /** We need an http server to serve the page and vendor packages. 
      * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
@@ -131,56 +148,67 @@ module.exports = function(RED) {
 
     //#endregion -------- Constants -------- //
 
-    //#region ----- Set up uibuilder root & root/common folders ----- //
+    //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
     /** Check uib root folder: create if needed, writable?
      * @since v2.0.0 2019-03-03
      */
     var uib_rootFolder_OK = true
-    // Try to create it - ignore error if it already exists
+    // Try to create root and root/.config - ignore error if it already exists
     try {
-        //fs.mkdirSync(uib_rootFolder) // try to create
-        fs.ensureDirSync(uib_rootFolder)
+        fs.ensureDirSync(uib.configFolder) // creates both folders
     } catch (e) {
         if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-            RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib_rootFolder}. ${e.message}`)
+            RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib.rootFolder}. ${e.message}`)
             uib_rootFolder_OK = false
         }
     }
-    // Try to access it (read/write) - if we can, create and serve the common resource folder
+    // Try to access the root folder (read/write) - if we can, create and serve the common resource folder
     try {
-        fs.accessSync( uib_rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
+        fs.accessSync( uib.rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
         // and create the common resource folder
-        const commonPath = path.join(uib_rootFolder, 'common')
-        fs.ensureDirSync(commonPath)
+        fs.ensureDirSync(uib.commonFolder)
         // and serve it up as a static resource folder (added in nodeGo() so available for each instance as `./common/`)
-        var commonStatic = serveStatic( commonPath )
+        var commonStatic = serveStatic( uib.commonFolder )
     } catch (e) {
-        RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib_rootFolder}. ${e.message}`)
+        RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib.commonFolder}. ${e.message}`)
         uib_rootFolder_OK = false
+    }
+    // Assuming all OK, copy over the master vendor package list & the working package list as needed (doesn't overwrite)
+    if (uib_rootFolder_OK === true) {
+        const fsOpts = {'overwrite': false}
+        try {
+            fs.copySync( path.join( uib.masterTemplateFolder, uib.masterPackageListFilename ), path.join( uib.configFolder, uib.masterPackageListFilename ), fsOpts )
+            fs.copySync( path.join( uib.masterTemplateFolder, uib.masterPackageListFilename ), path.join( uib.configFolder, uib.packageListFilename ), fsOpts )
+        } catch (e) {
+            RED.log.error(`uibuilder: Master Package List copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
+            uib_rootFolder_OK = false
+        }
+    }
+    // If the root folder setup failed, throw an error and give up completely
+    if (uib_rootFolder_OK !== true) {
+        throw new Error(`uibuilder: Failed to set up uibuilder root folder structure correctly. Check log for additional error messages. Root folder: ${uib.rootFolder}.`)
     }
     //#endregion ----- root folder ----- //
     
     /** Serve up vendor packages - this is the first check, the installed packages are rechecked at various times.
      * Adds ExpressJS static paths for each found FE package & saves the details to the vendorPaths variable.
-     * @since v2.0.0 Since we no longer use a global settings file, the initial run
-     *               of this only finds any "well known" library packages that are
-     *               installed in userDir/node_modules - e.g. the ones that the uibuilder
-     *               installation installs for you.
      */
-    vendorPaths = uiblib.updVendorPaths(vendorPaths, moduleName, userDir, log, app, serveStatic, RED)
+    // DEPRECATED // vendorPaths = uiblib.updVendorPaths(vendorPaths, uib.moduleName, userDir, log, app, serveStatic, RED)
+    /** Update uib.installedPackages */
+    uiblib.checkInstalledPackages('', uib, userDir, log)
 
     //#region ----- Set up Socket.IO server & middleware ----- //
     /** Holder for Socket.IO - we want this to survive redeployments of each node instance
      *  so that existing clients can be reconnected.
      * Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
-     * modules that might also use it (path). This is only needed ONCE for ALL instances of this node.
+     * modules that might also use it (path). This is only needed ONCE for ALL uib.instances of this node.
      **/
 
     /** URI path for accessing the socket.io client from FE code. 
      * @since v2.0.0-dev Now: `../uibuilder/vendor/socket.io/socket.io.js`
      * @constant {string} uib_socketPath */
-    //const uib_socketPath = tilib.urlJoin(httpNodeRoot, moduleName, 'socket.io')
-    const uib_socketPath = tilib.urlJoin(httpNodeRoot, moduleName, 'vendor', 'socket.io')
+    //const uib_socketPath = tilib.urlJoin(httpNodeRoot, uib.moduleName, 'socket.io')
+    const uib_socketPath = tilib.urlJoin(httpNodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
     log.trace('[uibuilder:Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
     var io = socketio.listen(RED.server, {'path': uib_socketPath}) // listen === attach
@@ -210,6 +238,7 @@ module.exports = function(RED) {
         }
         next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
     })
+    // TODO Remove uib_globalSettings - replace with <uibRoot>/.config/sioMiddleware
     /** @since 2017-12-20 add optional socket middleware from settings.js
      */
     if ( uib_globalSettings.hasOwnProperty('socketmiddleware') ) {
@@ -244,10 +273,11 @@ module.exports = function(RED) {
     //#endregion -------- master resources --------
 
     RED.log.info('+-----------------------------------------------------')
-    RED.log.info(`| ${moduleName} initialised:`)
-    RED.log.info(`|   root folder: ${uib_rootFolder}`)
-    RED.log.info(`|   version . .: ${nodeVersion}`)
-    RED.log.info(`|   packages . : ${Object.keys(vendorPaths)},socket.io`)
+    RED.log.info(`| ${uib.moduleName} initialised:`)
+    RED.log.info(`|   root folder: ${uib.rootFolder}`)
+    RED.log.info(`|   version . .: ${uib.version}`)
+    //RED.log.info(`|   packages . : ${Object.keys(vendorPaths)},socket.io`)
+    RED.log.info(`|   packages . : ${Object.keys(uib.installedPackages)}`)
     RED.log.info('+-----------------------------------------------------')
 
     /** Run the node instance - called from registerType()
@@ -279,15 +309,15 @@ module.exports = function(RED) {
 
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
 
-        // Keep a log of the active instances @since 2019-02-02
-        instances[node.id] = node.url
-        log.trace(`[uibuilder:${uibInstance}] Node Instances Registered`, instances)
+        // Keep a log of the active uib.instances @since 2019-02-02
+        uib.instances[node.id] = node.url
+        log.trace(`[uibuilder:${uibInstance}] Node uib.Instances Registered`, uib.instances)
 
         /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
          *   Files in this folder are also served to URL but take preference
          *   over those in the nodes folders (which act as defaults) @type {string}
          */
-        node.customFolder = path.join(uib_rootFolder, node.url)
+        node.customFolder = path.join(uib.rootFolder, node.url)
 
         //#region ----- Socket.IO instance configuration ----- //
         /** How many Socket clients connected to this instance? @type {integer} */
@@ -305,9 +335,9 @@ module.exports = function(RED) {
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
-        if ( deployments.hasOwnProperty(node.id) ) deployments[node.id]++
-        else deployments[node.id] = 1
-        log.trace(`[uibuilder:${uibInstance}] Number of Deployments`, deployments[node.id] )
+        if ( uib.deployments.hasOwnProperty(node.id) ) uib.deployments[node.id]++
+        else uib.deployments[node.id] = 1
+        log.trace(`[uibuilder:${uibInstance}] Number of uib.Deployments`, uib.deployments[node.id] )
 
         //#region ----- Set up ExpressJS Middleware ----- //
         /** Provide the ability to have a ExpressJS middleware hook.
@@ -381,7 +411,7 @@ module.exports = function(RED) {
              * TODO: always copy index.html */
             if ( node.copyIndex ) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-                fs.copy( path.join( masterTemplateFolder, uib_globalSettings.template ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
+                fs.copy( path.join( uib.masterTemplateFolder, uib_globalSettings.template ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
                     if(err){
                         log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates')} to ${path.join(node.customFolder, 'src')}`, err)
                     } else {
@@ -600,7 +630,7 @@ module.exports = function(RED) {
 
             // Do any complex close processing here if needed - MUST BE LAST
             //processClose(null, node, RED, ioNs, io, app) // swap with below if needing async
-            uiblib.processClose(done, node, RED, ioNs, io, app, log, instances)
+            uiblib.processClose(done, node, RED, ioNs, io, app, log, uib.instances)
 
             done()
         })
@@ -609,7 +639,7 @@ module.exports = function(RED) {
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
-    RED.nodes.registerType(moduleName, nodeGo, {
+    RED.nodes.registerType(uib.moduleName, nodeGo, {
         // see userDir/settings.js - makes the settings available to the admin ui
         /* settings: {
             uibuilder: {
@@ -625,6 +655,8 @@ module.exports = function(RED) {
     })
 
     //#region --- Admin API's ---
+
+    //#region -- File Handling API's --
     /** Create a simple NR admin API to return the list of files in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
      * @param {string} url The admin api url to create
@@ -679,7 +711,7 @@ module.exports = function(RED) {
 
         log.trace(`[uibfiles] Admin API. File list requested for uibuilder/${req.query.url}/${req.query.folder}/`)
 
-        const srcFolder = path.join(uib_rootFolder, req.query.url, folder)
+        const srcFolder = path.join(uib.rootFolder, req.query.url, folder)
 
         /** If requested, copy files from the master template folder
          *  Note: We don't copy the master dist folder
@@ -687,7 +719,7 @@ module.exports = function(RED) {
          */
         if ( (folder === 'src') && (cpyIdx === true) ) {
             const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-            const fromTemplateFolder = path.join( masterTemplateFolder, uib_globalSettings.template )
+            const fromTemplateFolder = path.join( uib.masterTemplateFolder, uib_globalSettings.template )
             try {
                 fs.copySync( fromTemplateFolder, srcFolder, cpyOpts)
                 log.trace(`[uibuilder:uibfiles] Copied template files from ${fromTemplateFolder} to ${srcFolder} (not overwriting)` )
@@ -825,7 +857,7 @@ module.exports = function(RED) {
             req.query.fname, 
             {
                 // Prevent injected relative paths from escaping `src` folder
-                'root': path.join(uib_rootFolder, req.query.url, folder),
+                'root': path.join(uib.rootFolder, req.query.url, folder),
                 // Turn off caching
                 'lastModified': false, 
                 'cacheControl': false
@@ -926,7 +958,7 @@ module.exports = function(RED) {
         log.trace(`[${req.body.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
-        const fullname = path.join(uib_rootFolder, req.body.url, folder, req.body.fname)
+        const fullname = path.join(uib.rootFolder, req.body.url, folder, req.body.fname)
 
         fs.writeFile(fullname, req.body.data, function (err, data) {
             if (err) {
@@ -1038,7 +1070,7 @@ module.exports = function(RED) {
         log.trace(`[${params.url}:uibnewfile] Admin API. File create requested for ${folder}/${params.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
-        const fullname = path.join(uib_rootFolder, params.url, folder, params.fname)
+        const fullname = path.join(uib.rootFolder, params.url, folder, params.fname)
 
         try {
             fs.ensureFileSync(fullname)
@@ -1063,34 +1095,8 @@ module.exports = function(RED) {
         //#region --- Parameter validation ---
         // TODO standardise param validation, move to functions
         const params = req.query
-        // We have to have a url to work with
-        if ( params.url === undefined ) {
-            log.error('[uibdeletefile] Admin API. url parameter not provided')
-            res.statusMessage = 'url parameter not provided'
-            res.status(500).end()
-            return
-        }
-        // URL must not exceed 20 characters
-        if ( params.url.length > 20 ) {
-            log.error('[uibdeletefile] Admin API. url parameter is too long (>20 characters)')
-            res.statusMessage = 'url parameter is too long. Max 20 characters'
-            res.status(500).end()
-            return
-        }
-        // URL must be more than 0 characters
-        if ( params.url.length < 1 ) {
-            log.error('[uibdeletefile] Admin API. url parameter is empty')
-            res.statusMessage = 'url parameter is empty, please provide a value'
-            res.status(500).end()
-            return
-        }
-        // URL cannot contain .. to prevent escaping sub-folder structure
-        if ( params.url.includes('..') ) {
-            log.error('[uibdeletefile] Admin API. url parameter contains ..')
-            res.statusMessage = 'url parameter may not contain ..'
-            res.status(500).end()
-            return
-        }
+        // If the url query param is invalid, exit (res.status was set in function)
+        if ( uiblib.checkUrl(params.url, res, 'uibdeletefile', log) === false ) return
 
         // We have to have an fname (file name) to work with
         if ( params.fname === undefined ) {
@@ -1149,7 +1155,7 @@ module.exports = function(RED) {
         log.trace(`[${params.url}:uibdeletefile] Admin API. File delete requested for ${folder}/${params.fname}`)
 
         // TODO: Add path validation - Also, file should always exist to check that
-        const fullname = path.join(uib_rootFolder, params.url, folder, params.fname)
+        const fullname = path.join(uib.rootFolder, params.url, folder, params.fname)
 
         try {
             fs.removeSync(fullname)
@@ -1165,6 +1171,8 @@ module.exports = function(RED) {
         }
     }) // ---- End of uibdeletefile ---- //
 
+    //#endregion -- File Handling API's -- //
+
     /** Create an index web page or JSON return listing all uibuilder endpoints
      * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
      * @since 2019-02-04 v1.1.0-beta6
@@ -1176,18 +1184,18 @@ module.exports = function(RED) {
          * @returns {boolean} True if the given url exists, else false
          */
         if (req.query.check) {
-            res.json( Object.values(instances).includes(req.query.check) )
+            res.json( Object.values(uib.instances).includes(req.query.check) )
             return
         }
 
         /** If no check parameter, return full details based on type parameter */
         switch (req.query.type) {
             case 'json': {
-                res.json(instances)
+                res.json(uib.instances)
                 break
             }
             case 'urls': {
-                res.json(Object.values(instances))
+                res.json(Object.values(uib.instances))
                 break
             }
             // default to 'html' output type
@@ -1198,11 +1206,12 @@ module.exports = function(RED) {
                 //console.log('Restify - server.router.mounts: ', server.router.mounts) // Restify
 
                 // Update the vendorPaths master variable
-                vendorPaths = uiblib.updVendorPaths(vendorPaths, moduleName, userDir, log, app, serveStatic, RED)
+                //vendorPaths = uiblib.updVendorPaths(vendorPaths, uib.moduleName, userDir, log, app, serveStatic, RED) // DEPRECATED
+                uiblib.checkInstalledPackages('', uib, userDir, log)
 
                 // Include socket.io as a client library (but don't add to vendorPaths)
-                let sioFolder = tilib.findPackage('socket.io', userDir)
-                let sioVersion = tilib.readPackageJson( sioFolder ).version
+                // let sioFolder = tilib.findPackage('socket.io', userDir)
+                // let sioVersion = tilib.readPackageJson( sioFolder ).version
 
                 // Collate current ExpressJS urls and details
                 var otherPaths = [], uibPaths = []
@@ -1248,11 +1257,11 @@ module.exports = function(RED) {
                                 <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>
                                 <th>Server Filing System Folder</th>
                             </tr></thead><tbody>`
-                Object.keys(instances).forEach(key => {
+                Object.keys(uib.instances).forEach(key => {
                     page += '  <tr>'
-                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, instances[key])}">${instances[key]}</a></td>`
+                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, uib.instances[key])}">${uib.instances[key]}</a></td>`
                     page += `    <td>${key}</td>`
-                    page += `    <td>${path.join(uib_rootFolder, instances[key])}</td>`
+                    page += `    <td>${path.join(uib.rootFolder, uib.instances[key])}</td>`
                     page += '  </tr>'
                 })
                 page += `</tbody></table>
@@ -1268,16 +1277,10 @@ module.exports = function(RED) {
                                 <th>uibuilder URL</th>
                                 <th>Main Entry Point</th>
                                 <th>Server Filing System Folder</th>
-                            </tr></thead><tbody><tr>
-                                <td><a href="https://socket.io/">socket.io</a></td>
-                                <td>${sioVersion}</td>
-                                <td>../uibuilder/socket.io/socket.io.js</td>
-                                <td><a href="${tilib.urlJoin(httpNodeRoot, 'uibuilder/vendor/socket.io/socket.io.js')}">../uibuilder/vendor/socket.io/socket.io.js</a></td>
-                                <td>${sioFolder}</td>
-                            </tr>`
+                            </tr></thead><tbody>`
 
-                Object.keys(vendorPaths).forEach(packageName => {
-                    let pj = vendorPaths[packageName]
+                Object.keys(uib.installedPackages).forEach(packageName => {
+                    let pj = uib.installedPackages[packageName]
                     page += '  <tr>'
                     page += `    <td><a href="${pj.homepage}">${packageName}</a></td>`
                     page += `    <td>${pj.version}</a></td>`
@@ -1291,23 +1294,25 @@ module.exports = function(RED) {
                 page += '<p>The \'Main Entry Point\' shown is <i>usually</i> a JavaScript file that you will want in your index.html. However, because this is reported'
                 page += 'by the authors of the package, it may refer to something completely different, uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation for the correct library files to load.</p>'
 
-                page += '<h1>Settings</h1>'
+                page += '<h1>Configuration</h1>'
                 page += '<ul>'
-                page += `  <li><b>uibuilder Version</b>: ${nodeVersion}</li>`
-                page += `  <li><b>Global Settings File</b>: ${path.join(uib_rootFolder, '.settings.json')}</li>`
-                page += `  <li><b>Backend Debug</b>: ${uib_globalSettings.debug}</li>`
-                page += `  <li><b>Backend Debug Logs</b>: ${path.join(uib_rootFolder, '.logs')}</li>`
-                page += `  <li><b>uib_rootFolder</b>: ${uib_rootFolder}</li>`
+                page += `  <li><b>uibuilder Version</b>: ${uib.version}</li>`
+                page += `  <li><b>uibuilder Global Configuration Folder</b>: ${uib.configFolder}</li>`
+                page += `  <li><b>uib.rootFolder</b>: ${uib.rootFolder}</li>`
                 page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
                 page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
                 page += '</ul>'
+
+                // page += '<h1>uib</h1><pre>'
+                // page += tilib.syntaxHighlight( uib )
+                // page += '</pre>'
 
                 // page += '<h1>userDir/package.json</h1><pre>'
                 // page += tilib.syntaxHighlight( readPackageJson(userDir) )
                 // page += '</pre>'
 
-                page += '<h1>vendorPaths</h1><pre>'
-                page += tilib.syntaxHighlight( vendorPaths )
+                page += '<h1>installedPackages</h1><pre>'
+                page += tilib.syntaxHighlight( uib.installedPackages )
                 page += '</pre>'
 
                 // Show the ExpressJS paths currently defined
@@ -1325,14 +1330,17 @@ module.exports = function(RED) {
 
     /** Check & update installed front-end library packages, return list as JSON */
     RED.httpAdmin.get('/uibvendorpackages', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        // Update the vendorPaths master variable
-        uiblib.updVendorPaths(vendorPaths, moduleName, userDir, log, app, serveStatic, RED)
+        //uiblib.updVendorPaths(vendorPaths, uib.moduleName, userDir, log, app, serveStatic, RED)
+        //res.json(vendorPaths)
 
-        res.json(vendorPaths)  // schema: [name]
+        // Update the installed packages list
+        uiblib.checkInstalledPackages('', uib, userDir, log)
+
+        res.json(uib.installedPackages)
     }) // ---- End of uibindex ---- //
 
     /** Call npm. Schema: {name:{(url),cmd}}
-     * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib_rootFolder>/<url>
+     * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib.rootFolder>/<url>
      * ~~Returns JSON {error} if package.json doesn't exist in the cwd~~
      * Valid commands:
      *    packages = List the installed npm packages
@@ -1341,18 +1349,29 @@ module.exports = function(RED) {
      * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
      * @param {string} req.query.cmd Command to run (see notes for this function)
      */
+    // TODO DEPRECATE. uibnpmmanage has replaced this.
     RED.httpAdmin.get('/uibnpm', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
-        log.trace(`[uibnpm] Call npm. Cmd: ${req.query.cmd}`)
+        log.warn(`[uibnpm] DEPRECATED. This API has been deprecated and should not be in use. Please raise an issue.`)
+
+        const params = req.query
+
+        // npm install --no-audit --no-update-notifier --save --save-prefix="~" --production node-red-contrib-unifi@0.0.6
+
+        log.trace(`[uibnpm] Call npm. Cmd: ${params.cmd}`)
 
         const npm = 'npm' //process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
         // Set the Current Working Directory (CWD). Default to userDir ...
         let uibPath = userDir
         // ... but if the url param exists, use the uib root folder+url
-        if ( req.query.url ) uibPath = path.join(uib_rootFolder, req.query.url)
+        if ( params.url ) {
+            // If the url query param is invalid, exit (res.status was set in function)
+            if ( uiblib.checkUrl(params.url, res, 'uibnpm', log) === false ) return
+            uibPath = path.join(uib.rootFolder, params.url)
+        }
 
         // console.log('[uibnpm] COMSPEC ', process.env.ComSpec) // normally will be cmd.exe for Windows
-        console.log(`[uibnpm] Command: ${req.query.cmd}. Package: ${req.query.package}. Path: ${uibPath}`)
+        console.log(`[uibnpm] Command: ${params.cmd}. Package: ${params.package}. Path: ${uibPath}`)
 
         /** results object */
         const output = {
@@ -1377,7 +1396,7 @@ module.exports = function(RED) {
             chk = true,    // Run the package.json check
             chkWarn = true // If false, package.json check fail will prevent cmd from running
 
-        switch (req.query.cmd) {
+        switch (params.cmd) {
             // Check whether chosen uibPath has a package.json - no command run
             case 'check': {
                 cmd = ''
@@ -1553,13 +1572,13 @@ module.exports = function(RED) {
                     if ( output.check.package_exists === true ) {
                         // If it is, update the global settings & the .settings.json file
                         uib_globalSettings.packages = tilib.mergeDedupe(uib_globalSettings.packages, [output.package])
-                        fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
+                        //fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
                     } else {
                         // Otherwise, remove from the global settings & the .settings.json file
                         let index
                         while ((index = uib_globalSettings.packages.indexOf(output.package)) > -1) {
                             uib_globalSettings.packages.splice(index, 1)
-                            fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
+                            //fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
                         }
                     }
                 }
@@ -1572,7 +1591,170 @@ module.exports = function(RED) {
 
         console.log(`[uibnpm] Command: ${cmd}. Output: `, output)
 
-    }) // ---- End of uibindex ---- //
+    }) // ---- End of uibnpm ---- //
+
+    /** Call npm. Schema: {name:{(url),cmd}}
+     * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib.rootFolder>/<url>
+     * Valid commands:
+     *    install, remove, update
+     *    * = run as npm command with --json output
+     * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
+     * @param {string} req.query.cmd Command to run (see notes for this function)
+     */
+    RED.httpAdmin.get('/uibnpmmanage', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+        //#region --- Parameter validation (cmd, package) ---
+        const params = req.query
+        
+        // Validate the npm command to be used.
+        if ( params.cmd === undefined ) {
+            log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
+            res.statusMessage = 'npm command parameter not provided'
+            res.status(500).end()
+            return
+        }
+        switch (params.cmd) {
+            case 'install':
+            case 'remove':
+            case 'update':
+                break
+        
+            default:
+                log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. Invalid command provided for npm management.')
+                res.statusMessage = 'npm command parameter is invalid'
+                res.status(500).end()
+                return
+        }
+
+        // package name must not exceed 255 characters
+        //we have to have a package name
+        if ( params.package === undefined ) {
+            log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. package parameter not provided')
+            res.statusMessage = 'package parameter not provided'
+            res.status(500).end()
+            return
+        }
+        if ( params.package.length > 255 ) {
+            log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. package name parameter is too long (>255 characters)')
+            res.statusMessage = 'package name parameter is too long. Max 255 characters'
+            res.status(500).end()
+            return
+        }
+        //#endregion ---- ----
+        
+        // TODO add optional url param that must be an active uibuilder url name
+        const folder = userDir
+
+        log.info(`[uibuilder/uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package}`)
+
+        // delete package lock file as it seems to mess up sometimes - no error if it fails
+        fs.removeSync(path.join(folder, 'package-lock.json'))
+
+        // Formulate the command to be run
+        var command = ''
+        switch (params.cmd) {
+            case 'install': {
+                // npm install --no-audit --no-update-notifier --save --production --color=false --json <packageName> // --save-prefix="~" 
+                command = `npm install --no-audit --no-update-notifier --save --production --color=false --json ${params.package}`
+                break
+            }
+            case 'remove': {
+                // npm remove --no-audit --no-update-notifier --color=false --json <packageName> // --save-prefix="~" 
+                command = `npm remove --no-audit --no-update-notifier --color=false --json ${params.package}`
+                break
+            }
+            case 'update': {
+
+                break
+            }
+        }
+        if ( command === '' ) {
+            log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. No valid command available for npm management.')
+            res.statusMessage = 'No valid npm command available'
+            res.status(500).end()
+            return
+        }
+
+        // Run the command - against the correct instance or userDir (cwd)
+        var output = [], errOut = null, success = false
+        child_process.exec(command, {'cwd': folder}, (error, stdout, stderr) => {
+            if ( error ) {
+                log.warn(`[uibuilder/uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, error)
+            }
+
+            // try to force output & error output to JSON (or split by newline)
+            try {
+                output.push(JSON.parse(stdout))
+            } catch (err) {
+                output.push(stdout.split('\n'))
+            }
+            try {
+                errOut = JSON.parse(stderr)
+            } catch (err) {
+                errOut = stderr.split('\n')
+            }
+
+            // Find the actual JSON output in amongst all the other crap that npm can produce
+            var result = null
+            try {
+                result = stdout.slice(stdout.search(/^\{/m), stdout.search(/^\}/m)+1) //stdout.match(/\n\{.*\}\n/)
+            } catch (e) {
+                result = e
+            }
+            var jResult = null
+            try {
+                jResult = JSON.parse(result)
+            } catch (e) {
+                jResult = {'ERROR': e, 'RESULT': result}
+            }
+
+            //log.trace(`[uibuilder/uibnpmmanage] Writing stdout to ${path.join(uib.rootFolder,uib.configFolder,'npm-out-latest.txt')}`)
+            //fs.writeFile(path.join(uib.configFolder,'npm-out-latest.txt'), stdout, 'utf8', function(){})
+
+            // Update the packageList
+            uib.installedPackages = uiblib.checkInstalledPackages(params.package, uib, userDir, log)
+
+            // Check the results of the command
+            switch (params.cmd) {
+                // check pkg exiss in uib.installedPackages, if so, serve it up
+                case 'install': {
+                    // package name should exist in uib.installedPackages
+                    if ( uib.installedPackages.hasOwnProperty(params.package) ) success = true
+                    if (success === true) {
+                        // Add an ExpressJS URL
+                        uiblib.servePackage(params.package, uib, userDir, log, app, serveStatic)
+                    }
+                    break
+                }
+                // Check pkg does not exist in uib.installedPackages, if so, remove served url
+                case 'remove': {
+                    // package name should NOT exist in uib.installedPackages
+                    if ( ! uib.installedPackages.hasOwnProperty(params.package) ) success = true
+                    if (success === true) {
+                        // Remove ExpressJS URL
+                        uiblib.unservePackage(params.package, uib, userDir, log, app, serveStatic)
+                    }
+                    break
+                }
+                // Check pkg still exists in uib.installedPackages
+                case 'update': {
+                    // package name should exist in uib.installedPackages
+                    if ( uib.installedPackages.hasOwnProperty(params.package) ) success = true
+                    break
+                }
+            }
+
+            if (success === true) {
+                log.info(`[uibuilder/uibnpmmanage] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
+            } else {
+                log.error(`[uibuilder/uibnpmmanage] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`, jResult)
+            }
+
+            res.json({'success':success,'result':jResult,'output':output,'errOut':errOut})
+            return
+        })
+
+    }) // ---- End of npmmanage ---- //
+
     //#endregion --- Admin API's ---
 
 } // ==== End of module.exports ==== //
