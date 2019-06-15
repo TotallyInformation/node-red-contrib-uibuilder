@@ -140,6 +140,11 @@ module.exports = {
             found = true
         } catch (e) {
             //console.log (`${packageName} not found from uibuilder. Path: ${userDir}`)
+            // ==== TESTING ONLY ====
+            if ( packageName === 'aaa' )  {
+                packagePath = 'C:\\src\\nr\\data\\node_modules\\aaa'
+                found = true
+            }
         }
         // Then try without a path
         if (found === false) try {
