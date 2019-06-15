@@ -23,11 +23,6 @@
             <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">Manage front-end libraries</button>
         </div>
 
-        <!-- Package List -->
-        <div class="form-row">
-            <ol id="node-input-packageList"></ol>
-        </div>
-
         <!-- Show advanced edit properties -->
         <div class="form-row">
             <h4 id="show-adv-props" title="Show/Hide the advanced configuration settings">
@@ -151,25 +146,9 @@
             or on <a href="https://npms.io/" target="_blank">npms.io</a>.
             Take the name and paste it below then use one of the buttons.
         </p>
-        <!-- npm package name -->
+        <!-- Package List -->
         <div class="form-row">
-            <label for="npm-package-name"><i class="fa fa-cube"></i> Package:</label>
-            <input type="text" id="npm-package-name">
-            <div id="npm-response" class="form-tips node-help"></div>
-        </div>
-
-        <!-- Install/Remove/Update -->
-        <div class="form-row">
-            <button class="btn" id="npm-install">Install</button>
-            <button class="btn" id="npm-update">Update</button>
-            <button class="btn" id="npm-remove">Remove</button>
-            <button class="btn" id="npm-close">Close</button>
-        </div>
-
-        <!-- Installed packages -->
-        <div>
-            <h4>Installed Packages</h4>
-            <ul class="inline" id="installed-packages"></ul>
+            <ol id="node-input-packageList"></ol>
         </div>
     </div>
 
