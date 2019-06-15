@@ -133,13 +133,15 @@ module.exports = {
     findPackage: function(packageName, userDir) {
         
         let found = false, packagePath = ''
+        // Try in userDir first
         try {
             packagePath = path.dirname( require.resolve(packageName, {paths: [userDir]}) )
             //console.log(`${packageName} found from userDir`, packagePath)
             found = true
         } catch (e) {
-            //console.log (`${packageName} not found from userDir`)
+            //console.log (`${packageName} not found from uibuilder. Path: ${userDir}`)
         }
+        // Then try without a path
         if (found === false) try {
             packagePath = path.dirname( require.resolve(packageName) )
             //console.log(`${packageName} found`, packagePath)
@@ -147,12 +149,13 @@ module.exports = {
         } catch (e) {
             //console.log (`${packageName} not found`)
         }
+        // Finally try in the uibuilder source folder
         if (found === false) try {
             packagePath = path.dirname( require.resolve(packageName, {paths: [path.join(__dirname,'..')]}) )
             //console.log(`${packageName} found from uibuilder`, packagePath)
             found = true
         } catch (e) {
-            //console.log (`${packageName} not found from uibuilder`)
+            //console.log (`${packageName} not found from uibuilder. Path: ${path.join(__dirname,'..')}`)
         }
 
         if ( found === false ) return null
