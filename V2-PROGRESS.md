@@ -11,8 +11,7 @@ This is the design note for part 2 of enabling source file editing from the Node
 ## IN PROGRESS
 
 * npm processing.
-   * Error: install results in no vendor paths
-   * Remove old vendor path
+   * Remove old vendor path - uiblib: checkInstalledPackages -> unservePackage
    * Admin ui: add close button
    * Admin ui: add focus
 * Add new middleware processing
