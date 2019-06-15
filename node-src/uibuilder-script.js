@@ -25,10 +25,11 @@
     /** AddItem function for package list
      * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
      * @param {number} index the index of the row
-     * @param {*} data data object for the row. {} if add button pressed, else data passed to addItem method
+     * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
      */
     function addPackageRow(element,index,data) {
         var hRow = ''
+
         if (Object.entries(data).length === 0) {
             // Add button was pressed so we have no packageName, create an input form instead
             hRow='<input type="text" id="packageList-input-' + index + '"> <button id="packageList-button-' + index + '">Install</button>'
@@ -37,17 +38,85 @@
             hRow = data
         }
         // Build the output row
-        $('<div class="packageList-row-data">'+hRow+'</div>').appendTo(element)
+        var myRow = $('<div id="packageList-row-' + index + '" class="packageList-row-data">'+hRow+'</div>').appendTo(element)
+
         // Create a button click listener for the install button for this row
         $('#packageList-button-' + index).click(function(){
-            console.log('.packageList-row-data button::click', $('#packageList-input-' + index).val() )
-            // TODO Call the npm installPackage API (it updates the package list)
-            // TODO If successful, 
-            //   TODO change the row, remove input field & button
-            //   TODO Add to local package list (saves a call to the api)
+            //console.log('.packageList-row-data button::click', $('#packageList-input-' + index).val() )
+
+            // show activity spinner
+            $('i.spinner').show()
+            
+            const packageName = '' + $('#packageList-input-' + index).val()
+
+            if ( packageName.length !== 0 ) {
+                // Call the npm installPackage API (it updates the package list)
+                $.get( 'uibnpmmanage?cmd=install&package=' + packageName, function(data){
+                    //console.log('.packageList-row-data get::uibnpm', data )
+
+                    if ( data.success === true) {
+                        console.log('PACKAGE INSTALLED')
+
+                        // Replace the input field with the normal package name display
+                        myRow.html(packageName)
+                    } else {
+                        console.log('ERROR ON INSTALLATION ' )
+                        console.dir( data.result )
+                    }
+
+                    // Hide the progress spinner
+                    $('i.spinner').hide()
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
+
+                    $('i.spinner').hide()
+                    return 'addPackageRow failed'
+                    // TODO otherwise highlight input
+                })
+            } // else Do nothing
+
+        }) // -- end of button click -- //
+
+    } // --- End of addPackageRow() ---- //
+
+    /** RemoveItem function for package list */
+    function removePackageRow(packageName) {
+        console.log('PACKAGE NAME: ', packageName)
+
+        // If package name is an empty object - user removed an add row so ignore
+        if ( (packageName === '') || (typeof packageName !== 'string') ) {
+            return false
+        }
+
+        // show activity spinner
+        $('i.spinner').show()
+
+        // Call the npm installPackage API (it updates the package list)
+        $.get( 'uibnpmmanage?cmd=remove&package=' + packageName, function(data){
+            console.log('removePackageRow get::uibnpm', data )
+
+            if ( data.success === true) console.log('PACKAGE REMOVED')
+            else {
+                console.log('ERROR ON REMOVAL ', data.result )
+                // Put the entry back again
+                $('#node-input-packageList').editableList('addItem',packageName)
+            }
+
+            $('i.spinner').hide()
+
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
+            
+            // Put the entry back again
+            $('#node-input-packageList').editableList('addItem',packageName)
+
+            $('i.spinner').hide()
+            return 'removePackageRow failed'
             // TODO otherwise highlight input
         })
-    }
+        
+    } // ---- End of removePackageRow ---- //
 
     /** Get full package list via API and show in admin ui
      * param {string} url 
@@ -61,7 +130,8 @@
 
             const pkgList = Object.keys(vendorPaths)
             pkgList.forEach(function(packageName,index){
-                $('#node-input-packageList').editableList('addItem',packageName)
+                if ( packageName !== 'socket.io' )
+                    $('#node-input-packageList').editableList('addItem',packageName)
             })
         })
     } // --- End of packageList --- //
@@ -349,28 +419,6 @@
             $('#node-input-copyIndex').prop('checked', this.copyIndex)
             //#endregion checkbox states
 
-            //#region Setup the package list
-            $('#node-input-packageList').editableList({
-                addItem: addPackageRow,
-                removeItem: function(data){},
-                resizeItem: function(row,index) {},
-                header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
-                height: 'auto',
-                addButton: true,
-                removable: true,
-                scrollOnAdd: true,
-                sortable: false,
-            })
-
-            /** Initialise default values for package list
-             * NOTE: This is build dynamically each time the edit panel is opened
-             *       we are not saving this since external changes would result in
-             *       users having being prompted to deploy even when they've made
-             *       no changes themselves to a node instance.
-             */
-            packageList()
-            //#endregion
-
             // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
                 // Show the root URL
@@ -617,9 +665,6 @@
             //#endregion ---- File Editor ---- //
 
             //#region ---- npm ---- //
-            $('#npm-response').hide()
-            /** @type {string[]} */
-            var npmMsg = []
             // NB: Assuming that the edit section is closed
             // Show the npm section, hide the main & adv sections
             $('#show-npm-props').click(function(e) {
@@ -629,70 +674,40 @@
                 $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#npm-props').show()
 
+                // TODO Improve feedback
+                //#region Setup the package list
+                $('#node-input-packageList').editableList({
+                    addItem: addPackageRow, // function
+                    removeItem: removePackageRow, // function(data){},
+                    resizeItem: function(row,index) {},
+                    header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
+                    height: 'auto',
+                    addButton: true,
+                    removable: true,
+                    scrollOnAdd: true,
+                    sortable: false,
+                })
+
+                /** Initialise default values for package list
+                 * NOTE: This is build dynamically each time the edit panel is opened
+                 *       we are not saving this since external changes would result in
+                 *       users having being prompted to deploy even when they've made
+                 *       no changes themselves to a node instance.
+                 */
                 packageList()
+
+                // spinner
+                $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
+                $('i.spinner').hide()
+                //#endregion --- package list ---- //
+
             })
             // Hide the npm section, show the main section
             $('#npm-close').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
 
-                // Empty the msgbox & hide it
-                $('#npm-response').html('').hide()
-
                 $('#main-props').show()
                 $('#npm-props').hide()
-            })
-            // Run the install command
-            $('#npm-install').click(function(e) {
-                e.preventDefault() // don't trigger normal click event
-
-                // Empty the msgbox & hide it
-                $('#npm-response').html('').hide(); npmMsg = []
-
-                // If packagename empty, don't bother
-                var packageName = $('#npm-package-name').val()
-                if ( packageName !== '' ) {
-                    $.get( 'uibnpm?cmd=install&package=' + packageName , function(data){ // + '&url=' + url
-                        console.log( '[uibuilder:npm-install:get] Success. Package: ', packageName, data )
-                        if (data.check.package_exists === false) {
-                            npmMsg.push('Requested package could not be installed.')
-                        } else {
-                            npmMsg.push('Package added.')
-                        }
-                        // TODO Add to .settings.json
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        console.error( '[uibuilder:npm-remove:get] Package:' + packageName + '. Error ' + textStatus, errorThrown )
-                        npmMsg.push('Error returned: ' + textStatus)
-                    }).always(function(){
-                        $('#npm-response').html('<p>' + npmMsg.join('<br>') + '</p>').show()
-                        packageList() // refresh the package list    
-                    })
-            }
-            })
-            // Run the remove command
-            $('#npm-remove').click(function(e) {
-                e.preventDefault() // don't trigger normal click event
-
-                // Empty the msgbox & hide it
-                $('#npm-response').html('').hide(); npmMsg = []
-
-                // If packagename empty, don't bother
-                var packageName = $('#npm-package-name').val()
-                if ( packageName !== '' ) {
-                    $.get( 'uibnpm?cmd=remove&package=' + packageName , function(data){ // + '&url=' + url
-                        console.log( '[uibuilder:npm-remove:get] Success. Package: ', packageName, data )
-                        if (data.check.package_exists === false) {
-                            npmMsg.push('Requested package does not exist.')
-                        } else {
-                            npmMsg.push('Package removed.')
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        console.error( '[uibuilder:npm-remove:get] Package:' + packageName + '. Error ' + textStatus, errorThrown )
-                        npmMsg.push('Error returned: ' + textStatus)
-                    }).always(function(){
-                        $('#npm-response').html('<p>' + npmMsg.join('<br>') + '</p>').show()
-                        packageList() // refresh the package list    
-                    })
-            }
             })
             //#endregion ---- npm ---- //
 
