@@ -11,11 +11,15 @@ This is the design note for part 2 of enabling source file editing from the Node
 ## IN PROGRESS
 
 * npm processing.
-   * How to retain the installed/discovered package list?
+   * Error: install results in no vendor paths
+   * Remove old vendor path
+   * Admin ui: add close button
+   * Admin ui: add focus
 * Add new middleware processing
 
 ### To Fix
 
+* [Minor] Admin ui/uiblib.checkInstalledPackages: Pass package file read errors back to admin ui. Currently only shows in Node-RED log.
 * [Major] Admin ui: copy index flag not set to true by default?
 * [Minor] Admin ui: In file editor, cannot currently edit files in sub-folders of src/dist. Also cannot create/delete/rename sub-folders.
 * [Minor] Admin ui: In file editor, cannot currently rename files.
@@ -46,10 +50,14 @@ These are what I'd like to also squeeze in but they might have to wait to v2.1
 
 New Ideas
 
+* [ ] Define msg.uib property as reserved. To allow for comms to specific component types and html ID's.
+   * [ ] uibuilderfe: If msg.uib present on incoming normal msg, don't include in normal msg event. Will be used in
+         dedicated uib components to allow a Dashboard-like experience.
+   * ? May need new nodes to make comms easier ?
 * [ ] New node: allowing a socket.io "room" to be defined. Will need to pick a current main instance from a dropdown (using API)
    * [ ] Change FE to allow for rooms.
 * [ ] New node: cache - see WIKI cache page for details.
-* [ ] 
+* [ ] Node(s) for specific web components. Possibly allowing the component to be pushed over ws. [Ref.1](https://markus.oberlehner.net/blog/distributed-vue-applications-pushing-content-and-component-updates-to-the-client/)
 
 ----
 
