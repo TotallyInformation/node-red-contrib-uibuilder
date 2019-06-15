@@ -339,16 +339,86 @@ module.exports = {
             //return vendorPaths
     }, // ---- End of updVendorPaths ---- //
 
+    /** Add an installed package to the ExpressJS app to allow access from URLs
+     * @param {string} packageName Name of the front-end npm package we are trying to add
+     * @param {Object} uib "Global" uib variable object
+     * @param {string} userDir Reference to the Node-RED userDir folder
+     * @param {Object} log Custom logger instance
+     * @param {Object} app ExpressJS web server app instance
+     * @param {Object} serveStatic ExpressJS static serving middleware instance
+     * @param {Object} RED RED object instance (for error logging)
+     * @returns {null|{url:string,folder:string}} Vendor url & fs path
+     */
+    servePackage: function(packageName, uib, userDir, log, app, serveStatic) {
+        let pkgDetails = null
+
+        // uib.installedPackages[packageName] MUST exist and be populated (done by uibuilder.js/uibnpmmanage)
+        if ( uib.installedPackages.hasOwnProperty(packageName) ) {
+            pkgDetails = uib.installedPackages[packageName]
+        } else {
+            log.error('[uibuilder:uiblib.servePackage] Failed to find package in uib.installedPackages')
+            return null
+        }
+
+        // Where is the node_modules folder for this package?
+        const installFolder = pkgDetails.folder
+
+        if (installFolder === '' ) {
+            log.error(`[uibuilder:uiblib.servePackage] Failed to add user vendor path - no install folder found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
+            return null
+        } else {
+            // What is the URL for this package? Remove the leading "../"
+            try {
+                var vendorPath = pkgDetails.url.replace('../','') // "../uibuilder/vendor/socket.io" tilib.urlJoin(uib.moduleName, 'vendor', packageName)
+            } catch (e) {
+                log.error(`[uibuilder:uiblib.servePackage] ${packageName} `, e)
+                console.dir({pkgDetails})
+                return null
+            }
+            log.trace(`[uibuilder:uiblib.servePackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
+            try {
+                app.use( vendorPath, /**function (req, res, next) {
+                    // TODO Allow for a test to turn this off
+                    // if (true !== true) {
+                    //     next('router')
+                    // }
+                    next() // pass control to the next handler
+                }, */ serveStatic(installFolder) )
+                
+                return {'url': pkgDetails.url, 'folder': installFolder}
+            } catch (e) {
+                log.error(`[uibuilder:uiblib.servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
+                return null
+            }
+        }
+    }, // ---- End of servePackage ---- //
+
+    /** Remove an installed package from the ExpressJS app
+     * @param {string} packageName Name of the front-end npm package we are trying to add
+     * @param {Object} uib "Global" uib variable object
+     * @param {string} userDir Reference to the Node-RED userDir folder
+     * @param {Object} log Custom logger instance
+     * @param {Object} app ExpressJS web server app instance
+     * @param {Object} serveStatic ExpressJS static serving middleware instance
+     * @param {Object} RED RED object instance (for error logging)
+     * @returns {null|{url:string,folder:string}} Vendor url & fs path
+     */
+    unservePackage: function(packageName, uib, userDir, log, app, serveStatic) {
+        return null
+    }, // ---- End of unservePackage ---- //
+
+
     /** Compare the in-memory package list against packages actually installed.
      * Also check common packages installed against the master package list in case any new ones have been added.
      * Updates the package list file and uib.installedPackages
      * param {Object} vendorPaths Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
+     * @param {string} [newPkg] Optional. Name of a new package to be checked for in addition to existing. 
      * @param {Object} uib Name of the uibuilder module ('uibuilder' by default)
      * @param {string} userDir Name of the Node-RED userDir folder currently in use
      * @param {Object} log Custom logger instance
      * @return {Object} uib.installedPackages
      */
-    checkInstalledPackages: function (uib, userDir, log) {
+    checkInstalledPackages: function (newPkg='', uib, userDir, log) {
         let installedPackages = {}
         let pkgList = []
         let masterPkgList = []
@@ -371,12 +441,18 @@ module.exports = {
         // Make sure we have socket.io in the list
         masterPkgList.push('socket.io')
 
+        // Add in the new package as well
+        if (newPkg !== '') {
+            pkgList.push(newPkg)
+        }
+
         merged = tilib.mergeDedupe(pkgList, masterPkgList)
 
         // For each
         merged.forEach( (pkgName, i) => {
             // Check combined list to see if folder names present in <userDir>/node_modules
             const pkgFolder = tilib.findPackage(pkgName, userDir)
+            
             // If so, update path, version installed, etc.
             if ( pkgFolder !== null ) {
                 // Get the package.json
@@ -408,6 +484,7 @@ module.exports = {
                     installedPackages[pkgName].main = 'socket.io.js'
                 }
 
+                // TODO Add new ExpressJS paths, Remove old ExpressJS paths
                 // TODO (maybe) check if it exists in userDir/package.json
             }
         })
