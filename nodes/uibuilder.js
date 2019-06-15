@@ -29,9 +29,12 @@ const child_process = require('child_process')
 
 // uibuilder module-level globals
 const uib = {
+    /** Contents of uibuilder's package.json file */
     me: fs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
     /** Module name must match this nodes html file @constant {string} uib.moduleName */
     moduleName: 'uibuilder',
+    // URL path prefix set in settings.js - prefixes all URL's
+    nodeRoot: '',
     /** Track across redeployments @constant {Object} uib.deployments */
     deployments: {},
     /** When nodeGo is run, add the node.id as a key with the value being the url
@@ -40,13 +43,16 @@ const uib = {
      * @constant {Object} uib.uib.instances
      */
     instances: {},
+    /** File name of the master package list used to check for commonly installed FE libraries */
     masterPackageListFilename: 'masterPackageList.json',
+    /** File name of the installed package list */
     packageListFilename: 'packageList.json',
-    /** Track the vendor packages installed and their paths
+    /** Track the vendor packages installed and their paths - updated by uiblib.checkInstalledPackages()
+     * Populated initially from packageList file once the configFolder is known & master list has been copied.
      * Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
      * @type {Object.<string, Object>} uib.packageList */
     installedPackages: {},
-    /** Location of master template folders (containing default front-end code) @constant {string} uib.uib.masterTemplateFolder */
+    /** Location of master template folders (containing default front-end code) @constant {string} uib.masterTemplateFolder */
     masterTemplateFolder: path.join( __dirname, 'templates' ),
     /** root folder (on the server FS) for all uibuilder front-end data
      *  Cannot be set until we have the RED object and know if projects are being used
@@ -55,7 +61,7 @@ const uib = {
      * @default <userDir>/<uib.moduleName> or <userDir>/projects/<currProject>/<uib.moduleName>
      **/
     rootFolder: null,
-    /** Locations for uib config can common folders - set once rootFolder is finalised */
+    /** Locations for uib config and common folders - set once rootFolder is finalised */
     configFolder: null,
     commonFolder: null,
 }
@@ -76,11 +82,6 @@ var log = dummyLog // reset to RED.log or anything else you fancy at any point
 
 // Placeholder - set in export
 var userDir = ''
-
-/** DEPRECATED Track the vendor packages installed and their paths
- * Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
- * @type {Object.<string, Object>} vendorPaths */
-var vendorPaths = {}
 
 /** Export the function that defines the node */
 module.exports = function(RED) {
@@ -110,7 +111,7 @@ module.exports = function(RED) {
     uib.commonFolder = path.join(uib.rootFolder, 'common')
     
     /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
-    const httpNodeRoot = RED.settings.httpNodeRoot
+    const httpNodeRoot = uib.nodeRoot = RED.settings.httpNodeRoot
 
     // TODO remove all references
     /** Default uibuilder global settings - DEPRECATED - to be removed
@@ -190,12 +191,12 @@ module.exports = function(RED) {
     }
     //#endregion ----- root folder ----- //
     
-    /** Serve up vendor packages - this is the first check, the installed packages are rechecked at various times.
+    /** Serve up vendor packages - updates uib.installedPackages
+     * This is the first check, the installed packages are rechecked at various times.
+     * Reads the packageList and masterPackageList files
      * Adds ExpressJS static paths for each found FE package & saves the details to the vendorPaths variable.
      */
-    // DEPRECATED // vendorPaths = uiblib.updVendorPaths(vendorPaths, uib.moduleName, userDir, log, app, serveStatic, RED)
-    /** Update uib.installedPackages */
-    uiblib.checkInstalledPackages('', uib, userDir, log)
+    uiblib.checkInstalledPackages('', uib, userDir, log, app)
 
     //#region ----- Set up Socket.IO server & middleware ----- //
     /** Holder for Socket.IO - we want this to survive redeployments of each node instance

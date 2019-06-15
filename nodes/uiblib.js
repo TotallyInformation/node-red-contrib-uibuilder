@@ -24,6 +24,7 @@ const path = require('path')
 const fs = require('fs-extra')
 const tilib = require('./tilib.js')
 const util = require('util')
+const serveStatic = require('serve-static')
 
 module.exports = {
 
@@ -341,23 +342,23 @@ module.exports = {
 
     /** Add an installed package to the ExpressJS app to allow access from URLs
      * @param {string} packageName Name of the front-end npm package we are trying to add
-     * @param {Object} uib "Global" uib variable object
+     * @param {Object} installedPackages Currently installed packages from "Global" uib.installedPackages variable object
      * @param {string} userDir Reference to the Node-RED userDir folder
      * @param {Object} log Custom logger instance
      * @param {Object} app ExpressJS web server app instance
-     * @param {Object} serveStatic ExpressJS static serving middleware instance
-     * @param {Object} RED RED object instance (for error logging)
-     * @returns {null|{url:string,folder:string}} Vendor url & fs path
+     * @returns {boolean} True if loaded, false otherwise
      */
-    servePackage: function(packageName, uib, userDir, log, app, serveStatic) {
+    servePackage: function(packageName, uib, userDir, log, app) {
         let pkgDetails = null
 
-        // uib.installedPackages[packageName] MUST exist and be populated (done by uibuilder.js/uibnpmmanage)
-        if ( uib.installedPackages.hasOwnProperty(packageName) ) {
-            pkgDetails = uib.installedPackages[packageName]
+        let installedPackages = uib.installedPackages
+
+        // uib.installedPackages[packageName] MUST exist and be populated (done by uiblib.checkInstalledPackages())
+        if ( installedPackages.hasOwnProperty(packageName) ) {
+            pkgDetails = installedPackages[packageName]
         } else {
             log.error('[uibuilder:uiblib.servePackage] Failed to find package in uib.installedPackages')
-            return null
+            return false
         }
 
         // Where is the node_modules folder for this package?
@@ -365,15 +366,14 @@ module.exports = {
 
         if (installFolder === '' ) {
             log.error(`[uibuilder:uiblib.servePackage] Failed to add user vendor path - no install folder found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
-            return null
+            return false
         } else {
             // What is the URL for this package? Remove the leading "../"
             try {
-                var vendorPath = pkgDetails.url.replace('../','') // "../uibuilder/vendor/socket.io" tilib.urlJoin(uib.moduleName, 'vendor', packageName)
+                var vendorPath = pkgDetails.url.replace('../','/') // "../uibuilder/vendor/socket.io" tilib.urlJoin(uib.moduleName, 'vendor', packageName)
             } catch (e) {
                 log.error(`[uibuilder:uiblib.servePackage] ${packageName} `, e)
-                console.dir({pkgDetails})
-                return null
+                return false
             }
             log.trace(`[uibuilder:uiblib.servePackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
             try {
@@ -384,29 +384,25 @@ module.exports = {
                     // }
                     next() // pass control to the next handler
                 }, */ serveStatic(installFolder) )
-                
-                return {'url': pkgDetails.url, 'folder': installFolder}
+                return true
             } catch (e) {
                 log.error(`[uibuilder:uiblib.servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
-                return null
+                return false
             }
         }
     }, // ---- End of servePackage ---- //
 
     /** Remove an installed package from the ExpressJS app
      * @param {string} packageName Name of the front-end npm package we are trying to add
-     * @param {Object} uib "Global" uib variable object
+     * @param {Object} installedPackages Currently installed packages from "Global" uib.installedPackages variable object
      * @param {string} userDir Reference to the Node-RED userDir folder
      * @param {Object} log Custom logger instance
      * @param {Object} app ExpressJS web server app instance
-     * @param {Object} serveStatic ExpressJS static serving middleware instance
-     * @param {Object} RED RED object instance (for error logging)
-     * @returns {null|{url:string,folder:string}} Vendor url & fs path
+     * @returns {boolean} True if unserved, false otherwise
      */
-    unservePackage: function(packageName, uib, userDir, log, app, serveStatic) {
-        return null
+    unservePackage: function(packageName, installedPackages, userDir, log, app) {
+        return false
     }, // ---- End of unservePackage ---- //
-
 
     /** Compare the in-memory package list against packages actually installed.
      * Also check common packages installed against the master package list in case any new ones have been added.
@@ -416,67 +412,89 @@ module.exports = {
      * @param {Object} uib Name of the uibuilder module ('uibuilder' by default)
      * @param {string} userDir Name of the Node-RED userDir folder currently in use
      * @param {Object} log Custom logger instance
+     * @param {Object} [app] Optional. Reference to ExpressJS app. If present each pkg will add a serveStatic.
      * @return {Object} uib.installedPackages
      */
-    checkInstalledPackages: function (newPkg='', uib, userDir, log) {
-        let installedPackages = {}
+    checkInstalledPackages: function (newPkg='', uib, userDir, log, app=null) {
+        let installedPackages = uib.installedPackages
         let pkgList = []
         let masterPkgList = []
         let merged = []
-        let oK = false
 
-        // Merge/dedupe packageList and masterPackageList from their files
+        //region --- get package lists from files --- //
+        // Read packageList and masterPackageList from their files
         try {
             pkgList = fs.readJsonSync(path.join(uib.configFolder, uib.packageListFilename))
-            masterPkgList = fs.readJsonSync(path.join(uib.configFolder, uib.masterPackageListFilename))
-            oK = true
         } catch (err) {
-            log.error(`[uibuilder:uiblib.checkInstalledPackages] Could not read either packageList or masterPackageList from: ${uib.configFolder} ${err}`, err)
+            // not an issue
         }
-
-        if ( oK !== true ) {
+        try {
+            masterPkgList = fs.readJsonSync(path.join(uib.configFolder, uib.masterPackageListFilename))
+        } catch (err) {
+            // no op
+        }
+        // If neither can be found, that's an error
+        if ( (pkgList.length === 0) && (masterPkgList.length === 0) ) {
+            log.error(`[uibuilder:uiblib.checkInstalledPackages] Neither packageList nor masterPackageList could be read from: ${uib.configFolder} ${err}`, err)
             return null
         }
-
         // Make sure we have socket.io in the list
         masterPkgList.push('socket.io')
+        //endregion --- get package lists from files --- //
 
-        // Add in the new package as well
+        // Add in the new package as well if requested
         if (newPkg !== '') {
             pkgList.push(newPkg)
         }
 
-        merged = tilib.mergeDedupe(pkgList, masterPkgList)
+        // Merge and de-dup to get a complete list
+        merged = tilib.mergeDedupe(Object.keys(installedPackages), pkgList, masterPkgList)
 
-        // For each
+        // For each entry in the complete list ...
         merged.forEach( (pkgName, i) => {
-            // Check combined list to see if folder names present in <userDir>/node_modules
+            // flags
+            let pkgExists = false
+
+            let pj = null // package details if found
+
+            // Check to see if folder names present in <userDir>/node_modules
             const pkgFolder = tilib.findPackage(pkgName, userDir)
-            
-            // If so, update path, version installed, etc.
+            // Check to see if the package is in the current list
+            const isInCurrent = installedPackages.hasOwnProperty(pkgName)
+
+            // Check whether package is really installed (exists)
             if ( pkgFolder !== null ) {
+                
                 // Get the package.json
-                const pj = tilib.readPackageJson( pkgFolder )
+                pj = tilib.readPackageJson( pkgFolder )
 
-                if (pj.hasOwnProperty('ERROR')) {
-                    //log.error(`[uibuilder:uiblib.checkInstalledPackages] package.json not found for ${pkgName} in ${pkgFolder}`, pj.ERROR)
-                } else {
-                    /** Looks like the folder delete for npm remove happens async so it may
-                     *  still exist when we recheck. But the package.json will have been removed
-                     *  so we don't create the entry unless package.json actually exists
-                     */
-                    installedPackages[pkgName] = {}
-
-                    installedPackages[pkgName].folder = pkgFolder
-                    installedPackages[pkgName].url = ['..', uib.moduleName, 'vendor', pkgName].join('/')
-    
-                    // Find installed version
-                    installedPackages[pkgName].version = pj.version
-                    // Find main entry point (or null)
-                    installedPackages[pkgName].main = pj.main
-                    // Find homepage
-                    installedPackages[pkgName].homepage = pj.homepage
+                /** The folder delete for npm remove happens async so it may
+                 *  still exist when we check. But the package.json will have been removed
+                 *  so we don't process the entry unless package.json actually exists
+                 */
+                if ( ! pj.hasOwnProperty('ERROR')) {
+                    // We only know for sure package exists now
+                    pkgExists = true
                 }
+            }
+
+            if ( pkgExists ) {
+                // If package does NOT exist in current - add it now
+                if ( ! isInCurrent ) {
+                    // Add to current & mark for loading
+                    installedPackages[pkgName] = {}
+                    installedPackages[pkgName].loaded = false
+                }
+
+                // Update package info
+                installedPackages[pkgName].folder = pkgFolder
+                installedPackages[pkgName].url = ['..', uib.moduleName, 'vendor', pkgName].join('/')
+                // Find installed version
+                installedPackages[pkgName].version = pj.version
+                // Find main entry point (or null)
+                installedPackages[pkgName].main = pj.main
+                // Find homepage
+                installedPackages[pkgName].homepage = pj.homepage
 
                 // Replace generic with specific entries if we know them
                 if ( pkgName === 'socket.io' ) {
@@ -484,13 +502,26 @@ module.exports = {
                     installedPackages[pkgName].main = 'socket.io.js'
                 }
 
-                // TODO Add new ExpressJS paths, Remove old ExpressJS paths
-                // TODO (maybe) check if it exists in userDir/package.json
+                // If we need to load it & we have app available
+                if ( (installedPackages[pkgName].loaded === false) && (app !== null) ) {
+                    /** Add a static path to serve up the files */
+                    installedPackages[pkgName].loaded = this.servePackage(pkgName, uib, userDir, log, app)
+                }
+
+            } else { // (package not actually installed)
+                // If in current, flag for unloading then delete from current
+                if ( isInCurrent ) {
+                    if ( app !== null) {
+                        installedPackages[pkgName].loaded = this.unservePackage(pkgName, installedPackages, userDir, log, app)
+                    }
+                    delete installedPackages[pkgName]
+                }
             }
         })
 
+        //uib.installedPackages = installedPackages
+        
         // Write packageList back to file
-        uib.installedPackages = installedPackages
         try {
             fs.writeJsonSync(path.join(uib.configFolder,uib.packageListFilename), Object.keys(installedPackages), {spaces:2})
         } catch(e) {
