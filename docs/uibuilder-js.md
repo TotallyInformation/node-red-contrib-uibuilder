@@ -6,6 +6,22 @@ Note that uibuilder [URI paths are documented in the WIKI](https://github.com/To
 
 ## Key processing elements
 
+### Installation
+
+
+
+### Global Initialisation
+
+Once a uibuilder node is added to any flow, the uibuilder module will be initialised on Node-RED startup.
+
+Everything in the `module.exports` function is run at this point. That creates all of the uibuilder "global" variables, functions and API's.
+
+### Instance Initialisation
+
+Each instance of uibuilder is initialised when flows start.
+
+The global function `nodeGo` is called for each instance. It 
+
 ### Adding staticServer paths for vendor packages
 
 Call uiblib.updVendorPaths. This calls uiblib.addPackage for each found package. addPackage attempts to create a staticServer path.
@@ -123,6 +139,32 @@ Default (v2.0): `{packages:[vue,bootstrap,vue-bootstrap],debug:false,template='v
 Default (v1.x): `{packages:[jquery,normalize.css],debug:false}`
 
 Originally read from the Node-RED `settings.json` file. No longer required.
+
+### `configFolder` {string}
+
+Filing system path to the folder containing any global configuration files. `<uibRoot>/.config`.
+
+Currently only contains:
+
+* `packageList.json` which contains the array of installed packages by their npm package name. These are packages that will be added as URI paths to the server to make them accessible to your front-end code.
+
+  Additional packages installed/removed via the admin ui package management section will update this file.
+
+  It is read on Node-RED startup and again whenever the admin ui package management section opened or the details API called.
+
+  If this file is not valid JSON, an error will be generated.
+
+* `masterPackageList.json` an array of recognised packages useful as front-end modules. Initialised from a master template included with the uibuilder source. May be altered at will.
+
+  Any packages in this list will be searched for on startup, when the admin ui/package management section is shown or the details API called. 
+
+  Any found to be actually installed in `<userDir>/node_modules` will be added to the packageList and added as URI paths to the server.
+
+  If this file is not valid JSON, an error will be generated.
+
+### `commonFolder` {string}
+
+Filing system path to the folder that is served to all instances as `./common/`
 
 ## Instance Variables
 

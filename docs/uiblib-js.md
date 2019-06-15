@@ -31,3 +31,7 @@ None
 ### addVendorPath - TO RENAME to addPackage
 
 ### updVendorPaths
+
+Called from:
+
+Changes: packageList

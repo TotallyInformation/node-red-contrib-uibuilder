@@ -35,7 +35,13 @@ Control message from server on client disconnection:
 {"uibuilderCtrl":"client disconnect","reason":"transport close","_socketId":"/nr/uib#W4bY7aTZ6WC1M_9MAAAG","from":"server","_msgid":"672af72f.170d18"}
 ```
 
+## Admin UI: Package Handling
 
+Load the admin ui for any uibuilder node. Click on the "Manage Front End Libraries" button.
+
+1. Add a new package
+2. Remove a package
+3. Add then remove the same package
 
 ## Vendor paths correct after deploy
 
