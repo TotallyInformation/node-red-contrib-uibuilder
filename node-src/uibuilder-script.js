@@ -94,7 +94,7 @@
 
         // Call the npm installPackage API (it updates the package list)
         $.get( 'uibnpmmanage?cmd=remove&package=' + packageName, function(data){
-            console.log('[uibuilder:removePackageRow:get::uibnpmmanage] ', data )
+            //console.log('[uibuilder:removePackageRow:get::uibnpmmanage] ', data )
 
             if ( data.success === true) console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
             else {
