@@ -67,16 +67,20 @@
             const packageName = '' + $('#packageList-input-' + index).val()
 
             if ( packageName.length !== 0 ) {
+                RED.notify('Installing npm package ' + packageName)
+
                 // Call the npm installPackage API (it updates the package list)
                 $.get( 'uibnpmmanage?cmd=install&package=' + packageName, function(data){
                     //console.log('.packageList-row-data get::uibnpm', data )
 
                     if ( data.success === true) {
+                        RED.notify('Successful installation of npm package ' + packageName, 'success')
                         console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName)
 
                         // Replace the input field with the normal package name display
                         myRow.html(packageName)
                     } else {
+                        RED.notify('FAILED installation of npm package ' + packageName, 'error')
                         console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName )
                         console.dir( data.result )
                     }
@@ -85,6 +89,7 @@
                     $('i.spinner').hide()
 
                 }).fail(function(jqXHR, textStatus, errorThrown) {
+                    RED.notify('FAILED installation of npm package ' + packageName, 'error')
                     console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
 
                     $('i.spinner').hide()
@@ -106,6 +111,7 @@
             return false
         }
 
+        RED.notify('Starting removal of npm package ' + packageName)
         // show activity spinner
         $('i.spinner').show()
 
@@ -113,8 +119,11 @@
         $.get( 'uibnpmmanage?cmd=remove&package=' + packageName, function(data){
             //console.log('[uibuilder:removePackageRow:get::uibnpmmanage] ', data )
 
-            if ( data.success === true) console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
-            else {
+            if ( data.success === true) {
+                RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
+                console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
+            } else {
+                RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
                 // Put the entry back again
                 $('#node-input-packageList').editableList('addItem',packageName)
@@ -123,6 +132,7 @@
             $('i.spinner').hide()
 
         }).fail(function(jqXHR, textStatus, errorThrown) {
+            RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
             console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
             
             // Put the entry back again
@@ -865,7 +875,7 @@
             <select id="node-input-filename" style="width: 75%;"></select>
         </div>
 
-        <!-- Save/Cancel/Reset/(message)/Delete -->
+        <!-- Save/Reset/close/(message)/Delete -->
         <div class="form-row">
             <button class="btn" id="edit-save" title="Save any changes to the file" style="font-size:0.8em;line-height:1em;">Save</button>
             <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)" style="font-size:0.8em;line-height:1em;">Reset</button>
@@ -891,7 +901,6 @@
                     <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">Warning: This action cannot be undone.</p>
                 </div>                  
             </div>
-
         </div>
 
         <!-- Edit box  editor-tray-content -->
@@ -921,7 +930,7 @@
 
     <!-- ---- Hideable NPM Section ---- -->
     <div id="npm-props">
-        <h3>Manage Front-End Libraries</h3>
+        <h4>Front-End Library Manager</h4>
         <p>
             Install, remove or update npm packages that provide front-end libraries such as
             VueJS, jQuery, MoonJS, etc.
@@ -935,6 +944,10 @@
         <!-- Package List -->
         <div class="form-row">
             <ol id="node-input-packageList"></ol>
+        </div>
+        <!-- Close Button -->
+        <div class="form-row">
+            <button class="btn" id="npm-close" title="Close the library"">Close Library Manager</button>
         </div>
     </div>
 
@@ -1024,6 +1037,11 @@
                     See the
                     <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching">WIKI</a>
                     for details.
+                </dd>
+                <dt>from <span class="property-type">(string)</span></dt>
+                <dd>
+                    Identifies the source of the msg since both <i>server</i> (back-end) and <i>client</i> (front-end) control messages
+                    will appear out of port #2.
                 </dd>
                 <dt>_socketId <span class="property-type">(string)</span></dt>
                 <dd>

@@ -50,16 +50,20 @@
             const packageName = '' + $('#packageList-input-' + index).val()
 
             if ( packageName.length !== 0 ) {
+                RED.notify('Installing npm package ' + packageName)
+
                 // Call the npm installPackage API (it updates the package list)
                 $.get( 'uibnpmmanage?cmd=install&package=' + packageName, function(data){
                     //console.log('.packageList-row-data get::uibnpm', data )
 
                     if ( data.success === true) {
+                        RED.notify('Successful installation of npm package ' + packageName, 'success')
                         console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName)
 
                         // Replace the input field with the normal package name display
                         myRow.html(packageName)
                     } else {
+                        RED.notify('FAILED installation of npm package ' + packageName, 'error')
                         console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName )
                         console.dir( data.result )
                     }
@@ -68,6 +72,7 @@
                     $('i.spinner').hide()
 
                 }).fail(function(jqXHR, textStatus, errorThrown) {
+                    RED.notify('FAILED installation of npm package ' + packageName, 'error')
                     console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
 
                     $('i.spinner').hide()
@@ -89,6 +94,7 @@
             return false
         }
 
+        RED.notify('Starting removal of npm package ' + packageName)
         // show activity spinner
         $('i.spinner').show()
 
@@ -96,8 +102,11 @@
         $.get( 'uibnpmmanage?cmd=remove&package=' + packageName, function(data){
             //console.log('[uibuilder:removePackageRow:get::uibnpmmanage] ', data )
 
-            if ( data.success === true) console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
-            else {
+            if ( data.success === true) {
+                RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
+                console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
+            } else {
+                RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
                 // Put the entry back again
                 $('#node-input-packageList').editableList('addItem',packageName)
@@ -106,6 +115,7 @@
             $('i.spinner').hide()
 
         }).fail(function(jqXHR, textStatus, errorThrown) {
+            RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
             console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
             
             // Put the entry back again

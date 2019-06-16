@@ -79,7 +79,7 @@
             <select id="node-input-filename" style="width: 75%;"></select>
         </div>
 
-        <!-- Save/Cancel/Reset/(message)/Delete -->
+        <!-- Save/Reset/close/(message)/Delete -->
         <div class="form-row">
             <button class="btn" id="edit-save" title="Save any changes to the file" style="font-size:0.8em;line-height:1em;">Save</button>
             <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)" style="font-size:0.8em;line-height:1em;">Reset</button>
@@ -105,7 +105,6 @@
                     <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">Warning: This action cannot be undone.</p>
                 </div>                  
             </div>
-
         </div>
 
         <!-- Edit box  editor-tray-content -->
@@ -135,7 +134,7 @@
 
     <!-- ---- Hideable NPM Section ---- -->
     <div id="npm-props">
-        <h3>Manage Front-End Libraries</h3>
+        <h4>Front-End Library Manager</h4>
         <p>
             Install, remove or update npm packages that provide front-end libraries such as
             VueJS, jQuery, MoonJS, etc.
@@ -149,6 +148,10 @@
         <!-- Package List -->
         <div class="form-row">
             <ol id="node-input-packageList"></ol>
+        </div>
+        <!-- Close Button -->
+        <div class="form-row">
+            <button class="btn" id="npm-close" title="Close the library"">Close Library Manager</button>
         </div>
     </div>
 
