@@ -55,12 +55,12 @@
                     //console.log('.packageList-row-data get::uibnpm', data )
 
                     if ( data.success === true) {
-                        console.log('PACKAGE INSTALLED')
+                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName)
 
                         // Replace the input field with the normal package name display
                         myRow.html(packageName)
                     } else {
-                        console.log('ERROR ON INSTALLATION ' )
+                        console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName )
                         console.dir( data.result )
                     }
 
@@ -82,7 +82,7 @@
 
     /** RemoveItem function for package list */
     function removePackageRow(packageName) {
-        console.log('PACKAGE NAME: ', packageName)
+        //console.log('[uibuilder:removePackageRow] PACKAGE NAME: ', packageName)
 
         // If package name is an empty object - user removed an add row so ignore
         if ( (packageName === '') || (typeof packageName !== 'string') ) {
@@ -94,11 +94,11 @@
 
         // Call the npm installPackage API (it updates the package list)
         $.get( 'uibnpmmanage?cmd=remove&package=' + packageName, function(data){
-            console.log('removePackageRow get::uibnpm', data )
+            console.log('[uibuilder:removePackageRow:get::uibnpmmanage] ', data )
 
-            if ( data.success === true) console.log('PACKAGE REMOVED')
+            if ( data.success === true) console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
             else {
-                console.log('ERROR ON REMOVAL ', data.result )
+                console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
                 // Put the entry back again
                 $('#node-input-packageList').editableList('addItem',packageName)
             }
@@ -124,7 +124,7 @@
      */
     function packageList() {
         $.getJSON('uibvendorpackages', function(vendorPaths) {
-            console.log('uibuilder:packageList:uibvendorpackages', vendorPaths)
+            //console.log('uibuilder:packageList:uibvendorpackages', vendorPaths)
 
             $('#node-input-packageList').editableList('empty');
 
@@ -538,8 +538,7 @@
                 e.preventDefault() // don't trigger normal click event
 
                 var authTokens = RED.settings.get('auth-tokens')
-                console.log(RED.settings.get("auth-tokens"))
-
+                
                 // Post the updated content of the file via the admin API
                 // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
                 var request = new XMLHttpRequest()
