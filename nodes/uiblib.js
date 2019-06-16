@@ -342,7 +342,7 @@ module.exports = {
 
     /** Add an installed package to the ExpressJS app to allow access from URLs
      * @param {string} packageName Name of the front-end npm package we are trying to add
-     * @param {Object} installedPackages Currently installed packages from "Global" uib.installedPackages variable object
+     * @param {Object} uib "Global" uib variable object
      * @param {string} userDir Reference to the Node-RED userDir folder
      * @param {Object} log Custom logger instance
      * @param {Object} app ExpressJS web server app instance
@@ -394,14 +394,27 @@ module.exports = {
 
     /** Remove an installed package from the ExpressJS app
      * @param {string} packageName Name of the front-end npm package we are trying to add
-     * @param {Object} installedPackages Currently installed packages from "Global" uib.installedPackages variable object
+     * @param {Object} uib "Global" uib variable object
      * @param {string} userDir Reference to the Node-RED userDir folder
      * @param {Object} log Custom logger instance
      * @param {Object} app ExpressJS web server app instance
      * @returns {boolean} True if unserved, false otherwise
      */
-    unservePackage: function(packageName, installedPackages, userDir, log, app) {
-        return false
+    unservePackage: function(packageName, uib, userDir, log, app) {
+        let pkgReStr = `/^\\/uibuilder\\/vendor\\/${packageName}\\/?(?=\\/|$)/i`
+        let done = false
+        // For each entry on ExpressJS's server stack...
+        app._router.stack.some( function(r, i) {
+            if ( r.regexp.toString() === pkgReStr ) {
+                // We can splice inside the array only because we will only do a single one.
+                app._router.stack.splice(i,1)
+                done = true
+                return true
+            }
+            return false
+        })
+
+        return done
     }, // ---- End of unservePackage ---- //
 
     /** Compare the in-memory package list against packages actually installed.
