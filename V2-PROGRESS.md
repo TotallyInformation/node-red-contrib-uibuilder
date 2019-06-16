@@ -10,10 +10,6 @@ This is the design note for part 2 of enabling source file editing from the Node
 ----
 ## IN PROGRESS
 
-* npm processing.
-   * Remove old vendor path - uiblib: checkInstalledPackages -> unservePackage
-   * Admin ui: add close button
-   * Admin ui: add focus
 * Add new middleware processing
 
 ### To Fix
@@ -23,7 +19,10 @@ This is the design note for part 2 of enabling source file editing from the Node
 * [Minor] Admin ui: In file editor, cannot currently edit files in sub-folders of src/dist. Also cannot create/delete/rename sub-folders.
 * [Minor] Admin ui: In file editor, cannot currently rename files.
 * [Minor] Admin ui: In file editor, none-text files cannot be handled but we want them so we can upload/rename/delete them.
+* [Minor] Admin ui: Improve admin user notifications for install/remove packages
+* [Minor] Template: Add socket id and explanation to default FE template
 
+* ~~Admin ui: add close button~~
 * [~~Major~~ Fixed] Admin ui: Deploy causes vendor paths (except socket.io) to disappear
   Bug introduced by moving vendor path processing to outside of the instance process. So we have to exclude the vendor paths when killing the instance paths during the close event.
 * [~~Minor~~ Fixed] fe: server time offset not working even though the 'client connect' control message from the server includes `msg.serverTimestamp`
@@ -35,28 +34,8 @@ This is the design note for part 2 of enabling source file editing from the Node
 
 These are an overview of what I really need/want to get working before release.
 
-* [ ] Admin UI: Move Installed Packages editable list into the "Manage Front-End Libraries" section.
-* [ ] Add/Remove/Update npm packages in userDir (for front-end library management).
 * [ ] Allow for middleware to be loaded from files in `<uibRoot>` both for http and for websockets
 
-These are what I'd like to also squeeze in but they might have to wait to v2.1
-
-* [ ] Admin UI: File editor needs to handle file uploads.
-* [ ] Admin UI: File editor needs to handle sub-folders for src & dist only.
-* [ ] Admin UI: File editor needs to handle common folder not just the instance folder.
-* [ ] Deal with instance folders build script if found.
-* [ ] Build script processing needs the ability to do npm handling for the instance folder not just for userDir.
-
-New Ideas
-
-* [ ] Define msg.uib property as reserved. To allow for comms to specific component types and html ID's.
-   * [ ] uibuilderfe: If msg.uib present on incoming normal msg, don't include in normal msg event. Will be used in
-         dedicated uib components to allow a Dashboard-like experience.
-   * ? May need new nodes to make comms easier ?
-* [ ] New node: allowing a socket.io "room" to be defined. Will need to pick a current main instance from a dropdown (using API)
-   * [ ] Change FE to allow for rooms.
-* [ ] New node: cache - see WIKI cache page for details.
-* [ ] Node(s) for specific web components. Possibly allowing the component to be pushed over ws. [Ref.1](https://markus.oberlehner.net/blog/distributed-vue-applications-pushing-content-and-component-updates-to-the-client/)
 
 ----
 
@@ -101,6 +80,10 @@ New Ideas
 - [x] Remove debug setting from initialised console output
 - [x] Remove FE/BE debug flags from admin ui config
 - [x] Update close processing to EXCLUDE vendorPaths. Because they are used across all instances.
+- [x] Add/Remove/Update npm packages in userDir (for front-end library management).
+- [x] Check url is free to use - using the uibindex api
+- [x] Does not contain leading dots or underscores
+- [x] Does not contain `/` or `\`
 
 - [x] Add `<adminurl>/uibnpm` admin API. Enable npm commands to be called from the admin ui. Checks whether `package.json` is available. Work against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter).
     - ~~Handle npm restart scripts~~
@@ -109,12 +92,9 @@ New Ideas
     - [x] Allow check if `package.json` and `node_modules` are present
     - [x] Allow creation of `package.json` in `userDir` or `<uibRoot>/<url>`.
     - [x] Allow package installations/updates/removals.
-    - [ ] Allow edit of `package.json` in `<uibRoot>/<url>`.
+    - [x] Allow edit of `package.json` in `<uibRoot>/<url>`.
 
 - [x] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
-    - [ ] Add advanced option to uibuilder.html - use of project folder is optional
-
-- [ ] Move custom middleware load from settings.js to `<uibRoot>/.mware/`. Possibly also allow for `<uibRoot>/<url>/.mware/`.
 
 ### Improvements to admin config ui (`uibuilder.html`)
 
@@ -134,46 +114,79 @@ New Ideas
 - [x] Add new file button
 - [x] Add file delete ~~(button is in place but disabled)~~ - needs a confirm dialogue
 - [x] Add interface for npm operations. Using `<adminurl>/uibnpm` admin API.
+- [x] Move Installed Packages editable list into the "Manage Front-End Libraries" section.
+- [x] New _Advanced settings_ option (hidden by default)
+- [x] Add notifications when installing/removing npm packages.
   
 - [x] Add folder selector before file selector - enables files in different folders to be edited. Folders are pre-selected.
    - [x] Rebuild file list on change of folder
    - [x] Add all instance folders (`<uibRoot>/<url>/src|dist|root`)
    - ~~Add uibuilder root folder & config file~~ No, as this would require Node-RED to be reloaded anyway, decided not to do this. npm functions will manage content.
    - ~~How to rebuild list if the file list changes outside of Node-RED?~~ Just change to another folder and back.
-   - [ ] Add subfolder support for dist and src, possible for root
-   - [ ] Add all instances endpoint folders
-  
-- [ ] Add option to keep backups for edited files + button to reset to backup + hide backup files
-- [ ] ?? Can we add the current nodes URL to the info panel? ?? 
-      [See 'Read node data from node-info panel'](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
-
-- [x] New _Advanced settings_ option (hidden by default)
-   - [ ] Add flag to make use of project folder optional.
-   - [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - 
-         giving the ability to have extra control, use a different port and separate security.
-      - [ ] Need to make use of Node-RED middleware optional.
-  
-- [ ] Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
-- [ ] Add validation hints for users
-- [ ] Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates
-
-- [ ] Add a "Build" button, disabled by default. uibuilder will check whether there is a `package.json` file in the `<uibRoot>/<uibuilder.url>` folder and whether it contains a script called "build". If that exists, the build button will be enabled.
-
-     This will need you to have followed the [build instructions in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Using-VueJS-with-Webpack). Or to have come up with some other build process.
-
-    - [ ] Add example webpack build file.
-
-### Other
-
-- [ ] Allow change of uibuilder.url to:
-   - [x] Check url is free to use - using the uibindex api
-   - [x] Does not contain leading dots or underscores
-   - [x] Does not contain `/` or `\`
-   - [ ] Copy (or rename?) current folder to new folder
 
 ### Docs
 
 - [x] Update WIKI and examples for new paths
+- [x] Add Doc view page using Docute or Docsify
+
+## Next Release
+
+These features are moved to the v2.1 release
+
+### Admin UI
+
+- New _Advanced settings_ option (hidden by default)
+   - Add flag to make use of project folder optional.
+   - Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - 
+     giving the ability to have extra control, use a different port and separate security.
+      - Need to make use of Node-RED middleware optional.
+      - Add option to keep backups for edited files + button to reset to backup + hide backup files
+
+- Add npm package delete confirmation - probably via std NR notifications
+- When adding a package, make sure that the input field gets focus & add <keyb>Enter</keyb> & <keyb>Esc</keyb> key processing.
+
+- Add subfolder support for dist and src, possible for root
+
+- Add all instances endpoint folders
+
+- ?? Can we add the current nodes URL to the info panel? ?? 
+      [See 'Read node data from node-info panel'](https://discourse.nodered.org/t/read-node-data-from-node-info-pane/10210/5)
+ 
+- Deleting one of the template files will reset it to the default if the copy flag is enabled in the main properties.
+ 
+- Add validation hints for users
+
+- Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates
+
+- Add a "Build" button, disabled by default. uibuilder will check whether there is a `package.json` file in the `<uibRoot>/<uibUrl>` folder 
+  and whether it contains a script called "build". If that exists, the build button will be enabled.
+
+     This will need you to have followed the [build instructions in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Using-VueJS-with-Webpack). Or to have come up with some other build process.
+
+    - Add example webpack build file.
+
+- Allow change of uibuilder.url to:
+   - Copy (or rename?) current folder to new folder
+
+- Provide template package.json file to go into `<uibRoot>/<uibUrl>` - provided automatically if user creates a file called package.json.
+
+* File editor needs to handle file uploads.
+* File editor needs to handle sub-folders for src & dist only.
+* File editor needs to handle common folder not just the instance folder.
+* Deal with instance folders build script if found.
+* Build script processing needs the ability to do npm handling for the instance folder not just for userDir.
+
+## New Ideas
+
+* Expose the uibuilder's `docs` folder as a url so that the docs can be viewed in Node-RED
+* Define msg.uib property as reserved. To allow for comms to specific component types and html ID's.
+   * uibuilderfe: If msg.uib present on incoming normal msg, don't include in normal msg event. Will be used in
+         dedicated uib components to allow a Dashboard-like experience.
+   * ? May need new nodes to make comms easier ?
+* New node: allowing a socket.io "room" to be defined. Will need to pick a current main instance from a dropdown (using API)
+   * Change FE to allow for rooms.
+* New node: cache - see WIKI cache page for details.
+* Node(s) for specific web components. Possibly allowing the component to be pushed over ws. [Ref.1](https://markus.oberlehner.net/blog/distributed-vue-applications-pushing-content-and-component-updates-to-the-client/)
 
 
 ## Maybe

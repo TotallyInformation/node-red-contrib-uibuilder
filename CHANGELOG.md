@@ -1,3 +1,11 @@
+## v2.0.0-dev4
+
+Note that v2 is now very close to completion. Please test it out if you can.
+
+* **CHANGE** Installation and removal of npm packages from within the Admin UI now work correctly.
+
+* **CHANGE** The docs folder of the uibuilder npm package contains some developer and testing documentation. It includes a simple web page that will display the documentation.
+
 ## v2.0.0-dev3
 
 * **BREAKING CHANGE** In uibuilderfe.js. Previously, it was quite hard to trace incoming/outgoing messages, especially between control and standard messages. This change aims to improve that.
