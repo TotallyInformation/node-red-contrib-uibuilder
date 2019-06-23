@@ -57,7 +57,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '2.0.0-dev4'
+        self.version = '2.0.0-beta1'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
 
@@ -108,6 +108,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                 // Socket.IO namespace HAS to start with a leading slash
                 ioNamespace = u.join('/')
+
+                self.uiDebug('log', 'uibuilderfe: IO Namespace - Found via url path: ' + ioNamespace)
+            } else {
+                self.uiDebug('log', 'uibuilderfe: IO Namespace - Found via cookie: ' + ioNamespace)
             }
 
             // Namespace HAS to start with a /
@@ -190,17 +194,30 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          */
         self.checkConnect = function (delay, factor) {
             var depth = depth++ || 1
+
             //self.uiDebug('debug', `uibuilderfe:checkConnect. Reconnect - Depth: ${depth}, Delay: ${delay}, Factor: ${factor}`)
             self.uiDebug('debug', 'uibuilderfe:checkConnect. Reconnect - Depth: ' + depth + ', Delay: ' + delay + ', Factor: ' + factor, self.ioNamespace, self.ioPath)
-            if (self.timerid) window.clearTimeout(self.timerid) // we only want one running at a time
+
+            // we only want one running at a time
+            if (self.timerid) window.clearTimeout(self.timerid)
+
+            // Create the new timer
             self.timerid = window.setTimeout(function () {
                 //self.uiDebug('debug', `uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ${delay}, depth: ${depth}`)
                 self.uiDebug('debug', 'uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ' + delay + ', depth: ' + depth, self.ioNamespace, self.ioPath)
+                console.info('[uibuilderfe:checkConnect:setTimeout] Socket.IO reconnection attempt. Current delay: ' + delay)
+                
+                // this is necessary sometimes when the socket fails to connect on startup
+                self.socket.close()
+
+                // Try to reconnect
+                self.socket.connect()
+
                 // don't need to check whether we have connected as the timer will have been cleared if we have
-                self.socket.close()    // this is necessary sometimes when the socket fails to connect on startup
-                self.socket.connect()  // Try to reconnect
                 self.timerid = null
-                self.checkConnect(delay * factor, factor) // extend timer for next time round
+
+                // Create new timer for next time round with extended delay
+                self.checkConnect(delay * factor, factor)
             }, delay)
         } // --- End of checkConnect Fn--- //
 
@@ -230,7 +247,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             self.uiDebug('debug', 'uibuilderfe:ioSetup: About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
             self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
 
-            // When the socket is connected ...
+            /** When the socket is connected - set ioConnected flag and reset connect timer  */
             self.socket.on('connect', function () {
                 self.uiDebug('info', 'uibuilderfe:ioSetup: SOCKET CONNECTED - Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
 
@@ -244,7 +261,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             }) // --- End of socket connection processing ---
 
-            // When Node-RED uibuilder node sends a msg over Socket.IO to us ...
+            // RECEIVE When Node-RED uibuilder node sends a msg over Socket.IO to us ...
             self.socket.on(self.ioChannels.server, function (receivedMsg) {
                 self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.server + ' (server): msg received - Namespace: ' + self.ioNamespace, receivedMsg)
 
@@ -278,7 +295,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             }) // -- End of websocket receive DATA msg from Node-RED -- //
 
-            // Receive a CONTROL msg from Node-RED - see also sendCtrl()
+            // RECEIVE a CONTROL msg from Node-RED - see also sendCtrl()
             self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
                 self.uiDebug('debug', 'uibuilder:ioSetup:' + self.ioChannels.control + ' (control): msg received - Namespace: ' + self.ioNamespace, receivedCtrlMsg)
 
@@ -343,10 +360,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                 self.set('ioConnected', false)
 
-                // A workaround for SIO's failure to reconnect after a NR redeploy of the node instance
-                if (reason === 'io server disconnect') {
-                    self.checkConnect(self.retryMs, self.retryFactor)
-                }
+                console.warn('[uibuilderfe:socket-disconnect] Reason: ' + reason)
+
+                /** A workaround for SIO's failure to reconnect after a disconnection */
+                self.checkConnect(self.retryMs, self.retryFactor)
             }) // --- End of socket disconnect processing ---
 
             // Socket.io connection error - probably the wrong ioPath
@@ -663,7 +680,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
     function makeMeAnObject(thing, property) {
         if (property === null || property === undefined) property = 'payload'
         if ( typeof property !== 'string' ) {
-            console.warn('makeMeAnObject:WARNING: property parameter must be a string and not: ' + typeof property)
+            console.warn('[uibuilderfe:makeMeAnObject] WARNING: property parameter must be a string and not: ' + typeof property)
             property = 'payload'
         }
         var out = {}
