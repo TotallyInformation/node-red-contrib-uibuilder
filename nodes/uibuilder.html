@@ -71,7 +71,7 @@
 
                 // Call the npm installPackage API (it updates the package list)
                 $.get( 'uibnpmmanage?cmd=install&package=' + packageName, function(data){
-                    //console.log('.packageList-row-data get::uibnpm', data )
+                    //console.log('.packageList-row-data get::uibnpmmanage', data )
 
                     if ( data.success === true) {
                         RED.notify('Successful installation of npm package ' + packageName, 'success')
