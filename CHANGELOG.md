@@ -1,6 +1,20 @@
-## v2.0.0-dev4
+## v2.0.0-beta1
 
 Note that v2 is now very close to completion. Please test it out if you can.
+
+* **BREAKING CHANGE** Two new files in `<uibRoot>/.config` control how front-end library packages are managed. You don't ever have to touch these since they will be managed for you. However, you can change them if you want to.
+   
+   `masterPackageList.json` is copied from a template and is used to search for common front-end packages. If any of the packages in this list are found to already be installed into `<userDir>`, they will automatically be added to the installed list.
+
+   `packageList.json` is created from any FE packages actually installed. If you uninstall a package in the list manually, the list will automatically update. If you install a FE package manually, if it is in the master list, it will be added here automatically, otherwise you will have to add it manually.
+
+   On first upgrade from v1 to v2, the packageList file will be updated from the uibuilder section of your `<userDir>/settings.js` file.
+  
+* **BREAKING CHANGE** Middleware for both ExpressJS and Socket.io is now loaded from js files in `<uibRoot>/.config`. Dummy template files are copied over if they don't exist.
+  
+* **CHANGE** Code tidy, removal of deprecated functions and variables.
+
+## v2.0.0-dev4
 
 * **CHANGE** Installation and removal of npm packages from within the Admin UI now work correctly.
 
@@ -91,9 +105,9 @@ Since the URI's for uibuilder have changed between v1 and v2, I've created [a WI
 
 * **NEW** Admin API `<adminurl>/uibvendorpackages` Returns list of available vendor packages with url and folder details.
 
-* **NEW** Admin API `<adminurl>/uibnpm` - run some npm commands from the admin ui. Will work against against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter). Checks whether `package.json` is available in the location. Option to return the installed npm packages in that location.
+* **DEPRECATED IN v2.0.0-dev1** replaced with `<adminurl>/uibnpmmanage` ~~**NEW** Admin API `<adminurl>/uibnpm` - run some npm commands from the admin ui. Will work against against `userDir` or `<uibRoot>/<url>` locations (optional `url` parameter). Checks whether `package.json` is available in the location. Option to return the installed npm packages in that location.~~
 
-  * Commands supported - note that return output is JSON, you should always get something back. 
+  * Commands supported - note that return output is JSON, you should always get something back.
     * `check`: Check whether `package.json` and `node_modules` exist
     * `packages`: Lists all of the top-level packages installed at this location.
     * `init`: Create a `package.json` file with default entries. You should ideally configure npm correctly on the server before running this if you want it to pick up your author details, etc.

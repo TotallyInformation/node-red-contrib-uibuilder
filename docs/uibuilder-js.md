@@ -24,7 +24,9 @@ The global function `nodeGo` is called for each instance. It
 
 ### Adding staticServer paths for vendor packages
 
-Call uiblib.updVendorPaths. This calls uiblib.addPackage for each found package. addPackage attempts to create a staticServer path.
+Call `uiblib.checkInstalledPackages`. Reads the packageList and masterPackageList, updates the package list file and uib.installedPackages. 
+
+`tilib.findPackage` is called for each package to check. New packages result in a call to `uiblib.servePackage` which serves up the package folder. REmoved packages result in a call to `uiblib.unservePackage` which removes the folder from ExpressJS.
 
 ### Client Connection
 
@@ -80,7 +82,7 @@ Default: `{}`
 
 *Object who's primary keys are each installed front-end vendor package. Also contains a sub-object showing the applied root URL for accessing the package resources from front-end (browser) code and the server filing system path to the root folder.*
 
-Created when module is activated. Updated by `uiblib.updVendorPaths`.
+Created when module is activated. 
 
 All URI paths start `../uibuilder/vendor/<packageName>/` - starting with `..` automatically includes the correct scheme (http[s]), (sub)domain, port and `httpNodeRoot` prefix.
 
@@ -122,15 +124,7 @@ Default: `'uibuilder'`
 
 instances[node.id] = node.url
 
-### `uib_GlobalSettings` {Object}
-
-```json
-{
-    "packages":string[],
-    "debug":string,
-    "template":string
-}
-```
+### ~~`uib_GlobalSettings` {Object}~~
 
 **_DEPRECATED in v2.0_**
 

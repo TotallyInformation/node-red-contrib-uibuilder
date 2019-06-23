@@ -10,7 +10,9 @@ This is the design note for part 2 of enabling source file editing from the Node
 ----
 ## IN PROGRESS
 
-* Add new middleware processing
+* Code tidy
+* Migration tooling
+* Documentation update
 
 ### To Fix
 
@@ -20,22 +22,13 @@ This is the design note for part 2 of enabling source file editing from the Node
 * [Minor] Admin ui: In file editor, cannot currently rename files.
 * [Minor] Admin ui: In file editor, none-text files cannot be handled but we want them so we can upload/rename/delete them.
 * [Minor] Admin ui: Improve admin user notifications for install/remove packages
-* [Minor] Template: Add socket id and explanation to default FE template
 
+* ~~Add new middleware processing~~
 * ~~Admin ui: add close button~~
 * [~~Major~~ Fixed] Admin ui: Deploy causes vendor paths (except socket.io) to disappear
   Bug introduced by moving vendor path processing to outside of the instance process. So we have to exclude the vendor paths when killing the instance paths during the close event.
 * [~~Minor~~ Fixed] fe: server time offset not working even though the 'client connect' control message from the server includes `msg.serverTimestamp`
 * [~~Minor~~ Fixed] Admin ui default text for advanced is "Path & Module Details", code sets it to "Path & Module Info"
-
-----
-
-## Focus
-
-These are an overview of what I really need/want to get working before release.
-
-* [ ] Allow for middleware to be loaded from files in `<uibRoot>` both for http and for websockets
-
 
 ----
 
@@ -95,6 +88,8 @@ These are an overview of what I really need/want to get working before release.
     - [x] Allow edit of `package.json` in `<uibRoot>/<url>`.
 
 - [x] Use projects folder if projects are in use. See [PR #47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) for details.
+- [x] Allow for middleware to be loaded from files in `<uibRoot>/.config` both for http and for websockets
+
 
 ### Improvements to admin config ui (`uibuilder.html`)
 
