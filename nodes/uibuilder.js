@@ -54,6 +54,8 @@ const uib = {
     installedPackages: {},
     /** Location of master template folders (containing default front-end code) @constant {string} uib.masterTemplateFolder */
     masterTemplateFolder: path.join( __dirname, 'templates' ),
+    /** What template to use as master? Must match a folder in the masterTemplateFolder */
+    masterTemplate: 'vue',
     /** root folder (on the server FS) for all uibuilder front-end data
      *  Cannot be set until we have the RED object and know if projects are being used
      *  Name of the fs path used to hold custom files & folders for all uib.instances of uibuilder
@@ -113,34 +115,19 @@ module.exports = function(RED) {
     /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
     const httpNodeRoot = uib.nodeRoot = RED.settings.httpNodeRoot
 
-    // TODO remove all references
+    // TODO remove all references to uib_globalSettings
     /** Default uibuilder global settings - DEPRECATED - to be removed
      * @typedef {Object} globalSettings
      * @prop {string[]} packages List of packages made available globally to the front-end (npm package name)
      * @prop {string} template - Which master template folder to use (index.{html|js|css})
      * @prop {boolean} debug - Should debug output be turned on?
      */
-    var uib_globalSettings = { 
-        // our default installed packages
-        'packages': [ 
-            'vue',
-            'bootstrap-vue',
-            'bootstrap',
-        ],
-        // Which template to use for default src files? Folder must exist in the master template folder
-        'template': 'vue',
-        // Back-end debug?
-        'debug': false,
-    }
+    var uib_globalSettings = {}
 
     //#region ----- back-end debugging ----- //
     log = RED.log
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
-
-    // TODO DEPRECATED - remove
-    /** @constant {string} newSettingsFile Location of the global settings file default: <uib.rootFolder>/.settings.json {@link uib.rootFolder} */
-    //const newSettingsFile = path.join(uib.rootFolder, '.settings.json')
 
     /** We need an http server to serve the page and vendor packages. 
      * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
@@ -216,39 +203,22 @@ module.exports = function(RED) {
     // @ts-ignore
     io.set('transports', ['polling', 'websocket'])
 
-    /** Check that all incoming SocketIO data has the IO cookie
-     *  WARNING: This will be called ONLY when the initial connection happens,
-     *           it is NOT run on every message exchange.
-     *           This means that websocket connections can NEVER be as secure.
-     *           since token expiry and validation is only run once
-     * TODO Could be mitigated with custom function in msg send and receive functions */
-    // TODO: Needs a bit more work to add some real security - should it be on ioNs? - No! Pointless as it is only done on connection
-    // TODO Include from external file: `<uibRoot>/.commonIoMiddleware.js` and/or `<uibRoot>/<instanceName>/.ioMiddleware.js`
-    io.use(function(socket, next){
-        /* Some SIO related info that might be useful in security checks
-            //console.log('--socket.request.connection.remoteAddress--')
-            //console.dir(socket.request.connection.remoteAddress)
-            //console.log('--socket.handshake.address--')
-            //console.dir(socket.handshake.address)
-            //console.dir(io.sockets.connected)
-        */
-        if (socket.request.headers.cookie) {
-            //log.debug('[uibuilder:Module] io.use - Authentication OK - ID: ' + socket.id)
-            //log.trace('[uibuilder:Module] Cookie', socket.request.headers.cookie)  // socket.handshake.headers.cookie
-            return next()
-        }
-        next(new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
-    })
-    // TODO Remove uib_globalSettings - replace with <uibRoot>/.config/sioMiddleware
-    /** @since 2017-12-20 add optional socket middleware from settings.js
-     */
-    if ( uib_globalSettings.hasOwnProperty('socketmiddleware') ) {
-        /** Is a uibuilder specific function available? */
-        if ( typeof uib_globalSettings.socketmiddleware === 'function' ) {
-            log.trace('[uibuilder:Module] Using socket middleware from settings.js')
-            io.use(uib_globalSettings.socketmiddleware)
-        }
+    /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev3 */
+    let sioMwPath = path.join(uib.rootFolder,'.config','sioMiddleware.js')
+    if ( ! fs.existsSync(sioMwPath) ) {
+        // Doesn't exist so copy the Template
+        fs.copySync( path.join(uib.masterTemplateFolder, 'sioMiddleware.js'), sioMwPath, {'overwrite':false, 'preserveTimestamps':true})
+        log.trace(`[uibuilder:Module] Copied sioMiddleware template file from ${uib.masterTemplateFolder} to ${sioMwPath} (not overwriting)` )
     }
+    try {
+        const sioMiddleware = require(sioMwPath)
+        if ( typeof sioMiddleware === 'function' ) {
+            io.use(require(path.join(uib.rootFolder,'.config','sioMiddleware.js')))
+        }    
+    } catch (e) {
+        log.trace('[uibuilder:Module] Socket.IO Middleware failed to load. Reason: ', e.message)
+    }
+
     //#endregion ----- socket.io server ----- //
 
     //#region ---- Set up uibuilder master resources (these are applied in nodeGO at instance level) ----
@@ -277,7 +247,6 @@ module.exports = function(RED) {
     RED.log.info(`| ${uib.moduleName} initialised:`)
     RED.log.info(`|   root folder: ${uib.rootFolder}`)
     RED.log.info(`|   version . .: ${uib.version}`)
-    //RED.log.info(`|   packages . : ${Object.keys(vendorPaths)},socket.io`)
     RED.log.info(`|   packages . : ${Object.keys(uib.installedPackages)}`)
     RED.log.info('+-----------------------------------------------------')
 
@@ -343,27 +312,24 @@ module.exports = function(RED) {
         //#region ----- Set up ExpressJS Middleware ----- //
         /** Provide the ability to have a ExpressJS middleware hook.
          * This can be used for custom authentication/authorisation or anything else.
-         * The function must be defined in settings.js
-         * @since v1.0.3 2017-12-15
          */
-        // TODO rework to load from a file - `<uibRoot>/.commonMiddleware.js` and/or `<uibRoot>/<instanceName>/.middleware.js`
         var httpMiddleware = function(req,res,next) { next() }
-        if ( uib_globalSettings.hasOwnProperty('middleware') ) {
-            /** Is a uibuilder specific function available? */
-            if ( typeof uib_globalSettings.middleware === 'function' ) {
-                log.trace(`[uibuilder:${uibInstance}] Using uibuilder specific middleware from settings.js`)
-                httpMiddleware = uib_globalSettings.middleware
-            }
-        } else {
-            /** If not, see if the Node-RED one is available and use that instead.
-             * Use httNodeMiddleware function which is defined in settings.js
-             * as for the http in/out nodes - normally used for authentication
-             */
-            if ( typeof RED.settings.httpNodeMiddleware === 'function' ) {
-                log.trace(`[uibuilder:${uibInstance}] Using Node-RED middleware from settings.js`)
-                httpMiddleware = RED.settings.httpNodeMiddleware
-            }
+        /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
+        let uibMwPath = path.join(uib.rootFolder,'.config','uibMiddleware.js')
+        if ( ! fs.existsSync(uibMwPath) ) {
+            // Doesn't exist so copy the Template
+            fs.copySync( path.join(uib.masterTemplateFolder, 'uibMiddleware.js'), uibMwPath, {'overwrite':false, 'preserveTimestamps':true})
+            log.trace(`[uibuilder:${uibInstance}] Copied uibMiddleware template file from ${uib.masterTemplateFolder} to ${uibMwPath} (not overwriting)` )
         }
+        try {
+            const uibMiddleware = require(uibMwPath)
+            if ( typeof uibMiddleware === 'function' ) {
+                httpMiddleware = uibMiddleware
+            }    
+        } catch (e) {
+            log.trace(`[uibuilder:${uibInstance}] uibuilder Middleware failed to load. Reason: `, e.message)
+        }
+
 
         /** This ExpressJS middleware runs when the uibuilder page loads - set cookies and headers
          * @see https://expressjs.com/en/guide/using-middleware.html */
@@ -379,8 +345,6 @@ module.exports = function(RED) {
         //#region ----- Create instance local folder structure ----- //
         var customStatic = function(req,res,next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
         var customFoldersOK = true
-        // TODO: May be better as async calls - probably not, but a promisified version would be OK?
-        // TODO make sure the folder for this node instance exists
         try {
             fs.mkdirSync(node.customFolder)
             fs.accessSync(node.customFolder, fs.constants.W_OK)
@@ -409,10 +373,10 @@ module.exports = function(RED) {
             /** Now copy files from the master template folder (instead of master src) @since 2017-10-01
              *  Note: We don't copy the master dist folder
              *  Don't copy if copy turned off in admin ui 
-             * TODO: always copy index.html */
+             */
             if ( node.copyIndex ) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-                fs.copy( path.join( uib.masterTemplateFolder, uib_globalSettings.template ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
+                fs.copy( path.join( uib.masterTemplateFolder, uib.masterTemplate ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
                     if(err){
                         log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates')} to ${path.join(node.customFolder, 'src')}`, err)
                     } else {
@@ -720,7 +684,7 @@ module.exports = function(RED) {
          */
         if ( (folder === 'src') && (cpyIdx === true) ) {
             const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-            const fromTemplateFolder = path.join( uib.masterTemplateFolder, uib_globalSettings.template )
+            const fromTemplateFolder = path.join( uib.masterTemplateFolder, uib.masterTemplate )
             try {
                 fs.copySync( fromTemplateFolder, srcFolder, cpyOpts)
                 log.trace(`[uibuilder:uibfiles] Copied template files from ${fromTemplateFolder} to ${srcFolder} (not overwriting)` )
@@ -1206,8 +1170,7 @@ module.exports = function(RED) {
                 //console.log('Expresss 4.x - app._router.stack: ', app._router.stack) // Expresss 4.x
                 //console.log('Restify - server.router.mounts: ', server.router.mounts) // Restify
 
-                // Update the vendorPaths master variable
-                //vendorPaths = uiblib.updVendorPaths(vendorPaths, uib.moduleName, userDir, log, app, serveStatic, RED) // DEPRECATED
+                // Update the uib.vendorPaths master variable
                 uiblib.checkInstalledPackages('', uib, userDir, log)
 
                 // Include socket.io as a client library (but don't add to vendorPaths)
@@ -1331,268 +1294,11 @@ module.exports = function(RED) {
 
     /** Check & update installed front-end library packages, return list as JSON */
     RED.httpAdmin.get('/uibvendorpackages', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-        //uiblib.updVendorPaths(vendorPaths, uib.moduleName, userDir, log, app, serveStatic, RED)
-        //res.json(vendorPaths)
-
         // Update the installed packages list
         uiblib.checkInstalledPackages('', uib, userDir, log)
 
         res.json(uib.installedPackages)
     }) // ---- End of uibindex ---- //
-
-    /** Call npm. Schema: {name:{(url),cmd}}
-     * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib.rootFolder>/<url>
-     * ~~Returns JSON {error} if package.json doesn't exist in the cwd~~
-     * Valid commands:
-     *    packages = List the installed npm packages
-     *    * = run as npm command with --json output
-     * @since v2.0.0 2019-03-02
-     * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
-     * @param {string} req.query.cmd Command to run (see notes for this function)
-     */
-    // TODO DEPRECATE. uibnpmmanage has replaced this.
-    RED.httpAdmin.get('/uibnpm', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
-        log.warn(`[uibnpm] DEPRECATED. This API has been deprecated and should not be in use. Please raise an issue.`)
-
-        const params = req.query
-
-        // npm install --no-audit --no-update-notifier --save --save-prefix="~" --production node-red-contrib-unifi@0.0.6
-
-        log.trace(`[uibnpm] Call npm. Cmd: ${params.cmd}`)
-
-        const npm = 'npm' //process.platform === 'win32' ? 'npm.cmd' : 'npm'
-
-        // Set the Current Working Directory (CWD). Default to userDir ...
-        let uibPath = userDir
-        // ... but if the url param exists, use the uib root folder+url
-        if ( params.url ) {
-            // If the url query param is invalid, exit (res.status was set in function)
-            if ( uiblib.checkUrl(params.url, res, 'uibnpm', log) === false ) return
-            uibPath = path.join(uib.rootFolder, params.url)
-        }
-
-        // console.log('[uibnpm] COMSPEC ', process.env.ComSpec) // normally will be cmd.exe for Windows
-        console.log(`[uibnpm] Command: ${params.cmd}. Package: ${params.package}. Path: ${uibPath}`)
-
-        /** results object */
-        const output = {
-            'result': [],
-            'errResult': [],
-            'error': [],
-            'package': req.query.package || '',
-            // Path to be used for npm operations
-            'path': uibPath,
-            'check': {
-                // Check if package.json exists in uibPath
-                'package.json': fs.pathExistsSync(path.join(uibPath, 'package.json')),
-                // check if node_modules folder exists in uibPath
-                'node_modules': fs.pathExistsSync(path.join(uibPath, 'node_modules')),
-                // if package param provided, check whether that package folder exists in uibPath
-                'package_exists': req.query.package !== '' ? fs.pathExistsSync(path.join(uibPath, 'node_modules', req.query.package)): 'N/A',
-            },
-        }
-        
-        // Validate cmd parameter
-        let cmd = '',      // command to run (if not empty string)
-            chk = true,    // Run the package.json check
-            chkWarn = true // If false, package.json check fail will prevent cmd from running
-
-        switch (params.cmd) {
-            // Check whether chosen uibPath has a package.json - no command run
-            case 'check': {
-                cmd = ''
-                break
-            }
-            // List the top-level packages installed in uibPath
-            case 'packages': {
-                if ( req.query.package ) {
-                    cmd = ''
-                    // IF uibPath = userDir ...
-                    //    Read .settings.json, extract package list, replace uib_globalSettings.packages
-                    //    foreach package, Check node_modules, remove any that aren't actually installed
-                    //    if uib_globalSettings.packages has changed, write back to .settings.json
-                    // ELSE
-                    //    List the top-level packages installed in uibPath
-                    //    cmd = `${npm} ls ${uibPath} --depth=0 --json`
-                    /*
-                            λ  npm ls C:\src\nr\data\uibuilder\uib --depth=0
-                            node-red-project@0.0.4 C:\src\nr\data
-                            `-- (empty)
-                    */
-                } else {
-                    cmd = ''
-                    output.error.push('No package name supplied for the package list command')
-                }
-
-                break
-            }
-            // Initialise a package.json file in the chosen CWD
-            case 'init': {
-                cmd = `${npm} init -y --json`
-                break
-            }
-            // Install an npm package in the chosen CWD
-            case 'install': {
-                /** Don't allow cmd to continue if package.json doesn't exist
-                 *  since this will install the package in a parent folder
-                 *  and that can be confusing.
-                 */
-                chkWarn = false
-                if ( req.query.package ) {
-                    cmd = `${npm} install ${req.query.package} --json`
-                } else {
-                    // No package to install
-                    cmd = ''
-                    output.error.push('No package name supplied for the install command')
-                }
-                break
-            }
-            // Update an npm package in the chosen CWD
-            case 'update': {
-                /** Don't allow cmd to continue if package.json doesn't exist
-                 *  since this will update the package in a parent folder
-                 *  and that can be confusing.
-                 */
-                chkWarn = false
-                if ( req.query.package ) {
-                    cmd = `${npm} update ${req.query.package} --json`
-                } else {
-                    // No package to install
-                    cmd = ''
-                    output.error.push('No package name supplied for the update command')
-                }
-                break
-            }
-            // Remove an npm package from the chosen CWD
-            case 'remove': {
-                if ( req.query.package ) {
-                    if ( output.check.package_exists === true) {
-                        cmd = `${npm} remove ${req.query.package} --json`
-                    } else {
-                        // Package doesn't exist in uibLib/node_modules
-                        cmd = ''
-                        output.error.push('Package does not exist in node_modules for the remove command')                      
-                    }
-                } else {
-                    // No package to remove
-                    cmd = ''
-                    output.error.push('No package name supplied for the remove command')
-                }
-                break
-            }
-            default: {
-                cmd = `${req.query.cmd} --json`
-                break
-            }
-        }
-
-        // Check whether chosen CWD has a package.json - if not, immediately returns an error
-        if (chk) {
-            if ( output.check['package.json'] === false ) {
-                output.errResult.push(`${uibPath}/package.json does not exist`)
-                output.error.push(`package.json does not exist in folder ${uibPath}`)
-                // If cmd isn't sensible without package.json, stop it now
-                if (chkWarn === false) {
-                    cmd = ''
-                    output.error.push('cmd blocked because no package.json exists at this path')
-                }
-            } else {
-                output.result.push(`${uibPath}/package.json exists`)
-            }
-            let modPath = path.join(uibPath, 'node_modules')
-            if ( output.check['node_modules'] === false ) {
-                output.errResult.push(`${modPath} does not exist`)
-                output.error.push(`node_modules does not exist in folder ${uibPath}`)
-                // If cmd isn't sensible without node_modules folder, stop it now
-                if (chkWarn === false) {
-                    cmd = ''
-                    output.error.push('cmd blocked because no node_modules folder exists at this path')
-                }
-            } else {
-                output.result.push(`${modPath} exists`)
-            }
-        }
-
-        if (cmd !== '') {
-            // Always run the cmd against the correct instance or userDir (cwd)
-            let child = child_process.exec(cmd, {'cwd': uibPath}, (error, stdout, stderr) => {
-                // try to force output to JSON (or split by newline)
-                try {
-                    output.result.push(JSON.parse(stdout))
-                } catch (error) {
-                    output.result.push(stdout.split('\n'))
-                }
-                try {
-                    output.errResult.push(JSON.parse(stderr))
-                } catch (error) {
-                    output.errResult.push(stderr.split('\n'))
-                }
-
-                if (error !== null) output.error.push(error)
-
-                switch (req.query.cmd) {
-                    // List the installed modules for this instance
-                    case 'packages': {
-                        output.packages = Object.keys(output.result[output.result.length-1].dependencies)
-                        break
-                    }
-                    case 'install': {
-                        let lastResult = output.result[output.result.length-1]
-                        let errCode = uiblib.getProps(RED, lastResult, 'error.code', '')
-                        if ( errCode === 'E404' ) {
-                            output.error.push(`Package '${req.query.package}' not found by npm`)
-                            output.installAction = 'none'
-                        }
-                        // Note that an install make comprise many add/update/etc actions
-                        if ( uiblib.getProps(RED, lastResult, 'updated[0].action', '') === 'update' ) {
-                            output.installAction = 'update'
-                        }
-                        if ( uiblib.getProps(RED, lastResult, 'added[0].action', '') === 'add' ) {
-                            output.installAction = 'add'
-                        }
-                        break
-                    }
-                    case 'remove': {
-                        console.log(`[uibnpm] Command: ${cmd}. Output: `, output)
-                        let lastResult = output.result[output.result.length-1]
-                        let errCode = uiblib.getProps(RED, lastResult, 'error.code', '')
-                        if ( errCode === 'E404' ) {
-                            output.error.push(`Package '${req.query.package}' not found by npm`)
-                            //output.installAction = 'none'
-                        }
-                        break
-                    }
-                    default: {
-                        break
-                    }
-                }
-
-                if ( output.package !== '' ) {
-                    // Recheck whether package is actually installed
-                    output.check.package_exists = fs.pathExistsSync(path.join(uibPath, 'node_modules', req.query.package))
-                    if ( output.check.package_exists === true ) {
-                        // If it is, update the global settings & the .settings.json file
-                        uib_globalSettings.packages = tilib.mergeDedupe(uib_globalSettings.packages, [output.package])
-                        //fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
-                    } else {
-                        // Otherwise, remove from the global settings & the .settings.json file
-                        let index
-                        while ((index = uib_globalSettings.packages.indexOf(output.package)) > -1) {
-                            uib_globalSettings.packages.splice(index, 1)
-                            //fs.writeFileSync(newSettingsFile, JSON.stringify(uib_globalSettings, null, '    '))
-                        }
-                    }
-                }
-                
-                res.json(output)
-            }) // --- End of exec process (async) --- //
-        } else {
-            res.json(output)
-        }
-
-        console.log(`[uibnpm] Command: ${cmd}. Output: `, output)
-
-    }) // ---- End of uibnpm ---- //
 
     /** Call npm. Schema: {name:{(url),cmd}}
      * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib.rootFolder>/<url>
