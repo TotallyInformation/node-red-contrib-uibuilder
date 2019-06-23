@@ -180,33 +180,6 @@ module.exports = {
         return packagePath
     }, // ----  ---- //
 
-    /** DEPRECATED. Return an updated list of installed front-end library packages
-     * TODO DEPRECATE and change references to uiblib.updVendorPaths()
-     * @param {string[]} masterPackageList Array of installed package names
-     * @param {string} userDir Home folder for Node-RED modules - needed to allow search for installation
-     * @return {string[]} Updated array of installed packages
-     */
-    updatePackageList: function(masterPackageList, userDir) {
-        console.warn('uibuilder warning: tilib.updatePackageList is DEPRECATED, please remove from code')
-        // Clone the current package list
-        const packageList = [...masterPackageList]
-        // Walk the cloned list and find any that are no longer actally there - changes the original list
-        packageList.forEach(function(packageName,index){
-            // call check function
-            const qPackage = this.findPackage(packageName, userDir)
-            // If not found, remove from global list
-            if ( qPackage === null ) {
-                masterPackageList = masterPackageList.filter(function(pName, index){
-                    return pName != packageName
-                })
-            }
-            // TODO ?Remove served references? Is this necessary?
-        })
-        // Find common FE packages and add them to the list if not already there - changes the original list
-
-        return masterPackageList
-    }, // ---- End of updatePackageList ---- //
-
     /** Read the contents of a package.json file 
      * @param {string} folder The folder containing a package.json file
      * @returns {Object|null} Object representation of JSON if found otherwise null
