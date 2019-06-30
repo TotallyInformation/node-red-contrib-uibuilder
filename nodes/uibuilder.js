@@ -1209,10 +1209,17 @@ module.exports = function(RED) {
                 })
 
                 // Build the web page
-                let page = `<!doctype html><html lang="en"><head>
+                let page = `
+                    <!doctype html><html lang="en"><head>
                         <title>Uibuilder Index</title>
                         <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+                        <style type="text/css" media="all">
+                            h1 {border-top:1px solid silver;margin-top:0.5em;padding-top:0.2em;}
+                        </style>
                     </head><body><div class="container">
+                        <p>
+                            Note that this page is only accessible to users with Node-RED admin authority.
+                        </p>
                         <h1>Index of uibuilder pages</h1>
                         <p>'Folders' refer to locations on your Node-RED's server. 'Paths' refer to URL's in the browser.</p>
                         <table class="table">
@@ -1220,7 +1227,8 @@ module.exports = function(RED) {
                                 <th>URL</th>
                                 <th title="Use this to search for the source node in the admin ui">Source Node Instance</th>
                                 <th>Server Filing System Folder</th>
-                            </tr></thead><tbody>`
+                            </tr></thead><tbody>
+                `
                 Object.keys(uib.instances).forEach(key => {
                     page += '  <tr>'
                     page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, uib.instances[key])}">${uib.instances[key]}</a></td>`
@@ -1238,50 +1246,88 @@ module.exports = function(RED) {
                         <table class="table"><thead><tr>
                                 <th>Package</th>
                                 <th>Version</th>
-                                <th>uibuilder URL</th>
-                                <th>Main Entry Point</th>
+                                <th>uibuilder URL (1)</th>
+                                <th>Main Entry Point (2)</th>
                                 <th>Server Filing System Folder</th>
                             </tr></thead><tbody>`
 
                 Object.keys(uib.installedPackages).forEach(packageName => {
                     let pj = uib.installedPackages[packageName]
-                    page += '  <tr>'
-                    page += `    <td><a href="${pj.homepage}">${packageName}</a></td>`
-                    page += `    <td>${pj.version}</a></td>`
-                    page += `    <td>${pj.url}</td>`
-                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.main)}">${pj.url}/${pj.main}</a></td>`
-                    page += `    <td>${pj.folder}</td>`
-                    page += '  </tr>'
+                    page += `
+                        <tr>
+                            <td><a href="${pj.homepage}">${packageName}</a></td>
+                            <td>${pj.version}</a></td>
+                            <td>${pj.url}</td>
+                            <td><a href="${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.main)}">${pj.url}/${pj.main}</a></td>
+                            <td>${pj.folder}</td>
+                        </tr>
+                    `
                 })
-                page += '</tbody></table>'
-                page += '<blockquote><p><em>Note</em>: Always use relative URL\'s. All vendor URL\'s start <code>../uibuilder/vendor/</code>, all uibuilder and custom file URL\'s start <code>./</code>.</p></blockquote>'
-                page += '<p>The \'Main Entry Point\' shown is <i>usually</i> a JavaScript file that you will want in your index.html. However, because this is reported'
-                page += 'by the authors of the package, it may refer to something completely different, uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation for the correct library files to load.</p>'
+                page += `</tbody></table>
+                    <p>Notes:</p>
+                    <ol>
+                        <li>
+                            Always use relative URL's. All vendor URL's start <code>../uibuilder/vendor/</code>, 
+                            all uibuilder and custom file URL's start <code>./</code>.<br>
+                            Using relative URL's saves you from needing to worry about http(s), ip names/addresses and port numbers.
+                        </li>
+                        <li>
+                            The 'Main Entry Point' shown is <i>usually</i> a JavaScript file that you will want in your index.html. 
+                            However, because this is reported by the authors of the package, it may refer to something completely different, 
+                            uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation 
+                            for the correct library files to load.
+                        </li>
+                    </ol>
+                `
 
-                page += '<h1>Configuration</h1>'
-                page += '<ul>'
-                page += `  <li><b>uibuilder Version</b>: ${uib.version}</li>`
-                page += `  <li><b>uibuilder Global Configuration Folder</b>: ${uib.configFolder}</li>`
-                page += `  <li><b>uib.rootFolder</b>: ${uib.rootFolder}</li>`
-                page += `  <li><b>uib_socketPath</b>: ${uib_socketPath}</li>`
-                page += `  <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>`
-                page += '</ul>'
+                page += `
+                    <h1>Configuration</h1>
+                    <h2>uibuilder</h2>
+                    <ul>
+                        <li><b>uibuilder Version</b>: ${uib.version}</li>
+                        <li><b>uibuilder Global Configuration Folder</b>: ${uib.configFolder}</li>
+                        <li><b>uib.rootFolder</b>: ${uib.rootFolder}</li>
+                        <li><b>uib_socketPath</b>: ${uib_socketPath}</li>
+                    </ul>
+                    <h2>Node-RED</h2>
+                    <p>See the <code>&lt;userDir&gt;/settings.js</code> file and the 
+                    <a href="https://nodered.org/docs/" target="_blank">Node-RED documentation</a> for details.</p>
+                    <ul>
+                        <li><b>userDir</b>: ${userDir}</li>
+                        <li><b>httpNodeRoot</b>: ${httpNodeRoot}</li>
+                    </ul>
+                    <h2>ExpressJS</h2>
+                    <p>See the <a href="https://expressjs.com/en/api.html#app.settings.table" target="_blank">ExpressJS documentation</a> for details.</p>
+                    <ul>
+                        <li><b>Views Folder</b>: ${app.get('views')}</li>
+                        <li><b>View Engine</b>: ${app.get('view engine')}</li>
+                        <li><b>View Cache</b>: ${app.get('view cache')}</li>
+                    </ul>
+                    <h3>app.locals</h3>
+                    <pre>${tilib.syntaxHighlight( app.locals )}</pre>
+                    <h3>app.mountpath</h3>
+                    <pre>${tilib.syntaxHighlight( app.mountpath )}</pre>
+                `
 
-                // page += '<h1>uib</h1><pre>'
-                // page += tilib.syntaxHighlight( uib )
-                // page += '</pre>'
-
-                // page += '<h1>userDir/package.json</h1><pre>'
-                // page += tilib.syntaxHighlight( readPackageJson(userDir) )
-                // page += '</pre>'
-
-                page += '<h1>installedPackages</h1><pre>'
-                page += tilib.syntaxHighlight( uib.installedPackages )
-                page += '</pre>'
+                page += `<h1>Installed Packages</h1>
+                    <p>
+                        These are the front-end libraries uibuilder knows to be installed and made available via ExpressJS serve-static.
+                        This is the raw view of the Vendor Client Libraries table above.
+                    </p>
+                    <pre>${tilib.syntaxHighlight( uib.installedPackages )}</pre>
+                `
 
                 // Show the ExpressJS paths currently defined
-                page += `<h1>uibuilder Vendor ExpressJS Paths</h1><pre>${tilib.syntaxHighlight( uibPaths )}</pre>`
-                page += `<h1>other ExpressJS Paths</h1><pre>${tilib.syntaxHighlight( otherPaths )}</pre>`
+                page += `
+                    <h1>uibuilder Vendor ExpressJS Paths</h1>
+                    <p>A raw view of the ExpressJS app.use paths currently in use serving vendor packages.</p>
+                    <pre>${tilib.syntaxHighlight( uibPaths )}</pre>
+                `
+                page += `
+                    <h1>Other ExpressJS Paths</h1>
+                    <p>A raw view of all other app.use paths being served.</p>
+                    <pre>${tilib.syntaxHighlight( otherPaths )}</pre>
+                `
 
                 page += '</div></body></html>'
     
