@@ -2,103 +2,65 @@
 // @ts-check
 'use strict'
 
-/** Merge the various sections of nodes/uibuilder.html from the files in node-src/
- * Note that this is run from `npm run mergehtml` which puts the working directory
- * to the root, not `./bin`
-*/
+/* ---- CHANGE THIS ---- */
+const nodeName = 'uibuilder'
+/* --------------------- */
 
 const replace = require('replace-in-file')
 const fs = require('fs')
-//const path = require('path')
-//const { spawn } = require('child_process')
+const path = require('path')
 
-const userDir = '/src/nr/data' // the Node-RED userDir, often `~/.node-red`
+const nodeSrc = path.join('.', 'node-admin-src')
 
-//nodemon node_modules/node-red/red.js --userDir ./data
-/* function spawnNodemon() {
-    const cp = spawn('node', [
-        '/src/nr/node_modules/node-red/red.js', '--userDir', '/src/nr/data'], {
-            // the important part is the 4th option 'ipc'
-            // this way `process.send` will be available in the child process (nodemon)
-            // so it can communicate back with parent process (through `.on()`, `.send()`)
-            // https://nodejs.org/api/child_process.html#child_process_options_stdio
-            stdio: [
-                'pipe', 'pipe', 'pipe', 'ipc'
-            ],
-        }
-    )
-    return cp
-} */
-
-/* var app = spawnNodemon()
-app.on('message', function (event) {
-    if (event.type === 'start') {
-        console.log('nodemon started')
-    } else if (event.type === 'crash') {
-        console.log('script crashed for some reason')
-    }
-}) */
-
-function mergehtml() {
-    // nodes\lib\uibuilder-help.html
-    const myhelp = fs.readFileSync('./node-src/uibuilder-help.html')
-    const mytemplate = fs.readFileSync('./node-src/uibuilder-template.html')
-    const myscript = fs.readFileSync('./node-src/uibuilder-script.js')
+/** Merge the various sections of nodes/uibuilder.html from the files in node-src/
+ * Note that this is run from `npm run mergehtml` which puts the working directory
+ * to the root, not `./bin`
+ * 
+ * Folder containing files must be called: `node-admin-src`
+ * Files must be named: `template.html`, `panel.html`, `help.html`, `script.js`
+ */
+function mergehtml(nodeName, srcFiles) {
+    const myhelp = fs.readFileSync( path.join(srcFiles, 'help.html') )
+    const mytemplate = fs.readFileSync(  path.join(srcFiles, 'panel.html') )
+    const myscript = fs.readFileSync(  path.join(srcFiles, 'script.js') )
 
     // Copy template
-    fs.copyFileSync('./node-src/uibuilder.html', './nodes/uibuilder.html')
+    fs.copyFileSync( path.join(srcFiles, 'template.html'), './nodes/' + nodeName + '.html')
 
     var options = {
-        files: './nodes/uibuilder.html',
+        files: './nodes/' + nodeName + '.html',
         from: [
             /(<script type="text\/javascript">)(.|\n)*?(<\/script>)/gmi,
-            /(<script type="text\/x-red" data-template-name="uibuilder">)(.|\n)*?(<\/script>)/gmi,
-            /(<script type="text\/x-red" data-help-name="uibuilder">)(.|\n)*?(<\/script>)/gmi,
+            /(<script type="text\/x-red" data-template-name="NODENAME">)(.|\n)*?(<\/script>)/gmi,
+            /(<script type="text\/x-red" data-help-name="NODENAME">)(.|\n)*?(<\/script>)/gmi,
+            /-name="NODENAME">/gmi,
         ],
         to: [
             `$1\n${myscript}\n$3`,
             `$1\n${mytemplate}\n$3`,
             `$1\n${myhelp}\n$3`,
+            `-name="${nodeName}">`,
         ],
     }
 
     replace(options)
         .then(changes => {
-            console.log('MERGEHELP: Modified files:', changes.join(', '))
-            restartNR()
+            console.log('MERGE:Modified files:', changes.join(', '));
         })
         .catch(error => {
-            console.error('MERGEHELP: Error occurred:', error)
+            console.error('MERGE: Error occurred:', error);
+        })
+        .finally( () => {
+            console.log('MERGE: Finished')
         })
 
-    console.log('MERGEHELP: Completed')
-}
+} /* ---- End of MergeHtml ---- */
 
-/*
-//v4 code
-replace(options)
-        .then(results => {
-            const changes = results.filter(result => result.hasChanged).map(result => result.file);
-            console.log('MERGEHELP: Modified files:', changes.join(', '))
-            restartNR()
-        })
-        .catch(error => {
-            console.error('MERGEHELP: Error occurred:', error)
-        })
-*/
-
-function restartNR() {
-    // force a restart
-    //app.send('restart')
-}
-
-fs.watch('./node-src/', (eventType, filename) => {
+fs.watch(nodeSrc, (eventType, filename) => {
     //console.log(`event type is: ${eventType}`);
     if (filename) {
-        //console.log(`filename provided: ${filename}`)
-        mergehtml()
-        //restartNR()
+        mergehtml(nodeName, nodeSrc)
     }
 })
 
-
+// EOF
