@@ -118,6 +118,7 @@ This is the design note for part 2 of enabling source file editing from the Node
    - [x] Add all instance folders (`<uibRoot>/<url>/src|dist|root`)
    - ~~Add uibuilder root folder & config file~~ No, as this would require Node-RED to be reloaded anyway, decided not to do this. npm functions will manage content.
    - ~~How to rebuild list if the file list changes outside of Node-RED?~~ Just change to another folder and back.
+- [x] Add option to create a web index showing full contents of node instances custom folder (including `src` and `dest` folders). Available to end user clients if flag is set.
 
 ### Docs
 

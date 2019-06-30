@@ -12,6 +12,8 @@ Note that v2 is now very close to completion. Please test it out if you can.
   
 * **BREAKING CHANGE** Middleware for both ExpressJS and Socket.io is now loaded from js files in `<uibRoot>/.config`. Dummy template files are copied over if they don't exist.
   
+* **NEW** Add configuration flag to allow a web page showing all served files for a specific uibilder instance. If set, the url `<url>/idx` will show an index listing of the `<uibRoot>/<url>/` folder (which includes the `src` and `dest` folders). The url is shown in the admin panel.
+  
 * **CHANGE** Code tidy, removal of deprecated functions and variables.
 
 ## v2.0.0-dev4

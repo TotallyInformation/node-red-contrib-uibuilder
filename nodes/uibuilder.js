@@ -21,6 +21,7 @@ const uiblib        = require('./uiblib')
 // General purpose library (by Totally Information)
 const tilib         = require('./tilib')
 const serveStatic   = require('serve-static')
+const serveIndex   = require('serve-index')
 const socketio      = require('socket.io')
 const path          = require('path')
 const fs            = require('fs-extra')
@@ -275,6 +276,7 @@ module.exports = function(RED) {
         node.allowScripts  = config.allowScripts
         node.allowStyles   = config.allowStyles
         node.copyIndex     = config.copyIndex
+        node.showfolder    = config.showfolder
         //#endregion ----- Local node config copy ----- //
 
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
@@ -329,7 +331,6 @@ module.exports = function(RED) {
         } catch (e) {
             log.trace(`[uibuilder:${uibInstance}] uibuilder Middleware failed to load. Reason: `, e.message)
         }
-
 
         /** This ExpressJS middleware runs when the uibuilder page loads - set cookies and headers
          * @see https://expressjs.com/en/guide/using-middleware.html */
@@ -410,6 +411,14 @@ module.exports = function(RED) {
         /** Apply all of the middleware functions to the current instance url 
          * Must be applied in the right order with the most important first */
         app.use( tilib.urlJoin(node.url), httpMiddleware, masterMiddleware, customStatic, masterStatic )
+        /** If enabled, allow for directory listing of the custom instance folder */
+        if ( node.showfolder === true ) {
+            app.use( tilib.urlJoin(node.url, 'idx'), 
+                serveIndex( node.customFolder, {'icons':true, 'view':'details'} ), 
+                serveStatic( node.customFolder ) 
+            )
+        }
+        /** Make the uibuilder static common folder available */
         app.use( tilib.urlJoin(node.url,'common'), commonStatic )
 
         const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
