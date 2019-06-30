@@ -402,6 +402,7 @@
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
             copyIndex: { value: true },        // Should the default template files be copied to the instance src folder?
+            showfolder: { value: false },      // Should a web index view of all source files be made available?
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -434,6 +435,7 @@
                 // Show the root URL
                  // @ts-ignore Cannot find name 'RED'.ts(2304)
                 $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
+                $('#node-input-showfolder-url').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '/idx">' + RED.settings.httpNodeRoot + $(this).val() + '/idx</a>')
             })
 
             // Show/Hide the advanced settings
@@ -444,16 +446,6 @@
                     $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Advanced Settings')
                 } else {
                     $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                }
-            })
-            // Show/Hide the Path & Module details
-            $('#show-info-props').css( 'cursor', 'pointer' )
-            $('#show-info-props').click(function(e) {
-                $('#info-props').toggle()
-                if ( $('#info-props').is(':visible') ) {
-                    $('#show-info-props').html('<i class="fa fa-caret-down"></i> Path &amp; Module Details')
-                } else {
-                    $('#show-info-props').html('<i class="fa fa-caret-right"></i> Path &amp; Module Details')
                 }
             })
 

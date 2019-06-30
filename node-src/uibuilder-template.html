@@ -25,15 +25,15 @@
 
         <!-- Show advanced edit properties -->
         <div class="form-row">
-            <h4 id="show-adv-props" title="Show/Hide the advanced configuration settings">
+            <h5 id="show-adv-props" title="Show/Hide the advanced configuration settings">
                 <i class="fa fa-caret-right"></i> Advanced Settings
-            </h4>
+            </h5>
         </div>
 
     </div>
 
     <!-- ---- Hideable Advanced Settings Section ---- -->
-    <div id="adv-props" style="display:hidden">
+    <div id="adv-props" style="display:hidden;border-bottom:1px solid silver;margin-bottom:.5em;">
         <!-- Allow scripts/styles to be passed to front-end? -->
         <div class="form-row" title="Add msg.script/msg.style to the input msg">
             Allow passing to the front-end: 
@@ -47,6 +47,12 @@
         <div class="form-row">
             <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
             <label for="node-input-copyIndex" style="width: 90%;">Copy index.(html|css|js) from templates to this instance if they don't exist?</label>
+        </div>
+
+        <!-- Provide a searchable file index view? -->
+        <div class="form-row">
+            <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-showfolder" style="width: 90%;">Show web view of source files at <span id="node-input-showfolder-url">_</span>.</label>
         </div>
 
         <div class="form-tips node-help" title="">
@@ -156,16 +162,5 @@
     </div>
 
     <!-- Info -->
-    <h4 id="show-info-props" title="Show/Hide the available paths &amp; module information">
-        <i class="fa fa-caret-right"></i> Path &amp; Module Details
-    </h4>
-    <div id="info-props" class="form-tips node-help" title="">
-        <div>Web Page URL: <span id="uibuilderurl"></span></div>
-        <div><a href="uibindex" target="_blank" title="Opens in a new tab">Detailed Information</a></div>
-        <div>
-            Click on the detailed info link to see details of what front-end libraries
-            are available to your web pages. It also shows a list of all uibuilder web pages
-            and some detailed uibuilder information.
-        </div>
-        <div>Front-end modules must be installed to your <i id="showuserdir">userDir</i> folder.</div>
-    </div>
+    <div title="Open the uibuilder web page">Web Page URL: <span id="uibuilderurl"></span></div>
+    <div title="Shows available libraries, configuration and other detailed uibuilder information"><a href="uibindex" target="_blank">Detailed Information</a></div>
