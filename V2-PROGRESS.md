@@ -13,6 +13,7 @@ This is the design note for part 2 of enabling source file editing from the Node
 * Code tidy
 * Migration tooling
 * Documentation update
+* Use [Glob](https://www.npmjs.com/package/glob) to enhance the source files list.
 
 ### To Fix
 

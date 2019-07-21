@@ -1,6 +1,8 @@
-## v2.0.0-beta1
+## v2.0.0-beta2
 
 Note that v2 is now very close to completion. Please test it out if you can.
+
+## v2.0.0-beta1
 
 * **BREAKING CHANGE** Two new files in `<uibRoot>/.config` control how front-end library packages are managed. You don't ever have to touch these since they will be managed for you. However, you can change them if you want to.
    
