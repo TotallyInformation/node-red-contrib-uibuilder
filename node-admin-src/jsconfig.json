@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "target": "ES5"
+    },
+    "typeAcquisition": {
+        "include": [
+            "node-red"
+        ]
+    }
+}
