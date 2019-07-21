@@ -99,7 +99,7 @@ module.exports = {
         var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
         var urlReVendor = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
         // For each entry on ExpressJS's server stack...
-        app._router.stack.forEach( function(r, i, stack) {
+        app._router.stack.forEach( function(r, i, _stack) {
             // Check whether the URL matches a vendor path...
             let rUrlVendor = r.regexp.toString().replace(urlReVendor, '')
             // If it DOES NOT, then...
@@ -351,7 +351,7 @@ module.exports = {
         }
         // If neither can be found, that's an error
         if ( (pkgList.length === 0) && (masterPkgList.length === 0) ) {
-            log.error(`[uibuilder:uiblib.checkInstalledPackages] Neither packageList nor masterPackageList could be read from: ${uib.configFolder} ${err}`, err)
+            log.error(`[uibuilder:uiblib.checkInstalledPackages] Neither packageList nor masterPackageList could be read from: ${uib.configFolder}`)
             return null
         }
         // Make sure we have socket.io in the list
@@ -367,7 +367,7 @@ module.exports = {
         merged = tilib.mergeDedupe(Object.keys(installedPackages), pkgList, masterPkgList)
 
         // For each entry in the complete list ...
-        merged.forEach( (pkgName, i) => {
+        merged.forEach( (pkgName, _i) => {
             // flags
             let pkgExists = false
 
