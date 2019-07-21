@@ -15,16 +15,20 @@
 -->
 
 <script type="text/javascript">
-    /* eslint-env browser */
-    /* global $,RED */
-    // @ts-check
     'use strict'
+
+    /** @typedef {import("node-red").Red} Red */
+
+    //#region --------- "global" variables for the panel --------- //
 
     /** Module name must match this nodes html file @constant {string} moduleName */
     var moduleName  = 'uibuilder'
-
-    /** placeholder for url duplicate check - marks url invalid/valid on change */
-    var urlIsDup = false
+    /** Node's label @constant {string} paletteCategory */
+    var nodeLabel  = '<REPLACE WITH REQUIRED PALETTE CATEGORY>'
+    /** Node's palette category @constant {string} paletteCategory */
+    var paletteCategory  = '<REPLACE WITH REQUIRED PALETTE CATEGORY>'
+    /** Node's background color @constant {string} paletteColor */
+    var paletteColor  = '#E6E0F8'
 
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
      * @typedef uiace
@@ -38,6 +42,10 @@
         'folder': 'src',
         'fname' : 'index.html'
     }
+
+    //#endregion ------------------------------------------------- //
+
+    //#region --------- "global" functions for the panel --------- //
 
     /** AddItem function for package list
      * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
@@ -64,9 +72,10 @@
             // show activity spinner
             $('i.spinner').show()
             
-            const packageName = '' + $('#packageList-input-' + index).val()
+            var packageName = '' + $('#packageList-input-' + index).val()
 
             if ( packageName.length !== 0 ) {
+                /** @type {Red} */
                 RED.notify('Installing npm package ' + packageName)
 
                 // Call the npm installPackage API (it updates the package list)
@@ -88,7 +97,7 @@
                     // Hide the progress spinner
                     $('i.spinner').hide()
 
-                }).fail(function(jqXHR, textStatus, errorThrown) {
+                }).fail(function(_jqXHR, textStatus, errorThrown) {
                     RED.notify('FAILED installation of npm package ' + packageName, 'error')
                     console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
 
@@ -131,7 +140,7 @@
 
             $('i.spinner').hide()
 
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(_jqXHR, textStatus, errorThrown) {
             RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
             console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
             
@@ -153,10 +162,10 @@
         $.getJSON('uibvendorpackages', function(vendorPaths) {
             //console.log('uibuilder:packageList:uibvendorpackages', vendorPaths)
 
-            $('#node-input-packageList').editableList('empty');
+            $('#node-input-packageList').editableList('empty')
 
-            const pkgList = Object.keys(vendorPaths)
-            pkgList.forEach(function(packageName,index){
+            var pkgList = Object.keys(vendorPaths)
+            pkgList.forEach(function(packageName,_index){
                 if ( packageName !== 'socket.io' )
                     $('#node-input-packageList').editableList('addItem',packageName)
             })
@@ -166,10 +175,10 @@
     /** Return a file type from a file name (or default to txt)
      *  ftype can be used in ACE editor modes */
     function fileType(fname) {
-        const fparts = fname.split('.')
+        var fparts = fname.split('.')
         if (fparts.length > 1) {
-            let ftype = 'text'
-            const fext = fparts[1].toLowerCase().trim()
+            var ftype = 'text'
+            var fext = fparts[1].toLowerCase().trim()
             switch (fext) {
                 case 'js':
                     ftype = 'javascript'
@@ -234,7 +243,7 @@
             else uiace.fname = firstFile
             $('#node-input-filename').val(uiace.fname)
             uiace.format = firstFile === '' ? 'text' : fileType(firstFile)
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
             uiace.fname = ''
             uiace.format = 'text'
@@ -249,13 +258,13 @@
         /** Get the chosen folder name - use the default/last saved on first load 
          * @type {string} */ 
          // @ts-ignore
-        const folder = $('#node-input-folder').val() || uiace.folder 
+        var folder = $('#node-input-folder').val() || uiace.folder 
         /** Get the chosen filename - use the default/last saved on first load 
          * @type {string} */
          // @ts-ignore
-        const fname = $('#node-input-filename').val() || uiace.fname
+        var fname = $('#node-input-filename').val() || uiace.fname
         // Get the current url
-        const url = $('#node-input-url').val()
+        var url = $('#node-input-url').val()
 
         //console.log( '[uibuilder:getFileContents] ', url, folder, fname )
 
@@ -264,8 +273,8 @@
         uiace.fname = fname
 
         // Change mode to match file type
-        const filetype = fname === '' ? 'text' : fileType(fname)
-        $("#node-input-format").val(filetype)
+        var filetype = fname === '' ? 'text' : fileType(fname)
+        $('#node-input-format').val(filetype)
 
         // Get the file contents via API defined in uibuilder.js
         $.get( 'uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data){
@@ -280,7 +289,7 @@
             uiace.editorSession.getUndoManager().isClean()
             // Position the cursor in the edit area
             uiace.editor.focus()
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
             uiace.editorSession.setValue('')
         })
@@ -293,17 +302,17 @@
      */
     function createNewFile(fname) {
         // Also get the current folder & url
-        const folder = $('#node-input-folder').val() || uiace.folder
-        const url = $('#node-input-url').val()
+        var folder = $('#node-input-folder').val() || uiace.folder
+        var url = $('#node-input-url').val()
 
-        const apiUrl = 'uibnewfile?url=' + url + '&fname=' + fname + '&folder=' + folder
+        var apiUrl = 'uibnewfile?url=' + url + '&fname=' + fname + '&folder=' + folder
 
-        $.get( apiUrl, function(data){
+        $.get( apiUrl, function(_data){
             // Rebuild the file list & select the file
             getFileList(fname)
 
             return 'Create file succeeded'
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:createNewFile:get] Error ' + textStatus, errorThrown )
             return 'Create file failed'
         })
@@ -314,18 +323,18 @@
      */
     function deleteFile() {
         // Get the current file, folder & url
-        const fname = $('#node-input-filename').val()
-        const folder = $('#node-input-folder').val()
-        const url = $('#node-input-url').val()
+        var fname = $('#node-input-filename').val()
+        var folder = $('#node-input-folder').val()
+        var url = $('#node-input-url').val()
 
-        const apiUrl = 'uibdeletefile?url=' + url + '&fname=' + fname + '&folder=' + folder
+        var apiUrl = 'uibdeletefile?url=' + url + '&fname=' + fname + '&folder=' + folder
 
-        $.get( apiUrl, function(data){
+        $.get( apiUrl, function(_data){
             // Rebuild the file list & select the file
             getFileList(fname)
 
             return 'Delete file succeeded'
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:deleteFile:get] Error ' + textStatus, errorThrown )
             return 'Delete file failed'
         })
@@ -406,11 +415,13 @@
 
     } // --- End of validateUrl --- //
 
+    //#endregion ------------------------------------------------- //
+
     // Register the node type, defaults and set up the edit fns 
      //@ts-ignore 
-    RED.nodes.registerType('uibuilder', {
-        category: 'UI Builder',
-        color: '#E6E0F8',
+    RED.nodes.registerType(moduleName, {
+        category: paletteCategory,
+        color: paletteColor,
         defaults: {
             name: { value: '' },
             topic: { value: '' },
@@ -426,11 +437,12 @@
         outputs: 2,
         outputLabels: ['Data from front-end', 'Control Msgs from front-end'],
         icon: 'ui_template.png',
-        paletteLabel: 'UI Builder',
-        label: function () { return this.url || this.name || 'UI Builder'; },
+        paletteLabel: nodeLabel,
+        label: function () { return this.url || this.name || nodeLabel },
 
+        /** Prepares the Editor panel */
         oneditprepare: function () {
-            const that = this
+            var that = this
 
             //#region Start with the edit section hidden & main section visible
             $('#main-props').show()
@@ -457,7 +469,7 @@
 
             // Show/Hide the advanced settings
             $('#show-adv-props').css( 'cursor', 'pointer' )
-            $('#show-adv-props').click(function(e) {
+            $('#show-adv-props').click(function(_e) {
                 $('#adv-props').toggle()
                 if ( $('#adv-props').is(':visible') ) {
                     $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Advanced Settings')
@@ -510,7 +522,7 @@
                      * using input event instead of change since it's called with some timeout 
                      * which is needed by the undo (which takes some time to update)
                      **/
-                    uiace.editor.on("input", function() {
+                    uiace.editor.on('input', function() {
                         // Is the editor clean?
                         fileIsClean(uiace.editorSession.getUndoManager().isClean())
                     })
@@ -534,11 +546,11 @@
             })
 
             // Handle the file editor change of folder/file
-            $('#node-input-folder').change(function(e) {
+            $('#node-input-folder').change(function(_e) {
                 // Rebuild the file list
                 getFileList()
             })
-            $('#node-input-filename').change(function(e) {
+            $('#node-input-filename').change(function(_e) {
                 // Get the content of the file via the admin API
                 getFileContents()
                 fileIsClean(true)
@@ -605,7 +617,7 @@
                     },
                 ]
             })
-            $('#edit-delete').click(function(e) {
+            $('#edit-delete').click(function(_e) {
                 $('#edit_del_dialog_del').addClass('input-error').css('color','brown')
                 $('#edit-delete-name').text($('#node-input-folder').val() + '/' + $('#node-input-filename').val())
                 if ( $('#node-input-folder').val() === 'src' ) {
@@ -656,7 +668,7 @@
                     },
                 ]
             })
-            $('#edit-new').click(function(e) {
+            $('#edit-new').click(function(_e) {
                 $('#edit_new_dialog').dialog('open')  
             })
             //#endregion
@@ -697,7 +709,7 @@
                 $('#node-input-packageList').editableList({
                     addItem: addPackageRow, // function
                     removeItem: removePackageRow, // function(data){},
-                    resizeItem: function(row,index) {},
+                    resizeItem: function(_row,_index) {},
                     header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
                     height: 'auto',
                     addButton: true,
@@ -737,6 +749,7 @@
 
         }, // ---- End of oneditprepare ---- //
 
+        /** Runs before save */
         oneditsave: function() {
             // xfer the editor text back to the template var
             //$('#node-input-template').val(this.editor.getValue())
@@ -746,8 +759,9 @@
                 delete uiace.editor
                 uiace.editorLoaded = false
             }
-        },
+        }, // ---- End of oneditsave ---- //
 
+        /** Runs before cancel */
         oneditcancel: function() {
             // Get rid of the editor
             if ( uiace.editorLoaded === true ) {
@@ -755,10 +769,10 @@
                 delete uiace.editor
                 uiace.editorLoaded = false
             }
-        },
+        }, // ---- End of oneditcancel ---- //
 
         /** Handle window resizing for the editor */
-        oneditresize: function(size) {
+        oneditresize: function(_size) {
             //console.log('RESIZE', size)
             if ( uiace.editorLoaded === true ) {
                 /**
@@ -774,14 +788,15 @@
                 for (var i=0; i<rows.length; i++) {
                     height -= $(rows[i]).outerHeight(true)
                 }
-                var editorRow = $("#dialog-form>div.node-text-editor-row")
-                height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")))
+                var editorRow = $('#dialog-form>div.node-text-editor-row')
+                height -= (parseInt(editorRow.css('marginTop'))+parseInt(editorRow.css('marginBottom')))
                 //$('.node-text-editor').css('height',height+'px')
                 $('#node-input-template-editor').css('height',height+'px')
                 uiace.editor.resize()
             }
-        },
-    })
+        }, // ---- End of oneditcancel ---- //
+
+    }) // ---- End of registerType() ---- //
 
 </script>
 
