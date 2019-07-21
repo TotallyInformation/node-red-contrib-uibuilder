@@ -116,15 +116,6 @@ module.exports = function(RED) {
     /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
     const httpNodeRoot = uib.nodeRoot = RED.settings.httpNodeRoot
 
-    // TODO remove all references to uib_globalSettings
-    /** Default uibuilder global settings - DEPRECATED - to be removed
-     * @typedef {Object} globalSettings
-     * @prop {string[]} packages List of packages made available globally to the front-end (npm package name)
-     * @prop {string} template - Which master template folder to use (index.{html|js|css})
-     * @prop {boolean} debug - Should debug output be turned on?
-     */
-    var uib_globalSettings = {}
-
     //#region ----- back-end debugging ----- //
     log = RED.log
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
@@ -344,7 +335,7 @@ module.exports = function(RED) {
         //#endregion ----- Express Middleware ----- //
 
         //#region ----- Create instance local folder structure ----- //
-        var customStatic = function(req,res,next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
+        var customStatic = function(req, res, next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
         var customFoldersOK = true
         try {
             fs.mkdirSync(node.customFolder)
@@ -582,7 +573,7 @@ module.exports = function(RED) {
                 // Add topic from node config if present and not present in msg
                 if ( !(msg.hasOwnProperty('topic')) || msg.topic === '' ) {
                     if ( node.topic !== '' ) msg.topic = node.topic
-                    else msg.topic = 'uibuilder'
+                    else msg.topic = uib.moduleName
                 }
             }
 
@@ -934,7 +925,7 @@ module.exports = function(RED) {
         // TODO: Add path validation - Also, file should always exist to check that
         const fullname = path.join(uib.rootFolder, req.body.url, folder, req.body.fname)
 
-        fs.writeFile(fullname, req.body.data, function (err, data) {
+        fs.writeFile(fullname, req.body.data, function (err, _data) {
             if (err) {
                 // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
                 log.error(`[${req.body.url}:uibputfile] Admin API. File write FAIL for ${req.body.fname}`, err)
@@ -1190,7 +1181,7 @@ module.exports = function(RED) {
                 var otherPaths = [], uibPaths = []
                 var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
                 // req.app._router.stack.forEach( function(r, i, stack) { // shows Node-RED admin server paths
-                app._router.stack.forEach( function(r, i, stack) { // shows Node-RED user server paths
+                app._router.stack.forEach( function(r, _i, _stack) { // shows Node-RED user server paths
                     let rUrl = r.regexp.toString().replace(urlRe, '')
                     if ( rUrl === '' ) {
                         uibPaths.push( {
@@ -1483,7 +1474,7 @@ module.exports = function(RED) {
                     if ( uib.installedPackages.hasOwnProperty(params.package) ) success = true
                     if (success === true) {
                         // Add an ExpressJS URL
-                        uiblib.servePackage(params.package, uib, userDir, log, app, serveStatic)
+                        uiblib.servePackage(params.package, uib, userDir, log, app)
                     }
                     break
                 }
@@ -1493,7 +1484,7 @@ module.exports = function(RED) {
                     if ( ! uib.installedPackages.hasOwnProperty(params.package) ) success = true
                     if (success === true) {
                         // Remove ExpressJS URL
-                        uiblib.unservePackage(params.package, uib, userDir, log, app, serveStatic)
+                        uiblib.unservePackage(params.package, uib, userDir, log, app)
                     }
                     break
                 }
@@ -1519,6 +1510,6 @@ module.exports = function(RED) {
 
     //#endregion --- Admin API's ---
 
-} // ==== End of module.exports ==== //
+} // ==== End of module.exports ==== // 
 
 // EOF
