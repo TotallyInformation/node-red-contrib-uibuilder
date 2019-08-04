@@ -697,7 +697,7 @@ module.exports = function(RED) {
         fs.readdir(srcFolder, {withFileTypes: true}, (err, files) => {
             if ( err ) {
                 log.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
-                console.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
+                //console.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
                 res.statusMessage = err
                 res.status(500).end()
                 return
@@ -825,17 +825,27 @@ module.exports = function(RED) {
 
         log.trace(`[uibgetfile:${req.query.url}] Admin API. File get requested for ${folder}/${req.query.fname}`)
 
-        // Send back a plain text response body containing content of the file
-        res.type('text/plain').sendFile(
-            req.query.fname, 
-            {
-                // Prevent injected relative paths from escaping `src` folder
-                'root': path.join(uib.rootFolder, req.query.url, folder),
-                // Turn off caching
-                'lastModified': false, 
-                'cacheControl': false
-            }
-        )
+        const filePathRoot = path.join(uib.rootFolder, req.query.url, folder)
+        const filePath = path.join(filePathRoot, req.query.fname)
+
+        // Does the file exist?
+        if ( fs.existsSync(filePath) ) {
+            // Send back a plain text response body containing content of the file
+            res.type('text/plain').sendFile(
+                req.query.fname, 
+                {
+                    // Prevent injected relative paths from escaping `src` folder
+                    'root': filePathRoot,
+                    // Turn off caching
+                    'lastModified': false, 
+                    'cacheControl': false
+                }
+            )
+        } else {
+            log.error(`[uibgetfile] Admin API. File does not exist '${filePath}'.`)
+            res.statusMessage = 'File does not exist'
+            res.status(500).end()
+        }
     }) // ---- End of uibgetfile ---- //
 
     /** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/<folder>` folder
