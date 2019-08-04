@@ -10,10 +10,10 @@ This is the design note for part 2 of enabling source file editing from the Node
 ----
 ## IN PROGRESS
 
-* Code tidy
-* Migration tooling
-* Documentation update
-* Use [Glob](https://www.npmjs.com/package/glob) to enhance the source files list.
+* Final tests:
+  
+   * New install (flags correct?)
+   * Upgrade (instructions correct?)
 
 ### To Fix
 
@@ -23,6 +23,7 @@ This is the design note for part 2 of enabling source file editing from the Node
 * [Minor] Admin ui: In file editor, cannot currently rename files.
 * [Minor] Admin ui: In file editor, none-text files cannot be handled but we want them so we can upload/rename/delete them.
 * [Minor] Admin ui: Improve admin user notifications for install/remove packages
+* [Minor] Use [Glob](https://www.npmjs.com/package/glob) to enhance the source files list.
 
 * ~~Add new middleware processing~~
 * ~~Admin ui: add close button~~

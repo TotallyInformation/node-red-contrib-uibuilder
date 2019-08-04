@@ -16,6 +16,7 @@
  **/
 'use strict'
 
+//#region ------ Require packages ------ //
 // Utility library for uibuilder
 const uiblib        = require('./uiblib')
 // General purpose library (by Totally Information)
@@ -28,7 +29,9 @@ const fs            = require('fs-extra')
 //const events        = require('events')
 const child_process = require('child_process')
 
-// uibuilder module-level globals
+//#endregion ----- Require packages ----- //
+
+//#region ------ uibuilder module-level globals ------ //
 const uib = {
     /** Contents of uibuilder's package.json file */
     me: fs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
@@ -68,6 +71,7 @@ const uib = {
     configFolder: null,
     commonFolder: null,
 }
+
 /** Current module version (taken from package.json) @constant {string} uib.version */
 uib.version = uib.me.version
 
@@ -85,6 +89,8 @@ var log = dummyLog // reset to RED.log or anything else you fancy at any point
 
 // Placeholder - set in export
 var userDir = ''
+
+//#endregion ----- uibuilder module-level globals ----- //
 
 /** Export the function that defines the node */
 module.exports = function(RED) {
@@ -235,12 +241,14 @@ module.exports = function(RED) {
     // the default index.html page can be utilised.
     //#endregion -------- master resources --------
 
-    RED.log.info('+-----------------------------------------------------')
-    RED.log.info(`| ${uib.moduleName} initialised:`)
-    RED.log.info(`|   root folder: ${uib.rootFolder}`)
-    RED.log.info(`|   version . .: ${uib.version}`)
-    RED.log.info(`|   packages . : ${Object.keys(uib.installedPackages)}`)
-    RED.log.info('+-----------------------------------------------------')
+    { // Output startup info to Node-RED log
+        RED.log.info('+-----------------------------------------------------')
+        RED.log.info(`| ${uib.moduleName} initialised:`)
+        RED.log.info(`|   root folder: ${uib.rootFolder}`)
+        RED.log.info(`|   version . .: ${uib.version}`)
+        RED.log.info(`|   packages . : ${Object.keys(uib.installedPackages)}`)
+        RED.log.info('+-----------------------------------------------------')
+    }
 
     /** Run the node instance - called from registerType()
      * @param {Object} config The configuration object passed from the Admin interface (see the matching HTML file)
@@ -382,7 +390,7 @@ module.exports = function(RED) {
         }
 
         //#region Add static path for instance local custom files
-        // TODO: need a build capability for dist - nb probably keep vendor and private code separate
+        // TODO: (v2.1) need a build capability for dist - nb probably keep vendor and private code separate
         try {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
             fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
@@ -464,7 +472,7 @@ module.exports = function(RED) {
                 }
 
                 // Send out the message for downstream flows
-                // TODO: This should probably have safety validations!
+                // TODO: (v2.1) This should probably have safety validations!
                 node.send(msg)
             })
             socket.on(node.ioChannels.control, function(msg) {
@@ -604,20 +612,7 @@ module.exports = function(RED) {
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
-    RED.nodes.registerType(uib.moduleName, nodeGo, {
-        // see userDir/settings.js - makes the settings available to the admin ui
-        /* settings: {
-            uibuilder: {
-                value: {
-                    'userVendorPackages': userVendorPackages,
-                    'debug': false,
-                    //middleware: function(req,res,next){next()},
-                    //socketmiddleware: function(socket,next){next()},
-                },
-                exportable: true
-            }
-        } */
-    })
+    RED.nodes.registerType(uib.moduleName, nodeGo)
 
     //#region --- Admin API's ---
 
@@ -659,7 +654,7 @@ module.exports = function(RED) {
             res.status(500).end()
             return
         }
-        // TODO: Does the url exist?
+        // TODO: (v2.1) Does the url exist?
 
         var folder = params.folder || 'src'
         if ( folder !== 'src' && folder !== 'dist' && folder !== 'root' ) {
@@ -694,7 +689,7 @@ module.exports = function(RED) {
         }
 
         // Get the file list - note, ignore errors for now
-        // TODO: Need to filter out folders. Or better, flatten and allow sub-folders.
+        // TODO: (v2.1) Need to filter out folders. Or better, flatten and allow sub-folders.
         // @ts-ignore
         fs.readdir(srcFolder, {withFileTypes: true}, (err, files) => {
             if ( err ) {
@@ -922,7 +917,7 @@ module.exports = function(RED) {
         
         log.trace(`[${req.body.url}:uibputfile] Admin API. File put requested for ${req.body.fname}`)
 
-        // TODO: Add path validation - Also, file should always exist to check that
+        // TODO: (v2.1) Add path validation - Also, file should always exist to check that
         const fullname = path.join(uib.rootFolder, req.body.url, folder, req.body.fname)
 
         fs.writeFile(fullname, req.body.data, function (err, _data) {
@@ -947,7 +942,7 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.get('/uibnewfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
         //#region --- Parameter validation ---
-        // TODO standardise param validation, move to functions
+        // TODO (v2.1) standardise param validation, move to functions
         const params = req.query
         // We have to have a url to work with
         if ( params.url === undefined ) {
@@ -1016,7 +1011,7 @@ module.exports = function(RED) {
             return
         }
         // folder can only be one of: 'src', 'dist', 'root'
-        // TODO: Allow for sub-folders in src & dist
+        // TODO: (v2.1) Allow for sub-folders in src & dist
         switch ( folder ) {
             case 'src':
             case 'dist':
@@ -1034,7 +1029,7 @@ module.exports = function(RED) {
         
         log.trace(`[${params.url}:uibnewfile] Admin API. File create requested for ${folder}/${params.fname}`)
 
-        // TODO: Add path validation - Also, file should always exist to check that
+        // TODO: (v2.1) Add path validation - Also, file should always exist to check that
         const fullname = path.join(uib.rootFolder, params.url, folder, params.fname)
 
         try {
@@ -1058,7 +1053,7 @@ module.exports = function(RED) {
      **/
     RED.httpAdmin.get('/uibdeletefile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
         //#region --- Parameter validation ---
-        // TODO standardise param validation, move to functions
+        // TODO: (v2.1) standardise param validation, move to functions
         const params = req.query
         // If the url query param is invalid, exit (res.status was set in function)
         if ( uiblib.checkUrl(params.url, res, 'uibdeletefile', log) === false ) return
@@ -1101,7 +1096,7 @@ module.exports = function(RED) {
             return
         }
         // folder can only be one of: 'src', 'dist', 'root'
-        // TODO: Allow for sub-folders in src & dist
+        // TODO: (v2.1) Allow for sub-folders in src & dist
         switch ( folder ) {
             case 'src':
             case 'dist':
@@ -1119,7 +1114,7 @@ module.exports = function(RED) {
         
         log.trace(`[${params.url}:uibdeletefile] Admin API. File delete requested for ${folder}/${params.fname}`)
 
-        // TODO: Add path validation - Also, file should always exist to check that
+        // TODO: (v2.1) Add path validation - Also, file should always exist to check that
         const fullname = path.join(uib.rootFolder, params.url, folder, params.fname)
 
         try {
@@ -1394,7 +1389,7 @@ module.exports = function(RED) {
         }
         //#endregion ---- ----
         
-        // TODO add optional url param that must be an active uibuilder url name
+        // TODO: (v2.1) add optional url param that must be an active uibuilder url name
         const folder = userDir
 
         log.info(`[uibuilder/uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package}`)

@@ -57,7 +57,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '2.0.0-beta1'
+        self.version = '2.0.0-beta3'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
 
