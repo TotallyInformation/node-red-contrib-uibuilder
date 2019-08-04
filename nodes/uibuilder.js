@@ -707,7 +707,7 @@ module.exports = function(RED) {
                 res.json(
                     files
                         .filter(fname => {
-                            let stat = fs.statSync(fname)
+                            let stat = fs.statSync( path.join(srcFolder, fname) )
                             return !stat.isDirectory()
                         })
                 )
