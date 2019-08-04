@@ -66,15 +66,15 @@
     "notyetnodes": {}
   },
   "dependencies": {
-    "bootstrap-vue": "^2.0.0-rc.23",
-    "fs-extra": "^8.0.1",
+    "bootstrap-vue": "^2.0.0-rc.27",
+    "fs-extra": "^8.1.0",
     "serve-index": "^1.9.1",
     "serve-static": "^1.14.1",
     "socket.io": "^2.2.0",
     "vue": "^2.6.10"
   },
   "devDependencies": {
-    "@types/jquery": "^3.3.29",
+    "@types/jquery": "^3.3.30",
     "@types/node-red": "^0.20.0",
     "replace-in-file": "^3.4.4",
     "uglify-js": "^3.6.0"
