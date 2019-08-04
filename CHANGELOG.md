@@ -1,4 +1,4 @@
-## v2.0.0-beta3
+## v2.0.0-beta3.1
 
 **NOTE: This is the final planned beta.**
 
