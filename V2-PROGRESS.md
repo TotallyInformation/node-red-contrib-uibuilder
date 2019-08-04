@@ -32,6 +32,10 @@ This is the design note for part 2 of enabling source file editing from the Node
 * [~~Minor~~ Fixed] fe: server time offset not working even though the 'client connect' control message from the server includes `msg.serverTimestamp`
 * [~~Minor~~ Fixed] Admin ui default text for advanced is "Path & Module Details", code sets it to "Path & Module Info"
 
+## Moved to v2.1 (or above)
+
+* Add "middleware" similar to the `webSocketNodeVerifyClient` in `settings.js` to allow checks on incoming messages.
+
 ----
 
 ## The Details

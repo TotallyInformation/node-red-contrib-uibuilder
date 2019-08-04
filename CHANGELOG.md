@@ -1,6 +1,40 @@
-## v2.0.0-beta2
+## v2.0.0-beta3
 
 Note that v2 is now very close to completion. Please test it out if you can.
+
+Final list of breaking changes between v1.2.2 and v2.0.0
+
+* The minimum supported version of Node.JS is now v8.6.
+
+* Settings in `<userDir>/settings.js` are no longer used, you should probably remove them to save confusion.
+
+* The folder used for configuration settings and your front-end code is found at `<userDir>/uibuilder/` (e.g. `~/.node-red/uibuilder/`) if projects are not being used. Alternatviely, it is at `<userDir>/projects/<projectName>/uibuilder` if using projects. This folder is refered to in the documentation as `<uibRoot>`
+  
+* Configuration files are found in `<uibRoot>/.config`
+  
+* In your front-end `index.html` file, _all_ of the master vendor files (deployed to `<userdir>`) now use a common URL style `../uibuilder/vendor/---` rather than the previous `./vendor/---`. You **must** update your html accordingly.
+
+   Also note that the socket.io client also uses this pattern. This allows it to take into account your `httpNodeRoot` setting which wasn't possible previously.
+
+* There is now a folder you can use to make common front-end code available to all instances of uibuilder. It is found in `<uibRoot>/common/`. That folder is mounted to the `../uibuilder/common/` URL.
+  
+* ExpressJS and Socket.IO middleware can be added to the `<uibRoot>/.config` folder. Dummy template files are provided. Limitations are listed in the comments of the templates. Any middleware specified in `settings.js` is ignored. If you want to use the same middleware as for `httpNodeMiddleware`, alter settings.js to read the uibuilder middleware file. The ExpressJS middleware files are `<uibRoot>/.commonMiddleware.js` and/or `<uibRoot>/<instanceName>/.middleware.js`. The socket.io middleware files are  `<uibRoot>/.commonIoMiddleware.js` and/or `<uibRoot>/<instanceName>/.ioMiddleware.js`.
+
+* Logging no longer users Winston and you can delete any log files previously created. Logging is now integrated with Node-RED logs. To get more detailed uibuilder logs, change the Node-RED log settings in `settings.js`.
+  
+  This should generally no longer be necessary. If you are unsure about what uibuilder is doing (e.g. what URL's it is serving and from which source folders), please use the provided API at `http<s>:<server>:<port>/<httpAdminRoot>/uibindex`. All instances of the uibuilder Node have a link to this called "Detailed Information". Access to this page is secured with the same settings as the Node-RED Editor (admin ui).
+  
+* In the front-end library (`uibuilderfe.js`):
+
+  * You now **MUST** initialise the library yourself by including the code `uibuilder.start()` as early as possible.
+    
+    This allows the socket.io namespace and ioPath to be overwritten which is important if you want to use code that is not in the instance root folder. E.g. (where your nodes URL is set to `myurl` and `httpNodeRoot` is set to `nr`) `<uibRoot>/myurl/src/myfolder`, in this case you would start the library with `uibuilder.start('/nr/myurl', '/nr/uibuilder/vendor/socket.io')`. If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages (see your browser's developer console), you probably got this wrong.
+
+    This also allows you to write front-end code to interact with uibuilder from a completely separate web server! Though you may have to mess with CORS settings.
+
+  * The variable `sentMsg` now only contains a copy of the last standard message sent back to the Node-RED server. `sentCtrlMsg` is a new varible that contains a copy of the last control message sent. If you want to track these in your front-end code, monitor them with `uibuilder.onChange('sentMsg', function(newVal){ ... })` and `uibuilder.onChange('sentCtrlMsg', function(newVal){ ... })`. See the default template for details. `msgsSent` and `msgsSentCtrl` are updated accordingly and contain the count of messages since the last page reload.
+
+  * If you have a difference in timezones between your Node-RED server and your client browsers, you can track this with the `serverTimeOffset` variable which is the number of hours that the server is different to the client. Use as `uibuilder.onChange('serverTimeOffset', function(newVal){ ... })`.
 
 ## v2.0.0-beta1
 
@@ -77,7 +111,7 @@ Since the URI's for uibuilder have changed between v1 and v2, I've created [a WI
 
 
 
-## v2.0.0
+## v2.0.0 (pre-dev)
 
 * **BREAKING CHANGE** Vendor `app.use` paths moved from instance level to module level so only done once. This means that you have to change your `index.html` file. Where before you might have had something like `<link rel="stylesheet" href="./vendor/normalize.css/normalize.css">`, that must now change to `<link rel="stylesheet" href="../uibuilder/vendor/normalize.css/normalize.css">`. Any link that started like `./vendor` must be changed to `../uibuilder/vendor`.
 
