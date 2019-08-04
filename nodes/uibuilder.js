@@ -70,6 +70,9 @@ const uib = {
     /** Locations for uib config and common folders - set once rootFolder is finalised */
     configFolder: null,
     commonFolder: null,
+    /** What version of Node.JS are we running under? Impacts some file processing. 
+     * @type {Array.<number|string>} */
+    nodeVersion: process.version.replace('v','').split('.')
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -700,11 +703,21 @@ module.exports = function(RED) {
                 return
             }
             // Send back a JSON response body containing the list of files that can be edited
-            res.json(
-                files
-                    .filter(dirent => !dirent.isDirectory())
-                    .map(dirent => dirent.name)
-            )
+            if ( uib.nodeVersion[0] < 10 ) {
+                res.json(
+                    files
+                        .filter(fname => {
+                            let stat = fs.statSync(fname)
+                            return !stat.isDirectory()
+                        })
+                )
+            } else {
+                res.json(
+                    files
+                        .filter(dirent => !dirent.isDirectory())
+                        .map(dirent => dirent.name)
+                )
+            }
         })
 
     }) // ---- End of uibfiles ---- //
