@@ -12,7 +12,7 @@ Final list of breaking changes between v1.2.2 and v2.0.0
   
 * Configuration files are found in `<uibRoot>/.config`
   
-* In your front-end `index.html` file, _all_ of the master vendor files (deployed to `<userdir>`) now use a common URL style `../uibuilder/vendor/---` rather than the previous `./vendor/---`. You **must** update your html accordingly.
+* **In your front-end `index.html` file, _all_ of the master vendor files (deployed to `<userDir>`) now use a common URL style `../uibuilder/vendor/---` rather than the previous `./vendor/---`. You MUST update your html accordingly.**
 
    Also note that the socket.io client also uses this pattern. This allows it to take into account your `httpNodeRoot` setting which wasn't possible previously.
 
