@@ -1,6 +1,6 @@
 ## v2.0.0-beta3
 
-Note that v2 is now very close to completion. Please test it out if you can.
+**NOTE: This is the final planned beta.**
 
 Final list of breaking changes between v1.2.2 and v2.0.0
 
