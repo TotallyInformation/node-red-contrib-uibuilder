@@ -53,7 +53,7 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
     * [2.1. Install](#21-install)
     * [2.2. Simple flow](#22-simple-flow)
     * [2.3. Edit the source files](#23-edit-the-source-files)
-    * [2.4. The WIKI](#24-the-wiki)
+    * [2.4. Additional Documentation in the WIKI](#24-additional-documentation-in-the-wiki)
   * [3. Features](#3-features)
   * [4. Known Issues](#4-known-issues)
   * [5. Discussions and suggestions](#5-discussions-and-suggestions)
@@ -89,9 +89,19 @@ From the node's admin ui, click on "Edit Source Files" to see the front-end code
 
 [VueJS](https://github.com/vuejs/vue#readme), [bootstrap](https://getbootstrap.com/) and [bootstrap-vue](https://bootstrap-vue.js.org/) make for a really easy to use initial setup that is very easy to use but powerful to build any kind of web user interface.
 
-### 2.4. The WIKI
+### 2.4. Additional Documentation in the WIKI
 
 Check out the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki) for more information, help and examples.
+
+In addition to various examples, the WIKI includes:
+
+* [v2 URL Paths](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths)
+* [v2 Breaking Changes](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/v2-Breaking-Changes)
+* [Structure & type of control messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure)
+* [Front-end library available properties & methods](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Front-End-Library---available-properties-and-methods)
+* [How to cache and replay messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)
+* [Creating pages in sub-folders](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Create-a-web-page-in-a-sub-path)
+* [Getting Started with VueJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Getting-Started-with-VueJS)
 
 _[back to top](#contents)_
 

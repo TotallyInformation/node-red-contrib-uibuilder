@@ -2,7 +2,7 @@
 
 **NOTE: This is the final planned beta.**
 
-Final list of breaking changes between v1.2.2 and v2.0.0
+Final list of breaking changes between v1.2.2 and v2.0.0 - note that a complete list is [available in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/v2-Breaking-Changes).
 
 * The minimum supported version of Node.JS is now v8.6.
 
@@ -51,6 +51,9 @@ Final list of breaking changes between v1.2.2 and v2.0.0
   * If you have a difference in timezones between your Node-RED server and your client browsers, you can track this with the `serverTimeOffset` variable which is the number of hours that the server is different to the client. 
     
     Use as `uibuilder.onChange('serverTimeOffset', function(newVal){ ... })`.
+
+There is a [summary of the URL paths used by uibuilder v2 in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths).
+
 
 ## v2.0.0-beta1
 
