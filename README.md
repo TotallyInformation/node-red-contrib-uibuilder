@@ -73,7 +73,9 @@ There is a lot more information available in the [WIKI](https://github.com/Total
 
 To install the current live version, please use Node-RED's Palette Manager.
 
-To install a specific development or test branch from GitHub, use `npm install TotallyInformation/node-red-contrib-uibuilde#<BRANCH-NAME> --save` from the command line on the server, having first changed to the `userDir` folder (normally `~/.node-red`).
+To install a specific development or test branch from GitHub, use `npm install TotallyInformation/node-red-contrib-uibuilder#<BRANCH-NAME> --save` from the command line on the server, having first changed to the `userDir` folder (normally `~/.node-red`).
+
+To install a specific release from npm, use `npm install node-red-contrib-uibuilder@<VERSION>`. In addition to release versions (e.g. 1.2.2), you can also use `latest` and `v1-last`. Sometimes, `next` may also be available. Check out the [Versions tab](https://www.npmjs.com/package/node-red-contrib-uibuilder?activeTab=versions) on the npm site for available versions.
 
 ### 2.2. Simple flow
 
