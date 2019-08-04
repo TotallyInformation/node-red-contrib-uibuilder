@@ -707,8 +707,12 @@ module.exports = function(RED) {
                 res.json(
                     files
                         .filter(fname => {
-                            let stat = fs.statSync( path.join(srcFolder, fname) )
-                            return !stat.isDirectory()
+                            try {
+                                let stat = fs.statSync( path.join(srcFolder, fname) )
+                                return !stat.isDirectory()
+                            } catch (e) {
+                                log.error(`[uibfiles] Admin API. stat failed for '${fname}' in '${srcFolder}'.`, e)
+                            }
                         })
                 )
             } else {
