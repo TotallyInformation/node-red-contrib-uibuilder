@@ -36,12 +36,12 @@ Final list of breaking changes between v1.2.2 and v2.0.0
 
   * You now **MUST** initialise the library yourself by including the code `uibuilder.start()` as early as possible.
     
-    This allows the socket.io namespace and ioPath to be overwritten which is important if you want to use code that is not in the instance root folder. 
-    
     e.g. (where your nodes URL is set to `myurl` and `httpNodeRoot` is set to `nr`) `<uibRoot>/myurl/src/myfolder`, in this case you would start the library with `uibuilder.start('/nr/myurl', '/nr/uibuilder/vendor/socket.io')`. 
-    
+
     If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages (see your browser's developer console), you probably got this wrong.
 
+    This allows the socket.io namespace and ioPath to be overwritten which is important if you want to use code that is not in the instance root folder.     
+    
     This also allows you to write front-end code to interact with uibuilder from a completely separate web server! Though you may have to mess with CORS settings.
 
   * The variable `sentMsg` now only contains a copy of the last standard message sent back to the Node-RED server. `sentCtrlMsg` is a new varible that contains a copy of the last control message sent. 
