@@ -10,17 +10,21 @@ The [main To Do list is now in the WIKI](https://github.com/TotallyInformation/n
 * If using Node-RED's "projects" feature, each project now gets its own `uibuilder` folder. Without projects, this is located at `<userDir>/uibuilder/`. With projects, it will be located at `<userDir>/projects/<projectName>/uibuilder/`. **This location will now be referred to as `<uibRoot>`**.
 
 ----
-## IN PROGRESS
-
-* Final tests:
-  
-   * New install (flags correct?)
-   * Upgrade (instructions correct?)
 
 ### To Fix
 
+Feedback from [this thread](https://discourse.nodered.org/t/uibuilder-v2-now-published-to-npm-under-the-next-tag/13998/13):
+
+* [x] [Major] Default VueJS template Javascript contains some ES6 rather than ES5 (`const`,`let` replaced by `var`)
+* [x] [Minor] Admin ui: Most links don't force target=_blank in panel and help.
+* [x] [Minor] Admin ui: New file creation dialogue, button says "New", change to "Create".
+* [x] [Minor] Admin ui: better documentation - esp. in regard to full-screen button. (Added to help panel)
+* [x] [Minor] Documentation: Note about bootstrap warning (ignore)
+* [ ] [Major] Admin ui: Full-screen editor only uses Javascript language instead of inheriting the correct language (e.g. html)
+
+Other (likely delayed to v2.1):
+
 * [Minor] Admin ui/uiblib.checkInstalledPackages: Pass package file read errors back to admin ui. Currently only shows in Node-RED log.
-* [Major] Admin ui: copy index flag not set to true by default?
 * [Minor] Admin ui: In file editor, cannot currently edit files in sub-folders of src/dist. Also cannot create/delete/rename sub-folders.
 * [Minor] Admin ui: In file editor, cannot currently rename files.
 * [Minor] Admin ui: In file editor, none-text files cannot be handled but we want them so we can upload/rename/delete them.
@@ -36,7 +40,7 @@ The [main To Do list is now in the WIKI](https://github.com/TotallyInformation/n
 
 ## Moved to v2.1 (or above)
 
-* Add "middleware" similar to the `webSocketNodeVerifyClient` in `settings.js` to allow checks on incoming messages.
+Please see the [To Do page in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/To-Do).
 
 ----
 

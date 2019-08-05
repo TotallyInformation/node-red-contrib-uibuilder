@@ -1,8 +1,21 @@
-## v2.0.0-beta3.1
+## v2.0.0-beta3.3
 
 **NOTE: This is the final planned beta.**
 
 Final list of breaking changes between v1.2.2 and v2.0.0 - note that a complete list is [available in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/v2-Breaking-Changes).
+
+**ISSUES**: There is currently one known issue in this realease:
+
+* [ ] [Major] Admin ui: Full-screen editor only uses Javascript language instead of inheriting the correct language (e.g. html)
+
+
+* Bug fixes
+  
+  * [x] [Major] Default VueJS template Javascript contains some ES6 rather than ES5 (`const`,`let` replaced by `var`)
+  * [x] [Minor] Admin ui: Most links don't force target=_blank in panel and help.
+  * [x] [Minor] Admin ui: New file creation dialogue, button says "New", change to "Create".
+  * [x] [Minor] Admin ui: better documentation - esp. in regard to full-screen button. (Added to help panel)
+  * [x] [Minor] Documentation: Note about bootstrap warning (ignore)
 
 * The minimum supported version of Node.JS is now v8.6.
 
