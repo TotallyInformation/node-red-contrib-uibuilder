@@ -1,5 +1,5 @@
-/* jshint browser: true, esversion: 5 */
-/* globals document,Vue,window,uibuilder */
+/* jshint browser: true, esversion: 5, asi: true */
+/* globals Vue,uibuilder */
 // @ts-nocheck
 /*
   Copyright (c) 2019 Julian Knight (Totally Information)
@@ -21,7 +21,7 @@
 /** @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Front-End-Library---available-properties-and-methods */
 
 // eslint-disable-next-line no-unused-vars
-const app1 = new Vue({
+var app1 = new Vue({
     el: '#app',
     data: {
         startMsg    : 'Vue has started, waiting for messages',
@@ -45,22 +45,22 @@ const app1 = new Vue({
     }, // --- End of data --- //
     computed: {
         hLastRcvd: function() {
-            const msgRecvd = this.msgRecvd
+            var msgRecvd = this.msgRecvd
             if (typeof msgRecvd === 'string') return 'Last Message Received = ' + msgRecvd
             else return 'Last Message Received = ' + this.syntaxHighlight(msgRecvd)
         },
         hLastSent: function() {
-            const msgSent = this.msgSent
+            var msgSent = this.msgSent
             if (typeof msgSent === 'string') return 'Last Message Sent = ' + msgSent
             else return 'Last Message Sent = ' + this.syntaxHighlight(msgSent)
         },
         hLastCtrlRcvd: function() {
-            const msgCtrl = this.msgCtrl
+            var msgCtrl = this.msgCtrl
             if (typeof msgCtrl === 'string') return 'Last Control Message Received = ' + msgCtrl
             else return 'Last Control Message Received = ' + this.syntaxHighlight(msgCtrl)
         },
         hLastCtrlSent: function() {
-            const msgCtrlSent = this.msgCtrlSent
+            var msgCtrlSent = this.msgCtrlSent
             if (typeof msgCtrlSent === 'string') return 'Last Control Message Sent = ' + msgCtrlSent
             //else return 'Last Message Sent = ' + this.callMethod('syntaxHighlight', [msgCtrlSent])
             else return 'Last Control Message Sent = ' + this.syntaxHighlight(msgCtrlSent)
@@ -70,7 +70,7 @@ const app1 = new Vue({
         increment: function() {
             // Increment the count by one
             this.counterBtn = this.counterBtn + 1
-            let topic = this.msgRecvd.topic || 'uibuilder/vue'
+            var topic = this.msgRecvd.topic || 'uibuilder/vue'
             uibuilder.send( {
                 'topic': topic,
                 'payload': {
@@ -85,7 +85,7 @@ const app1 = new Vue({
         // return formatted HTML version of JSON object
         syntaxHighlight: function(json) {
             json = JSON.stringify(json, undefined, 4)
-            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
                 var cls = 'number'
                 if (/^"/.test(match)) {
