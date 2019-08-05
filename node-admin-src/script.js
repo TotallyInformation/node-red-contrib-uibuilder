@@ -631,7 +631,7 @@
                 autoOpen:false, modal:true, closeOnEscape:true,
                 buttons: [
                     {
-                        text: 'New',
+                        text: 'Create',
                         id: 'edit_new_dialog_new',
                         click: function() {
                             // NB: Button is disabled unless name.length > 0 so don't need to check here
