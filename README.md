@@ -77,6 +77,12 @@ To install a specific development or test branch from GitHub, use `npm install T
 
 To install a specific release from npm, use `npm install node-red-contrib-uibuilder@<VERSION>`. In addition to release versions (e.g. 1.2.2), you can also use `latest` and `v1-last`. Sometimes, `next` may also be available. Check out the [Versions tab](https://www.npmjs.com/package/node-red-contrib-uibuilder?activeTab=versions) on the npm site for available versions.
 
+**NOTE**: When installing v2.x, you may get a warning from the install:
+
+> `npm WARN bootstrap@4.3.1 requires a peer of jquery@1.9.1 - 3 but none is installed. You must install peer dependencies yourself`
+
+It is safe to ignore that warning unless you want to take control of bootstrap yourself since vue-bootstrap doesn't actually need it.
+
 ### 2.2. Simple flow
 
 Once installed, add a simple flow consisting of a trigger, a uibuilder and a debug node all connected in order. Deploy the changes then double click on the uibuilder node, click "Advanced" and then click on "Path & Module Info" then click on the web page url. 
