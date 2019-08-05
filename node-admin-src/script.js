@@ -446,8 +446,8 @@
             $('#node-input-url').change(function () {
                 // Show the root URL
                  // @ts-ignore Cannot find name 'RED'.ts(2304)
-                $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
-                $('#node-input-showfolder-url').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '/idx">' + RED.settings.httpNodeRoot + $(this).val() + '/idx</a>')
+                $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '" target="_blank">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
+                $('#node-input-showfolder-url').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '/idx" target="_blank">' + RED.settings.httpNodeRoot + $(this).val() + '/idx</a>')
             })
 
             // Show/Hide the advanced settings
@@ -660,7 +660,10 @@
             $('#node-function-expand-js').click(function(e) {
                 e.preventDefault()
                 var value = uiace.editor.getValue()
-                //@ts-ignore Cannot find name 'RED'.ts(2304)
+
+                // TODO: Don't use editJavaScript as it might not be! Need to rewrite.
+                console.log('**** ' + uiace.format + ' **** ', uiace.editor.mode)
+
                 RED.editor.editJavaScript({
                     value: value,
                     width: 'Infinity',
