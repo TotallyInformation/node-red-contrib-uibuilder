@@ -371,7 +371,7 @@
      * @param {*} value The url value to validate
      * @returns {boolean} true = valid
      **/
-    function validateUrl(value){
+    function validateUrl(value) {
         // NB: `this` is the node instance configuration as at last press of Done
         // TODO: Add display comment to help user
 
@@ -414,6 +414,51 @@
         }
 
     } // --- End of validateUrl --- //
+
+    /** Set the height of the ACE text editor box */
+    function setACEheight() {
+        var height
+
+        if ( uiace.editorLoaded === true ) {
+            if (document.fullscreenElement) {
+                // Force background color and add some padding to keep away from edge
+                $('#edit-props').css('background-color','#f6f6f6').css('padding','1em')
+
+                // Calculate the available height and adjust the editor to fill the ht
+                height = parseInt($('#edit-props').css('height')) // full available height
+                height -= 25
+
+                //console.log('Entered full-screen mode. Element: ', document.fullscreenElement.id, height)
+
+            } else {
+                $('#edit-props').css('background-color','').css('padding','')
+
+                // Full height
+                height = parseInt($('#dialog-form').height())
+                // Subtract info lines
+                height -= parseInt($('#info').height())
+
+                //console.log('Leaving full-screen mode.', height)
+                
+            }
+            
+            // everything but the edit box
+            var rows = $('#edit-props > div:not(.node-text-editor-row)')
+
+            // subtract height of each row from the total
+            for (var i=0; i<rows.length; i++) {
+                height -= $(rows[i]).outerHeight(true)
+            }
+
+            // Set the height of the edit box
+            $('#node-input-template-editor').css('height',height+'px')
+
+            // Get the content to match the edit box size
+            uiace.editor.resize()
+
+        }
+
+    } // --- End of setACEheight --- //
 
     //#endregion ------------------------------------------------- //
 
@@ -497,8 +542,7 @@
                 $('#node-input-template-editor > div.ui-resizable-handle.ui-resizable-s').css({
                     'height': '25px',
                     'bottom': '-25px'
-                }
-                )
+                })
 
                 // @since 2019-01-27 - adding file editor
                 // Build the file list
@@ -532,6 +576,9 @@
                     }) */
                     uiace.editorLoaded = true
 
+                    // Resize to max available height
+                    setACEheight()
+                    
                     // Be friendly and auto-load the initial file via the admin API
                     getFileContents()
                     fileIsClean(true)
@@ -677,23 +724,31 @@
             $('#node-function-expand-js').click(function(e) {
                 e.preventDefault()
                 var value = uiace.editor.getValue()
+                //uiace.editorSession
 
                 // TODO: Don't use editJavaScript as it might not be! Need to rewrite.
-                console.log('**** ' + uiace.format + ' **** ', uiace.editor.mode)
+                console.log('**** ' + uiace.format + ' **** ', uiace.editor)
 
-                RED.editor.editJavaScript({
-                    value: value,
-                    width: 'Infinity',
-                    cursor: uiace.editor.getCursorPosition(),
-                    mode: 'ace/mode/' + uiace.format,
-                    complete: function(v,cursor) {
-                        uiace.editor.setValue(v, -1)
-                        uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
-                        setTimeout(function() {
-                            uiace.editor.focus()
-                        },300)
-                    }
-                })
+                // Select the editor components and make full-screen
+                var viewer = $('#edit-props')[0]
+                var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
+                if (rFS) rFS.call(viewer)
+                
+                // TODO: Add popup if no method is available
+
+                // RED.editor.editJavaScript({
+                //     value: value,
+                //     width: 'Infinity',
+                //     cursor: uiace.editor.getCursorPosition(),
+                //     mode: 'ace/mode/' + uiace.format,
+                //     complete: function(v,cursor) {
+                //         uiace.editor.setValue(v, -1)
+                //         uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
+                //         setTimeout(function() {
+                //             uiace.editor.focus()
+                //         },300)
+                //     }
+                // })
             })
             //#endregion ---- File Editor ---- //
 
@@ -776,27 +831,10 @@
 
         /** Handle window resizing for the editor */
         oneditresize: function(_size) {
-            //console.log('RESIZE', size)
-            if ( uiace.editorLoaded === true ) {
-                /**
-                 * #node-input-template-editor
-                 * #editor-stack > div > div.editor-tray-body-wrapper > div > div:nth-child(2) > div:nth-child(1)
-                 *    .editor-tray-content
-                 */
-                /** Tries to make sure the editor+other visible components don't overflow (cause scroll) 
-                 * Limited by min-height.
-                */
-                var rows = $('#dialog-form>div:not(.node-text-editor-row)')
-                var height = $('#dialog-form').height()
-                for (var i=0; i<rows.length; i++) {
-                    height -= $(rows[i]).outerHeight(true)
-                }
-                var editorRow = $('#dialog-form>div.node-text-editor-row')
-                height -= (parseInt(editorRow.css('marginTop'))+parseInt(editorRow.css('marginBottom')))
-                //$('.node-text-editor').css('height',height+'px')
-                $('#node-input-template-editor').css('height',height+'px')
-                uiace.editor.resize()
-            }
+            console.log('RESIZE', _size)
+
+            setACEheight()
+
         }, // ---- End of oneditcancel ---- //
 
     }) // ---- End of registerType() ---- //
@@ -968,9 +1006,11 @@
     </div>
 
     <!-- Info -->
-    <div title="Open the uibuilder web page">Web Page URL: <span id="uibuilderurl"></span></div>
-    <div title="Shows available libraries, configuration and other detailed uibuilder information">
-        <a href="uibindex" target="_blank">Detailed Information</a>
+    <div id="info">
+        <div title="Open the uibuilder web page">Web Page URL: <span id="uibuilderurl"></span></div>
+        <div title="Shows available libraries, configuration and other detailed uibuilder information">
+            <a href="uibindex" target="_blank">Detailed Information</a>
+        </div>
     </div>
 
 </script>

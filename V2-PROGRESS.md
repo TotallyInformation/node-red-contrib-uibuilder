@@ -11,6 +11,13 @@ The [main To Do list is now in the WIKI](https://github.com/TotallyInformation/n
 
 ----
 
+### In Progress
+
+Revamped full-screen editor
+
+* remove horizontal resize bar {panel.html #119}
+* Exchange arrow button (fa-expand/fa-compress) {panel.html #124}
+
 ### To Fix
 
 Feedback from [this thread](https://discourse.nodered.org/t/uibuilder-v2-now-published-to-npm-under-the-next-tag/13998/13):

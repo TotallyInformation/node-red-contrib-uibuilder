@@ -1,4 +1,4 @@
-## v2.0.0-beta3.3
+## v2.0.0-beta3.4
 
 **NOTE: This is the final planned beta.**
 
@@ -7,6 +7,11 @@ Final list of breaking changes between v1.2.2 and v2.0.0 - note that a complete 
 **ISSUES**: There is currently one known issue in this realease:
 
 * [ ] [Major] Admin ui: Full-screen editor only uses Javascript language instead of inheriting the correct language (e.g. html)
+  
+  Partially completed. You now get proper full-screen on all but the oldest of browsers. Press <kyb>Esc</kyb> to exit.
+  I still need to swap the full-screen button for an exit button to give an alternative exit.
+
+  Also note that the standard edit box auto-sizes to the available height as well now.
 
 
 * Bug fixes
