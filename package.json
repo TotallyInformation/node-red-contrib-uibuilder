@@ -9,7 +9,7 @@
     "dashboard"
   ],
   "scripts": {
-    "postinstall": "postinstall || exit 0",
+    "postinstall": "./bin/postinstall || exit 0",
     "build": "node ./bin/mergehtml",
     "watchbuild": "node ./bin/watchhtml",
     "prepush": "npm run packfe && npm run build",
