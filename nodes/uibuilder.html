@@ -548,16 +548,6 @@
                 $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#edit-props').show()
 
-                // Make the horizontal separator draggable
-                $('#node-input-template-editor').resizable({
-                    'handles': 's'
-                })
-                $('#node-input-template-editor > div.ui-resizable-handle.ui-resizable-s').css({
-                    'height': '25px',
-                    'bottom': '-25px'
-                })
-
-                // @since 2019-01-27 - adding file editor
                 // Build the file list
                 getFileList()
 
@@ -961,7 +951,7 @@
         <!-- Edit box  editor-tray-content -->
         <div id="edit-outer" class="form-row node-text-editor-row" style="position:relative">
             <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
-            <div id="edit-drag-y" class="red-ui-panels-separator" style="position: relative;"></div>
+            <!-- <div id="edit-drag-y" class="red-ui-panels-separator" style="position: relative;"></div> -->
         </div>
 
         <!-- file data (hidden), language selector -->

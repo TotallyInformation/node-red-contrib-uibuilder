@@ -531,16 +531,6 @@
                 $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#edit-props').show()
 
-                // Make the horizontal separator draggable
-                $('#node-input-template-editor').resizable({
-                    'handles': 's'
-                })
-                $('#node-input-template-editor > div.ui-resizable-handle.ui-resizable-s').css({
-                    'height': '25px',
-                    'bottom': '-25px'
-                })
-
-                // @since 2019-01-27 - adding file editor
                 // Build the file list
                 getFileList()
 
