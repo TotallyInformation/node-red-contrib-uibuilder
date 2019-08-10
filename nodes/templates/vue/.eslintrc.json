@@ -6,10 +6,8 @@
     "es6": false
   },
   "globals": {
-    "io": true,
-    "require": true,
-    "module": true,
-    "exports": true
+    "Vue": true,
+    "uibuilder": true
   },
   "extends": "eslint:recommended",
   "rules": {
