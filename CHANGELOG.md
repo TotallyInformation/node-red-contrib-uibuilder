@@ -1,25 +1,29 @@
-## v2.0.0-beta3.4
+## v2.0.0-beta3.5
 
 **NOTE: This is the final planned beta.**
 
 Final list of breaking changes between v1.2.2 and v2.0.0 - note that a complete list is [available in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/v2-Breaking-Changes).
 
-**ISSUES**: There is currently one known issue in this realease:
-
-* [ ] [Major] Admin ui: Full-screen editor only uses Javascript language instead of inheriting the correct language (e.g. html)
+* Bug fixes in v2.0.0.beta3
   
-  Partially completed. You now get proper full-screen on all but the oldest of browsers. Press <kbd>Esc</kbd> to exit.
-  I still need to swap the full-screen button for an exit button to give an alternative exit.
+  * [x] [Major] Admin ui: Full-screen editor only uses Javascript language instead of inheriting the correct language (e.g. html)
+    
+    You now get proper full-screen on all but the oldest of browsers. 
+    
+    To enter fullscreen, click the expand/compress button.
 
-  Also note that the standard edit box auto-sizes to the available height as well now.
+    Press <kbd>Esc</kbd> or click the expand/compress button to exit.
+    
+    Also note that the standard edit box auto-sizes to the available height as well now. So no more need for the bottom resize drag bar.
 
-
-* Bug fixes
-  
   * [x] [Major] Default VueJS template Javascript contains some ES6 rather than ES5 (`const`,`let` replaced by `var`)
+
   * [x] [Minor] Admin ui: Most links don't force target=_blank in panel and help.
+
   * [x] [Minor] Admin ui: New file creation dialogue, button says "New", change to "Create".
+
   * [x] [Minor] Admin ui: better documentation - esp. in regard to full-screen button. (Added to help panel)
+
   * [x] [Minor] Documentation: Note about bootstrap warning (ignore)
 
 * The minimum supported version of Node.JS is now v8.6.

@@ -15,8 +15,8 @@ The [main To Do list is now in the WIKI](https://github.com/TotallyInformation/n
 
 Revamped full-screen editor
 
-* remove horizontal resize bar {panel.html #119}
-* Exchange arrow button (fa-expand/fa-compress) {panel.html #124}
+* [x] remove horizontal resize bar {panel.html #119}
+* [x] Exchange arrow button (fa-expand/fa-compress) {panel.html #124}
 
 ### To Fix
 
@@ -27,7 +27,7 @@ Feedback from [this thread](https://discourse.nodered.org/t/uibuilder-v2-now-pub
 * [x] [Minor] Admin ui: New file creation dialogue, button says "New", change to "Create".
 * [x] [Minor] Admin ui: better documentation - esp. in regard to full-screen button. (Added to help panel)
 * [x] [Minor] Documentation: Note about bootstrap warning (ignore)
-* [ ] [Major] Admin ui: Full-screen editor only uses Javascript language instead of inheriting the correct language (e.g. html)
+* [x] [Major] Admin ui: Full-screen editor only uses Javascript language instead of inheriting the correct language (e.g. html)
 
 Other (likely delayed to v2.1):
 
