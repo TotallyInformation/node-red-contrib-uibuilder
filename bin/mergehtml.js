@@ -44,10 +44,10 @@ function mergehtml(nodeName, srcFiles) {
 
     replace(options)
         .then(changes => {
-            console.log('MERGE:Modified files:', changes.join(', '));
+            console.log('MERGE:Modified files:', changes.join(', '))
         })
         .catch(error => {
-            console.error('MERGE: Error occurred:', error);
+            console.error('MERGE: Error occurred:', error)
         })
         .finally( () => {
             console.log('MERGE: Finished. Use `npm run watchbuild` for dynamic updates.')

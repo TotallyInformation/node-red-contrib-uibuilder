@@ -45,10 +45,10 @@ function mergehtml(nodeName, srcFiles) {
 
     replace(options)
         .then(changes => {
-            console.log('MERGE:Modified files:', changes.join(', '));
+            console.log('MERGE:Modified files:', changes.join(', '))
         })
         .catch(error => {
-            console.error('MERGE: Error occurred:', error);
+            console.error('MERGE: Error occurred:', error)
         })
         .finally( () => {
             console.log('MERGE: Finished')
@@ -57,7 +57,7 @@ function mergehtml(nodeName, srcFiles) {
 } /* ---- End of MergeHtml ---- */
 
 fs.watch(nodeSrc, (eventType, filename) => {
-    //console.log(`event type is: ${eventType}`);
+    //console.log(`event type is: ${eventType}`)
     if (filename) {
         mergehtml(nodeName, nodeSrc)
     }

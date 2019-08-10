@@ -6,15 +6,15 @@ You should note that I am not a full-time programmer and this project is intende
 
 If all of this is techno-babble, don't despair and don't give up! Please join us in the #uibuilder channel of the [Node-RED Slack group](https://nodered.org/slack/) where you will find some friendly folk to explain the basics.
 
-### Licensing and copyright
+## Licensing and copyright
 
 Before continuing, please make sure that you are happy with the [license](../LICENSE) that this code is published under. You need to make sure that any contributed code meets this license. If you contribute code, documentation, images or anything else to this project, you are confirming that you have the rights to do so and that you are conferring rights to use the contributions to this project under this repositories license.
 
-### What to contribute?
+## What to contribute?
 
 We welcome contributions to documentation, the WIKI as well as code. So you don't have to be a developer to help the project!
 
-### Community and behavioural expectations
+## Community and behavioural expectations
 
 If you wish to contribute to this project, you will be agreeing to abide by the projects code of conduct.
 
@@ -22,11 +22,11 @@ This project uses the [code of conduct provided by the JavaScript Foundation](ht
 
 I always like to given a shout out to contributors. In doing so, I will give a link to your GitHub profile. If you would prefer I didn't for some reason, just let me know.
 
-### Creating useful issue reports
+## Creating useful issue reports
 
 Please fill in as much of the issue template as possible as it makes it much faster to home in on any potential problems.
 
-### Creating useful pull requests
+## Creating useful pull requests
 
 GitHub pull requests allow you to directly contribute your own code to the project. To do so, you should clone the project, make your changes and then submit a pull request for review.
 
