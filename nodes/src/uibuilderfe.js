@@ -1,5 +1,3 @@
-/* jshint browser: true, esversion: 5 */
-/* globals document,window */
 /*
   Copyright (c) 2017 Julian Knight (Totally Information)
 
