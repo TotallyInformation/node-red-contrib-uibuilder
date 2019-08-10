@@ -1,8 +1,18 @@
+## v2.0.0 (live)
+
+Welcome to v2 of uibuilder. 
+
+This version is a significant rebuild from v1.x with many changes, some of which are breaking and will require you to make a few minor changes to existing code and settings I'm afraid. See below for details.
+
+v2 provides a much stronger platform for further developments such as a front-end build step so that you can use Webpack, TypeScript, etc. The [main To Do list is now in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/To-Do).
+
+---
+
 ## v2.0.0-beta3.5
 
 **NOTE: This is the final planned beta.**
 
-Final list of breaking changes between v1.2.2 and v2.0.0 - note that a complete list is [available in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/v2-Breaking-Changes).
+Final list of breaking changes between v1.2.2 and v2.0.0 - note that a complete list is [available in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/v2-Breaking-Changes). A copy is in the docs folder of this repository.
 
 * Bug fixes in v2.0.0.beta3
   

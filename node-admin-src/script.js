@@ -498,6 +498,7 @@
             $('#node-input-allowScripts').prop('checked', this.allowScripts)
             $('#node-input-allowStyles').prop('checked', this.allowStyles)
             $('#node-input-copyIndex').prop('checked', this.copyIndex)
+            $('#node-input-showfolder').prop('checked', this.showfolder)
             //#endregion checkbox states
 
             // When the url changes (NB: Also see the validation function)

@@ -104,8 +104,13 @@
             to edit the front-end files that define your user interface.<br>
             All text-based files in the `<userDir>/uibuilder/<url>/src` folder on the server's filing system will
             be available to edit.<br>
-            Note that you can expand the edit panel by clicking on the <kbd class="help-key">&#x2921;</kbd> arrow button underneath the panel.
             To return back, click the red <kbd class="help-key">Done</kbd> or grey <kbd class="help-key">Cancel</kbd> buttons.
+            <p>
+                Note that you can expand the edit panel by clicking on the <kbd class="help-key">&#x2921;</kbd> arrow button underneath the panel.
+                To exit fullscreen, press the same button (now highlighted) or the <kbd class="help-key">Esc</kbd> key.
+            </p>
+            
+
         </dd>
         <dt>Manage Front-End Libraries <span class="property-type">(button)</span></dt>
         <dd>
@@ -135,6 +140,12 @@
                 If on (default), index.(css|html|js) files are copied from the master template folder
                 if they don't exist in the local assets folder <code>~/.node-red/uibuilder/{url}/src/</code>.
                 Turn off if you don't want this to happen (e.g. if you prefer them in a sub-folder).
+            </dd>
+
+            <dt>Show web view of source files at ... <span class="property-type">(boolean) showfolder</span></dt>
+            <dd>
+                If on, an extra web page is dynamically created at the indicated URL. That page shows an index listing
+                of all files in the instances <i>src</i> folder. As this could be a security issue, it is turned off by default.
             </dd>
 
             <dt>Forward received messages direct to output? <span class="property-type">(boolean) node-input-fwdInMessages</span></dt>

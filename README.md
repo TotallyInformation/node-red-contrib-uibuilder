@@ -30,18 +30,21 @@ The key features and benefits are:
 * Use without any front-end framework if you like. Keep it light and simple.
 * The included front-end library provides connectivity to Node-RED and msg event handling.
 * Write your own HTML, CSS and JavaScript to define the perfect front-end user interface for your needs.
+* Edit your custom front-end code from within the Node-RED Editor, little to no need for access to the server's filing system.
 * Needs almost no boilerplate in your front-end code in order to work.
 * Simple included example works out-of-the-box, no need to install anything other than the node.
 * VueJS, MoonJS extended and caching example flows included.
+* Optional index web page listing of available files.
 
 Current limitations are:
 
 * You have to write your own HTML, uibuilder doesn't (yet) do it for you. *This is by design. I hope to have a component design available at some point which will give additional options and make the UI building easier.*
 * You have to know the front-end library locations for installed libraries and edit your HTML accordingly. The `uibindex` admin API (accessible from any node's admin ui) shows you all of the root folders and what the package authors report as the main entry point for all active packages.
-* You cannot (yet) compile/compress your custom front-end code (HMTL, JS, SCSS, etc.) for efficiency. *This will be added soon.*
+* You cannot yet compile/compress your custom front-end code (HMTL, JS, SCSS, etc.) for efficiency. *This will be added soon.*
+* You cannot yet edit source files in sub-folders. *This will be added soon.*
 
 
-This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of having to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
+uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of having to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
 
 ## Contents
 <!-- TOC -->
@@ -53,7 +56,8 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
     * [2.1. Install](#21-install)
     * [2.2. Simple flow](#22-simple-flow)
     * [2.3. Edit the source files](#23-edit-the-source-files)
-    * [2.4. Additional Documentation in the WIKI](#24-additional-documentation-in-the-wiki)
+    * [2.4. Install additional front-end libraries](#24-install-additional-front-end-libraries)
+    * [2.5. Additional Documentation in the WIKI](#25-additional-documentation-in-the-wiki)
   * [3. Features](#3-features)
   * [4. Known Issues](#4-known-issues)
   * [5. Discussions and suggestions](#5-discussions-and-suggestions)
@@ -85,17 +89,31 @@ It is safe to ignore that warning unless you want to take control of bootstrap y
 
 ### 2.2. Simple flow
 
-Once installed, add a simple flow consisting of a trigger, a uibuilder and a debug node all connected in order. Deploy the changes then double click on the uibuilder node, click "Advanced" and then click on "Path & Module Info" then click on the web page url. 
+Once installed, add a simple flow consisting of a trigger, a uibuilder and a debug node all connected in order. Deploy the changes then double click on the uibuilder node, click on the web page url.
 
 That will show you a simple page that makes use of [VueJS](https://github.com/vuejs/vue#readme) and [bootstrap-vue](https://bootstrap-vue.js.org/). It shows the messages being sent and recieved and has a button that inrements a counter while sending the updated count back to Node-RED.
 
 ### 2.3. Edit the source files
 
-From the node's admin ui, click on "Edit Source Files" to see the front-end code. Make some changes to see what happens.
+From the node's configuration panel in the Editor, click on "Edit Source Files" to see the front-end code. Make some changes to see what happens.
 
-[VueJS](https://github.com/vuejs/vue#readme), [bootstrap](https://getbootstrap.com/) and [bootstrap-vue](https://bootstrap-vue.js.org/) make for a really easy to use initial setup that is very easy to use but powerful to build any kind of web user interface.
+If you need more space for the editor, click on the <kbd>&#x2921;</kbd> button underneath the text editor. To get back, press the same button (which is now highlighted) or the <kbd>Esc</kbd> key.
 
-### 2.4. Additional Documentation in the WIKI
+Click on the <kbd>Save</kbd> button to save changes, <kbd>Reset</kbd> to revert to the saved file, <kbd>Close</kbd> to exit the editor. Note that the close button isn't available while there are outstanding changes, press Save or Reset first. The Editor's red Done button is also disabled while there are still outstanding changes.
+
+You can create a new file and delete files as well with the appropriate buttons. If you delete one of the default `index.(html|css|js)` files and have the _Copy Index_ flag set (in advanced settings), the file will be replaced automatically with the default template file. Useful if you get into a complete mess.
+
+The default included [VueJS](https://github.com/vuejs/vue#readme), [bootstrap](https://getbootstrap.com/) and [bootstrap-vue](https://bootstrap-vue.js.org/) packages make for a really easy to use initial setup that is very easy to use but powerful to build any kind of web user interface. The default template files should give you some ideas on how to use everything.
+
+### 2.4. Install additional front-end libraries
+
+If the default [VueJS](https://github.com/vuejs/vue#readme), [bootstrap](https://getbootstrap.com/) and [bootstrap-vue](https://bootstrap-vue.js.org/) libraries are either not enough for you or you want to use a different framework, click the "Manage front-end libraries" button. Then click the <kbd>+ add</kbd> button and type in the name of the package as it is defined in npm.
+
+You can also remove installed libraries from here.
+
+The uibuilder _Detailed Information_ API page (link in the configuration panel) shows details of all packages installed, their URL for your html pages and their physical location on the server (so that you can track down the right file to include in your HTML).
+
+### 2.5. Additional Documentation in the WIKI
 
 Check out the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki) for more information, help and examples.
 
@@ -167,7 +185,7 @@ _[back to top](#contents)_
   
   The name is the same as the URL path specified in the node instance's settings. (defaults to `uibuilder`). `src` and `dist` sub-folders are also created. The `url` name is limited to a maximum of 20 characters and cannot be `templates` as this is reserved.
 
-  The files in these folders can be edited from within the node's admin ui in Node-RED. No need for command line or other file access on the server.
+  The files in these folders can be edited from within the node's configuration panel in Node-RED's Editor. No need for command line or other file access on the server.
 
 - If the local `dist` folder contains an `index.html` file, the `dist` folder will be served,
   otherwise the `src` folder will be served. This allows you to run a build step (e.g. webpack/babel). The WIKI has instructions on how to do a build step.
@@ -192,10 +210,13 @@ I don't believe any of the current issues make the node unusable. They are mainl
   
   See the [Caching page on the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache) for how to easily handle new or updated client connections with minimal code.
 
-- **Socket.IO isn't secured by default** Use Node-RED's security features and/or the available socket middleware feature to secure things properly before considering use over the Internet.
+- **Socket.IO isn't secured by default** Use uibuilder's ExpressJS and socket middleware feature to secure things properly before considering use over the Internet.
+
+  Note, however that the socket middleware is only called on initial socket connection. Once the connection upgrades to websocket, this is no longer called.
+
+  I hope to improve this in a future release.
 
   You could also work around this by using a proxy such as NGINX or HAproxy to be the TLS endpoint. Just make sure you proxy the websocket traffic as well as the standard web traffic.
-
 
 _[back to top](#contents)_
 
