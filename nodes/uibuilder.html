@@ -36,11 +36,13 @@
      * @property {string} format
      * @property {string} folder
      * @property {string} fname
+     * @property {boolean} fullscreen Is the editor in fullscreen mode?
      */
     var uiace = {
         'format': 'html',
         'folder': 'src',
-        'fname' : 'index.html'
+        'fname' : 'index.html',
+        'fullscreen': false
     }
 
     //#endregion ------------------------------------------------- //
@@ -420,13 +422,19 @@
         var height
 
         if ( uiace.editorLoaded === true ) {
+            // If the editor is in full-screen ...
             if (document.fullscreenElement) {
                 // Force background color and add some padding to keep away from edge
                 $('#edit-props').css('background-color','#f6f6f6').css('padding','1em')
 
-                // Calculate the available height and adjust the editor to fill the ht
+                // Start to calculate the available height and adjust the editor to fill the ht
                 height = parseInt($('#edit-props').css('height')) // full available height
                 height -= 25
+
+                // Replace the expand icon with a compress icon
+                $('#node-function-expand-js').css('background-color','black').html('<i class="fa fa-compress"></i>')
+
+                uiace.fullscreen = true
 
                 //console.log('Entered full-screen mode. Element: ', document.fullscreenElement.id, height)
 
@@ -437,7 +445,12 @@
                 height = parseInt($('#dialog-form').height())
                 // Subtract info lines
                 height -= parseInt($('#info').height())
+                
+                // Replace the compress icon with a expand icon
+                $('#node-function-expand-js').css('background-color','').html('<i class="fa fa-expand"></i>')
 
+                uiace.fullscreen = false
+                
                 //console.log('Leaving full-screen mode.', height)
                 
             }
@@ -723,32 +736,20 @@
             // Handle the expander button (show full screen editor) - from core function node
             $('#node-function-expand-js').click(function(e) {
                 e.preventDefault()
-                var value = uiace.editor.getValue()
-                //uiace.editorSession
 
-                // TODO: Don't use editJavaScript as it might not be! Need to rewrite.
-                console.log('**** ' + uiace.format + ' **** ', uiace.editor)
+                // Are we in fullscreen? Variable is updated when oneditresize calls setACEheight()
+                if (uiace.fullscreen === false) {
+                    // Select the editor components and make full-screen, triggers oneditresize()
+                    var viewer = $('#edit-props')[0]
+                    var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
+                    if (rFS) rFS.call(viewer)
+                    
+                    // TODO: Add popup if no method is available
+                } else {
+                    // Already in fullscreen so lets exit, triggers oneditresize()
+                    document.exitFullscreen()
+                }
 
-                // Select the editor components and make full-screen
-                var viewer = $('#edit-props')[0]
-                var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
-                if (rFS) rFS.call(viewer)
-                
-                // TODO: Add popup if no method is available
-
-                // RED.editor.editJavaScript({
-                //     value: value,
-                //     width: 'Infinity',
-                //     cursor: uiace.editor.getCursorPosition(),
-                //     mode: 'ace/mode/' + uiace.format,
-                //     complete: function(v,cursor) {
-                //         uiace.editor.setValue(v, -1)
-                //         uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
-                //         setTimeout(function() {
-                //             uiace.editor.focus()
-                //         },300)
-                //     }
-                // })
             })
             //#endregion ---- File Editor ---- //
 
@@ -882,9 +883,9 @@
         <div class="form-row" title="Add msg.script/msg.style to the input msg">
             Allow passing to the front-end: 
             <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-allowScripts" style="">Scripts? (JS)</label>
+            <label for="node-input-allowScripts">Scripts? (JS)</label>
             <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-allowStyles" style="">Styles? (CSS)</label>
+            <label for="node-input-allowStyles">Styles? (CSS)</label>
         </div>
 
         <!-- Copy index.(html|css|js) to local assets if they dont exist? -->
