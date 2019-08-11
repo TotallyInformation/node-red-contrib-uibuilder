@@ -1252,11 +1252,15 @@ module.exports = function(RED) {
                             </tr></thead><tbody>
                 `
                 Object.keys(uib.instances).forEach(key => {
-                    page += '  <tr>'
-                    page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, uib.instances[key])}">${uib.instances[key]}</a></td>`
-                    page += `    <td>${key}</td>`
-                    page += `    <td>${path.join(uib.rootFolder, uib.instances[key])}</td>`
-                    page += '  </tr>'
+                    // When nodes get deleted, uib.instances for this node will be set to undefined. Skip deleted nodes
+                    // from displaying
+                    if (uib.instances[key] !== undefined) {
+                        page += '  <tr>'
+                        page += `    <td><a href="${tilib.urlJoin(httpNodeRoot, uib.instances[key])}">${uib.instances[key]}</a></td>`
+                        page += `    <td>${key}</td>`
+                        page += `    <td>${path.join(uib.rootFolder, uib.instances[key])}</td>`
+                        page += '  </tr>'
+                    }
                 })
                 page += `</tbody></table>
                     <p>Note that each instance uses its own socket.io <i>namespace</i> that matches <code>httpNodeRoot/url</code>. You can use this to manually send messages to your user interface.</p>
