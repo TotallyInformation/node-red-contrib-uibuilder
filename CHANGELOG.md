@@ -1,3 +1,7 @@
+## v2.0.1
+
+Bugfix for [Issue #59](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/59)
+
 ## v2.0.0 (live)
 
 Welcome to v2 of uibuilder. 
