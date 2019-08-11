@@ -123,7 +123,7 @@ module.exports = {
         }
 
         // Keep a log of the active instances @since 2019-02-02
-        instances[node.id] = undefined
+        delete instances[node.id] // = undefined
 
         /*
             // This code borrowed from the http nodes
