@@ -153,6 +153,7 @@ module.exports = {
      */
     getProps: function(RED,myObj,props,defaultAnswer = []) {
         if ( (typeof props) === 'string' ) {
+            // @ts-ignore
             props = [props]
         }
         if ( ! Array.isArray(props) ) {
