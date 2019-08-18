@@ -145,12 +145,11 @@ module.exports = {
      * Makes use of RED.util.getMessageProperty
      * @param {Object} RED - RED
      * @param {Object} myObj - the parent object to search for the props
-     * @param {string|array} props - one or a list of property names to retrieve.
+     * @param {string|string[]} props - one or a list of property names to retrieve.
      *                               Can be nested, e.g. 'prop1.prop1a'
      *                               Stops searching when the first property is found
      * @param {any} defaultAnswer - if the prop can't be found, this is returned
-     * JK @since 2017-08-17 Added
-     * TODO Change instances of "in" and "hasOwnProperty" to use this function
+     * @return {any} The first found property value or the default answer
      */
     getProps: function(RED,myObj,props,defaultAnswer = []) {
         if ( (typeof props) === 'string' ) {
