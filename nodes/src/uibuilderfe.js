@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2017 Julian Knight (Totally Information)
+  Copyright (c) 2019 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '2.0.0-beta3'
+        self.version = '2.0.2'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
 
