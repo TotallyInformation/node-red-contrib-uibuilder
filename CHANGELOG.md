@@ -1,3 +1,9 @@
+## v2.0.2
+
+* **UPDATE** Update examples for uibuilder v2. Include new example of caching with a function node (many thanks to [@cflurin](https://discourse.nodered.org/u/cflurin))
+  
+Note that some of the WIKI examples have also been updated.
+
 ## v2.0.1
 
 Bugfix for [Issue #59](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/59)
