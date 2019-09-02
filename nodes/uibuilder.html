@@ -923,21 +923,21 @@
 
         <!-- Save/Reset/close/(message)/Delete -->
         <div class="form-row">
-            <button class="btn" id="edit-save" title="Save any changes to the file" style="font-size:0.8em;line-height:1em;">Save</button>
-            <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)" style="font-size:0.8em;line-height:1em;">Reset</button>
-            <button class="btn" id="edit-close" title="Close the edit window (lose any unsaved changes)" style="font-size:0.8em;line-height:1em;">Close</button>
+            <button class="btn" id="edit-save" title="Save any changes to the file">Save</button>
+            <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)">Reset</button>
+            <button class="btn" id="edit-close" title="Close the edit window (lose any unsaved changes)">Close</button>
 
             <span id="file-action-message"></span>
 
             <div style="position: absolute;right:1.6em;display:inline-block;">
-                <button class="btn" id="edit-new" title="Add a new file." style="font-size:0.8em;line-height:1em;">
+                <button class="btn" id="edit-new" title="Add a new file.">
                     New
                 </button>
                 <div id="edit_new_dialog" title="Create a new file" dialog>
                     <label for="edit-input-newname">New File Name</label>
                     <input type="text" id="edit-input-newname">
                 </div>                  
-                <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set." style="font-size:0.8em;line-height:1em;">
+                <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set.">
                     Delete
                 </button>
                 <div id="edit_delete_dialog" title="Delete the currently selected file" dialog>
@@ -952,15 +952,14 @@
         <!-- Edit box  editor-tray-content -->
         <div id="edit-outer" class="form-row node-text-editor-row" style="position:relative">
             <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
-            <!-- <div id="edit-drag-y" class="red-ui-panels-separator" style="position: relative;"></div> -->
         </div>
 
         <!-- file data (hidden), language selector -->
         <div class="form-row">
-            <button id="node-function-expand-js" class="editor-button editor-button-small"><i class="fa fa-expand"></i></button>
+            <button id="node-function-expand-js" class="editor-button"><i class="fa fa-expand"></i></button>
             <input type="hidden" id="node-input-template" autofocus="autofocus" data-isClean="true">
-            <div style="position: absolute; right:1.6em;display:inline-block; text-align: right; font-size: 0.8em;">
-                <select id="node-input-format" style="width:110px; font-size: 10px !important;  height: 24px; padding:0;">
+            <div style="position: absolute; right:1.6em;display:inline-block; text-align: right;">
+                <select id="node-input-format" style="width:110px; padding:0;">
                     <option value="handlebars">mustache</option>
                     <option value="html">HTML</option>
                     <option value="json">JSON</option>
