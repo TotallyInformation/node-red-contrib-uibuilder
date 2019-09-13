@@ -520,9 +520,9 @@
 
             // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
+                var thisurl = $(this).val()
                 // Show the root URL
-                 // @ts-ignore Cannot find name 'RED'.ts(2304)
-                $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '" target="_blank">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
+                $('#uibuilderurl').prop('href', RED.settings.httpNodeRoot + thisurl).text('Open Page: ' + RED.settings.httpNodeRoot + thisurl)
                 $('#node-input-showfolder-url').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '/idx" target="_blank">' + RED.settings.httpNodeRoot + $(this).val() + '/idx</a>')
             })
 
@@ -982,8 +982,8 @@
         </p>
         <p>
             You can search for packages on the 
-            <a href="https://www.npmjs.com/" target="_blank">official npm site</a> 
-            or on <a href="https://npms.io/" target="_blank">npms.io</a>.
+            <a href="https://www.npmjs.com/" target="_blank" class="red-ui-button editor-button">official npm site</a> 
+            or on <a href="https://npms.io/" target="_blank" class="red-ui-button editor-button">npms.io</a>.
             Take the name and paste it below then use one of the buttons.
         </p>
         <!-- Package List -->
@@ -998,10 +998,8 @@
 
     <!-- Info -->
     <div id="info">
-        <div title="Open the uibuilder web page">Web Page URL: <span id="uibuilderurl"></span></div>
-        <div title="Shows available libraries, configuration and other detailed uibuilder information">
-            <a href="uibindex" target="_blank">Detailed Information</a>
-        </div>
+        <a id="uibuilderurl" title="Open the uibuilder web page" href="uibindex" target="_blank" class="red-ui-button editor-button"></a> 
+        <a href="uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed uibuilder information">Show Detailed Information</a>
     </div>
 
 </script>

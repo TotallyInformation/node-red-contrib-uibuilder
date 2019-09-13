@@ -503,9 +503,9 @@
 
             // When the url changes (NB: Also see the validation function)
             $('#node-input-url').change(function () {
+                var thisurl = $(this).val()
                 // Show the root URL
-                 // @ts-ignore Cannot find name 'RED'.ts(2304)
-                $('#uibuilderurl').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '" target="_blank">' + RED.settings.httpNodeRoot + $(this).val() + '</a>')
+                $('#uibuilderurl').prop('href', RED.settings.httpNodeRoot + thisurl).text('Open Page: ' + RED.settings.httpNodeRoot + thisurl)
                 $('#node-input-showfolder-url').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '/idx" target="_blank">' + RED.settings.httpNodeRoot + $(this).val() + '/idx</a>')
             })
 
