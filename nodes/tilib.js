@@ -131,34 +131,43 @@ module.exports = {
      * @return {null|string} Actual filing system path to the installed package
      */
     findPackage: function(packageName, userDir) {
+
+        let debug = false
+        // if ( packageName === 'startbootstrap-sb-admin-2' ) {
+        //     debug = true
+        //     if (debug) console.debug(`\n[UIBUILDER] Looking for package ${packageName}`)
+        // }
         
         let found = false, packagePath = ''
         // Try in userDir first
         try {
             packagePath = path.dirname( require.resolve(packageName, {paths: [userDir]}) )
-            //console.log(`${packageName} found from userDir`, packagePath)
+            if (debug) console.log(`[UIBUILDER] ${packageName} found from userDir`, packagePath)
             found = true
         } catch (e) {
-            //console.log (`${packageName} not found from uibuilder. Path: ${userDir}`)
+            if (debug) console.log (`[UIBUILDER] ${packageName} not found from userDir. Path: ${userDir}`)
         }
         // Then try without a path
         if (found === false) try {
             packagePath = path.dirname( require.resolve(packageName) )
-            //console.log(`${packageName} found`, packagePath)
+            if (debug) console.log(`[UIBUILDER] ${packageName} found (no path)`, packagePath)
             found = true
         } catch (e) {
-            //console.log (`${packageName} not found`)
+            if (debug) console.log (`[UIBUILDER] ${packageName} not found (no path)`)
         }
         // Finally try in the uibuilder source folder
         if (found === false) try {
             packagePath = path.dirname( require.resolve(packageName, {paths: [path.join(__dirname,'..')]}) )
-            //console.log(`${packageName} found from uibuilder`, packagePath)
+            if (debug) console.log(`[UIBUILDER] ${packageName} found from uibuilder path`, packagePath)
             found = true
         } catch (e) {
-            //console.log (`${packageName} not found from uibuilder. Path: ${path.join(__dirname,'..')}`)
+            if (debug) console.log (`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
         }
 
-        if ( found === false ) return null
+        if ( found === false ) {
+            if (debug) console.log (`[UIBUILDER] ${packageName} not found anywhere\n`)
+            return null
+        }
 
         /** require.resolve returns the "main" script, this may not be in the root folder for the package
          *  so we change that here. We check whether the last element of the path matches the package
@@ -172,6 +181,7 @@ module.exports = {
         if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageName) ) pathSplit.pop()
         packagePath = pathSplit.join(path.sep)
 
+        if (debug) console.debug(`[UIBUILDER] PackagePath: ${packagePath}\n`)
         return packagePath
     }, // ----  ---- //
 
