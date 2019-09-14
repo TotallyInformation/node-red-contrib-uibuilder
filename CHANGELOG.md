@@ -1,3 +1,9 @@
+## v2.0.3
+
+* **UPDATE** bootstrap-vue has been updated to v2.0.1 from the dev version. Check out the [bootstrap-vue changelog](https://bootstrap-vue.js.org/docs/misc/changelog/) because there are a few breaking changes.
+* **UPDATE** Fix formatting of links in the config panel in readiness for Node-RED v1.0
+* **UPDATE** Add workaround for npm packages that don't define a `main` entrypoint. Fixes [Issue #67](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/67).
+
 ## v2.0.2
 
 * **UPDATE** Update examples for uibuilder v2. Include new example of caching with a function node (many thanks to [@cflurin](https://discourse.nodered.org/u/cflurin))
