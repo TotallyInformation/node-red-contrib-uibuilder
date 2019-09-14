@@ -163,6 +163,20 @@ module.exports = {
         } catch (e) {
             if (debug) console.log (`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
         }
+        /** No, REALLY finally this time - because require.resolve only works if a package has a `main` entry point defined
+         * We will make one final effort to find something using a manual trawl through <userDir>/node_modules
+         * @since v2.0.3
+         **/
+        if (found === false) {
+            let loc = path.join(userDir, 'node_modules', packageName)
+            if ( fs.existsSync( loc ) ) {
+                found = true
+                packagePath = loc
+                if (debug) console.log (`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
+            } else {
+                if (debug) console.log (`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
+            }
+        }
 
         if ( found === false ) {
             if (debug) console.log (`[UIBUILDER] ${packageName} not found anywhere\n`)
