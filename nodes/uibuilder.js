@@ -568,10 +568,18 @@ module.exports = function(RED) {
         }) // ---- End of ioNs.on connection ---- //
 
         /** Handler function for node input events (when a node instance receives a msg)
+         * @see https://nodered.org/blog/2019/09/20/node-done 
          * @param {Object} msg The msg object received.
+         * @param {function} send Per msg send function, node-red v1+
+         * @param {function} done Per msg finish function, node-red v1+
          **/
-        function nodeInputHandler(msg) {
+        function nodeInputHandler(msg, send, done) {
             log.trace(`[uibuilder:${uibInstance}] nodeGo:nodeInputHandler - emit received msg - Namespace: ${node.url}`) //debug
+
+            // If this is pre-1.0, 'send' will be undefined, so fallback to node.send
+            send = send || node.send
+            // If this is pre-1.0, 'done' will be undefined, so fallback to dummy function
+            done = done || function() {}
 
             // If msg is null, nothing will be sent
             if ( msg !== null ) {
@@ -590,7 +598,7 @@ module.exports = function(RED) {
 
             // Keep this fn small for readability so offload
             // any further, more customised code to another fn
-            msg = uiblib.inputHandler(msg, node, RED, io, ioNs, log)
+            msg = uiblib.inputHandler(msg, send, done, node, RED, io, ioNs, log)
 
         } // -- end of msg received processing -- //
 

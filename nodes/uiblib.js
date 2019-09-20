@@ -28,9 +28,10 @@ const serveStatic = require('serve-static')
 
 module.exports = {
 
-    // Complex, custom code when processing an incoming msg should go here
-    // Needs to return the msg object
-    inputHandler: function(msg, node, RED, io, ioNs, log) {
+    /** Complex, custom code when processing an incoming msg should go here
+     * Needs to return the msg object
+     */
+    inputHandler: function(msg, send, done, node, RED, io, ioNs, log) {
         node.rcvMsgCount++
         log.trace(`[uiblib:${node.url}] msg received via FLOW. ${node.rcvMsgCount} messages received`, msg)
 
@@ -59,7 +60,8 @@ module.exports = {
 
         if (node.fwdInMessages) {
             // Send on the input msg to output
-            node.send(msg)
+            send(msg)
+            done()
             log.trace(`[${node.url}] msg passed downstream to next node`, msg)
         }
 
