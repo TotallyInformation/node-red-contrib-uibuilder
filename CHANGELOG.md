@@ -8,9 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
-
+- uib icon (blue node-red icon) to the detailed information page (uibindex)
 
 ### Changed
+
+### Removed
+- Spurious `</a>` from the detailed information page (uibindex)
 
 ----
 

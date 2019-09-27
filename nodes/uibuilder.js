@@ -1287,7 +1287,7 @@ module.exports = function(RED) {
                     page += `
                         <tr>
                             <td><a href="${pj.homepage}">${packageName}</a></td>
-                            <td>${pj.version}</a></td>
+                            <td>${pj.version}</td>
                             <td>${pj.url}</td>
                             <td><a href="${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.main)}">${pj.url}/${pj.main}</a></td>
                             <td>${pj.folder}</td>
