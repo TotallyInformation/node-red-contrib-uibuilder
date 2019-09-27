@@ -1243,6 +1243,7 @@ module.exports = function(RED) {
                     <!doctype html><html lang="en"><head>
                         <title>Uibuilder Index</title>
                         <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+                        <link rel="icon" href="./images/node-blue.ico">
                         <style type="text/css" media="all">
                             h1 {border-top:1px solid silver;margin-top:0.5em;padding-top:0.2em;}
                         </style>
