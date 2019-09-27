@@ -37,7 +37,7 @@ const uib = {
     me: fs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
     /** Module name must match this nodes html file @constant {string} uib.moduleName */
     moduleName: 'uibuilder',
-    // URL path prefix set in settings.js - prefixes all URL's
+    /** URL path prefix set in settings.js - prefixes all URL's */
     nodeRoot: '',
     /** Track across redeployments @constant {Object} uib.deployments */
     deployments: {},
@@ -67,8 +67,9 @@ const uib = {
      * @default <userDir>/<uib.moduleName> or <userDir>/projects/<currProject>/<uib.moduleName>
      **/
     rootFolder: null,
-    /** Locations for uib config and common folders - set once rootFolder is finalised */
+    /** Location for uib config folder - set once rootFolder is finalised */
     configFolder: null,
+    /** Location for uib common folder - set once rootFolder is finalised */
     commonFolder: null,
     /** What version of Node.JS are we running under? Impacts some file processing. 
      * @type {Array.<number|string>} */
@@ -422,6 +423,7 @@ module.exports = function(RED) {
         }
         /** Make the uibuilder static common folder available */
         app.use( tilib.urlJoin(node.url,'common'), commonStatic )
+        app.use( tilib.urlJoin(uib.moduleName,'common'), commonStatic )
 
         const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
 
@@ -1242,8 +1244,8 @@ module.exports = function(RED) {
                 let page = `
                     <!doctype html><html lang="en"><head>
                         <title>Uibuilder Index</title>
-                        <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-                        <link rel="icon" href="./images/node-blue.ico">
+                        <link type="text/css" href="${uib.nodeRoot}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+                        <link rel="icon" href="${uib.nodeRoot}${uib.moduleName}/common/images/node-blue.ico">
                         <style type="text/css" media="all">
                             h1 {border-top:1px solid silver;margin-top:0.5em;padding-top:0.2em;}
                         </style>

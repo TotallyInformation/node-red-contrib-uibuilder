@@ -1,9 +1,8 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
@@ -11,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - uib icon (blue node-red icon) to the detailed information page (uibindex)
 
 ### Changed
+- CHANGELOG.md changed to use "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)" recommended formatting which will facilitate the use of `gh-release` in the future.
+
+### Fixed
+- Fixed error in link url's for the detailed information page (uibindex)
+- Common folder was served as `/<httpRoot>/<uibUrl>/common` instead of `/<httpRoot>/uibuilder/common`. Added the 2nd form, note that the first form should not be used, it may be deprecated in a future release.
 
 ### Removed
 - Spurious `</a>` from the detailed information page (uibindex)
@@ -282,3 +286,13 @@ Since the URI's for uibuilder have changed between v1 and v2, I've created [a WI
 ----
 
 Because of the many changes in v2, the v1 changelog has been moved to a separate file: `./docs/CHANGELOG-v1.md`
+
+----
+
+Types of changes
+Added for new features.
+Changed for changes in existing functionality.
+Deprecated for soon-to-be removed features.
+Removed for now removed features.
+Fixed for any bug fixes.
+Security in case of vulnerabilities.
