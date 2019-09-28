@@ -334,6 +334,9 @@ module.exports = {
      * @return {Object} uib.installedPackages
      */
     checkInstalledPackages: function (newPkg='', uib, userDir, log, app=null) {
+        const debug = false
+        //if (debug) console.log('[uibuilder.uiblib] debugging ', {newPkg, uib, userDir})
+
         let installedPackages = uib.installedPackages
         let pkgList = []
         let masterPkgList = []
@@ -377,8 +380,6 @@ module.exports = {
 
             // Check to see if folder names present in <userDir>/node_modules
             const pkgFolder = tilib.findPackage(pkgName, userDir)
-            // Check to see if the package is in the current list
-            const isInCurrent = installedPackages.hasOwnProperty(pkgName)
 
             // Check whether package is really installed (exists)
             if ( pkgFolder !== null ) {
@@ -396,6 +397,9 @@ module.exports = {
                 }
             }
 
+            // Check to see if the package is in the current list
+            const isInCurrent = installedPackages.hasOwnProperty(pkgName)
+
             if ( pkgExists ) {
                 // If package does NOT exist in current - add it now
                 if ( ! isInCurrent ) {
@@ -409,8 +413,10 @@ module.exports = {
                 installedPackages[pkgName].url = ['..', uib.moduleName, 'vendor', pkgName].join('/')
                 // Find installed version
                 installedPackages[pkgName].version = pj.version
-                // Find main entry point (or null)
-                installedPackages[pkgName].main = pj.main
+                // Find main entry point (or '')
+                installedPackages[pkgName].main = pj.main || ''
+                // Find browser entry point (or '')
+                installedPackages[pkgName].browser = pj.browser || ''
                 // Find homepage
                 installedPackages[pkgName].homepage = pj.homepage
 
@@ -431,8 +437,10 @@ module.exports = {
                 if ( isInCurrent ) {
                     if ( app !== null) {
                         installedPackages[pkgName].loaded = this.unservePackage(pkgName, installedPackages, userDir, log, app)
+                        if (debug) console.log('[uibuilder.uiblib] checkInstalledPackages - package unserved ', pkgName)
                     }
                     delete installedPackages[pkgName]
+                    if (debug) console.log('[uibuilder.uiblib] checkInstalledPackages - package deleted from installedPackages ', pkgName)
                 }
             }
         })
