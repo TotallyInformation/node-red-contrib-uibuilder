@@ -100,9 +100,12 @@
   ],
   "directories": {
     "bin": "./bin",
-    "example": "./nodes/examples"
+    "example": "./examples",
+    "doc": "./docs",
+    "lib": "./nodes"
   },
-  "main": "./nodes/src/uibuilderfe.js",
+  "main": "./nodes/uibuilder.js",
+  "browser": "./nodes/src/uibuilderfe.js",
   "bin": {
     "mergehtml": "./bin/mergehtml.js",
     "watchhtml": "./bin/watchhtml.js"
