@@ -126,6 +126,7 @@ module.exports = {
      *       When run from a linked package, it uses the link root not the linked location, 
      *       this throws out the tree search. That's why we have to try several different locations here.
      *       Also, it finds the "main" script name which might not be in the package root.
+     *       Also, it won't find ANYTHING if a `main` entry doesn't exist :(
      * @param {string} packageName - Name of the package who's root folder we are looking for.
      * @param {string} userDir - Home folder for Node-RED modules - needed to allow search for installation
      * @return {null|string} Actual filing system path to the installed package
@@ -202,14 +203,15 @@ module.exports = {
     /** Read the contents of a package.json file 
      * @param {string} folder The folder containing a package.json file
      * @returns {Object|null} Object representation of JSON if found otherwise null
-    */
+     */
     readPackageJson: function(folder) {
-        var file = null
+        let debug = false
+        let file = null
         try {
-            // TODO replace with fs-extra readJsonSync
-            file = JSON.parse( fs.readFileSync( path.join(folder, 'package.json'), 'utf8' ) )
+            file = fs.readJsonSync( path.join(folder, 'package.json'), 'utf8' )
+            if (debug) console.log('[uibuilder] tilib.readPackageJson - read successfully ', folder)
         } catch (err) {
-            //console.error('[uibuilder] tilib.readPackageJson - failed to read ', folder, 'package.json', err)
+            if (debug) console.error('[uibuilder] tilib.readPackageJson - failed to read ', folder, 'package.json', err)
             file = {'ERROR': err}
         }
         return file
