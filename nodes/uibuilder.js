@@ -155,12 +155,8 @@ module.exports = function(RED) {
     // Try to access the root folder (read/write) - if we can, create and serve the common resource folder
     try {
         fs.accessSync( uib.rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
-        // and create the common resource folder
-        fs.ensureDirSync(uib.commonFolder)
-        // and serve it up as a static resource folder (added in nodeGo() so available for each instance as `./common/`)
-        var commonStatic = serveStatic( uib.commonFolder )
     } catch (e) {
-        RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib.commonFolder}. ${e.message}`)
+        RED.log.error(`uibuilder: Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
         uib_rootFolder_OK = false
     }
     // Assuming all OK, copy over the master vendor package list & the working package list as needed (doesn't overwrite)
@@ -173,6 +169,17 @@ module.exports = function(RED) {
             RED.log.error(`uibuilder: Master Package List copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
             uib_rootFolder_OK = false
         }
+        // and copy the common folder from template (contains the default blue node-red icon)
+        const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
+        fs.copy( path.join( uib.masterTemplateFolder, 'common' ), uib.commonFolder, cpyOpts, function(err){
+            if(err){
+                log.error(`[uibuilder] Error copying common template folder from ${path.join( uib.masterTemplateFolder, 'common')} to ${uib.commonFolder}`, err)
+            } else {
+                log.trace(`[uibuilder] Copied common template folder to local common folder (not overwriting)`, uib.commonFolder )
+            }
+        })
+        // and serve it up as a static resource folder (added in nodeGo() so available for each instance as `./common/`)
+        var commonStatic = serveStatic( uib.commonFolder )
     }
     // If the root folder setup failed, throw an error and give up completely
     if (uib_rootFolder_OK !== true) {
