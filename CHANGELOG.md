@@ -4,12 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-
-
-----
-
-## v2.0.4 2019-09-28
+## [2.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.3...2.0.4) - 2019-09-28
 
 ### Added
 - uib icon (blue node-red icon) to the detailed information page (uibindex) & logo to README

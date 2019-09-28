@@ -23,8 +23,9 @@
     "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
     "npmtagnext": "npm dist-tag add node-red-contrib-uibuilder@$npm_package_version next",
     "gittags": "git tag",
-    "gittag": "git tag -a v$npm_package_version",
-    "gitpushtags": "git push origin --tags"
+    "gittag": "git tag -a v%npm_package_version%",
+    "gitpushtags": "git push origin --tags",
+    "release": "github-release-from-changelog --dry-run"
   },
   "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
@@ -85,7 +86,7 @@
   "devDependencies": {
     "@types/jquery": "^3.3.31",
     "@types/node-red": "^0.20.0",
-    "gh-release": "^3.5.0",
+    "github-release-from-changelog": "^2.1.0",
     "replace-in-file": "^3.4.4",
     "uglify-js": "^3.6.0"
   },
