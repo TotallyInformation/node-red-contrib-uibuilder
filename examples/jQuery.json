@@ -21,11 +21,6 @@
         "name": "jQuery Example",
         "topic": "",
         "url": "jq",
-        "fwdInMessages": false,
-        "allowScripts": false,
-        "allowStyles": false,
-        "copyIndex": true,
-        "showfolder": false,
         "x": 460,
         "y": 2100,
         "wires": [

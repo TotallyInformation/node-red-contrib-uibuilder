@@ -282,15 +282,15 @@ module.exports = function(RED) {
         node.name          = config.name  || ''
         node.topic         = config.topic || ''
         node.url           = config.url   || 'uibuilder'
-        node.fwdInMessages = config.fwdInMessages        // @since 2017-09-20 changed to remove default, || with boolean doesn't work properly
-        node.allowScripts  = config.allowScripts
-        node.allowStyles   = config.allowStyles
-        node.copyIndex     = config.copyIndex
-        node.showfolder    = config.showfolder
+        node.fwdInMessages = config.fwdInMessages === undefined ? false : config.fwdInMessages
+        node.allowScripts  = config.allowScripts === undefined ? false : config.allowScripts
+        node.allowStyles   = config.allowStyles === undefined ? false : config.allowStyles
+        node.copyIndex     = config.copyIndex === undefined ? true : config.copyIndex
+        node.showfolder    = config.showfolder === undefined ? false : config.showfolder
         //#endregion ----- Local node config copy ----- //
 
-        log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'debugFE': node.debugFE })
-
+        log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })
+        
         // Keep a log of the active uib.instances @since 2019-02-02
         uib.instances[node.id] = node.url
         log.trace(`[uibuilder:${uibInstance}] Node uib.Instances Registered`, uib.instances)

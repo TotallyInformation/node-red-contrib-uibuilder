@@ -6,11 +6,6 @@
         "name": "",
         "topic": "",
         "url": "uiswitch",
-        "fwdInMessages": false,
-        "allowScripts": false,
-        "allowStyles": false,
-        "copyIndex": true,
-        "showfolder": false,
         "x": 460,
         "y": 1620,
         "wires": [

@@ -17,8 +17,6 @@
         "z": "106ba95c.ff91e7",
         "name": "vuejs",
         "url": "vue",
-        "fwdInMessages": false,
-        "customFoldersReqd": true,
         "x": 270,
         "y": 260,
         "wires": [

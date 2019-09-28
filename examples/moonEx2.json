@@ -6,11 +6,6 @@
         "name": "",
         "topic": "",
         "url": "moon",
-        "fwdInMessages": false,
-        "allowScripts": false,
-        "allowStyles": false,
-        "copyIndex": true,
-        "showfolder": false,
         "x": 470,
         "y": 2460,
         "wires": [
