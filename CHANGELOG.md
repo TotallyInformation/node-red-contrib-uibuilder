@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
@@ -10,14 +10,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - uib icon (blue node-red icon) to the detailed information page (uibindex)
 
 ### Changed
-- CHANGELOG.md changed to use "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)" recommended formatting which will facilitate the use of `gh-release` in the future.
+- CHANGELOG.md changed to use "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)" recommended formatting which will facilitate the use of `gh-release` in the future. Also added link to list of commits between versions.
+- `package.json` 
+   - added `browser` property as per [this spec}(https://github.com/defunctzombie/package-browser-field-spec) (also [here](https://github.com/stereobooster/package.json)) to give hints to bundlers. Changed `main` to point to the server-side js.
+   - Added `directories.doc`, `directories.lib`  & `directories.test`
+- Dependent packages updated to latest
 
 ### Fixed
 - Fixed error in link url's for the detailed information page (uibindex)
 - Common folder was served as `/<httpRoot>/<uibUrl>/common` instead of `/<httpRoot>/uibuilder/common`. Added the 2nd form, note that the first form should not be used, it may be deprecated in a future release.
+- Incorrect default values
 
 ### Removed
 - Spurious `</a>` from the detailed information page (uibindex)
+- Spurious console.log for oneditresize
+
+[Commits](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.3...master)
 
 ----
 
@@ -26,6 +34,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * **UPDATE** bootstrap-vue has been updated to v2.0.1 from the dev version. Check out the [bootstrap-vue changelog](https://bootstrap-vue.js.org/docs/misc/changelog/) because there are a few breaking changes.
 * **UPDATE** Fix formatting of links in the config panel in readiness for Node-RED v1.0
 * **UPDATE** Add workaround for npm packages that don't define a `main` entrypoint. Fixes [Issue #67](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/67).
+
+[Commits](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.2...v2.0.3)
 
 ## v2.0.2
 
