@@ -6,18 +6,27 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+
+----
+
+## v2.0.4 2019-09-28
+
 ### Added
-- uib icon (blue node-red icon) to the detailed information page (uibindex)
+- uib icon (blue node-red icon) to the detailed information page (uibindex) & logo to README
+- Look for the package.json `browser` property not just `main` and display it on the `uibuindex` page if available instead of main.
 
 ### Changed
 - CHANGELOG.md changed to use "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)" recommended formatting which will facilitate the use of `gh-release` in the future. Also added link to list of commits between versions.
 - `package.json` 
    - added `browser` property as per [this spec}(https://github.com/defunctzombie/package-browser-field-spec) (also [here](https://github.com/stereobooster/package.json)) to give hints to bundlers. Changed `main` to point to the server-side js.
    - Added `directories.doc`, `directories.lib`  & `directories.test`
+- Updated the detailed information page (`uibindex`). Improved layout and added some additional useful debugging information. Included the URL for the common resources.
 - Dependent packages updated to latest
 
 ### Fixed
-- Fixed error in link url's for the detailed information page (uibindex)
+- Fixed detailed information page (uibindex) issues:
+   - Error in link url's
+   - Error in "Main Entry Point" column if package.json didn't contain a `main` property.
 - Common folder was served as `/<httpRoot>/<uibUrl>/common` instead of `/<httpRoot>/uibuilder/common`. Added the 2nd form, note that the first form should not be used, it may be deprecated in a future release.
 - Incorrect default values
 
@@ -25,9 +34,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Spurious `</a>` from the detailed information page (uibindex)
 - Spurious console.log for oneditresize
 
-[Commits](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.3...master)
+[Commits](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.3...2.0.4)
 
-----
 
 ## v2.0.3
 
