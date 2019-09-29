@@ -4,12 +4,12 @@ All notable changes to this project will be documented in this file. The format 
 
 uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.4...master)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.4...master)
 
 
 ----
 
-## [2.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.3...2.0.4) - 2019-09-28
+## [2.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.3...v2.0.4) - 2019-09-28
 
 ### Added
 - uib icon (blue node-red icon) to the detailed information page (uibindex) & logo to README
@@ -34,7 +34,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Spurious `</a>` from the detailed information page (uibindex)
 - Spurious console.log for oneditresize
 
-[Commits](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.3...2.0.4)
+[Commits](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.3...v2.0.4)
 
 
 ## v2.0.3
