@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. The format 
 
 uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.4...master)
+
+
+----
+
 ## [2.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/2.0.3...2.0.4) - 2019-09-28
 
 ### Added
@@ -13,7 +18,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 - CHANGELOG.md changed to use "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)" recommended formatting which will facilitate the use of `gh-release` in the future. Also added link to list of commits between versions.
 - `package.json` 
-   - added `browser` property as per [this spec}(https://github.com/defunctzombie/package-browser-field-spec) (also [here](https://github.com/stereobooster/package.json)) to give hints to bundlers. Changed `main` to point to the server-side js.
+   - added `browser` property as per [this spec](https://github.com/defunctzombie/package-browser-field-spec) (also [here](https://github.com/stereobooster/package.json)) to give hints to bundlers. Changed `main` to point to the server-side js.
    - Added `directories.doc`, `directories.lib`  & `directories.test`
 - Updated the detailed information page (`uibindex`). Improved layout and added some additional useful debugging information. Included the URL for the common resources.
 - Dependent packages updated to latest
