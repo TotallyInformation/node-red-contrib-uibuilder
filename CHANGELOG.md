@@ -55,7 +55,7 @@ Note that some of the WIKI examples have also been updated.
 
 Bugfix for [Issue #59](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/59)
 
-## [v2.0.0 (live)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.0-beta3.5...v2.0.1)
+## [v2.0.0 (live)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v1.2.6...v2.0.1)
 
 Welcome to v2 of uibuilder. 
 
