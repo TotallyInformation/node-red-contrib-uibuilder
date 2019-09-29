@@ -37,7 +37,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 [Commits](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.3...v2.0.4)
 
 
-## v2.0.3
+## [v2.0.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.2...v2.0.3)
 
 * **UPDATE** bootstrap-vue has been updated to v2.0.1 from the dev version. Check out the [bootstrap-vue changelog](https://bootstrap-vue.js.org/docs/misc/changelog/) because there are a few breaking changes.
 * **UPDATE** Fix formatting of links in the config panel in readiness for Node-RED v1.0
@@ -45,17 +45,17 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 [Commits](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.2...v2.0.3)
 
-## v2.0.2
+## [v2.0.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.1...v2.0.2)
 
 * **UPDATE** Update examples for uibuilder v2. Include new example of caching with a function node (many thanks to [@cflurin](https://discourse.nodered.org/u/cflurin))
   
 Note that some of the WIKI examples have also been updated.
 
-## v2.0.1
+## [v2.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.0...v2.0.1)
 
 Bugfix for [Issue #59](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/59)
 
-## v2.0.0 (live)
+## [v2.0.0 (live)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.0-beta3.5...v2.0.1)
 
 Welcome to v2 of uibuilder. 
 
