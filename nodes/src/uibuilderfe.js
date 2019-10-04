@@ -102,7 +102,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 var u = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
 
                 // @since 2017-11-06 If the last element of the path is an .html file name, remove it
-                if (u[u.length - 1].endsWith('.html')) u.pop()
+                if (u.length > 0) {  // Issue #73 - Check length of `u`, otherwise endsWith errors with undefined
+                    if (u[u.length - 1].endsWith('.html')) u.pop()
+                }
 
                 // Socket.IO namespace HAS to start with a leading slash
                 ioNamespace = u.join('/')
@@ -160,7 +162,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // split current url path, eliminate any blank elements and trailing or double slashes
             var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
             // handle url includes file name
-            if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
+            if (fullPath.length > 0) {  // Issue #73 - Check length of `fullPath`, otherwise endsWith errors with undefined
+                if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
+            }
             self.url = fullPath.pop() // not actually used and only gives the last path section of the url anyway
             self.httpNodeRoot = '/' + fullPath.join('/')
             self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')
