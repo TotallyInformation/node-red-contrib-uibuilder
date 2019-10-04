@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. The format 
 
 uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.4...master)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.5...master)
 
 
 ----
