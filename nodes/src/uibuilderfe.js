@@ -55,7 +55,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '2.0.4'
+        self.version = '2.0.5'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
 
@@ -101,8 +101,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 // split url path & eliminate any blank elements, and trailing or double slashes
                 var u = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
 
-                // @since 2017-11-06 If the last element of the path is an .html file name, remove it
-                if (u[u.length - 1].endsWith('.html')) u.pop()
+                /** @since v2.0.5 Extra check for 0 length, Issue #73. @since 2017-11-06 If the last element of the path is an .html file name, remove it */
+                if (u.length > 0) if (u[u.length - 1].endsWith('.html')) u.pop()
 
                 // Socket.IO namespace HAS to start with a leading slash
                 ioNamespace = u.join('/')
@@ -159,8 +159,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         {
             // split current url path, eliminate any blank elements and trailing or double slashes
             var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
-            // handle url includes file name
-            if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
+            /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
+            if (fullPath.length > 0) if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
             self.url = fullPath.pop() // not actually used and only gives the last path section of the url anyway
             self.httpNodeRoot = '/' + fullPath.join('/')
             self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')

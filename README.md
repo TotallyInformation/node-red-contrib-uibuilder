@@ -243,6 +243,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Thomas Wagner](https://github.com/Thomseeen) - thanks for the steer and PR on using projects folder if active.
 - [Arlena Derksen](https://github.com/boisei0) - thanks for suggestions, bug checks and Issue #59/PR #60.
 - [cflurin](https://discourse.nodered.org/u/cflurin) - thanks for the cache example.
+- [Scott Page - IndySoft](https://github.com/scottpageindysoft) - thanks for Issue #73/PR #74.
 
 
 <a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>

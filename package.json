@@ -105,6 +105,10 @@
     {
       "name": "cflurin",
       "url": "https://discourse.nodered.org/u/cflurin"
+    },
+    {
+      "name": "Scott Page - IndySoft",
+      "url": "https://github.com/scottpageindysoft"
     }
   ],
   "license": "Apache-2.0",

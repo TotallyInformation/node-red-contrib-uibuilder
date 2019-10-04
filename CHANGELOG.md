@@ -6,6 +6,10 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.4...master)
 
+## Fixed
+
+- [Issue #73](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/73) Cannot read property 'endsWith' of undefined in uibuilderfe.js - added extra zero-length checks. Thanks to [Scott Page - IndySoft](https://github.com/scottpageindysoft) for the fix.
+
 
 ----
 
