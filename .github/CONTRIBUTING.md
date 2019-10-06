@@ -4,7 +4,7 @@ Thanks for reading this page! Hopefully it means that you are considering or int
 
 You should note that I am not a full-time programmer and this project is intended to support the community that surrounds Node-RED which is a great open source project. So any and all help is most welcome and will hopefully continue to support and grow Node-RED as a tool that can be used by many.
 
-If all of this is techno-babble, don't despair and don't give up! Please join us in the #uibuilder channel of the [Node-RED Slack group](https://nodered.org/slack/) where you will find some friendly folk to explain the basics.
+If all of this is techno-babble, don't despair and don't give up! Please join us in the [Node-RED Discourse forum](https://discourse.nodered.org/) or in the #uibuilder channel of the [Node-RED Slack group](https://nodered.org/slack/) where you will find some friendly folk to explain the basics.
 
 ## Licensing and copyright
 
