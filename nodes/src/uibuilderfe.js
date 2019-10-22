@@ -84,6 +84,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             return self.debug === true ? self : 'uibuilderfe.js Version: ' + self.version
         }
 
+        self.uiDebug('log', 'uibuilderfe: uibuilder.debug = true, fe version: ', self.version)
+
         /** Try to get the Socket.IO namespace from the current URL - won't work if page is in a sub-folder
          * @since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
          * @since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
@@ -412,7 +414,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.send = function (msgToSend, channel) {
             if ( channel === null || channel === undefined ) channel = self.ioChannels.client
 
-            self.uiDebug('debug', 'uibuilderfe: sending msg - Namespace: ' + self.ioNamespace + ', Channel: ' + channel, msgToSend)
+            self.uiDebug('log', 'uibuilderfe: sending msg - Namespace: ' + self.ioNamespace + ', Channel: ' + channel, msgToSend)
 
             // Make sure msgToSend is an object
             if (channel === self.ioChannels.client) {
