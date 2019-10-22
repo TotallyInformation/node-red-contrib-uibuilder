@@ -19,7 +19,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Further improvements to changelog format & fixes to formatting.
 - Switch round some properties in package.json to make it easier to read.
-- uibuilderfe: Small tweak to debug output for better analysis.
+- uibuilderfe: Small tweak to debug output for better analysis. Also outputs both library version AND whether you are running the packed (minified) or unpacked version.
 
 
 

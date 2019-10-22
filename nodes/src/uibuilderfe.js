@@ -56,8 +56,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         //#region ======== Start of setup ======== //
 
         self.version = '2.0.5'
-        self.debug = false // do not change directly - use .debug() method
+        self.debug = true // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
+        self.isUnminified = /param/.test(function(param) {})
 
         /** Debugging function
          * @param {string} type One of log|error|warn|info|dir, etc
@@ -84,7 +85,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             return self.debug === true ? self : 'uibuilderfe.js Version: ' + self.version
         }
 
-        self.uiDebug('log', 'uibuilderfe: uibuilder.debug = true, fe version: ', self.version)
+        self.uiDebug('log', '\nuibuilderfe: Debug? ', self.debug, '\n\t\tVersion? ', self.version, '\n\t\tRunning Packed version? ', !self.isUnminified, '\n ')
+
 
         /** Try to get the Socket.IO namespace from the current URL - won't work if page is in a sub-folder
          * @since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
