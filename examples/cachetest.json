@@ -1,27 +1,32 @@
 [
     {
-        "id": "dad2c34a.f17d2",
+        "id": "c81e9ded.1f863",
         "type": "uibuilder",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "",
         "topic": "",
         "url": "uiswitch",
-        "x": 460,
-        "y": 1620,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "showfolder": false,
+        "x": 620,
+        "y": 1080,
         "wires": [
             [
-                "f3b82d51.b3aea",
-                "baad0c8f.1426"
+                "9f8d4d57.3157e",
+                "16aa3d7.761c5c3"
             ],
             [
-                "c5a9dc1.e98822"
+                "ec4e6395.b7646"
             ]
         ]
     },
     {
-        "id": "b6bda4ad.bdb598",
+        "id": "53ecf4d4.dfab4c",
         "type": "inject",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "at_home: true",
         "topic": "",
         "payload": "{\"name\":\"at_home\",\"service_name\":\"at_home\",\"characteristic\":\"On\",\"value\":true}",
@@ -30,18 +35,18 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "x": 150,
-        "y": 1600,
+        "x": 170,
+        "y": 1060,
         "wires": [
             [
-                "f190861c.f30268"
+                "61f76ec.b2a469"
             ]
         ]
     },
     {
-        "id": "44f38451.f4b7cc",
+        "id": "8df7c15b.e3cc4",
         "type": "inject",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "at_home: false",
         "topic": "",
         "payload": "{\"name\":\"at_home\",\"service_name\":\"at_home\",\"characteristic\":\"On\",\"value\":false}",
@@ -50,76 +55,76 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "x": 140,
-        "y": 1640,
+        "x": 160,
+        "y": 1100,
         "wires": [
             [
-                "f190861c.f30268"
+                "61f76ec.b2a469"
             ]
         ]
     },
     {
-        "id": "1f9837dc.8d43e8",
+        "id": "b912e4ce.5a69e8",
         "type": "link in",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "home-replay",
         "links": [
-            "f3b82d51.b3aea",
-            "c5a9dc1.e98822"
+            "9f8d4d57.3157e",
+            "ec4e6395.b7646"
         ],
-        "x": 195,
-        "y": 1560,
+        "x": 215,
+        "y": 1020,
         "wires": [
             [
-                "f190861c.f30268"
+                "61f76ec.b2a469"
             ]
         ]
     },
     {
-        "id": "f3b82d51.b3aea",
+        "id": "9f8d4d57.3157e",
         "type": "link out",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "home-controls",
         "links": [
-            "1f9837dc.8d43e8"
+            "b912e4ce.5a69e8"
         ],
-        "x": 595,
-        "y": 1560,
+        "x": 755,
+        "y": 1020,
         "wires": []
     },
     {
-        "id": "c5a9dc1.e98822",
+        "id": "ec4e6395.b7646",
         "type": "link out",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "",
         "links": [
             "ae0fd0a1.2f9f7",
-            "1f9837dc.8d43e8"
+            "b912e4ce.5a69e8"
         ],
-        "x": 595,
-        "y": 1640,
+        "x": 755,
+        "y": 1100,
         "wires": []
     },
     {
-        "id": "f190861c.f30268",
+        "id": "61f76ec.b2a469",
         "type": "function",
-        "z": "63281c77.40a064",
-        "name": "cache",
-        "func": "// saved context\nvar ui_msgs = context.get('ui_msgs') || {}\n\n// Replay cache if requested\nif (msg.hasOwnProperty('uibuilderCtrl') && msg.uibuilderCtrl === 'ready for content') {\n    for (var name in ui_msgs) {\n        node.send({\n            \"topic\": msg.topic,\n            \"payload\": ui_msgs[name],\n            \"_socketId\": msg._socketId\n        })\n    }\n    return null\n}\n\n// ignore cacheControl and uibuilder control messages\nif (msg.hasOwnProperty('cacheControl') || msg.hasOwnProperty('uibuilderCtrl')) return null\n\nif (msg.hasOwnProperty('payload') && msg.payload.hasOwnProperty('name')) {\n    // Keep the last msg.payload by msg.payload.name\n    ui_msgs[msg.payload.name] = msg.payload\n    \n    // save context for next time\n    context.set('ui_msgs', ui_msgs)\n    msg._socketId = null\n} else {\n    node.warn(\"no payload or payload.name\")\n    msg = null\n}\n\n// Show number of cached msgs in status\nnode.status({fill:'green',shape:'ring',text:'Cached: ' + Object.keys('ui_msgs').length})\n\nreturn msg;\n",
+        "z": "18cb249f.38bafb",
+        "name": "cache by payload.name",
+        "func": "/* jshint asi: true */\n\n// cache variable name - needs to be unique for each cache\nvar cacheVarName = 'ui_msgs'\n\n// saved context\nvar ui_msgs = context.get(cacheVarName) || {}\n\n// Replay cache if requested\nif (msg.hasOwnProperty('uibuilderCtrl') && msg.uibuilderCtrl === 'ready for content') {\n    for (var name in ui_msgs) {\n        node.send({\n            \"topic\": msg.topic,\n            \"payload\": ui_msgs[name],\n            \"_socketId\": msg._socketId\n        })\n    }\n    return null\n}\n\n// ignore cacheControl and uibuilder control messages\nif (msg.hasOwnProperty('cacheControl') || msg.hasOwnProperty('uibuilderCtrl')) return null\n\nif (msg.hasOwnProperty('payload') && msg.payload.hasOwnProperty('name')) {\n    // Keep the last msg.payload by msg.payload.name\n    ui_msgs[msg.payload.name] = msg.payload\n    \n    // save context for next time\n    context.set(cacheVarName, ui_msgs)\n    \n    msg._socketId = null\n} else {\n    node.warn(\"no payload or payload.name\")\n    msg = null\n}\n\n// Show number of cached msgs in status\nnode.status({fill:'green',shape:'ring',text:'Cached: ' + Object.keys(ui_msgs).length})\n\nreturn msg;\n",
         "outputs": 1,
         "noerr": 0,
-        "x": 330,
-        "y": 1620,
+        "x": 410,
+        "y": 1080,
         "wires": [
             [
-                "dad2c34a.f17d2"
+                "c81e9ded.1f863"
             ]
         ]
     },
     {
-        "id": "baad0c8f.1426",
+        "id": "16aa3d7.761c5c3",
         "type": "debug",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "uib output",
         "active": true,
         "tosidebar": true,
@@ -127,51 +132,51 @@
         "tostatus": false,
         "complete": "payload",
         "targetType": "msg",
-        "x": 640,
-        "y": 1600,
+        "x": 800,
+        "y": 1060,
         "wires": []
     },
     {
-        "id": "220f66d3.43847a",
+        "id": "affc4151.63336",
         "type": "comment",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "index.html",
         "info": "<!doctype html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"utf-8\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n    <meta name=\"viewport\" content=\"width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes\">\n\n    <title>Node-RED UI Builder</title>\n    <meta name=\"description\" content=\"Node-RED UI Builder - VueJS + bootstrap-vue version\">\n\n    <link rel=\"icon\" href=\"./images/node-blue.ico\">\n\n    <!-- See https://goo.gl/OOhYW5 -->\n    <link rel=\"manifest\" href=\"./manifest.json\">\n    <meta name=\"theme-color\" content=\"#3f51b5\">\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"../uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css\" />\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.css\" />\n    \n    <link rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n</head>\n<body>\n    <div id=\"app\" v-cloak>\n      <b-container id=\"app_container\">           \n        <b-card no-body>\n          <b-tabs card small>\n            <b-tab title=\"Main\" active>\n              <b-card header=\"Control\" border-variant=\"primary\">\n                <acc-switch name=\"at_home\" v-model=\"v_value.at_home\" badge></acc-switch>\n                <acc-switch name=\"security_system\" v-model=\"v_value.security_system\"></acc-switch>\n                <acc-switch name=\"heating\" v-model=\"v_value.heating\"></acc-switch>\n                <acc-switch name=\"greenhouse\" v-model=\"v_value.greenhouse\"></acc-switch>\n              </b-card>\n            </b-tab>\n\n            <b-tab title=\"Accessories\">\n              <b-card header=\"Accessories\" border-variant=\"primary\">\n                <b-card-text>an accessories list ...</b-card-text>\n              </b-card>\n            </b-tab>\n          </b-tabs>\n          \n          <b-card v-if=debug header=\"Debug\" border-variant=\"info\">\n            <b-card-text v-if=\"msg\">last msg: {{msg.payload}}</b-card-text>\n            <b-card-text>accessories: {{accessories}}</b-card-text>\n            <b-card-text>v_value: {{v_value}}</b-card-text>\n          </b-card>\n        </b-card>\n      </b-container>\n    </div>\n    \n    <script src=\"../uibuilder/vendor/socket.io/socket.io.js\"></script>\n\n    <!--  Vendor Libraries - Load in the right order -->\n    <script src=\"../uibuilder/vendor/vue/dist/vue.js\"></script> <!-- dev version with component compiler -->\n    <!-- <script src=\"../uibuilder/vendor/vue/dist/vue.min.js\"></script>   prod version with component compiler -->\n    <!-- <script src=\"../uibuilder/vendor/vue/dist/vue.runtime.min.js\"></script>   prod version without component compiler -->\n    <script src=\"../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.js\"></script>\n    <!-- Loading from CDN -->\n    <!-- <script src=\"https://unpkg.com/http-vue-loader\"></script> -->\n    <!-- Loading from npm installed version -->\n    <script src=\"../uibuilder/vendor/http-vue-loader/src/httpVueLoader.js\"></script>\n    \n    <!-- REQUIRED: Sets up Socket listeners and the msg object -->\n    <!-- <script src=\"./uibuilderfe.js\"></script>   //dev version -->\n    <script src=\"./uibuilderfe.min.js\"></script> <!--    //prod version -->\n    <!-- OPTIONAL: You probably want this. Put your custom code here -->\n    <script src=\"./index.js\"></script>\n</body>\n</html>\n\n",
-        "x": 360,
-        "y": 1520,
+        "x": 480,
+        "y": 980,
         "wires": [],
         "icon": "node-red/parser-html.svg"
     },
     {
-        "id": "6db7ebea.bde3e4",
+        "id": "9bd5106a.eb76",
         "type": "comment",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "index.js",
         "info": "'use strict'\n\nnew Vue({\n  el: '#app',\n  components: {\n    'acc-switch': httpVueLoader('acc-switch.vue'),\n  },\n  \n  data: {\n    msg: {},\n    accessories: {},\n    v_value: {},\n    debug: false\n  },\n  \n  methods: {    \n  \n  },\n\n  mounted: function() {\n    //console.debug('[mounted] app mounted - setting up uibuilder watchers')\n    uibuilder.start()\n    \n    uibuilder.onChange('msg', function(msg) {\n      this.msg = msg\n      \n      if (msg.payload.value !== this.v_value[msg.payload.name]) {\n        console.debug('[uibuilder.onChange]', msg.payload)\n        Vue.set(this.accessories, msg.payload.name, msg.payload)\n        Vue.set(this.v_value, msg.payload.name, msg.payload.value)\n      }\n    }.bind(this))\n  }\n})\n",
-        "x": 490,
-        "y": 1520,
+        "x": 610,
+        "y": 980,
         "wires": [],
         "icon": "font-awesome/fa-file-code-o"
     },
     {
-        "id": "6fe16c41.43ac04",
+        "id": "a362192e.f34228",
         "type": "comment",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "acc-switch.vue",
         "info": "<template>\n  <div>\n    <b-form-checkbox\n      v-bind:checked=\"checked\"\n      v-on:change.native=\"sw_onChange($event.target.checked)\"\n      switch size=\"lg\"\n      >{{name}}\n      <b-badge v-if=\"badge\" variant=\"info\">{{checked? 'on': 'off'}}</b-badge>\n    </b-form-checkbox>\n  </div>\n</template>\n\n<script>\nmodule.exports = {\n  model: {\n    prop: 'checked',\n    event: 'change'\n  },\n  props: {\n    checked: Boolean,\n    name: String,\n    badge: {type: Boolean, default: false},\n  },\n  \n  data: function() {\n    return {\n    \n    }\n  },\n\n  methods: {\n    sw_onChange: function(value) {\n      console.debug('[sw_onChange]',this.name, value)\n      uibuilder.send({\n        \"topic\": \"sw_onChange\",\n        \"payload\": {\n          \"name\": this.name,\n          \"service_name\": this.name,\n          \"characteristic\":\"On\",\n          \"value\": value\n        }\n      })\n    }\n  },\n}\n</script>",
-        "x": 640,
-        "y": 1520,
+        "x": 760,
+        "y": 980,
         "wires": [],
         "icon": "node-red/hash.svg"
     },
     {
-        "id": "fbadf675.c649c8",
+        "id": "c8bec69.6d66c38",
         "type": "comment",
-        "z": "63281c77.40a064",
+        "z": "18cb249f.38bafb",
         "name": "Cache Example: Instructions",
-        "info": "Many thanks to cflurin for this example.\n\n## To install this example:\n\n1. Install `node-red-contrib-uibuilder` & import\n  from the library\n\n2. In the uibuilder Front-End Library Manager \n  add `http-vue-loader`\n\n3. Copy the code from the comment nodes \n  (index.htm and index.js) and paste into the \n  corresponding files.\n\n4. Copy the code from the comment node \n  acc-switch.vue and paste into a new file \n  `acc-switch.vue`.\n\nSee here for further details: https://discourse.nodered.org/t/front-end-based-on-uibuilder-1-component-acc-switch-vue/14962\n\nAuthor: https://discourse.nodered.org/u/cflurin\n\n## To try\n\n1. Click one of the inject nodes and watch \nthe \"At Home\" switch in the ui change.\n\n2, Click any of the switches in the ui and\nsee the debug output.\n\n3. Having set some of the switches, load a new\nbrowser tab (or a different browser) to the same\nui page and note that the cache ensures that\nall of the switches are the same.\n\n4. Change a switch on one of the tabs and note\nthat the other tab also changes.\n\n## Other things to try\n\nTry altering the cache function so that different \nbrowser tabs can have different switch settings.\n\nWhile this doesn't make particular sense for \nthis example as written, it is good to know\nthat you can do it if needed.\n\nHint: You will need to retain the socket ID.",
-        "x": 160,
-        "y": 1520,
+        "info": "Many thanks to cflurin for this example.\n\n## To install this example:\n\n1. Install `node-red-contrib-uibuilder` & import\n  from the library\n\n2. In the uibuilder Front-End Library Manager \n  add `http-vue-loader`\n\n3. Copy the code from the comment nodes \n  (index.htm and index.js) and paste into the \n  corresponding files.\n\n4. Copy the code from the comment node \n  acc-switch.vue and paste into a new file \n  `acc-switch.vue`.\n\n5. Change the name of the cache variable if copying this function.\n\nSee here for further details: https://discourse.nodered.org/t/front-end-based-on-uibuilder-1-component-acc-switch-vue/14962\n\nAuthor: https://discourse.nodered.org/u/cflurin\n\n## To try\n\n1. Click one of the inject nodes and watch \nthe \"At Home\" switch in the ui change.\n\n2, Click any of the switches in the ui and\nsee the debug output.\n\n3. Having set some of the switches, load a new\nbrowser tab (or a different browser) to the same\nui page and note that the cache ensures that\nall of the switches are the same.\n\n4. Change a switch on one of the tabs and note\nthat the other tab also changes.\n\n## Other things to try\n\nTry altering the cache function so that different \nbrowser tabs can have different switch settings.\n\nWhile this doesn't make particular sense for \nthis example as written, it is good to know\nthat you can do it if needed.\n\nHint: You will need to retain the socket ID.",
+        "x": 280,
+        "y": 980,
         "wires": []
     }
 ]
