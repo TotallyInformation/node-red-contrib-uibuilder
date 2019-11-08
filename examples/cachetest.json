@@ -70,7 +70,8 @@
         "name": "home-replay",
         "links": [
             "9f8d4d57.3157e",
-            "ec4e6395.b7646"
+            "ec4e6395.b7646",
+            "6327f550.24f41c"
         ],
         "x": 215,
         "y": 1020,
@@ -177,6 +178,66 @@
         "info": "Many thanks to cflurin for this example.\n\n## To install this example:\n\n1. Install `node-red-contrib-uibuilder` & import\n  from the library\n\n2. In the uibuilder Front-End Library Manager \n  add `http-vue-loader`\n\n3. Copy the code from the comment nodes \n  (index.htm and index.js) and paste into the \n  corresponding files.\n\n4. Copy the code from the comment node \n  acc-switch.vue and paste into a new file \n  `acc-switch.vue`.\n\n5. Change the name of the cache variable if copying this function.\n\nSee here for further details: https://discourse.nodered.org/t/front-end-based-on-uibuilder-1-component-acc-switch-vue/14962\n\nAuthor: https://discourse.nodered.org/u/cflurin\n\n## To try\n\n1. Click one of the inject nodes and watch \nthe \"At Home\" switch in the ui change.\n\n2, Click any of the switches in the ui and\nsee the debug output.\n\n3. Having set some of the switches, load a new\nbrowser tab (or a different browser) to the same\nui page and note that the cache ensures that\nall of the switches are the same.\n\n4. Change a switch on one of the tabs and note\nthat the other tab also changes.\n\n## Other things to try\n\nTry altering the cache function so that different \nbrowser tabs can have different switch settings.\n\nWhile this doesn't make particular sense for \nthis example as written, it is good to know\nthat you can do it if needed.\n\nHint: You will need to retain the socket ID.",
         "x": 280,
         "y": 980,
+        "wires": []
+    },
+    {
+        "id": "a87ef10c.5f61a",
+        "type": "inject",
+        "z": "18cb249f.38bafb",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 315,
+        "y": 1140,
+        "wires": [
+            [
+                "6c9d6822.3667c8"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "6c9d6822.3667c8",
+        "type": "change",
+        "z": "18cb249f.38bafb",
+        "name": "Clear Cache",
+        "rules": [
+            {
+                "t": "set",
+                "p": "cacheControl",
+                "pt": "msg",
+                "to": "CLEAR",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 410,
+        "y": 1140,
+        "wires": [
+            [
+                "6327f550.24f41c"
+            ]
+        ]
+    },
+    {
+        "id": "6327f550.24f41c",
+        "type": "link out",
+        "z": "18cb249f.38bafb",
+        "name": "",
+        "links": [
+            "b912e4ce.5a69e8"
+        ],
+        "x": 515,
+        "y": 1140,
         "wires": []
     }
 ]
