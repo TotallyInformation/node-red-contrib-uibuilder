@@ -175,7 +175,7 @@ module.exports = function(RED) {
             if(err){
                 log.error(`[uibuilder] Error copying common template folder from ${path.join( uib.masterTemplateFolder, 'common')} to ${uib.commonFolder}`, err)
             } else {
-                log.trace(`[uibuilder] Copied common template folder to local common folder (not overwriting)`, uib.commonFolder )
+                log.trace(`[uibuilder] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
             }
         })
         // and serve it up as a static resource folder (added in nodeGo() so available for each instance as `./common/`)
@@ -317,7 +317,7 @@ module.exports = function(RED) {
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
-        if ( uib.deployments.hasOwnProperty(node.id) ) uib.deployments[node.id]++
+        if ( Object.prototype.hasOwnProperty.call(uib.deployments, node.id) ) uib.deployments[node.id]++
         else uib.deployments[node.id] = 1
         log.trace(`[uibuilder:${uibInstance}] Number of uib.Deployments`, uib.deployments[node.id] )
 
@@ -479,7 +479,7 @@ module.exports = function(RED) {
                 }
 
                 // If the sender hasn't added msg._clientId, add the Socket.id now
-                if ( ! msg.hasOwnProperty('_socketId') ) {
+                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) {
                     msg._socketId = socket.id
                 }
 
@@ -499,12 +499,12 @@ module.exports = function(RED) {
                 }
 
                 // If the sender hasn't added msg._clientId, add the Socket.id now
-                if ( ! msg.hasOwnProperty('_socketId') ) {
+                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) {
                     msg._socketId = socket.id
                 }
 
                 // @since 2017-11-05 v0.4.9 If the sender hasn't added msg.from, add it now
-                if ( ! msg.hasOwnProperty('from') ) {
+                if ( ! Object.prototype.hasOwnProperty.call(msg, 'from') ) {
                     msg.from = 'client'
                 }
 
@@ -599,7 +599,7 @@ module.exports = function(RED) {
                     msg = { 'payload': msg }
                 }
                 // Add topic from node config if present and not present in msg
-                if ( !(msg.hasOwnProperty('topic')) || msg.topic === '' ) {
+                if ( !(Object.prototype.hasOwnProperty.call(msg, 'topic')) || msg.topic === '' ) {
                     if ( node.topic !== '' ) msg.topic = node.topic
                     else msg.topic = uib.moduleName
                 }
@@ -1183,8 +1183,7 @@ module.exports = function(RED) {
      */
     RED.httpAdmin.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
         log.trace('[uibindex] User Page/API. List all available uibuilder endpoints')
-        const debug = true
-
+        
         /** If GET includes a "check" parameter, see if that uibuilder URL is in use
          * @returns {boolean} True if the given url exists, else false
          */
@@ -1616,7 +1615,7 @@ module.exports = function(RED) {
                 // check pkg exiss in uib.installedPackages, if so, serve it up
                 case 'install': {
                     // package name should exist in uib.installedPackages
-                    if ( uib.installedPackages.hasOwnProperty(params.package) ) success = true
+                    if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
                     if (success === true) {
                         // Add an ExpressJS URL
                         uiblib.servePackage(params.package, uib, userDir, log, app)
@@ -1626,7 +1625,7 @@ module.exports = function(RED) {
                 // Check pkg does not exist in uib.installedPackages, if so, remove served url
                 case 'remove': {
                     // package name should NOT exist in uib.installedPackages
-                    if ( ! uib.installedPackages.hasOwnProperty(params.package) ) success = true
+                    if ( ! Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
                     if (success === true) {
                         // Remove ExpressJS URL
                         uiblib.unservePackage(params.package, uib, userDir, log, app)
@@ -1636,7 +1635,7 @@ module.exports = function(RED) {
                 // Check pkg still exists in uib.installedPackages
                 case 'update': {
                     // package name should exist in uib.installedPackages
-                    if ( uib.installedPackages.hasOwnProperty(params.package) ) success = true
+                    if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
                     break
                 }
             }
