@@ -4,10 +4,23 @@ All notable changes to this project will be documented in this file. The format 
 
 uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.5...master)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.6...master)
 
 
 ----
+
+## [2.0.6](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.5...v2.0.6) - 2019-11-21
+
+### Fixed
+
+- Improved detection for projects. Previously if projects _had_ been in use and were then disabled, uibuilder would still think them active.
+
+## Changed
+
+- Add a new example to the library: cacheByTopic - A simple caching example that uses a function node to cache the last msg for each topic & replay them when a client connects.
+- Improved initial debug msg in the front-end (if debug=true), shows versions and whether the minimised version of `uibuilderfe` is in use.
+- Code safety improvements and tidy up.
+- Slight tweak to the default template (VueJS). The button now has an ID and the increment function prints out the event object to console.
 
 ## [2.0.5](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.4...v2.0.5) - 2019-10-04
 
@@ -20,8 +33,6 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Further improvements to changelog format & fixes to formatting.
 - Switch round some properties in package.json to make it easier to read.
 - uibuilderfe: Small tweak to debug output for better analysis. Also outputs both library version AND whether you are running the packed (minified) or unpacked version.
-
-
 
 ## [2.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.3...v2.0.4) - 2019-09-28
 
