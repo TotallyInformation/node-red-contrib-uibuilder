@@ -15,7 +15,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Improved detection for projects. Previously if projects _had_ been in use and were then disabled, uibuilder would still think them active.
 
-## Changed
+### Changed
 
 - Add a new example to the library: cacheByTopic - A simple caching example that uses a function node to cache the last msg for each topic & replay them when a client connects.
 - Improved initial debug msg in the front-end (if debug=true), shows versions and whether the minimised version of `uibuilderfe` is in use.
@@ -28,7 +28,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - [Issue #73](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/73) Cannot read property 'endsWith' of undefined in uibuilderfe.js - added extra zero-length checks. Thanks to [Scott Page - IndySoft](https://github.com/scottpageindysoft) for the fix.
 
-## Changed
+### Changed
 
 - Further improvements to changelog format & fixes to formatting.
 - Switch round some properties in package.json to make it easier to read.
