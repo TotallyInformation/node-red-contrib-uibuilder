@@ -116,8 +116,10 @@ module.exports = function(RED) {
     // Set the root folder
     uib.rootFolder = path.join(userDir, uib.moduleName)
     // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
-    const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
-    if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
+    if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
+        const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
+        if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
+    }
 
     /** Locations for uib config can common folders */
     uib.configFolder = path.join(uib.rootFolder, '.config') 
