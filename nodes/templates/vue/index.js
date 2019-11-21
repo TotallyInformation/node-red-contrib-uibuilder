@@ -67,7 +67,9 @@ var app1 = new Vue({
         },
     }, // --- End of computed --- //
     methods: {
-        increment: function() {
+        increment: function(event) {
+            console.log('Button Pressed. Event DatA: ', event)
+
             // Increment the count by one
             this.counterBtn = this.counterBtn + 1
             var topic = this.msgRecvd.topic || 'uibuilder/vue'
@@ -80,6 +82,7 @@ var app1 = new Vue({
                     'inputChkBox': this.inputChkBox
                 }
             } )
+
         }, // --- End of increment --- //
 
         // return formatted HTML version of JSON object
