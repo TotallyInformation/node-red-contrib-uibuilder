@@ -14,9 +14,9 @@
  * @param {*} packet The msg send by a client
  * @param {function} next The callback to hand off to the next middleware
  */
-// module.exports = function(packet, next) {
+// module.exports = function(msg, next) {
 //     //if (not some kind of error) {
-//         console.log('SIO packet', packet)
+//         console.log('Socket.IO:sioUse.js - msg from client: ', msg)
 //         return next()
 //     //} else {
 //         // The error is sent back to the client and further processing of the msg stops
