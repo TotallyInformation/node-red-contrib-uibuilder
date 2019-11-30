@@ -11,6 +11,14 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Add a middleware JavaScript module file to allow use of `socket.use`. The new `<uibRoot>/.config/sioUse.js` file exports a single function.
   The function is called everytime the uibuilder node receives a message from a client. If the `next()` callback function is called with a `new Error('err message')`
   parameter, that is passed back to the client.
+- uibuilderfe: Add socket.io `error` event handler - outputs a console warning message so switch on debug to see it. 
+  
+  The Socket.IO server will send an error message if the socket.use middleware (see above) calls `next( new Error('err message') )`
+
+  Add your own event handler to do something useful with the message.
+
+  Typical use is to handle data errors or even authorisation failures.
+
 
 ### Changed
 
