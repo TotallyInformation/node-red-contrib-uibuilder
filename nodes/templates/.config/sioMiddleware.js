@@ -1,6 +1,6 @@
 /* globals module, log */
 /**
- * Template Socket.IO Middleware for uibuilder.
+ * Template Socket.IO Connection Middleware for uibuilder.
  *
  * NOTES & WARNINGS:
  *   1) This function is only called ONCE - when a new client connects. So any authentication/security processing is limited
