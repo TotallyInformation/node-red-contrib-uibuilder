@@ -374,6 +374,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 //console.dir(err)
             }) // --- End of socket connect error processing ---
             
+            // Socket.io error - from the server (socket.use middleware triggered an error response)
+            self.socket.on('error', function(err) {
+                self.uiDebug('warn', 'uibuilderfe:ioSetup: SOCKET ERROR from server - MESSAGE: ', err)
+                //console.dir(err)
+            }) // --- End of socket error processing ---
+
             // Ensure we are connected, retry if not
             self.checkConnect(self.retryMs, self.retryFactor)
 
