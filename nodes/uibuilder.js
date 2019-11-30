@@ -69,11 +69,17 @@ const uib = {
     rootFolder: null,
     /** Location for uib config folder - set once rootFolder is finalised */
     configFolder: null,
+    /** name of the config folder */
+    configFolderName: '.config',
     /** Location for uib common folder - set once rootFolder is finalised */
     commonFolder: null,
+    /** Name of the `common` folder for shared resources */
+    commonFolderName: 'common',
+    /** Name of the Socket.IO Use Middleware */
+    sioUseMwName: 'sioUse.js',
     /** What version of Node.JS are we running under? Impacts some file processing. 
      * @type {Array.<number|string>} */
-    nodeVersion: process.version.replace('v','').split('.')
+    nodeVersion: process.version.replace('v','').split('.'),
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -122,8 +128,8 @@ module.exports = function(RED) {
     }
 
     /** Locations for uib config can common folders */
-    uib.configFolder = path.join(uib.rootFolder, '.config') 
-    uib.commonFolder = path.join(uib.rootFolder, 'common')
+    uib.configFolder = path.join(uib.rootFolder,uib.configFolderName) 
+    uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
     
     /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
     const httpNodeRoot = uib.nodeRoot = RED.settings.httpNodeRoot
@@ -161,21 +167,20 @@ module.exports = function(RED) {
         RED.log.error(`uibuilder: Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
         uib_rootFolder_OK = false
     }
-    // Assuming all OK, copy over the master vendor package list & the working package list as needed (doesn't overwrite)
+    // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
     if (uib_rootFolder_OK === true) {
-        const fsOpts = {'overwrite': false}
+        const fsOpts = {'overwrite': false, 'preserveTimestamps':true}
         try {
-            fs.copySync( path.join( uib.masterTemplateFolder, uib.masterPackageListFilename ), path.join( uib.configFolder, uib.masterPackageListFilename ), fsOpts )
-            fs.copySync( path.join( uib.masterTemplateFolder, uib.masterPackageListFilename ), path.join( uib.configFolder, uib.packageListFilename ), fsOpts )
+            fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
         } catch (e) {
-            RED.log.error(`uibuilder: Master Package List copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
+            RED.log.error(`uibuilder: Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
             uib_rootFolder_OK = false
         }
+
         // and copy the common folder from template (contains the default blue node-red icon)
-        const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-        fs.copy( path.join( uib.masterTemplateFolder, 'common' ), uib.commonFolder, cpyOpts, function(err){
+        fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err){
             if(err){
-                log.error(`[uibuilder] Error copying common template folder from ${path.join( uib.masterTemplateFolder, 'common')} to ${uib.commonFolder}`, err)
+                log.error(`[uibuilder] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
             } else {
                 log.trace(`[uibuilder] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
             }
@@ -215,16 +220,11 @@ module.exports = function(RED) {
     io.set('transports', ['polling', 'websocket'])
 
     /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev3 */
-    let sioMwPath = path.join(uib.rootFolder,'.config','sioMiddleware.js')
-    if ( ! fs.existsSync(sioMwPath) ) {
-        // Doesn't exist so copy the Template
-        fs.copySync( path.join(uib.masterTemplateFolder, 'sioMiddleware.js'), sioMwPath, {'overwrite':false, 'preserveTimestamps':true})
-        log.trace(`[uibuilder:Module] Copied sioMiddleware template file from ${uib.masterTemplateFolder} to ${sioMwPath} (not overwriting)` )
-    }
+    let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
     try {
         const sioMiddleware = require(sioMwPath)
         if ( typeof sioMiddleware === 'function' ) {
-            io.use(require(path.join(uib.rootFolder,'.config','sioMiddleware.js')))
+            io.use(require(sioMwPath))
         }    
     } catch (e) {
         log.trace('[uibuilder:Module] Socket.IO Middleware failed to load. Reason: ', e.message)
@@ -329,12 +329,7 @@ module.exports = function(RED) {
          */
         var httpMiddleware = function(req,res,next) { next() }
         /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
-        let uibMwPath = path.join(uib.rootFolder,'.config','uibMiddleware.js')
-        if ( ! fs.existsSync(uibMwPath) ) {
-            // Doesn't exist so copy the Template
-            fs.copySync( path.join(uib.masterTemplateFolder, 'uibMiddleware.js'), uibMwPath, {'overwrite':false, 'preserveTimestamps':true})
-            log.trace(`[uibuilder:${uibInstance}] Copied uibMiddleware template file from ${uib.masterTemplateFolder} to ${uibMwPath} (not overwriting)` )
-        }
+        let uibMwPath = path.join(uib.configFolder, 'uibMiddleware.js')
         try {
             const uibMiddleware = require(uibMwPath)
             if ( typeof uibMiddleware === 'function' ) {
@@ -431,8 +426,8 @@ module.exports = function(RED) {
             )
         }
         /** Make the uibuilder static common folder available */
-        app.use( tilib.urlJoin(node.url,'common'), commonStatic )
-        app.use( tilib.urlJoin(uib.moduleName,'common'), commonStatic )
+        app.use( tilib.urlJoin(node.url, uib.commonFolderName), commonStatic )
+        app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
 
         const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
 
@@ -451,6 +446,14 @@ module.exports = function(RED) {
         ioNs.on('connection', function(socket) {
             node.ioClientsCount++
 
+            // Try to load the sioUse middleware function
+            try {
+                const sioUseMw = require( path.join(uib.configFolder, uib.sioUseMwName) )
+                if ( typeof sioUseMw === 'function' ) socket.use(sioUseMw)
+            } catch(e) {
+                log.trace(`[uibuilder:${uibInstance}] Socket.use Failed to load Use middleware. Reason: `, e.message)
+            }
+            
             log.trace(`[uibuilder:${uibInstance}] Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}`)
 
             uiblib.setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
@@ -966,7 +969,8 @@ module.exports = function(RED) {
         // TODO: (v2.1) Add path validation - Also, file should always exist to check that
         const fullname = path.join(uib.rootFolder, req.body.url, folder, req.body.fname)
 
-        fs.writeFile(fullname, req.body.data, function (err, _data) {
+        // eslint-disable-next-line no-unused-vars
+        fs.writeFile(fullname, req.body.data, function (err, data) {
             if (err) {
                 // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
                 log.error(`[${req.body.url}:uibputfile] Admin API. File write FAIL for ${req.body.fname}`, err)
@@ -1222,7 +1226,8 @@ module.exports = function(RED) {
                 var otherPaths = [], uibPaths = []
                 var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
                 // req.app._router.stack.forEach( function(r, i, stack) { // shows Node-RED admin server paths
-                app._router.stack.forEach( function(r, _i, _stack) { // shows Node-RED user server paths
+                // eslint-disable-next-line no-unused-vars
+                app._router.stack.forEach( function(r, i, stack) { // shows Node-RED user server paths
                     let rUrl = r.regexp.toString().replace(urlRe, '')
                     if ( rUrl === '' ) {
                         uibPaths.push( {

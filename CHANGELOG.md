@@ -6,6 +6,16 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.6...master)
 
+### New
+
+- Add a middleware JavaScript module file to allow use of `socket.use`. The new `<uibRoot>/.config/sioUse.js` file exports a single function.
+  The function is called everytime the uibuilder node receives a message from a client. If the `next()` callback function is called with a `new Error('err message')`
+  parameter, that is passed back to the client.
+
+### Changed
+
+- Further code tidy up.
+- Move configuration template files from templates root to `templates/.config` and reduce copy processes down to just copying the folder with no overwrite
 
 ----
 
