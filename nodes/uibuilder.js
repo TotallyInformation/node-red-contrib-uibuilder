@@ -342,6 +342,8 @@ module.exports = function(RED) {
         /** This ExpressJS middleware runs when the uibuilder page loads - set cookies and headers
          * @see https://expressjs.com/en/guide/using-middleware.html */
         function masterMiddleware (req, res, next) {
+            // Help reduce risk of XSS attacks
+            res.setHeader('X-XSS-Protection','1;mode=block')
             // Tell the client what Socket.IO namespace to use,
             // trim the leading slash because the cookie will turn it into a %2F
             res.setHeader('uibuilder-namespace', node.ioNamespace)
