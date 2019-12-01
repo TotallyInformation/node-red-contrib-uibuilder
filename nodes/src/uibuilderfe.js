@@ -247,7 +247,20 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
             self.uiDebug('debug', 'uibuilderfe:ioSetup: About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
-            self.socket = io(self.ioNamespace, { path: self.ioPath, transports: self.ioTransport })
+            self.socket = io(self.ioNamespace, { 
+                path: self.ioPath, 
+                transports: self.ioTransport, 
+                transportOptions: {
+                    // Can only set headers when polling
+                    polling: {
+                        extraHeaders: {
+                            'x-clientid': 'uibuilderfe',
+                            Authorization: 'test', //TODO: Replace with self.jwt variable
+                        }
+                    },
+                },
+                //extraHeaders: { Authorization: `Bearer ${your_jwt}` } 
+            })
 
             /** When the socket is connected - set ioConnected flag and reset connect timer  */
             self.socket.on('connect', function () {
@@ -384,9 +397,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             self.checkConnect(self.retryMs, self.retryFactor)
 
             /* We really don't need these, just for interest
-                socket.on('connect_timeout', function(data) {
-                    self.uiDebug('log', 'SOCKET CONNECT TIMEOUT - Namespace: ' + ioNamespace)
-                    console.dir(data)
+                socket.on('connect_timeout', function(timeout) {
+                    self.uiDebug('log', 'SOCKET CONNECT TIMEOUT - Namespace: ' + ioNamespace + ', Timeout: ' + timeout)
                 }) // --- End of socket connect timeout processing ---
                 socket.on('reconnect', function(attemptNum) {
                     self.uiDebug('log', 'SOCKET RECONNECTED - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
@@ -401,15 +413,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     self.uiDebug('log', 'SOCKET RECONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
                     //console.dir(err)
                 }) // --- End of socket reconnect_error processing ---
-                socket.on('reconnect_failed', function(data) {
+                socket.on('reconnect_failed', function() {
                     self.uiDebug('log', 'SOCKET RECONNECT FAILED - Namespace: ' + ioNamespace)
-                    console.dir(data)
                 }) // --- End of socket reconnect_failed processing ---
                 socket.on('ping', function() {
                     self.uiDebug('log', 'SOCKET PING - Namespace: ' + ioNamespace)
                 }) // --- End of socket ping processing ---
-                socket.on('pong', function(data) {
-                    self.uiDebug('log', 'SOCKET PONG - Namespace: ' + ioNamespace + ', Data: ' + data)
+                socket.on('pong', function(latency) {
+                    self.uiDebug('log', 'SOCKET PONG - Namespace: ' + self.ioNamespace + ', Latency: ', latency)
                 }) // --- End of socket pong processing ---
             // */
         } // ---- End of ioSetup ---- //
