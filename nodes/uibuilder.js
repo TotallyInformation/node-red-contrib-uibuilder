@@ -352,7 +352,7 @@ module.exports = function(RED) {
             // trim the leading slash because the cookie will turn it into a %2F
             res.setHeader('uibuilder-namespace', node.ioNamespace)
             res.cookie('uibuilder-namespace', tilib.trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
-            
+
             next()
         }
         //#endregion ----- Express Middleware ----- //
@@ -1667,6 +1667,18 @@ module.exports = function(RED) {
     }) // ---- End of npmmanage ---- //
 
     //#endregion --- Admin API's ---
+
+    //#region --- End User API's ---
+    //app = RED.httpNode
+    /** Login */
+    const bodyParser = require('body-parser')
+    app.post('/uiblogin', bodyParser.json(), (req, res) => {
+        log.info(`[uibuilder/uiblogin] Looks like you asked to log in`)
+        console.log('[uiblogin] BODY: ', req.body)
+        console.log('[uiblogin] HEADERS: ', req.headers)
+        res.json(req.body)
+    })
+    //#endregion --- End User API's ---
 
 } // ==== End of module.exports ==== // 
 
