@@ -11,7 +11,9 @@
  *
  * Allows you to process incoming data from clients.
  * 
- * @param {*} packet The msg send by a client
+ * @see also https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html#websocket-implementation-hints
+ * 
+ * @param {*} msg The msg send by a client (Socket.IO calls it a "packet")
  * @param {function} next The callback to hand off to the next middleware
  */
 // module.exports = function(msg, next) {
