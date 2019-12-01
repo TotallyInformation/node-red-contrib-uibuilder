@@ -22,6 +22,7 @@
     "release": "github-release-from-changelog --dry-run"
   },
   "dependencies": {
+    "body-parser": "^1.19.0",
     "bootstrap-vue": "^2.1.0",
     "fs-extra": "^8.1.0",
     "serve-index": "^1.9.1",
