@@ -1,3 +1,5 @@
+// Isolate this code
+;(function () {
     'use strict'
 
     /** @typedef {import("node-red").Red} Red */
@@ -485,6 +487,9 @@
         oneditprepare: function () {
             var that = this
 
+            // TODO: TESTING ONLY - TO BE REMOVED
+            RED.nodes.getType('nrtest2').myFunction('NRTEST')
+
             //#region Start with the edit section hidden & main section visible
             $('#main-props').show()
             $('#edit-props').hide()
@@ -813,3 +818,4 @@
         }, // ---- End of oneditcancel ---- //
 
     }) // ---- End of registerType() ---- //
+})()
