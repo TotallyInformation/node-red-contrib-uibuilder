@@ -473,12 +473,11 @@ module.exports = function(RED) {
                 'uibuilderCtrl': 'client connect',
                 'cacheControl': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
                 'debug': node.debugFE,
-                '_socketId': socket.id,
-                'from': 'server',
                 // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
                 // time difference (UTC->Local) without needing clever libraries.
                 'serverTimestamp': (new Date()),
-            }, ioNs, node)
+                topic: node.topic || undefined,
+            }, ioNs, node, socket.id, true)
             //ioNs.emit( node.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
 
             // if the client sends a specific msg channel...
@@ -532,8 +531,8 @@ module.exports = function(RED) {
 
                 } else {
                     // Send out the message on port #2 for downstream flows
-                    uiblib.sendControl(msg, ioNs, node)  // fn adds topic if needed
-                    //node.send([null,msg])
+                    if ( ! msg.topic ) msg.topic = node.topic
+                    node.send([null,msg])
                 }
 
             })
@@ -549,9 +548,8 @@ module.exports = function(RED) {
                 uiblib.sendControl({
                     'uibuilderCtrl': 'client disconnect',
                     'reason': reason,
-                    '_socketId': socket.id,
-                    'from': 'server'
-                }, ioNs, node)
+                    topic: node.topic || undefined,
+                }, ioNs, node, socket.id, true)
                 //node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'topic': node.topic}])
             })
 
@@ -561,9 +559,8 @@ module.exports = function(RED) {
                 uiblib.sendControl({
                     'uibuilderCtrl': 'socket error',
                     'error': err.message,
-                    '_socketId': socket.id,
-                    'from': 'server'
-                }, ioNs, node)
+                    topic: node.topic || undefined,
+                }, ioNs, node, socket.id, true)
             })
 
             /* More Socket.IO events but we really don't need to monitor them
@@ -1725,7 +1722,7 @@ module.exports = function(RED) {
         // Finds the validation errors in this request and wraps them in an object with handy functions
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            return res.status(400).json({ errors: errors.array() })
         }
 
         return res.status(200).json(req.body)
