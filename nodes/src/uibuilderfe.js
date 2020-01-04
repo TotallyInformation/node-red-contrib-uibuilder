@@ -388,14 +388,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     case 'authorisation failure':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorisation failure" from server')
                         console.log('LOGIN FAILED', receivedCtrlMsg) //TODO remove
-                        self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg.payload)
+                        self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._uibAuth.authData)
                         break
 
                     // Logoff confirmation from server - note that payload may contain more info
                     case 'logged off':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "logged off" from server')
                         console.log('LOGOFF', receivedCtrlMsg) //TODO remove
-                        self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg.payload)
+                        self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._uibAuth)
                         break
 
                     default:
@@ -444,14 +444,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             self.checkConnect(self.retryMs, self.retryFactor)
 
             // TODO: Just for testing - remove or do something useful
-            self.socket.io.on('packet', function(data){
-                // we get one of these for each REAL msg (not ping/pong)
-                console.log('PACKET', data)
-            })
-            self.socket.on('pong', function(latency) {
-                console.log('SOCKET PONG - Latency: ', latency)
-                //console.dir(self.socket)
-            }) // --- End of socket pong processing ---
+            // self.socket.io.on('packet', function(data){
+            //     // we get one of these for each REAL msg (not ping/pong)
+            //     console.log('PACKET', data)
+            // })
+            // self.socket.on('pong', function(latency) {
+            //     console.log('SOCKET PONG - Latency: ', latency)
+            //     //console.dir(self.socket)
+            // }) // --- End of socket pong processing ---
 
             /* We really don't need these, just for interest
                 self.socket.io.on('packet', function(data){
@@ -500,7 +500,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 }    
             }
             if ( localReason !== undefined ) data.localReason = localReason
-            
+
             self.authData = data
 
             self.isAuthorised = false
@@ -514,16 +514,21 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @param {Object} _auth Required. Authorisation information.
          */
         self.updateAuth = function(_auth) {
+            // Ignore if empty object
+            if ( Object.keys(_auth).length === 0 ) return
+
             if ( _auth.authToken ) {
                 self.isAuthorised = true
                 self.authToken = _auth.authToken
                 self.authTokenExpiry = _auth.authTokenExpiry
-                self.authData = _auth.authData
+                self.authData = _auth.authData || {}
+                self.authData.reason = _auth.reason
+                self.authData.warning = _auth.warning
                 //self.socketOptions.transportOptions.polling.extraHeaders.Authorization = 'Bearer ' + self.authToken
             } else {
                 // This should never happen
                 self.uiDebug('debug', 'uibuilderfe:updateAuth:' + self.ioChannels.control + ' Received "authorised" from server but without a token - logon failed')
-                console.log('LOGIN SUCCEEDED BUT NO token sent', _auth) //TODO remove
+                console.log('LOGIN SUCCEEDED BUT NO token sent', _auth); console.trace() //TODO remove
                 self.markLoggedOut('Logon succeeded but no token received, logged out', _auth.authData)
             }
         } // ---- End of updateAuth ---- //
