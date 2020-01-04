@@ -8,11 +8,14 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### New
 
-- Add a middleware JavaScript module file to allow use of `socket.use`. The new `<uibRoot>/.config/sioUse.js` file exports a single function.
-  The function is called everytime the uibuilder node receives a message from a client. If the `next()` callback function is called with a `new Error('err message')`
-  parameter, that is passed back to the client.
+- Add a middleware JavaScript module file to allow use of `socket.use`. 
+  
+  The new `<uibRoot>/.config/sioUse.js` file exports a single function.
 
-- uibuilderfe: Add socket.io `error` event handler - outputs a console warning message so switch on debug to see it. 
+  The function is called everytime the uibuilder node receives a message from a client. If the `next()` callback function is called with a `new Error('err message')` parameter, that is passed back to the client.
+
+- uibuilderfe: Add socket.io `error` event handler - 
+  outputs a console warning message so switch on debug to see it. 
   
   The Socket.IO server will send an error message if the socket.use middleware (see above) calls `next( new Error('err message') )`
 
@@ -20,7 +23,27 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
   Typical use is to handle data errors or even authorisation failures.
 
-- Add `X-XSS-Protection: 1;mode=block` and `X-Content-Type-Options: nosniff` security headers.
+- uibuilderfe: Added msg._socketId to sent messages.
+  
+- uibuilderfe: Added `.logon(...)` and `.logoff()` functions.
+  
+  The `logon` function takes a single parameter which must be an Object (schema not yet finalised).
+  At the least, it MUST contain an `id` property which will be used by the server to track sessions.
+  
+  Added new variables:
+  
+  - `isAuthorised` {boolean} - informs whether the current client connection is authenticated
+  - `authTokenExpiry` {Date|null} - when the authentication token expires
+  - `authData` {Object} - Additional data returned from logon/logoff requests. Can be used by front-end to display messages at logon/off or anything else desired.
+  - _`authToken` {String}_ - this is not externally accessible. It is sent back to the server on every msg sent and validated by the server.
+  
+  Added new control message types:
+
+  - 'authorised' - received from server after a successful logon request. Returns the token, expiry and any optional additional data (into `authData`).
+  - 'authorisation failure' - received from server after an **un**successful logon request.
+  - 'logged off' - received from server after a successful logoff request. Returns optional additional data (into `authData`)
+
+- Added `X-XSS-Protection: 1;mode=block` and `X-Content-Type-Options: nosniff` security headers.
   
   If you want to add your own headers, make use of the `uibMiddleware.js` (for ExpressJS) and `sioMiddleware.js` (for Socket.IO initial connection and polling connections) middleware files.
 
@@ -29,6 +52,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Further code tidy up.
 - Move configuration template files from templates root to `templates/.config` and reduce copy processes down to just copying the folder with no overwrite
+- Add code isolation to Editor config code
+- uibuilderfe: Internal improvements to get/set functions
 
 ----
 

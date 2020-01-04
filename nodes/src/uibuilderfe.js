@@ -55,7 +55,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '2.0.6'
+        self.version = '2.0.7'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         self.isUnminified = /param/.test(function(param) {})
@@ -125,8 +125,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         } // --- End of set IO namespace --- //
 
         //#region --- variables ---
-        /** Writable (via custom method. read via .get method) */
 
+        /** Writable (via custom method. read via .get method) */
         /** Automatically send a "ready for content" control message on window.load
          * Set to false if you want to send this yourself (e.g. when Riot/Moon/etc mounted event triggered)
          * see .autoSendReady method
@@ -150,6 +150,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.msgsCtrl     = 0   // track number of control messages received from server since page load
         self.ioConnected  = false
         self.serverTimeOffset = null // placeholder to track time offset from server, see fn self.socket.on(self.ioChannels.server ...)
+        self.isAuthorised = false    // Set to true if receive 'authorised' msg from server
+        self.authTokenExpiry  = null // Set on successful logon. Timestamp.
+        self.authData     = {}       // Additional data returned from logon/logoff requests
+
         // ---- These are unlikely to be needed externally: ----
         self.ioChannels   = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
         self.retryMs      = 2000                            // starting retry ms period for manual socket reconnections workaround
@@ -158,6 +162,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.ioNamespace  = self.setIOnamespace()           // Get the namespace from the current URL
         self.ioTransport  = ['polling', 'websocket']
         self.loaded       = false                           // Are all browser resources loaded?
+
+        // ---- These cannot be access externally via get/set: ----
+        self.authToken    = ''    // populated when receive 'authorised' msg from server, must be returned with each msg sent
 
         /** Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot */
         {
@@ -247,7 +254,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
             self.uiDebug('debug', 'uibuilderfe:ioSetup: About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
-            self.socket = io(self.ioNamespace, { 
+            self.socketOptions = { 
                 path: self.ioPath, 
                 transports: self.ioTransport, 
                 transportOptions: {
@@ -255,12 +262,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     polling: {
                         extraHeaders: {
                             'x-clientid': 'uibuilderfe',
-                            Authorization: 'test', //TODO: Replace with self.jwt variable
+                            //Authorization: 'test', //TODO: Replace with self.jwt variable? // Authorization: `Bearer ${your_jwt}`
                         }
                     },
                 },
-                //extraHeaders: { Authorization: `Bearer ${your_jwt}` } 
-            })
+            }
+            self.socket = io(self.ioNamespace, self.socketOptions)
 
             /** When the socket is connected - set ioConnected flag and reset connect timer  */
             self.socket.on('connect', function () {
@@ -332,31 +339,71 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 self.set('ctrlMsg', receivedCtrlMsg)
                 self.set('msgsCtrl', self.msgsCtrl + 1)
 
+                /** Process control msg types */
                 switch(receivedCtrlMsg.uibuilderCtrl) {
+                    // Initial startup msg from Node-RED server
                     case 'ready for content':
+                        if ( receivedCtrlMsg._uibAuth ) self.updateAuth(receivedCtrlMsg._uibAuth)
+
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "ready for content" from server')
+
                         break
+
+                    // Node-RED is shutting down
                     case 'shutdown':
-                        // Node-RED is shutting down
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "shutdown" from server')
                         break
+
+                    // We are connected to the server
                     case 'client connect':
-                        // We are connected to the server
+                        if ( receivedCtrlMsg._uibAuth ) self.updateAuth(receivedCtrlMsg._uibAuth)
+
                         if ( self.autoSendReady === true ) {
                             self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "client connect" from server, auto-sending REPLAY control msg')
-            
+
                             // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
                             self.send({
                                 'uibuilderCtrl':'ready for content',
                                 'cacheControl':'REPLAY',
-                                'from': 'client', // @since 2018-10-07 v1.0.9
                             },self.ioChannels.control)
                         }
+
                         break
+
+                    // Login was accepted by the Node-RED server - note that payload may contain more info
+                    case 'authorised':
+                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server')
+                        console.log('LOGIN SUCCESSFUL', receivedCtrlMsg) //TODO remove
+                        if ( receivedCtrlMsg._uibAuth ) {
+                            self.updateAuth(receivedCtrlMsg._uibAuth)
+                        } else {
+                            // This should never happen
+                            self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server but without a _uibAuth property - logon failed')
+                            console.log('LOGIN SUCCEEDED BUT NO _uibAuth sent', receivedCtrlMsg) //TODO remove
+                            self.markLoggedOut('Logon succeeded but no _uibAuth received, logged out')
+                        }
+                        break
+
+                    // Login was rejected by the Node-RED server - note that payload may contain more info
+                    case 'authorisation failure':
+                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorisation failure" from server')
+                        console.log('LOGIN FAILED', receivedCtrlMsg) //TODO remove
+                        self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg.payload)
+                        break
+
+                    // Logoff confirmation from server - note that payload may contain more info
+                    case 'logged off':
+                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "logged off" from server')
+                        console.log('LOGOFF', receivedCtrlMsg) //TODO remove
+                        self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg.payload)
+                        break
+
                     default:
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
+                        if ( receivedCtrlMsg._uibAuth ) self.updateAuth(receivedCtrlMsg._uibAuth)
                         // Anything else
-                } // */
+
+                } // ---- End of process control msg types ---- //
 
                 /* Test auto-response
                     if (self.debug) {
@@ -396,35 +443,108 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // Ensure we are connected, retry if not
             self.checkConnect(self.retryMs, self.retryFactor)
 
+            // TODO: Just for testing - remove or do something useful
+            self.socket.io.on('packet', function(data){
+                // we get one of these for each REAL msg (not ping/pong)
+                console.log('PACKET', data)
+            })
+            self.socket.on('pong', function(latency) {
+                console.log('SOCKET PONG - Latency: ', latency)
+                //console.dir(self.socket)
+            }) // --- End of socket pong processing ---
+
             /* We really don't need these, just for interest
-                socket.on('connect_timeout', function(timeout) {
+                self.socket.io.on('packet', function(data){
+                    // We get one of these for actual messages, not ping/pong
+                    console.log('PACKET', data)
+                })
+                self.socket.on('connect_timeout', function(timeout) {
                     self.uiDebug('log', 'SOCKET CONNECT TIMEOUT - Namespace: ' + ioNamespace + ', Timeout: ' + timeout)
                 }) // --- End of socket connect timeout processing ---
-                socket.on('reconnect', function(attemptNum) {
+                self.socket.on('reconnect', function(attemptNum) {
                     self.uiDebug('log', 'SOCKET RECONNECTED - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
                 }) // --- End of socket reconnect processing ---
-                socket.on('reconnect_attempt', function(attemptNum) {
+                self.socket.on('reconnect_attempt', function(attemptNum) {
                     self.uiDebug('log', 'SOCKET RECONNECT ATTEMPT - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
                 }) // --- End of socket reconnect_attempt processing ---
-                socket.on('reconnecting', function(attemptNum) {
+                self.socket.on('reconnecting', function(attemptNum) {
                     self.uiDebug('log', 'SOCKET RECONNECTING - Namespace: ' + ioNamespace + ', Attempt #: ' + attemptNum)
                 }) // --- End of socket reconnecting processing ---
-                socket.on('reconnect_error', function(err) {
+                self.socket.on('reconnect_error', function(err) {
                     self.uiDebug('log', 'SOCKET RECONNECT ERROR - Namespace: ' + ioNamespace + ', Reason: ' + err.message)
                     //console.dir(err)
                 }) // --- End of socket reconnect_error processing ---
-                socket.on('reconnect_failed', function() {
+                self.socket.on('reconnect_failed', function() {
                     self.uiDebug('log', 'SOCKET RECONNECT FAILED - Namespace: ' + ioNamespace)
                 }) // --- End of socket reconnect_failed processing ---
-                socket.on('ping', function() {
-                    self.uiDebug('log', 'SOCKET PING - Namespace: ' + ioNamespace)
+                self.socket.on('ping', function() {
+                    self.uiDebug('log', 'SOCKET PING')
                 }) // --- End of socket ping processing ---
-                socket.on('pong', function(latency) {
-                    self.uiDebug('log', 'SOCKET PONG - Namespace: ' + self.ioNamespace + ', Latency: ', latency)
+                self.socket.on('pong', function(latency) {
+                    self.uiDebug('log', 'SOCKET PONG - Latency: ', latency)
                 }) // --- End of socket pong processing ---
-            // */
+             */
         } // ---- End of ioSetup ---- //
         
+        /** Mark client as logged off 
+         * @param {String=} localReason Optional, give a reason for logoff, will be placed in self.authData
+         * @param {Any=} data Optional additional data, will be placed in self.authData
+         */
+        self.markLoggedOut = function(localReason, data) {
+            // Make sure data is an Object
+            if ( Object.prototype.toString.call(data) !== '[object Object]' ) {
+                if ( data === undefined ) {
+                    data = {}
+                } else {
+                    data = { 'message': data }
+                }    
+            }
+            if ( localReason !== undefined ) data.localReason = localReason
+            
+            self.authData = data
+
+            self.isAuthorised = false
+            self.authToken = ''
+            //delete self.socketOptions.transportOptions.polling.extraHeaders.Authorization
+        } // ---- End of markLoggedOut ---- //
+
+        /** Update client authorisation info
+         * Note that this may happen after a successful logon request or at any time
+         * a msg is received (on any channel) that contains a msg._uibAuth object
+         * @param {Object} _auth Required. Authorisation information.
+         */
+        self.updateAuth = function(_auth) {
+            if ( _auth.authToken ) {
+                self.isAuthorised = true
+                self.authToken = _auth.authToken
+                self.authTokenExpiry = _auth.authTokenExpiry
+                self.authData = _auth.authData
+                //self.socketOptions.transportOptions.polling.extraHeaders.Authorization = 'Bearer ' + self.authToken
+            } else {
+                // This should never happen
+                self.uiDebug('debug', 'uibuilderfe:updateAuth:' + self.ioChannels.control + ' Received "authorised" from server but without a token - logon failed')
+                console.log('LOGIN SUCCEEDED BUT NO token sent', _auth) //TODO remove
+                self.markLoggedOut('Logon succeeded but no token received, logged out', _auth.authData)
+            }
+        } // ---- End of updateAuth ---- //
+
+        /** Returns a standard msg._uibAuth Object
+         * If we have an authToken and not expired, add `_uibAuth` with just the token
+         */
+        self.addAuth = function() {
+            if ( self.isAuthorised ) {
+                if ( self.authTokenExpiry > (new Date()) ) {
+                    return {
+                        authToken: self.authToken,
+                    }
+                } else { // Token has expired so mark as logged off
+                    self.markLoggedOut('Automatically logged off by send(). Token expired')
+                }
+            }
+            // Return empty object if current auth is not valid
+            return {}
+        } // ---- End of addAuth ---- //
+
         /** Send a standard msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
          * @param {Object} msgToSend The msg object to send.
@@ -446,6 +566,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 // help remember where this came from as ctrl msgs can come from server or client
                 msgToSend.from = 'client'
             }
+
+            /** @since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
+            msgToSend._socketId = self.socket.id
+
+            /** @since 2020-01-04 If we have an authToken and not expired, add `_uibAuth` with just the token */
+            msgToSend._uibAuth = self.addAuth()
 
             // Track how many messages have been sent & last msg sent
             if (channel === self.ioChannels.client) {
@@ -530,16 +656,40 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              * @param {*} val
              */
             set: function (prop, val) {
-                // Add exclusions for protected properties - can't use hasOwnProperty or use an allow list as that would exclude new properties
+                /** Add exclusions for protected properties.
+                 * Can't use hasOwnProperty or use an allow list as that would exclude new properties
+                 * @type {Array}
+                 */
                 var excluded = [
-                    'version', 'debug', 'msg', 'ctrlMsg', 'sentMsg', 'msgsSent', 'msgsSentCtrl', 'msgsReceived',
-                    'msgsCtrl', 'ioConnected', 'ioChannels', 'retryMs', 'retryFactor', 'timerid', 'ioNamespace',
-                    'ioPath', 'ioTransport', 'events', 'autoSendReady',
+                    'authData', 'autoSendReady', 'authToken', 'authTokenExpiry',
+                    'ctrlMsg', 
+                    'debug', 
+                    'events', 
+                    'httpNodeRoot',
+                    'ioChannels', 'ioConnected', 'ioNamespace', 'ioPath', 'ioTransport', 
+                    'isAuthorised', 'isUnminified',
+                    'loaded',
+                    'msg', 'msgsCtrl', 'msgsReceived', 'msgsSent', 'msgsSentCtrl', 'moduleName',
+                    'retryFactor', 'retryMs',
+                    'sentMsg', 'sentCtrlMsg', 'serverTimeOffset', 'socket',
+                    'timerid', 
+                    'url',
+                    'version', 
                     // Ensure no clashes with internal and external method names
-                    'set', 'get', 'send', 'sendCtrl', 'onChange', 'socket', 'checkConnect', 'emit', 'uiReturn',
-                    'newScript', 'newStyle', 'uiDebug', 'me', 'self', 'setIOnamespace'
+                    'addAuth', 
+                    'checkConnect', 'checkTimestamp',
+                    'emit', 
+                    'get', 
+                    'ioSetup',
+                    'markLoggedOut', 'me', 
+                    'newScript', 'newStyle', 
+                    'onChange', 
+                    'set', 'send', 'sendCtrl', 'socket', 'self', 'setIOnamespace',
+                    'uiDebug', 'updateAuth',
+                    'uiReturn',
                 ]
                 if (excluded.indexOf(prop) !== -1) {
+                    console.warn('[uibuilder] Cannot use set() on protected property "' + prop + '"')
                     self.uiDebug('warn', 'uibuilderfe:uibuilder:set: "' + prop + '" is in list of excluded properties, not set')
                     return
                 }
@@ -554,8 +704,34 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              * @return {*} The current value of the property
              */
             get: function (prop) {
+                /** Add exclusions for protected properties.
+                 * Can't use hasOwnProperty or use an allow list as that would exclude new properties
+                 * @type {Array}
+                 */
+                var excluded = [
+                    'authToken',
+                    // Exclude internal methods
+                    'addAuth', 
+                    'checkConnect', 'checkTimestamp',
+                    'emit', 
+                    'get', 
+                    'ioSetup',
+                    'me', 
+                    'newScript', 'newStyle', 
+                    'onChange', 
+                    'set', 'send', 'sendCtrl', 'socket', 'self', 'setIOnamespace',
+                    'uiDebug', 'updateAuth',
+                    'uiReturn',
+                ]
+                if (excluded.indexOf(prop) !== -1) {
+                    console.warn('[uibuilder] Cannot use get() on protected property "' + prop + '"')
+                    self.uiDebug('warn', 'uibuilderfe:uibuilder:get: "' + prop + '" is in list of excluded properties, not get')
+                    return
+                }
                 //if ( prop !== 'debug' ) self.uiDebug('log', `uibuilderfe:uibuilder:get Property: ${prop}`)
-                // TODO: Add warning for non-existent property?
+                if ( self[prop] === undefined ) {
+                    console.warn('[uibuilder] get() - property "' + prop + '" does not exist')
+                }
                 return self[prop]
             },
 
@@ -637,6 +813,29 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 if (ioPath !== undefined) self.ioPath = ioPath
 
                 self.ioSetup()
+            },
+
+            /** Send a logon request message
+             * @param {Object} [data] Optional. Logon specific data to be passed to Node-RED
+             */
+            logon: function(data) {
+                if ( data === undefined ) data = {}
+                self.send({
+                    'uibuilderCtrl':'logon',
+                    'from': 'client',
+                    'payload': data,
+                },self.ioChannels.control)
+            },
+
+            /** Send a logoff request message
+             * Note that the local auth data is NOT removed here.
+             *   That happens when the client receives the control msg "logged off" from the server.
+             */
+            logoff: function() {
+                self.send({
+                    'uibuilderCtrl':'logoff',
+                    'from': 'client',
+                },self.ioChannels.control)
             },
 
         } // --- End of return callback functions --- //

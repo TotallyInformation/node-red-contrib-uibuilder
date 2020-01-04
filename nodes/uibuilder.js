@@ -510,7 +510,7 @@ module.exports = function(RED) {
                         msg = { 'uibuilderCtrl': msg }
                 }
 
-                // If the sender hasn't added msg._clientId, add the Socket.id now
+                // If the sender hasn't added Socket.id, add it now
                 if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) {
                     msg._socketId = socket.id
                 }
@@ -520,9 +520,19 @@ module.exports = function(RED) {
                     msg.from = 'client'
                 }
 
-                // Send out the message on port #2 for downstream flows
-                uiblib.sendControl(msg, ioNs, node)  // fn adds topic if needed
-                //node.send([null,msg])
+                /** If a logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
+                if ( msg.uibuilderCtrl === 'logon') {
+                    uiblib.logon(msg, ioNs, node, socket)
+
+                } else if ( msg.uibuilderCtrl === 'logoff') {
+                    uiblib.logoff(msg, ioNs, node, socket)
+
+                } else {
+                    // Send out the message on port #2 for downstream flows
+                    uiblib.sendControl(msg, ioNs, node)  // fn adds topic if needed
+                    //node.send([null,msg])
+                }
+
             })
 
             socket.on('disconnect', function(reason) {
@@ -572,6 +582,7 @@ module.exports = function(RED) {
                         'data': data
                     })
                 })
+                // ping is received every 30 sec
                 socket.on('ping', function(data) {
                     RED.log.audit({
                         'UIbuilder': node.url+' PING received', 'ID': socket.id,
@@ -1670,13 +1681,51 @@ module.exports = function(RED) {
 
     //#region --- End User API's ---
     //app = RED.httpNode
-    /** Login */
+    /** Login 
+     * TODO: Change to an external module
+    */
     const bodyParser = require('body-parser')
-    app.post('/uiblogin', bodyParser.json(), (req, res) => {
-        log.info(`[uibuilder/uiblogin] Looks like you asked to log in`)
+    const jwt = require('jsonwebtoken')
+    const { checkSchema, validationResult } = require('express-validator')
+
+    /** Input validation schema, @see https://express-validator.github.io/docs/schema-validation.html */
+    const loginSchema = {
+        'user': {
+            in: ['body'],
+            errorMessage: 'User name is incorrect',
+            isLength: {
+                errorMessage: 'User name must be between 1 and 50 characters long',
+                // Multiple options would be expressed as an array
+                options: { min: 1, max: 50 }
+            },
+            stripLow: true,
+            trim: true,
+        },
+        'auth': {
+            in: ['body'],
+            errorMessage: 'Password is incorrect',
+            isLength: {
+                errorMessage: 'Password must be between 10 and 50 characters long',
+                // Multiple options would be expressed as an array
+                options: { min: 10, max: 50 }
+            },
+            stripLow: true,
+            trim: true,
+        },
+    }
+
+    app.post('/uiblogin', bodyParser.json(),checkSchema(loginSchema), (req, res) => {
+
         console.log('[uiblogin] BODY: ', req.body)
-        console.log('[uiblogin] HEADERS: ', req.headers)
-        res.json(req.body)
+        //console.log('[uiblogin] HEADERS: ', req.headers)
+
+        // Finds the validation errors in this request and wraps them in an object with handy functions
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        return res.status(200).json(req.body)
     })
     //#endregion --- End User API's ---
 
