@@ -504,27 +504,69 @@ module.exports = {
     /** Process a logon request
      * msg.payload contains any extra data needed for the login
      */
-    logon: function(msg, ioNs, node, socket) {
+    logon: function(msg, ioNs, node, socket, log) {
+
+        // Only process if security is turned on
+        if ( node.useSecurity !== true ) {
+            log.info('[uibuilder:uiblib:logon] Security is not turned on, ignoring logon attempt.')
+            return
+        }
+
+        // console.log('SOCKET', Object.keys(socket))
+        // console.log('SOCKET.client', Object.keys(socket.client))
+        // console.log('SOCKET.conn', Object.keys(socket.conn))
+        // console.log('SOCKET.server', Object.keys(socket.server))
+        // console.log('SOCKET.flags', Object.keys(socket.flags))
+        // console.log('SOCKET.handshake', Object.keys(socket.handshake))
+        //console.log('SOCKET.handshake', socket.handshake)
+
+        const _uibAuth = {}
 
         // Check if using TLS - if not, send warning to log
+        if ( socket.handshake.secure !== true ) {
+            if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
+                _uibAuth.warning = 'A logon is being processed without TLS security turned on - this will not work in a non-development environment. See the uibuilder security docs for details'
+
+                log.warn(`[uibuilder:uiblib:logon] **WARNING** ${_uibAuth.warning}`)
+            } else {
+                log.error('[uibuilder:uiblib:logon] **ERROR** A logon is being attempted in a non-development environment without TLS security turned on - this is not permitted. See the uibuilder security docs for details')
+                
+                // Report fail to client but don't output to port #2 as error msg already sent
+                _uibAuth.reason = 'Logons cannot be processed without TLS in non-development environments'
+
+                this.sendControl({
+                    uibuilderCtrl: 'authorisation failure',
+                    topic: msg.topic,
+                    _socketId: socket.id,
+                    '_uibAuth': _uibAuth,
+                }, ioNs, node, socket.id, false)
+                return
+            }
+        }
 
         // Attempt logon
         let auth = false
         if ( msg.payload.id === 'jk' ) auth = true
         else auth = false
 
+        // Send responses
         if ( auth === true ) {
             // Record session details
 
+            _uibAuth.authToken = '1234'
+            _uibAuth.authTokenExpiry = new Date(+new Date() + node.sessionLength)
+            _uibAuth.reason = 'Logon successful'
+            // Optional data
+            _uibAuth.authData = {
+                name: 'Me',
+                message: 'Hi you, don\'t forget to change your password :)'
+            }
+
             // Report success & send token to client
             this.sendControl({
-                'payload': {
-                    name: 'Me',
-                },
-                uibuilderCtrl: 'authorised',
-                authToken: 1234,
-                tokenExpires: new Date(+new Date() + 1.8e6), // 1.8e6 = 30*60000 = 30min
-                topic: msg.topic,
+                'uibuilderCtrl': 'authorised',
+                'topic': msg.topic,
+                '_uibAuth': _uibAuth,
             }, ioNs, node, socket.id, false)
 
             // Send output to port #2 manually
@@ -541,16 +583,15 @@ module.exports = {
                 topic: msg.topic,
                 _socketId: socket.id,
             }])
-        } else {
+        } else { // auth <> true
             // ?? record fail ??
+            _uibAuth.reason = 'Logon failed. Invalid id or password'
 
             const out = {
-                'payload': {
-                    reason: 'Invalid id or password',
-                },
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic,
                 _socketId: socket.id,
+                '_uibAuth': _uibAuth,
             }
 
             // Report fail to client & Send output to port #2
@@ -561,7 +602,13 @@ module.exports = {
     /** Process a logon request
      * msg.payload contains any extra data needed for the login
      */
-    logoff: function(msg, ioNs, node, socket) {
+    logoff: function(msg, ioNs, node, socket, log) {
+        // Only process if security is turned on
+        if ( node.useSecurity !== true ) {
+            log.info('[uibuilder:uiblib:logoff] Security is not turned on, ignoring logoff attempt.')
+            return
+        }
+
         // Check that request is valid (has valid token)
         // Check that session exists
         // delete session entry
@@ -571,7 +618,11 @@ module.exports = {
             uibuilderCtrl: 'logged off',
             topic: msg.topic,
             _socketId: socket.id,
+            '_uibAuth': {
+                reason: 'Logoff successful',
+            },
         }
+
         this.sendControl(out, ioNs, node, socket.id, true)
     }, // ---- End of logoff ---- //
 
