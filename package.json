@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. VueJS and bootstrap-vue included but change as desired.",
   "scripts": {
     "postinstall": "node ./bin/postinstall",
@@ -24,7 +24,9 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "bootstrap-vue": "^2.1.0",
+    "express-validator": "^6.3.0",
     "fs-extra": "^8.1.0",
+    "jsonwebtoken": "^8.5.1",
     "serve-index": "^1.9.1",
     "serve-static": "^1.14.1",
     "socket.io": "^2.3.0",
