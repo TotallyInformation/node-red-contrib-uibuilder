@@ -289,6 +289,9 @@ module.exports = function(RED) {
         node.allowStyles   = config.allowStyles === undefined ? false : config.allowStyles
         node.copyIndex     = config.copyIndex === undefined ? true : config.copyIndex
         node.showfolder    = config.showfolder === undefined ? false : config.showfolder
+
+        node.useSecurity   = true
+        node.sessionLength = 60000  // 1.8e6 = 30*60000 = 30min
         //#endregion ----- Local node config copy ----- //
 
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })
@@ -522,10 +525,10 @@ module.exports = function(RED) {
 
                 /** If a logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
                 if ( msg.uibuilderCtrl === 'logon') {
-                    uiblib.logon(msg, ioNs, node, socket)
+                    uiblib.logon(msg, ioNs, node, socket, log)
 
                 } else if ( msg.uibuilderCtrl === 'logoff') {
-                    uiblib.logoff(msg, ioNs, node, socket)
+                    uiblib.logoff(msg, ioNs, node, socket, log)
 
                 } else {
                     // Send out the message on port #2 for downstream flows
