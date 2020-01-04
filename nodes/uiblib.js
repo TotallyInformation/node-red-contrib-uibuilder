@@ -181,8 +181,11 @@ module.exports = {
      * @param {Object} ioNs Socket.IO instance to use
      * @param {Object} node The node object
      * @param {string=} socketId Optional. If included, only send to specific client id
+     * @param {boolean=} output Optional. If included, also output to port #2 of the node @since 2020-01-03
      */
-    sendControl: function(msg, ioNs, node, socketId) {
+    sendControl: function(msg, ioNs, node, socketId, output) {
+        if (output === undefined || output === null) output = true
+
         if (socketId) msg._socketId = socketId
 
         // Send to specific client if required
@@ -191,8 +194,8 @@ module.exports = {
 
         if ( (! msg.hasOwnProperty('topic')) && (node.topic !== '') ) msg.topic = node.topic
 
-        // copy msg to output port #2
-        node.send([null, msg])
+        // copy msg to output port #2 if required
+        if ( output === true ) node.send([null, msg])
     }, // ---- End of getProps ---- //
 
     /** Simple fn to set a node status in the admin interface
@@ -497,5 +500,79 @@ module.exports = {
 
         return true
     }, // ---- End of checkUrl ---- //
+
+    /** Process a logon request
+     * msg.payload contains any extra data needed for the login
+     */
+    logon: function(msg, ioNs, node, socket) {
+
+        // Check if using TLS - if not, send warning to log
+
+        // Attempt logon
+        let auth = false
+        if ( msg.payload.id === 'jk' ) auth = true
+        else auth = false
+
+        if ( auth === true ) {
+            // Record session details
+
+            // Report success & send token to client
+            this.sendControl({
+                'payload': {
+                    name: 'Me',
+                },
+                uibuilderCtrl: 'authorised',
+                authToken: 1234,
+                tokenExpires: new Date(+new Date() + 1.8e6), // 1.8e6 = 30*60000 = 30min
+                topic: msg.topic,
+            }, ioNs, node, socket.id, false)
+
+            // Send output to port #2 manually
+            node.send([null, {
+                'payload': {
+                    // Try to show some usefull info without revealing too much
+                    id: msg.payload.id,
+                    uid: msg.payload.uid,
+                    user: msg.payload.user,
+                    name: msg.payload.name,
+                },
+                uibuilderCtrl: 'authorised',
+                tokenExpires: new Date(+new Date() + 1.8e6), // 1.8e6 = 30*60000 = 30min
+                topic: msg.topic,
+                _socketId: socket.id,
+            }])
+        } else {
+            // ?? record fail ??
+
+            const out = {
+                'payload': {
+                    reason: 'Invalid id or password',
+                },
+                uibuilderCtrl: 'authorisation failure',
+                topic: msg.topic,
+                _socketId: socket.id,
+            }
+
+            // Report fail to client & Send output to port #2
+            this.sendControl(out, ioNs, node, socket.id, true)
+        }
+    }, // ---- End of logon ---- //
+
+    /** Process a logon request
+     * msg.payload contains any extra data needed for the login
+     */
+    logoff: function(msg, ioNs, node, socket) {
+        // Check that request is valid (has valid token)
+        // Check that session exists
+        // delete session entry
+
+        // confirm logoff to client & Send output to port #2
+        const out = {
+            uibuilderCtrl: 'logged off',
+            topic: msg.topic,
+            _socketId: socket.id,
+        }
+        this.sendControl(out, ioNs, node, socket.id, true)
+    }, // ---- End of logoff ---- //
 
 } // ---- End of module.exports ---- //
