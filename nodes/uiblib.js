@@ -83,7 +83,7 @@ module.exports = {
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
         // Let all the clients know we are closing down
-        this.sendControl({ 'uibuilderCtrl': 'shutdown', 'from': 'server' }, ioNs, node)
+        this.sendControl({ 'uibuilderCtrl': 'shutdown' }, ioNs, node)
 
         // Disconnect all Socket.IO clients
         const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
@@ -185,6 +185,8 @@ module.exports = {
      */
     sendControl: function(msg, ioNs, node, socketId, output) {
         if (output === undefined || output === null) output = true
+
+        msg.from = 'server'
 
         if (socketId) msg._socketId = socketId
 
@@ -536,8 +538,7 @@ module.exports = {
 
                 this.sendControl({
                     uibuilderCtrl: 'authorisation failure',
-                    topic: msg.topic,
-                    _socketId: socket.id,
+                    topic: msg.topic || node.topic,
                     '_uibAuth': _uibAuth,
                 }, ioNs, node, socket.id, false)
                 return
@@ -565,37 +566,36 @@ module.exports = {
             // Report success & send token to client
             this.sendControl({
                 'uibuilderCtrl': 'authorised',
-                'topic': msg.topic,
+                'topic': msg.topic || node.topic,
                 '_uibAuth': _uibAuth,
             }, ioNs, node, socket.id, false)
 
             // Send output to port #2 manually
             node.send([null, {
-                'payload': {
+                uibuilderCtrl: 'authorised',
+                topic: msg.topic || node.topic,
+                _socketId: socket.id,
+                from: 'server',
+                '_uibAuth': {
                     // Try to show some usefull info without revealing too much
                     id: msg.payload.id,
+                    authTokenExpiry: _uibAuth.authTokenExpiry,
+                    // Optional data from the client
                     uid: msg.payload.uid,
                     user: msg.payload.user,
                     name: msg.payload.name,
                 },
-                uibuilderCtrl: 'authorised',
-                tokenExpires: new Date(+new Date() + 1.8e6), // 1.8e6 = 30*60000 = 30min
-                topic: msg.topic,
-                _socketId: socket.id,
             }])
         } else { // auth <> true
             // ?? record fail ??
             _uibAuth.reason = 'Logon failed. Invalid id or password'
 
-            const out = {
-                uibuilderCtrl: 'authorisation failure',
-                topic: msg.topic,
-                _socketId: socket.id,
-                '_uibAuth': _uibAuth,
-            }
-
             // Report fail to client & Send output to port #2
-            this.sendControl(out, ioNs, node, socket.id, true)
+            this.sendControl({
+                uibuilderCtrl: 'authorisation failure',
+                topic: msg.topic || node.topic,
+                '_uibAuth': _uibAuth,
+            }, ioNs, node, socket.id, true)
         }
     }, // ---- End of logon ---- //
 
@@ -614,16 +614,13 @@ module.exports = {
         // delete session entry
 
         // confirm logoff to client & Send output to port #2
-        const out = {
+        this.sendControl({
             uibuilderCtrl: 'logged off',
-            topic: msg.topic,
-            _socketId: socket.id,
+            topic: msg.topic || node.topic,
             '_uibAuth': {
                 reason: 'Logoff successful',
             },
-        }
-
-        this.sendControl(out, ioNs, node, socket.id, true)
+        }, ioNs, node, socket.id, true)
     }, // ---- End of logoff ---- //
 
 } // ---- End of module.exports ---- //

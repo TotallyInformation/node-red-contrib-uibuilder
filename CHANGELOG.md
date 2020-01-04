@@ -53,6 +53,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Further code tidy up.
 - Move configuration template files from templates root to `templates/.config` and reduce copy processes down to just copying the folder with no overwrite
 - Add code isolation to Editor config code
+- Improve standardisation of output topic
 - uibuilderfe: Internal improvements to get/set functions
 
 ----
