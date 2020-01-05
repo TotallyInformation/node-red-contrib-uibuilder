@@ -42,6 +42,10 @@ var app1 = new Vue({
         msgsSent    : 0,
         msgCtrlSent : '[Nothing]',
         msgsCtrlSent: 0,
+
+        isLoggedOn  : false,
+        userId      : null,
+        userPw      : null,
     }, // --- End of data --- //
     computed: {
         hLastRcvd: function() {
@@ -68,7 +72,7 @@ var app1 = new Vue({
     }, // --- End of computed --- //
     methods: {
         increment: function(event) {
-            console.log('Button Pressed. Event DatA: ', event)
+            console.log('Button Pressed. Event Data: ', event)
 
             // Increment the count by one
             this.counterBtn = this.counterBtn + 1
@@ -84,6 +88,16 @@ var app1 = new Vue({
             } )
 
         }, // --- End of increment --- //
+
+        doLogon: function() {
+            uibuilder.logon( {
+                'id': this.inputId,
+            } )
+        }, // --- End of doLogon --- //
+
+        doLogoff: function() {
+            uibuilder.logoff()
+        }, // --- End of doLogon --- //
 
         // return formatted HTML version of JSON object
         syntaxHighlight: function(json) {
@@ -131,62 +145,52 @@ var app1 = new Vue({
         //#region ---- Trace Received Messages ---- //
         // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
         // newVal relates to the attribute being listened to.
-        uibuilder.onChange('msg', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', newVal)
-            vueApp.msgRecvd = newVal
-        })
-        // As we receive new messages, we get an updated count as well
-        uibuilder.onChange('msgsReceived', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange] Updated count of received msgs:', newVal)
-            vueApp.msgsReceived = newVal
+        uibuilder.onChange('msg', function(msg){
+            //console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', msg)
+            vueApp.msgRecvd = msg
+            vueApp.msgsReceived = uibuilder.get('msgsReceived')
         })
 
         // If we receive a control message from Node-RED, we can get the new data here - we pass it to a Vue variable
-        uibuilder.onChange('ctrlMsg', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange:ctrlMsg] CONTROL msg received from Node-RED server:', newVal)
-            vueApp.msgCtrl = newVal
-        })
-        // Updated count of control messages received
-        uibuilder.onChange('msgsCtrl', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange:msgsCtrl] Updated count of received CONTROL msgs:', newVal)
-            vueApp.msgsControl = newVal
+        uibuilder.onChange('ctrlMsg', function(msg){
+            //console.info('[indexjs:uibuilder.onChange:ctrlMsg] CONTROL msg received from Node-RED server:', msg)
+            vueApp.msgCtrl = msg
+            vueApp.msgsControl = uibuilder.get('msgsCtrl')
         })
         //#endregion ---- End of Trace Received Messages ---- //
 
         //#region ---- Trace Sent Messages ---- //
         // You probably only need these to help you understand the order of processing //
         // If a message is sent back to Node-RED, we can grab a copy here if we want to
-        uibuilder.onChange('sentMsg', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange:sentMsg] msg sent to Node-RED server:', newVal)
-            vueApp.msgSent = newVal
-        })
-        // Updated count of sent messages
-        uibuilder.onChange('msgsSent', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange:msgsSent] Updated count of msgs sent:', newVal)
-            vueApp.msgsSent = newVal
+        uibuilder.onChange('sentMsg', function(msg){
+            //console.info('[indexjs:uibuilder.onChange:sentMsg] msg sent to Node-RED server:', msg)
+            vueApp.msgSent = msg
+            vueApp.msgsSent = uibuilder.get('msgsSent')
         })
 
         // If we send a control message to Node-RED, we can get a copy of it here
-        uibuilder.onChange('sentCtrlMsg', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange:sentCtrlMsg] Control message sent to Node-RED server:', newVal)
-            vueApp.msgCtrlSent = newVal
-        })
-        // And we can get an updated count
-        uibuilder.onChange('msgsSentCtrl', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange:msgsSentCtrl] Updated count of CONTROL msgs sent:', newVal)
-            vueApp.msgsCtrlSent = newVal
+        uibuilder.onChange('sentCtrlMsg', function(msg){
+            //console.info('[indexjs:uibuilder.onChange:sentCtrlMsg] Control message sent to Node-RED server:', msg)
+            vueApp.msgCtrlSent = msg
+            vueApp.msgsCtrlSent = uibuilder.get('msgsSentCtrl')
         })
         //#endregion ---- End of Trace Sent Messages ---- //
 
         // If Socket.IO connects/disconnects, we get true/false here
-        uibuilder.onChange('ioConnected', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange:ioConnected] Socket.IO Connection Status Changed to:', newVal)
-            vueApp.socketConnectedState = newVal
+        uibuilder.onChange('ioConnected', function(connected){
+            //console.info('[indexjs:uibuilder.onChange:ioConnected] Socket.IO Connection Status Changed to:', connected)
+            vueApp.socketConnectedState = connected
         })
         // If Server Time Offset changes
-        uibuilder.onChange('serverTimeOffset', function(newVal){
-            //console.info('[indexjs:uibuilder.onChange:serverTimeOffset] Offset of time between the browser and the server has changed to:', newVal)
-            vueApp.serverTimeOffset = newVal
+        uibuilder.onChange('serverTimeOffset', function(serverTimeOffset){
+            //console.info('[indexjs:uibuilder.onChange:serverTimeOffset] Offset of time between the browser and the server has changed to:', serverTimeOffset)
+            vueApp.serverTimeOffset = serverTimeOffset
+        })
+
+        // If user is logged on/off
+        uibuilder.onChange('isAuthorised', function(isAuthorised){
+            //console.info('[indexjs:uibuilder.onChange:serverTimeOffset] Offset of time between the browser and the server has changed to:', serverTimeOffset)
+            vueApp.isLoggedOn = isAuthorised
         })
 
     } // --- End of mounted hook --- //
