@@ -170,8 +170,10 @@ Each instance of the uibuilder node has the following variables.
 
 * `node.customFolder` {String}: Default `<uib.rootFolder>/<node.url>`. 
   Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder.
-  Files in this folder are also served to URL but take preference
-  over those in the nodes folders (which act as defaults) @type {string}
+  Files in either the `src` or `dist` sub-folders are also served to the instance's URL. 
+  The `dist` folder will only be used if `index.html` exists in that folder.
+  Any resource names that clash with files in the  `<uib.rootFolder>/common` folder will take preference
+  ensuring local control is available.
 
 * `node.ioClientsCount` {Integer}: How many Socket clients connected to this instance?
 
