@@ -159,7 +159,7 @@ Each instance of the uibuilder node has the following variables.
   copy the template `index.[html|js|css] files to the source folder if they don't exist.
 * `node.showfolder` {Boolean}: Default `false`. Whether uibuilder will automatically create
   an index page view showing the source files available. Turning this on in production would be
-  unwise as it would be a security issue.
+  unwise as it would be a security issue. If turned on, resulting URL is `<httpNodeRoot>/<node.url>/idx`.
 
 #### Security Related
 
