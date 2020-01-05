@@ -352,6 +352,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     // Node-RED is shutting down
                     case 'shutdown':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "shutdown" from server')
+                        self.set('serverShutdown', undefined)
                         break
 
                     // We are connected to the server
@@ -437,6 +438,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // Socket.io error - from the server (socket.use middleware triggered an error response)
             self.socket.on('error', function(err) {
                 self.uiDebug('warn', 'uibuilderfe:ioSetup: SOCKET ERROR from server - MESSAGE: ', err)
+                self.set('socketError', err)
                 //console.dir(err)
             }) // --- End of socket error processing ---
 
@@ -503,8 +505,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             self.authData = data
 
-            self.isAuthorised = false
+            self.set('isAuthorised', false) // also triggers event
+
             self.authToken = ''
+            self.authTokenExpiry = null
+            self.authData = {}
             //delete self.socketOptions.transportOptions.polling.extraHeaders.Authorization
         } // ---- End of markLoggedOut ---- //
 
@@ -518,7 +523,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             if ( Object.keys(_auth).length === 0 ) return
 
             if ( _auth.authToken ) {
-                self.isAuthorised = true
+                self.set('isAuthorised', true) // also triggers event
+                
                 self.authToken = _auth.authToken
                 self.authTokenExpiry = _auth.authTokenExpiry
                 self.authData = _auth.authData || {}
