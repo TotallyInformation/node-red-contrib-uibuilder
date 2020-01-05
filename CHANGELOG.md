@@ -66,6 +66,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   
   [uibuilder Security Documentation](./docs/security.md) and [security.js Technical Documentation](./docs/securityjs.md).
 
+- uibuilderfe: Add logon/logoff example UI and processing
+
 ### Changed
 
 - Further code tidy up.
@@ -73,6 +75,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Add code isolation to Editor config code
 - Improve standardisation of output topic
 - uibuilderfe: Internal improvements to get/set functions
+- uibuilderfe: Simplify default Vue templates
 
 ----
 
