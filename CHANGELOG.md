@@ -43,10 +43,28 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - 'authorisation failure' - received from server after an **un**successful logon request.
   - 'logged off' - received from server after a successful logoff request. Returns optional additional data (into `authData`)
 
-- Added `X-XSS-Protection: 1;mode=block` and `X-Content-Type-Options: nosniff` security headers.
+- Added `X-XSS-Protection: 1;mode=block`, `X-Content-Type-Options: nosniff` and `'x-powered-by: uibuilder` security headers.
   
   If you want to add your own headers, make use of the `uibMiddleware.js` (for ExpressJS) and `sioMiddleware.js` (for Socket.IO initial connection and polling connections) middleware files.
 
+- Added `useSecurity` flag. If set, the uibuilder instance will apply security processes.
+
+  Note that if not using TLS security to encrypt communications in Node-RED, you will get at least a warning (in development mode. In production mode, security will turn off as there is no point).
+
+- Added `security.js` template module and added processing from `<uibRoot>/<url>/` or `<uibRoot>/.config/`.
+  
+  In non-development node.js modes, logon processing will not work unless you have used your own security.js file.
+
+  See the template file for more information about what functions you need to export and about data schema's required.
+  It isn't very hard to use.
+
+  This is the core of the security processing. uibuilder enforces some standards for you but you have to validate users and sessions. uibuilder makes
+  this as easy as it can so that you don't have to be a mega-coder to work with it. Your user validation for example could be as simple as a file-based lookup.
+  I will add more examples as the code stabilised so that you should be able to copy & paste a solution if you want soething fairly simple.
+
+- Added security documentation
+  
+  [uibuilder Security Documentation](./docs/security.md) and [security.js Technical Documentation](./docs/securityjs.md).
 
 ### Changed
 
