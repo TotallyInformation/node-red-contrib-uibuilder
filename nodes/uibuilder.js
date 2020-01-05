@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Julian Knight (Totally Information)
+ * Copyright (c) 2020 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -351,6 +351,9 @@ module.exports = function(RED) {
             //res.setHeader('X-Frame-Options','SAMEORIGIN')
             //res.setHeader('Content-Security-Policy',"script-src 'self'")
 
+            // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
+            res.setHeader('x-powered-by','uibuilder')
+
             // Tell the client what Socket.IO namespace to use,
             // trim the leading slash because the cookie will turn it into a %2F
             res.setHeader('uibuilder-namespace', node.ioNamespace)
@@ -524,7 +527,7 @@ module.exports = function(RED) {
 
                 /** If a logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
                 if ( msg.uibuilderCtrl === 'logon') {
-                    uiblib.logon(msg, ioNs, node, socket, log)
+                    uiblib.logon(msg, ioNs, node, socket, log, uib)
 
                 } else if ( msg.uibuilderCtrl === 'logoff') {
                     uiblib.logoff(msg, ioNs, node, socket, log)
