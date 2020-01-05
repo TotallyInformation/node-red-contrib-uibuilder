@@ -103,7 +103,7 @@ Note that if a client disconnects then reconnects it will have a different `_soc
   {"<node.id>": "<url>"}
   ```
 
-* `masterPackageListFilename` {String}: 'masterPackageList.json'. 
+* `masterPackageListFilename` {String}: Default `masterPackageList.json`. 
   File name of the master package list used to check for commonly installed FE libraries.
 
 * `masterTemplate` {String}: 'vue'. What template to use as master? Must match a folder in the masterTemplateFolder.
@@ -114,19 +114,19 @@ Note that if a client disconnects then reconnects it will have a different `_soc
 
 * `me` {Object}: Contents of uibuilder's package.json file
   
-* `moduleName` {String}: Default 'uibuilder'. Module name must match this nodes html file.
+* `moduleName` {String}: Default `uibuilder`. Module name must match this nodes html file.
   
 * `nodeRoot` {String}: Default: `RED.settings.httpNodeRoot`. URL path prefix set in settings.js - prefixes all non-admin URL's.
   
 * `nodeVersion` {String}: What version of Node.JS are we running under? Impacts some file processing.
   
-* `packageListFilename` {String}: 'packageList.json'. File name of the installed package list.
+* `packageListFilename` {String}: Default `packageList.json`. File name of the installed package list.
   
 * `rootFolder` {String}: Root folder (on the server FS) for all uibuilder front-end data. 
   Name of the fs path used to hold custom files & folders for all uib.instances of uibuilder.
-  Default: `<userDir>/<moduleName>` or `<userDir>/projects/<activeProject>/<moduleName>` if Node-RED projects are in use.
+  Default: `<userDir>/<uib.moduleName>` or `<userDir>/projects/<activeProjectName>/<uib.moduleName>` if Node-RED projects are in use.
 
-* `sioUseMwName` {String}: 'sioUse.js'. Name of the Socket.IO Use Middleware.
+* `sioUseMwName` {String}: Default `sioUse.js`. Name of the Socket.IO Use Middleware.
   
 * `version` {String}: Current uibuilder module version (taken from package.json).
 
@@ -140,23 +140,35 @@ Each instance of the uibuilder node has the following variables.
 
 ### From the admin Editor ui
 
-* `node.name`
-* `node.topic`
-* `node.url` ['uibuilder']
-* `node.fwdInMessages`
-* `node.allowScripts`
-* `node.allowStyles`
-* `node.copyIndex`
-* `node.showfolder`
+* `node.name` {String}:
+* `node.topic` {String}:
+* `node.url` {String}: Default `uibuilder`. Used for both the URL of this instance and for
+  the filing system location of instance resources.
+
+#### Advanced Settings
+
+* `node.fwdInMessages` {Boolean}: Default `false`. Whether input messages will be automatically forwarded
+  to the output.
+* `node.allowScripts` {Boolean}: Default `false`. Whether uibuilder will allow
+  input messages to send custom JavaScript code to the front-end. This could be
+  a potential security hole unless well controlled.
+* `node.allowStyles` {Boolean}: Default `false`. Whether uibuilder will allow
+  input messages to send custom CSS style information to the front-end. This could be
+  a potential security hole unless well controlled.
+* `node.copyIndex` {Boolean}: Default `true`. Whether uibuilder will automatically
+  copy the template `index.[html|js|css] files to the source folder if they don't exist.
+* `node.showfolder` {Boolean}: Default `false`. Whether uibuilder will automatically create
+  an index page view showing the source files available. Turning this on in production would be
+  unwise as it would be a security issue.
 
 #### Security Related
 
-* `node.useSecurity`: Whether to use uibuilder's security architecture.
-* `node.sessionLength`: = 60000  // 1.8e6 = 30*60000 = 30min
+* `node.useSecurity` {Boolean}: Default `false`. Whether to use uibuilder's security architecture.
+* `node.sessionLength` {Integer}: Default `1.8e6`. (1.8e6 = 30*60000 = 30min).
 
 ### Locally configured (not set in Editor)
 
-* `node.customFolder` {String}: [path.join(uib_rootFolder, node.url)]. 
+* `node.customFolder` {String}: Default `<uib.rootFolder>/<node.url>`. 
   Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder.
   Files in this folder are also served to URL but take preference
   over those in the nodes folders (which act as defaults) @type {string}
