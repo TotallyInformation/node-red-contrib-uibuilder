@@ -64,105 +64,81 @@ Note that if a client disconnects then reconnects it will have a different `_soc
 
 ## Global/Module Variables
 
-### `vendorPaths` {Object}
+### `uib` {Object} [Module global]
 
-```json
-{
+* `commonFolder` {String}: Default `./common/`. URL for uib common folder.
+  The common folder contains resources made available to all instances of uibuilder.
+
+* `commonFolderName` {String}: Default `<uibRoot>/common`. Filing system folder name of the `common` folder for shared resources.
+  
+* `configFolder` {String}: Default `<uibRoot>/.config`. 
+  Filing system path to the folder containing any uibuilder global configuration files.
+  e.g. package lists, security and middleware modules.
+
+* `configFolderName` {String}: Default `<uibRoot>/.config`. Filing system folder name of the config folder.
+  
+* `deployments` {Object}: Track across redeployments.
+  
+* `installedPackages` {Object}: Track the vendor packages installed and their paths - updated by uiblib.checkInstalledPackages(). 
+  Populated initially from packageList file once the configFolder is known & master list has been copied. 
+
+  Schema: 
+  
+  ```json
+  {
     "<npm package name>": {
-        "url": <vendorPath>, 
-        "folder": <installFolder>,
-        "homepage": <packageHomePage>,
-        "version": <packageVersion>, 
-        "main": <mainEntryScript>
+        "url": vendorPath, 
+        "path": installFolder, 
+        "version": packageVersion, 
+        "main": mainEntryScript
     } 
-}
-```
+  }
+  ```
 
-Default: `{}`
+* `instances` {Object}: When nodeGo is run, the node.id is added as a key with the value being the url. 
+  
+  Schema: 
+  
+  ```json
+  {"<node.id>": "<url>"}
+  ```
 
-*Object who's primary keys are each installed front-end vendor package. Also contains a sub-object showing the applied root URL for accessing the package resources from front-end (browser) code and the server filing system path to the root folder.*
+* `masterPackageListFilename` {String}: 'masterPackageList.json'. 
+  File name of the master package list used to check for commonly installed FE libraries.
 
-Created when module is activated. 
+* `masterTemplate` {String}: 'vue'. What template to use as master? Must match a folder in the masterTemplateFolder.
+  
+* `masterTemplateFolder` {String}: Default: `__dirname/templates`. 
+  Location of master template folders (containing default front-end code).
+  Holds a set of master templates to use. These are copied over to the instance src folder when needed.
 
-All URI paths start `../uibuilder/vendor/<packageName>/` - starting with `..` automatically includes the correct scheme (http[s]), (sub)domain, port and `httpNodeRoot` prefix.
+* `me` {Object}: Contents of uibuilder's package.json file
+  
+* `moduleName` {String}: Default 'uibuilder'. Module name must match this nodes html file.
+  
+* `nodeRoot` {String}: Default: `RED.settings.httpNodeRoot`. URL path prefix set in settings.js - prefixes all non-admin URL's.
+  
+* `nodeVersion` {String}: What version of Node.JS are we running under? Impacts some file processing.
+  
+* `packageListFilename` {String}: 'packageList.json'. File name of the installed package list.
+  
+* `rootFolder` {String}: Root folder (on the server FS) for all uibuilder front-end data. 
+  Name of the fs path used to hold custom files & folders for all uib.instances of uibuilder.
+  Default: `<userDir>/<moduleName>` or `<userDir>/projects/<activeProject>/<moduleName>` if Node-RED projects are in use.
 
-NB: socket.io is not included.
+* `sioUseMwName` {String}: 'sioUse.js'. Name of the Socket.IO Use Middleware.
+  
+* `version` {String}: Current uibuilder module version (taken from package.json).
 
-### `uib_rootFolder` {string} 
+### Other variables
 
-*The root folder that contains all of the folders for each instance of uibuilder nodes.*
+* `userDir` {String}: The current userDir folder. `RED.settings.userDir`.
+  
+## uibuilder Node Instance Variables
 
-Default: `<userDir>/<moduleName>` or `<userDir>/projects/<activeProject>/<moduleName>` if Node-RED projects are in use. 
+Each instance of the uibuilder node has the following variables.
 
-`<moduleName>` = 'uibuilder'
-
-### `masterTemplateFolder` {string} 
-
-Default: `__dirname/templates`
-
-*Holds a set of master templates to use. These are copied over to the instance src folder when needed.*
-
-### `httpNodeRoot` {string} 
-
-Default: `RED.settings.httpNodeRoot`
-
-*The URL path Node-RED will prefix to all user urls (e.g. non-admin urls).*
-
-### `module` {string} 
-
-Default: `'uibuilder'`
-
-*Name of the uibuilder module/node. Set at global module level.*
-
-### instances {Object}
-
-```json
-{"node.id": <url>}
-```
-
-*Map of all instantiated instances of uibuilder along with their URLs.*
-
-instances[node.id] = node.url
-
-### ~~`uib_GlobalSettings` {Object}~~
-
-**_DEPRECATED in v2.0_**
-
-Default (v2.0): `{packages:[vue,bootstrap,vue-bootstrap],debug:false,template='vue'}`
-
-Default (v1.x): `{packages:[jquery,normalize.css],debug:false}`
-
-Originally read from the Node-RED `settings.json` file. No longer required.
-
-### `configFolder` {string}
-
-Filing system path to the folder containing any global configuration files. `<uibRoot>/.config`.
-
-Currently only contains:
-
-* `packageList.json` which contains the array of installed packages by their npm package name. These are packages that will be added as URI paths to the server to make them accessible to your front-end code.
-
-  Additional packages installed/removed via the admin ui package management section will update this file.
-
-  It is read on Node-RED startup and again whenever the admin ui package management section opened or the details API called.
-
-  If this file is not valid JSON, an error will be generated.
-
-* `masterPackageList.json` an array of recognised packages useful as front-end modules. Initialised from a master template included with the uibuilder source. May be altered at will.
-
-  Any packages in this list will be searched for on startup, when the admin ui/package management section is shown or the details API called. 
-
-  Any found to be actually installed in `<userDir>/node_modules` will be added to the packageList and added as URI paths to the server.
-
-  If this file is not valid JSON, an error will be generated.
-
-### `commonFolder` {string}
-
-Filing system path to the folder that is served to all instances as `./common/`
-
-## Instance Variables
-
-Each instance of the uibuilder node has the following variables that are configured via the admin ui.
+### From the admin Editor ui
 
 * `node.name`
 * `node.topic`
@@ -171,17 +147,44 @@ Each instance of the uibuilder node has the following variables that are configu
 * `node.allowScripts`
 * `node.allowStyles`
 * `node.copyIndex`
+* `node.showfolder`
 
-And some additional, locally configured instance variables:
+#### Security Related
 
-* `node.customFolder ` [path.join(uib_rootFolder, node.url)]
-* `fullPath` [tilib.urlJoin( httpNodeRoot, node.url )] Same as `node.ioNamespace`
+* `node.useSecurity`: Whether to use uibuilder's security architecture.
+* `node.sessionLength`: = 60000  // 1.8e6 = 30*60000 = 30min
 
+### Locally configured (not set in Editor)
 
+* `node.customFolder` {String}: [path.join(uib_rootFolder, node.url)]. 
+  Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder.
+  Files in this folder are also served to URL but take preference
+  over those in the nodes folders (which act as defaults) @type {string}
+
+* `node.ioClientsCount` {Integer}: How many Socket clients connected to this instance?
+
+* `node.rcvMsgCount` {Integer}: How many msg's received since last reset or redeploy?
+
+* `node.ioChannels` {Object}: The channel names used for Socket.IO.
+  Default `{control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}`.
+
+* `node.ioNamespace` {String}: Default `<httpNodeRoot>/<node.url>`.
+  Make sure each node instance uses a separate Socket.IO namespace.
+  WARNING: This HAS to match the one derived in uibuilderfe.js.
 
 ## Functions/Methods
 
+### Module level
 
+* `log`: Default `RED.log`. Logging functions.
+* `app`: Default `RED.httpNode`. Reference to the ExpressJS app.
+* `io`: Reference to the Socket.IO server.
+* `nodeGo`: The function passed to the node `registerType` function.
+
+### Instance level
+
+* `ioNs`: Reference to Socket.IO namespace used for the instance.
+* `nodeInputHandler`: Function that handles incoming messages for a uibuilder instance.
 
 ## Admin API's
 
