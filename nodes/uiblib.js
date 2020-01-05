@@ -1,7 +1,7 @@
 /**
  * Utility library for uibuilder
  * 
- * Copyright (c) 2019 Julian Knight (Totally Information)
+ * Copyright (c) 2020 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -16,8 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
 'use strict'
 
 const path = require('path')
@@ -25,6 +23,10 @@ const fs = require('fs-extra')
 const tilib = require('./tilib.js')
 const util = require('util')
 const serveStatic = require('serve-static')
+
+// Make sure that we only work out where the security.js file exists only ONCE - see the logon() function
+let securitySrc = ''
+let securityjs = null
 
 module.exports = {
 
@@ -506,7 +508,7 @@ module.exports = {
     /** Process a logon request
      * msg.payload contains any extra data needed for the login
      */
-    logon: function(msg, ioNs, node, socket, log) {
+    logon: function(msg, ioNs, node, socket, log, uib) {
 
         // Only process if security is turned on
         if ( node.useSecurity !== true ) {
@@ -521,8 +523,9 @@ module.exports = {
         // console.log('SOCKET.flags', Object.keys(socket.flags))
         // console.log('SOCKET.handshake', Object.keys(socket.handshake))
         //console.log('SOCKET.handshake', socket.handshake)
+        //console.dir(msg)
 
-        const _uibAuth = {}
+        const _uibAuth = msg._uibAuth || {}
 
         // Check if using TLS - if not, send warning to log
         if ( socket.handshake.secure !== true ) {
@@ -545,23 +548,60 @@ module.exports = {
             }
         }
 
-        // Attempt logon
+        /** Attempt logon 
+         * @type {boolean|Object} */
         let auth = false
-        if ( msg.payload.id === 'jk' ) auth = true
-        else auth = false
+
+        // If an instance specific version of the security module exists, use it
+        if ( securitySrc === '' ) { // make sure this only runs once
+            securitySrc = path.join(node.customFolder,'security.js')
+            if ( ! fs.existsSync(securitySrc) ) {
+                // Otherwise try to use the central version in uibRoot/.config
+                securitySrc = path.join(uib.rootFolder, uib.configFolderName,'security.js')
+                if ( ! fs.existsSync(securitySrc) ) {
+                    // Otherwise use the template version from ./templates/.config
+                    securitySrc = path.join(__dirname, 'templates', '.config', 'security.js')
+
+                    // And output a warning if in dev mode, fail in production mode
+                    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
+                        log.warn('[uibuilder:uiblib:logon] Security is ON but no `security.js` found. Using master template. Please replace with your own code.')
+
+                        if (node.copyIndex === true) {
+                            log.warn('[uibuilder:uiblib:logon] copyIndex flag is ON so copying master template `security.js` to the <usbRoot>/.config` folder.')
+                            fs.copy(securitySrc, path.join(uib.configFolderName,'security.js'), {overwrite:false, preserveTimestamps:true}, err => {
+                                if (err) log.error('[uibuilder:uiblib:logon] Copy of master template `security.js` FAILED.', err)
+                                else {
+                                    log.warn('[uibuilder:uiblib:logon] Copy of master template `security.js` SUCCEEDED. Please restart Node-RED to use it.')
+                                }
+                            })
+                        }
+                    } else {
+                        // In production mode, don't allow insecure processes - fail now
+                        log.error('[uibuilder:uiblib:logon] Security is ON but no `security.js` found. Cannot process logon in non-development mode without a custom security.js file. See uibuilder security docs for details.')
+                        return
+                    }
+                }
+            }
+
+            securityjs = require( securitySrc )
+        }
+
+        auth = securityjs.userValidate(msg._uibAuth)
+        let authData = null
+        if ( Object.prototype.toString.call(auth) === '[object Object]' ) {
+            authData = auth.authData || {}
+            auth = auth.userValidated
+        }
 
         // Send responses
         if ( auth === true ) {
             // Record session details
 
+            // Add token
             _uibAuth.authToken = '1234'
             _uibAuth.authTokenExpiry = new Date(+new Date() + node.sessionLength)
             _uibAuth.reason = 'Logon successful'
-            // Optional data
-            _uibAuth.authData = {
-                name: 'Me',
-                message: 'Hi you, don\'t forget to change your password :)'
-            }
+            _uibAuth.authData = authData
 
             // Report success & send token to client
             this.sendControl({
@@ -578,12 +618,12 @@ module.exports = {
                 from: 'server',
                 '_uibAuth': {
                     // Try to show some usefull info without revealing too much
-                    id: msg.payload.id,
+                    id: _uibAuth.id,
                     authTokenExpiry: _uibAuth.authTokenExpiry,
                     // Optional data from the client
-                    uid: msg.payload.uid,
-                    user: msg.payload.user,
-                    name: msg.payload.name,
+                    uid: _uibAuth.uid,
+                    user: _uibAuth.user,
+                    name: _uibAuth.name,
                 },
             }])
         } else { // auth <> true
