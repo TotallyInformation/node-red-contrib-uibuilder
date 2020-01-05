@@ -533,21 +533,22 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
         } // ---- End of updateAuth ---- //
 
-        /** Returns a standard msg._uibAuth Object
-         * If we have an authToken and not expired, add `_uibAuth` with just the token
+        /** Returns a standard msg._uibAuth Object either with valid authToken or none
+         * If token has expired, run the logout to invalidate the retained data.
+         * @param {Object=} _uibAuth Input standard auth object
          */
-        self.addAuth = function() {
+        self.addAuthToken = function(_uibAuth) {
+            if ( Object.prototype.toString.call(_uibAuth) !== '[object Object]' ) _uibAuth = {}
             if ( self.isAuthorised ) {
                 if ( self.authTokenExpiry > (new Date()) ) {
-                    return {
-                        authToken: self.authToken,
-                    }
+                    _uibAuth.authToken = self.authToken
                 } else { // Token has expired so mark as logged off
+                    _uibAuth.authToken = undefined
                     self.markLoggedOut('Automatically logged off by send(). Token expired')
                 }
             }
-            // Return empty object if current auth is not valid
-            return {}
+            // Return _uibAuth
+            return _uibAuth
         } // ---- End of addAuth ---- //
 
         /** Send a standard msg back to Node-RED via Socket.IO
@@ -576,7 +577,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             msgToSend._socketId = self.socket.id
 
             /** @since 2020-01-04 If we have an authToken and not expired, add `_uibAuth` with just the token */
-            msgToSend._uibAuth = self.addAuth()
+            msgToSend._uibAuth = self.addAuthToken(msgToSend._uibAuth)
 
             // Track how many messages have been sent & last msg sent
             if (channel === self.ioChannels.client) {
@@ -828,7 +829,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 self.send({
                     'uibuilderCtrl':'logon',
                     'from': 'client',
-                    'payload': data,
+                    '_uibAuth': data,
                 },self.ioChannels.control)
             },
 
