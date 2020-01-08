@@ -664,6 +664,9 @@ module.exports = function(RED) {
         credentials: {
             jwtSecret: {type:'text'},
         },
+        settings: {
+            node_env: process.env.NODE_ENV,
+        },
     })
 
     //#region --- Admin API's ---
