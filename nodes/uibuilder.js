@@ -660,7 +660,11 @@ module.exports = function(RED) {
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
-    RED.nodes.registerType(uib.moduleName, nodeGo)
+    RED.nodes.registerType(uib.moduleName, nodeGo, {
+        credentials: {
+            jwtSecret: {type:'text'},
+        },
+    })
 
     //#region --- Admin API's ---
 
