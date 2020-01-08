@@ -27,6 +27,7 @@ const serveStatic = require('serve-static')
 // Make sure that we only work out where the security.js file exists only ONCE - see the logon() function
 let securitySrc = ''
 let securityjs = null
+let jsonwebtoken = null
 
 module.exports = {
 
@@ -505,6 +506,61 @@ module.exports = {
         return true
     }, // ---- End of checkUrl ---- //
 
+
+    /** Create a new JWT token based on a user id, session length and security string 
+     * @param {String} userId The unique id that identifies the user.
+     * @param {Object} node  Reference to the calling uibuilder node instance.
+     * @returns {Object} A base64 encoded, signed JWT token string & expiry date/time.
+     */
+    createToken: function(userId, node) {
+
+        if (jsonwebtoken === null) jsonwebtoken = require('jsonwebtoken')
+
+        const sessionExpiry = Math.floor(Date.now() / 1000) + node.sessionLength
+
+        const jwtData = {
+            // When does the token expire? Value is seconds since 1970
+            exp: sessionExpiry,
+            // Subject = unique id to identify user
+            sub: userId,
+            // Issuer
+            iss: 'uibuilder',
+        }
+
+        return { 'token': jsonwebtoken.sign(jwtData, node.jwtSecret), 'tokenExpiry': sessionExpiry * 1000 }
+
+    }, // ---- End of createToken ---- //
+
+    /** Check whether a received JWT token is valid. If it is, then try to update it. 
+     * @param {String} token A base64 encoded, signed JWT token string.
+     * @param {Object} node  Reference to the calling uibuilder node instance.
+     * @returns {Object}  { valid: [boolean], data: [object], newToken: [string], err: [object] }
+     */
+    checkToken: function(token, node) {
+        if (jsonwebtoken === null)  jsonwebtoken = require('jsonwebtoken')
+
+        const options = {
+            issuer: 'uibuilder',
+            clockTimestamp: Math.floor(Date.now() / 1000), // seconds since 1970
+            //clockTolerance: 10, // seconds
+            //maxAge: "7d",
+        }
+
+        var response = { 'valid': false, data: undefined, newToken: undefined, err: undefined }
+
+        try {
+            response.data = jsonwebtoken.verify(token, node.jwtSecret, options) // , callback])
+            response.newToken = this.createToken(response.data.sub, node)
+            response.valid = true
+        } catch(err) {
+            response.err = err
+            response.valid = false
+        }
+
+        return response
+
+    }, // ---- End of checkToken ---- //
+
     /** Process a logon request
      * msg.payload contains any extra data needed for the login
      */
@@ -517,15 +573,30 @@ module.exports = {
         }
 
         // console.log('SOCKET', Object.keys(socket))
-        // console.log('SOCKET.client', Object.keys(socket.client))
-        // console.log('SOCKET.conn', Object.keys(socket.conn))
-        // console.log('SOCKET.server', Object.keys(socket.server))
-        // console.log('SOCKET.flags', Object.keys(socket.flags))
-        // console.log('SOCKET.handshake', Object.keys(socket.handshake))
-        //console.log('SOCKET.handshake', socket.handshake)
-        //console.dir(msg)
+         // console.log('SOCKET.client', Object.keys(socket.client))
+         // console.log('SOCKET.conn', Object.keys(socket.conn))
+         // console.log('SOCKET.server', Object.keys(socket.server))
+         // console.log('SOCKET.flags', Object.keys(socket.flags))
+         // console.log('SOCKET.handshake', Object.keys(socket.handshake))
+         //console.log('SOCKET.handshake', socket.handshake)
+         //console.dir(msg)
 
         const _uibAuth = msg._uibAuth || {}
+
+        // Make sure that we at least have a user id
+        if ( ! _uibAuth.id ) {
+            log.warn('')
+
+            // ?? record fail ??
+            _uibAuth.reason = 'Logon failed. No id provided'
+
+            // Report fail to client & Send output to port #2
+            this.sendControl({
+                uibuilderCtrl: 'authorisation failure',
+                topic: msg.topic || node.topic,
+                '_uibAuth': _uibAuth,
+            }, ioNs, node, socket.id, true)
+        }
 
         // Check if using TLS - if not, send warning to log
         if ( socket.handshake.secure !== true ) {
@@ -586,6 +657,7 @@ module.exports = {
             securityjs = require( securitySrc )
         }
 
+        // Use security module to validate user
         auth = securityjs.userValidate(msg._uibAuth)
         let authData = null
         if ( Object.prototype.toString.call(auth) === '[object Object]' ) {
@@ -598,8 +670,12 @@ module.exports = {
             // Record session details
 
             // Add token
-            _uibAuth.authToken = '1234'
-            _uibAuth.authTokenExpiry = new Date(+new Date() + node.sessionLength)
+            const tokenData = this.createToken(_uibAuth.id, node)
+            console.log(tokenData)
+            _uibAuth.authToken = tokenData.token
+            _uibAuth.authTokenExpiry = tokenData.tokenExpiry
+
+            // Add success reason and add any optional data from the user validation
             _uibAuth.reason = 'Logon successful'
             _uibAuth.authData = authData
 
