@@ -291,7 +291,9 @@ module.exports = function(RED) {
         node.showfolder    = config.showfolder === undefined ? false : config.showfolder
 
         node.useSecurity   = true
-        node.sessionLength = 60000  // 1.8e6 = 30*60000 = 30min
+        node.tokenAutoExtend = true //TODO docs
+        node.jwtSecret     = 'thisneedsreplacingwithacredential'
+        node.sessionLength = 120  // in seconds
         //#endregion ----- Local node config copy ----- //
 
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })

@@ -164,6 +164,8 @@ Each instance of the uibuilder node has the following variables.
 #### Security Related
 
 * `node.useSecurity` {Boolean}: Default `false`. Whether to use uibuilder's security architecture.
+* `node.tokenAutoExtend`: Whether to use client `ping` messages (every 25-30 sec) to automatically extend the token lifespan.
+* `node.jwtSecret` {String}: The secret used to sign/verify the JWT token.
 * `node.sessionLength` {Integer}: Default `1.8e6`. (1.8e6 = 30*60000 = 30min).
 
 ### Locally configured (not set in Editor)
