@@ -527,7 +527,7 @@ module.exports = {
             iss: 'uibuilder',
         }
 
-        return { 'token': jsonwebtoken.sign(jwtData, node.jwtSecret), 'tokenExpiry': sessionExpiry * 1000 }
+        return { 'token': jsonwebtoken.sign(jwtData, node.credentials.jwtSecret), 'tokenExpiry': sessionExpiry * 1000 }
 
     }, // ---- End of createToken ---- //
 
@@ -549,7 +549,7 @@ module.exports = {
         var response = { 'valid': false, data: undefined, newToken: undefined, err: undefined }
 
         try {
-            response.data = jsonwebtoken.verify(token, node.jwtSecret, options) // , callback])
+            response.data = jsonwebtoken.verify(token, node.credentials.jwtSecret, options) // , callback])
             response.newToken = this.createToken(response.data.sub, node)
             response.valid = true
         } catch(err) {

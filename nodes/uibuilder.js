@@ -292,7 +292,7 @@ module.exports = function(RED) {
 
         node.useSecurity   = true
         node.tokenAutoExtend = true //TODO docs
-        node.jwtSecret     = 'thisneedsreplacingwithacredential'
+        //node.jwtSecret     = 'thisneedsreplacingwithacredential'
         node.sessionLength = 120  // in seconds
         //#endregion ----- Local node config copy ----- //
 
