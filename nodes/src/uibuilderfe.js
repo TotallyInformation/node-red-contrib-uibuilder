@@ -524,7 +524,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             if ( _auth.authToken ) {
                 self.set('isAuthorised', true) // also triggers event
-                
+
                 self.authToken = _auth.authToken
                 self.authTokenExpiry = _auth.authTokenExpiry
                 self.authData = _auth.authData || {}
@@ -545,12 +545,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          */
         self.addAuthToken = function(_uibAuth) {
             if ( Object.prototype.toString.call(_uibAuth) !== '[object Object]' ) _uibAuth = {}
-            if ( self.isAuthorised ) {
-                if ( self.authTokenExpiry > (new Date()) ) {
+            if ( self.isAuthorised ) {                
+                if ( new Date(self.authTokenExpiry) > (new Date()) ) {
                     _uibAuth.authToken = self.authToken
                 } else { // Token has expired so mark as logged off
                     _uibAuth.authToken = undefined
-                    self.markLoggedOut('Automatically logged off by send(). Token expired')
+                    self.markLoggedOut('Automatically logged off. Token expired', _uibAuth.authData)
                 }
             }
             // Return _uibAuth
