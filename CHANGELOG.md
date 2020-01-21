@@ -6,6 +6,21 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.6...master)
 
+### Summary
+
+As this contains rather a lot of changes, here is a summary of the key changes for users of the node. The details are in the following sections.
+
+- New security features
+  
+  - Added a new standardised property to uibuilder control msg's. `msg._uibAuth`
+  - Security features can be turned on via a flag in the node configuration.
+  - 
+  
+- New security documentation
+- Improved Editor configuration panel layout for Advanced Settings
+- Some simplification of the default VueJS JavaScript template. Makes it a little easier to read.
+- Added configuration option to add browser/proxy caching control to all static assets - set the length of time before assets will be reloaded from the server. This may sometimes significantly improve performance in the browser. It depends on the performance of your server and the complexity of the UI.
+
 ### New
 
 - Add a middleware JavaScript module file to allow use of `socket.use`. 
@@ -32,8 +47,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   
   Added new variables:
   
-  - `isAuthorised` {boolean} - informs whether the current client connection is authenticated
-  - `authTokenExpiry` {Date|null} - when the authentication token expires
+  - `isAuthorised` {boolean} - informs whether the current client connection is authenticated.
+  - `authTokenExpiry` {Date|null} - when the authentication token expires.
   - `authData` {Object} - Additional data returned from logon/logoff requests. Can be used by front-end to display messages at logon/off or anything else desired.
   - _`authToken` {String}_ - this is not externally accessible. It is sent back to the server on every msg sent and validated by the server.
   
@@ -41,11 +56,17 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
   - 'authorised' - received from server after a successful logon request. Returns the token, expiry and any optional additional data (into `authData`).
   - 'authorisation failure' - received from server after an **un**successful logon request.
-  - 'logged off' - received from server after a successful logoff request. Returns optional additional data (into `authData`)
+  - 'logged off' - received from server after a successful logoff request. Returns optional additional data (into `authData`).
 
 - Added `X-XSS-Protection: 1;mode=block`, `X-Content-Type-Options: nosniff` and `'x-powered-by: uibuilder` security headers.
   
   If you want to add your own headers, make use of the `uibMiddleware.js` (for ExpressJS) and `sioMiddleware.js` (for Socket.IO initial connection and polling connections) middleware files.
+
+- Added security documentation.
+
+  Read these to understand how to use uibuilder security and how it works (respectively).
+  
+  [uibuilder Security Documentation](./docs/security.md) and [security.js Technical Documentation](./docs/securityjs.md).
 
 - Added `useSecurity` flag. If set, the uibuilder instance will apply security processes.
 
@@ -62,20 +83,24 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   this as easy as it can so that you don't have to be a mega-coder to work with it. Your user validation for example could be as simple as a file-based lookup.
   I will add more examples as the code stabilised so that you should be able to copy & paste a solution if you want soething fairly simple.
 
-- Added security documentation
+- uibuilderfe: Add logon/logoff example UI and processing.
   
-  [uibuilder Security Documentation](./docs/security.md) and [security.js Technical Documentation](./docs/securityjs.md).
+- Added on options variable for serve-static to allow control of caching & other headers. `uib.staticOpts`.
 
-- uibuilderfe: Add logon/logoff example UI and processing
+  This lets you control caching of your "static" assets like JavaScript, HTML, CSS, Images and any installed front-end library resources (Vue, etc).
+
+  Note that this is **not** for caching the msg's coming through the node, see the caching examples in the WIKI for that.
 
 ### Changed
 
+- Documentation: Greatly improved documentation coverage in the `/docs` folder. This contains a lot of developer documentation which should make it easier to work on improvements to uibuilder in the future.
 - Further code tidy up.
-- Move configuration template files from templates root to `templates/.config` and reduce copy processes down to just copying the folder with no overwrite
-- Add code isolation to Editor config code
-- Improve standardisation of output topic
-- uibuilderfe: Internal improvements to get/set functions
-- uibuilderfe: Simplify default Vue templates
+- Move configuration template files from templates root to `templates/.config` and reduce copy processes down to just copying the folder with no overwrite.
+- Add code isolation to Editor config code.
+- Improve standardisation of output topic.
+- uibuilderfe: Internal improvements to get/set functions.
+- uibuilderfe: Simplify default Vue templates.
+- Editor: Tidy up the Advanced Settings section of the configuration panel.
 
 ----
 

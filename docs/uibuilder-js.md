@@ -8,7 +8,7 @@ Note that uibuilder [URI paths are documented in the WIKI](https://github.com/To
 
 ### Installation
 
-
+Installing the npm module will ensure that all dependent components are also installed. VueJS and bootstrap-vue (hence also bootstrap) will be installed.
 
 ### Global Initialisation
 
@@ -127,6 +127,8 @@ Note that if a client disconnects then reconnects it will have a different `_soc
   Default: `<userDir>/<uib.moduleName>` or `<userDir>/projects/<activeProjectName>/<uib.moduleName>` if Node-RED projects are in use.
 
 * `sioUseMwName` {String}: Default `sioUse.js`. Name of the Socket.IO Use Middleware.
+
+* `staticOpts` {Object}: Default empty. Options to pass to static-serve. See [ExpressJS docs for details](https://expressjs.com/en/resources/middleware/serve-static.html).
   
 * `version` {String}: Current uibuilder module version (taken from package.json).
 
@@ -149,14 +151,22 @@ Each instance of the uibuilder node has the following variables.
 
 * `node.fwdInMessages` {Boolean}: Default `false`. Whether input messages will be automatically forwarded
   to the output.
+
 * `node.allowScripts` {Boolean}: Default `false`. Whether uibuilder will allow
   input messages to send custom JavaScript code to the front-end. This could be
   a potential security hole unless well controlled.
+
 * `node.allowStyles` {Boolean}: Default `false`. Whether uibuilder will allow
   input messages to send custom CSS style information to the front-end. This could be
   a potential security hole unless well controlled.
+
+* `node.maxAge` {Integer}: Default 0. How long (in seconds) should resources be cached for?
+  
+  It is not advisable to go above 31536000 seconds (nominally a year) since browsers may not treat that consistently.
+
 * `node.copyIndex` {Boolean}: Default `true`. Whether uibuilder will automatically
   copy the template `index.[html|js|css] files to the source folder if they don't exist.
+
 * `node.showfolder` {Boolean}: Default `false`. Whether uibuilder will automatically create
   an index page view showing the source files available. Turning this on in production would be
   unwise as it would be a security issue. If turned on, resulting URL is `<httpNodeRoot>/<node.url>/idx`.
@@ -165,8 +175,13 @@ Each instance of the uibuilder node has the following variables.
 
 * `node.useSecurity` {Boolean}: Default `false`. Whether to use uibuilder's security architecture.
 * `node.tokenAutoExtend`: Whether to use client `ping` messages (every 25-30 sec) to automatically extend the token lifespan.
-* `node.jwtSecret` {String}: The secret used to sign/verify the JWT token.
-* `node.sessionLength` {Integer}: Default `1.8e6`. (1.8e6 = 30*60000 = 30min).
+* `node.sessionLength` {Integer}: Default `1.8e6`. (1.8e6 milliseconds = 30*60000 = 30min). How long without the client sending a msg will it be until a login is automatically logged out.
+
+#### Credentials
+
+Credentials in Node-RED are node configuration settings that are stored encrypted in a separate json file from your flows. They are _not_ exported when you export a flow.
+
+* `node.credentials.jwtSecret` {String}: The secret used to sign/verify the JWT token.
 
 ### Locally configured (not set in Editor)
 

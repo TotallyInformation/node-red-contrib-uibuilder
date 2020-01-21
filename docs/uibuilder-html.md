@@ -2,6 +2,27 @@
 
 Documents the processing of the html file that defines the Node-RED admin UI panel for uibuilder. Shown when double-clicking on a uibuilder node in a flow.
 
+###
+
+## Variables
+
+### Properties
+
+See the `node.` variables in [docs/uibuilder-js](./uibuilder-js.md).
+
+### Credentials
+
+These are NOT copied when exporting a flow.
+
+* `jwtSecret` {String}
+
+### Pseudo Settings
+
+These are passed as `settings` from `uibuilder.js` when `RED.nodes.registerType` is called. Access as `RED.settings.<varName>` from within the editor.
+
+* `RED.settings.node_env` {String} - a copy of process.env.NODE_ENV environment variable from node.js.
+  Used to show different warnings for security processing depending on whether mode is "development" or something else.
+
 ## Package List
 
 The package list is shown when the "Manage Front-End Libraries" button is clicked.
@@ -39,3 +60,4 @@ If the length of `data` is zero, we know that the `add` button was pressed. This
 If `data` is non-zero, the assumption is that we are adding known entries (probably via the `packageList()` function). The string in `data` is simply added to the list widget as a new row.
 
 If the "Install" button is pressed, the uibuilder `installPackage` API is called with the package name.
+
