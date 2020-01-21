@@ -214,7 +214,7 @@ module.exports = {
         node.status(status)
     }, // ---- End of setNodeStatus ---- //
 
-    /** Add an ExpressJS url for an already npm installed package (doesn't update vendorPaths var)
+    /** DEPRECATED - Add an ExpressJS url for an already npm installed package (doesn't update vendorPaths var)
      * @param {string} packageName Name of the front-end npm package we are trying to add
      * @param {string} installFolder The filing system location of the package (if '', will use findPackage() to search for it)
      * @param {string} moduleName Name of the uibuilder module ('uibuilder')
@@ -226,31 +226,34 @@ module.exports = {
      * @returns {null|{url:string,folder:string}} Vendor url & fs path
      */
     addPackage: function(packageName, installFolder='', moduleName, userDir, log, app, serveStatic, RED) {
-        if ( installFolder === '' ) {
-            installFolder = tilib.findPackage(packageName, userDir)
-        }
+        RED.log.error( '[uibuilder:uiblib:addPackage] THIS FUNCTION IS DEPRECATED. Please raise a GitHub issue.' )
+        return
 
-        if (installFolder === '' ) {
-            RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
-            return null
-        } else {
-            let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
-            log.trace(`[uibuilder:uiblib:addPackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
-            try {
-                app.use( vendorPath, /**function (req, res, next) {
-                    // TODO Allow for a test to turn this off
-                    // if (true !== true) {
-                    //     next('router')
-                    // }
-                    next() // pass control to the next handler
-                }, */ serveStatic(installFolder) )
+        // if ( installFolder === '' ) {
+        //     installFolder = tilib.findPackage(packageName, userDir)
+        // }
+
+        // if (installFolder === '' ) {
+        //     RED.log.warn(`uibuilder:Module: Failed to add user vendor path - no install found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
+        //     return null
+        // } else {
+        //     let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
+        //     log.trace(`[uibuilder:uiblib:addPackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
+        //     try {
+        //         app.use( vendorPath, /**function (req, res, next) {
+        //             // TODO Allow for a test to turn this off
+        //             // if (true !== true) {
+        //             //     next('router')
+        //             // }
+        //             next() // pass control to the next handler
+        //         }, */ serveStatic(installFolder) )
                 
-                return {'url': '..'+vendorPath, 'folder': installFolder}
-            } catch (e) {
-                RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
-                return null
-            }
-        }
+        //         return {'url': '..'+vendorPath, 'folder': installFolder}
+        //     } catch (e) {
+        //         RED.log.error(`uibuilder: app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
+        //         return null
+        //     }
+        // }
     }, // ---- End of addPackage ---- //
 
     /** Add an installed package to the ExpressJS app to allow access from URLs
@@ -296,7 +299,7 @@ module.exports = {
                     //     next('router')
                     // }
                     next() // pass control to the next handler
-                }, */ serveStatic(installFolder) )
+                }, */ serveStatic(installFolder, uib.staticOpts) )
                 return true
             } catch (e) {
                 log.error(`[uibuilder:uiblib.servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
