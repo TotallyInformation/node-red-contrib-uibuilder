@@ -23,6 +23,14 @@ functions that uibuilder requires in order to be able to validate users and sess
 
 * TBC
 
+## Standard Schema for `msg._uibAuth`
+
+uibuilder proposes a standard(ish) schema for exchanging authentication, authorisation and session data.
+
+This uses the `_uibAuth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
+
+Please refer to the [Security doc](./security.md) for details.
+
 ## NOTES & WARNINGS
 
 * If there is an error in this JavaScript, it is very likely that Node-RED will terminate with an error. Check the Node-RED log if this happens.

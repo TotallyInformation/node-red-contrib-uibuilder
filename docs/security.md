@@ -26,7 +26,7 @@ This enables anyone to implement simple but effective multi-user security on the
 
    Security is **not** applied to your web resources (html, css, javascript, images, etc). It is always assumed that these are "public" in the sense that anyone with access to your web server is able to load them. So make sure that nothing sensitive is made available via a web resource.
 
-   The front-end `uibuilder.logon()` function allows you to include a single object as a parameter. This object can contain any extra data that you want to make available to the `validateUser()` function in `security.js`. That data is added to `msg._uibAuth`. It is passed as the only parameter to `validateUser()`. As a minimum, you _must_ include an `id` property which is used to identify the user.
+   The front-end `uibuilder.logon()` function allows you to include a single object as a parameter. This object can contain any extra data that you want to make available to the `validateUser()` function in `security.js`. That data is added to `msg._uibAuth`. It is passed as the only parameter to `validateUser()`. As a minimum, you _must_ include an `id` property which is used to identify the user. See below for more information about `msg._uibAuth`.
 
    The front-end `uibuilder.logoff()` function allows you to allow a user to log off. It takes no parameters. An equivalent automatic process happens if the authentication token expires. uibuilderfe will clear its own authentication data in this case but you are responsible for clearing any other sensitive or protected information.
 
@@ -69,6 +69,42 @@ After you have done this, you will need to access your Node-RED web pages using 
 3. Restart Node-RED.
    
 4. Test that you can now only access the admin Editor, Dashboard and uibuilder instances only using `https` and not `http`.
+
+## Standard Schema for `msg._uibAuth`
+
+uibuilder proposes a standard(ish) schema for exchanging authentication, authorisation and session data.
+
+This uses the `_uibAuth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
+
+Some control msg types would be:
+
+- Logon (client to server)
+- Logoff (client to server)
+- Logon success (server to client)
+- Logon failure (server to client)
+- Session expiry (server to client)
+
+Example `msg` structure:
+
+```json
+{
+   "payload": ... ,
+   "topic": ... ,
+   "_msgId": ... ,
+   "_socketId": ... ,
+
+   "_uibAuth": {
+      "id": ...unique user identifier... ,
+      // Other potential information depending on need.
+      // e.g. for a login:
+      "password": ...encoded password... ,
+      // or for ongoing session management:
+      "jwt": ... JWT token (base 64 encoded) ... 
+   }
+}
+```
+
+The same msg property is also used when sending information from the Node-RED server to the client as well. For example, on a successful login, you might return a message for the user from the server such as "Welcome to xxxxx, please remember to change your password" or whatever, you might also pass back other "meta-data" such as a timestamp when the users subscription expires.
 
 ## Additional Information
 
