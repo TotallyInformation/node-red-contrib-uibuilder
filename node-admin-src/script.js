@@ -11,7 +11,7 @@
     /** Node's label @constant {string} paletteCategory */
     var nodeLabel  = 'UI Builder'
     /** Node's palette category @constant {string} paletteCategory */
-    var paletteCategory  = 'UI Builder'
+    var paletteCategory  = 'uibuilder'
     /** Node's background color @constant {string} paletteColor */
     var paletteColor  = '#E6E0F8'
 
@@ -474,6 +474,12 @@
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
             copyIndex: { value: true },        // Should the default template files be copied to the instance src folder?
             showfolder: { value: false },      // Should a web index view of all source files be made available?
+            useSecurity: { value: false },
+            sessionLength: { value: false },   // TODO add validation if useSecurity=true
+            tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
+        },
+        credentials: {
+            jwtSecret: {type:'text'},
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -488,13 +494,21 @@
             var that = this
 
             // TODO: TESTING ONLY - TO BE REMOVED
-            RED.nodes.getType('nrtest2').myFunction('NRTEST')
+            var nrtest2
+            try {
+                nrtest2 = RED.nodes.getType('nrtest2')
+                nrtest2.myFunction('NRTEST')
+                console.log( '[uibuilder::nrtest2:myFunction2] Returned Value: ', nrtest2.myFunction2(6) )
+            } catch(err) {
+                console.error('[uibuilder::nrtest2] ERROR: ', err)
+            }
 
             //#region Start with the edit section hidden & main section visible
             $('#main-props').show()
             $('#edit-props').hide()
             $('#npm-props').hide()
             $('#adv-props').hide()
+            $('#sec-props').hide()
             $('#info-props').hide()
             //#endregion
 
@@ -504,6 +518,8 @@
             $('#node-input-allowStyles').prop('checked', this.allowStyles)
             $('#node-input-copyIndex').prop('checked', this.copyIndex)
             $('#node-input-showfolder').prop('checked', this.showfolder)
+            $('#node-input-useSecurity').prop('checked', this.useSecurity)
+            $('#node-input-tokenAutoExtend').prop('checked', this.useSecurity)
             //#endregion checkbox states
 
             // When the url changes (NB: Also see the validation function)
@@ -525,16 +541,55 @@
                 }
             })
 
+            // Show/Hide the security settings
+            $('#show-security-props').css( 'cursor', 'pointer' )
+            $('#show-security-props').click(function(_e) {
+                $('#sec-props').toggle()
+                if ( $('#sec-props').is(':visible') ) {
+                    $('#show-security-props').html('<i class="fa fa-caret-down"></i> Security Settings')
+                } else {
+                    $('#show-security-props').html('<i class="fa fa-caret-right"></i> Security Settings')
+                }
+            })
+
+            // Security turning on/off
+            $('#node-input-useSecurity').change(function() {
+                // security is requested, enable other settings and add warnings if needed
+                if ( this.checked ) {
+                    $('#node-input-sessionLength').prop('disabled', false)
+                    $('#node-input-jwtSecret').prop('disabled', false)
+                    $('#node-input-tokenAutoExtend').prop('disabled', false)
+                    if (window.location.protocol !== 'https') {
+                        if (RED.settings.uibuilderNodeEnv !== 'development') {
+                            console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
+                        } else {
+                            console.warn('HTTPS NOT IN USE BUT SECURITY REQUESTED - Node environment is "development" so this is allowed but not recommended')
+                        }
+                        // TODO: Add user warnings
+                    }
+
+                } else { // security not requested, disable other settings
+                    $('#node-input-sessionLength').prop('disabled', true)
+                    $('#node-input-jwtSecret').prop('disabled', true)
+                    $('#node-input-tokenAutoExtend').prop('disabled', true)
+                }
+            }) // -- end of security change -- //
+
+            // What mode is Node-RED running in? development or something else?
+            $('#nrMode').text(RED.settings.uibuilderNodeEnv)
+
             //#region ---- File Editor ---- //
             // Mark edit save/reset buttons as disabled by default
             fileIsClean(true)
 
-            // Show the edit section, hide the main & adv sections
+            // Show the edit section, hide the main, adv & sec sections
             $('#show-edit-props').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
                 $('#main-props').hide()
-                $('#adv-props').hide()
+                $('#sec-props').hide()
+                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#edit-props').show()
 
                 // Build the file list
@@ -734,12 +789,14 @@
 
             //#region ---- npm ---- //
             // NB: Assuming that the edit section is closed
-            // Show the npm section, hide the main & adv sections
+            // Show the npm section, hide the main, adv & security sections
             $('#show-npm-props').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
                 $('#main-props').hide()
                 $('#adv-props').hide()
+                $('#sec-props').hide()
                 $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#npm-props').show()
 
                 // TODO Improve feedback

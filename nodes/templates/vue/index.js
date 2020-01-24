@@ -46,6 +46,7 @@ var app1 = new Vue({
         isLoggedOn  : false,
         userId      : null,
         userPw      : null,
+        inputId     : '',
     }, // --- End of data --- //
     computed: {
         hLastRcvd: function() {
@@ -160,15 +161,16 @@ var app1 = new Vue({
         //#endregion ---- End of Trace Received Messages ---- //
 
         //#region ---- Trace Sent Messages ---- //
-        // You probably only need these to help you understand the order of processing //
-        // If a message is sent back to Node-RED, we can grab a copy here if we want to
+        /** You probably only need these to help you understand the order of processing
+         * If a message is sent back to Node-RED, we can grab a copy here if we want to
+         */
         uibuilder.onChange('sentMsg', function(msg){
             //console.info('[indexjs:uibuilder.onChange:sentMsg] msg sent to Node-RED server:', msg)
             vueApp.msgSent = msg
             vueApp.msgsSent = uibuilder.get('msgsSent')
         })
 
-        // If we send a control message to Node-RED, we can get a copy of it here
+        /** If we send a control message to Node-RED, we can get a copy of it here */
         uibuilder.onChange('sentCtrlMsg', function(msg){
             //console.info('[indexjs:uibuilder.onChange:sentCtrlMsg] Control message sent to Node-RED server:', msg)
             vueApp.msgCtrlSent = msg
@@ -176,20 +178,22 @@ var app1 = new Vue({
         })
         //#endregion ---- End of Trace Sent Messages ---- //
 
-        // If Socket.IO connects/disconnects, we get true/false here
+        /** If Socket.IO connects/disconnects, we get true/false here */
         uibuilder.onChange('ioConnected', function(connected){
             //console.info('[indexjs:uibuilder.onChange:ioConnected] Socket.IO Connection Status Changed to:', connected)
             vueApp.socketConnectedState = connected
         })
-        // If Server Time Offset changes
+        /** If Server Time Offset changes */
         uibuilder.onChange('serverTimeOffset', function(serverTimeOffset){
             //console.info('[indexjs:uibuilder.onChange:serverTimeOffset] Offset of time between the browser and the server has changed to:', serverTimeOffset)
             vueApp.serverTimeOffset = serverTimeOffset
         })
 
-        // If user is logged on/off
+        /** If user is logged on/off */
         uibuilder.onChange('isAuthorised', function(isAuthorised){
-            //console.info('[indexjs:uibuilder.onChange:serverTimeOffset] Offset of time between the browser and the server has changed to:', serverTimeOffset)
+            //console.info('[indexjs:uibuilder.onChange:isAuthorised] isAuthorised changed. User logged on?:', isAuthorised)
+            //console.log('authData: ', uibuilder.get('authData'))
+            //console.log('authTokenExpiry: ', uibuilder.get('authTokenExpiry'))
             vueApp.isLoggedOn = isAuthorised
         })
 

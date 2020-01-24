@@ -12,14 +12,20 @@ As this contains rather a lot of changes, here is a summary of the key changes f
 
 - New security features
   
-  - Added a new standardised property to uibuilder control msg's. `msg._uibAuth`
-  - Security features can be turned on via a flag in the node configuration.
-  - 
+  - Security features can be turned on via a flag in the node configuration. They are off by default.
+  - Security is mostly controlled via websocket messages, not by HTTP. The web UI itself is assumed to be non-sensitive. Only msg transfer is controlled. Read the security document for details.
+  - Security does use JWT as a convenience. JWT is _NOT_ a security feature though (despite what much of the web would have you believe). Session processing is required if you want real security. Again, see the security doc for details.
+  - Logon/logoff processing is done from the front-end using new `logon()` and `logoff()` functions in uibuilderfe.
+  - Logon/logoff and logon failure events are reported via uibuilder's control port (output port #2).
+  - Added a new standardised property to uibuilder control msg's. `msg._uibAuth`. This contains all the necessary data for logon and ongoing session maintenance. As a minimum, this must contain an `id` property which uniquely identifies the user. It will also contain the JWT token since websockets don't allow custom headers.
+  - Added security headers to protect against XSS and content sniffing.
+  - All custom security processing (validating user details - including password - and session validation/extension) is done via standard functions in the new `<uibRoot>/.config/security.js` file. A simple template is provided for you to use as a starting point. You can also override this with custom processing for a single instance by using `<uibRoot>/<url>/security.js`.
+  - If running in Production mode but without using TLS encryption, the security won't turn on. This is to stop you sending secure information in plain-text over the wire. In Development mode, you will get a warning.
   
 - New security documentation
 - Improved Editor configuration panel layout for Advanced Settings
 - Some simplification of the default VueJS JavaScript template. Makes it a little easier to read.
-- Added configuration option to add browser/proxy caching control to all static assets - set the length of time before assets will be reloaded from the server. This may sometimes significantly improve performance in the browser. It depends on the performance of your server and the complexity of the UI.
+- **NOT YET WORKING** Added configuration option to add browser/proxy caching control to all static assets - set the length of time before assets will be reloaded from the server. This may sometimes significantly improve performance in the browser. It depends on the performance of your server and the complexity of the UI.
 
 ### New
 
@@ -58,6 +64,8 @@ As this contains rather a lot of changes, here is a summary of the key changes f
   - 'authorisation failure' - received from server after an **un**successful logon request.
   - 'logged off' - received from server after a successful logoff request. Returns optional additional data (into `authData`).
 
+- uibuilderfe: Add logon/logoff example UI and processing.
+  
 - Added `X-XSS-Protection: 1;mode=block`, `X-Content-Type-Options: nosniff` and `'x-powered-by: uibuilder` security headers.
   
   If you want to add your own headers, make use of the `uibMiddleware.js` (for ExpressJS) and `sioMiddleware.js` (for Socket.IO initial connection and polling connections) middleware files.
@@ -83,9 +91,9 @@ As this contains rather a lot of changes, here is a summary of the key changes f
   this as easy as it can so that you don't have to be a mega-coder to work with it. Your user validation for example could be as simple as a file-based lookup.
   I will add more examples as the code stabilised so that you should be able to copy & paste a solution if you want soething fairly simple.
 
-- uibuilderfe: Add logon/logoff example UI and processing.
-  
-- Added on options variable for serve-static to allow control of caching & other headers. `uib.staticOpts`.
+- **NOT YET WORKING** Added on options variable for serve-static to allow control of caching & other headers. `uib.staticOpts`.
+
+  Some static folders are served at module level and so don't have access to instance settings. Would likely need to have different settings on global serves from instance ones. _Needs more thought_.
 
   This lets you control caching of your "static" assets like JavaScript, HTML, CSS, Images and any installed front-end library resources (Vue, etc).
 
@@ -94,13 +102,14 @@ As this contains rather a lot of changes, here is a summary of the key changes f
 ### Changed
 
 - Documentation: Greatly improved documentation coverage in the `/docs` folder. This contains a lot of developer documentation which should make it easier to work on improvements to uibuilder in the future.
+- Editor: Tidy up the Advanced Settings section of the configuration panel.
+- uibuilderfe: Internal improvements to get/set functions.
+- uibuilderfe: Simplify default Vue templates.
 - Further code tidy up.
 - Move configuration template files from templates root to `templates/.config` and reduce copy processes down to just copying the folder with no overwrite.
 - Add code isolation to Editor config code.
 - Improve standardisation of output topic.
-- uibuilderfe: Internal improvements to get/set functions.
-- uibuilderfe: Simplify default Vue templates.
-- Editor: Tidy up the Advanced Settings section of the configuration panel.
+- Moved some serveStatic code back to instance level to allow caching to be changed by config.
 
 ----
 

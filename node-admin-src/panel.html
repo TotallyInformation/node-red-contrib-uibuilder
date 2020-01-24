@@ -12,15 +12,15 @@
         </div>
 
         <!-- Home "page" id - defines the URL used -->
-        <div class="form-row" title="Make sure this gives a unique URL">
+        <div class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
             <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
             <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
         </div>
 
         <!-- Buttons to show "edit src files" & "mng front-end libs", hide this section -->
-        <div class="form-row">
+        <div class="form-row" title="Install/remove/update npm packages to use with your UI">
             <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
-            <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">Manage front-end libraries</button>
+            <button class="btn" id="show-npm-props">Manage front-end libraries</button>
         </div>
 
         <!-- Show advanced edit properties -->
@@ -28,44 +28,97 @@
             <h5 id="show-adv-props" title="Show/Hide the advanced configuration settings">
                 <i class="fa fa-caret-right"></i> Advanced Settings
             </h5>
+            <!-- ---- Hideable Advanced Settings Section ---- -->
+            <div id="adv-props" style="display:hidden;border:1px solid silver;padding:.5em;">
+                <!-- How long do we want resources to be cached for? *** NOT READY *** 
+                <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
+                    <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
+                    <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
+                </div> -->
+                
+                <!-- Allow scripts/styles to be passed to front-end? -->
+                <div class="form-row" title="Add msg.script/msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
+                    Allow passing to the front-end: <br>
+                    <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-allowScripts">Scripts? (JS)</label>
+                    <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-allowStyles">Styles? (CSS)</label>
+                </div>
+
+                <!-- Copy index.(html|css|js) to local assets if they dont exist? -->
+                <div class="form-row">
+                    <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-copyIndex" style="width: 90%;">Copy index.(html|css|js) from templates to this instance if they don't exist?</label>
+                </div>
+
+                <!-- Provide a searchable file index view? -->
+                <div class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
+                    <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-showfolder" style="width: 90%;">Show web view of source files at <span id="node-input-showfolder-url">_</span>.</label>
+                </div>
+
+                <div class="form-tips node-help" title="">
+                    Warning: Most people will not need the following.
+                </div>
+                <!-- Forward flag -->
+                <div class="form-row" title="forward inbound msg's direct to the output">
+                    <!-- Forward input msgs to output -->
+                    <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-fwdInMessages" style="width: 40%;">
+                        Forward input to output?
+                    </label>
+                </div>
+            </div>
         </div>
 
-    </div>
-
-    <!-- ---- Hideable Advanced Settings Section ---- -->
-    <div id="adv-props" style="display:hidden;border-bottom:1px solid silver;margin-bottom:.5em;">
-        <!-- Allow scripts/styles to be passed to front-end? -->
-        <div class="form-row" title="Add msg.script/msg.style to the input msg">
-            Allow passing to the front-end: 
-            <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-allowScripts">Scripts? (JS)</label>
-            <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-allowStyles">Styles? (CSS)</label>
-        </div>
-
-        <!-- Copy index.(html|css|js) to local assets if they dont exist? -->
+        <!-- Show security properties -->
         <div class="form-row">
-            <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-copyIndex" style="width: 90%;">Copy index.(html|css|js) from templates to this instance if they don't exist?</label>
+            <h5 id="show-security-props" title="Show/Hide security settings">
+                <i class="fa fa-caret-right"></i> Security Settings
+            </h5>
+            <!-- ---- Hideable Security Settings Section ---- -->
+            <div id="sec-props" style="display:hidden;border:1px solid silver;padding:.5em;">
+                <!-- Do we want security turned on? -->
+                <div class="form-row">
+                    <input type="checkbox" id="node-input-useSecurity" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-useSecurity" style="width: 90%;">Use uibuilder's security?</label>
+                </div>
+
+                <!-- How long do we want our sessions to be? -->
+                <div class="form-row" title="Required. Session length. If client doesn't send a msg in this time, it is logged out.">
+                    <label for="node-input-sessionLength"><i class="fa fa-clock-o"></i> Sess Length</label>
+                    <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-sessionLength" style="width: 10em;"> Seconds
+                </div>
+
+                <!-- JWT Secret (credential) -->
+                <div class="form-row" title="Required. A string to be used to sign/validate JWT's. Stored as a credential so not copied when exporting a flow.">
+                    <label for="node-input-jwtSecret"><i class="fa fa-user-secret"></i> JWT Secret</label>
+                    <input type="text" id="node-input-jwtSecret">
+                </div>
+                
+                <!-- Do we want to auto-extend the token life? -->
+                <div class="form-row" title="While the client continues to send ping queries (~30sec), the expiry will be moved fwd 30 sec">
+                    <input type="checkbox" id="node-input-tokenAutoExtend" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-tokenAutoExtend" style="width: 90%;">Auto-extend the token expiry?</label>
+                </div>
+
+                <div class="form-row">
+                    Node-RED is running in <i><b><span id="nrMode"></span></b></i> mode.
+                </div>
+
+                <div class="form-tips node-help" title="">
+                    Warning: To safely deploy security, you really need to be using TLS.
+                    If you deploy without TLS, you will get warnings. If you try to deploy to production without TLS,
+                    security will not turn on.
+                </div>
+                <div class="form-tips node-help" title="">
+                    In development mode, if the "Copy Index" (see advanced settings) flag is on, a simplistic template 
+                    <code>security.js</code> file will be copied to <code>&lt;uibRoot>/.config/security.js</code>.
+                    This should be adapted for your own needs and contains the code to validate users and handle sessions.
+                </div>
+            </div>
         </div>
 
-        <!-- Provide a searchable file index view? -->
-        <div class="form-row">
-            <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-showfolder" style="width: 90%;">Show web view of source files at <span id="node-input-showfolder-url">_</span>.</label>
-        </div>
-
-        <div class="form-tips node-help" title="">
-            Warning: Most people will not need these settings.
-        </div>
-        <!-- Forward flag -->
-        <div class="form-row">
-            <!-- Forward input msgs to output -->
-            <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-fwdInMessages" style="width: 40%;" title="forward inbound msg's direct to the output">
-                Forward input to output?
-            </label>
-        </div>
     </div>
 
     <!-- ---- Hideable File Editor Section ---- -->

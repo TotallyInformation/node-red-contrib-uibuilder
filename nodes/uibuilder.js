@@ -80,6 +80,10 @@ const uib = {
     /** What version of Node.JS are we running under? Impacts some file processing. 
      * @type {Array.<number|string>} */
     nodeVersion: process.version.replace('v','').split('.'),
+    /** Options for serveStatic
+     * @see https://expressjs.com/en/resources/middleware/serve-static.html
+     */
+    staticOpts: {}, //{ maxAge: 31536000, immutable: true, },
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -99,6 +103,9 @@ var log = dummyLog // reset to RED.log or anything else you fancy at any point
 
 // Placeholder - set in export
 var userDir = ''
+
+// Only serve the common static folder once
+var commonStaticLoaded = false
 
 //#endregion ----- uibuilder module-level globals ----- //
 
@@ -185,8 +192,7 @@ module.exports = function(RED) {
                 log.trace(`[uibuilder] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
             }
         })
-        // and serve it up as a static resource folder (added in nodeGo() so available for each instance as `./common/`)
-        var commonStatic = serveStatic( uib.commonFolder )
+        // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeGo() so available for each instance as `./common/`)
     }
     // If the root folder setup failed, throw an error and give up completely
     if (uib_rootFolder_OK !== true) {
@@ -237,18 +243,19 @@ module.exports = function(RED) {
      * Loads standard images, ico file, etc.
      * @since v2.0.0 2019-03-03 Moved out of nodeGo() only need to do once - but is applied in nodeGo
      */
-    var masterStatic = function(req,res,next) { next() }
+    var masterStatic //= function(req,res,next) { next() }
     try {
         // Will we use "compiled" version of module front-end code?
         fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
         log.trace('[uibuilder:Module] Using master production build folder')
         // If the ./dist/index.html exists use the dist folder...
-        masterStatic = serveStatic( path.join( __dirname, 'dist' ) )
+        masterStatic = path.join( __dirname, 'dist' )
     } catch (e) {
         // ... otherwise, use dev resources at ./src/
+        //TODO: Check if path.join(__dirname, 'src') actually exists & is accessible - else fail completely
         log.trace('[uibuilder:Module] Using master src folder')
         log.trace('                   Reason for not using master dist folder: ', e.message )
-        masterStatic = serveStatic( path.join( __dirname, 'src' ) )
+        masterStatic = path.join( __dirname, 'src' )
     }
     // These are NOT applied here since they have to be applied at the instance level so that
     // the default index.html page can be utilised.
@@ -419,30 +426,41 @@ module.exports = function(RED) {
             fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
             // If the ./dist/index.html exists use the dist folder...
             log.trace(`[uibuilder:${uibInstance}] Using local dist folder`)
-            customStatic = serveStatic( path.join(node.customFolder, 'dist') )
+            customStatic = serveStatic( path.join(node.customFolder, 'dist'), uib.staticOpts )
             // NOTE: You are expected to have included vendor packages in
             //       a build process so we are not loading them here
         } catch (e) {
             // dist not being used or not accessible, use src
             log.trace(`[uibuilder:${uibInstance}] Dist folder not in use or not accessible. Using local src folder`, e.message )
-            customStatic = serveStatic( path.join(node.customFolder, 'src') )
+            //TODO: Check if folder actually exists & is accessible
+            customStatic = serveStatic( path.join(node.customFolder, 'src'), uib.staticOpts )
         }
         //#endregion -- Added static path for local custom files -- //
         //#endregion ------ End of Create custom folder structure ------- //
 
         /** Apply all of the middleware functions to the current instance url 
          * Must be applied in the right order with the most important first */
-        app.use( tilib.urlJoin(node.url), httpMiddleware, masterMiddleware, customStatic, masterStatic )
+        app.use( 
+            tilib.urlJoin(node.url), 
+            httpMiddleware, masterMiddleware, customStatic, 
+            serveStatic( masterStatic, uib.staticOpts )
+        )
         /** If enabled, allow for directory listing of the custom instance folder */
         if ( node.showfolder === true ) {
             app.use( tilib.urlJoin(node.url, 'idx'), 
                 serveIndex( node.customFolder, {'icons':true, 'view':'details'} ), 
-                serveStatic( node.customFolder ) 
+                serveStatic( node.customFolder, uib.staticOpts ) 
             )
         }
-        /** Make the uibuilder static common folder available */
+        /** Serve up the uibuilder static common folder on `<url>/<commonFolderName>` and `uibuilder/<commonFolderName>` */
+        let commonStatic = serveStatic( uib.commonFolder, uib.staticOpts )
         app.use( tilib.urlJoin(node.url, uib.commonFolderName), commonStatic )
-        app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
+        if ( commonStaticLoaded === false ) {
+            // Only load this once for all instances
+            //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
+            app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
+            commonStaticLoaded = true
+        }
 
         const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
 
@@ -665,7 +683,7 @@ module.exports = function(RED) {
             jwtSecret: {type:'text'},
         },
         settings: {
-            node_env: process.env.NODE_ENV,
+            uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
         },
     })
 
@@ -1452,6 +1470,21 @@ module.exports = function(RED) {
                         </tr>
                     </table>
 
+                    <h3>Configuration Files</h3>
+
+                    <p>All are kept in the master configuration folder: ${uib.configFolder}</p>
+
+                    <dl style="margin-left:1em;">
+                        <dt>${uib.masterPackageListFilename}</dt>
+                        <dd>Holds a list of npm packages automatically recognised, uibuilder will add URL's for these.</dd>
+                        <dt>${uib.packageListFilename}</dt>
+                        <dd>The list of npm packages actually installed and being served.</dd>
+                        <dt>${uib.sioUseMwName}</dt>
+                        <dd>Custom Socket.IO Middleware file, also uibMiddleware.js.</dd>
+                        <dt>uibMiddleware.js</dt>
+                        <dd>Custom ExpressJS Middleware file.</dd>
+                    </dl>
+
                     <h3>Node-RED</h3>
                     <p>See the <code>&lt;userDir&gt;/settings.js</code> file and the 
                     <a href="https://nodered.org/docs/" target="_blank">Node-RED documentation</a> for details.</p>
@@ -1482,7 +1515,6 @@ module.exports = function(RED) {
                     <pre>${tilib.syntaxHighlight( app.locals )}</pre>
                     <h4>app.mountpath</h4>
                     <pre>${tilib.syntaxHighlight( app.mountpath )}</pre>
-
                 `
 
                 /** Installed Packages */
