@@ -9,7 +9,7 @@
     /** Module name must match this nodes html file @constant {string} moduleName */
     var moduleName  = 'uibuilder'
     /** Node's label @constant {string} paletteCategory */
-    var nodeLabel  = 'UI Builder'
+    var nodeLabel  = 'uibuilder'
     /** Node's palette category @constant {string} paletteCategory */
     var paletteCategory  = 'uibuilder'
     /** Node's background color @constant {string} paletteColor */
