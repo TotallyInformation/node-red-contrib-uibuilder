@@ -55,7 +55,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '2.0.7'
+        self.version = '3.0.0-dev1'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         self.isUnminified = /param/.test(function(param) {})
@@ -91,14 +91,19 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         /** Try to get the Socket.IO namespace from the current URL - won't work if page is in a sub-folder
          * @since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
          * @since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
+         * @since 2020-01-25 Removed httpRoot from namespace to prevent proxy induced errors
          * @return {string} Socket.IO namespace
          */
         self.setIOnamespace = function () {
 
             var ioNamespace = ''
 
-            // Try getting the namespace cookie. @since 2017-11-12 v1.0.2 Made capture non-greedy to cope with multiple cookies of same name.
-            ioNamespace = document.cookie.replace(/(?:(?:^|.*;\s*)uibuilder-namespace\s*\=\s*([^;]*?).*$)|^.*$/, '$1')
+            /** Try getting the namespace cookie. 
+             * @since 2020-01-25 Changed to allow for duplicate cookies */
+            try {
+                ioNamespace = document.cookie.match(/uibuilder-namespace\s*=.*?\s*;/g)[0].replace('uibuilder-namespace=','').replace(';','')
+            // eslint-disable-next-line no-empty
+            } catch(e) {}
 
             // if it wasn't available, try using the current url path
             if (ioNamespace === '' ) {
@@ -108,8 +113,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 /** @since v2.0.5 Extra check for 0 length, Issue #73. @since 2017-11-06 If the last element of the path is an .html file name, remove it */
                 if (u.length > 0) if (u[u.length - 1].endsWith('.html')) u.pop()
 
-                // Socket.IO namespace HAS to start with a leading slash
-                ioNamespace = u.join('/')
+                // Get the last part of the url path, this MUST match the namespace in uibuilder
+                ioNamespace = u.pop()
 
                 self.uiDebug('log', 'uibuilderfe: IO Namespace - Found via url path: ' + ioNamespace)
             } else {
