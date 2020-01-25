@@ -114,8 +114,9 @@ var app1 = new Vue({
 
         /** **REQUIRED** Start uibuilder comms with Node-RED @since v2.0.0-dev3
          * Pass the namespace and ioPath variables if hosting page is not in the instance root folder
+         * The namespace is the "url" you put in uibuilder's configuration in the Editor.
          * e.g. If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages.
-         * e.g. uibuilder.start('/nr/uib', '/nr/uibuilder/vendor/socket.io') // change to use your paths/names
+         * e.g. uibuilder.start('uib', '/nr/uibuilder/vendor/socket.io') // change to use your paths/names
          */
         uibuilder.start()
 
