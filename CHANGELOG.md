@@ -110,6 +110,13 @@ As this contains rather a lot of changes, here is a summary of the key changes f
 - Add code isolation to Editor config code.
 - Improve standardisation of output topic.
 - Moved some serveStatic code back to instance level to allow caching to be changed by config.
+- Changed palette category name from "UI Builder" to "uibuilder" and palette label to "uibuilder" from "UI Builder" for consistency with other nodes.
+- Removed `httpRoot` from the Socket.IO namespace. It is no longer required anyway since url uniqueness checks were added.
+
+### Fixed
+
+- Running behind a proxy was causing Socket.IO namespace issues (see [Issue #84](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/84)
+  Removing `httpRoot` from the namespace should fix that. It is no longer required anyway since url uniqueness checks were added.
 
 ----
 
