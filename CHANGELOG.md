@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file. The format 
 
 uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.6...master)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.7...master)
+
+N/A
+
+----
+
+## [2.0.7](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.6...v2.0.7)
 
 ### New
 
@@ -29,8 +35,11 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Further code tidy up.
 - Move configuration template files from templates root to `templates/.config` and reduce copy processes down to just copying the folder with no overwrite
+- Removed `httpRoot` from Socket.IO namespace. No longer required now that uniqueness checks are done on URL config. Simplifies configuration.
 
-----
+### Fixed
+
+- [Issue #84](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/84) Proxy rewrites were messing with the Socket.IO namespace.
 
 ## [2.0.6](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.5...v2.0.6) - 2019-11-21
 

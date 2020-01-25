@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 Julian Knight (Totally Information)
+ * Copyright (c) 2020 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -312,7 +312,7 @@ module.exports = function(RED) {
         node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
         /** Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
          * @since v1.0.10, changed namespace creation to correct a missing / if httpNodeRoot had been changed from the default. @type {string} */
-        node.ioNamespace = tilib.urlJoin(httpNodeRoot, node.url)
+        node.ioNamespace = node.url //tilib.urlJoin(httpNodeRoot, node.url)
 
         log.trace(`[uibuilder:${uibInstance}] Socket.io details`, { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
         //#endregion ----- socket.io instance config ----- //
@@ -351,7 +351,7 @@ module.exports = function(RED) {
             // Tell the client what Socket.IO namespace to use,
             // trim the leading slash because the cookie will turn it into a %2F
             res.setHeader('uibuilder-namespace', node.ioNamespace)
-            res.cookie('uibuilder-namespace', tilib.trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
+            res.cookie('uibuilder-namespace', node.ioNamespace, {path: node.url, sameSite: true})
             
             next()
         }
@@ -436,7 +436,7 @@ module.exports = function(RED) {
         app.use( tilib.urlJoin(node.url, uib.commonFolderName), commonStatic )
         app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
 
-        const fullPath = tilib.urlJoin( httpNodeRoot, node.url ) // same as node.ioNamespace
+        const fullPath = tilib.urlJoin( httpNodeRoot, node.url )
 
         log.debug(`uibuilder : ${uibInstance} : URL . . . . .  : ${fullPath}`)
         log.debug(`uibuilder : ${uibInstance} : Source files . : ${node.customFolder}`)
