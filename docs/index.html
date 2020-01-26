@@ -39,13 +39,13 @@
                 },
             ],
             sidebar: [
-                {title: '', link: '/'},
-                {title: '', link: '/uibuilder-js'},
-                {title: '', link: '/uibuilder-html'},
-                {title: '', link: '/uiblib-js'},
-                {title: '', link: '/tilib-js'},
-                {title: '', link: '/uibuilderfe-js'},
-                {title: '', link: '../CHANGELOG'},
+                {title: 'Home', link: '/'},
+                {title: 'Changelog', link: '../CHANGELOG'},
+                {title: 'uibuilder.js', link: '/uibuilder-js'},
+                {title: 'uibuilder.html', link: '/uibuilder-html'},
+                {title: 'uiblib.js', link: '/uiblib-js'},
+                {title: 'tilib.js', link: '/tilib-js'},
+                {title: 'uibuilderfe.js', link: '/uibuilderfe-js'},
                 {link:'https://github.com/TotallyInformation/node-red-contrib-uibuilder', title:'GitHub Code'},
                 // A sidebar item, with child links
                 // {
@@ -66,6 +66,9 @@
             overrides: {
                 '/security/': {
                     sourcePath: 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/security'
+                },
+                '/': {
+                  language: 'English' // Used by the language dropdown menu in the sidebar
                 },
             },
             // Use `versions` option to add a version selector In the sidebar
