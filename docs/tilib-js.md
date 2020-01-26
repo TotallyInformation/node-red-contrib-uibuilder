@@ -1,7 +1,4 @@
----
----
-
-## Developer documentation for `tilib.js`
+# Developer documentation for `tilib.js`
 
 `tilib.js` is a utility library containing methods that are reusable, not just specific to uibuilder.
 
