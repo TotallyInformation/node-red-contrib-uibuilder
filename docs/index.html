@@ -10,32 +10,74 @@
     <div id="docute"></div>
     <script src="https://unpkg.com/docute@4/dist/docute.js"></script>
     <script>
-      new Docute({
-        target: '#docute',
-        title: 'uibuilder v2 Documentation',
-        nav: [
-          {
-            title: 'Home',
-            link: '/'
-          },
-          {
-            title: 'GitHub',
-            link: 'https://github.com/TotallyInformation/node-red-contrib-uibuilder'
-          },
-          {
-            title: 'WIKI',
-            link: 'https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki'
-          },
-          {
-            title: 'Much Ado About IT (Blog)',
-            link: 'https://it.knightnet.org.uk'
-          },
-          {
-            title: 'Node-RED',
-            link: 'https://nodered.org/'
-          },
-        ],
-      })
+        //https://docute.org/guide/markdown-features
+        new Docute({
+            target: '#docute',
+            title: 'uibuilder v2 Documentation',
+            editLinkBase: 'https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/docs',
+            detectSystemDarkTheme: true, darkThemeToggler: true,
+            nav: [
+                {
+                    title: 'Home',
+                    link: '/'
+                },
+                {
+                    title: 'GitHub',
+                    link: 'https://github.com/TotallyInformation/node-red-contrib-uibuilder'
+                },
+                {
+                    title: 'WIKI',
+                    link: 'https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki'
+                },
+                {
+                    title: 'Much Ado About IT (Blog)',
+                    link: 'https://it.knightnet.org.uk'
+                },
+                {
+                    title: 'Node-RED',
+                    link: 'https://nodered.org/'
+                },
+            ],
+            sidebar: [
+                {title: '', link: '/'},
+                {title: '', link: '/uibuilder-js'},
+                {title: '', link: '/uibuilder-html'},
+                {title: '', link: '/uiblib-js'},
+                {title: '', link: '/tilib-js'},
+                {title: '', link: '/uibuilderfe-js'},
+                {title: '', link: '../CHANGELOG'},
+                {link:'https://github.com/TotallyInformation/node-red-contrib-uibuilder', title:'GitHub Code'},
+                // A sidebar item, with child links
+                // {
+                //     title: 'Guide',
+                //     children: [
+                //         {
+                //             title: 'Getting Started',
+                //             link: '/guide/getting-started'
+                //         },
+                //         {
+                //             title: 'Installation',
+                //             link: '/guide/installation'
+                //         }
+                //     ]
+                // },
+            ],
+            // Configure following paths to load Markdown files from different path
+            overrides: {
+                '/security/': {
+                    sourcePath: 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/security'
+                },
+            },
+            // Use `versions` option to add a version selector In the sidebar
+            versions: {
+                'v2 (Master)': {
+                    link: '/'
+                },
+                'v2 (Security)': {
+                    link: '/security/'
+                },
+            }
+        })
     </script>
   </body>
 </html>
