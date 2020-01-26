@@ -1,10 +1,6 @@
 # Developer Documentation for `uibuilderfe.js`
 
-
-
 This is the front-end library. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages.
-
-
 
 ## Variable Handling
 
