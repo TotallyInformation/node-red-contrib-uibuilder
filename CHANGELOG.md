@@ -30,7 +30,6 @@ N/A
   
   If you want to add your own headers, make use of the `uibMiddleware.js` (for ExpressJS) and `sioMiddleware.js` (for Socket.IO initial connection and polling connections) middleware files.
 
-
 ### Changed
 
 - Further code tidy up.
@@ -40,6 +39,7 @@ N/A
 ### Fixed
 
 - [Issue #84](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/84) Proxy rewrites were messing with the Socket.IO namespace.
+  Many thanks to [Vinay Kharecha](https://github.com/vinaykharecha) for reporting.
 
 ## [2.0.6](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.5...v2.0.6) - 2019-11-21
 
