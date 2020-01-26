@@ -1,4 +1,6 @@
+/* eslint-disable indent */
 // Isolate this code
+// eslint-disable-next-line no-extra-semi
 ;(function () {
     'use strict'
 
