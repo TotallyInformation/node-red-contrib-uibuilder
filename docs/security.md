@@ -72,6 +72,8 @@ After you have done this, you will need to access your Node-RED web pages using 
 
 ## Standard Schema for `msg._uibAuth`
 
+**NOTE**: _The name of this property is likely to change to something like `msg._auth` so that other tools needing front-end authentication and authorisation can use a common schema._
+
 uibuilder proposes a standard(ish) schema for exchanging authentication, authorisation and session data.
 
 This uses the `_uibAuth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
