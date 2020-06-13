@@ -31,8 +31,8 @@ let jsonwebtoken = null
 
 module.exports = {
 
-    /** Complex, custom code when processing an incoming msg should go here
-     * Needs to return the msg object
+    /** Complex, custom code when processing an incoming msg to uibuilder node input should go here
+     * Needs to return the msg object. Not for processing msgs coming back from front-end.
      */
     inputHandler: function(msg, send, done, node, RED, io, ioNs, log) {
         node.rcvMsgCount++
@@ -54,9 +54,12 @@ module.exports = {
         // pass the complete msg object to the uibuilder client
         // TODO: This should have some safety validation on it!
         if (msg._socketId) {
+            //! If security is active ...
+            //  ...If socketId not validated as having a current session, don't send
             log.trace(`[${node.url}] msg sent on to client ${msg._socketId}. Channel: ${node.ioChannels.server}`, msg)
             ioNs.to(msg._socketId).emit(node.ioChannels.server, msg)
         } else {
+            //? - is there any way to prevent sending to clients not logged in?
             log.trace(`[${node.url}] msg sent on to ALL clients. Channel: ${node.ioChannels.server}`, msg)
             ioNs.emit(node.ioChannels.server, msg)
         }
@@ -623,10 +626,11 @@ module.exports = {
         }
 
         /** Attempt logon 
-         * @type {boolean|Object} */
+         * @type {boolean|Object}
+         */
         let auth = false
 
-        // If an instance specific version of the security module exists, use it
+        // If an instance specific version of the security module exists, use it or use master
         if ( securitySrc === '' ) { // make sure this only runs once
             securitySrc = path.join(node.customFolder,'security.js')
             if ( ! fs.existsSync(securitySrc) ) {
@@ -718,7 +722,7 @@ module.exports = {
         }
     }, // ---- End of logon ---- //
 
-    /** Process a logon request
+    /** Process a logoff request
      * msg.payload contains any extra data needed for the login
      */
     logoff: function(msg, ioNs, node, socket, log) {
