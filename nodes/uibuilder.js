@@ -354,6 +354,7 @@ module.exports = function(RED) {
         /** This ExpressJS middleware runs when the uibuilder page loads - set cookies and headers
          * @see https://expressjs.com/en/guide/using-middleware.html */
         function masterMiddleware (req, res, next) {
+            //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             // Help reduce risk of XSS and other attacks
             res.setHeader('X-XSS-Protection','1;mode=block')
             res.setHeader('X-Content-Type-Options','nosniff')
@@ -503,7 +504,7 @@ module.exports = function(RED) {
             }, ioNs, node, socket.id, true)
             //ioNs.emit( node.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
 
-            // if the client sends a specific msg channel...
+            // Listen for msgs from clients only on specific input channels:
             socket.on(node.ioChannels.client, function(msg) {
                 log.trace(`[uibuilder:${uibInstance}] Data received from client, ID: ${socket.id}, Msg:`, msg)
 
@@ -515,10 +516,12 @@ module.exports = function(RED) {
                         msg = { 'topic': node.topic, 'payload': msg}
                 }
 
-                // If the sender hasn't added msg._clientId, add the Socket.id now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) {
-                    msg._socketId = socket.id
-                }
+                //! If security is active...
+                //      does the client have a valid session?
+                //      if not, return a not logged in control msg
+
+                // If the sender hasn't added msg._socketId, add the Socket.id now
+                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
                 // Send out the message for downstream flows
                 // TODO: (v2.1) This should probably have safety validations!
@@ -536,14 +539,10 @@ module.exports = function(RED) {
                 }
 
                 // If the sender hasn't added Socket.id, add it now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) {
-                    msg._socketId = socket.id
-                }
+                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
                 // @since 2017-11-05 v0.4.9 If the sender hasn't added msg.from, add it now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, 'from') ) {
-                    msg.from = 'client'
-                }
+                if ( ! Object.prototype.hasOwnProperty.call(msg, 'from') ) msg.from = 'client'
 
                 /** If a logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
                 if ( msg.uibuilderCtrl === 'logon') {
@@ -553,6 +552,10 @@ module.exports = function(RED) {
                     uiblib.logoff(msg, ioNs, node, socket, log)
 
                 } else {
+                    //! If security is active...
+                    //      does the client have a valid session?
+                    //      if not, return a not logged in control msg
+
                     // Send out the message on port #2 for downstream flows
                     if ( ! msg.topic ) msg.topic = node.topic
                     node.send([null,msg])
@@ -622,7 +625,7 @@ module.exports = function(RED) {
 
         }) // ---- End of ioNs.on connection ---- //
 
-        /** Handler function for node input events (when a node instance receives a msg)
+        /** Handler function for node flow input events (when a node instance receives a msg from the flow)
          * @see https://nodered.org/blog/2019/09/20/node-done 
          * @param {Object} msg The msg object received.
          * @param {function} send Per msg send function, node-red v1+
@@ -651,17 +654,15 @@ module.exports = function(RED) {
                 }
             }
 
-            // Keep this fn small for readability so offload
-            // any further, more customised code to another fn
+            // Keep this fn small for readability so offload any further, more customised code to another fn
             msg = uiblib.inputHandler(msg, send, done, node, RED, io, ioNs, log)
 
-        } // -- end of msg received processing -- //
+        } // -- end of flow msg received processing -- //
 
         // Process inbound messages
         node.on('input', nodeInputHandler)
 
-        // Do something when Node-RED is closing down
-        // which includes when this node instance is redeployed
+        // Do something when Node-RED is closing down which includes when this node instance is redeployed
         node.on('close', function(removed,done) {
             log.trace(`[uibuilder:${uibInstance}] nodeGo:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
 
@@ -690,6 +691,7 @@ module.exports = function(RED) {
     //#region --- Admin API's ---
 
     //#region -- File Handling API's --
+    
     /** Create a simple NR admin API to return the list of files in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
      * @param {string} url The admin api url to create
@@ -1619,8 +1621,8 @@ module.exports = function(RED) {
         var command = ''
         switch (params.cmd) {
             case 'install': {
-                // npm install --no-audit --no-update-notifier --save --production --color=false --json <packageName> // --save-prefix="~" 
-                command = `npm install --no-audit --no-update-notifier --save --production --color=false --json ${params.package}`
+                // npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json <packageName>@latest // --save-prefix="~" 
+                command = `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
                 break
             }
             case 'remove': {
@@ -1769,8 +1771,14 @@ module.exports = function(RED) {
             return res.status(400).json({ errors: errors.array() })
         }
 
+        // Validate user data
+
+        // If valid user, generate token & add to authorization header
+
+        // Return
         return res.status(200).json(req.body)
-    })
+    }) // --- End of uiblogin api --- //
+
     //#endregion --- End User API's ---
 
 } // ==== End of module.exports ==== // 
