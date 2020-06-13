@@ -43,7 +43,7 @@
     "notyetnodes": {}
   },
   "engines": {
-    "node": ">=8.16"
+    "node": ">=10.0"
   },
   "directories": {
     "bin": "./bin",
