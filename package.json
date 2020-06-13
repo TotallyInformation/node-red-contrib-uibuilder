@@ -21,13 +21,15 @@
   },
   "dependencies": {
     "body-parser": "^1.19.0",
-    "bootstrap-vue": "^2.15.0",
     "express-validator": "^6.5.0",
     "fs-extra": "^9.0.1",
     "jsonwebtoken": "^8.5.1",
     "serve-index": "^1.9.1",
     "serve-static": "^1.14.1",
     "socket.io": "^2.3.0",
+  },
+  "peerDependencies": {
+    "bootstrap-vue": "^2.15.0",
     "vue": "^2.6.11"
   },
   "devDependencies": {
@@ -35,8 +37,9 @@
     "@types/node-red": "^0.20.1",
     "uglify-js": "^3.9.4"
   },
+  "optionalDependencies": {},
   "node-red": {
-    "version": ">=0.16.0",
+    "version": ">=0.20.0",
     "nodes": {
       "uibuilder": "nodes/uibuilder.js"
     },
