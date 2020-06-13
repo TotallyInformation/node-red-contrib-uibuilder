@@ -3,7 +3,8 @@
   "version": "3.0.0-dev2",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. VueJS and bootstrap-vue included but change as desired.",
   "scripts": {
-    "postinstall": "node ./bin/postinstall",
+    "preinstall": "npm install vue bootstrap-vue",
+    "postinstall": "node ./bin/postinstall.js",
     "prepush": "npm run packfe",
     "push": "git push origin",
     "pull": "git pull origin",
