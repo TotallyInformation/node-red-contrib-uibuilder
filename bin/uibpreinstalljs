@@ -5,32 +5,38 @@
 
 //console.log(process.env)
 
-//cd .. && npm install mime vue bootstrap-vue
-console.log('========================= [UIBUILDER PREINSTALL] =========================')
-console.log('Pre-installing vue & bootstrap-vue')
-console.log('Please ignore warnings about missing peer dependencies for jquery, vue, bootstrap-vue')
-console.log('   ... this will take a minute ...\n')
+;(function () {
+    //cd .. && npm install mime vue bootstrap-vue
+    console.log('========================= [UIBUILDER PREINSTALL] =========================')
+    console.log('Pre-installing vue & bootstrap-vue')
+    console.log('Please ignore warnings about missing peer dependencies for jquery, vue, bootstrap-vue')
+    console.log('   ... this will take a minute ...\n')
 
-/** We need to install peer-dependencies in the parent folder 
- *  since the current working folder will be that of the uibuilder package
- */
-process.chdir('..')
+    /** We need to install peer-dependencies in the parent folder 
+     *  since the current working folder will be that of the uibuilder package
+     */
+    const fldr = process.cwd()
+    process.chdir('..')
 
-/** We have to use exec not spawn because we need the shell environment */
-const { exec } = require('child_process')
-exec('npm install vue bootstrap-vue', (error, stdout, stderr) => {
-    if (error) {
-        console.log(`ERROR: ${error.message}`)
-        console.log('Pre-install FAILED\n==========================================================================\n')
-        return
-    }
-    if (stderr) {
-        console.log(stderr)
-        console.log('Pre-install completed with warnings\n==========================================================================\n')
-        return
-    }
-    console.log(stdout)
-    console.log('Pre-install completed\n==========================================================================\n')
-})
+    /** We have to use exec not spawn because we need the shell environment */
+    const { exec } = require('child_process')
+    exec('npm install vue bootstrap-vue', (error, stdout, stderr) => {
+        if (error) {
+            console.log(`ERROR: ${error.message}`)
+            console.log('Pre-install FAILED\n==========================================================================\n')
+            process.chdir(fldr)
+            return
+        }
+        if (stderr) {
+            console.log(stderr)
+            console.log('Pre-install completed with warnings\n==========================================================================\n')
+            process.chdir(fldr)
+            return
+        }
+        console.log(stdout)
+        console.log('Pre-install completed\n==========================================================================\n')
+        process.chdir(fldr)
+    })
+})()
 
 //EOF
