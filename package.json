@@ -1,18 +1,16 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "3.0.0-dev1",
+  "version": "3.0.0-dev2",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. VueJS and bootstrap-vue included but change as desired.",
   "scripts": {
     "postinstall": "node ./bin/postinstall",
-    "build": "node ./bin/mergehtml",
-    "watchbuild": "node ./bin/watchhtml",
-    "prepush": "npm run packfe && npm run build",
+    "prepush": "npm run packfe",
     "push": "git push origin",
     "pull": "git pull origin",
     "presync": "npm run pull",
     "sync": "npm run push",
     "packfe": "uglifyjs ./nodes/src/uibuilderfe.js --output ./nodes/src/uibuilderfe.min.js --compress --mangle",
-    "prepublishOnly": "npm run packfe && npm run build",
+    "prepublishOnly": "npm run packfe",
     "listbin": "ls ./node_modules/bin",
     "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
     "npmtagnext": "npm dist-tag add node-red-contrib-uibuilder@$npm_package_version next",
@@ -23,20 +21,19 @@
   },
   "dependencies": {
     "body-parser": "^1.19.0",
-    "bootstrap-vue": "^2.1.0",
-    "express-validator": "^6.3.0",
+    "bootstrap-vue": "^2.15.0",
+    "express-validator": "^6.5.0",
     "fs-extra": "^8.1.0",
     "jsonwebtoken": "^8.5.1",
     "serve-index": "^1.9.1",
     "serve-static": "^1.14.1",
     "socket.io": "^2.3.0",
-    "vue": "^2.6.10"
+    "vue": "^2.6.11"
   },
   "devDependencies": {
-    "@types/jquery": "^3.3.31",
-    "@types/node-red": "^0.20.0",
-    "replace-in-file": "^3.4.4",
-    "uglify-js": "^3.6.9"
+    "@types/jquery": "^3.3.38",
+    "@types/node-red": "^0.20.1",
+    "uglify-js": "^3.9.4"
   },
   "node-red": {
     "version": ">=0.16.0",
@@ -57,10 +54,7 @@
   },
   "main": "./nodes/uibuilder.js",
   "browser": "./nodes/src/uibuilderfe.js",
-  "bin": {
-    "mergehtml": "./bin/mergehtml.js",
-    "watchhtml": "./bin/watchhtml.js"
-  },
+  "bin": {},
   "browserslist": [
     "> 0.5%",
     "maintained node versions",
@@ -72,7 +66,12 @@
     "node-red",
     "ui",
     "gui",
-    "dashboard"
+    "dashboard",
+    "spa",
+    "web",
+    "website",
+    "data-driven",
+    "webpage"
   ],
   "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
