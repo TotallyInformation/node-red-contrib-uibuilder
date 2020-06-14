@@ -189,11 +189,13 @@ module.exports = {
          *  name. If not, we walk back up the tree until it is or we run out of tree.
          *  If we don't do this, when it is used with serveStatic, we may not get everything we need served.
          * NB: Only assuming 3 levels here.
+         * NB2: Added packageName split to allow for more complex npm package names.
          */
         let pathSplit = packagePath.split(path.sep)
-        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageName) ) pathSplit.pop()
-        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageName) ) pathSplit.pop()
-        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageName) ) pathSplit.pop()
+        let packageLast = packageName.split('/').pop() // Allow for package names like `@riophae/vue-treeselect`
+        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageLast) ) pathSplit.pop()
+        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageLast) ) pathSplit.pop()
+        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageLast) ) pathSplit.pop()
         packagePath = pathSplit.join(path.sep)
 
         if (debug) console.debug(`[UIBUILDER] PackagePath: ${packagePath}\n`)
