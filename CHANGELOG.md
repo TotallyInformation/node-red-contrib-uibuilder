@@ -23,12 +23,20 @@ As this contains rather a lot of changes, here is a summary of the key changes f
   - If running in Production mode but without using TLS encryption, the security won't turn on. This is to stop you sending secure information in plain-text over the wire. In Development mode, you will get a warning.
   
 - New security documentation
+- `vue` and `bootstrap-vue` packages can now be removed (NB: if uibuilder previously installed, you need to remove and reinstall for this to be possible)
+- Scoped packages can now be added and removed
 - Improved Editor configuration panel layout for Advanced Settings
 - Some simplification of the default VueJS JavaScript template. Makes it a little easier to read.
 - **NOT YET WORKING** Added configuration option to add browser/proxy caching control to all static assets - set the length of time before assets will be reloaded from the server. This may sometimes significantly improve performance in the browser. It depends on the performance of your server and the complexity of the UI.
 
 ### New
 
+- Moved pre-installed VueJS and bootstrap-vue to be installed into `<userDir>` instead of into the uibuilder package folder.
+  
+  This allows the `vue` and `bootstrap-vue` packages to be uninstalled like everything else and resolves Issue [#75](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/75).
+
+  Note that, at present, I have not added any clever code to remove the old installations of vue and bootstrap-vue. If you want to get them into the right place, shut down Node-RED, manually remove and re-add uibuilder from the security branch. Note that you don't need to do anything unless you want to be able to remove `vue` and `bootstrap-vue`.
+  
 - Add a middleware JavaScript module file to allow use of `socket.use`. 
   
   The new `<uibRoot>/.config/sioUse.js` file exports a single function.
@@ -114,6 +122,10 @@ As this contains rather a lot of changes, here is a summary of the key changes f
 - Removed `httpRoot` from the Socket.IO namespace. It is no longer required anyway since url uniqueness checks were added.
 
 ### Fixed
+
+- Allow for npm [Scoped Packages](https://docs.npmjs.com/using-npm/scope.html). e.g. those like `@riophae/vue-treeselect`.
+  
+  These can now be added and removed.
 
 - Running behind a proxy was causing Socket.IO namespace issues (see [Issue #84](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/84)
   Removing `httpRoot` from the namespace should fix that. It is no longer required anyway since url uniqueness checks were added.
