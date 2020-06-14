@@ -4,11 +4,20 @@ All notable changes to this project will be documented in this file. The format 
 
 uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.7...master)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.8...master)
 
 N/A
 
 ----
+
+## [2.0.8](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.7...v2.0.8)
+
+### Fixed
+
+- Allow for npm [Scoped Packages](https://docs.npmjs.com/using-npm/scope.html). e.g. those like `@riophae/vue-treeselect`.
+  
+  These can now be added and removed. Fixes [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71). Thanks to Stephen McLaughlin.
+
 
 ## [2.0.7](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.6...v2.0.7)
 
