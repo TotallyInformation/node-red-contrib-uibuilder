@@ -14,7 +14,7 @@ This enables anyone to implement simple but effective multi-user security on the
    
    **WARNING**: Do not - EVER - use any kind of web login process without first setting up TLS. It is unsafe and sends your sensitive user data unencrypted over the network (potentially over the Internet).
 
-   If you have configured Node-RED to work in an non-development mode (e.g. the NODE_ENV environment variable was set to somethnig other than "development"), uibuilder will _refuse_ to turn on security unless TLS is properly configured. In development mode, it will allow it but will output a security warning every time a user connects.
+   If you have configured Node-RED to work in a non-development mode (e.g. the NODE_ENV environment variable was set to somethnig other than "development"), uibuilder will _refuse_ to turn on security unless TLS is properly configured. In development mode, it will allow it but will output a security warning every time a user connects.
 
 2. Open the configuration of your uibuilder Node in the Node-RED admin Editor. Turn on the security flag.
    
@@ -26,7 +26,7 @@ This enables anyone to implement simple but effective multi-user security on the
 
    Security is **not** applied to your web resources (html, css, javascript, images, etc). It is always assumed that these are "public" in the sense that anyone with access to your web server is able to load them. So make sure that nothing sensitive is made available via a web resource.
 
-   The front-end `uibuilder.logon()` function allows you to include a single object as a parameter. This object can contain any extra data that you want to make available to the `validateUser()` function in `security.js`. That data is added to `msg._uibAuth`. It is passed as the only parameter to `validateUser()`. As a minimum, you _must_ include an `id` property which is used to identify the user. See below for more information about `msg._uibAuth`.
+   The front-end `uibuilder.logon()` function allows you to include a single object as a parameter. This object can contain any extra data that you want to make available to the `validateUser()` function in `security.js`. That data is added to `msg._auth`. It is passed as the only parameter to `validateUser()`. As a minimum, you _must_ include an `id` property which is used to identify the user. See below for more information about `msg._auth`.
 
    The front-end `uibuilder.logoff()` function allows you to allow a user to log off. It takes no parameters. An equivalent automatic process happens if the authentication token expires. uibuilderfe will clear its own authentication data in this case but you are responsible for clearing any other sensitive or protected information.
 
@@ -70,21 +70,23 @@ After you have done this, you will need to access your Node-RED web pages using 
    
 4. Test that you can now only access the admin Editor, Dashboard and uibuilder instances only using `https` and not `http`.
 
-## Standard Schema for `msg._uibAuth`
+## Standard Schema for `msg._auth`
 
 **NOTE**: _The name of this property is likely to change to something like `msg._auth` so that other tools needing front-end authentication and authorisation can use a common schema._
 
 uibuilder proposes a standard(ish) schema for exchanging authentication, authorisation and session data.
 
-This uses the `_uibAuth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
+This uses the `_auth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
 
 Some control msg types would be:
 
-- Logon (client to server)
-- Logoff (client to server)
-- Logon success (server to client)
-- Logon failure (server to client)
-- Session expiry (server to client)
+- `logon` (client to server)
+- `logoff` (client to server)
+- `unauthorized` (server to client)
+- `logon success` (server to client)
+- `logon failure` (server to client)
+- `session expiry` (server to client)
+- `session invalid` (server to client)
 
 Example `msg` structure:
 
@@ -95,15 +97,40 @@ Example `msg` structure:
    "_msgId": ... ,
    "_socketId": ... ,
 
-   "_uibAuth": {
+   "_auth": {
       "id": ...unique user identifier... ,
       // Other potential information depending on need.
       // e.g. for a login:
       "password": ...encoded password... ,
       // or for ongoing session management:
-      "jwt": ... JWT token (base 64 encoded) ... 
+      "jwt": ... JWT token (base 64 encoded) ... ,
+      "sessionExpiry": "2020-06-14T20:42:50.000Z",
+      // Optional additional data about the user and/or session
+      "info": {
+          ... other metadata ... can be any data, some ideas shown ...
+          "fullName": "John Smith",
+          "givenName": "John",
+          "familyName": "Smith",
+          "expiry": "2020-10-25", // maybe when this users account expires
+          "message": "Welcome John, you have successfully logged in",
+      }
    }
 }
+```
+
+Here is the JSDoc type definition for the `_auth` schema:
+
+```javascript
+/**
+ * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
+ * Note that any other data may be passed from your front-end code in the _auth.info object.
+ * @property {String} id Required. A unique user identifier.
+ * @property {String} [password] Required for login only.
+ * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
+ * @property {Number} [sessionExpiry] Required if logged in. Seconds since 1970. Needed for ongoing session validation and management.
+ * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
+ * @property {Object=} [info] Optional metadata about the user.
+ */
 ```
 
 The same msg property is also used when sending information from the Node-RED server to the client as well. For example, on a successful login, you might return a message for the user from the server such as "Welcome to xxxxx, please remember to change your password" or whatever, you might also pass back other "meta-data" such as a timestamp when the users subscription expires.

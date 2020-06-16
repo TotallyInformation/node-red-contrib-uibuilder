@@ -18,6 +18,50 @@
  **/
 'use strict'
 
+//#region --- Type Defs --- //
+/**
+ * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
+ * Note that any other data may be passed from your front-end code in the _auth.info object.
+ * _auth.info.error, _auth.info.validJwt, _auth.info.message, _auth.info.warning
+ * @property {String} id Required. A unique user identifier.
+ * @property {String} [password] Required for login only.
+ * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
+ * @property {Number} [sessionExpiry] Required if logged in. Milliseconds since 1970. Needed for ongoing session validation and management.
+ * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
+ * @property {Object=} [info] Optional metadata about the user.
+ */
+/**
+ * @typedef {object} uibNode Local copy of the node instance config + other info
+ * @property {String} id Unique identifier for this instance
+ * @property {String} type What type of node is this an instance of? (uibuilder)
+ * @property {String} name Descriptive name, only used by Editor
+ * @property {String} topic msg.topic overrides incoming msg.topic
+ * @property {String} url The url path (and folder path) to be used by this instance
+ * @property {boolean} fwdInMessages Forward input msgs to output #1?
+ * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} copyIndex Copy index.(html|js|css) files from templates if they don't exist?
+ * @property {boolean} showfolder Provide a folder index web page?
+ * @property {boolean} useSecurity Use uibuilder's built-in security features?
+ * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
+ * @property {Number} sessionLength Lifespan of token (in seconds)
+ * @property {String} jwtSecret Seed string for encryption of JWT
+ * @property {String} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {Number} ioClientsCount How many Socket clients connected to this instance?
+ * @property {Number} rcvMsgCount How many msg's received since last reset or redeploy?
+ * @property {Object} ioChannels The channel names for Socket.IO
+ * @property {String} ioChannels.control SIO Control channel name 'uiBuilderControl'
+ * @property {String} ioChannels.client SIO Client channel name 'uiBuilderClient'
+ * @property {String} ioChannels.server SIO Server channel name 'uiBuilder'
+ * @property {String} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ * @property {Function} send Send a Node-RED msg to an output port
+ * @property {Function=} done Dummy done function for pre-Node-RED 1.0 servers
+ * @property {Function=} on Event handler
+ * @property {Function=} removeListener Event handling
+ * z, wires
+ */
+//#endregion --- Type Defs --- //
+
 const path = require('path')
 const fs = require('fs-extra')
 const tilib = require('./tilib.js')
@@ -28,6 +72,19 @@ const serveStatic = require('serve-static')
 let securitySrc = ''
 let securityjs = null
 let jsonwebtoken = null
+/**  Gives us a standard _auth object to work with
+ * @type _auth */
+const dummyAuth = {
+    id: null,
+    jwt: undefined,
+    sessionExpiry: undefined,
+    userValidated: false,
+    info: {
+        error: undefined,
+        message: undefined,
+        validJwt: undefined,
+    },
+}
 
 module.exports = {
 
@@ -182,7 +239,7 @@ module.exports = {
     }, // ---- End of getProps ---- //
 
     /** Output a control msg
-     * Sends to all connected clients & outputs a msg to port 2
+     * Sends to all connected clients & outputs a msg to port 2 if required
      * @param {Object} msg The message to output
      * @param {Object} ioNs Socket.IO instance to use
      * @param {Object} node The node object
@@ -512,37 +569,118 @@ module.exports = {
         return true
     }, // ---- End of checkUrl ---- //
 
-
-    /** Create a new JWT token based on a user id, session length and security string 
-     * @param {String} userId The unique id that identifies the user.
-     * @param {Object} node  Reference to the calling uibuilder node instance.
-     * @returns {Object} A base64 encoded, signed JWT token string & expiry date/time.
+    /** Check authorisation validity - called for every msg received from client if security is on
+     * @param {Object} msg The input message from the client
+     * @param {SocketIO.Namespace} ioNs Socket.IO instance to use
+     * @param {uibNode} node The node object
+     * @param {SocketIO.Socket} socket 
+     * @param {Object} log Custom logger instance
+     * @returns {_auth} An updated _auth object
      */
-    createToken: function(userId, node) {
+    authCheck: function(msg, ioNs, node, socket, log) {
+        /** @type _auth */
+        var _auth = dummyAuth
 
-        if (jsonwebtoken === null) jsonwebtoken = require('jsonwebtoken')
+        // Has the client included msg._auth? If not, send back an unauth msg
+        if (!msg._auth) {
+            _auth.info.error = 'Client did not provide an _auth'
 
-        const sessionExpiry = Math.floor(Date.now() / 1000) + node.sessionLength
+            this.sendControl({
+                'uibuilderCtrl': 'Auth Failure',
+                'topic': node.topic || undefined,
+                /** @type _auth */
+                '_auth': _auth,
+            }, ioNs, node, socket.id, false)
 
-        const jwtData = {
-            // When does the token expire? Value is seconds since 1970
-            exp: sessionExpiry,
-            // Subject = unique id to identify user
-            sub: userId,
-            // Issuer
-            iss: 'uibuilder',
+            return _auth
         }
 
-        return { 'token': jsonwebtoken.sign(jwtData, node.credentials.jwtSecret), 'tokenExpiry': sessionExpiry * 1000 }
+        // Has the client included msg._auth.id? If not, send back an unauth msg
+        if (!msg._auth.id) {
+            _auth.info.error = 'Client did not provide an _auth.id',
+
+            this.sendControl({
+                'uibuilderCtrl': 'Auth Failure',
+                'topic': node.topic || undefined,
+                /** @type _auth */
+                '_auth': _auth,
+            }, ioNs, node, socket.id, false)
+
+            return _auth
+        }
+
+        //      does the client have a valid session?
+        //      if not, return a not logged in control msg
+        console.log('[uibuilder:socket.on.control] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
+
+        _auth = this.checkToken(msg._auth, node)
+
+        //console.log('[uibuilder:socket.on.control] result of checkToken _auth: ', _auth)
+        // if (_auth.info.validJwt === true) {
+        //     uiblib.sendControl({
+        //         'uibuilderCtrl': 'session valid',
+        //         'topic': node.topic || undefined,
+        //         '_auth': _auth
+        //     }, ioNs, node, socket.id, false)
+        // } else {
+        //     uiblib.sendControl({
+        //         'uibuilderCtrl': 'session invalid',
+        //         'topic': node.topic || undefined,
+        //         '_auth': _auth
+        //     }, ioNs, node, socket.id, false)
+        // }
+
+        return _auth
+    }, // ---- End of authCheck ---- //
+
+    /** Create a new JWT token based on a user id, session length and security string 
+     * @param {_auth} _auth The unique id that identifies the user.
+     * @param {uibNode} node  Reference to the calling uibuilder node instance.
+     * @returns {_auth} Updated _auth including a signed JWT token string, expiry date/time & info flag.
+     */
+    createToken: function(_auth, node) {
+
+        // If anything fails, ensure that the token is invalidated
+        try {
+
+            if (jsonwebtoken === null) jsonwebtoken = require('jsonwebtoken')
+
+            const sessionExpiry = Math.floor(Number(Date.now()) / 1000) + Number(node.sessionLength)
+
+            const jwtData = {
+                // When does the token expire? Value is seconds since 1970
+                exp: sessionExpiry,
+                // Subject = unique id to identify user
+                sub: _auth.id,
+                // Issuer
+                iss: 'uibuilder',
+            }
+
+            _auth.jwt = jsonwebtoken.sign(jwtData, node.jwtSecret)
+            _auth.sessionExpiry = sessionExpiry * 1000 // Javascript ms not unix sec
+            _auth.info.validJwt = true
+
+        } catch(e) {
+
+            _auth.jwt = undefined
+            _auth.sessionExpiry = undefined
+            _auth.userValidated = false
+            if (!_auth.info) _auth.info = {}
+            _auth.info.validJwt = false
+            _auth.info.error = 'Could not create JWT'
+
+        }
+
+        return _auth
 
     }, // ---- End of createToken ---- //
 
     /** Check whether a received JWT token is valid. If it is, then try to update it. 
-     * @param {String} token A base64 encoded, signed JWT token string.
-     * @param {Object} node  Reference to the calling uibuilder node instance.
-     * @returns {Object}  { valid: [boolean], data: [object], newToken: [string], err: [object] }
+     * @param {_auth} token A base64 encoded, signed JWT token string.
+     * @param {uibNode} node  Reference to the calling uibuilder node instance.
+     * @returns {_auth}  { valid: [boolean], data: [object], newToken: [string], err: [object] }
      */
-    checkToken: function(token, node) {
+    checkToken: function(_auth, node) {
         if (jsonwebtoken === null)  jsonwebtoken = require('jsonwebtoken')
 
         const options = {
@@ -552,85 +690,124 @@ module.exports = {
             //maxAge: "7d",
         }
 
-        var response = { 'valid': false, data: undefined, newToken: undefined, err: undefined }
-
-        try {
-            response.data = jsonwebtoken.verify(token, node.credentials.jwtSecret, options) // , callback])
-            response.newToken = this.createToken(response.data.sub, node)
-            response.valid = true
-        } catch(err) {
-            response.err = err
-            response.valid = false
+        /** @type _auth */
+        var response = {
+            id: _auth.id,
+            jwt: undefined, 
+            info: {
+                validJwt: false, 
+                error: undefined,
+            }, 
         }
 
+        try {
+            response.info.verify = jsonwebtoken.verify(_auth.jwt, node.jwtSecret, options) // , callback])
+            response = this.createToken(response, node)
+            //response.info.validJwt = true // set in createToken, also the jwt & expiry
+        } catch(err) {
+            response.info.error = err
+            response.info.validJwt = false
+        }
+
+        console.log(`[uibuilder:uiblib.js:checkToken] response: `, response)
         return response
 
     }, // ---- End of checkToken ---- //
 
     /** Process a logon request
-     * msg.payload contains any extra data needed for the login
+     * msg._auth contains any extra data needed for the login
+     * @param {Object} msg The input message from the client
+     * @param {SocketIO.Namespace} ioNs Socket.IO instance to use
+     * @param {uibNode} node The node object
+     * @param {SocketIO.Socket} socket 
+     * @param {Object} log Custom logger instance
+     * @param {Object} uib Constants from uibuilder.js
+     * @returns {boolean} True = user logged in, false = user not logged in
      */
     logon: function(msg, ioNs, node, socket, log, uib) {
 
-        // Only process if security is turned on
+        /** @type _auth */
+        var _auth = msg._auth || dummyAuth
+        if (!_auth.info) _auth.info = {}
+        _auth.userValidated = false
+
+        // Only process if security is turned on. Otherwise output info to log, inform client and exit
         if ( node.useSecurity !== true ) {
             log.info('[uibuilder:uiblib:logon] Security is not turned on, ignoring logon attempt.')
-            return
+
+            _auth.info.error = 'Security is not turned on for this uibuilder instance'
+
+            this.sendControl({
+                uibuilderCtrl: 'authorisation failure',
+                topic: msg.topic || node.topic,
+                '_auth': _auth,
+            }, ioNs, node, socket.id, false)
+
+            return _auth.userValidated
         }
 
-        // console.log('SOCKET', Object.keys(socket))
-         // console.log('SOCKET.client', Object.keys(socket.client))
-         // console.log('SOCKET.conn', Object.keys(socket.conn))
-         // console.log('SOCKET.server', Object.keys(socket.server))
-         // console.log('SOCKET.flags', Object.keys(socket.flags))
-         // console.log('SOCKET.handshake', Object.keys(socket.handshake))
-         //console.log('SOCKET.handshake', socket.handshake)
-         //console.dir(msg)
+        // Check if using TLS - if not, send warning to log & inform client and exit
+        if ( socket.handshake.secure !== true ) {
+            if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
+                _auth.info.warning = `
+    
+    +---------------------------------------------------------------+
+    | uibuilder security warning:                                   |
+    |    A logon is being processed without TLS security turned on. |
+    |    This works, with warnings, in a development environment.   |
+    |    It will NOT work for non-development environments.         |
+    |    See the uibuilder security docs for details.               |
+    +---------------------------------------------------------------+
+    `
+                log.warn(`[uibuilder:uiblib:logon] **WARNING** ${_auth.info.warning}`)
+            } else {
+                _auth.info.error = `
+    
+    +---------------------------------------------------------------+
+    | uibuilder security warning:                                   |
+    |    A logon is being processed without TLS security turned on. |
+    |    This IS NOT PERMITTED for non-development environments.    |
+    |    See the uibuilder security docs for details.               |
+    +---------------------------------------------------------------+
+    `
+                log.error(`[uibuilder:uiblib:logon] **ERROR** ${_auth.info.error}`)
+                
+                // Report fail to client but don't output to port #2 as error msg already sent
+                _auth.userValidated = false
+                _auth.info.error = 'Logons cannot be processed without TLS in non-development environments'
 
-        const _uibAuth = msg._uibAuth || {}
+                this.sendControl({
+                    uibuilderCtrl: 'authorisation failure',
+                    topic: msg.topic || node.topic,
+                    '_auth': _auth,
+                }, ioNs, node, socket.id, false)
 
-        // Make sure that we at least have a user id
-        if ( ! _uibAuth.id ) {
-            log.warn('')
+                return _auth.userValidated
+            }
+        }
 
-            // ?? record fail ??
-            _uibAuth.reason = 'Logon failed. No id provided'
+        // Make sure that we at least have a user id, if not, inform client and exit
+        if ( ! _auth.id ) {
+            log.warn('[uibuilder:uiblib.js:logon] No _auth.id provided')
+
+            //TODO ?? record fail ??
+            _auth.userValidated = false
+            _auth.info.error = 'Logon failed. No id provided'
 
             // Report fail to client & Send output to port #2
             this.sendControl({
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic || node.topic,
-                '_uibAuth': _uibAuth,
+                '_auth': _auth,
             }, ioNs, node, socket.id, true)
+
+            return _auth.userValidated
         }
 
-        // Check if using TLS - if not, send warning to log
-        if ( socket.handshake.secure !== true ) {
-            if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
-                _uibAuth.warning = 'A logon is being processed without TLS security turned on - this will not work in a non-development environment. See the uibuilder security docs for details'
+        /** Attempt logon */
 
-                log.warn(`[uibuilder:uiblib:logon] **WARNING** ${_uibAuth.warning}`)
-            } else {
-                log.error('[uibuilder:uiblib:logon] **ERROR** A logon is being attempted in a non-development environment without TLS security turned on - this is not permitted. See the uibuilder security docs for details')
-                
-                // Report fail to client but don't output to port #2 as error msg already sent
-                _uibAuth.reason = 'Logons cannot be processed without TLS in non-development environments'
-
-                this.sendControl({
-                    uibuilderCtrl: 'authorisation failure',
-                    topic: msg.topic || node.topic,
-                    '_uibAuth': _uibAuth,
-                }, ioNs, node, socket.id, false)
-                return
-            }
-        }
-
-        /** Attempt logon 
-         * @type {boolean|Object}
-         */
-        let auth = false
-
-        // If an instance specific version of the security module exists, use it or use master
+        // If an instance specific version of the security module exists, use it or use master copy or fail
+        // On fail, output to NR log & exit the logon - don't tell the client as that would be leaking security info
         if ( securitySrc === '' ) { // make sure this only runs once
             securitySrc = path.join(node.customFolder,'security.js')
             if ( ! fs.existsSync(securitySrc) ) {
@@ -656,94 +833,117 @@ module.exports = {
                     } else {
                         // In production mode, don't allow insecure processes - fail now
                         log.error('[uibuilder:uiblib:logon] Security is ON but no `security.js` found. Cannot process logon in non-development mode without a custom security.js file. See uibuilder security docs for details.')
-                        return
+
+                        return _auth.userValidated
                     }
                 }
             }
 
-            securityjs = require( securitySrc )
+            try {
+                securityjs = require( securitySrc )
+            } catch (e) {
+                log.error('[uibuilder:uiblib:logon] Security is ON but `security.js` could not be `required`. Cannot process logons. Is security.js a valid Node.js module?', e)
+
+                return _auth.userValidated
+            }
         }
 
-        // Use security module to validate user
-        auth = securityjs.userValidate(msg._uibAuth)
-        let authData = null
-        if ( Object.prototype.toString.call(auth) === '[object Object]' ) {
-            authData = auth.authData || {}
-            auth = auth.userValidated
+        // Make sure that securityjs has the correct functions available or log and exit
+        if ( ! securityjs.userValidate ) {
+            log.error('[uibuilder:uiblib:logon] Security is ON but `security.js` does not contain the required function(s). Cannot process logon. Check docs and change file.')
+            return _auth.userValidated
         }
+
+        // Use security module to validate user - updates _auth
+        _auth = securityjs.userValidate(_auth)
 
         // Send responses
-        if ( auth === true ) {
+        //TODO Should output to port #2 be an option? Should less data be sent?
+        if ( _auth.userValidated === true ) {
             // Record session details
 
-            // Add token
-            const tokenData = this.createToken(_uibAuth.id, node)
-            console.log(tokenData)
-            _uibAuth.authToken = tokenData.token
-            _uibAuth.authTokenExpiry = tokenData.tokenExpiry
+            // Add token to _auth - created here not in user function to ensure consistency
+            _auth = this.createToken(_auth, node)
 
-            // Add success reason and add any optional data from the user validation
-            _uibAuth.reason = 'Logon successful'
-            _uibAuth.authData = authData
+            console.log('[uibuilder:uiblib.js:logon] Updated _auth: ', _auth)
 
-            // Report success & send token to client
+            // Check that we have a valid token
+            if ( _auth.info.jwtValid === true ) {
+                // Add success reason and add any optional data from the user validation
+                _auth.info.message = 'Logon successful'
+            } else {
+                _auth.userValidated === false
+            }
+
+            // Report success & send token to client & to port #2
             this.sendControl({
                 'uibuilderCtrl': 'authorised',
                 'topic': msg.topic || node.topic,
-                '_uibAuth': _uibAuth,
-            }, ioNs, node, socket.id, false)
+                '_auth': _auth,
+            }, ioNs, node, socket.id, true)
 
-            // Send output to port #2 manually
-            node.send([null, {
+            // Send output to port #2 manually (because we only include a subset of _auth)
+            /* node.send([null, {
                 uibuilderCtrl: 'authorised',
                 topic: msg.topic || node.topic,
                 _socketId: socket.id,
                 from: 'server',
-                '_uibAuth': {
+                '_auth': {
                     // Try to show some usefull info without revealing too much
-                    id: _uibAuth.id,
-                    authTokenExpiry: _uibAuth.authTokenExpiry,
+                    id: _auth.id,
+                    authTokenExpiry: _auth.authTokenExpiry,
                     // Optional data from the client
-                    uid: _uibAuth.uid,
-                    user: _uibAuth.user,
-                    name: _uibAuth.name,
+                    uid: _auth.uid,
+                    user: _auth.user,
+                    name: _auth.name,
                 },
-            }])
-        } else { // auth <> true
-            // ?? record fail ??
-            _uibAuth.reason = 'Logon failed. Invalid id or password'
+             }]) */
+        } else { // _auth.userValidated <> true
+            _auth.info.error = 'Logon failed. Invalid id or password'
 
             // Report fail to client & Send output to port #2
             this.sendControl({
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic || node.topic,
-                '_uibAuth': _uibAuth,
+                '_auth': _auth,
             }, ioNs, node, socket.id, true)
         }
+
+        return _auth.userValidated
     }, // ---- End of logon ---- //
 
     /** Process a logoff request
-     * msg.payload contains any extra data needed for the login
+     * msg._auth contains any extra data needed for the login
+     * @param {Object} msg The input message from the client
+     * @param {SocketIO.Namespace} ioNs Socket.IO instance to use
+     * @param {uibNode} node The node object
+     * @param {SocketIO.Socket} socket 
+     * @param {Object} log Custom logger instance
+     * @returns {_auth} Updated _auth
      */
     logoff: function(msg, ioNs, node, socket, log) {
-        // Only process if security is turned on
-        if ( node.useSecurity !== true ) {
-            log.info('[uibuilder:uiblib:logoff] Security is not turned on, ignoring logoff attempt.')
-            return
-        }
-
+        /** @type _auth */
+        var _auth = msg._auth || dummyAuth
+        
         // Check that request is valid (has valid token)
         // Check that session exists
         // delete session entry
+
+        _auth.jwt = undefined
+        _auth.sessionExpiry = undefined
+        _auth.userValidated = false
+        if (!_auth.info) _auth.info = {}
+        _auth.info.validJwt = false
+        _auth.info.message = 'Logoff successful'
 
         // confirm logoff to client & Send output to port #2
         this.sendControl({
             uibuilderCtrl: 'logged off',
             topic: msg.topic || node.topic,
-            '_uibAuth': {
-                reason: 'Logoff successful',
-            },
+            '_auth': _auth,
         }, ioNs, node, socket.id, true)
+
+        return _auth
     }, // ---- End of logoff ---- //
 
 } // ---- End of module.exports ---- //

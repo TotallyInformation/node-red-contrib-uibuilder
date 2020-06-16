@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2020 Julian Knight (Totally Information)
- * https://it.knightnet.org.uk
+ * Copyright (c) 2017-2020 Julian Knight (Totally Information)
+ * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,50 @@
  * limitations under the License.
  **/
 'use strict'
+
+//#region --- Type Defs --- //
+/**
+ * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
+ * Note that any other data may be passed from your front-end code in the _auth.info object.
+ * _auth.info.error, _auth.info.validJwt
+ * @property {String} id Required. A unique user identifier.
+ * @property {String} [password] Required for login only.
+ * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
+ * @property {Number} [sessionExpiry] Required if logged in. Milliseconds since 1970. Needed for ongoing session validation and management.
+ * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
+ * @property {Object=} [info] Optional metadata about the user.
+ */
+/**
+ * @typedef {object} uibNode Local copy of the node instance config + other info
+ * @property {String} id Unique identifier for this instance
+ * @property {String} type What type of node is this an instance of? (uibuilder)
+ * @property {String} name Descriptive name, only used by Editor
+ * @property {String} topic msg.topic overrides incoming msg.topic
+ * @property {String} url The url path (and folder path) to be used by this instance
+ * @property {boolean} fwdInMessages Forward input msgs to output #1?
+ * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} copyIndex Copy index.(html|js|css) files from templates if they don't exist?
+ * @property {boolean} showfolder Provide a folder index web page?
+ * @property {boolean} useSecurity Use uibuilder's built-in security features?
+ * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
+ * @property {Number} sessionLength Lifespan of token (in seconds)
+ * @property {String} jwtSecret Seed string for encryption of JWT
+ * @property {String} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {Number} ioClientsCount How many Socket clients connected to this instance?
+ * @property {Number} rcvMsgCount How many msg's received since last reset or redeploy?
+ * @property {Object} ioChannels The channel names for Socket.IO
+ * @property {String} ioChannels.control SIO Control channel name 'uiBuilderControl'
+ * @property {String} ioChannels.client SIO Client channel name 'uiBuilderClient'
+ * @property {String} ioChannels.server SIO Server channel name 'uiBuilder'
+ * @property {String} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ * @property {Function} send Send a Node-RED msg to an output port
+ * @property {Function=} done Dummy done function for pre-Node-RED 1.0 servers
+ * @property {Function=} on Event handler
+ * @property {Function=} removeListener Event handling
+ * z, wires
+ */
+//#endregion --- Type Defs --- //
 
 //#region ------ Require packages ------ //
 // Utility library for uibuilder
@@ -282,25 +326,26 @@ module.exports = function(RED) {
 
         log.trace(`[uibuilder:${uibInstance}] ================ instance registered ================`)
 
-        /** A copy of 'this' object in case we need it in context of callbacks of other functions. @constant {Object} node */
+        /** A copy of 'this' object in case we need it in context of callbacks of other functions. 
+         * @type {uibNode} node
+         */
         const node = this
         log.trace(`[uibuilder:${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
 
         //#region ----- Create local copies of the node configuration (as defined in the .html file) ----- //
         // NB: node.id and node.type are also available
-        node.name          = config.name  || ''
-        node.topic         = config.topic || ''
-        node.url           = config.url   || 'uibuilder'
-        node.fwdInMessages = config.fwdInMessages === undefined ? false : config.fwdInMessages
-        node.allowScripts  = config.allowScripts === undefined ? false : config.allowScripts
-        node.allowStyles   = config.allowStyles === undefined ? false : config.allowStyles
-        node.copyIndex     = config.copyIndex === undefined ? true : config.copyIndex
-        node.showfolder    = config.showfolder === undefined ? false : config.showfolder
-
-        node.useSecurity   = true
-        node.tokenAutoExtend = true //TODO docs
-        //node.jwtSecret     = 'thisneedsreplacingwithacredential'
-        node.sessionLength = 120  // in seconds
+        node.name            = config.name  || ''
+        node.topic           = config.topic || ''
+        node.url             = config.url   || 'uibuilder'
+        node.fwdInMessages   = config.fwdInMessages === undefined ? false : config.fwdInMessages
+        node.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
+        node.allowStyles     = config.allowStyles === undefined ? false : config.allowStyles
+        node.copyIndex       = config.copyIndex === undefined ? true : config.copyIndex
+        node.showfolder      = config.showfolder === undefined ? false : config.showfolder
+        node.useSecurity     = config.useSecurity 
+        node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
+        node.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
+        node.tokenAutoExtend = config.tokenAutoExtend
         //#endregion ----- Local node config copy ----- //
 
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })
@@ -492,11 +537,10 @@ module.exports = function(RED) {
 
             uiblib.setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
 
-            // Let the clients (and output #2) know we are connecting & send the desired debug state
+            // Let the clients (and output #2) know we are connecting
             uiblib.sendControl({
                 'uibuilderCtrl': 'client connect',
                 'cacheControl': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
-                'debug': node.debugFE,
                 // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
                 // time difference (UTC->Local) without needing clever libraries.
                 'serverTimestamp': (new Date()),
@@ -516,12 +560,15 @@ module.exports = function(RED) {
                         msg = { 'topic': node.topic, 'payload': msg}
                 }
 
-                //! If security is active...
-                //      does the client have a valid session?
-                //      if not, return a not logged in control msg
-
                 // If the sender hasn't added msg._socketId, add the Socket.id now
                 if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
+
+                // If security is active...
+                if (node.useSecurity === true) {
+                    /** Check for valid auth and session 
+                     * @type _auth */
+                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log)
+                }
 
                 // Send out the message for downstream flows
                 // TODO: (v2.1) This should probably have safety validations!
@@ -552,9 +599,12 @@ module.exports = function(RED) {
                     uiblib.logoff(msg, ioNs, node, socket, log)
 
                 } else {
-                    //! If security is active...
-                    //      does the client have a valid session?
-                    //      if not, return a not logged in control msg
+                    // If security is active...
+                    if (node.useSecurity === true) {
+                        /** Check for valid auth and session 
+                         * @type _auth */
+                        msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log)
+                    }
 
                     // Send out the message on port #2 for downstream flows
                     if ( ! msg.topic ) msg.topic = node.topic
@@ -637,7 +687,7 @@ module.exports = function(RED) {
             // If this is pre-1.0, 'send' will be undefined, so fallback to node.send
             send = send || function() { node.send.apply(node,arguments) }
             // If this is pre-1.0, 'done' will be undefined, so fallback to dummy function
-            done = done || function() { if (arguments.length>0) node.error.apply(node,arguments) }
+            done = done || function() { if (arguments.length>0) node.done.apply(node,arguments) }
 
             // If msg is null, nothing will be sent
             if ( msg !== null ) {
@@ -681,7 +731,7 @@ module.exports = function(RED) {
      *  Node functions. */
     RED.nodes.registerType(uib.moduleName, nodeGo, {
         credentials: {
-            jwtSecret: {type:'text'},
+            jwtSecret: {type:'password'},
         },
         settings: {
             uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
@@ -1731,25 +1781,25 @@ module.exports = function(RED) {
      * TODO: Change to an external module
     */
     const bodyParser = require('body-parser')
-    const jwt = require('jsonwebtoken')
+    //const jwt = require('jsonwebtoken')
     const { checkSchema, validationResult } = require('express-validator')
 
     /** Input validation schema, @see https://express-validator.github.io/docs/schema-validation.html */
     const loginSchema = {
-        'user': {
+        'id': {
             in: ['body'],
-            errorMessage: 'User name is incorrect',
+            errorMessage: 'User ID is incorrect length',
             isLength: {
-                errorMessage: 'User name must be between 1 and 50 characters long',
+                errorMessage: 'User ID must be between 1 and 50 characters long',
                 // Multiple options would be expressed as an array
                 options: { min: 1, max: 50 }
             },
             stripLow: true,
             trim: true,
         },
-        'auth': {
+        'password': {
             in: ['body'],
-            errorMessage: 'Password is incorrect',
+            errorMessage: 'Password is incorrect length',
             isLength: {
                 errorMessage: 'Password must be between 10 and 50 characters long',
                 // Multiple options would be expressed as an array
@@ -1760,22 +1810,28 @@ module.exports = function(RED) {
         },
     }
 
+    //TODO
     app.post('/uiblogin', bodyParser.json(),checkSchema(loginSchema), (req, res) => {
 
         console.log('[uiblogin] BODY: ', req.body)
         //console.log('[uiblogin] HEADERS: ', req.headers)
 
         // Finds the validation errors in this request and wraps them in an object with handy functions
-        const errors = validationResult(req);
+        const errors = validationResult(req)
+        console.log('[uiblogin] Validation Errors: ', errors)
+
+        // Request body failed validation, return 400 - bad request
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
         }
 
+        //TODO
         // Validate user data
-
         // If valid user, generate token & add to authorization header
 
-        // Return
+        // If user or pw is invalid, return 401 - Unauthorized
+
+        // Return status 200 - OK with json data
         return res.status(200).json(req.body)
     }) // --- End of uiblogin api --- //
 

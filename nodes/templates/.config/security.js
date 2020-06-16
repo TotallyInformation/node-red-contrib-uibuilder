@@ -46,11 +46,11 @@
  */
 /**
  * @typedef {Object} userValidation Optional return object that is able to pass on additional use metadata back to the client.
- * @property {boolean} userValidated Required. Whether the input ID (and optional additional data from the _uibAuth object) validated correctly or not.
- * @property {userMetadata} [authData] Optional return metadata about the user. Will be added to the output msg's _uibAuth object
+ * @property {boolean} userValidated Required. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
+ * @property {userMetadata} [authData] Optional return metadata about the user. Will be added to the output msg's _auth object
  */
 /**
- * @typedef {Object} userMetadata Optional. Metadata about the user. Will be added to the output msg's _uibAuth object.
+ * @typedef {Object} userMetadata Optional. Metadata about the user. Will be added to the output msg's _auth object.
  * This is just an example of what you might want to return, you can send anything you like.
  * @property {String} [name] Users full name or screen name.
  * @property {String} [message] A message that the front-end code could use to display to the user when they log in.
@@ -62,20 +62,20 @@
 
 module.exports = {
     /** Validate user against your own user data.
-     * The minimum input data is _uibAuth.id which must represent a unique ID.
+     * The minimum input data is _auth.id which must represent a unique ID.
      * Called from the logon function (uiblib.js::logon) which is triggered by a uibuilder control msg from the client of type 'logon'.
      * May also be called to revalidate users at any time.
-     * @param {uibAuth} _uibAuth Required. 
+     * @param {uibAuth} _auth Required. 
      * @return {boolean|userValidation} Either true/false or Object of type userValidation
      */
-    userValidate: function(_uibAuth) {
-        console.log(`[uibuilder:security.js] userValidate Security from ${__filename} used. Replace this template with your own code. _uibAuth:`, _uibAuth)
+    userValidate: function(_auth) {
+        console.log(`[uibuilder:security.js] userValidate Security from ${__filename} used. Replace this template with your own code. _auth:`, _auth)
 
         /** Manual "test" ID validates - this will be replaced with a suitable lookup in your code - maybe from a database or a file.
          * You will also want to pass through some kind of password to validate the user.
          */
-        if ( _uibAuth.id === 'test' ) {
-            console.log(`[uibuilder:security.js] User id ${_uibAuth.id} has been validated`)
+        if ( _auth.id === 'test' ) {
+            console.log(`[uibuilder:security.js] User id ${_auth.id} has been validated`)
 
             // Example of simple boolean return
             return true
@@ -95,7 +95,7 @@ module.exports = {
         // return {
         //     userValidated: false,
         //     authData: {
-        //         message: `Login failed, User id ${_uibAuth.id} not recognised.`
+        //         message: `Login failed, User id ${_auth.id} not recognised.`
         //     }
         // }
         

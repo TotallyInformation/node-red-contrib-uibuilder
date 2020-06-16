@@ -14,7 +14,7 @@ functions that uibuilder requires in order to be able to validate users and sess
 
 ### Exported functions
 
-* `userValidate(_uibAuth)` - based on an id, lookup the user data to see if the user is valid.
+* `userValidate(_auth)` - based on an id, lookup the user data to see if the user is valid.
   
   It **MUST** return a boolean or object of type userValidation (which is documented in the template).
 
@@ -23,11 +23,11 @@ functions that uibuilder requires in order to be able to validate users and sess
 
 * TBC
 
-## Standard Schema for `msg._uibAuth`
+## Standard Schema for `msg._auth`
 
 uibuilder proposes a standard(ish) schema for exchanging authentication, authorisation and session data.
 
-This uses the `_uibAuth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
+This uses the `_auth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
 
 Please refer to the [Security doc](./security.md) for details.
 

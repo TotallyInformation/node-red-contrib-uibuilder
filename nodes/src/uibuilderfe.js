@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2019 Julian Knight (Totally Information)
+  Copyright (c) 2020 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -14,12 +14,11 @@
   limitations under the License.
 */
 /**
- * This is the default Front-End JavaScript for uibuilder
+ * This is the Front-End JavaScript for uibuilder
  * It provides a number of global objects that can be used in your own javascript.
  * @see the docs folder `./docs/uibuilderfe-js.md` for details of how to use this fully.
  * 
- * Please use the default index.js file for your own code and leave this as-is
- * unless you really need to change something.
+ * Please use the default index.js file for your own code and leave this as-is.
  */
 
 'use strict'
@@ -34,6 +33,20 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
  * Isolate everything
  **/
 (function () {
+    //#region --- Type Defs --- //
+    /**
+     * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
+     * Note that any other data may be passed from your front-end code in the _auth.info object.
+     * _auth.info.error, _auth.info.validJwt, _auth.info.message, _auth.info.warning
+     * @property {String} id Required. A unique user identifier.
+     * @property {String} [password] Required for login only.
+     * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
+     * @property {Number} [sessionExpiry] Required if logged in. Milliseconds since 1970. Needed for ongoing session validation and management.
+     * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
+     * @property {Object=} [info] Optional metadata about the user.
+     */
+    //#endregion --- Type Defs --- //
+
     // Keep a copy of the starting context
     var root = this
     // Keep a copy of anything with a clashing name in the starting context
@@ -55,10 +68,26 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '3.0.0-dev1'
+        self.version = '3.0.0-dev3'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         self.isUnminified = /param/.test(function(param) {})
+        /** Empty User info template
+         * @type {_auth} */
+        self.dummyAuth = {
+            id: null,
+            jwt: undefined,
+            sessionExpiry: undefined,
+            userValidated: false,
+            info: {
+                error: undefined,
+                message: undefined,
+                validJwt: undefined,
+            },
+        }
+        /** Retained User info
+         * @type {_auth|undefined} */
+        self._auth = undefined
 
         /** Debugging function
          * @param {string} type One of log|error|warn|info|dir, etc
@@ -298,6 +327,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 // @since 2018-10-07 v1.0.9: Work out local time offset from server
                 self.checkTimestamp(receivedMsg)
 
+                // Update _auth if needed
+                if ( receivedMsg._auth ) self.updateAuth(receivedMsg._auth)
+
                 // If the msg contains a code property (js), insert to DOM, remove from msg if required
                 if ( self.allowScript && receivedMsg.hasOwnProperty('script') ) {
                     self.newScript(receivedMsg.script)
@@ -348,7 +380,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 switch(receivedCtrlMsg.uibuilderCtrl) {
                     // Initial startup msg from Node-RED server
                     case 'ready for content':
-                        if ( receivedCtrlMsg._uibAuth ) self.updateAuth(receivedCtrlMsg._uibAuth)
+                        if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
 
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "ready for content" from server')
 
@@ -362,7 +394,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                     // We are connected to the server
                     case 'client connect':
-                        if ( receivedCtrlMsg._uibAuth ) self.updateAuth(receivedCtrlMsg._uibAuth)
+                        if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
 
                         if ( self.autoSendReady === true ) {
                             self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "client connect" from server, auto-sending REPLAY control msg')
@@ -380,13 +412,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     case 'authorised':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server')
                         console.log('LOGIN SUCCESSFUL', receivedCtrlMsg) //TODO remove
-                        if ( receivedCtrlMsg._uibAuth ) {
-                            self.updateAuth(receivedCtrlMsg._uibAuth)
+                        if ( receivedCtrlMsg._auth ) {
+                            self.updateAuth(receivedCtrlMsg._auth)
                         } else {
                             // This should never happen
-                            self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server but without a _uibAuth property - logon failed')
-                            console.log('LOGIN SUCCEEDED BUT NO _uibAuth sent', receivedCtrlMsg) //TODO remove
-                            self.markLoggedOut('Logon succeeded but no _uibAuth received, logged out')
+                            self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server but without a _auth property - logon failed')
+                            console.log('LOGIN SUCCEEDED BUT NO _auth received from server', receivedCtrlMsg) //TODO remove
+                            self.markLoggedOut('Logon succeeded but no _auth received, logged out')
                         }
                         break
 
@@ -394,19 +426,20 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     case 'authorisation failure':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorisation failure" from server')
                         console.log('LOGIN FAILED', receivedCtrlMsg) //TODO remove
-                        self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._uibAuth.authData)
+                        self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._auth.authData)
                         break
 
                     // Logoff confirmation from server - note that payload may contain more info
                     case 'logged off':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "logged off" from server')
                         console.log('LOGOFF', receivedCtrlMsg) //TODO remove
-                        self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._uibAuth)
+                        self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._auth)
                         break
 
                     default:
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
-                        if ( receivedCtrlMsg._uibAuth ) self.updateAuth(receivedCtrlMsg._uibAuth)
+                        console.log('uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server') //TODO remove
+                        if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
                         // Anything else
 
                 } // ---- End of process control msg types ---- //
@@ -493,73 +526,157 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              */
         } // ---- End of ioSetup ---- //
         
-        /** Mark client as logged off 
+        /** Mark client as logged off & delete local auth data
          * @param {String=} localReason Optional, give a reason for logoff, will be placed in self.authData
-         * @param {Any=} data Optional additional data, will be placed in self.authData
+         * @param {_auth=} _auth Data from server, uses self._auth if not provided
          */
-        self.markLoggedOut = function(localReason, data) {
-            // Make sure data is an Object
-            if ( Object.prototype.toString.call(data) !== '[object Object]' ) {
-                if ( data === undefined ) {
-                    data = {}
-                } else {
-                    data = { 'message': data }
-                }    
-            }
-            if ( localReason !== undefined ) data.localReason = localReason
+        self.markLoggedOut = function(localReason, _auth) {
+            // If _auth undefined then ignore
+            if (self._auth === undefined && _auth === undefined) return
 
-            self.authData = data
+            // If _auth not provided, use self._auth
+            if ( _auth === undefined ) _auth = self._auth
 
+            // Reset auth info
+            _auth = self.dummyAuth
+
+            // Record reason if given
+            if ( localReason !== undefined ) self._auth.info.message = localReason
+
+            // Trigger change in isAuthorised
             self.set('isAuthorised', false) // also triggers event
 
-            self.authToken = ''
-            self.authTokenExpiry = null
-            self.authData = {}
+            // Trigger change in _auth
+            self.set('_auth', _auth)
+
             //delete self.socketOptions.transportOptions.polling.extraHeaders.Authorization
         } // ---- End of markLoggedOut ---- //
 
-        /** Update client authorisation info
+        /** Send a logon request control message
+         * @param {_auth=} _auth Logon specific data to be passed to Node-RED, uses self._auth if not provided.
+         * @param {string=} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
+         */
+        self.logon = function(_auth, api) {
+            // If _auth undefined then ignore
+            if (self._auth === undefined && _auth === undefined) return
+
+            // If _auth not provided, use self._auth
+            if ( _auth === undefined ) _auth = self._auth
+
+            if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
+                console.error('[uibuilder:logon] No logon id supplied, ignoring request.')
+                return
+            }
+
+            if ( ! _auth.info ) _auth.info = self.dummyAuth.info
+
+            self.set('_auth', _auth)
+
+            if (api) {
+                //TODO (see login method on vue2 test)
+            } else {
+                self.send({
+                    'uibuilderCtrl':'logon',
+                    'from': 'client',
+                    '_auth': self._auth,
+                },self.ioChannels.control)
+            }
+
+            console.log('[uibuilder:logon] ', self._auth)
+        } // ---- End of logon ---- //
+
+        /** Send a logoff request control message
+         * Note that the local auth data is NOT removed here.
+         *   That happens when the client receives the control msg "logged off" from the server.
+         * @param {_auth=} _auth Required. Logon specific data to be passed to Node-RED
+         * @param {string} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
+         */
+        self.logoff = function(_auth, api) {
+            // If _auth undefined then ignore
+            if (self._auth === undefined && _auth === undefined) return
+
+            // If _auth not provided, use self._auth
+            if ( _auth === undefined ) _auth = self._auth
+
+            if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
+                console.error('[uibuilder:logoff] No logoff id supplied, ignoring request.')
+                return
+            }
+
+            if ( ! _auth.info ) _auth.info = self.dummyAuth.info
+
+            self._auth = _auth
+
+            if (api) {
+                //TODO (see login method on vue2 test)
+            } else {
+                self.send({
+                    'uibuilderCtrl':'logoff',
+                    'from': 'client',
+                    '_auth': self._auth,
+                },self.ioChannels.control)
+            }
+        }  // ---- End of logoff ---- //
+
+        /** Update client authorisation info from server info
          * Note that this may happen after a successful logon request or at any time
-         * a msg is received (on any channel) that contains a msg._uibAuth object
-         * @param {Object} _auth Required. Authorisation information.
+         * a msg is received (on any channel) that contains a msg._auth object
+         * @param {_auth=} _auth Authorisation information. Defaults to self._auth if not supplied
          */
         self.updateAuth = function(_auth) {
-            // Ignore if empty object
-            if ( Object.keys(_auth).length === 0 ) return
+            // If _auth undefined then ignore
+            if (self._auth === undefined && _auth === undefined) return
 
-            if ( _auth.authToken ) {
+            // If _auth not provided, use self._auth
+            if ( _auth === undefined ) _auth = self._auth
+
+            // Ignore if empty object
+            //if ( Object.keys(_auth).length === 0 ) return
+
+            if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
+                console.error('[uibuilder:updateAuth] No auth id supplied by server, ignoring server response.')
+                if (_auth.info && _auth.info.error) console.warn('[uibuilder:updateAuth] Error from Server: ', _auth.info.error)
+                return
+            }
+
+            if ( ! _auth.info ) _auth.info = self.dummyAuth.info
+
+            // Make sure user is valid & jwt is valid and current
+            if ( _auth.userValidated && _auth.jwt && _auth.info.validJwt === true && (new Date(_auth.sessionExpiry) > (new Date())) ) {
                 self.set('isAuthorised', true) // also triggers event
 
-                self.authToken = _auth.authToken
-                self.authTokenExpiry = _auth.authTokenExpiry
-                self.authData = _auth.authData || {}
-                self.authData.reason = _auth.reason
-                self.authData.warning = _auth.warning
+                self.set('_auth', _auth)
+
                 //self.socketOptions.transportOptions.polling.extraHeaders.Authorization = 'Bearer ' + self.authToken
             } else {
-                // This should never happen
-                self.uiDebug('debug', 'uibuilderfe:updateAuth:' + self.ioChannels.control + ' Received "authorised" from server but without a token - logon failed')
-                console.log('LOGIN SUCCEEDED BUT NO token sent', _auth); console.trace() //TODO remove
-                self.markLoggedOut('Logon succeeded but no token received, logged out', _auth.authData)
+                self.markLoggedOut('Logon succeeded but no token received, logged out')
             }
+
         } // ---- End of updateAuth ---- //
 
-        /** Returns a standard msg._uibAuth Object either with valid authToken or none
+        /** Returns a standard msg._auth Object either with valid authToken or none
          * If token has expired, run the logout to invalidate the retained data.
-         * @param {Object=} _uibAuth Input standard auth object
+         * @returns {_auth|undefined}
          */
-        self.addAuthToken = function(_uibAuth) {
-            if ( Object.prototype.toString.call(_uibAuth) !== '[object Object]' ) _uibAuth = {}
-            if ( self.isAuthorised ) {                
-                if ( new Date(self.authTokenExpiry) > (new Date()) ) {
-                    _uibAuth.authToken = self.authToken
-                } else { // Token has expired so mark as logged off
-                    _uibAuth.authToken = undefined
-                    self.markLoggedOut('Automatically logged off. Token expired', _uibAuth.authData)
+        self.sendAuth = function() {
+            //if ( Object.prototype.toString.call(_auth) !== '[object Object]' ) _auth = self.dummyAuth
+
+            // If anything goes wrong, don't send _auth to server
+            try {
+                if ( self._auth === undefined ) return undefined
+                if ( self.isAuthorised ) {                
+                    if ( new Date(self._auth.sessionExpiry) > (new Date()) ) {
+                        return self._auth
+                    } else { // Token has expired so mark as logged off
+                        self.markLoggedOut('Automatically logged off. Token expired')
+                        return self._auth
+                    }
+                } else {
+                    return self._auth
                 }
+            } catch(e) {
+                return undefined
             }
-            // Return _uibAuth
-            return _uibAuth
         } // ---- End of addAuth ---- //
 
         /** Send a standard msg back to Node-RED via Socket.IO
@@ -587,8 +704,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             /** @since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
             msgToSend._socketId = self.socket.id
 
-            /** @since 2020-01-04 If we have an authToken and not expired, add `_uibAuth` with just the token */
-            msgToSend._uibAuth = self.addAuthToken(msgToSend._uibAuth)
+            /** If we have an authToken and not expired, add `_auth` to output msg */
+            msgToSend._auth = self.sendAuth()
 
             // Track how many messages have been sent & last msg sent
             if (channel === self.ioChannels.client) {
@@ -678,7 +795,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                  * @type {Array}
                  */
                 var excluded = [
-                    'authData', 'autoSendReady', 'authToken', 'authTokenExpiry',
+                    'autoSendReady',
                     'ctrlMsg', 
                     'debug', 
                     'events', 
@@ -693,22 +810,31 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     'url',
                     'version', 
                     // Ensure no clashes with internal and external method names
-                    'addAuth', 
                     'checkConnect', 'checkTimestamp',
                     'emit', 
                     'get', 
                     'ioSetup',
+                    'logon', 'logoff',
                     'markLoggedOut', 'me', 
                     'newScript', 'newStyle', 
                     'onChange', 
-                    'set', 'send', 'sendCtrl', 'socket', 'self', 'setIOnamespace',
+                    'set', 'send', 'sendAuth', 'sendCtrl', 'socket', 'self', 'setIOnamespace',
                     'uiDebug', 'updateAuth',
                     'uiReturn',
                 ]
                 if (excluded.indexOf(prop) !== -1) {
-                    console.warn('[uibuilder] Cannot use set() on protected property "' + prop + '"')
+                    console.warn('[uibuilder:set] Cannot use set() on protected property "' + prop + '"')
                     self.uiDebug('warn', 'uibuilderfe:uibuilder:set: "' + prop + '" is in list of excluded properties, not set')
                     return
+                }
+
+                // if setting _auth, make sure it has the right bits in it
+                if (prop === '_auth') {
+                    if ( (!val.id) || val.id.length === 0 ) {
+                        console.warn('[uibuilder:set] _auth must contain a valid _auth.id property')
+                        return
+                    }
+                    if ( !val.info ) val.info = self.dummyAuth.info
                 }
 
                 // Set & Trigger this prop's event callbacks (listeners)
@@ -726,17 +852,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                  * @type {Array}
                  */
                 var excluded = [
-                    'authToken',
                     // Exclude internal methods
-                    'addAuth', 
                     'checkConnect', 'checkTimestamp',
                     'emit', 
                     'get', 
                     'ioSetup',
-                    'me', 
+                    'logon', 'logoff',
+                    'markLoggedOut', 'me', 
                     'newScript', 'newStyle', 
                     'onChange', 
-                    'set', 'send', 'sendCtrl', 'socket', 'self', 'setIOnamespace',
+                    'set', 'send', 'sendAuth', 'sendCtrl', 'socket', 'self', 'setIOnamespace',
                     'uiDebug', 'updateAuth',
                     'uiReturn',
                 ]
@@ -835,25 +960,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             /** Send a logon request message
              * @param {Object} [data] Optional. Logon specific data to be passed to Node-RED
              */
-            logon: function(data) {
-                if ( data === undefined ) data = {}
-                self.send({
-                    'uibuilderCtrl':'logon',
-                    'from': 'client',
-                    '_uibAuth': data,
-                },self.ioChannels.control)
-            },
+            logon: self.logon,
 
             /** Send a logoff request message
              * Note that the local auth data is NOT removed here.
              *   That happens when the client receives the control msg "logged off" from the server.
              */
-            logoff: function() {
-                self.send({
-                    'uibuilderCtrl':'logoff',
-                    'from': 'client',
-                },self.ioChannels.control)
-            },
+            logoff: self.logoff,
 
         } // --- End of return callback functions --- //
 
