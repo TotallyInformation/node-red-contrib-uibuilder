@@ -106,9 +106,20 @@ Note that if a client disconnects then reconnects it will have a different `_soc
 * `masterPackageListFilename` {String}: Default `masterPackageList.json`. 
   File name of the master package list used to check for commonly installed FE libraries.
 
+* `masterStaticDistFolder` {String}: Default: `__dirname/../front-end/dist`. 
+  Location of the distribution (built) versions of the core master static files.
+  This folder is only used if it contains an `index.html` file otherwise, the `src` folder is used.
+
+  Currently unused.
+
+* `masterStaticSrcFolder` {String}: Default: `__dirname/../front-end/src`. 
+  Location of the source version of the core master static files
+  (e.g. the master library `uibuilderfe.js`).
+  Only used if the `dist` folder is not used.
+
 * `masterTemplate` {String}: 'vue'. What template to use as master? Must match a folder in the masterTemplateFolder.
   
-* `masterTemplateFolder` {String}: Default: `__dirname/templates`. 
+* `masterTemplateFolder` {String}: Default: `__dirname/../templates`. 
   Location of master template folders (containing default front-end code).
   Holds a set of master templates to use. These are copied over to the instance src folder when needed.
 
@@ -181,7 +192,7 @@ Each instance of the uibuilder node has the following variables.
 
 Credentials in Node-RED are node configuration settings that are stored encrypted in a separate json file from your flows. They are _not_ exported when you export a flow.
 
-* `node.credentials.jwtSecret` {String}: The secret used to sign/verify the JWT token.
+* `node.jwtSecret` {String}: The secret used to sign/verify the JWT token.
 
 ### Locally configured (not set in Editor)
 
@@ -203,6 +214,43 @@ Credentials in Node-RED are node configuration settings that are stored encrypte
   Make sure each node instance uses a separate Socket.IO namespace.
   WARNING: This HAS to match the one derived in uibuilderfe.js.
 
+### Internals & Typedef
+
+In addition, the `node` object has a number of other useful functions and properties.
+
+```javascript
+/**
+ * @typedef {object} uibNode Local copy of the node instance config + other info
+ * @property {String} id Unique identifier for this instance
+ * @property {String} type What type of node is this an instance of? (uibuilder)
+ * @property {String} name Descriptive name, only used by Editor
+ * @property {String} topic msg.topic overrides incoming msg.topic
+ * @property {String} url The url path (and folder path) to be used by this instance
+ * @property {boolean} fwdInMessages Forward input msgs to output #1?
+ * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} copyIndex Copy index.(html|js|css) files from templates if they don't exist?
+ * @property {boolean} showfolder Provide a folder index web page?
+ * @property {boolean} useSecurity Use uibuilder's built-in security features?
+ * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
+ * @property {Number} sessionLength Lifespan of token (in seconds)
+ * @property {String} jwtSecret Seed string for encryption of JWT
+ * @property {String} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {Number} ioClientsCount How many Socket clients connected to this instance?
+ * @property {Number} rcvMsgCount How many msg's received since last reset or redeploy?
+ * @property {Object} ioChannels The channel names for Socket.IO
+ * @property {String} ioChannels.control SIO Control channel name 'uiBuilderControl'
+ * @property {String} ioChannels.client SIO Client channel name 'uiBuilderClient'
+ * @property {String} ioChannels.server SIO Server channel name 'uiBuilder'
+ * @property {String} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ * @property {Function} send Send a Node-RED msg to an output port
+ * @property {Function=} done Dummy done function for pre-Node-RED 1.0 servers
+ * @property {Function=} on Event handler
+ * @property {Function=} removeListener Event handling
+ * z, wires
+ */
+```
+
 ## Functions/Methods
 
 ### Module level
@@ -219,3 +267,4 @@ Credentials in Node-RED are node configuration settings that are stored encrypte
 
 ## Admin API's
 
+TBC

@@ -101,7 +101,7 @@ const uib = {
      * @type {Object.<string, Object>} uib.packageList */
     installedPackages: {},
     /** Location of master template folders (containing default front-end code) @constant {string} uib.masterTemplateFolder */
-    masterTemplateFolder: path.join( __dirname, 'templates' ),
+    masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
     /** What template to use as master? Must match a folder in the masterTemplateFolder */
     masterTemplate: 'vue',
     /** Location of master dist folder (containing built core front-end code) @constant {string} uib.masterStaticDistFolder */
@@ -296,10 +296,10 @@ module.exports = function(RED) {
         /** Will we use "compiled" version of module front-end code? @since 2020-06-17 Moved */
         fs.accessSync( path.join(uib.masterStaticDistFolder, 'index.html'), fs.constants.R_OK )
         log.trace('[uibuilder:Module] Using master production build folder')
-        // If the ./dist/index.html exists use the dist folder...
+        // If the ./../front-end/dist/index.html exists use the dist folder...
         masterStatic = uib.masterStaticDistFolder
     } catch (e) {
-        // ... otherwise, use dev resources at ./src/
+        // ... otherwise, use dev resources at ./../front-end/src/
         //TODO: Check if path.join(__dirname, 'src') actually exists & is accessible - else fail completely
         log.trace('[uibuilder:Module] Using master src folder')
         log.trace('                   Reason for not using master dist folder: ', e.message )
@@ -470,7 +470,7 @@ module.exports = function(RED) {
         }
 
         //#region Add static path for instance local custom files
-        // TODO: (v2.1) need a build capability for dist - nb probably keep vendor and private code separate
+        // TODO: (v3.1) need a build capability for dist - nb probably keep vendor and private code separate
         try {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
             fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )

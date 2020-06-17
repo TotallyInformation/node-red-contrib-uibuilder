@@ -1,0 +1,31 @@
+{
+  "env": {
+		"node": false,
+		"browser": true,
+    "es6": false,
+    "es5": true
+  },
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-console": 0,
+    "indent": [
+      "warn",
+      4,
+      {"SwitchCase": 1}
+    ],
+    "linebreak-style": [
+      "error",
+      "unix"
+    ],
+    "quotes": [
+      "warn",
+      "single"
+    ],
+    "semi": [
+      "warn",
+      "never"
+    ],
+    "comma-dangle":"off",
+    "no-unused-vars": "warn"
+  }
+}
