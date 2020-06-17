@@ -120,6 +120,7 @@ As this contains rather a lot of changes, here is a summary of the key changes f
 - Moved some serveStatic code back to instance level to allow caching to be changed by config.
 - Changed palette category name from "UI Builder" to "uibuilder" and palette label to "uibuilder" from "UI Builder" for consistency with other nodes.
 - Removed `httpRoot` from the Socket.IO namespace. It is no longer required anyway since url uniqueness checks were added.
+- Moved all front-end master code (e.g. `nodes/src` and `nodes/dist`) to new top-level folder `front-end` & refactored `uibuilder.js` accordingly. Folder references also changed to new properties in the `uib` variable.
 
 ### Fixed
 

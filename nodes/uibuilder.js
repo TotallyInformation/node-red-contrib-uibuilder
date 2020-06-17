@@ -104,6 +104,10 @@ const uib = {
     masterTemplateFolder: path.join( __dirname, 'templates' ),
     /** What template to use as master? Must match a folder in the masterTemplateFolder */
     masterTemplate: 'vue',
+    /** Location of master dist folder (containing built core front-end code) @constant {string} uib.masterStaticDistFolder */
+    masterStaticDistFolder: path.join( __dirname, '..', 'front-end', 'dist' ),
+    /** Location of master src folder (containing src core front-end code) @constant {string} uib.masterStaticSrcFolder */
+    masterStaticSrcFolder: path.join( __dirname, '..', 'front-end', 'src' ),
     /** root folder (on the server FS) for all uibuilder front-end data
      *  Cannot be set until we have the RED object and know if projects are being used
      *  Name of the fs path used to hold custom files & folders for all uib.instances of uibuilder
@@ -289,17 +293,17 @@ module.exports = function(RED) {
      */
     var masterStatic //= function(req,res,next) { next() }
     try {
-        // Will we use "compiled" version of module front-end code?
-        fs.accessSync( path.join(__dirname, 'dist', 'index.html'), fs.constants.R_OK )
+        /** Will we use "compiled" version of module front-end code? @since 2020-06-17 Moved */
+        fs.accessSync( path.join(uib.masterStaticDistFolder, 'index.html'), fs.constants.R_OK )
         log.trace('[uibuilder:Module] Using master production build folder')
         // If the ./dist/index.html exists use the dist folder...
-        masterStatic = path.join( __dirname, 'dist' )
+        masterStatic = uib.masterStaticDistFolder
     } catch (e) {
         // ... otherwise, use dev resources at ./src/
         //TODO: Check if path.join(__dirname, 'src') actually exists & is accessible - else fail completely
         log.trace('[uibuilder:Module] Using master src folder')
         log.trace('                   Reason for not using master dist folder: ', e.message )
-        masterStatic = path.join( __dirname, 'src' )
+        masterStatic = uib.masterStaticSrcFolder
     }
     // These are NOT applied here since they have to be applied at the instance level so that
     // the default index.html page can be utilised.
