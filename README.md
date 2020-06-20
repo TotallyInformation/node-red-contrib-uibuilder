@@ -11,10 +11,10 @@
 [![Open Issues](https://img.shields.io/github/issues-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues)
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
 
-<img align="right" src="/nodes/src/images/node-blue-192x192.png" title="uibuilder icon" />
+<img class="dhide" align="right" src="/docs/node-blue-192x192.png" title="uibuilder icon" />
 
-**Please Note** that v3+ includes breaking changes from v2, please see the [CHANGELOG](./CHANGELOG.md) for details.
-**Also Note** that v2+ includes breaking changes from v1, please see the [CHANGELOG-v2](./docs/CHANGELOG-v2.md) for details.
+**Please Note** that v3+ includes breaking changes from v2, please see the [CHANGELOG](CHANGELOG.md) for details.
+**Also Note** that v2+ includes breaking changes from v1, please see the [CHANGELOG-v2](/docs/CHANGELOG-v2.md) for details.
 
 # node-red-contrib-uibuilder
 

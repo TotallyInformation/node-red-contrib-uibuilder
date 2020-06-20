@@ -9,11 +9,19 @@
     <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/lib/themes/vue.css">
+    <style>
+        .dhide {
+            display:none;
+        }
+        img[src*="#cool"] {
+            display:none;
+        }
+    </style>
 </head>
 
 <body>
     <nav>
-        <a href="#/">Home</a>
+        <a href="#/" style="font-size:200%">uibuilder Technical Documentation</a>
         <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki">WIKI</a>
         <a href="https://it.knightnet.org.uk">Much Ado About IT (Blog)</a>
         <a href="https://nodered.org/">Node-RED</a>
@@ -24,10 +32,11 @@
             name: 'uibuilder Technical Documentation',
             repo: 'https://github.com/TotallyInformation/node-red-contrib-uibuilder',
             loadSidebar: true,
-            relativePath: true,
-            noCompileLinks: [
-                "../*",
-            ]
+            logo: '/node-blue-192x192.png',
+            alias: {
+                '/docs/(.*)': '/$1',
+                //'/.*/_sidebar.md': '/_sidebar.md', // See #301
+            },
         }
     </script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
