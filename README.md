@@ -13,7 +13,8 @@
 
 <img align="right" src="/nodes/src/images/node-blue-192x192.png" title="uibuilder icon" />
 
-**Please Note** that v2.0.0 includes breaking changes from v1, please see the [CHANGELOG](./CHANGELOG.md) for details.
+**Please Note** that v3+ includes breaking changes from v2, please see the [CHANGELOG](./CHANGELOG.md) for details.
+**Also Note** that v2+ includes breaking changes from v1, please see the [CHANGELOG-v2](./docs/CHANGELOG-v2.md) for details.
 
 # node-red-contrib-uibuilder
 
