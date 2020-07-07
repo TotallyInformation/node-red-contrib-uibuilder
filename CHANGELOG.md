@@ -138,7 +138,8 @@ As this contains rather a lot of changes, here is a summary of the key changes f
 
 ----
 
-Because of the many changes in v3, the v2 changelog has been moved to a separate file: `./docs/CHANGELOG-v2.md`
+Because of the many changes in v3, the v2 changelog has been moved to a separate file: [v2 Changelog](/docs/CHANGELOG-v2.md).
+Similarly, v1 chanegs are now in the [v1 Changelog](/docs/CHANGELOG-v1.md).
 
 ----
 
