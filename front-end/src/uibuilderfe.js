@@ -68,10 +68,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '3.0.0-dev3'
+        self.version = '3.0.0-dev.4'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
-        self.isUnminified = /param/.test(function(param) {})
+        // @ts-ignore
+        self.isUnminified = /param/.test(function(param) {}) // Tests loaded ver of lib to see if minified
         /** Empty User info template
          * @type {_auth} */
         self.dummyAuth = {
