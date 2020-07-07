@@ -18,7 +18,7 @@
 
 # node-red-contrib-uibuilder
 
-A Node-RED web user interface builder. UIbuilder Aims to Provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
+A Node-RED web user interface builder. uibuilder aims to provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
 
 The key features and benefits are:
 
@@ -28,7 +28,7 @@ The key features and benefits are:
 * Have as many custom user interfaces as you want. Just 1 node is needed for each entry point. Use link nodes to send data from other parts of your flows.
 * Has a control interface separate to the message interface. Know when a browser connects or disconnects, send cached data.
 * Much lighter in weight and more mobile friendly than the Node-RED official Dashboard (assuming you don't use Angular as your framework).
-* Finds these front-end framework packages automatically and makes them available:  vue, bootstrap, bootstrap-vue, jquery, moonjs, reactjs, riot, angular, picnic,umbrellajs (note this list may expand).
+* Finds these front-end framework packages automatically and makes them available:  vue, bootstrap, bootstrap-vue, jquery, moonjs, reactjs, riot, angular, picnic, umbrellajs (note this list may expand).
 * Use **any** front-end framework you like. Tested with at least [JQuery](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-JQuery), [VueJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Simple-Example-using-VueJS), [MoonJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example,-MoonJS-with-Mini.CSS), [REACT](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-ReactJS), [UmbrellaJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example-Umbrella-JS-and-Picnic-CSS) and [Riot](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Basic-uibuilder-RIOT-example-displaying-values,-switch-and-select-box).
 * Use without any front-end framework if you like. Keep it light and simple.
 * The included front-end library provides connectivity to Node-RED and msg event handling.
@@ -72,7 +72,7 @@ uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is design
 ---- 
 ## 1. Additional Documentation
 
-There is a lot more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki).
+There is a lot more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). In addition, there is more technical and developer documentation in the [docs](/docs) folder that is also available as a [documentation web site](https://totallyinformation.github.io/node-red-contrib-uibuilder/).
 
 ## 2. Getting Started
 
