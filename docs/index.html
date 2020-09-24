@@ -8,7 +8,7 @@
     <meta name="description" content="uibuilder Technical Documentation">
     <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/lib/themes/vue.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/themes/vue.css" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/style.min.css"
         title="docsify-darklight-theme" type="text/css" />
     <style>
@@ -29,29 +29,29 @@
         <a href="https://it.knightnet.org.uk">Much Ado About IT (Blog)</a>
         <a href="https://nodered.org/">Node-RED</a>
     </nav>
-    <div id="app"></div>
+    <div id="app">Loading, please wait ...</div>
     <script>
         // https://docsify.js.org/
         window.$docsify = {
             name: 'uibuilder Technical Documentation',
             repo: 'https://github.com/TotallyInformation/node-red-contrib-uibuilder',
             loadSidebar: true,
-            autoHeader: true,
-            logo: '/node-blue-192x192.png',
-            auto2top: true,
-            alias: {
-                '/docs/(.*)': '/$1',
-                //'/.*/_sidebar.md': '/_sidebar.md', // See #301
-            },
-            search: [
-                '/',
-                '/CHANGELOG',
-                '/glossary',
-                '/security',
-            ],
+            // autoHeader: true,
+            // logo: '/node-blue-192x192.png',
+            // auto2top: true,
+            // alias: {
+            //     '/docs/(.*)': '/$1',
+            //     //'/.*/_sidebar.md': '/_sidebar.md', // See #301
+            // },
+            // search: [
+            //     '/',
+            //     '/CHANGELOG',
+            //     '/glossary',
+            //     '/security',
+            // ],
         }
     </script>
-    <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js" type="text/javascript"></script>
 </body>

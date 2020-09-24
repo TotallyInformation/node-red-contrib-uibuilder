@@ -1,3 +1,5 @@
-# uibuilder Documentation
+# uibuilder Technical Documentation
 
-This is the developer documentation for uibuilder v2.
+uibuilder is a low-code solution for building data-driven web sites and web apps.
+
+It works in conjunction with Node-RED.
