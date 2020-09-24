@@ -1,0 +1,24 @@
+sequenceDiagram
+
+    title: uibuilder security sequence
+
+    participant client as client
+    participant NR as Node-RED
+    participant js as Custom Code
+
+    client ->> NR: HTTPS GET endpoint 
+    NR->>client: 200: index.html
+    client->>NR: HTTPS GET other resources
+    NR->>client: 200: other resources
+
+    client->>NR: HTTPS Websocket connection request
+    NR->>client: 200: OK
+    client->>NR: WSS Websocket UPGRADE request
+    
+    activate NR
+    Note right of NR: Headers/cookies no longer available
+    NR->>client: 101: Switching Protocols
+
+    NR-->>client: uibuilderCtrl: "client connect", cacheControl: "REPLAY"
+    client-->>NR: uibuilderCtrl: "ready for content", cacheControl: "REPLAY"
+    Note right of NR: Cached content sent if available

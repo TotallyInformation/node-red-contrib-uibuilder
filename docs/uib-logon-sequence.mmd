@@ -1,0 +1,41 @@
+sequenceDiagram
+
+    autonumber
+
+    title: uibuilder security sequence
+
+    participant client as client
+    participant NR as Node-RED
+    participant js as Custom Code
+
+    client ->> NR: HTTPS GET endpoint & other services
+    NR->>client: resources
+
+    client->>NR: HTTPS Websocket connection request
+    NR-->>client: 200: OK
+    client->>NR: WSS Websocket UPGRADE request
+    
+    activate NR
+    Note right of NR: Headers/cookies no longer available
+    NR-->>client: 101: Switching Protocols
+
+    NR-->>client: uibuilderCtrl: "client connect", cacheControl: "REPLAY"
+    client-->>NR: uibuilderCtrl: "ready for content", cacheControl: "REPLAY"
+    
+    Note right of NR: Is Auth required? (uib settings)
+    NR-->>client: uibuilderCtrl "Auth Failure" _auth: ...
+    Note right of NR: _auth: {id: null, userValidated: false, info: {error: "Client did not provide an _auth"}}
+    Note right of NR: No data will be sent until auth (ctrl msgs allowed)
+
+    client->>NR: uibuilderCtrl: "logon" _auth: {id: "admin", password: "admin00001", info: {}}
+    Note right of NR: uiblib.logon()
+
+    NR->>js: Validate id/password - securityjs.userValidate(_auth)
+    alt Validated user?
+        js-->>NR: TRUE
+        NR-->NR: uiblib.createToken(_auth, node)
+        NR->>client: uibuilderCtrl: "authorised" _auth: ...
+    else
+        js-->>NR: FALSE
+        NR->>client: uibuilderCtrl: "authorisation failure" _auth: ...
+    end
