@@ -22,7 +22,7 @@
 /**
  * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
  * Note that any other data may be passed from your front-end code in the _auth.info object.
- * _auth.info.error, _auth.info.validJwt, _auth.info.message, _auth.info.warning
+ * _auth.info.error, _auth.info.validJwt
  * @property {String} id Required. A unique user identifier.
  * @property {String} [password] Required for login only.
  * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
@@ -582,6 +582,7 @@ module.exports = {
         var _auth = dummyAuth
 
         // Has the client included msg._auth? If not, send back an unauth msg
+        // TODO: Only send if msg was on std channel NOT on control channel
         if (!msg._auth) {
             _auth.info.error = 'Client did not provide an _auth'
 
@@ -596,6 +597,7 @@ module.exports = {
         }
 
         // Has the client included msg._auth.id? If not, send back an unauth msg
+        // TODO: Only send if msg was on std channel NOT on control channel
         if (!msg._auth.id) {
             _auth.info.error = 'Client did not provide an _auth.id',
 
@@ -609,9 +611,11 @@ module.exports = {
             return _auth
         }
 
+        // TODO: remove log output
+        console.log('[uibuilder:socket.on.control] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
+
         //      does the client have a valid session?
         //      if not, return a not logged in control msg
-        console.log('[uibuilder:socket.on.control] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
 
         _auth = this.checkToken(msg._auth, node)
 
@@ -854,8 +858,22 @@ module.exports = {
             return _auth.userValidated
         }
 
+        // Make sure that _auth.info exists
+        if ( ! Object.prototype.hasOwnProperty.call(_auth, 'info') ) _auth.info = {}
+
         // Use security module to validate user - updates _auth
         _auth = securityjs.userValidate(_auth)
+
+        // Remove _auth.password!
+        delete _auth.password
+
+        // Validate the _auth object
+        if ( ! this.chkAuth(_auth, 'full') ) {
+            log.error('[uibuilder:uiblib:logon] Security is ON but `security.js` does not contain the required function(s). Cannot process logon. Check docs and change file.')
+            return false
+        }
+
+        console.log('[uibuilder:uiblib.js:logon] Updated _auth: ', _auth)
 
         // Send responses
         //TODO Should output to port #2 be an option? Should less data be sent?
@@ -864,8 +882,6 @@ module.exports = {
 
             // Add token to _auth - created here not in user function to ensure consistency
             _auth = this.createToken(_auth, node)
-
-            console.log('[uibuilder:uiblib.js:logon] Updated _auth: ', _auth)
 
             // Check that we have a valid token
             if ( _auth.info.jwtValid === true ) {
@@ -899,6 +915,10 @@ module.exports = {
                 },
              }]) */
         } else { // _auth.userValidated <> true
+            if ( ! Object.prototype.hasOwnProperty.call(_auth, 'info') ) {
+                console.log(_auth)
+                _auth.info = {}
+            }
             _auth.info.error = 'Logon failed. Invalid id or password'
 
             // Report fail to client & Send output to port #2
@@ -945,5 +965,36 @@ module.exports = {
 
         return _auth
     }, // ---- End of logoff ---- //
+
+    /** Check an _auth object for the correct schema 
+     * @param {_auth} _auth The _auth object to check
+     * @param {String=} type Optional. 'short' or 'full'. How much checking to do
+     * @returns {Boolean}
+    */
+    chkAuth: function(_auth, type='short') {
+        let chk = false
+
+        // --- REQUIRED --- //
+        // ID? (user id)
+        try {
+            if ( _auth.id !== '' ) chk = true
+        } catch (e) {
+            //
+        }
+
+        if ( type === 'full' ) {
+            // userValidated
+            if ( _auth.userValidated === true ||_auth.userValidated === false ) chk = true
+            else chk = false
+            // info
+            if ( _auth.info  ) chk = true
+            else chk = false
+            // MUST NOT EXIST password
+            if ( ! _auth.password  ) chk = true
+            else chk = false
+        }
+
+        return chk
+    } // ---- End of chkAuth() ---- //
 
 } // ---- End of module.exports ---- //
