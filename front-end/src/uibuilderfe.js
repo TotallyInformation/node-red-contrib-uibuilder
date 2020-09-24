@@ -68,7 +68,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '3.0.0-dev.4'
+        self.version = '3.0.0-dev.5'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-ignore
@@ -665,6 +665,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // If anything goes wrong, don't send _auth to server
             try {
                 if ( self._auth === undefined ) return undefined
+                // TODO: Remove extra metadata from _auth beofre sending (info, userValidated, sessionExpiry)
                 if ( self.isAuthorised ) {                
                     if ( new Date(self._auth.sessionExpiry) > (new Date()) ) {
                         return self._auth
@@ -720,6 +721,27 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             self.socket.emit(channel, msgToSend)
         } // --- End of Send Msg Fn --- //
 
+        /** Register on-change event listeners
+         * Make it possible to register a function that will be run when the property changes.
+         * Note that you can create listeners for non-existant properties becuase
+         * Example: uibuilder.onChange('msg', function(newValue){ console.log('uibuilder.msg changed! It is now: ', newValue) })
+         *
+         * @param {string} prop The property of uibuilder that we want to monitor
+         * @param {function(*)} callback The function that will run when the property changes, parameter is the new value of the property after change
+         */
+        self.onChange = function(prop, callback) {
+            // Note: Property does not have to exist yet
+
+            //self.uiDebug('log', `uibuilderfe:uibuilder:onchange: pushing new callback (event listener) for property: ${prop}`)
+
+            // Create a new array or add to the array of callback functions for the property in the events object
+            if (self.events[prop]) {
+                self.events[prop].push(callback)
+            } else {
+                self.events[prop] = [callback]
+            }
+        } // ---- End of onChange() ---- //
+
         //#region ========== Our own event handling system ========== //
 
         self.events = {}  // placeholder for event listener callbacks by property name
@@ -774,6 +796,50 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // @ts-ignore
             newStyle.textContent = style
             document.getElementsByTagName('head')[0].appendChild(newStyle)
+        }
+
+        // Only if Vue is in use and a reference to the Vue master app is available ...
+        if ( self.vueApp ) {
+            /** If Vue is in use and we have a reference to the main app, this fn can send data and config direct to a Vue componant instance
+             *  if that component has been written in the right way.
+             * @param {Object} msg Message object from Node-RED
+             */
+            self.onChange('msg', function(msg) {
+                // Do nothing if the msg doesn't have a component ref
+                if ( !msg._uib ) return
+                if ( !msg._uib.componentRef ) return
+
+                var vueApp = self.vueApp
+
+                // Does the component ref exist? Remember to include a ref="xxxx" on each component instance in your html
+                if ( msg._uib.componentRef in vueApp.$refs ) { 
+
+                    /** Copy each prop direct into the component (updates the DOM if needed) */
+                    if ( msg._uib.options ) {
+
+                        self.uiDebug('log', '🔢📈 new component instance options received for ref', msg._uib.componentRef, ':', msg._uib.options)
+
+                        Object.keys(msg._uib.options).forEach( function(key) {
+
+                            vueApp.$refs[msg._uib.componentRef].$props['config'][key] = msg._uib.options[key]
+
+                        })
+                    }
+
+                    /** Also check if the payload exists. If it does, update the components value with it
+                     * WARNING: No type or other checking is done - make sure you pass the right data type
+                     *          and make sure that custom components check inputs.
+                     */
+                    if ( msg.payload ) {
+
+                        self.uiDebug('log', '🔢📈 new component instance value received for ref', msg._uib.componentRef, ':', msg.payload)
+
+                        vueApp.$refs[msg._uib.componentRef].$props['config']['value'] = msg.payload
+                        
+                    }
+                }
+
+            }) // ---- End of onChange(msg) handler ---- //
         }
 
         //#endregion ====== End of Handle incoming code via received msg ====== //
@@ -878,26 +944,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 return self[prop]
             },
 
-            /** Register on-change event listeners
-             * Make it possible to register a function that will be run when the property changes.
-             * Note that you can create listeners for non-existant properties becuase
-             * Example: uibuilder.onChange('msg', function(newValue){ console.log('uibuilder.msg changed! It is now: ', newValue) })
-             *
-             * @param {string} prop The property of uibuilder that we want to monitor
-             * @param {function(*)} callback The function that will run when the property changes, parameter is the new value of the property after change
+            /** Register on-change event listeners 
+             * Example: uibuilder.onChange('msg', function(msg){ console.log(msg) })
              */
-            onChange: function (prop, callback) {
-                // Note: Property does not have to exist yet
-
-                //self.uiDebug('log', `uibuilderfe:uibuilder:onchange: pushing new callback (event listener) for property: ${prop}`)
-
-                // Create a new array or add to the array of callback functions for the property in the events object
-                if (self.events[prop]) {
-                    self.events[prop].push(callback)
-                } else {
-                    self.events[prop] = [callback]
-                }
-            },
+            onChange: self.onChange,
 
             /** Helper fn, shortcut to return current value of msg
              * Use instead of having to do: uibuilder.get('msg')
@@ -947,13 +997,49 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             me: self.me,
 
             /** Startup socket.io comms - must be done manually by user to allow for changes to namespace/path 
-             * @param {string=} namespace If not blank, changes self.ioNamespace from the default
-             * @param {string=} ioPath If not blank, changes self.ioPath from the default
+             * @param {Object=|string=} namespace Optional. Object containing ref to vueApp, Object containing settings, or IO Namespace override. changes self.ioNamespace from the default.
+             * @param {string=} ioPath Optional. changes self.ioPath from the default
+             * @param {Object=} vueApp Optional. reference to the VueJS instance
              */
-            start: function(namespace,ioPath) {
-                //TODO change to options object? What other options would we want?
-                if (namespace !== undefined) self.ioNamespace = namespace
-                if (ioPath !== undefined) self.ioPath = ioPath
+            start: function(namespace,ioPath,vueApp) {
+                self.uiDebug('log', 'uibuilderfe: start() called')
+
+                // If 1st param is an object ...
+                if ( toString.call(namespace) === '[object Object]' ) {
+                    self.uiDebug('log', '✅ namespace IS an object!')
+
+                    // Is it the vue instance?
+                    if ( namespace._isVue === true ) {
+                        self.uiDebug('log', '✅ Vue instance object IS available!')
+                        vueApp = namespace
+                        namespace = undefined
+                    } else {
+                        // if not vue instance, is it an options object? If so, separate them out
+                        if ( namespace.ioPath ) ioPath = namespace.ioPath
+                        if ( namespace.vueApp ) vueApp = namespace.vueApp
+                        if ( namespace.namespace ) namespace = namespace.namespace // make sure this is the last entry
+                        else namespace = undefined // finally reset the namespace var but only if it wasn't in the object
+                    }
+                } else {
+                    // If the 1st param wasn't an object, was the vueApp param provided?
+                    if ( ! vueApp ) {
+                        self.uiDebug('log', '❌ app1 not available!')
+                    } else if ( toString.call(vueApp) === '[object Object]' && vueApp._isVue === true ) {
+                        self.uiDebug('log', '✅ Vue instance object IS available!')
+                    } else {
+                        self.uiDebug('log', '❌ Vue instance object not available!')
+                        vueApp = undefined
+                    }
+                }
+
+                self.uiDebug('log', 'uibuilder:start: Calling params - namespace', namespace, 'ioPath', ioPath, 'vueApp', vueApp)
+                
+                // Save the parameters
+                if (namespace !== undefined && namespace !== null) self.ioNamespace = namespace
+                if (ioPath !== undefined && ioPath !== null) self.ioPath = ioPath
+                if (vueApp !== undefined && vueApp !== null) self.vueApp = vueApp
+
+                self.uiDebug('log', 'uibuilder:start: Final Socket.IO params - namespace', namespace, 'ioPath', ioPath)
 
                 self.ioSetup()
             },
