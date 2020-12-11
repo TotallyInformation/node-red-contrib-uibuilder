@@ -123,29 +123,35 @@ var app1 = new Vue({
         }, // --- End of syntaxHighlight --- //
     }, // --- End of methods --- //
 
-    // Available hooks: init,mounted,updated,destroyed
-    mounted: function(){
-        //console.debug('[indexjs:Vue.mounted] app mounted - setting up uibuilder watchers')
+    // Available hooks: beforeCreate,created,beforeMount,mounted,beforeUpdate,updated,beforeDestroy,destroyed, activated,deactivated, errorCaptured
+
+    /** Called after the Vue app has been created. A good place to put startup code */
+    created: function() {
+        // Example of retrieving data from uibuilder
+        this.feVersion = uibuilder.get('version')
 
         /** **REQUIRED** Start uibuilder comms with Node-RED @since v2.0.0-dev3
          * Pass the namespace and ioPath variables if hosting page is not in the instance root folder
          * e.g. If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages.
          * e.g. uibuilder.start('/uib', '/uibuilder/vendor/socket.io') // change to use your paths/names
-         * @param {String} namespace is always the url parameter defined in the Editor for this instance of uibuilder
-         * @param {String} sioClientPath is always '/uibuilder/vendor/socket.io' unless `httpNodeRoot` is defined in settings.js and then you need to add that as a prefix.
+         * @param {Object=|string=} namespace Optional. Object containing ref to vueApp, Object containing settings, or String IO Namespace override. changes self.ioNamespace from the default.
+         * @param {string=} ioPath Optional. changes self.ioPath from the default
+         * @param {Object=} vueApp Optional. Reference to the VueJS instance. Used for Vue extensions.
          */
-        uibuilder.start()
+        uibuilder.start(this) // Single param passing vue app to allow Vue extensions to be used.
 
-        var vueApp = this
+        //console.log(this)
+    },
+
+    /** Called once all Vue component instances have been loaded and the virtual DOM built */
+    mounted: function(){
+        //console.debug('[indexjs:Vue.mounted] app mounted - setting up uibuilder watchers')
+
+        var vueApp = this  // Reference to `this` in case we need it for more complex functions
 
         // Example of retrieving data from uibuilder
         vueApp.feVersion = uibuilder.get('version')
 
-        /** You can use the following to help trace how messages flow back and forth.
-         * You can then amend this processing to suite your requirements.
-         */
-
-        //#region ---- Trace Received Messages ---- //
         // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
         // newVal relates to the attribute being listened to.
         uibuilder.onChange('msg', function(msg){
@@ -154,15 +160,19 @@ var app1 = new Vue({
             vueApp.msgsReceived = uibuilder.get('msgsReceived')
         })
 
+        //#region ---- Debug info, can be removed for live use ---- //
+
+        /** You can use the following to help trace how messages flow back and forth.
+         * You can then amend this processing to suite your requirements.
+         */
+
         // If we receive a control message from Node-RED, we can get the new data here - we pass it to a Vue variable
         uibuilder.onChange('ctrlMsg', function(msg){
             //console.info('[indexjs:uibuilder.onChange:ctrlMsg] CONTROL msg received from Node-RED server:', msg)
             vueApp.msgCtrl = msg
             vueApp.msgsControl = uibuilder.get('msgsCtrl')
         })
-        //#endregion ---- End of Trace Received Messages ---- //
 
-        //#region ---- Trace Sent Messages ---- //
         /** You probably only need these to help you understand the order of processing
          * If a message is sent back to Node-RED, we can grab a copy here if we want to
          */
@@ -178,7 +188,6 @@ var app1 = new Vue({
             vueApp.msgCtrlSent = msg
             vueApp.msgsCtrlSent = uibuilder.get('msgsSentCtrl')
         })
-        //#endregion ---- End of Trace Sent Messages ---- //
 
         /** If Socket.IO connects/disconnects, we get true/false here */
         uibuilder.onChange('ioConnected', function(connected){
@@ -198,6 +207,8 @@ var app1 = new Vue({
             //console.log('authTokenExpiry: ', uibuilder.get('authTokenExpiry'))
             vueApp.isLoggedOn = isAuthorised
         })
+
+        //#endregion ---- Debug info, can be removed for live use ---- //
 
     } // --- End of mounted hook --- //
 
