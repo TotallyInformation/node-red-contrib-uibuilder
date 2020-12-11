@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "3.0.0-dev.4",
+  "version": "3.0.0",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. VueJS and bootstrap-vue included but change as desired.",
   "scripts": {
     "postinstall": "node ./bin/uibpreinstalljs",
@@ -9,7 +9,7 @@
     "pull": "git pull origin",
     "presync": "npm run pull",
     "sync": "npm run push",
-    "packfe": "uglifyjs ./front-end/src/uibuilderfe.js --output ./front-end/src/uibuilderfe.min.js --compress --mangle",
+    "packfe": "minify ./front-end/src/uibuilderfe.js --out-file ./front-end/src/uibuilderfe.min.js",
     "prepublishOnly": "npm run packfe",
     "listbin": "ls ./node_modules/bin",
     "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "body-parser": "^1.19.0",
-    "express-validator": "^6.5.0",
+    "express-validator": "^6.8.0",
     "fs-extra": "^9.0.1",
     "jsonwebtoken": "^8.5.1",
     "serve-index": "^1.9.1",
@@ -30,17 +30,20 @@
     "socket.io": "^2.3.0"
   },
   "peerDependencies": {
-    "bootstrap-vue": "^2.15.0",
-    "vue": "^2.6.11"
+    "bootstrap-vue": "^2.17.3",
+    "vue": "^2.6.12"
   },
   "devDependencies": {
-    "@types/jquery": "^3.3.38",
-    "@types/node-red": "^0.20.1",
-    "uglify-js": "^3.9.4"
+    "@babel/cli": "^7.12.10",
+    "@babel/core": "^7.12.10",
+    "babel-minify": "^0.5.1",
+    "@types/jquery": "^3.5.5",
+    "@types/node-red": "^1.1.1",
+    "uglify-js": "^3.12.1"
   },
   "optionalDependencies": {},
   "node-red": {
-    "version": ">=0.20.0",
+    "version": ">=1.0.0",
     "nodes": {
       "uibuilder": "nodes/uibuilder.js"
     },
