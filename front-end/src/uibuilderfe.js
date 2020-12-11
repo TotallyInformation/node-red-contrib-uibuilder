@@ -1,3 +1,4 @@
+/* global Vue */
 /*
   Copyright (c) 2020 Julian Knight (Totally Information)
 
@@ -68,7 +69,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '3.0.0-dev.5'
+        self.version = '3.0.0'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-ignore
@@ -214,6 +215,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         }
 
         //#endregion --- variables ---
+
+        //#region --- internal functions --- //
 
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
          * Also triggers any event listeners.
@@ -412,13 +415,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     // Login was accepted by the Node-RED server - note that payload may contain more info
                     case 'authorised':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server')
-                        console.log('LOGIN SUCCESSFUL', receivedCtrlMsg) //TODO remove
                         if ( receivedCtrlMsg._auth ) {
                             self.updateAuth(receivedCtrlMsg._auth)
                         } else {
                             // This should never happen
                             self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server but without a _auth property - logon failed')
-                            console.log('LOGIN SUCCEEDED BUT NO _auth received from server', receivedCtrlMsg) //TODO remove
                             self.markLoggedOut('Logon succeeded but no _auth received, logged out')
                         }
                         break
@@ -426,20 +427,17 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     // Login was rejected by the Node-RED server - note that payload may contain more info
                     case 'authorisation failure':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorisation failure" from server')
-                        console.log('LOGIN FAILED', receivedCtrlMsg) //TODO remove
                         self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._auth.authData)
                         break
 
                     // Logoff confirmation from server - note that payload may contain more info
                     case 'logged off':
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "logged off" from server')
-                        console.log('LOGOFF', receivedCtrlMsg) //TODO remove
                         self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._auth)
                         break
 
                     default:
                         self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
-                        console.log('uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server') //TODO remove
                         if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
                         // Anything else
 
@@ -583,7 +581,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 },self.ioChannels.control)
             }
 
-            console.log('[uibuilder:logon] ', self._auth)
+            self.uiDebug('log', '[uibuilder:logon] ', self._auth)
         } // ---- End of logon ---- //
 
         /** Send a logoff request control message
@@ -742,6 +740,132 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
         } // ---- End of onChange() ---- //
 
+        /** Simple function to create a toast notification from an incoming msg
+         * Requires a reference to a VueJS instance and a msg object from Node-RED.
+         * Place inside the uibuilder.on('msg', ...) function inside your Vue app's
+         * mounted section.
+         * @see https://bootstrap-vue.org/docs/components/toast
+         * @param {Object} msg A msg from Node-RED with appropriate formatting
+         */
+        self.showToast = function(msg) {                
+
+            // We need self.vueApp to be set
+            if ( ! self.vueApp ) {
+                console.warn('[uibuilder:toast] Vue app object not available, cannot create a toast')
+                return
+            }
+
+            // Make sure that we have Vue loaded with the $bvToast function
+            // That lets us dynamically create a toast object directly in the virtual DOM
+            if ( ! self.vueApp.$bvToast ) {
+                console.warn('[uibuilder:toast] bootstrap-vue toast component not available, cannot create a toast')
+                return
+            }
+
+            // $createElement is a Vue function that lets you create Vue virtual DOM
+            // elements. We use it here to let us render HTML in the toast.
+            const h = self.vueApp.$createElement
+
+            /** Toast options
+             * @type {Object} toastOptions Optional metadata for the toast.
+             * @param {String|vNodes|vNodes[]} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
+             * @param {Boolean} [toastOptions.appendToast] Optional. Whether to show new toasts below previous ones still on-screen (true). Or to replace previous (false - default)
+             * @param {Number} [toastOptions.autoHideDelay] Optional. Ms until toast is auto-hidden.
+             */
+            let toastOptions = {}
+
+            /** Main content of the toast
+             * @type {String|vNodes|vNodes[]}
+             */
+            let content = ''
+            
+            // Main body content
+            if ( msg.payload ) content += msg.payload
+            if ( msg._uib.options.content ) content += msg._uib.options.content
+            // Assume that the input content is or could be HTML. create a virtual DOM element
+            const vNodesContent = h(
+                'p', {
+                    domProps: {
+                        innerHTML: content
+                    }
+                }
+            )
+
+            if ( msg._uib.options ) toastOptions = Object.assign({}, msg._uib.options) // Need a copy here otherwise debug output breaks
+
+            // The title is also allowed to have HTML
+            if ( msg._uib.options.title ) toastOptions.title = h(
+                'p', {
+                    domProps: {
+                        innerHTML: msg._uib.options.title
+                    }
+                }
+            )
+
+            // Do we want new toasts to be shown at the bottom of the list (true) instead of the top (false - default)?
+            if ( msg._uib.options.append ) toastOptions.appendToast = msg._uib.options.append
+
+            // If set, number of ms until toast is auto-hidden
+            if ( msg._uib.options.autoHideDelay ) {
+                toastOptions.autohide = true
+                toastOptions.delay = msg._uib.options.autoHideDelay
+            }
+
+            // Toast wont show anyway if content is empty, may as well warn user
+            if ( content === '' ) {
+                console.warn('[uibuilder:toast] Toast content is blank. Not shown.')
+                return
+            }
+
+            // Dynamically insert the toast to the virtual DOM
+            // Will show at top-right of the HTML element that is the app root
+            // unless you include a <b-toaster> element
+            self.vueApp.$bvToast.toast(vNodesContent, toastOptions)
+
+        } // --- End of makeToast() --- //
+
+        /** Return a control msg containing the props/attribs/etc of a given Vue Component instance
+         * @param {String} componentRef The ref value of the component instance to be queried
+         * @returns {Object} msg - a uibuilder control msg object
+         */
+        self.showComponentDetails = function(componentRef) {
+            // Only if Vue is in use and a reference to the Vue master app is available ...
+            if ( !self.vueApp ) return
+
+            if ( ! self.vueApp.$refs[componentRef] ) return
+
+            let ref = self.vueApp.$refs[componentRef]
+
+            let msg = {}
+
+            // It is possible that what looks like a component is only a set of HTML elements
+            // So we have to test for that.
+            if ( ref.$options ) {
+                msg = {
+                    'uibuilderCtrl': 'vue component details',
+                    'componentDetails': {
+                        'ref': componentRef,
+                        'tag': ref.$options._componentTag,
+                        'props': ref.$options._propKeys,
+                    },
+                }
+            } else {
+                let warning = `[uibuilderfe:showComponentDetails] ref="${componentRef}" is not a Vue Component. Details cannot be returned.`
+                self.uiDebug('warn', warning )
+                msg = {
+                    'uibuilderCtrl': 'vue component details',
+                    'componentDetails': {
+                        'warning': warning,
+                        'ref': componentRef,
+                        'tag': null,
+                        'props': null,
+                    },
+                }
+            }
+
+            return msg
+        }
+
         //#region ========== Our own event handling system ========== //
 
         self.events = {}  // placeholder for event listener callbacks by property name
@@ -798,53 +922,92 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             document.getElementsByTagName('head')[0].appendChild(newStyle)
         }
 
-        // Only if Vue is in use and a reference to the Vue master app is available ...
-        if ( self.vueApp ) {
-            /** If Vue is in use and we have a reference to the main app, this fn can send data and config direct to a Vue componant instance
-             *  if that component has been written in the right way.
-             * @param {Object} msg Message object from Node-RED
-             */
-            self.onChange('msg', function(msg) {
-                // Do nothing if the msg doesn't have a component ref
-                if ( !msg._uib ) return
-                if ( !msg._uib.componentRef ) return
-
-                var vueApp = self.vueApp
-
-                // Does the component ref exist? Remember to include a ref="xxxx" on each component instance in your html
-                if ( msg._uib.componentRef in vueApp.$refs ) { 
-
-                    /** Copy each prop direct into the component (updates the DOM if needed) */
-                    if ( msg._uib.options ) {
-
-                        self.uiDebug('log', '🔢📈 new component instance options received for ref', msg._uib.componentRef, ':', msg._uib.options)
-
-                        Object.keys(msg._uib.options).forEach( function(key) {
-
-                            vueApp.$refs[msg._uib.componentRef].$props['config'][key] = msg._uib.options[key]
-
-                        })
-                    }
-
-                    /** Also check if the payload exists. If it does, update the components value with it
-                     * WARNING: No type or other checking is done - make sure you pass the right data type
-                     *          and make sure that custom components check inputs.
-                     */
-                    if ( msg.payload ) {
-
-                        self.uiDebug('log', '🔢📈 new component instance value received for ref', msg._uib.componentRef, ':', msg.payload)
-
-                        vueApp.$refs[msg._uib.componentRef].$props['config']['value'] = msg.payload
-                        
-                    }
-                }
-
-            }) // ---- End of onChange(msg) handler ---- //
-        }
-
         //#endregion ====== End of Handle incoming code via received msg ====== //
 
-        //#region ========== uibuilder callbacks ========== //
+        //#endregion --- end of internal functions --- //
+
+        /** If Vue is in use and we have a reference to the main app, this fn can send data and config direct to a Vue componant instance
+         *  if that component has been written in the right way.
+         * @param {Object} msg Message object from Node-RED
+         */
+        self.onChange('msg', function(msg) {
+
+            // Only if Vue is in use and a reference to the Vue master app is available ...
+            if ( !self.vueApp ) return
+            
+            // Do nothing if the msg doesn't have a component ref
+            if ( !msg._uib ) return
+            if ( !msg._uib.componentRef ) return
+
+            let vueApp = self.vueApp
+            let componentRef = msg._uib.componentRef
+
+            // Return ctrl msg containing component instance details
+            if ( msg._uib.requestDetails ) {
+                let m = self.showComponentDetails(componentRef)
+                if (m) {
+                    if (msg.topic) m.topic = msg.topic
+                    self.send(m, self.ioChannels.control)
+                }
+                return
+            }
+
+            // Deal with toast requests first (notifications)
+            if (componentRef === 'globalNotification') {
+                // This dynamically inserts a toast into the DOM
+                self.showToast(msg)
+                return
+            }
+            
+            // Does the component ref exist? Remember to include a ref="xxxx" on each component instance in your html
+            if ( componentRef in vueApp.$refs ) {
+
+                /** Copy each prop direct into the component (updates the DOM if needed) */
+                if ( msg._uib.options ) {
+
+                    self.uiDebug('log', '🔢📈 new component instance options received for ref', componentRef, ':', msg._uib.options)
+
+                    Object.keys(msg._uib.options).forEach( function(key) {
+                        try {
+                            vueApp.$set(vueApp.$refs[componentRef], key,  msg._uib.options[key])
+                        } catch (e) {
+                            self.uiDebug('warn', `[uibuilderfe:internal:onChange] Could not update prop "${key}" for component ref="${componentRef}". Error: ${e.message}`)
+                        }
+                    })
+                }
+
+                /** Also check if the payload exists. If it does, update the components value with it
+                 * WARNING: No type or other checking is done - make sure you pass the right data type
+                 *          and make sure that custom components check inputs.
+                 */
+                if ( msg.payload ) {
+
+                    self.uiDebug('log', '🔢📈 new component instance value received for ref', componentRef, ':', msg.payload)
+
+                    // TODO: Not sure this is quite right ...
+                    try {
+                        vueApp.$refs[componentRef].$props['config']['value'] = msg.payload
+                    } catch (e) {}
+                    
+                }
+            
+            } else {
+                let warning = `[uibuilderfe:internal:onChange] ref="${componentRef}" is not a Vue Component. Cannot set props.`
+                self.uiDebug('warn', warning )
+                let m = {
+                    'uibuilderCtrl': 'vue component details',
+                    'componentDetails': {
+                        'warning': warning,
+                        'ref': componentRef,
+                        'tag': null,
+                        'props': null,
+                    },
+                }
+                if (msg.topic) m.topic = msg.topic
+                self.send(m, self.ioChannels.control)
+            }
+
+        }) // ---- End of internal onChange(msg) handler ---- //
 
         // uiReturn contains a set of functions that are returned when this function
         // self-executes (on-load)
@@ -885,7 +1048,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     'markLoggedOut', 'me', 
                     'newScript', 'newStyle', 
                     'onChange', 
-                    'set', 'send', 'sendAuth', 'sendCtrl', 'socket', 'self', 'setIOnamespace',
+                    'self', 'set', 'send', 'sendAuth', 'sendCtrl', 'setIOnamespace', 'showComponentDetails', 'showToast', 'socket', 
                     'uiDebug', 'updateAuth',
                     'uiReturn',
                 ]
@@ -928,7 +1091,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     'markLoggedOut', 'me', 
                     'newScript', 'newStyle', 
                     'onChange', 
-                    'set', 'send', 'sendAuth', 'sendCtrl', 'socket', 'self', 'setIOnamespace',
+                    'self', 'set', 'send', 'sendAuth', 'sendCtrl', 'setIOnamespace', 'showComponentDetails', 'showToast', 'socket', 
                     'uiDebug', 'updateAuth',
                     'uiReturn',
                 ]
@@ -1055,9 +1218,30 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              */
             logoff: self.logoff,
 
-        } // --- End of return callback functions --- //
+            /** Return a control msg containing the props/attribs/etc of a given Vue Component instance
+             * @param {String} componentRef The ref value of the component instance to be queried
+             * @returns {Object} msg - a uibuilder control msg object
+             */
+            showComponentDetails: self.showComponentDetails,
 
-        //#endregion ======== End of uibuilder callbacks ======== //
+            /** Display a pop-up notification
+             * @see docs/vue-component-handling.md
+             * @param {string|html} text Text to show in the notification body. May be HTML. Use options params for more control.
+             * @param {string} [ref] Optional. If provided, positions the notification next to the referenced component instance
+             * @param {Object} [options] Optional. Additional toast options
+             */
+            showToast: function(text, ref='globalNotification', options={}) {
+                const msg = {
+                    "_uib": {
+                        "componentRef": ref,
+                        "options": options,
+                    },
+                    "payload": text,
+                }
+                self.showToast(msg)
+            },
+
+        } // --- End of return callback functions --- //
 
         //#endregion ========== End of setup ========== //
 
