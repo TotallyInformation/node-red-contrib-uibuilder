@@ -1,5 +1,8 @@
 * [Home](/)
 * [Changes](CHANGELOG.md)
+* [Working with Vue Components](vue-component-handling.md)
+* [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
+* [Glossary of Terms](glossary.md)
 * [Security](security.md)
   * [Local Security: security.js](securityjs.md)
 * Developer Documentation

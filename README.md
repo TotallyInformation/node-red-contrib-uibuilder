@@ -140,6 +140,8 @@ _[back to top](#contents)_
 - Each node instance gets its own Socket.IO *namespace* matching the URL path setting.
   Note that Socket.IO will efficiently share sockets while keeping traffic separated by namespace.
 
+  The namespace is the uibuilder url (defined in the Editor) with a preceding "/".
+
 - There is a front-end library `uibuilderfe.min.js` or `uibuilderfe.js` that hides all the complexities of using Socket.IO
   so that your own FE code is easy to write. It provides a simple event handling system so that you can subscribe to changes and process them as they happen. The default `index.js` file has details and examples of use. The library is written so that it can be sourced via html or included via a build step (e.g. webpack).
 
@@ -202,12 +204,19 @@ _[back to top](#contents)_
 
   See the [URI Paths page in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths) for details of all URI's available to your web apps.
 
+- Some VueJS helper functions are included with the front-end library. The idea being to bridge the complexity gap between the Node-RED Dashboard and uibuilder for novice 
+  front-end programmers.
+
 _[back to top](#contents)_
 
 ## 4. Known Issues
 
 I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
 
+- v3.0.0 does not have a completely working security model. It is not fully tested and may not work. Do not use in production.
+  
+- Some of the VueJS helpers in the front-end library have edge-cases where they don't work.
+  
 - It is common to need to send a number of messages from Node-RED to the front-end,
   specifically when a new client is loaded or a user refreshes the client browser. The 2nd output port of the node provides the control messages needed to handle this. 
   

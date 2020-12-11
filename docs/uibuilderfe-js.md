@@ -17,6 +17,9 @@ uibuilder.start('/nr/uib',   '/nr/uibuilder/vendor/socket.io')
 
 If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages in your browser console, this is the most likely reason.
 
+* @param {String} namespace - is always the url parameter defined in the Editor for this instance of uibuilder
+* @param {String} sioClientPath - is always '/uibuilder/vendor/socket.io' unless `httpNodeRoot` is defined in settings.js and then you need to add that as a prefix.
+
 ## Events
 
 uibuilderfe has its own, simple, event handling system. This lets you "subscribe" to an event with a function that is exectuted automatically when the event fires.

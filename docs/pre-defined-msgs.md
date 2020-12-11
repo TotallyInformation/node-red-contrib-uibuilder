@@ -74,8 +74,9 @@ This would send a notification to all connected clients. May be injected to a ui
 
 ```jsonc
 {
-    "uibuilderCtrl": "vue",               // Required. Control message type
-    "componentRef": "globalNotification", // Required.
+    "_vue": {  // Required. VueJS Component data
+        "componentRef": "globalNotification", // Required.
+    },
     "payload": "This is a notification from Node-RED!", // Optional. Will be added to the notification message (content). May be HTML.       
 }
 ```
@@ -84,35 +85,35 @@ This would send a notification to all connected clients. May be injected to a ui
 
 ```jsonc
 {
-    "uibuilderCtrl": "vue",  // Required. Control message type
-    "from": "server",        // NR->Client, uibuilder will add this for you.
-    
-    "componentRef": "globalNotification", // Required.
-    "payload": "<any>",      // Optional. Will be added to the notification message (content). May be HTML.       
-    // options object is optional. Options are passed directly to the bootstra-vue `<toast>` component.
-    // These are examples only.
-    "options": { // all of the entries are optional.
-        // Creates a title section above the content that is highlighted
-        "title": "This is the <i>title</i>",
-        // Main message content (appears after any payload). May contain HTML.
-        "content": "This is content <span style=\"color:red;\">in addition to</span> the payload",
-        // New message appears above old by default (false), change to true to add to the bottom instead.
-        "append": true,
-        // 5000 by default, how long the message stays on-screen. Hover over message to pause countdown.
-        "autoHideDelay": 1500,
-        // Bootstrap-vue colour variant. Primary, Secondary, Error, Warning, Info
-        "variant": "info",
-        // Default display is semi-transparent, set this to true to make the message solid colour.
-        "solid": true,
-        // If present, the whole message is turned into a link. Click takes the client to the URL.
-        "href": "https://bbc.co.uk",
-        // Controls where on the page the toast appears. Several standard locations are available.
-        // default is top-right. Custom positions can be set by including a <toaster> element in your HTML.
-        "toaster": "b-toaster-top-center",
-        // Default false. If true stops auto-Hide. Click on the close button to remove the toast.
-        "noAutoHide": true
-        // More options are available. @see https://bootstrap-vue.org/docs/components/toast
+    "_uib": {  // Required. VueJS Component data    
+        "componentRef": "globalNotification", // Required.
+        // options object is optional. Options are passed directly to the bootstra-vue `<toast>` component.
+        // These are examples only.
+        "options": { // all of the entries are optional.
+            // Creates a title section above the content that is highlighted
+            "title": "This is the <i>title</i>",
+            // Main message content (appears after any payload). May contain HTML.
+            "content": "This is content <span style=\"color:red;\">in addition to</span> the payload",
+            // New message appears above old by default (false), change to true to add to the bottom instead.
+            "append": true,
+            // 5000 by default, how long the message stays on-screen. Hover over message to pause countdown.
+            "autoHideDelay": 1500,
+            // Bootstrap-vue colour variant. Primary, Secondary, Error, Warning, Info
+            "variant": "info",
+            // Default display is semi-transparent, set this to true to make the message solid colour.
+            "solid": true,
+            // If present, the whole message is turned into a link. Click takes the client to the URL.
+            "href": "https://bbc.co.uk",
+            // Controls where on the page the toast appears. Several standard locations are available.
+            // default is top-right. Custom positions can be set by including a <toaster> element in your HTML.
+            "toaster": "b-toaster-top-center",
+            // Default false. If true stops auto-Hide. Click on the close button to remove the toast.
+            "noAutoHide": true
+            // More options are available. @see https://bootstrap-vue.org/docs/components/toast
+        },
     },
+
+    "payload": "<any>",      // Optional. Will be added to the notification message (content). May be HTML.       
 
     "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",    // Optional. ID of client (from Socket.IO) - msg would only be sent to this client.
 }
@@ -141,6 +142,8 @@ to the uibuilder node. Make sure you include the `_socketId` if you want that re
 ### Clear Cache (Control Message)
 
 This can be sent from anywhere. You will need to link the message to your caching node (e.g. a function node that handles caching).
+
+Note that sending this into a uibuilder node, the msg will be dropped by uibuilder (to prevent control loops). Send it to your cache node.
 
 ```jsonc
 {

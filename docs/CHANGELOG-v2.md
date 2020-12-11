@@ -4,6 +4,47 @@ Current major version changelog can be found in the root of this package: `../CH
 
 ----
 
+## [2.0.8](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.7...v2.0.8)
+
+### Fixed
+
+- Allow for npm [Scoped Packages](https://docs.npmjs.com/using-npm/scope.html). e.g. those like `@riophae/vue-treeselect`.
+  
+  These can now be added and removed. Fixes [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71). Thanks to Stephen McLaughlin.
+
+
+## [2.0.7](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.6...v2.0.7)
+
+### New
+
+- Add a middleware JavaScript module file to allow use of `socket.use`. The new `<uibRoot>/.config/sioUse.js` file exports a single function.
+  The function is called everytime the uibuilder node receives a message from a client. If the `next()` callback function is called with a `new Error('err message')`
+  parameter, that is passed back to the client.
+
+- uibuilderfe: Add socket.io `error` event handler - outputs a console warning message so switch on debug to see it. 
+  
+  The Socket.IO server will send an error message if the socket.use middleware (see above) calls `next( new Error('err message') )`
+
+  Add your own event handler to do something useful with the message.
+
+  Typical use is to handle data errors or even authorisation failures.
+
+- Add `X-XSS-Protection: 1;mode=block` and `X-Content-Type-Options: nosniff` security headers.
+  
+  If you want to add your own headers, make use of the `uibMiddleware.js` (for ExpressJS) and `sioMiddleware.js` (for Socket.IO initial connection and polling connections) middleware files.
+
+### Changed
+
+- Further code tidy up.
+- Move configuration template files from templates root to `templates/.config` and reduce copy processes down to just copying the folder with no overwrite
+- Removed `httpRoot` from Socket.IO namespace. No longer required now that uniqueness checks are done on URL config. Simplifies configuration.
+
+### Fixed
+
+- [Issue #84](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/84) Proxy rewrites were messing with the Socket.IO namespace.
+  Many thanks to [Vinay Kharecha](https://github.com/vinaykharecha) for reporting.
+
+  
 ## [2.0.6](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.5...v2.0.6) - 2019-11-21
 
 ### Fixed
