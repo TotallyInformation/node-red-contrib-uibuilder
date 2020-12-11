@@ -38,26 +38,19 @@
 'use strict'
 
 /**
- * @typedef {Object} uibAuth The standard auth object used by uibuilder security. See docs for details.
- * Note that any other data may be passed from your front-end code in the uibAuth object.
- * An obvious property would be `password`.
- * @property {String} id Required. A unique user identifier.
- * @property {Object=} [authData] Optional metadata about the user.
- */
+ * Standard msg._auth object exchanged in msg's between front-end and server
+ * @typedef {import('../../index').MsgAuth} MsgAuth
+ */ 
 /**
- * @typedef {Object} userValidation Optional return object that is able to pass on additional use metadata back to the client.
- * @property {boolean} userValidated Required. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
- * @property {userMetadata} [authData] Optional return metadata about the user. Will be added to the output msg's _auth object
+ * Validated user object returned by the userValidate function
+ * typedef {import('./security').userValidation} userValidation 
  */
+
+const TYPEDEFS = require('../../typedefs.js')
 /**
- * @typedef {Object} userMetadata Optional. Metadata about the user. Will be added to the output msg's _auth object.
- * This is just an example of what you might want to return, you can send anything you like.
- * @property {String} [name] Users full name or screen name.
- * @property {String} [message] A message that the front-end code could use to display to the user when they log in.
- * @property {String} [level] Users authorisation level (admin, gold, silver, reader, editor, author, ...).
- * @property {String} [location] Users location.
- * @property {Date} [passwordExpiry] Date/time the users password expires.
- * @property {Date} [subsExpiry] Date/time the users subscription expires.
+ * typedef {TYPEDEFS.MsgAuth} MsgAuth
+ * @typedef {TYPEDEFS.userValidation} userValidation
+ * @typedef {TYPEDEFS.userMetadata} userMetadata
  */
 
 module.exports = {
@@ -65,7 +58,7 @@ module.exports = {
      * The minimum input data is _auth.id which must represent a unique ID.
      * Called from the logon function (uiblib.js::logon) which is triggered by a uibuilder control msg from the client of type 'logon'.
      * May also be called to revalidate users at any time.
-     * @param {uibAuth} _auth Required. 
+     * @param {MsgAuth} _auth Required. 
      * @return {boolean|userValidation} Either true/false or Object of type userValidation
      */
     userValidate: function(_auth) {
