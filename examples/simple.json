@@ -1,0 +1,198 @@
+[
+    {
+        "id": "17bb5138.7d1a5f",
+        "type": "group",
+        "z": "ff1a7711.244f48",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "3a85e836.06b698",
+            "7cf5c3b2.96006c",
+            "8f8bfd94.685e6",
+            "8a35b840.a3b2d8",
+            "2cf3f051.3dd33",
+            "eb95241.bca25d8",
+            "70cf5aa5.9b03c4",
+            "4e7c2860.c5c318",
+            "16169222.b4d91e",
+            "dcbb878b.7de8c8"
+        ],
+        "x": 54,
+        "y": 79,
+        "w": 812,
+        "h": 222
+    },
+    {
+        "id": "3a85e836.06b698",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "uibuilder/Simple Example",
+        "info": "[Front-End](/uib_simple)\n\nThis flow gets a \"quote of the day\" from the Internet and passes it\nto uibuilder. It caches the result so that if you reload the page,\nyou get the last result back. The quote is updated every 30 minutes\nduring the day and evening.\n\n\"Simple\" refers to the front-end code. While the flow looks a little\ncomplex, it really isn't. A trigger (repeating), an Internet request,\na cache and uibuilder. The link nodes loop the control output from\nuibuilder back to the cache.\n\n## Configuration\n\nUpdate the files:\n\n* `index.html`\n* `index.js`\n* `index.css`\n\nAccording to the example(s) in the 3 other comment nodes in this example.\n\nPress the button on the trigger to start the flow.",
+        "x": 230,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "7cf5c3b2.96006c",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "index.html",
+        "info": "<!doctype html><html lang=\"en\"><head>\n    <meta charset=\"utf-8\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n    <title>uibuilder simple example</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Simple example using VueJS\">\n\n    <link rel=\"icon\" href=\"./images/node-blue.ico\">\n\n    <!-- Put your own custom styles in here -->\n    <link rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n</head><body>\n    <!-- The \"app\" element is where the code for dynamic updates is attached -->\n\t<div id=\"app\">\n\t    <h1>A simple uibuilder page</h1>\n\t    <p>\n\t        The elements below are dynamically updated when you send\n\t        a msg to your uibuilder node.\n\t    </p>\n\t    \n\t    <div v-if=\"msg.payload\">\n\t        <h2>Quote of the Day</h2>\n\t        <blockquote>\n\t            <i>{{ msg.payload.quote.body }}</i>\n    \t        <div>{{ msg.payload.quote.author }}</div>\n\t        </blockquote>\n\t    </div>\n\t    \n\t    <h2>The full msg object</h2>\n\t\t<code>{{ msg }}</code>\n\t\t\n\t</div>\n\n    <!-- Vendor Libraries - Load in the right order -->\n    <script src=\"../uibuilder/vendor/socket.io/socket.io.js\"></script>\n    <script src=\"../uibuilder/vendor/vue/dist/vue.min.js\"></script>\n\n    <!-- REQUIRED: Sets up Socket listeners, the uibuilder and msg objects -->\n    <script src=\"./uibuilderfe.min.js\"></script>\n\n    <!-- Put your own custom code in here -->\n    <script src=\"./index.js\"></script>\n\n</body></html>",
+        "x": 420,
+        "y": 120,
+        "wires": [],
+        "icon": "node-red/parser-html.svg"
+    },
+    {
+        "id": "8f8bfd94.685e6",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "index.js",
+        "info": "/* jshint browser: true, esversion: 5, asi: true */\n/*globals uibuilder, Vue */\n// @ts-nocheck\n/*\n  Copyright (c) 2020 Julian Knight (Totally Information)\n\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n  http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License.\n*/\n'use strict'\n\n/** @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Front-End-Library---available-properties-and-methods */\n\nvar app1 = new Vue({\n    // The HTML element to attach to\n\tel: '#app',\n\t/** Pre-defined data\n\t *  Anything defined here can be used in the HTML\n\t *  if you update it, the HTML will automatically update\n\t */\n\tdata: {\n\t\tmsg: '[Nothing Recieved Yet]',\n\t},\n\n    // Called after the Vue app has been created. A good place to put startup code\n    created: function() {\n        // **REQUIRED** Start uibuilder comms with Node-RED\n        uibuilder.start()\n    },\n\n    // Called when Vue is fully loaded\n\tmounted: function() {\n\t\t// Keep a convenient reference to the Vue app\n\t\tvar vueApp = this\n\n        /** Triggered when the node on the Node-RED server\n         *  recieves a (non-control) msg\n         */\n\t\tuibuilder.onChange('msg', function(msg) {\n\t\t\tvueApp.msg = msg\n\t\t})\n\n\t\t// Send message back to node-red\n\t\t// uibuilder.send({payload:'some message'})\n\t},\n\t\n}) // --- End of the Vue app definition --- //\n\n// EOF",
+        "x": 550,
+        "y": 120,
+        "wires": [],
+        "icon": "font-awesome/fa-code"
+    },
+    {
+        "id": "8a35b840.a3b2d8",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "index.css",
+        "info": "body {font-family: sans-serif; font-size: 120%;}\ndiv, p, code { margin:0.3em; padding: 0.3em;}\n\nblockquote i {\n    font-size: 1.5em; color:grey; font-style: italic;\n}",
+        "x": 680,
+        "y": 120,
+        "wires": [],
+        "icon": "node-red/hash.svg"
+    },
+    {
+        "id": "2cf3f051.3dd33",
+        "type": "debug",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "simple-debug",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 740,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "eb95241.bca25d8",
+        "type": "uibuilder",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "Simple Example",
+        "topic": "",
+        "url": "uib_simple",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "showfolder": false,
+        "useSecurity": false,
+        "sessionLength": "",
+        "tokenAutoExtend": false,
+        "x": 530,
+        "y": 180,
+        "wires": [
+            [
+                "2cf3f051.3dd33"
+            ],
+            [
+                "4e7c2860.c5c318"
+            ]
+        ]
+    },
+    {
+        "id": "70cf5aa5.9b03c4",
+        "type": "inject",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "str",
+        "x": 150,
+        "y": 180,
+        "wires": [
+            [
+                "dcbb878b.7de8c8"
+            ]
+        ]
+    },
+    {
+        "id": "4e7c2860.c5c318",
+        "type": "debug",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "uib controls",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 730,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "16169222.b4d91e",
+        "type": "debug",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "qod-debug",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 530,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "dcbb878b.7de8c8",
+        "type": "http request",
+        "z": "ff1a7711.244f48",
+        "g": "17bb5138.7d1a5f",
+        "name": "Quote of the day",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": false,
+        "url": "https://favqs.com/api/qotd",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 310,
+        "y": 180,
+        "wires": [
+            [
+                "eb95241.bca25d8",
+                "16169222.b4d91e"
+            ]
+        ]
+    }
+]
