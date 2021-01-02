@@ -2,7 +2,7 @@
 /*globals Vue, uibuilder */
 // @ts-nocheck
 /*
-  Copyright (c) 2019 Julian Knight (Totally Information)
+  Copyright (c) 2021 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 /** @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Front-End-Library---available-properties-and-methods */
 
 // eslint-disable-next-line no-unused-vars
-var app1 = new Vue({
+new Vue({
     el: '#app',
     data: {
         startMsg    : 'Vue has started, waiting for messages',
@@ -147,17 +147,14 @@ var app1 = new Vue({
     mounted: function(){
         //console.debug('[indexjs:Vue.mounted] app mounted - setting up uibuilder watchers')
 
-        var vueApp = this  // Reference to `this` in case we need it for more complex functions
-
-        // Example of retrieving data from uibuilder
-        vueApp.feVersion = uibuilder.get('version')
+        var app = this  // Reference to `this` in case we need it for more complex functions
 
         // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
         // newVal relates to the attribute being listened to.
         uibuilder.onChange('msg', function(msg){
             //console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', msg)
-            vueApp.msgRecvd = msg
-            vueApp.msgsReceived = uibuilder.get('msgsReceived')
+            app.msgRecvd = msg
+            app.msgsReceived = uibuilder.get('msgsReceived')
         })
 
         //#region ---- Debug info, can be removed for live use ---- //
@@ -169,8 +166,8 @@ var app1 = new Vue({
         // If we receive a control message from Node-RED, we can get the new data here - we pass it to a Vue variable
         uibuilder.onChange('ctrlMsg', function(msg){
             //console.info('[indexjs:uibuilder.onChange:ctrlMsg] CONTROL msg received from Node-RED server:', msg)
-            vueApp.msgCtrl = msg
-            vueApp.msgsControl = uibuilder.get('msgsCtrl')
+            app.msgCtrl = msg
+            app.msgsControl = uibuilder.get('msgsCtrl')
         })
 
         /** You probably only need these to help you understand the order of processing
@@ -178,26 +175,26 @@ var app1 = new Vue({
          */
         uibuilder.onChange('sentMsg', function(msg){
             //console.info('[indexjs:uibuilder.onChange:sentMsg] msg sent to Node-RED server:', msg)
-            vueApp.msgSent = msg
-            vueApp.msgsSent = uibuilder.get('msgsSent')
+            app.msgSent = msg
+            app.msgsSent = uibuilder.get('msgsSent')
         })
 
         /** If we send a control message to Node-RED, we can get a copy of it here */
         uibuilder.onChange('sentCtrlMsg', function(msg){
             //console.info('[indexjs:uibuilder.onChange:sentCtrlMsg] Control message sent to Node-RED server:', msg)
-            vueApp.msgCtrlSent = msg
-            vueApp.msgsCtrlSent = uibuilder.get('msgsSentCtrl')
+            app.msgCtrlSent = msg
+            app.msgsCtrlSent = uibuilder.get('msgsSentCtrl')
         })
 
         /** If Socket.IO connects/disconnects, we get true/false here */
         uibuilder.onChange('ioConnected', function(connected){
             //console.info('[indexjs:uibuilder.onChange:ioConnected] Socket.IO Connection Status Changed to:', connected)
-            vueApp.socketConnectedState = connected
+            app.socketConnectedState = connected
         })
         /** If Server Time Offset changes */
         uibuilder.onChange('serverTimeOffset', function(serverTimeOffset){
             //console.info('[indexjs:uibuilder.onChange:serverTimeOffset] Offset of time between the browser and the server has changed to:', serverTimeOffset)
-            vueApp.serverTimeOffset = serverTimeOffset
+            app.serverTimeOffset = serverTimeOffset
         })
 
         /** If user is logged on/off */
@@ -205,7 +202,7 @@ var app1 = new Vue({
             //console.info('[indexjs:uibuilder.onChange:isAuthorised] isAuthorised changed. User logged on?:', isAuthorised)
             //console.log('authData: ', uibuilder.get('authData'))
             //console.log('authTokenExpiry: ', uibuilder.get('authTokenExpiry'))
-            vueApp.isLoggedOn = isAuthorised
+            app.isLoggedOn = isAuthorised
         })
 
         //#endregion ---- Debug info, can be removed for live use ---- //
