@@ -1,6 +1,6 @@
 /* jshint browser: true, esversion: 5, asi: true */
 <!--
-    Copyright (c) 2020 Julian Knight (Totally Information)
+    Copyright (c) 2021 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -631,7 +631,7 @@
                 // security is requested, enable other settings and add warnings if needed
                 if ( this.checked ) {
                     // If in production, cannot turn on security without https, in dev, give a warning
-                    if (window.location.protocol !== 'https') {
+                    if (window.location.protocol !== 'https' || window.location.protocol !== 'https:') {
                         if (RED.settings.uibuilderNodeEnv !== 'development') {
                             console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
                             $('#node-input-useSecurity').prop('checked', false); this.checked = false
