@@ -859,18 +859,39 @@
             $('#node-function-expand-js').click(function(e) {
                 e.preventDefault()
 
+                // Creates another edit session with max width
+                var value = uiace.editor.getValue();
+                RED.editor.editText({
+                    mode: $("#node-input-format").val(), //mode: $("#node-input-format").val(),
+                    value: value,
+                    width: "Infinity",
+                    cursor: uiace.editor.getCursorPosition(),
+                    complete: function(v,cursor) {
+                        // v contains the returned text
+                        uiace.editor.setValue(v, -1);
+                        uiace.editor.gotoLine(cursor.row+1,cursor.column,false);
+                        setTimeout(function() {
+                            uiace.editor.focus();
+                            // Check if anything changed
+                            if ( v !== value ) {
+                                fileIsClean(false)
+                            }
+                        },300);
+                    }
+                })
+
                 // Are we in fullscreen? Variable is updated when oneditresize calls setACEheight()
-                if (uiace.fullscreen === false) {
-                    // Select the editor components and make full-screen, triggers oneditresize()
-                    var viewer = $('#edit-props')[0]
-                    var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
-                    if (rFS) rFS.call(viewer)
+                // if (uiace.fullscreen === false) {
+                //     // Select the editor components and make full-screen, triggers oneditresize()
+                //     var viewer = $('#edit-props')[0]
+                //     var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
+                //     if (rFS) rFS.call(viewer)
                     
-                    // TODO: Add popup if no method is available
-                } else {
-                    // Already in fullscreen so lets exit, triggers oneditresize()
-                    document.exitFullscreen()
-                }
+                //     // TODO: Add popup if no method is available
+                // } else {
+                //     // Already in fullscreen so lets exit, triggers oneditresize()
+                //     document.exitFullscreen()
+                // }
 
             })
             //#endregion ---- File Editor ---- //
