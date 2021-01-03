@@ -6,8 +6,17 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.6...master)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.0.1...master)
 
+## [3.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.0.0...v3.0.1)
+
+### Changed
+
+* Fix for [Issue #100](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/100) - Detection of whether Node-RED is currently using https.
+* Fix for [Issue #93](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/93) - Full screen editor doesn't work correctly for mobile users. Replaced custom code with equivalent feature from core.
+* Remove test code from `uibuilder.html`
+
+## [3.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v2.0.8...v3.0.0)
 ### Summary
 
 As this contains rather a lot of changes, here is a summary of the key changes for users of the node. The details are in the following sections.
