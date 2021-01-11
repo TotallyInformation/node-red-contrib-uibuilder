@@ -185,10 +185,13 @@
     /** Return a file type from a file name (or default to txt)
      *  ftype can be used in ACE editor modes */
     function fileType(fname) {
-        var fparts = fname.split('.')
+        let ftype = 'text'
+        let fparts = fname.split('.')
+        // Take off the first entry if the file name started with a dot
+        if ( fparts[0] === '' ) fparts.shift()
         if (fparts.length > 1) {
-            var ftype = 'text'
-            var fext = fparts[1].toLowerCase().trim()
+            // Get the last element of the array
+            let fext = fparts.pop().toLowerCase().trim()
             switch (fext) {
                 case 'js':
                     ftype = 'javascript'
@@ -211,10 +214,8 @@
                 default:
                     ftype = fext
             }
-            return ftype
-        } else {
-            return 'text'
         }
+        return ftype
     } // --- End of fileType --- //
 
     /** Get the list of files for the chosen url & folder
