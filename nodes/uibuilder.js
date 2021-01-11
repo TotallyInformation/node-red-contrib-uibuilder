@@ -932,7 +932,8 @@ module.exports = function(/** @type Red */ RED) {
                     'root': filePathRoot,
                     // Turn off caching
                     'lastModified': false, 
-                    'cacheControl': false
+                    'cacheControl': false,
+                    'dotfiles': 'allow',
                 }
             )
         } else {
