@@ -1,22 +1,25 @@
 /** JavaScript Versions
- * 5 is minimum -> Last IE11
- * 6 = 2015 -> Node >8.10, iOS12+
- * 7 = 2016 -> FF78+, 
- * 8 = 2017 -> Node 10.9+
- * 9 = 2018 -> Node 12.11+
+ *  5 is minimum -> Last IE11
+ *  6 = 2015 -> Node >8.10, iOS12+
+ *  7 = 2016 -> FF78+, 
+ *  8 = 2017 -> Node 10.9+
+ *  9 = 2018 -> Node 12.11+
+ * 10 = 2019
+ * 11 = 2020
+ * 12 = 2021
  */
 module.exports = {
     root: true,
     env: {
         node: false,
         browser: true,
-        //es6: true,
+        es6: true,
         //es5: true,
         commonjs: true,
     },
     parserOptions: {
         //parser: "babel-eslint",
-        ecmaVersion: 2017,
+        ecmaVersion: 2015,
         // specifying a module sourcetype prevent eslint from marking import statements as errors
         //sourceType: 'module',
     },

@@ -5,7 +5,7 @@
       "allowSyntheticDefaultImports":true,
       "alwaysStrict":false,
       "newLine":"lf",
-      "target": "es5",
+      "target": "es6",
       "checkJs": true
     },
     "exclude": ["node_modules", "**/node_modules/*"],

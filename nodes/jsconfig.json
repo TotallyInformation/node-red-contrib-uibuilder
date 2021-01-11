@@ -1,8 +1,11 @@
 {
     "compilerOptions": {
       "module": "commonjs",
-      "target": "es6",
-      "checkJs": true
+      "target": "es2017",
+      "checkJs": true,
+      "allowSyntheticDefaultImports": true
     },
+    "baseUrl": "..",
+    "include": ["../typedefs.js"],
     "exclude": ["node_modules", "**/node_modules/*", "tilogger.js"],
   }

@@ -1,5 +1,6 @@
+/* eslint-env node es2017 */
 /**
- * Copyright (c) 2017-2020 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2021 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
