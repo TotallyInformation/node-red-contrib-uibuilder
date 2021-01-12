@@ -20,7 +20,7 @@
 
     /** We have to use exec not spawn because we need the shell environment */
     const { exec } = require('child_process')
-    exec('npm install vue@latest bootstrap-vue@"2.*" --no-fund --no-audit --no-update-notifier --production --color=false', (error, stdout, stderr) => {
+    exec('npm install vue@"2.*" bootstrap-vue@"2.*" --no-fund --no-audit --no-update-notifier --production --color=false', (error, stdout, stderr) => {
         //process.chdir(fldr)
         if (error) {
             console.log(`ERROR: ${error.message}`)
