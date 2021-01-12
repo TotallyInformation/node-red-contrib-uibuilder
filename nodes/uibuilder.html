@@ -16,10 +16,8 @@
 
 <script type="text/javascript">
 /* eslint-env browser es6 */
-/* eslint-disable indent */
 
 // Isolate this code
-// eslint-disable-next-line no-extra-semi
 ;(function () {
     'use strict'
 
@@ -223,58 +221,104 @@
      * @param {string} [selectedFile] Optional. If present will select this filename after refresh, otherwise 1st file is selected.
      */
     function getFileList(selectedFile) {
-        $('#node-input-filename option').remove()
-
+        //#region --- Collect variables from Config UI ---
         var url = $('#node-input-url').val()
         var folder = $('#node-input-folder').val()
-
+        var f = $('#node-input-filename').val()
+        
         // Whether or not to force the index.(html|js|css) files to be copied over if missing
         var nodeInputCopyIndex = $('#node-input-copyIndex').is(':checked')
+        //#endregion -------------------------------------
 
-        // Build the file list - pass the url so the BE can find the right folder
-        $.getJSON('uibfiles?url=' + url + '&folder=' + folder + '&cpyIdx=' + nodeInputCopyIndex, function(files) {
-            var firstFile = '', indexHtml = false, selected = false
+        // Collect the current filename from various places
+        if ( selectedFile === undefined ) selectedFile = f
+        if ( selectedFile === null ) 
+            selectedFile = localStorage.getItem('uibuilder.'+url+'.selectedFile') || undefined
 
-            $.each(files, function (i, fname) {
-                // Choose the default file. In order: selectedFile param, index.html, 1st returned
-                if ( i === 0 ) firstFile = fname
-                if ( fname === 'index.html' ) indexHtml = true
-                if ( fname === selectedFile ) selected = true
+        if ( folder === null ) 
+            folder = localStorage.getItem('uibuilder.'+url+'.folder') || undefined
+
+        // Clear out drop-downs ready for rebuilding
+        $('#node-input-filename option').remove()
+        $('#node-input-folder option').remove()
+
+        // Get all files/folders for this uibuilder instance from API call
+        $.getJSON('uibgetfiles?url=' + url, function(res) {
+            let firstFile = '', indexHtml = false, selected = false
+
+            // build folder list, pre-select src if no current folder selected #node-input-folder - Object.keys(res)
+            const folders = Object.keys(res).sort()
+
+            // Rebuild folder drop-down
+            $.each(folders, function (i, fldrname) {
+                // For the root folder, use empty string for folders lookup but "root" for display
+                if ( fldrname === '' ) fldrname = 'root'
                 // Build the drop-down
-                $('#node-input-filename').append($('<option>', { 
-                    value: fname,
-                    text : fname, 
+                $('#node-input-folder').append($('<option>', { 
+                    value: fldrname,
+                    text : fldrname, 
                 }))
             })
+            // if currently selected folder doesn't exist
+            if ( !res[folder] ) {
+                // Use 'src' if it exists otherwise use 'root'
+                if ( res['src'] ) folder = 'src'
+                else folder = root
+            }
+            // Selected folder
+            $('#node-input-folder').val(folder)
+            uiace.folder = folder
+            // Persist the folder selection
+            localStorage.setItem('uibuilder.'+url+'.folder', folder)
 
-            //console.log( '[uibuilder:getFileList:getJSON] Got files ', files, firstFile, folder, url )
-
+            // build file list for selected folder
+            let files = []
+            files = res[folder]
+            
+            $.each(files, function (i, filename) {
+                // Build the drop-down
+                $('#node-input-filename').append($('<option>', { 
+                    value: filename,
+                    text : filename, 
+                }))
+                // Choose the default file. In order: selectedFile param, index.html, 1st returned
+                if ( i === 0 ) firstFile = filename
+                if ( filename === 'index.html' ) indexHtml = true
+                if ( filename === selectedFile ) selected = true
+            })
             // Set default file name/type. In order: selectedFile param, index.html, 1st returned
             if ( selected === true ) uiace.fname = selectedFile
             else if ( indexHtml === true ) uiace.fname = 'index.html'
             else uiace.fname = firstFile
             $('#node-input-filename').val(uiace.fname)
-            uiace.format = firstFile === '' ? 'text' : fileType(firstFile)
+            uiace.format = fileType(uiace.fname)
+            // Persist the file name selection
+            localStorage.setItem('uibuilder.'+url+'.selectedFile', uiace.fname)
+
         }).fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
             uiace.fname = ''
             uiace.format = 'text'
+
         }).always(function() {
             getFileContents()
-            fileIsClean(true)
         })
-    }
+    } // --- End of getFileList --- //
 
     /** Get the chosen file contents & set up the ACE editor */
     function getFileContents() {
         /** Get the chosen folder name - use the default/last saved on first load 
          * @type {string} */ 
          // @ts-ignore
-        var folder = $('#node-input-folder').val() || uiace.folder 
+        var folder = $('#node-input-folder').val()
+        if ( folder === null ) 
+            folder = localStorage.getItem('uibuilder.'+url+'.folder') || uiace.folder 
         /** Get the chosen filename - use the default/last saved on first load 
          * @type {string} */
          // @ts-ignore
-        var fname = $('#node-input-filename').val() || uiace.fname
+        var fname = $('#node-input-filename').val()
+        if ( fname === null ) 
+            fname = localStorage.getItem('uibuilder.'+url+'.selectedFile') || uiace.fname 
         // Get the current url
         var url = $('#node-input-url').val()
 
@@ -284,13 +328,18 @@
         uiace.folder = folder
         uiace.fname = fname
 
+        // Persist the folder & file name selection
+        localStorage.setItem('uibuilder.'+url+'.folder', uiace.folder)
+        localStorage.setItem('uibuilder.'+url+'.selectedFile', uiace.fname)
+
         // Change mode to match file type
-        var filetype = fname === '' ? 'text' : fileType(fname)
+        var filetype = uiace.format = fileType(fname)
         $('#node-input-format').val(filetype)
 
         // Get the file contents via API defined in uibuilder.js
         $.get( 'uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data){
-            //console.log( '[uibuilder:getFileContents:get] Success. ', url, folder, fname )
+            $('#node-input-template-editor').show()
+            $('#node-input-template-editor-no-file').hide()
             // Add the fetched data to the editor
             uiace.editorSession.setValue(data)
             // Set the editor file mode
@@ -301,11 +350,42 @@
             uiace.editorSession.getUndoManager().isClean()
             // Position the cursor in the edit area
             uiace.editor.focus()
+
         }).fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
             uiace.editorSession.setValue('')
+            $('#node-input-template-editor').hide()
+            $('#node-input-template-editor-no-file').show()
+
+        }).always(function(){
+            fileIsClean(true)
+            // Default the language selector in case it wasn't recognised
+            if(!$('#node-input-format option:selected').length) $('#node-input-format').val('text')
         })
     } // --- End of getFileContents --- //
+
+    /** Call admin API to create a new folder 
+     * @param {string} folder Name of new folder to create (combines with current uibuilder url)
+     * @return {string} Status message
+     * 
+     */
+     function createNewFolder(folder) {
+        // Also get the current folder & url
+        //var folder = $('#node-input-folder').val() || uiace.folder
+        var url = $('#node-input-url').val()
+
+        var apiUrl = 'uibnewfile?url=' + url + '&fname=' + fname + '&folder=' + folder
+
+        $.get( apiUrl, function(_data){
+            // Rebuild the file list & select the file
+            getFileList(fname)
+
+            return 'Create file succeeded'
+        }).fail(function(_jqXHR, textStatus, errorThrown) {
+            console.error( '[uibuilder:createNewFile:get] Error ' + textStatus, errorThrown )
+            return 'Create file failed'
+        })
+    } // --- End of createNewFile --- //
 
     /** Call admin API to create a new file 
      * @param {string} fname Name of new file to create (combines with current selected folder and the current uibuilder url)
@@ -559,16 +639,6 @@
         oneditprepare: function () {
             var that = this
 
-            // TODO: TESTING ONLY - TO BE REMOVED
-            // var nrtest2
-            // try {
-            //     nrtest2 = RED.nodes.getType('nrtest2')
-            //     nrtest2.myFunction('NRTEST')
-            //     console.log( '[uibuilder::nrtest2:myFunction2] Returned Value: ', nrtest2.myFunction2(6) )
-            // } catch(err) {
-            //     console.error('[uibuilder::nrtest2] ERROR: ', err)
-            // }
-
             //#region Start with the edit section hidden & main section visible
             $('#main-props').show()
             $('#edit-props').hide()
@@ -577,6 +647,9 @@
             $('#sec-props').hide()
             $('#info-props').hide()
             //#endregion
+
+            // Hide the folder buttons until needed
+            //$('#fldr-buttons').hide()
 
             //#region Set the checkbox states
             $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
@@ -729,7 +802,7 @@
                 $('#edit-props').hide()
             })
 
-            // Handle the file editor change of folder/file
+            // Handle the file editor change of folder/file (1st built on click of show edit button)
             $('#node-input-folder').change(function(_e) {
                 // Rebuild the file list
                 getFileList()
@@ -737,15 +810,76 @@
             $('#node-input-filename').change(function(_e) {
                 // Get the content of the file via the admin API
                 getFileContents()
-                fileIsClean(true)
             })
+
+            // Handle the folder new/delete buttons
+            $('#fldr-new-dialog').dialog({
+                autoOpen:false, modal:true, closeOnEscape:true,
+                buttons: [
+                    {
+                        text: 'Create',
+                        id: 'fldr-new-dialog_new',
+                        click: function() {
+                            // NB: Button is disabled unless name.length > 0 so don't need to check here
+                            // Call the new file API
+                            createNewFolder($('#fldr-input-newname').val())
+                            $('#fldr-input-newname').val(null).addClass('input-error')
+                            $('#fldr-new-dialog_new').addClass('input-error').prop('disabled',true)
+                            $( this ).dialog( 'close' )
+                        }
+                    },{
+                        text: 'Cancel',
+                        click: function() {
+                            $('#fldr-input-newname').val(null).addClass('input-error')
+                            $('#fldr-new-dialog_new').addClass('input-error').prop('disabled',true)
+                            $( this ).dialog( 'close' )
+                        }
+                    },
+                ]
+            })
+            $('#btn-fldr-new').click(function(e) {
+                $('#fldr-new-dialog').dialog('open')  
+            })
+            $('#fldr-del-dialog').dialog({
+                autoOpen:false, modal:true, closeOnEscape:true,
+                buttons: [
+                    {
+                        text: 'Delete',
+                        id: 'fldr-del-dialog_del',
+                        click: function() {
+                            // Call the delete folder API (uses the current folder)
+                            deleteFolder()
+                            $( this ).dialog( 'close' )
+                        }
+                    },{
+                        text: 'Cancel',
+                        click: function() {
+                            $( this ).dialog( 'close' )
+                        }
+                    },
+                ]
+            })
+            $('#btn-fldr-del').click(function(e) {
+                $('#fldr-del-dialog_del').addClass('input-error').css('color','brown')
+                $('#fldr-del-name').text($('#node-input-folder').val())
+                if ( $('#node-input-folder').val() === 'src' ) {
+                    if ( $('#node-input-copyIndex').is(':checked') ) {
+                        $('#fldr-del-recopy').css('color','').text('Copy flag is set so the src folder will be recreated and the index.(html|js|css) files will be recopied from the master template.')
+                    } else {
+                        $('#fldr-del-recopy').css('color','brown').text('Copy flag is NOT set so the src folder will NOT be recopied from the master template.')
+                    }    
+                } else {
+                    $('#fldr-del-recopy').css('color','').text('')
+                }
+                $('#fldr-del-dialog').dialog('open')                  
+            })
+
             // Handle the file editor reset button (reload the file)
             $('#edit-reset').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
 
                 // Get the content of the file via the admin API
                 getFileContents()
-                fileIsClean(true)
                 $('#file-action-message').text('')
             })
             // Handle the file editor save button
@@ -1118,11 +1252,25 @@
         <!-- Drop-down for selecting folder -->
         <div class="form-row" title="Choose between the src, dist (built src) or root folders">
             <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Folder:</label>
-            <select id="node-input-folder" style="width: 75%;">
-                <option value="src">src</option>
-                <option value="dist">dist</option>
-                <option value="root">root</option>
-            </select>
+            <select id="node-input-folder" style="width: 75%;"></select>
+            <span id="fldr-buttons">
+                <button class="btn" id="btn-fldr-new" title="Add a new folder">New</button>
+                <div id="fldr-new-dialog" title="Create a new file" dialog>
+                    <label for="fldr-input-newname">New Folder Name</label>
+                    <input type="text" id="fldr-input-newname">
+                </div>                  
+                <button class="btn" id="btn-fldr-del" title="Delete the selected folder">Del</button>
+                <div id="fldr-del-dialog" title="Delete the currently selected folder" dialog>
+                    <h5>Folder to be deleted</h5>
+                    <p id="fldr-del-name"></p>
+                    <p id="fldr-del-recopy"></p>
+                    <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">
+                        Warning: This action cannot be undone.<br />
+                        If you delete the <code>src</code> or <code>dist</code> folders
+                        some things might not work correctly.
+                    </p>
+                </div>                  
+            </span>
         </div>
 
         <!-- Drop-down for selecting file to edit -->
@@ -1162,6 +1310,9 @@
         <!-- Edit box  editor-tray-content -->
         <div id="edit-outer" class="form-row node-text-editor-row" style="position:relative">
             <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
+            <div style="height: 350px; min-height:150px;" style="display:hidden" id="node-input-template-editor-no-file" >
+                No file available, please select a different file or folder.
+            </div>
         </div>
 
         <!-- file data (hidden), language selector -->
@@ -1170,14 +1321,15 @@
             <input type="hidden" id="node-input-template" autofocus="autofocus" data-isClean="true">
             <div style="position: absolute; right:1.6em;display:inline-block; text-align: right;">
                 <select id="node-input-format" style="width:110px; padding:0;">
-                    <option value="handlebars">mustache</option>
+                    <option value="text">Text</option>
                     <option value="html">HTML</option>
-                    <option value="json">JSON</option>
                     <option value="javascript">Javascript</option>
+                    <option value="json">JSON</option>
                     <option value="css">CSS</option>
+                    <option value="scss">SCSS</option>
+                    <option value="handlebars">mustache</option>
                     <option value="markdown">Markdown</option>
                     <option value="yaml">YAML</option>
-                    <option value="text">Text</option>
                 </select>
             </div>
         </div>
