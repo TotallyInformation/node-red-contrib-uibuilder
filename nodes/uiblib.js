@@ -1,7 +1,8 @@
+/* eslint-env node es2017 */
 /**
  * Utility library for uibuilder
  * 
- * Copyright (c) 2020 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2021 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -529,7 +530,7 @@ module.exports = {
 
     }, // ---- End of checkInstalledPackages ---- //
 
-    /** Validate a url query parameter
+    /** Validate a url query parameter - DEPRECATED in v3.1.0
      * @param {string} url uibuilder URL to check (not a full url, the name used by uibuilder)
      * @param {Object} res The ExpressJS response variable
      * @param {string} caller A string indicating the calling function - used for logging only
@@ -537,6 +538,7 @@ module.exports = {
      * @return {boolean} True if the url is valid, false otherwise (having set the response object)
      */
     checkUrl: function (url, res, caller, log) {
+        log.warn(`[uibuilder:checkUrl] FUNCTION DEPRECATED - DO NOT USE. url=${url}, caller=${caller}`)
         // We have to have a url to work with
         if ( url === undefined ) {
             log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter not provided`)
