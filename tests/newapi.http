@@ -1,0 +1,63 @@
+// Test uibuilder v3 admin API routes
+//
+// Using REST Client extension https://github.com/Huachao/vscode-restclient#rest-client
+
+// File variables
+@hostname = localhost
+@port = 1880
+@host = {{hostname}}:{{port}}
+@redAdminPath = red/
+@uibAdminPath = uib
+@contentType = application/json
+@createdAt = {{$datetime iso8601}}
+
+# @name Sample-Get
+# Get something and return it
+GET http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/ping?url=uib&ping=pong
+content-type: {{contentType}}
+
+{
+    "name": "sample GET",
+    "time": "{{createdAt}}"
+}
+
+###
+
+# @name Sample-Put
+# Write file contents
+PUT http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/ping?url=uib
+content-type: {{contentType}}
+
+{
+    "name": "sample PUT",
+    "time": "{{createdAt}}"
+}
+
+###
+
+# @name Sample-Post
+# Create a new folder or file
+POST http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/ping?url=uib
+content-type: {{contentType}}
+
+{
+    "name": "sample DELETE",
+    "time": "{{createdAt}}"
+}
+
+###
+
+# @name Sample-Delete
+# Delete a folder or a file
+DELETE http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/ping?url=uib
+content-type: {{contentType}}
+
+{
+    "name": "sample DELETE",
+    "time": "{{createdAt}}"
+}
+
+
+// NOTES:
+//  - can send a file: `< filename.json` or (for processing variables): `<@ filename.json`
+//  - ExpressJS supported methods are here: https://expressjs.com/en/4x/api.html#app.METHOD
