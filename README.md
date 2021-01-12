@@ -13,8 +13,11 @@
 
 <img class="dhide" align="right" src="/docs/node-blue-192x192.png" title="uibuilder icon" />
 
-**Please Note** that v3+ includes breaking changes from v2, please see the [CHANGELOG](CHANGELOG.md) for details.
-**Also Note** that v2+ includes breaking changes from v1, please see the [CHANGELOG-v2](/docs/CHANGELOG-v2.md) for details.
+**Please Note** that:
+
+* v3+ no longer supports Internet Explorer, it requires Node.js v10+ and Node-RED v1+
+* v3+ includes breaking changes from v2, please see the [CHANGELOG](CHANGELOG.md) for details.
+* v2+ includes breaking changes from v1, please see the [CHANGELOG-v2](/docs/CHANGELOG-v2.md) for details.
 
 # node-red-contrib-uibuilder
 
@@ -72,7 +75,7 @@ uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is design
 ---- 
 ## 1. Additional Documentation
 
-There is a lot more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). In addition, there is more technical and developer documentation in the [docs](/docs) folder that is also available as a [documentation web site](https://totallyinformation.github.io/node-red-contrib-uibuilder/).
+There is a lot more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). In addition, there is more technical and developer documentation in the [docs](/docs) folder that is also available, once you have added uibuilder to your Node-RED palette, as a documentation web site at `<node-red-editor-url>/uibdocs`.
 
 ## 2. Getting Started
 
@@ -254,7 +257,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Arlena Derksen](https://github.com/boisei0) - thanks for suggestions, bug checks and Issue #59/PR #60.
 - [cflurin](https://discourse.nodered.org/u/cflurin) - thanks for the cache example.
 - [Scott Page - IndySoft](https://github.com/scottpageindysoft) - thanks for Issue #73/PR #74.
-- [Stephen McLaughlin - Steve-Mcl](https://discourse.nodered.org/u/Steve-Mcl) - thanks for the fix for [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71)
+- [Stephen McLaughlin - Steve-Mcl](https://discourse.nodered.org/u/Steve-Mcl) - thanks for the fix for [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71) and for the enhancement idea [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102).
 
 
 <a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>
