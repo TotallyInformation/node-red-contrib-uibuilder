@@ -23,15 +23,21 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Editor, "Edit Source Files" improvements:
   - Allow all folders and files within the `<uibRoot>/<url>` folder to be edited.
   - Allow linked files/folders to be used. This lets you put your actually code wherever you like as long as you create a soft or hard link into the `<uibRoot>/<url>` folder.
+  - Add better information toasts on file create/delete actions.
+  - Make enter keyboard button do the default action in the create dialog windows.
+  - Add more information to the create/delete dialog windows. (url, folder name, file name)
   - [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102) - Relax file-type checks when editing files, allows for use of more ACE file-types and prepares the way for the introduction of the Monaco editor in Node-RED v2.
   - [Issue #107](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/107) Allow selection of sub-folders for file editor.
   - [Issue #109](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/109) Persist the selection of folder and file when editing. Uses browser local storage (no IE).
-  - Improve display when no file is available to edit or if the file cannot be opened.
+  - Improved display when no file is available to edit or if the file cannot be opened.
+  - Started moving to new v3 admin API's that are more consistent with less overheads.
+
+- uibuilder.js: 
+  - Started to simplify and rationalise API checks and reporting. Deprecated `/uibfiles`, `/uibnewfile`, `/uibdeletefile` API's, replaced with new v3 admin API `/uib/:url`. Simplifies the admin API's, makes them more consistent and reduces the number of URL's.
+  - Added v3 admin API's to create new and delete files and folders
 
 - Update dependencies
-- Installer: Improve the post-install console message (Post Install takes a while). Force VueJS to v2.x (not v3 as yet which will soon be the latest version).
-- uibuilder.js: Start to simplify and rationalise API checks and reporting. Deprecate the `/uibfiles` API, replaced by `/uibgetfiles` which uses the `fast-glob` package.
-
+- Installer: Improved the post-install console message (Post Install takes a while). Force VueJS to v2.x (not v3 as yet which will soon be the latest version).
 
 ## [3.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.0.0...v3.0.1)
 
