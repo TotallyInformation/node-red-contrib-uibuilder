@@ -13,7 +13,7 @@
 
 # @name Sample-Get
 # Get something and return it
-GET http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/ping?url=uib&ping=pong
+GET http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/uib?ping=pong
 content-type: {{contentType}}
 
 {
@@ -25,7 +25,7 @@ content-type: {{contentType}}
 
 # @name Sample-Put
 # Write file contents
-PUT http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/ping?url=uib
+PUT http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/uib
 content-type: {{contentType}}
 
 {
@@ -37,7 +37,7 @@ content-type: {{contentType}}
 
 # @name Sample-Post
 # Create a new folder or file
-POST http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/ping?url=uib
+POST http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/uib
 content-type: {{contentType}}
 
 {
@@ -49,7 +49,7 @@ content-type: {{contentType}}
 
 # @name Sample-Delete
 # Delete a folder or a file
-DELETE http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/ping?url=uib
+DELETE http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/uib
 content-type: {{contentType}}
 
 {
