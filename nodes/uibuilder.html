@@ -243,11 +243,19 @@
         $('#node-input-folder option').remove()
 
         // Get all files/folders for this uibuilder instance from API call
-        $.getJSON('uibgetfiles?url=' + url, function(res) {
+        $.ajax({
+            type: 'GET',
+            dataType: 'json',
+            url: './uib/' + url,
+            data: {
+                'cmd': 'listall',
+            },
+        })
+        .done(function(data, textStatus, jqXHR) {
             let firstFile = '', indexHtml = false, selected = false
 
             // build folder list, pre-select src if no current folder selected #node-input-folder - Object.keys(res)
-            const folders = Object.keys(res).sort()
+            const folders = Object.keys(data).sort()
 
             // Rebuild folder drop-down
             $.each(folders, function (i, fldrname) {
@@ -260,9 +268,9 @@
                 }))
             })
             // if currently selected folder doesn't exist
-            if ( !res[folder] ) {
+            if ( !data[folder] ) {
                 // Use 'src' if it exists otherwise use 'root'
-                if ( res['src'] ) folder = 'src'
+                if ( data['src'] ) folder = 'src'
                 else folder = root
             }
             // Selected folder
@@ -271,9 +279,11 @@
             // Persist the folder selection
             localStorage.setItem('uibuilder.'+url+'.folder', folder)
 
+            //console.log({folder, folders, data})
+
             // build file list for selected folder
             let files = []
-            files = res[folder]
+            files = data[folder]
             
             $.each(files, function (i, filename) {
                 // Build the drop-down
@@ -295,14 +305,17 @@
             // Persist the file name selection
             localStorage.setItem('uibuilder.'+url+'.selectedFile', uiace.fname)
 
-        }).fail(function(_jqXHR, textStatus, errorThrown) {
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            //console.log({jqXHR, textStatus, errorThrown})
             console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
             uiace.fname = ''
             uiace.format = 'text'
+            RED.notify(`uibuilder: Folder and file listing error.<br>${errorThrown}`, {type:'error'})
 
         }).always(function() {
             getFileContents()
         })
+
     } // --- End of getFileList --- //
 
     /** Get the chosen file contents & set up the ACE editor */
@@ -364,30 +377,40 @@
         })
     } // --- End of getFileContents --- //
 
-    /** Call admin API to create a new folder 
+    /** Call v3 admin API to create a new folder 
      * @param {string} folder Name of new folder to create (combines with current uibuilder url)
      * @return {string} Status message
      * 
      */
-     function createNewFolder(folder) {
-        // Also get the current folder & url
-        //var folder = $('#node-input-folder').val() || uiace.folder
+    function createNewFolder(folder) {
+        // Also get the current url
         var url = $('#node-input-url').val()
 
-        var apiUrl = 'uibnewfile?url=' + url + '&fname=' + fname + '&folder=' + folder
+        $.ajax({
+            type: 'POST',
+            dataType: 'json',
+            url: './uib/' + url,
+            data: {
+                'folder': folder,
+                'cmd': 'newfolder',
+            },
+        })
+        .done(function(data, textStatus, jqXHR) {
+            //console.log({data, textStatus, jqXHR})
+            RED.notify(`uibuilder: Folder <code>${folder}</code> Created.`, {type:'success'})
+            // Rebuild the file list
+            getFileList()
 
-        $.get( apiUrl, function(_data){
-            // Rebuild the file list & select the file
-            getFileList(fname)
-
-            return 'Create file succeeded'
-        }).fail(function(_jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:createNewFile:get] Error ' + textStatus, errorThrown )
-            return 'Create file failed'
+            return 'Create folder succeeded'
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            //console.error( '[uibuilder:createNewFolder:post] Error ' + textStatus, errorThrown )
+            //console.log({jqXHR, textStatus, errorThrown})
+            RED.notify(`uibuilder: Create Folder Error.<br>${errorThrown}`, {type:'error'})
+            return 'Create folder failed'
         })
     } // --- End of createNewFile --- //
 
-    /** Call admin API to create a new file 
+    /** Call v3 admin API to create a new file 
      * @param {string} fname Name of new file to create (combines with current selected folder and the current uibuilder url)
      * @return {string} Status message
      * 
@@ -397,39 +420,97 @@
         var folder = $('#node-input-folder').val() || uiace.folder
         var url = $('#node-input-url').val()
 
-        var apiUrl = 'uibnewfile?url=' + url + '&fname=' + fname + '&folder=' + folder
-
-        $.get( apiUrl, function(_data){
-            // Rebuild the file list & select the file
+        $.ajax({
+            type: 'POST',
+            dataType: 'json',
+            url: './uib/' + url,
+            data: {
+                'folder': folder,
+                'fname': fname,
+                'cmd': 'newfile',
+            },
+        })
+        .done(function(data, textStatus, jqXHR) {
+            console.log({data, textStatus, jqXHR})
+            RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Created.`, {type:'success'})
+            // Rebuild the file list
             getFileList(fname)
 
             return 'Create file succeeded'
-        }).fail(function(_jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:createNewFile:get] Error ' + textStatus, errorThrown )
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            //console.error( '[uibuilder:createNewFile:post] Error ' + textStatus, errorThrown )
+            //console.log({jqXHR, textStatus, errorThrown})
+            RED.notify(`uibuilder: Create File Error.<br>${errorThrown}`, {type:'error'})
             return 'Create file failed'
         })
     } // --- End of createNewFile --- //
 
-    /** Call admin API to delete the currently selected file 
+    /** Call v3 admin API to delete the currently selected folder 
+     * @return {string} Status message
+     */
+    function deleteFolder() {
+        // Also get the current url & folder
+        var url = $('#node-input-url').val()
+        var folder = $('#node-input-folder').val()
+
+        $.ajax({
+            type: 'DELETE',
+            dataType: 'json',
+            url: './uib/' + url,
+            data: {
+                'folder': folder,
+                'cmd': 'deletefolder',
+            },
+        })
+        .done(function(data, textStatus, jqXHR) {
+            //console.log({data, textStatus, jqXHR})
+            RED.notify(`uibuilder: Folder <code>${folder}</code> deleted.`, {type:'success'})
+            // Rebuild the file list
+            getFileList()
+
+            return 'Delete folder succeeded'
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            //console.error( '[uibuilder:deleteFolder:delete] Error ' + textStatus, errorThrown )
+            //console.log({jqXHR, textStatus, errorThrown})
+            RED.notify(`uibuilder: Delete Folder Error.<br>${errorThrown}`, {type:'error'})
+            return 'Delete folder failed'
+        })
+
+    } // --- End of deleteFolder --- //
+
+    /** Call v3 admin API to delete the currently selected file 
      * @return {string} Status message
      */
     function deleteFile() {
         // Get the current file, folder & url
-        var fname = $('#node-input-filename').val()
-        var folder = $('#node-input-folder').val()
+        var folder = $('#node-input-folder').val() || uiace.folder
         var url = $('#node-input-url').val()
+        var fname = $('#node-input-filename').val()
 
-        var apiUrl = 'uibdeletefile?url=' + url + '&fname=' + fname + '&folder=' + folder
-
-        $.get( apiUrl, function(_data){
-            // Rebuild the file list & select the file
+        $.ajax({
+            type: 'DELETE',
+            dataType: 'json',
+            url: './uib/' + url,
+            data: {
+                'folder': folder,
+                'fname': fname,
+                'cmd': 'deletefile',
+            },
+        })
+        .done(function(data, textStatus, jqXHR) {
+            //console.log({data, textStatus, jqXHR})
+            RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Deleted.`, {type:'success'})
+            // Rebuild the file list
             getFileList(fname)
 
             return 'Delete file succeeded'
-        }).fail(function(_jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:deleteFile:get] Error ' + textStatus, errorThrown )
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( '[uibuilder:deleteFile:delete] Error ' + textStatus, errorThrown )
+            //console.log({jqXHR, textStatus, errorThrown})
+            RED.notify(`uibuilder: Delete File Error.<br>${errorThrown}`, {type:'error'})
             return 'Delete file failed'
         })
+
     } // --- End of deleteFile --- //
 
     /** Enable/disable buttons if file has edits or not
@@ -812,8 +893,18 @@
                 getFileContents()
             })
 
-            // Handle the folder new/delete buttons
-            $('#fldr-new-dialog').dialog({
+            // Handle the folder new button
+            $('#fldr-new-dialog_new').addClass('input-error').prop('disabled',true)
+            $('#fldr-input-newname').addClass('input-error').on('input', function(){
+                if ( $('#fldr-input-newname').val().length === 0) {
+                    $('#fldr-input-newname').addClass('input-error')
+                    $('#fldr').addClass('input-error').prop('disabled',true)
+                } else {
+                    $('#fldr-input-newname').removeClass('input-error')
+                    $('#fldr-new-dialog_new').removeClass('input-error').prop('disabled',false)
+                }
+            })
+            $('#fldr-new-dialog').dialog({ // define the dialog box
                 autoOpen:false, modal:true, closeOnEscape:true,
                 buttons: [
                     {
@@ -836,10 +927,15 @@
                         }
                     },
                 ]
+            }).keyup(function(e) { // make enter key fire the create
+                if (e.keyCode == $.ui.keyCode.ENTER)
+                    $('#fldr_new_dialog_new').click();
             })
             $('#btn-fldr-new').click(function(e) {
+                $('#fldr_url').html( $('#node-input-url').val() )
                 $('#fldr-new-dialog').dialog('open')  
             })
+            // Handle the folder delete button
             $('#fldr-del-dialog').dialog({
                 autoOpen:false, modal:true, closeOnEscape:true,
                 buttons: [
@@ -985,8 +1081,13 @@
                         }
                     },
                 ]
+            }).keyup(function(e) { // make enter key fire the create
+                if (e.keyCode == $.ui.keyCode.ENTER)
+                    $('#edit_new_dialog_new').click();
             })
             $('#edit-new').click(function(_e) {
+                $('#file_url').html( $('#node-input-url').val() )
+                $('#file_fldr').html( $('#node-input-folder').val() )
                 $('#edit_new_dialog').dialog('open')  
             })
             //#endregion
@@ -1124,7 +1225,8 @@
 </script>
 
 <script type="text/html" data-template-name="uibuilder">
-    <div id="main-props"><!-- Hideable main properties section -->
+    <!-- #region ---- Hideable main properties section ---- -->
+    <div id="main-props">
         <!-- Node Name -->
         <div class="form-row">
             <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
@@ -1246,23 +1348,32 @@
         </div>
 
     </div>
+    <!-- #endregion -->
 
-    <!-- ---- Hideable File Editor Section ---- -->
+    <!-- #region ---- Hideable File Editor Section ---- -->
     <div id="edit-props">
-        <!-- Drop-down for selecting folder -->
+        <!-- Drop-down for selecting folder & new/del buttons -->
         <div class="form-row" title="Choose between the src, dist (built src) or root folders">
-            <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Folder:</label>
-            <select id="node-input-folder" style="width: 75%;"></select>
+            <label for="node-input-folder" style="width:5em;">
+                <i class="fa fa-folder-open-o"></i> Folder:
+            </label>
+            <select id="node-input-folder" style="width:63%;"></select>
             <span id="fldr-buttons">
                 <button class="btn" id="btn-fldr-new" title="Add a new folder">New</button>
-                <div id="fldr-new-dialog" title="Create a new file" dialog>
+                <div id="fldr-new-dialog" title="Create a new folder" dialog>
                     <label for="fldr-input-newname">New Folder Name</label>
                     <input type="text" id="fldr-input-newname">
+                    <div title="" style="margin-top:.5em;">
+                        New folder will be created inside 
+                        <code>&lt;uibRoot>/<span id="fldr_url">&lt;url></span></code>.<br>
+                        Do not forget to include sub-folder name if needed.<br>
+                        e.g. <code>src/mynewfldr</code>
+                    </div>
                 </div>                  
                 <button class="btn" id="btn-fldr-del" title="Delete the selected folder">Del</button>
                 <div id="fldr-del-dialog" title="Delete the currently selected folder" dialog>
                     <h5>Folder to be deleted</h5>
-                    <p id="fldr-del-name"></p>
+                    <p><code id="fldr-del-name"></code></p>
                     <p id="fldr-del-recopy"></p>
                     <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">
                         Warning: This action cannot be undone.<br />
@@ -1275,8 +1386,8 @@
 
         <!-- Drop-down for selecting file to edit -->
         <div class="form-row">
-            <label for="node-input-filename"><i class="fa fa-file-code-o"></i> File:</label>
-            <select id="node-input-filename" style="width: 75%;"></select>
+            <label for="node-input-filename"  style="width:5em;"><i class="fa fa-file-code-o"></i> File:</label>
+            <select id="node-input-filename" style="width: 83%;"></select>
         </div>
 
         <!-- Save/Reset/close/(message)/Delete -->
@@ -1291,16 +1402,24 @@
                 <button class="btn" id="edit-new" title="Add a new file.">
                     New
                 </button>
-                <div id="edit_new_dialog" title="Create a new file" dialog>
+                <div dialog id="edit_new_dialog" title="Create a new file">
                     <label for="edit-input-newname">New File Name</label>
                     <input type="text" id="edit-input-newname">
+                    <div style="margin-top:.5em;">
+                        New file will be created inside the 
+                        <code>
+                            &lt;uibRoot>/<span id="file_url">&lt;url></span>/<span id="file_fldr">&lt;folder></span>
+                        </code> folder.<br>
+                        You can include a sub-folder name if needed. Intermediate folders will be automatically created.<br>
+                        e.g. <code>src/mynewfldr/myfile.js</code>
+                    </div>
                 </div>                  
                 <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set.">
                     Delete
                 </button>
                 <div id="edit_delete_dialog" title="Delete the currently selected file" dialog>
                     <h5>File to be deleted</h5>
-                    <p id="edit-delete-name"></p>
+                    <p><code id="edit-delete-name"></code></p>
                     <p id="edit-delete-recopy"></p>
                     <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">Warning: This action cannot be undone.</p>
                 </div>                  
@@ -1334,8 +1453,9 @@
             </div>
         </div>
     </div>
+    <!-- #endregion -->
 
-    <!-- ---- Hideable NPM Section ---- -->
+    <!-- #region ---- Hideable NPM Section ---- -->
     <div id="npm-props">
         <h4>Front-End Library Manager</h4>
         <p>
@@ -1357,12 +1477,14 @@
             <button class="btn" id="npm-close" title="Close the library"">Close Library Manager</button>
         </div>
     </div>
+    <!-- #endregion -->
 
-    <!-- Info -->
+    <!-- #region Info -->
     <div id="info">
         <a id="uibuilderurl" title="Open the uibuilder web page" href="uibindex" target="_blank" class="red-ui-button editor-button"></a> 
         <a href="uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed uibuilder information">Show Detailed Information</a>
     </div>
+    <!-- #endregion -->
 
 </script>
 
