@@ -45,12 +45,11 @@ The key features and benefits are:
 Current limitations are:
 
 * You have to write your own HTML, uibuilder doesn't (yet) do it for you. *This is by design. I hope to have a component design available at some point which will give additional options and make the UI building easier.*
-* You have to know the front-end library locations for installed libraries and edit your HTML accordingly. The `uibindex` admin API (accessible from any node's admin ui) shows you all of the root folders and what the package authors report as the main entry point for all active packages.
+* You have to know the front-end library locations for installed libraries and edit your HTML accordingly. The `uibindex` admin API (accessible from any node's admin ui) shows you all of the root folders and what the package authors report as the main entry point for all active packages. There is now also a simplified information page for the currently viewed uibuilder node instance, this is access from a button in the configuration panel.
 * You cannot yet compile/compress your custom front-end code (HMTL, JS, SCSS, etc.) for efficiency. *This will be added soon.*
-* You cannot yet edit source files in sub-folders. *This will be added soon.*
 
 
-uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework but at the trade off of having to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
+uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework (or none) but at the trade off of having to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
 
 ## Contents
 <!-- TOC -->
@@ -75,7 +74,7 @@ uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is design
 ---- 
 ## 1. Additional Documentation
 
-There is a lot more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). In addition, there is more technical and developer documentation in the [docs](/docs) folder that is also available, once you have added uibuilder to your Node-RED palette, as a documentation web site at `<node-red-editor-url>/uibdocs`.
+There is a lot more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). In addition, there is more technical and developer documentation in the [docs](/docs) folder that is also available, once you have added uibuilder to your Node-RED palette, as a documentation web site at `<node-red-editor-url>/uibdocs`. There is a button to that in the configuration panel.
 
 ## 2. Getting Started
 
@@ -107,7 +106,7 @@ If you need more space for the editor, click on the <kbd>&#x2921;</kbd> button u
 
 Click on the <kbd>Save</kbd> button to save changes, <kbd>Reset</kbd> to revert to the saved file, <kbd>Close</kbd> to exit the editor. Note that the close button isn't available while there are outstanding changes, press Save or Reset first. The Editor's red Done button is also disabled while there are still outstanding changes.
 
-You can create a new file and delete files as well with the appropriate buttons. If you delete one of the default `index.(html|css|js)` files and have the _Copy Index_ flag set (in advanced settings), the file will be replaced automatically with the default template file. Useful if you get into a complete mess.
+You can create a new file and delete files and folders as well with the appropriate buttons. If you delete one of the default `index.(html|css|js)` files and have the _Copy Index_ flag set (in advanced settings), the file will be replaced automatically with the default template file. Useful if you get into a complete mess.
 
 The default included [VueJS](https://github.com/vuejs/vue#readme), [bootstrap](https://getbootstrap.com/) and [bootstrap-vue](https://bootstrap-vue.js.org/) packages make for a really easy to use initial setup that is very easy to use but powerful to build any kind of web user interface. The default template files should give you some ideas on how to use everything.
 
@@ -151,8 +150,8 @@ _[back to top](#contents)_
   Handling incoming messages from Node-RED is as simple as:
 
   ```javascript
-  uibuilder.onChange('msg', function(newVal){
-      console.info('[uibuilder.onChange] property msg changed!', newVal)
+  uibuilder.onChange('msg', function(msg){
+      console.info('[uibuilder.onChange] property msg changed!', msg)
   })
   ```
 
@@ -207,24 +206,21 @@ _[back to top](#contents)_
 
   See the [URI Paths page in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths) for details of all URI's available to your web apps.
 
-- Some VueJS helper functions are included with the front-end library. The idea being to bridge the complexity gap between the Node-RED Dashboard and uibuilder for novice 
-  front-end programmers.
+  Better still, see the <kbd>uibuilder details</kbd> and <kbd>instance details</kbd> buttons in the uibuilder configuration panel in the Node-RED Editor, these will show pages of more detailed information.
+
+- Some VueJS helper functions are now included with the front-end library. The idea being to bridge the complexity gap between the Node-RED Dashboard and uibuilder for novice 
+  front-end programmers. See the technical docs for details.
 
 _[back to top](#contents)_
 
 ## 4. Known Issues
 
-I don't believe any of the current issues make the node unusable. They are mainly things to be aware of & that I'd like to tidy up at some point.
+These are things to be aware of & that I'd like to tidy up at some point.
 
-- v3.0.0 does not have a completely working security model. It is not fully tested and may not work. Do not use in production.
+- v3.0.0 does not have a completely working security model. It is not fully tested and may not work. Do not use this part in production. Everything else is fine.
   
 - Some of the VueJS helpers in the front-end library have edge-cases where they don't work.
   
-- It is common to need to send a number of messages from Node-RED to the front-end,
-  specifically when a new client is loaded or a user refreshes the client browser. The 2nd output port of the node provides the control messages needed to handle this. 
-  
-  See the [Caching page on the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache) for how to easily handle new or updated client connections with minimal code.
-
 - **Socket.IO isn't secured by default** Use uibuilder's ExpressJS and socket middleware feature to secure things properly before considering use over the Internet.
 
   Note, however that the socket middleware is only called on initial socket connection. Once the connection upgrades to websocket, this is no longer called.
@@ -237,9 +233,12 @@ _[back to top](#contents)_
 
 ## 5. Discussions and suggestions
 
-Use the `Dashboard` category in the [Node-RED Discourse forum](https://discourse.nodered.org/c/dashboard) or the [#uibuilder](https://node-red.slack.com/messages/C7K77MG06) channel in the [Node-RED Slack](https://node-red.slack.com) for general discussion about this node. 
+Use the `Dashboard` category in the [Node-RED Discourse forum](https://discourse.nodered.org/c/dashboard) 
 
 Or use the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements.
+
+Please note that I rarely have time to monitor the [#uibuilder channel](https://node-red.slack.com/messages/C7K77MG06) in Slack any more, it is best to use Discourse or raise an issue.
+
 
 ## 6. Contributing
 
