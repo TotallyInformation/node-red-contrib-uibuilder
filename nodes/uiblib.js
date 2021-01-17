@@ -182,6 +182,8 @@ module.exports = {
             }
             // NB: We do not want to remove the vendor URL's because they are only created ONCE when Node-RED initialises
         })
+        // TODO Remove instance debug admin route `RED.httpAdmin.get('/uib/instance/${node.url}')`
+
 
         // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
         for (var i = removePath.length -1; i >= 0; i--) {
@@ -997,6 +999,151 @@ module.exports = {
         }
 
         return chk
-    } // ---- End of chkAuth() ---- //
+    }, // ---- End of chkAuth() ---- //
+
+    /** Create instance details web page
+     * @param {Object} node configuration data for this instance
+     * @param {Object} uib uibuilder "globals" common to all instances
+     * @param {string} userDir The Node-RED userDir folder
+     * @param {Object} RED The Node-RED object
+     * @return {string} page html
+     */
+    showInstanceDetails: function(node, uib, userDir, RED) {
+        let page = ''
+
+        console.log({uib})
+
+        page += `
+            <!doctype html><html lang="en"><head>
+                <title>uibuilder Instance Debug Page</title>
+                <link type="text/css" href="${uib.nodeRoot}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+                <link rel="icon" href="${uib.nodeRoot}${uib.moduleName}/common/images/node-blue.ico">
+                <style type="text/css" media="all">
+                    h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
+                    .col3i tbody>tr>:nth-child(3){ font-style:italic; }
+                </style>
+            </head><body><div class="container">
+                <h1>uibuilder Instance Debug Page</h1>
+                <p>
+                    Note that this page is only accessible to users with Node-RED admin authority.
+                </p>
+            `
+    
+        page += `
+            <h2>Instance Information for '${node.url}'</h2>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>The node id for this instance</th>
+                        <td>${node.id}<br>
+                            This can be used to search for the node in the Editor.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filing system path to front-end resources</th>
+                        <td>${node.customFolder}<br>
+                            Contains all of your UI code and other resources.
+                            Folders and files can be viewed, edited, created and deleted using the "Edit Files" button.
+                            You <b>MUST</b> keep at least the <code>src</code> and <code>dist</code> folders otherwise things may not work.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>URL for the front-end resources - index.html page will be shown</th>
+                        <td><a href=${tilib.urlJoin(uib.nodeRoot, node.url)} target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a></td>
+                    </tr>
+                    <tr>
+                        <th>Node-RED userDir folder</th>
+                        <td>${userDir}<br>
+                            Also the location for any installed vendor resources (installed library packages)
+                            and your other nodes.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>URL for vendor resources</th>
+                        <td><a href=${tilib.urlJoin(uib.nodeRoot, 'uibuilder', 'vendor')} target="_blank">../uibuilder/vendor/</a><br>
+                            See the <a href="../../uibindex" target="_blank">Detailed Information Page</a> for more details.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filing system path to common (shared) front-end resources</th>
+                        <td>${uib.commonFolder}<br>
+                            Resource files in this folder are accessible from the main URL.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filing system path to common uibuilder configuration resource files</th>
+                        <td>${uib.configFolder}<br>
+                            Contains the package list, master package list, authentication and authorisation middleware.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filing system path to uibuilder master template files</th>
+                        <td>${uib.masterTemplateFolder}<br>
+                            These are copied to any new instance of the uibuilder node.
+                            If you keep the copy flag turned on they are re-copied if deleted.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>uibuilder version</th>
+                        <td>${uib.version}</td>
+                    </tr>
+                    <tr>
+                        <th>Node-RED version</th>
+                        <td>${RED.settings.version}<br>
+                            Minimum version required by uibuilder is ${uib.me['node-red'].version}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Node.js version</th>
+                        <td>${uib.nodeVersion.join('.')}<br>
+                            Minimum version required by uibuilder is ${uib.me.engines.node}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            `
+
+        const nodeKeys = [
+            'id', 'type',  
+            'name', 'wires', '_wireCount', 'credentials', 'topic', 'url', 
+            'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder', 
+            'useSecurity', 'sessionLength', 'tokenAutoExtend', 'customFolder', 
+            'ioClientsCount', 'rcvMsgCount', 'ioChannels', 'ioNamespace'
+        ]
+        // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]
+        // Keep secret: ['jwtSecret', ]
+    
+        page += `
+            <h2>Node Instance Configuration Items</h2>
+            <p>
+                Shows the internal configuration.
+            </p>
+            <table class="table">
+                <tbody>
+            `
+
+        nodeKeys.sort().forEach( item => {
+            let info = node[item]
+            if ( info!== null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
+            page += `
+                <tr>
+                    <th>${item}</th>
+                    <td>${info}</td>
+                </tr>
+                `
+        })
+
+        page += `
+                </tbody>
+            </table>
+            `
+
+        page += ``
+        page += `<div></div>`
+
+        page += `</body></html>`
+
+        return page
+    }, // ---- End of showInstanceDetails() ---- //
 
 } // ---- End of module.exports ---- //
