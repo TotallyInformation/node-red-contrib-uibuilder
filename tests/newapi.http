@@ -10,10 +10,12 @@
 @uibAdminPath = uib
 @contentType = application/json
 @createdAt = {{$datetime iso8601}}
+# Valid uibuilder instance URL
+@url = uib
 
 # @name Sample-Get
 # Get something and return it
-GET http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/uib?ping=pong
+GET http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/{{url}}?ping=pong
 content-type: {{contentType}}
 
 {
@@ -25,7 +27,7 @@ content-type: {{contentType}}
 
 # @name Sample-Put
 # Write file contents
-PUT http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/uib
+PUT http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/{{url}}
 content-type: {{contentType}}
 
 {
@@ -37,7 +39,7 @@ content-type: {{contentType}}
 
 # @name Sample-Post
 # Create a new folder or file
-POST http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/uib
+POST http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/{{url}}
 content-type: {{contentType}}
 
 {
@@ -49,11 +51,23 @@ content-type: {{contentType}}
 
 # @name Sample-Delete
 # Delete a folder or a file
-DELETE http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/uib
+DELETE http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/{{url}}
 content-type: {{contentType}}
 
 {
     "name": "sample DELETE",
+    "time": "{{createdAt}}"
+}
+
+###
+
+# @name Instance-Info
+# Returns an HTML page of info for the current instance of uibuilder
+GET http://{{host}}/{{redAdminPath}}{{uibAdminPath}}/instance/{{url}}
+content-type: {{contentType}}
+
+{
+    "cmd": "showinstancesettings",
     "time": "{{createdAt}}"
 }
 
