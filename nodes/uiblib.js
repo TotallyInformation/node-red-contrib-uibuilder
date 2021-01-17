@@ -1011,8 +1011,6 @@ module.exports = {
     showInstanceDetails: function(node, uib, userDir, RED) {
         let page = ''
 
-        console.log({uib})
-
         page += `
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
