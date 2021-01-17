@@ -694,7 +694,7 @@ module.exports = function(/** @type Red */ RED) {
         })
 
         // Shows an instance details debug page
-        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, function(req,res) {
             let page = uiblib.showInstanceDetails(node, uib, userDir, RED)
             res.status(200).send( page )
         })
@@ -846,7 +846,7 @@ module.exports = function(/** @type Red */ RED) {
             next()
         })
         /** Get something and return it */
-        .get(RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+        .get(function(req,res) {
             const params = res.allparams
             params.type = 'get'
 
@@ -882,7 +882,7 @@ module.exports = function(/** @type Red */ RED) {
 
         })
         /** TODO Write file contents */
-        .put(RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+        .put(function(req,res) {
             const params = res.allparams
             params.type = 'put'
             
@@ -897,7 +897,7 @@ module.exports = function(/** @type Red */ RED) {
 
         })
         /** Create a new folder or file */
-        .post(RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+        .post(function(req,res) {
             const params = res.allparams
             params.type = 'post'
 
@@ -965,7 +965,7 @@ module.exports = function(/** @type Red */ RED) {
             })
         })
         /** Delete a folder or a file */
-        .delete(RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+        .delete(function(req,res) {
             const params = res.allparams
             params.type = 'delete'
 
@@ -1038,7 +1038,7 @@ module.exports = function(/** @type Red */ RED) {
      * @param {Object} permissions The permissions required for access
      * @param {function} cb
      **/
-    RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+    RED.httpAdmin.get('/uibgetfile', function(req,res) {
         //#region --- Parameter validation ---
         /** req.query parameters
          * url
@@ -1106,7 +1106,7 @@ module.exports = function(/** @type Red */ RED) {
      * @param {Object} permissions The permissions required for access (Express middleware)
      * @param {function} cb
      **/
-    RED.httpAdmin.post('/uibputfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+    RED.httpAdmin.post('/uibputfile', function(req,res) {
         //#region --- Parameter validation ---
         const params = req.body
 
@@ -1159,7 +1159,7 @@ module.exports = function(/** @type Red */ RED) {
      * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
      * @since 2019-02-04 v1.1.0-beta6
      */
-    RED.httpAdmin.get('/uibindex', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+    RED.httpAdmin.get('/uibindex', function(req,res) {
         log.trace('[uibindex] User Page/API. List all available uibuilder endpoints')
         
         /** If GET includes a "check" parameter, see if that uibuilder URL is in use
@@ -1476,7 +1476,7 @@ module.exports = function(/** @type Red */ RED) {
     }) // ---- End of uibindex ---- //
 
     /** Check & update installed front-end library packages, return list as JSON */
-    RED.httpAdmin.get('/uibvendorpackages', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+    RED.httpAdmin.get('/uibvendorpackages', function(req,res) {
         // Update the installed packages list
         uiblib.checkInstalledPackages('', uib, userDir, log)
 
@@ -1491,7 +1491,7 @@ module.exports = function(/** @type Red */ RED) {
      * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
      * @param {string} req.query.cmd Command to run (see notes for this function)
      */
-    RED.httpAdmin.get('/uibnpmmanage', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+    RED.httpAdmin.get('/uibnpmmanage', function(req,res) {
         //#region --- Parameter validation (cmd, package) ---
         const params = req.query
         
@@ -1658,7 +1658,7 @@ module.exports = function(/** @type Red */ RED) {
      * @param {Object} permissions The permissions required for access
      * @param {function} cb Function to be exectuted when this API called
      **/
-    RED.httpAdmin.get('/uibfiles', RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+    RED.httpAdmin.get('/uibfiles', function(req,res) {
         log.warn('[uibuilder:uibfiles] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
         //#region --- Parameter validation ---
         const params = req.query
@@ -1744,7 +1744,7 @@ module.exports = function(/** @type Red */ RED) {
      * @param {Object} permissions The permissions required for access (Express middleware)
      * @param {function} cb
      **/
-    RED.httpAdmin.get('/uibnewfile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+    RED.httpAdmin.get('/uibnewfile', function(req,res) {
         log.warn('[uibuilder:uibuilder] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
         //#region --- Parameter validation ---
         const params = req.query
@@ -1797,7 +1797,7 @@ module.exports = function(/** @type Red */ RED) {
      * @param {Object} permissions The permissions required for access (Express middleware)
      * @param {function} cb
      **/
-    RED.httpAdmin.get('/uibdeletefile', RED.auth.needsPermission('uibuilder.write'), function(req,res) {
+    RED.httpAdmin.get('/uibdeletefile', function(req,res) {
         log.warn('[uibuilder:uibdeletefile] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
         //#region --- Parameter validation ---
         const params = req.query

@@ -10,6 +10,27 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing right now.
 
+## [3.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.0...v3.1.1)
+
+Emergency fix.
+
+The permissions feature of the Node-RED Admin API does not seem to work as documented.
+
+```
+RED.httpAdmin.get('/uibgetfile', RED.auth.needsPermission('read'), function(req,res) {
+    // .....
+})
+```
+
+Should allow you to have a user defined with "read" permission and they would be allowed to access the API endpoint.
+However, as far as I can tell, this does not work.
+
+I have removed all permissions from the API endpoints until someone can work out how to do this correctly.
+
+Until then, all you can do is to remove the default user in settings.js so that defined users have no access until they have logged in.
+
+There is no longer a separation between read and write permissions I'm afraid.
+
 ## [3.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.0.1...v3.1.0)
 
 ### Fixed
