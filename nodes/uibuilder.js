@@ -693,6 +693,12 @@ module.exports = function(/** @type Red */ RED) {
             done()
         })
 
+        // Shows an instance details debug page
+        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+            let page = uiblib.showInstanceDetails(node, uib, userDir, RED)
+            res.status(200).send( page )
+        })
+
     } // ---- End of nodeGo (initialised node instance) ---- //
 
     /** Register the node by name. This must be called before overriding any of the
@@ -821,11 +827,11 @@ module.exports = function(/** @type Red */ RED) {
     } // ---- End of fn chkParamFldr ---- //
 
     /** uibuilder v3 Admin API router - new API commands should be added here */
-    RED.httpAdmin.route('/uib/:url')
-        /** Get something and return it */
-        .get(RED.auth.needsPermission('uibuilder.read'), function(req,res) {
-            const params = Object.assign({}, req.query, req.body, req.params)
-            params.type = 'get'
+    RED.httpAdmin.route('/uibuilder/admin/:url')
+        // For all routes
+        .all(function(req,res,next) {
+            const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
+            params.type = 'all'
             //params.headers = req.headers
 
             // Validate URL - params.url
@@ -836,6 +842,13 @@ module.exports = function(/** @type Red */ RED) {
                 res.status(chkUrl.status).end()
                 return
             }    
+
+            next()
+        })
+        /** Get something and return it */
+        .get(RED.auth.needsPermission('uibuilder.read'), function(req,res) {
+            const params = res.allparams
+            params.type = 'get'
 
             // List all folders and files for this uibuilder instance
             if ( params.cmd === 'listall' ) {
@@ -870,18 +883,9 @@ module.exports = function(/** @type Red */ RED) {
         })
         /** TODO Write file contents */
         .put(RED.auth.needsPermission('uibuilder.write'), function(req,res) {
-            const params = Object.assign({}, req.query, req.body, req.params)
+            const params = res.allparams
             params.type = 'put'
-            //params.headers = req.headers
             
-            const chkUrl = chkParamUrl(params)
-            if ( chkUrl.status !== 0 ) {
-                log.error(`[uibuilder:admin-router:PUT] Admin API. ${chkUrl.statusMessage}`)
-                res.statusMessage = chkUrl.statusMessage
-                res.status(chkUrl.status).end()
-                return
-            }    
-
             let fullname = path.join(uib.rootFolder, params.url)
 
             log.trace(`[uibuilder:admin-router:PUT] Admin API. url=${params.url}`)
@@ -894,18 +898,9 @@ module.exports = function(/** @type Red */ RED) {
         })
         /** Create a new folder or file */
         .post(RED.auth.needsPermission('uibuilder.write'), function(req,res) {
-            const params = Object.assign({}, req.query, req.body, req.params)
+            const params = res.allparams
             params.type = 'post'
-            //params.headers = req.headers
 
-            // Validate URL - params.url
-            const chkUrl = chkParamUrl(params)
-            if ( chkUrl.status !== 0 ) {
-                log.error(`[uibuilder:admin-router:POST] Admin API. ${chkUrl.statusMessage}`)
-                res.statusMessage = chkUrl.statusMessage
-                res.status(chkUrl.status).end()
-                return
-            }
             // Validate folder name - params.folder
             const chkFldr = chkParamFldr(params)
             if ( chkFldr.status !== 0 ) {
@@ -971,18 +966,9 @@ module.exports = function(/** @type Red */ RED) {
         })
         /** Delete a folder or a file */
         .delete(RED.auth.needsPermission('uibuilder.write'), function(req,res) {
-            const params = Object.assign({}, req.query, req.body, req.params)
+            const params = res.allparams
             params.type = 'delete'
-            //params.headers = req.headers
 
-            // Validate URL - params.url
-            const chkUrl = chkParamUrl(params)
-            if ( chkUrl.status !== 0 ) {
-                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${chkUrl.statusMessage}`)
-                res.statusMessage = chkUrl.statusMessage
-                res.status(chkUrl.status).end()
-                return
-            }
             // Validate folder name - params.folder
             const chkFldr = chkParamFldr(params)
             if ( chkFldr.status !== 0 ) {
@@ -1010,8 +996,6 @@ module.exports = function(/** @type Red */ RED) {
                 }        
             }
     
-            console.log('[uibuilder:admin-router:DELETE]', {params})
-
             let fullname = path.join(uib.rootFolder, params.url, params.folder)
             if (params.cmd === 'deletefile' ) {
                 fullname = path.join(fullname, params.fname)
