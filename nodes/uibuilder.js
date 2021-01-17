@@ -1648,7 +1648,7 @@ module.exports = function(/** @type Red */ RED) {
     /** Serve up the package docs folder (uses docsify)
      * @see [Issue #108](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108)
      */
-    RED.httpAdmin.use('/uibdocs', serveStatic( path.join(__dirname, '..', 'docs'), uib.staticOpts ) )
+    RED.httpAdmin.use('/uibuilder/techdocs', serveStatic( path.join(__dirname, '..', 'docs'), uib.staticOpts ) )
 
     //#region ------ DEPRECATED API's ------- //
 
