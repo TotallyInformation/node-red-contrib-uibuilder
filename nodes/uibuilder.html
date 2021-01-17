@@ -246,7 +246,7 @@
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: './uib/' + url,
+            url: './uibuilder/admin/' + url,
             data: {
                 'cmd': 'listall',
             },
@@ -389,7 +389,7 @@
         $.ajax({
             type: 'POST',
             dataType: 'json',
-            url: './uib/' + url,
+            url: './uibuilder/admin/' + url,
             data: {
                 'folder': folder,
                 'cmd': 'newfolder',
@@ -423,7 +423,7 @@
         $.ajax({
             type: 'POST',
             dataType: 'json',
-            url: './uib/' + url,
+            url: './uibuilder/admin/' + url,
             data: {
                 'folder': folder,
                 'fname': fname,
@@ -431,14 +431,13 @@
             },
         })
         .done(function(data, textStatus, jqXHR) {
-            console.log({data, textStatus, jqXHR})
             RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Created.`, {type:'success'})
             // Rebuild the file list
             getFileList(fname)
 
             return 'Create file succeeded'
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            //console.error( '[uibuilder:createNewFile:post] Error ' + textStatus, errorThrown )
+            console.error( '[uibuilder:createNewFile:post] Error ' + textStatus, errorThrown )
             //console.log({jqXHR, textStatus, errorThrown})
             RED.notify(`uibuilder: Create File Error.<br>${errorThrown}`, {type:'error'})
             return 'Create file failed'
@@ -456,7 +455,7 @@
         $.ajax({
             type: 'DELETE',
             dataType: 'json',
-            url: './uib/' + url,
+            url: './uibuilder/admin/' + url,
             data: {
                 'folder': folder,
                 'cmd': 'deletefolder',
@@ -470,7 +469,7 @@
 
             return 'Delete folder succeeded'
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            //console.error( '[uibuilder:deleteFolder:delete] Error ' + textStatus, errorThrown )
+            console.error( '[uibuilder:deleteFolder:delete] Error ' + textStatus, errorThrown )
             //console.log({jqXHR, textStatus, errorThrown})
             RED.notify(`uibuilder: Delete Folder Error.<br>${errorThrown}`, {type:'error'})
             return 'Delete folder failed'
@@ -490,7 +489,7 @@
         $.ajax({
             type: 'DELETE',
             dataType: 'json',
-            url: './uib/' + url,
+            url: './uibuilder/admin/' + url,
             data: {
                 'folder': folder,
                 'fname': fname,
@@ -746,8 +745,9 @@
             $('#node-input-url').change(function () {
                 var thisurl = $(this).val()
                 // Show the root URL
-                $('#uibuilderurl').prop('href', RED.settings.httpNodeRoot + thisurl).text('Open Page: ' + RED.settings.httpNodeRoot + thisurl)
+                $('#uibuilderurl').prop('href', RED.settings.httpNodeRoot + thisurl).text('Open ' + RED.settings.httpNodeRoot + thisurl)
                 $('#node-input-showfolder-url').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '/idx" target="_blank">' + RED.settings.httpNodeRoot + $(this).val() + '/idx</a>')
+                $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
             })
 
             // Show/Hide the advanced settings
@@ -1245,10 +1245,14 @@
             <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
         </div>
 
-        <!-- Buttons to show "edit src files" & "mng front-end libs", hide this section -->
-        <div class="form-row" title="Install/remove/update npm packages to use with your UI">
-            <button class="btn" id="show-edit-props" title="Edit the front-end code">Edit Source Files</button>
-            <button class="btn" id="show-npm-props">Manage front-end libraries</button>
+        <!-- Buttons to show "edit files" & "mng front-end libs", hide this section -->
+        <div class="form-row">
+            <button class="btn" id="show-edit-props" title="Edit the front-end code">
+                Edit Files
+            </button>
+            <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">
+                Manage front-end libraries
+            </button>
         </div>
 
         <!-- Show advanced edit properties -->
@@ -1482,19 +1486,25 @@
     <!-- #region Info -->
     <div id="info">
         <a id="uibuilderurl" title="Open the uibuilder web page" href="uibindex" target="_blank" class="red-ui-button editor-button"></a> 
-        <a href="uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed uibuilder information">Show Detailed Information</a>
+        <a href="uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed uibuilder information">uibuilder details</a>
+        <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Shows detailed configuration for this instance of uibuilder">Instance Details</a>
+        <a href="./uibdocs" target="_blank" class="red-ui-button editor-button" title="Shows the uibuilder technical documentation as a new page">Tech Docs</a>
     </div>
     <!-- #endregion -->
 
 </script>
 
 <script type="text/html" data-help-name="uibuilder">
-    <p>Easily create a UI (web app) at a <a href="/uibuilder" target="_blank">given URL</a></p>
+    <p>Easily create a data-driven web user interface (UI)</p>
     <p>
-        Create dynamic user interfaces that send and receive messages to/from Node-RED.
+        Create dynamic, data-driven user interfaces that send and receive messages to/from Node-RED.
         Creates a file/folder structure that is used to deliver static resources (html, css, js, images, etc) and
         manages the delivery of vendor library resources (VueJS, jQuery, etc).
         You can also pass script and style information to the front-end in a message.
+    </p>
+
+    <p id="uib_help_docs">
+        Detailed technical documentation can be found <a href="./uibdocs" target="_blank">HERE</a>.
     </p>
 
     <h3>Input msg</h3>
