@@ -8,36 +8,71 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.0.1...master)
 
+Nothing right now.
+
+## [3.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.0.1...v3.1.0)
+
 ### Fixed
 
 - [Issue #106](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/106) Editor: When editing files, a filename with a leading dot did not set the filetype correctly.
+
 - [Issue #105](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/105) Editor: Attempting to edit a hidden file (with a leading dot) resulted in an error and white screen.
 
 ### New
 
-- [Issue #108](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108) You can now view the uibuilder package docs (the ones in this package) by going to the url `<node-red-editor-url>/uibdocs`. The package docs use [Docsify](https://docsify.js.org/#/?id=docsify) for formatting. The docs include a search feature as well.
+- [Issue #108](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108) You can now view the uibuilder package docs (the ones in this package) by going to the url `<node-red-editor-url>/uibuilder/techdocs`. 
+  
+  The package docs use [Docsify](https://docsify.js.org/#/?id=docsify) for formatting. The docs include a search feature as well.
+
+  The docs are linked to from both the uibuilder help information panel and from a new button in the configuration panel.
+
+- The config editor has a new button <kbd>Instance Details</kbd>. clicking the button will show a new page in a new tab. The page contains debug details of the exact settings for the uibuilder instance. This should help people better understand all of the settings including folders and urls.
 
 
 ### Changed
 
-- Editor, "Edit Source Files" improvements:
-  - Allow all folders and files within the `<uibRoot>/<url>` folder to be edited.
-  - Allow linked files/folders to be used. This lets you put your actually code wherever you like as long as you create a soft or hard link into the `<uibRoot>/<url>` folder.
-  - Add better information toasts on file create/delete actions.
-  - Make enter keyboard button do the default action in the create dialog windows.
-  - Add more information to the create/delete dialog windows. (url, folder name, file name)
-  - [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102) - Relax file-type checks when editing files, allows for use of more ACE file-types and prepares the way for the introduction of the Monaco editor in Node-RED v2.
-  - [Issue #107](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/107) Allow selection of sub-folders for file editor.
-  - [Issue #109](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/109) Persist the selection of folder and file when editing. Uses browser local storage (no IE).
+#### Editor, "Edit Source Files" improvements:
+  - **ALL** folders and files within the `<uibRoot>/<url>` folder can now be edited.
+  
+  - Soft- or Hard-linked folders and files can now be used. This lets you put your front-end resources wherever you like as long as you create a soft or hard link into the `<uibRoot>/<url>` folder.
+  
+  - Added better information toasts on file create/delete actions.
+  
+    Pop-up notifications are now given when you create/delete folders and files.
+
+  - Made keyboard <kbd>enter</kbd> button do the default action in the create dialog windows.
+  
+  - Added more information to the create/delete dialog windows. (url, folder name, file name)
+  
+  - [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102) Relaxed the file-type checks when editing files. Allows for use of more ACE file-types and prepares the way for the introduction of the Monaco editor in Node-RED v2.
+  
+  - [Issue #107](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/107) Allowed the selection of any folder or sub-folders in the file editor.
+
+    The editor still constrains you to the folder for the instance but any folder within that root can be viewed. New sub-folders can be created and existing ones deleted.
+
+  - [Issue #109](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/109) Persist the selection of folder and file when editing.
+
+    This means that closing and reopening the editor will return to the last edited file.
+
+    Uses browser local storage and so does not work with Internet Explorer (which hasn't been supported by uibuilder since v3.0.0).
+
   - Improved display when no file is available to edit or if the file cannot be opened.
+  
   - Started moving to new v3 admin API's that are more consistent with less overheads.
+  
+  - Changed "Edit Source Files" button to say "Edit Files". Recognising the additional capabilities.
+  
+  - Changed button link names in the configuration panel to clarify and accommodate the 2 extra buttons for the instance details and technical docs links.
 
-- uibuilder.js: 
-  - Started to simplify and rationalise API checks and reporting. Deprecated `/uibfiles`, `/uibnewfile`, `/uibdeletefile` API's, replaced with new v3 admin API `/uib/:url`. Simplifies the admin API's, makes them more consistent and reduces the number of URL's.
+#### uibuilder.js: 
+  - Started to simplify and rationalise API checks and reporting. Deprecated `/uibfiles`, `/uibnewfile`, `/uibdeletefile` API's, replaced with new v3 admin API `/uibuilder/admin/:url`. Simplifies the admin API's, makes them more consistent and reduces the number of URL's.
   - Added v3 admin API's to create new and delete files and folders
+  - Added `/uibuilder/instance/<url>` admin API. Is created for each instance. Calling it will show a detailed information page for the given uibuilder instance.
 
-- Update dependencies
-- Installer: Improved the post-install console message (Post Install takes a while). Force VueJS to v2.x (not v3 as yet which will soon be the latest version).
+#### Other
+
+- Updated dependencies
+- Installer: Improved the post-install console message (Post Install takes a while). Also forces VueJS to v2.x (not v3 as yet which will soon be the latest version because there are currently too many breaking changes).
 
 ## [3.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.0.0...v3.0.1)
 
