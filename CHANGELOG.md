@@ -10,6 +10,10 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing right now.
 
+## [3.1.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.2)
+
+The post install script only works if used with PowerShell as the shell. It does not work with BASH or Windows cmd shells.
+
 ## [3.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.0...v3.1.1)
 
 Emergency fix.
