@@ -12,9 +12,7 @@ function doit() {
 
     //cd .. && npm install mime vue bootstrap-vue
     console.log('========================= [UIBUILDER PREINSTALL] =========================')
-    console.log('\nPre-installing vue & bootstrap-vue')
     console.log('Please ignore warnings about missing peer dependencies for jquery, vue, bootstrap-vue')
-    console.log('   ... this will take some time - be patient ...\n')
 
     /** We need to install peer-dependencies in the userDir folder 
      *  since the current working folder will be that of the uibuilder package
@@ -91,6 +89,7 @@ function doit() {
     try {
         /** We have to use exec not spawn because we need the shell environment */
         console.log('   npm install ...\n')
+        console.log('   ... this will take some time - be patient ...\n')
         out = child_process.execSync(cmd+cmdEnd, {'cwd': wd, 'windowsHide': true}).toString()
         console.log('   ... npm install finished\n')
     } catch (e) {
@@ -103,7 +102,7 @@ function doit() {
         console.error('   *** Vue and bootstrap-vue are not installed at the end of the pre-install. ***\n   *** Please install Vue and bootstrap-vue manually. ***')
     }
     if ( ! fs.existsSync(path.join(wd, 'node_modules', 'uibuilder')) ) {
-        console.error('   *** uibuilder is NOT installed at the end of the pre-install. ***')
+        console.error('   *** ERROR: uibuilder is NOT installed at the end of the pre-install. ***')
     }
 
     // Get rid of package-lock.json - it seems to cause vue/bootstrap-vue to sometimes disappear on install of uibuilder - it gets rebuilt anyway
