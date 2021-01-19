@@ -1,0 +1,40 @@
+#! /usr/bin/env node
+// -*- js -*-
+
+'use strict'
+
+//console.log(process.env)
+
+;(function () {
+    //cd .. && npm install mime vue bootstrap-vue
+    console.log('========================= [UIBUILDER POSTINSTALL] =========================')
+    console.log('Post-installing vue & bootstrap-vue')
+    console.log('Please ignore warnings about missing peer dependencies for jquery, vue, bootstrap-vue')
+    console.log('   ... this will take some time - be patient ...\n')
+
+    /** We need to install peer-dependencies in the parent folder 
+     *  since the current working folder will be that of the uibuilder package
+     */
+    //const fldr = process.cwd()
+    process.chdir('..')
+
+    /** We have to use exec not spawn because we need the shell environment */
+    const { exec } = require('child_process')
+    exec('npm install vue@"2.*" bootstrap-vue@"2.*" --no-fund --no-audit --no-update-notifier --production --color=false', (error, stdout, stderr) => {
+        //process.chdir(fldr)
+        if (error) {
+            console.log(`ERROR: ${error.message}`)
+            console.log('Post-install FAILED\n===========================================================================\n')
+            return
+        }
+        if (stderr) {
+            console.log(stderr)
+            console.log('Post-install completed with warnings\n===========================================================================\n')
+            return
+        }
+        console.log(stdout)
+        console.log('Post-install completed\n===========================================================================\n')
+    })
+})()
+
+//EOF
