@@ -23,14 +23,14 @@ function doit() {
     process.chdir(wd)
     if ( debug ) console.log(`   Working Folder (userDir): ${wd}`)
 
-    if ( debug ) {
-        // Will always show not installed? Because npm removes the package it is installing.
-        if ( fs.existsSync(path.join(wd, 'node_modules', 'uibuilder')) ) {
-            console.log('   uibuilder is already installed')
-        } else {
-            console.log('   uibuilder is NOT installed')
-        }
-    }
+    // if ( debug ) {
+    //     // Will always show not installed? Because npm removes the package it is installing.
+    //     if ( fs.existsSync(path.join(wd, 'node_modules', 'uibuilder')) ) {
+    //         console.log('   uibuilder is already installed')
+    //     } else {
+    //         console.log('   uibuilder is NOT installed')
+    //     }
+    // }
     
     // if ( debug ) {
     //     console.log( child_process.execSync('dir', {'cwd': wd+'/node_modules', 'windowsHide': true}).toString() )
@@ -61,7 +61,7 @@ function doit() {
         cmd += 'bootstrap-vue@"2.*" '
     }
     
-    if ( process.env.UIBNOPOST === 'true' ) {
+    if ( process.env.UIBRUNPRE === 'true' ) {
         if ( numInstalls > 0 ) {
             console.log( '   NOPOST requested so will not run the install. Please install for yourself using:' )
             console.log('    ', cmd+cmdEnd, '\n\nUIBUILDER Pre-install completed\n\n=================================================================\n\n')
@@ -118,8 +118,8 @@ function doit() {
     
 }
 
-setTimeout(() => {
+//setTimeout(() => {
     doit()
-}, 10000)
+//}, 10)
 
 //EOF
