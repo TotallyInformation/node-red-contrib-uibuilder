@@ -61,7 +61,7 @@ function doit() {
         cmd += 'bootstrap-vue@"2.*" '
     }
     
-    if ( process.env.UIBRUNPRE === 'true' ) {
+    if ( process.env.UIBNOPRE === 'true' ) {
         if ( numInstalls > 0 ) {
             console.log( '   NOPOST requested so will not run the install. Please install for yourself using:' )
             console.log('    ', cmd+cmdEnd, '\n\nUIBUILDER Pre-install completed\n\n=================================================================\n\n')

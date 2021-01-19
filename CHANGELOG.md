@@ -12,8 +12,8 @@ Nothing right now.
 
 ## [3.1.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.2)
 
-### Fixed
-- [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/110) The post install script only works if used with PowerShell as the shell. It does not work with BASH or Windows cmd shells.
+### Issue
+- [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/110) The npm post install script has very unexpected side-effects that appear to be issues with npm itself. There does not appear to be a reliable fix at this time. Set the environment variable `UIBRUNPRE` to 'false'
 
 ### New
 - Added environment variable `UIBNOPPRE` processing to the pre-install script
