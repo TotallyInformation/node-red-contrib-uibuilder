@@ -12,11 +12,23 @@ Nothing right now.
 
 ## [3.1.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.2)
 
+This is a tweak to 3.1.1 to enable a workaround for the npm install issues.
+
 ### Issue
-- [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/110) The npm post install script has very unexpected side-effects that appear to be issues with npm itself. There does not appear to be a reliable fix at this time. Set the environment variable `UIBRUNPRE` to 'false'
+- [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/110) The npm post install script has very unexpected and unwelcome side-effects that appear to be issues with npm itself. It seems that you cannot reliably run npm from within npm.
+  
+   There does not appear to be a reliable fix at this time. Set the environment variable `UIBNOPRE` to 'true' before installation to avoid the problem if you hit it. You should then install `vue` v2 and `bootstrap-vue` v2 manually if you need to:
+
+   ```bash
+   #cd <userDir>
+   npm install vue@"2.*" bootstrap-vue@"2.*"
+   ```
+
+   I will attempt to find another way to install vue and bootstrap-vue since in uibuilder v1/v2 you could not remove either of them. Some people don't want these libraries and so want to be able to remove them.
 
 ### New
 - Added environment variable `UIBNOPPRE` processing to the pre-install script
+- Added environment variable `UIBDEBUG` processing to the pre-install script
 
 ### Changed
 - Removed Vue and bootstrap-vue peer dependencies from this package since they are actually dependencies for the userDir folder. Gets rid of the warnings. Vue and bootstrap-vue are installed by the pre-install script unless you set an environment variable `UIBNOPRE` to 'true' before installation.
