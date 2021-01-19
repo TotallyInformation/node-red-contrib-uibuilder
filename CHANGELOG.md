@@ -12,7 +12,15 @@ Nothing right now.
 
 ## [3.1.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.2)
 
-The post install script only works if used with PowerShell as the shell. It does not work with BASH or Windows cmd shells.
+### Fixed
+- [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/110) The post install script only works if used with PowerShell as the shell. It does not work with BASH or Windows cmd shells.
+
+### New
+- Added environment variable `UIBNOPPRE` processing to the pre-install script
+
+### Changed
+- Removed Vue and bootstrap-vue peer dependencies from this package since they are actually dependencies for the userDir folder. Gets rid of the warnings. Vue and bootstrap-vue are installed by the pre-install script unless you set an environment variable `UIBNOPRE` to 'true' before installation.
+- Post-install script is now a pre-install script.
 
 ## [3.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.0...v3.1.1)
 
