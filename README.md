@@ -15,6 +15,7 @@
 
 **Please Note** that:
 
+* v3.1.3+ no longer installs vue and bootstrap-vue, if you want to use those, install them separately.
 * v3+ no longer supports Internet Explorer, it requires Node.js v10+ and Node-RED v1+
 * v3+ includes breaking changes from v2, please see the [CHANGELOG](CHANGELOG.md) for details.
 * v2+ includes breaking changes from v1, please see the [CHANGELOG-v2](/docs/CHANGELOG-v2.md) for details.
@@ -91,6 +92,13 @@ To install a specific release from npm, use `npm install node-red-contrib-uibuil
 > `npm WARN bootstrap@4.3.1 requires a peer of jquery@1.9.1 - 3 but none is installed. You must install peer dependencies yourself`
 
 It is safe to ignore that warning unless you want to take control of bootstrap yourself since vue-bootstrap doesn't actually need it.
+
+Once you have installed uibuilder, you will need to install `vue` and `bootstrap-vue` if you want to use the provided default templates.
+
+```bash
+#cd <userDir>
+npm install vue@"2.*" bootstrap-vue@"2.*"
+```
 
 ### 2.2. Simple flow
 

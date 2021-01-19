@@ -10,6 +10,28 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing right now.
 
+## [3.1.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.3)
+
+### Fix (kind of)
+
+[Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/110)
+
+It seems that npm is incapable of safely being called from within a preinstall or postinstall npm script.
+
+Every effort at trying to achieve this in order to install `vue` and `bootstrap-vue` has failed.
+
+So I have removed this processing completely.
+
+The result of this is that you must install vue and bootstrap-vue yourself if they aren't already installed (and if you want to use them of course).
+
+You should instal v2 versions however, not v3 since there are a lot of breaking changes in vue v3 that have not been tested with uibuilder.
+The installation command is:
+
+```bash
+#cd <userDir>
+npm install vue@"2.*" bootstrap-vue@"2.*"
+```
+
 ## [3.1.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.2)
 
 This is a tweak to 3.1.1 to enable a workaround for the npm install issues.
