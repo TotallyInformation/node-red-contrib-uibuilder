@@ -387,7 +387,6 @@ module.exports = function(/** @type Red */ RED) {
         //#endregion ----- Express Middleware ----- //
 
         //#region ----- Create instance local folder structure ----- //
-        var customStatic = function(req, res, next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
         var customFoldersOK = true
         try {
             fs.mkdirSync(node.customFolder)
@@ -434,7 +433,8 @@ module.exports = function(/** @type Red */ RED) {
         }
 
         //#region Add static path for instance local custom files
-        // TODO: (v3.1) need a build capability for dist - nb probably keep vendor and private code separate
+        var customStatic = function(req, res, next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
+
         try {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
             fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
@@ -450,6 +450,7 @@ module.exports = function(/** @type Red */ RED) {
             customStatic = serveStatic( path.join(node.customFolder, 'src'), uib.staticOpts )
         }
         //#endregion -- Added static path for local custom files -- //
+
         //#endregion ------ End of Create custom folder structure ------- //
 
         /** Apply all of the middleware functions to the current instance url 
