@@ -9,6 +9,7 @@
  * @property {boolean} uibNode.allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} uibNode.allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
  * @property {boolean} uibNode.copyIndex Copy index.(html|js|css) files from templates if they don't exist?
+ * @property {String}  uibNode.templateFolder Folder name for the source of the chosen template
  * @property {boolean} uibNode.showfolder Provide a folder index web page?
  * @property {boolean} uibNode.useSecurity Use uibuilder's built-in security features?
  * @property {boolean} uibNode.tokenAutoExtend Extend token life when msg's received from client?
@@ -56,4 +57,23 @@
  * @property {String} [userMetadata.location] Users location.
  * @property {Date} [userMetadata.passwordExpiry] Date/time the users password expires.
  * @property {Date} [userMetadata.subsExpiry] Date/time the users subscription expires.
+ */
+
+/**
+ * Props define attributes on a virtual node.
+ * @typedef {Object.<string, any> | {}} Props
+ * @property {Children} Props.children
+ */
+/**
+ * The vnode children of a virtual node.
+ * @typedef {VNode[]} Children
+ */
+/**
+ * Define a custom type for virtual nodes:
+ * @typedef {string | number | Function} Type
+ * @typedef {Object.<string, any>} VNode
+ * @property {Type} VNode.type
+ * @property {Props} VNode.props
+ * @property {Children} VNode.children
+ * @property {Key} [VNode.key]
  */
