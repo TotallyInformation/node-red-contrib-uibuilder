@@ -83,22 +83,22 @@ There is a lot more information available in the [WIKI](https://github.com/Total
 
 To install the current live version, please use Node-RED's Palette Manager.
 
-To install a specific development or test branch from GitHub, use `npm install TotallyInformation/node-red-contrib-uibuilder#<BRANCH-NAME> --save` from the command line on the server, having first changed to the `userDir` folder (normally `~/.node-red`).
-
-To install a specific release from npm, use `npm install node-red-contrib-uibuilder@<VERSION>`. In addition to release versions (e.g. 1.2.2), you can also use `latest` and `v1-last`. Sometimes, `next` may also be available. Check out the [Versions tab](https://www.npmjs.com/package/node-red-contrib-uibuilder?activeTab=versions) on the npm site for available versions.
-
-**NOTE**: When installing v2.x, you may get a warning from the install:
-
-> `npm WARN bootstrap@4.3.1 requires a peer of jquery@1.9.1 - 3 but none is installed. You must install peer dependencies yourself`
-
-It is safe to ignore that warning unless you want to take control of bootstrap yourself since vue-bootstrap doesn't actually need it.
-
-Once you have installed uibuilder, you will need to install `vue` and `bootstrap-vue` if you want to use the provided default templates.
+**NOTE**: As of v3.1.3, npm cannot safely install the VueJS and bootstrap-vue default dependencies. If you want to use the provided default templates, you must install these yourself. Either use uibuilder's library manager or manually install from the command line:
 
 ```bash
 #cd <userDir>
 npm install vue@"2.*" bootstrap-vue@"2.*"
 ```
+
+To install a specific development or test branch from GitHub, use `npm install TotallyInformation/node-red-contrib-uibuilder#<BRANCH-NAME>` from the command line on the server, having first changed to the `userDir` folder (normally `~/.node-red`). If you just want the `main` branch which contains the latest development build, you can do `npm install TotallyInformation/node-red-contrib-uibuilder`
+
+To install a specific release from npm, use `npm install node-red-contrib-uibuilder@<VERSION>`. In addition to release versions (e.g. 1.2.2), you can also use `latest` and `v1-last`. Sometimes, `next` may also be available. Check out the [Versions tab](https://www.npmjs.com/package/node-red-contrib-uibuilder?activeTab=versions) on the npm site for available versions.
+
+**NOTE**: When installing v2+, you may get a warning from the install:
+
+> `npm WARN bootstrap@4.3.1 requires a peer of jquery@1.9.1 - 3 but none is installed. You must install peer dependencies yourself`
+
+It is safe to ignore that warning unless you want to take control of bootstrap yourself since vue-bootstrap doesn't actually need it.
 
 ### 2.2. Simple flow
 
