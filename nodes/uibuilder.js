@@ -25,15 +25,21 @@
 //#endregion --- Type Defs --- //
 
 //#region ------ Require packages ------ //
+// uibuilder custom 
 const uiblib        = require('./uiblib')  // Utility library for uibuilder
 const tilib         = require('./tilib')   // General purpose library (by Totally Information)
+const templateConf  = require('../templates/template_dependencies') // Template configuration metadata
+
+// Core node.js
+const path          = require('path')
+//const events        = require('events')
+const child_process = require('child_process')
+
+// 3rd-party
 const serveStatic   = require('serve-static')
 const serveIndex    = require('serve-index')
 const socketio      = require('socket.io')
-const path          = require('path')
 const fs            = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
-//const events        = require('events')
-const child_process = require('child_process')
 const fg            = require('fast-glob') // https://github.com/mrmlnc/fast-glob
 
 //#endregion ----- Require packages ----- //
@@ -65,7 +71,9 @@ const uib = {
     installedPackages: {},
     /** Location of master template folders (containing default front-end code) @constant {string} uib.masterTemplateFolder */
     masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
-    /** What template to use as master? Must match a folder in the masterTemplateFolder */
+    /** DEFAULT template to use as master? Must match a folder in the masterTemplateFolder
+     * Each instance can have its own template, stored in node.templSel
+     */
     masterTemplate: 'vue',
     /** Location of master dist folder (containing built core front-end code) @constant {string} uib.masterStaticDistFolder */
     masterStaticDistFolder: path.join( __dirname, '..', 'front-end', 'dist' ),
@@ -309,6 +317,7 @@ module.exports = function(/** @type Red */ RED) {
         node.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
         node.allowStyles     = config.allowStyles === undefined ? false : config.allowStyles
         node.copyIndex       = config.copyIndex === undefined ? true : config.copyIndex
+        node.templateFolder  = config.templateFolder || templateConf.vue.folder
         node.showfolder      = config.showfolder === undefined ? false : config.showfolder
         node.useSecurity     = config.useSecurity 
         node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
@@ -416,14 +425,15 @@ module.exports = function(/** @type Red */ RED) {
             /** Now copy files from the master template folder (instead of master src) @since 2017-10-01
              *  Note: We don't copy the master dist folder
              *  Don't copy if copy turned off in admin ui 
+             *  Note that the template folder is stored in node.templSel
              */
             if ( node.copyIndex ) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-                fs.copy( path.join( uib.masterTemplateFolder, uib.masterTemplate ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
+                fs.copy( path.join( uib.masterTemplateFolder, node.templateFolder ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
                     if(err){
-                        log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates')} to ${path.join(node.customFolder, 'src')}`, err)
+                        log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates', node.templSel)} to ${path.join(node.customFolder, 'src')}`, err)
                     } else {
-                        log.trace(`[uibuilder:${uibInstance}] Copied template files to local src (not overwriting)`, node.customFolder )
+                        log.trace(`[uibuilder:${uibInstance}] Copied template files from ${path.join( __dirname, 'templates', node.templateFolder)} to local src (not overwriting)`, node.customFolder )
                     }
                 })
             }
@@ -710,6 +720,7 @@ module.exports = function(/** @type Red */ RED) {
         },
         settings: {
             uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
+            uibuilderTemplates: { value: templateConf, exportable: true },
         },
     })
 

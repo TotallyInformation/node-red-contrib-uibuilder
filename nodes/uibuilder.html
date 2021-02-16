@@ -37,6 +37,8 @@
     var defaultSessionLength = 432000
     /** Default JWT secret if security is active - to ensure it isn't blank @type {String} */
     var defaultJwtSecret = 'Replace This With A Real Secret'
+    /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
+    var packages = []
 
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
      * @typedef {Object} uiace
@@ -53,6 +55,15 @@
     }
 
     //#endregion ------------------------------------------------- //
+
+    /** Initialise default values for package list - must be done before everything to give the ajax call time to finish
+     *  since the list is used to check if the template dependencies are installed.
+     * NOTE: This is build dynamically each time the edit panel is opened
+     *       we are not saving this since external changes would result in
+     *       users having being prompted to deploy even when they've made
+     *       no changes themselves to a node instance.
+     */
+    packageList()
 
     //#region --------- "global" functions for the panel --------- //
 
@@ -97,6 +108,9 @@
 
                         // Replace the input field with the normal package name display
                         myRow.html(packageName)
+
+                        // Update the master package list
+                        packages.push(packageName)
                     } else {
                         RED.notify('FAILED installation of npm package ' + packageName, 'error')
                         console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName )
@@ -140,6 +154,10 @@
             if ( data.success === true) {
                 RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
                 console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
+                
+                // Remove the entry from the master package list
+                const i = packages.indexOf(packageName)
+                if ( i > 0 ) packages.splice(i,1)
             } else {
                 RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
@@ -163,20 +181,16 @@
         
     } // ---- End of removePackageRow ---- //
 
-    /** Get full package list via API and show in admin ui
-     * param {string} url 
-     * param {boolean} rebuild - Rebuild the vendorPaths list
-     */
+    /** Get list of installed packages via API - save to master list */
     function packageList() {
         $.getJSON('uibvendorpackages', function(vendorPaths) {
             //console.log('uibuilder:packageList:uibvendorpackages', vendorPaths)
 
-            $('#node-input-packageList').editableList('empty')
-
+            packages = []
             var pkgList = Object.keys(vendorPaths)
             pkgList.forEach(function(packageName,_index){
-                if ( packageName !== 'socket.io' )
-                    $('#node-input-packageList').editableList('addItem',packageName)
+                // Populate the master package list (used to check dependencies)
+                packages.push(packageName)
             })
         })
     } // --- End of packageList --- //
@@ -683,6 +697,55 @@
 
     } // --- End of validateSecret --- //
 
+    /** Populate the template selection dropdown
+     * Uses a file that is `require`d in uibuilder.js
+    */
+    function populateTemplateDropdown() {
+        if ( $('#node-input-copyIndex').prop('checked') !== true ) return
+
+        // Load each option - first entry will be the default
+        Object.values(RED.settings.uibuilderTemplates).forEach( templ => {
+            // Build the drop-down
+            $('#node-input-templSel').append($('<option>', { 
+                value: templ.folder,
+                text : templ.name, 
+            }))
+        })
+
+        // 1st entry is default - populate the description help tip
+        $('#node-templSel-info').text(Object.values(RED.settings.uibuilderTemplates)[0].description) 
+    } // --- end of function populateTemplateDropdown --- //
+
+    /** Check whether the currently selected template's npm dependencies are installed
+     * If not, warn the user to install them.
+     */
+    function checkDependencies() {
+        const folder = $('#node-input-templSel').val()
+        const deps = RED.settings.uibuilderTemplates[folder].dependencies || []
+        const missing = []
+
+        deps.forEach( depName => {
+            if ( ! packages.includes(depName) ) missing.push(depName)
+        })
+
+        if ( missing.length > 0 ) {
+            var myNotification = RED.notify(`WARNING<br /><br />The selected uibuilder template (${folder}) is MISSING the following dependencies:<div> ${missing.join(', ')}</div><br />Please install them using the uibuilder Library Manager or select a different template.`,{
+                type: 'warning',
+                modal: true,
+                fixed: true,
+                buttons: [
+                    {
+                        text: "OK",
+                        class:"primary",
+                        click: function(e) {
+                            myNotification.close();
+                        }
+                    }
+                ]
+            })
+        }
+    }
+
     //#endregion ------------------------------------------------- //
 
     // Register the node type, defaults and set up the edit fns 
@@ -698,6 +761,7 @@
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
             copyIndex: { value: true },        // Should the default template files be copied to the instance src folder?
+            templateFolder: { value: undefined }, // Folder for selected template
             showfolder: { value: false },      // Should a web index view of all source files be made available?
             useSecurity: { value: false },
             sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
@@ -821,6 +885,21 @@
 
             // What mode is Node-RED running in? development or something else?
             $('#nrMode').text(RED.settings.uibuilderNodeEnv)
+
+            // Populate the template selection drop-down and select default (in advanced)
+            populateTemplateDropdown()
+            if ( that.templateFolder ) $('#node-input-templSel').val(that.templateFolder)
+            else $('#node-input-templSel').prop('selectedIndex',0)
+            checkDependencies()
+            // Change change of template
+            $('#node-input-templSel').change(function(_e) {
+                // save the selected template folder name
+                that.templateFolder = $('#node-input-templSel').val()
+                // update the help tip
+                $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
+                // Check if the dependencies are installed, warn if not
+                checkDependencies()
+            })
 
             //#region ---- File Editor ---- //
             // Mark edit save/reset buttons as disabled by default
@@ -1145,7 +1224,7 @@
                 $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#npm-props').show()
 
-                // TODO Improve feedback
+                /** todo! Improve feedback */
                 //#region Setup the package list
                 $('#node-input-packageList').editableList({
                     addItem: addPackageRow, // function
@@ -1159,13 +1238,13 @@
                     sortable: false,
                 })
 
-                /** Initialise default values for package list
-                 * NOTE: This is build dynamically each time the edit panel is opened
-                 *       we are not saving this since external changes would result in
-                 *       users having being prompted to deploy even when they've made
-                 *       no changes themselves to a node instance.
-                 */
-                packageList()
+                // reset and populate the list
+                $('#node-input-packageList').editableList('empty')
+                packages.forEach( packageName => {
+                    if ( packageName !== 'socket.io' ) // ignore socket.io
+                        $('#node-input-packageList').editableList('addItem',packageName)
+                })
+
 
                 // spinner
                 $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
@@ -1257,10 +1336,10 @@
 
         <!-- Show advanced edit properties -->
         <div class="form-row">
-            <h5 id="show-adv-props" title="Show/Hide the advanced configuration settings">
+            <b id="show-adv-props" title="Show&sol;Hide the advanced configuration settings">
                 <i class="fa fa-caret-right"></i> Advanced Settings
-            </h5>
-            <!-- ---- Hideable Advanced Settings Section ---- -->
+            </b>
+            <!-- #region ---- Hideable Advanced Settings Section ---- -->
             <div id="adv-props" style="display:hidden;border:1px solid silver;padding:.5em;">
                 <!-- How long do we want resources to be cached for? *** NOT READY *** 
                 <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
@@ -1268,25 +1347,35 @@
                     <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
                 </div> -->
                 
-                <!-- Allow scripts/styles to be passed to front-end? -->
-                <div class="form-row" title="Add msg.script/msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
-                    Allow passing to the front-end: <br>
-                    <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-allowScripts">Scripts? (JS)</label>
-                    <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-allowStyles">Styles? (CSS)</label>
-                </div>
-
                 <!-- Copy index.(html|css|js) to local assets if they dont exist? -->
-                <div class="form-row">
+                <div class="form-row" title="Select if and what template code you would like to use.">
                     <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
                     <label for="node-input-copyIndex" style="width: 90%;">Copy index.(html|css|js) from templates to this instance if they don't exist?</label>
+
+                    <label for="node-input-templSel" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
+                    <select id="node-input-templSel" style="width:73%;"></select>
+                    <div id="node-templSel-info" class="form-tips node-help"></div>
+
+                    <div class="form-tips node-help">
+                        Change the template BEFORE deploying for the first time.<br>
+                        Changing selection on its own will not do anything.
+                        You must also delete your index files so that they are recreated from the template.
+                    </div>
                 </div>
 
                 <!-- Provide a searchable file index view? -->
                 <div class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
                     <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
                     <label for="node-input-showfolder" style="width: 90%;">Show web view of source files at <span id="node-input-showfolder-url">_</span>.</label>
+                </div>
+
+                <!-- Allow scripts/styles to be passed to front-end? -->
+                <div class="form-row" title="Add msg.script&sol;msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
+                    Allow passing to the front-end: <br>
+                    <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-allowScripts">Scripts? (JS)</label>
+                    <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-allowStyles">Styles? (CSS)</label>
                 </div>
 
                 <div class="form-tips node-help" title="">
@@ -1301,13 +1390,14 @@
                     </label>
                 </div>
             </div>
+            <!-- #endregion -->
         </div>
 
         <!-- Show security properties -->
         <div class="form-row">
-            <h5 id="show-security-props" title="Show/Hide security settings">
+            <b id="show-security-props" title="Show&sol;Hide security settings">
                 <i class="fa fa-caret-right"></i> Security Settings
-            </h5>
+            </b>
             <!-- ---- Hideable Security Settings Section ---- -->
             <div id="sec-props" style="display:hidden;border:1px solid silver;padding:.5em;">
                 <!-- Do we want security turned on? -->
@@ -1323,7 +1413,7 @@
                 </div>
 
                 <!-- JWT Secret (credential) -->
-                <div class="form-row" title="Required. A string to be used to sign/validate JWT's. Stored as a credential so not copied when exporting a flow.">
+                <div class="form-row" title="Required. A string to be used to sign&sol;validate JWT's. Stored as a credential so not copied when exporting a flow.">
                     <label for="node-input-jwtSecret"><i class="fa fa-user-secret"></i> JWT Secret</label>
                     <input type="text" id="node-input-jwtSecret">
                 </div>
@@ -1376,7 +1466,7 @@
                 </div>                  
                 <button class="btn" id="btn-fldr-del" title="Delete the selected folder">Del</button>
                 <div id="fldr-del-dialog" title="Delete the currently selected folder" dialog>
-                    <h5>Folder to be deleted</h5>
+                    <b>Folder to be deleted</b>
                     <p><code id="fldr-del-name"></code></p>
                     <p id="fldr-del-recopy"></p>
                     <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">
@@ -1422,7 +1512,7 @@
                     Delete
                 </button>
                 <div id="edit_delete_dialog" title="Delete the currently selected file" dialog>
-                    <h5>File to be deleted</h5>
+                    <b>File to be deleted</b>
                     <p><code id="edit-delete-name"></code></p>
                     <p id="edit-delete-recopy"></p>
                     <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">Warning: This action cannot be undone.</p>
@@ -1461,7 +1551,7 @@
 
     <!-- #region ---- Hideable NPM Section ---- -->
     <div id="npm-props">
-        <h4>Front-End Library Manager</h4>
+        <b>Front-End Library Manager</b>
         <p>
             Install, remove or update npm packages that provide front-end libraries such as
             VueJS, jQuery, MoonJS, etc.
@@ -1469,8 +1559,8 @@
         <p>
             You can search for packages on the 
             <a href="https://www.npmjs.com/" target="_blank" class="red-ui-button editor-button">official npm site</a> 
-            or on <a href="https://npms.io/" target="_blank" class="red-ui-button editor-button">npms.io</a>.
-            Take the name and paste it below then use one of the buttons.
+            or on <a href="https://npms.io/" target="_blank" class="red-ui-button editor-button">npms.io</a>.<br>
+            Copy the name, click on "+ add" below and paste in the input.
         </p>
         <!-- Package List -->
         <div class="form-row">
@@ -1507,6 +1597,10 @@
         Detailed technical documentation can be found <a href="./uibuilder/techdocs" target="_blank">HERE</a>.
     </p>
 
+    <p>
+        Still more information is available in the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/" target="_blank">uibuilder WIKI</a>.
+    </p>
+
     <h3>Input msg</h3>
     <dl class="message-properties">
         <dt class="optional">payload <span class="property-type">(string | buffer)</span></dt>
@@ -1516,15 +1610,15 @@
 
         <dt class="optional">script <span class="property-type">(string | string[])</span></dt>
         <dd>
-        Optionally, a string or array of strings containing valid JavaScript.
-        This will be added to the web page dynamically. Currently contains minimal validation so care is required.
-        This feature is <b>off</b> by default, turn on in the Advanced Settings.
+            Optionally, a string or array of strings containing valid JavaScript.
+            This will be added to the web page dynamically. Currently contains minimal validation so care is required.
+            This feature is <b>off</b> by default, turn on in the Advanced Settings.
         </dd>
         <dt class="optional">style <span class="property-type">(string | string[])</span></dt>
         <dd>
-        Optionally, a string or array of strings containing valid CSS for styling the front-end page.
-        This will be added to the web page dynamically. Currently contains minimal validation so care is required.
-        This feature is <b>off</b> by default, turn on in the Advanced Settings.
+            Optionally, a string or array of strings containing valid CSS for styling the front-end page.
+            This will be added to the web page dynamically. Currently contains minimal validation so care is required.
+            This feature is <b>off</b> by default, turn on in the Advanced Settings.
         </dd>
     </dl>
 
@@ -1581,46 +1675,44 @@
                     Note that the initial part of the ID contains the source URI.
                 </dd>
             </dl>
+        </li>
     </ol>
 
     <h3>Node Settings</h3>
-    <dl class="message-properties">
-        <dt>Name <span class="property-type">(string) node-input-name</span></dt>
-        <dd>A short description shown in the admin interface</dd>
-        <dt>Topic <span class="property-type">(string) node-input-topic</span></dt>
-        <dd>A topic name to use if the incoming msg does not contain one.</dd>
-        <dt>URL <span class="property-type">(string) node-input-url</span></dt>
-        <dd>
-            The URL path that the resulting page and other resources will be served from.
-            Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
-            and port. Will also be prefixed by the Node-RED setting <i>httpNodeRoot</i>.<br>
-            The default URL is <a href="/uibuilder" target="_blank">/uibuilder</a>.<br>
-            The url is also used to define the server filing system path for front-end code files.<br>
-            The url must be valid as a filename as well as a url path. It may not exceed 20 characters.
-        </dd>
+        <dl class="message-properties">
+            <dt>Name <span class="property-type">(string) node-input-name</span></dt>
+            <dd>A short description shown in the admin interface</dd>
+            <dt>Topic <span class="property-type">(string) node-input-topic</span></dt>
+            <dd>A topic name to use if the incoming msg does not contain one.</dd>
+            <dt>URL <span class="property-type">(string) node-input-url</span></dt>
+            <dd>
+                The URL path that the resulting page and other resources will be served from.
+                Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
+                and port. Will also be prefixed by the Node-RED setting <i>httpNodeRoot</i>.<br>
+                The default URL is <a href="/uibuilder" target="_blank">/uibuilder</a>.<br>
+                The url is also used to define the server filing system path for front-end code files.<br>
+                The url must be valid as a filename as well as a url path. It may not exceed 20 characters.
+            </dd>
 
-        <dt>Edit Source Files <span class="property-type">(button)</span></dt>
-        <dd>
-            Clicking this button will hide the above settings and display a file editor allowing you
-            to edit the front-end files that define your user interface.<br>
-            All text-based files in the `<userDir>/uibuilder/<url>/src` folder on the server's filing system will
-            be available to edit.<br>
-            To return back, click the red <kbd class="help-key">Done</kbd> or grey <kbd class="help-key">Cancel</kbd> buttons.
-            <p>
-                Note that you can expand the edit panel by clicking on the <kbd class="help-key">&#x2921;</kbd> arrow button underneath the panel.
-                To exit fullscreen, press the same button (now highlighted) or the <kbd class="help-key">Esc</kbd> key.
-            </p>
-            
-
-        </dd>
-        <dt>Manage Front-End Libraries <span class="property-type">(button)</span></dt>
-        <dd>
-            Clicking this button will hide the above settings and display a list of currently available
-            front-end library packages. This interface allows you to add, remove and update any library
-            that can be installed via <a href="https://www.npmjs.com/" target="_blank">npm</a>.
-        </dd>
-
-    </dl>
+            <dt>Edit Source Files <span class="property-type">(button)</span></dt>
+            <dd>
+                Clicking this button will hide the above settings and display a file editor allowing you
+                to edit the front-end files that define your user interface.<br />
+                All text-based files in the `&lt;userDir>/uibuilder/&lt;url>/src` folder on the server's filing system will
+                be available to edit.<br />
+                To return back, click the red <kbd class="help-key">Done</kbd> or grey <kbd class="help-key">Cancel</kbd> buttons.
+                <p>
+                    Note that you can expand the edit panel by clicking on the <kbd class="help-key">&#x2921;</kbd> arrow button underneath the panel.
+                    To exit fullscreen, press the same button (now highlighted) or the <kbd class="help-key">Esc</kbd> key.
+                </p>
+            </dd>
+            <dt>Manage Front-End Libraries <span class="property-type">(button)</span></dt>
+            <dd>
+                Clicking this button will hide the above settings and display a list of currently available
+                front-end library packages. This interface allows you to add, remove and update any library
+                that can be installed via <a href="https://www.npmjs.com/" target="_blank">npm</a>.
+            </dd>
+        </dl>
         <h4>Advanced Settings</h4>
         <dl class="message-properties">
             <dt>Allow scripts to be passed to front-end? <span class="property-type">(boolean) allowScripts</span></dt>
