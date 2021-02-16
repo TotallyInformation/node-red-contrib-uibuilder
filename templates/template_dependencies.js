@@ -7,7 +7,7 @@ module.exports = {
     vue: {
         'name': 'VueJS & bootstrap-vue',
         'folder': 'vue',
-        'dependencies': [ 'vue', 'bootstrap-vue', 'donkey' ],
+        'dependencies': [ 'vue', 'bootstrap-vue' ],
         'description': 'The default template since uibuilder v2. Uses VueJS and bootstrap-vue.'
     },
     blank: {
