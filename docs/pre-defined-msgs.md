@@ -7,11 +7,14 @@ Documents the different types of uibuilder messages between a Node-RED uibuilder
     * [msg._auth `{Object}` (uibuilder v3+)](#msg_auth-object-uibuilder-v3)
     * [msg.script `{String}`](#msgscript-string)
     * [msg.style `{String}`](#msgstyle-string)
+    * [msg._uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
+    * [msg.uibDomEvent `{Object}` (uibuilder v3.2+)](#msguibdomevent-object-uibuilder-v32)
   * [From Node-RED uibuilder node to the front-end (browser)](#from-node-red-uibuilder-node-to-the-front-end-browser)
     * [Client (re)Connection (Control Message)](#client-reconnection-control-message)
     * [VueJS UI Notification [Toast] (Control Message)](#vuejs-ui-notification-toast-control-message)
   * [From the front-end (browser) to the Node-RED uibuilder node](#from-the-front-end-browser-to-the-node-red-uibuilder-node)
     * [Client Ready for Content (Control Message)](#client-ready-for-content-control-message)
+    * [DOM Event (standard message from eventSend function)](#dom-event-standard-message-from-eventsend-function)
   * [From either Node-RED or the client](#from-either-node-red-or-the-client)
     * [Clear Cache (Control Message)](#clear-cache-control-message)
 
@@ -44,6 +47,13 @@ Text must be valid CSS and will be dynamically added to the client page DOM.
 
 **WARNING** No checking is done and this could be quite dangerous.
 
+### msg._uib `{Object}` (uibuilder v3+)
+
+Used by the [showToast](showtoast-vuejs-only-shows-a-popup-message-in-the-ui) and [showComponentDetails](showcomponentdetails-vuejs-only-return-a-control-msg-contining-details-of-a-vue-component) functions and their equivalent messages from Node-RED.
+
+### msg.uibDomEvent `{Object}` (uibuilder v3.2+)
+
+Used by the [eventSend](front-end-library?id=eventsend-helper-fn-to-send-event-data) function.
 
 ## From Node-RED uibuilder node to the front-end (browser)
 
@@ -121,6 +131,8 @@ This would send a notification to all connected clients. May be injected to a ui
 
 ## From the front-end (browser) to the Node-RED uibuilder node
 
+Note that, if responding to a control msg, you **must** remove the `uibuilderCtrl` property otherwise, uibuilder will refuse to send the msg (to prevent msg loops).
+
 ### Client Ready for Content (Control Message)
 
 Is send by the client library (uibuilderfe) to Node-RED whenever the client connects by loading or reloading the page.
@@ -134,6 +146,31 @@ to the uibuilder node. Make sure you include the `_socketId` if you want that re
     "cacheControl": "REPLAY",               // Cache control request type: REPLAY or CLEAR
     "from": "client",                       // NR->Client
     "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",    // ID of client (from Socket.IO)
+}
+```
+
+### DOM Event (standard message from eventSend function)
+
+Is sent whenever the eventSend function is called.
+
+Example output:
+
+```jsonc
+{
+    "topic": "mytopic",  // Optional. Repeats the topic from the last inbound msg if it exists
+
+    "uibDomEvent": {
+        // The HTML id attribute where the event occured
+        // If no id present, will try to use `name`, if
+        // that isn't present, will use the first 25 chars of the inner text.
+        "sourceId": "mytagid",
+        // The DOM event type
+        "event": "click",
+    },
+
+    // Each `data-xxxx` attribute in the HTML is added as a property
+    // - this may be an empty Object if no data attributes defined
+    "payload": { ... },
 }
 ```
 

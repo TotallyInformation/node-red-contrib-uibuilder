@@ -81,7 +81,7 @@ uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is design
 ---- 
 ## 1. Additional Documentation
 
-There is a lot more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). In addition, there is more technical and developer documentation in the [docs](/docs) folder that is also available, once you have added uibuilder to your Node-RED palette, as a documentation web site at `<node-red-editor-url>/uibdocs`. There is a button to that in the configuration panel.
+There is a lot more information available in the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). In addition, there is more technical and developer documentation in the [docs](/docs) folder that is also available, once you have added uibuilder to your Node-RED palette, as a documentation web site at `<node-red-editor-url>/uibdocs`. There is a button to that in the configuration panel. You can also access that documentation [here](https://totallyinformation.github.io/node-red-contrib-uibuilder).
 
 ## 2. Getting Started
 

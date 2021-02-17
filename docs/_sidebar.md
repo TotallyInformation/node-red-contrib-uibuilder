@@ -1,14 +1,15 @@
 * [Home](/)
-* [Changes](CHANGELOG.md)
+* [Changes (new tab)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/CHANGELOG.md)
+* [Working with the uibuilderfe Library](front-end-library.md)
 * [Working with Vue Components](vue-component-handling.md)
 * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
 * [Glossary of Terms](glossary.md)
 * [Security](security.md)
   * [Local Security: security.js](securityjs.md)
 * Developer Documentation
+  * [`front-end/src/uibuilderfe.js`](uibuilderfe-js.md)
   * [`nodes/uibuilder.js`](uibuilder-js.md)
   * [`nodes/uibuilder.html`](uibuilder-html.md)
-  * [`nodes/uibuilderfe.js`](uibuilderfe-js.md)
   * [`nodes/uiblib.js`](uiblib-js.md)
   * [`nodes/tilib.js`](tilib-js.md)
 * Testing
