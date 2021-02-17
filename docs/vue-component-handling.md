@@ -24,7 +24,7 @@ for more details in the use of notifications.
 
 This is the structure of the `msg` to send through the uibuilder node in Node-RED.
 
-```jsonc
+```json
 {
     "topic": "Optional. Can be anything",
     "_uib": { // Required
@@ -53,7 +53,7 @@ can then be used to craft messages for the next feature.
 
 ### Message schema
 
-```jsonc
+```json
 {
     "topic": "Optional. Can be anything",
     // Required
@@ -143,7 +143,7 @@ new Vue({
 
 ##### Msg
 
-```jsonc
+```json
 {
     "topic": "alert1props",
     "payload": {
@@ -180,7 +180,7 @@ component instance and changing `uibuilder.start()` to `uibuilder.start(this)`
 
 ### Message schema
 
-```jsonc
+```json
 {
     "topic": "Optional. Can be anything",
     // Required

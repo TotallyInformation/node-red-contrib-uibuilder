@@ -197,7 +197,7 @@ methods: {
 
 The msg returned to Node-RED will be:
 
-```jsonc
+```json
 {
     "topic": "", // Optional. Will include the topic from the last inbound msg if it is available
 
@@ -301,7 +301,7 @@ Note that to use this, you **must** have an instance of the component in your HT
 
 Note that you can trigger this automatically (without front-end code) by sending a msg from Node-RED in the form:
 
-```jsonc
+```
 {
     "_uib": {
         "requestDetails": true,
@@ -313,7 +313,7 @@ Note that you can trigger this automatically (without front-end code) by sending
 
 The returned control message to Node-RED looks like:
 
-```jsonc
+```
 {
     "uibuilderCtrl":"vue component details",
     "componentDetails": {
@@ -340,7 +340,7 @@ See the [Working with Vue Components](vue-component-handling) documentation page
 
 Note that you can trigger this automatically (without front-end code) by sending a msg from Node-RED in the form:
 
-```jsonc
+```
 {
     "_uib": {
         // This can actually be anything, if it doesn't exist, 

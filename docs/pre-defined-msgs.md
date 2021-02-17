@@ -62,7 +62,7 @@ Used by the [eventSend](front-end-library?id=eventsend-helper-fn-to-send-event-d
 Is sent from Node-RED by uibuilder to the client whenever a new client connects or
 when an existing client re-connects (by reloading their page).
 
-```jsonc
+```json
 {
     "uibuilderCtrl": "client connect",  // control message type
     "cacheControl": "REPLAY",           // Cache control request type: REPLAY or CLEAR
@@ -82,7 +82,7 @@ message to the user in the browser. No code is required at the front-end.
 
 This would send a notification to all connected clients. May be injected to a uibuilder node.
 
-```jsonc
+```json
 {
     "_vue": {  // Required. VueJS Component data
         "componentRef": "globalNotification", // Required.
@@ -93,7 +93,7 @@ This would send a notification to all connected clients. May be injected to a ui
 
 #### More complex example
 
-```jsonc
+```json
 {
     "_uib": {  // Required. VueJS Component data    
         "componentRef": "globalNotification", // Required.
@@ -140,7 +140,7 @@ Is send by the client library (uibuilderfe) to Node-RED whenever the client conn
 Any message that contains `"cacheControl": "REPLAY"` and is linked back to your cache node should trigger that node to replay all of the saved cache
 to the uibuilder node. Make sure you include the `_socketId` if you want that replay to only go to a specific connected client.
 
-```jsonc
+```json
 {
     "uibuilderCtrl": "ready for content",   // control message type
     "cacheControl": "REPLAY",               // Cache control request type: REPLAY or CLEAR
@@ -155,7 +155,7 @@ Is sent whenever the eventSend function is called.
 
 Example output:
 
-```jsonc
+```json
 {
     "topic": "mytopic",  // Optional. Repeats the topic from the last inbound msg if it exists
 
@@ -182,8 +182,9 @@ This can be sent from anywhere. You will need to link the message to your cachin
 
 Note that sending this into a uibuilder node, the msg will be dropped by uibuilder (to prevent control loops). Send it to your cache node.
 
-```jsonc
+```json
 {
     "uibuilderCtrl": "clear cache",   // Required. control message type
     "cacheControl": "CLEAR",          // Required. Cache control request type: REPLAY or CLEAR
 }
+```
