@@ -19,8 +19,8 @@
 
 //#region --- Type Defs --- //
 /**
- * @typedef {import('./typedefs.js')._auth} _auth
- * @typedef {import('node-red').Red} Red
+ * @typedef {import('../typedefs.js')._auth} _auth
+ * @typedef {import('node-red')} Red
  */
 //#endregion --- Type Defs --- //
 
@@ -144,6 +144,7 @@ module.exports = function(/** @type Red */ RED) {
 
     //#region ----- Constants (& logging) for standard setup ----- //
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
+    // @ts-ignore
     userDir = RED.settings.userDir
 
     // Set the root folder
@@ -159,9 +160,11 @@ module.exports = function(/** @type Red */ RED) {
     uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
     
     /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
+    // @ts-ignore
     const httpNodeRoot = uib.nodeRoot = RED.settings.httpNodeRoot
 
     //#region ----- back-end debugging ----- //
+    // @ts-ignore
     log = RED.log
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
@@ -262,8 +265,9 @@ module.exports = function(/** @type Red */ RED) {
     /** Create a new, additional static http path to enable loading of central static resources for uibuilder
      * Loads standard images, ico file, etc.
      * @since v2.0.0 2019-03-03 Moved out of nodeGo() only need to do once - but is applied in nodeGo
+     * @type {string}
      */
-    var masterStatic //= function(req,res,next) { next() }
+    var masterStatic = ''
     try {
         /** Will we use "compiled" version of module front-end code? @since 2020-06-17 Moved */
         fs.accessSync( path.join(uib.masterStaticDistFolder, 'index.html'), fs.constants.R_OK )
@@ -295,6 +299,7 @@ module.exports = function(/** @type Red */ RED) {
      */
     function nodeGo(config) {
         // Create the node
+        // @ts-ignore
         RED.nodes.createNode(this, config)
 
         /** @since 2019-02-02 - the current instance name (url) */
@@ -305,6 +310,7 @@ module.exports = function(/** @type Red */ RED) {
         /** A copy of 'this' object in case we need it in context of callbacks of other functions. 
          * @type {uibNode} node
          */
+        // @ts-ignore
         const node = this
         log.trace(`[uibuilder:${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
 
@@ -321,6 +327,7 @@ module.exports = function(/** @type Red */ RED) {
         node.showfolder      = config.showfolder === undefined ? false : config.showfolder
         node.useSecurity     = config.useSecurity 
         node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
+        // @ts-ignore
         node.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
         node.tokenAutoExtend = config.tokenAutoExtend
         //#endregion ----- Local node config copy ----- //
@@ -431,7 +438,7 @@ module.exports = function(/** @type Red */ RED) {
                 const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
                 fs.copy( path.join( uib.masterTemplateFolder, node.templateFolder ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
                     if(err){
-                        log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates', node.templSel)} to ${path.join(node.customFolder, 'src')}`, err)
+                        log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates', node.templateFolder)} to ${path.join(node.customFolder, 'src')}`, err)
                     } else {
                         log.trace(`[uibuilder:${uibInstance}] Copied template files from ${path.join( __dirname, 'templates', node.templateFolder)} to local src (not overwriting)`, node.customFolder )
                     }
@@ -465,10 +472,11 @@ module.exports = function(/** @type Red */ RED) {
 
         /** Apply all of the middleware functions to the current instance url 
          * Must be applied in the right order with the most important first */
+        let mStatic = serveStatic( masterStatic, uib.staticOpts )
         app.use( 
             tilib.urlJoin(node.url), 
             httpMiddleware, masterMiddleware, customStatic, 
-            serveStatic( masterStatic, uib.staticOpts )
+            mStatic
         )
         /** If enabled, allow for directory listing of the custom instance folder */
         if ( node.showfolder === true ) {
@@ -714,6 +722,7 @@ module.exports = function(/** @type Red */ RED) {
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
+    // @ts-ignore
     RED.nodes.registerType(uib.moduleName, nodeGo, {
         credentials: {
             jwtSecret: {type:'password'},
@@ -842,6 +851,7 @@ module.exports = function(/** @type Red */ RED) {
     RED.httpAdmin.route('/uibuilder/admin/:url')
         // For all routes
         .all(function(req,res,next) {
+            // @ts-ignore
             const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
             params.type = 'all'
             //params.headers = req.headers
@@ -859,6 +869,7 @@ module.exports = function(/** @type Red */ RED) {
         })
         /** Get something and return it */
         .get(function(req,res) {
+            // @ts-ignore
             const params = res.allparams
             params.type = 'get'
 
@@ -895,6 +906,7 @@ module.exports = function(/** @type Red */ RED) {
         })
         /** TODO Write file contents */
         .put(function(req,res) {
+            // @ts-ignore
             const params = res.allparams
             params.type = 'put'
             
@@ -910,6 +922,7 @@ module.exports = function(/** @type Red */ RED) {
         })
         /** Create a new folder or file */
         .post(function(req,res) {
+            // @ts-ignore
             const params = res.allparams
             params.type = 'post'
 
@@ -978,6 +991,7 @@ module.exports = function(/** @type Red */ RED) {
         })
         /** Delete a folder or a file */
         .delete(function(req,res) {
+            // @ts-ignore
             const params = res.allparams
             params.type = 'delete'
 
@@ -1059,6 +1073,7 @@ module.exports = function(/** @type Red */ RED) {
          */
         const params = req.query
 
+        // @ts-ignore
         const chkUrl = chkParamUrl(params)
         if ( chkUrl.status !== 0 ) {
             log.error(`[uibuilder:uibgetfile] Admin API. ${chkUrl.statusMessage}`)
@@ -1067,6 +1082,7 @@ module.exports = function(/** @type Red */ RED) {
             return
         }
 
+        // @ts-ignore
         const chkFname = chkParamFname(params)
         if ( chkFname.status !== 0 ) {
             log.error(`[uibuilder:uibgetfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
@@ -1075,6 +1091,7 @@ module.exports = function(/** @type Red */ RED) {
             return
         }
 
+        // @ts-ignore
         const chkFldr = chkParamFldr(params)
         if ( chkFldr.status !== 0 ) {
             log.error(`[uibuilder:uibgetfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
@@ -1088,13 +1105,16 @@ module.exports = function(/** @type Red */ RED) {
 
         if ( params.folder === 'root' ) params.folder = ''
 
+        // @ts-ignore
         const filePathRoot = path.join(uib.rootFolder, req.query.url, params.folder)
+        // @ts-ignore
         const filePath = path.join(filePathRoot, req.query.fname)
 
         // Does the file exist?
         if ( fs.existsSync(filePath) ) {
             // Send back a plain text response body containing content of the file
             res.type('text/plain').sendFile(
+                // @ts-ignore
                 req.query.fname, 
                 {
                     // Prevent injected relative paths from escaping `src` folder
@@ -1613,6 +1633,7 @@ module.exports = function(/** @type Red */ RED) {
             //fs.writeFile(path.join(uib.configFolder,'npm-out-latest.txt'), stdout, 'utf8', function(){})
 
             // Update the packageList
+            // @ts-ignore
             uib.installedPackages = uiblib.checkInstalledPackages(params.package, uib, userDir, log)
 
             // Check the results of the command
@@ -1623,6 +1644,7 @@ module.exports = function(/** @type Red */ RED) {
                     if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
                     if (success === true) {
                         // Add an ExpressJS URL
+                        // @ts-ignore
                         uiblib.servePackage(params.package, uib, userDir, log, app)
                     }
                     break
@@ -1633,6 +1655,7 @@ module.exports = function(/** @type Red */ RED) {
                     if ( ! Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
                     if (success === true) {
                         // Remove ExpressJS URL
+                        // @ts-ignore
                         uiblib.unservePackage(params.package, uib, userDir, log, app)
                     }
                     break
@@ -1660,6 +1683,7 @@ module.exports = function(/** @type Red */ RED) {
     /** Serve up the package docs folder (uses docsify)
      * @see [Issue #108](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108)
      */
+    // @ts-ignore
     RED.httpAdmin.use('/uibuilder/techdocs', serveStatic( path.join(__dirname, '..', 'docs'), uib.staticOpts ) )
 
     //#region ------ DEPRECATED API's ------- //
@@ -1673,6 +1697,7 @@ module.exports = function(/** @type Red */ RED) {
     RED.httpAdmin.get('/uibfiles', function(req,res) {
         log.warn('[uibuilder:uibfiles] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
         //#region --- Parameter validation ---
+        /** @type {Object} */
         const params = req.query
 
         const chkUrl = chkParamUrl(params)
@@ -1699,6 +1724,7 @@ module.exports = function(/** @type Red */ RED) {
 
         log.trace(`[uibuilder:uibfiles] Admin API. File get requested. url=${params.url}, folder=${folder}`)
 
+        // @ts-ignore
         const srcFolder = path.join(uib.rootFolder, req.query.url, folder)
 
         /** If requested, copy files from the master template folder
@@ -1759,6 +1785,7 @@ module.exports = function(/** @type Red */ RED) {
     RED.httpAdmin.get('/uibnewfile', function(req,res) {
         log.warn('[uibuilder:uibuilder] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
         //#region --- Parameter validation ---
+        /** @type {Object} */
         const params = req.query
 
         const chkUrl = chkParamUrl(params)
@@ -1812,6 +1839,7 @@ module.exports = function(/** @type Red */ RED) {
     RED.httpAdmin.get('/uibdeletefile', function(req,res) {
         log.warn('[uibuilder:uibdeletefile] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
         //#region --- Parameter validation ---
+        /** @type {Object} */
         const params = req.query
 
         const chkUrl = chkParamUrl(params)
@@ -1901,6 +1929,7 @@ module.exports = function(/** @type Red */ RED) {
     }
 
     //TODO
+    // @ts-ignore
     app.post('/uiblogin', bodyParser.json(),checkSchema(loginSchema), (req, res) => {
 
         console.log('[uiblogin] BODY: ', req.body)
