@@ -35,14 +35,16 @@ Nothing right now.
   - Added a new public method: `eventSend`. You can use this to attach to any HTML DOM event (e.g. a button click). 
     It will automatically send a msg back to Node-RED with details of the event.
 
-    Details on how to use this are contained in the [technical docs](./docs/index.html) in the `uibuilderfe-js` page.
+    Details on how to use this are contained in the [technical docs](https://totallyinformation.github.io/node-red-contrib-uibuilder) in the `uibuilderfe-js` page.
     You can access these docs directly in Node-RED either using the button in the configuration panel or the link
     in the help panel.
 
 ## Changed
 
-- Further improvements to the techical documentation
+- Further improvements to the techical documentation. This is now available [online](https://totallyinformation.github.io/node-red-contrib-uibuilder) as well as from the uibuilder node configuration panel and the help panel in the Editor.
 - Improved links from the Node-RED Editor's help panel, particularly on how to use the uibuilderfe front-end library.
+- Extensive improvements to the 
+  [documentation for working with the `uibuilderfe` library](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/front-end-library) in your front-end code.
 
 ## [3.1.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.3)
 
