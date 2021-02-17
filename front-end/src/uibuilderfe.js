@@ -556,6 +556,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         } // ---- End of markLoggedOut ---- //
 
         /** Send a logon request control message
+         * Node-RED will respond with another control msg indicating success or failure,
+         * the `isAuthorised` variable is set accordingly to true or false.
          * @param {_auth=} _auth Logon specific data to be passed to Node-RED, uses self._auth if not provided.
          * @param {string=} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
          */
@@ -1211,7 +1213,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 self.ioSetup()
             },
 
-            /** Send a logon request message
+            /** Send a logon request control message
+             * Node-RED will respond with another control msg indicating success or failure,
+             * the `isAuthorised` variable is set accordingly to true or false.
              * @param {Object} [data] Optional. Logon specific data to be passed to Node-RED
              */
             logon: self.logon,
