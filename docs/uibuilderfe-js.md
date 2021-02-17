@@ -2,23 +2,99 @@
 
 This is the front-end library. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages.
 
+## ToC
+* [Developer Documentation for `uibuilderfe.js`](#developer-documentation-for-uibuilderfejs)
+  * [ToC](#toc)
+  * [Startup](#startup)
+    * [Startup Optional Parameters](#startup-optional-parameters)
+    * [Parameters](#parameters)
+    * [Examples](#examples)
+    * [Errors](#errors)
+  * [Events](#events)
+    * [Example onChange event handler](#example-onchange-event-handler)
+    * [Currently available pre-defined events](#currently-available-pre-defined-events)
+  * [Variable Handling](#variable-handling)
+  * [Public Variables](#public-variables)
+    * [Externally Writable (via .set method, read via .get method)](#externally-writable-via-set-method-read-via-get-method)
+    * [Externally read-only (via .get method)](#externally-read-only-via-get-method)
+  * [Private Variables](#private-variables)
+  * [Public Methods](#public-methods)
+    * [autoSendReady](#autosendready)
+    * [debug](#debug)
+    * [eventSend](#eventsend)
+    * [get](#get)
+    * [logon](#logon)
+    * [logoff](#logoff)
+    * [me](#me)
+    * [msg](#msg)
+    * [onChange](#onchange)
+    * [send](#send)
+    * [sendCtrl](#sendctrl)
+    * [set](#set)
+    * [showComponentDetails](#showcomponentdetails)
+    * [showToast](#showtoast)
+    * [start](#start)
+    * [uiDebug](#uidebug)
+  * [Private Methods](#private-methods)
+
 ## Startup
 
 In order to use the front-end library for uibuilder, you must call the start function: `uibuilder.start()`.
 
 This should be called once all of the page resources have loaded & the core DOM has rendered.
 
+### Startup Optional Parameters
+
 If initialising this library from a page that is _not in the root folder_ for the uibuilder instance (or indeed is from a different server), the library cannot work out the correct Socket.io path nor the actual root URL and so you have to supply this yourself. e.g.
 
+In addition, if you are using VueJS, you can pass the Vue app instance to the `start` function to allow uibuilder to work some magic such as providing direct access to the toast popups code-free.
+
+### Parameters
+
+* `namespace` {Object=|string=} Optional. One of:
+  
+  * Object containing ref to vueApp, 
+  * Object containing settings using the property names given here, or 
+  * IO Namespace override. Changes self.ioNamespace from the default.
+    
+    If you are not sure about the correct namespace, use the "Instance Details" button in the uibuilder node configuration panel (in the Node-RED Editor) and search for "ioNamespace" in the resulting page.
+
+    The namespace to use here is that result prefixed with a leading `/`
+  
+* `ioPath` {string=} Optional. changes self.ioPath from the default
+
+  The ioPath is a combination of:
+  
+  * A leading `/`,
+  * `httpNodeRoot` - normally empty unless you have changed it in `settings.js`
+  * "/uibuilder/vendor/socket.io"
+
+* `vueApp` {Object=}  Optional. reference to the VueJS instance
+
+### Examples
+
 ```javascript
-//    Socket.io  Namespace,   IO path   
-uibuilder.start('/nr/uib',   '/nr/uibuilder/vendor/socket.io')
+//    Socket.io  Namespace,   IO path (no httpNodeRoot defined)
+uibuilder.start('/uiburl',   '/uibuilder/vendor/socket.io')
 ```
 
-If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages in your browser console, this is the most likely reason.
+```javascript
+// Just passes the VueJS app object to enable Vue magic functions
+uibuilder.start(this)
+```
 
-* @param {String} namespace - is always the url parameter defined in the Editor for this instance of uibuilder
-* @param {String} sioClientPath - is always '/uibuilder/vendor/socket.io' unless `httpNodeRoot` is defined in settings.js and then you need to add that as a prefix.
+```javascript
+// Pass a settings object
+uibuilder.start({
+    namespace: '/uib',
+    ioPath: '/nr/uibuilder/vendor/socket.io', // httpNodeRoot defined as "nr" in settings.js
+    vueApp: this
+})
+```
+
+### Errors
+
+If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages in your browser console, this is the most likely reason.
 
 ## Events
 
@@ -28,9 +104,11 @@ Events are created automatically by the internal `self.set` function that is use
 
 Events are subscribed to using the `uibuilder.onChange(evtName, callback)` function. Where the callback is executed whenever anything triggers that event name.
 
-Event processing is highly efficient since nothing actually happens if no `onchange` function has been registered against an event. Multiple `onChange` callbacks can be assigned to an event which is helpful if you have front-end code such as components. In general though, try to minimise the number of `onChange` entries.
+Event processing is highly efficient since nothing actually happens if no `onChange` function has been registered against an event. Multiple `onChange` callbacks can be assigned to an event which is helpful if you have front-end code such as components. In general though, try to minimise the number of `onChange` entries.
 
-### Example use
+Most commonly, the only `onChange` event handler you will define is the one that fires whenever a msg is received from Node-RED:
+
+### Example onChange event handler
 
 The most common event used is when the `msg` variable is updated by an incoming message from Node-RED.
 
@@ -40,7 +118,7 @@ uibuilder.onChange('msg', function(msg){
 })
 ```
 
-### Currently available events
+### Currently available pre-defined events
 
 * `ctrlMsg` - triggered whenever the client receives a control message from the server.
 * `ioConnected` - triggered whenever the client connects or disconnects from the server over Socket.IO.
@@ -83,6 +161,8 @@ Internally to the library, all variable access should be via `self.get()` and `s
 * `autoSendReady` {boolean} [true] If true, a REPLAY control message is sent once the client receives a "client connected" control message from the server.
 
 ### Externally read-only (via .get method)
+
+It is very rare, if ever, that you will need to manually `get` any of these. It is better to use an `onChange` function that fires whenever they change.
 
 * `ctrlMsg` {Object} Copy of last control msg object received from sever
 
@@ -130,27 +210,108 @@ These are only accessible from within the library.
 
 These are are available from user code via `uibuilder.xxxx()`. Many also have private equivalents.
 
-* `set` - set a variable inside the library. Also creates an event that can be subscribed to.
-  
-  Note that the set function protects private variables and prevents the overwriting of internal function names.
+### autoSendReady
+### debug
 
-* `get` - get the value of a variable inside the library.
+Turns on/off debugging. See the output in your browser's developer console.
+
+Example: `uibuilder.debug(true)`
+
+Best used in the `created` section of Vue or similar frameworks.
+
+### eventSend
+
+A simple helper function designed to be the target method for DOM events. Typically used for the click event handler for a button.
+
+A msg will be sent back to Node-RED containing some information as shown in the example below
+
+_Vue/bootstrap-vue example_:
+
+In `index.html`
+
+```html
+<b-button id="myButton1" @click="doEvent" data-something="hello"></b-button>
+```
+
+Note that all `data-xxxx` attributes are 
+
+In `index.js`
+
+```javascript
+// ...
+methods: {
+    doEvent: uibuilder.eventSend,
+},
+// ...
+```
+
+The msg returned to Node-RED will be:
+
+```jsonc
+{
+    "topic": "", // Optional. Will include the topic from the last inbound msg if it is available
+
+    "uibDomEvent": {
+        // The html id attribute. If that doesn't exist, the name attribute
+        // is used. If that doesn't exist, the 1st 25 chars of the inner text is used
+        "sourceId": "myButton1",
+        // The DOM event that triggered the function
+        "event": "click",
+    },
+
+    // Each `data-xxxx` attribute is added as a property
+    // - this may be an empty Object if no data attributes defined
+    "payload": {
+        "something": "hello"
+    }
+
+}
+```
+
+### get
+
+`get` - get the value of a variable inside the library.
   
   Note that the get function protects private variables preventing easy access. This is not a security function since JavaScript has no mechanism for completely protecting private variables.
 
-* `onChange` - Subscribe to an event. Has two parameters. The first is the name of the event, the second is a callback function to be triggered when the event is fired.
-  
-* `msg` - a convenience method, returns the current value of the last received standard (not control) message.
-  
-* `send` - send a standard message back to Node-RED. Requires an object as its single parameter. The object is the msg object to be sent.
+### logon
+### logoff
+### me
 
-  The library will add some standard properties to the message so you only need to add your own data.
-  
-* `sendCtrl` - send a control message back to Node-RED. Requires an object as its single parameter. The object is the msg object to be sent.
-  
-  Note that you shouldn't really need to ever send a control msg since the library takes care of all of that. However, there may be rare occasions when you might want to do something like trigger a cache replay or cache clear.
+Returns the front-end library version as a string unless debugging is turned on. In which case it returns the full `self` object - use with caution.
 
-  The library will add some standard properties to the message so you only need to add your own data.
+### msg
+
+`msg` - a convenience method, returns the current value of the last received standard (not control) message.
+
+### onChange
+
+`onChange` - Subscribe to an event. Has two parameters. The first is the name of the event, the second is a callback function to be triggered when the event is fired.
+
+### send
+
+`send` - send a standard message back to Node-RED. Requires an object as its single parameter. The object is the msg object to be sent.
+
+The library will add some standard properties to the message so you only need to add your own data.
+
+### sendCtrl
+
+`sendCtrl` - send a control message back to Node-RED. Requires an object as its single parameter. The object is the msg object to be sent.
+  
+Note that you shouldn't really need to ever send a control msg since the library takes care of all of that. However, there may be rare occasions when you might want to do something like trigger a cache replay or cache clear.
+
+The library will add some standard properties to the message so you only need to add your own data.
+
+### set
+
+`set` - set a variable inside the library. Also creates an event that can be subscribed to.
+  
+Note that the set function protects private variables and prevents the overwriting of internal function names.
+
+### showComponentDetails
+### showToast
+### start
+### uiDebug
 
 ## Private Methods
 

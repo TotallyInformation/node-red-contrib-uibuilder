@@ -6,9 +6,43 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.0.1...master)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.0...master)
 
 Nothing right now.
+
+## [3.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.3...v3.2.0)
+
+## New
+
+- You can now choose between front-end templates. 
+  
+  Vue/Bootstrap-vue is still the default.
+
+  Expand the "Advanced" settings to see the new dropdown. Note that uibuilder never overwrites your files so you either have to change the selection **before** the first deployment of the node or you have to delete the index.(html|js|css) and README.md files before changing the selection.
+
+- The Editor will now tell you if you have missing dependencies for your chosen template.
+  
+  ![missing packages warning](docs/missing-packages-warning.png)
+
+  Useful for people who forget to install vue and bootstrap-vue now that they have been removed from the default install.
+
+- New "Blank" template added.
+  
+  This does not contain any front-end libraries or frameworks. It uses just the uibuilderfe library with raw DOM commands.
+
+- In the `uibuilderfe` front-end library:
+
+  - Added a new public method: `eventSend`. You can use this to attach to any HTML DOM event (e.g. a button click). 
+    It will automatically send a msg back to Node-RED with details of the event.
+
+    Details on how to use this are contained in the [technical docs](./docs/index.html) in the `uibuilderfe-js` page.
+    You can access these docs directly in Node-RED either using the button in the configuration panel or the link
+    in the help panel.
+
+## Changed
+
+- Further improvements to the techical documentation
+- Improved links from the Node-RED Editor's help panel, particularly on how to use the uibuilderfe front-end library.
 
 ## [3.1.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.3)
 
