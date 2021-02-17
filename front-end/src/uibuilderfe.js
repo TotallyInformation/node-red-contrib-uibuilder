@@ -1,6 +1,6 @@
 /* global Vue */
 /*
-  Copyright (c) 2020 Julian Knight (Totally Information)
+  Copyright (c) 2021 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -46,6 +46,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
      * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
      * @property {Object=} [info] Optional metadata about the user.
      */
+    /**
+     * A string containing HTML markup
+     * @typedef {string} html
+     */
     //#endregion --- Type Defs --- //
 
     // Keep a copy of the starting context
@@ -65,11 +69,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
         }
 
+        /** @type {Object} */
         var self = this
 
         //#region ======== Start of setup ======== //
 
-        self.version = '3.0.0'
+        self.version = '3.2.0'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-ignore
@@ -202,17 +207,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         // ---- These cannot be access externally via get/set: ----
         self.authToken    = ''    // populated when receive 'authorised' msg from server, must be returned with each msg sent
 
-        /** Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot */
-        {
-            // split current url path, eliminate any blank elements and trailing or double slashes
-            var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
-            /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
-            if (fullPath.length > 0) if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
-            self.url = fullPath.pop() // not actually used and only gives the last path section of the url anyway
-            self.httpNodeRoot = '/' + fullPath.join('/')
-            self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')
-            self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url (not used): ' + self.url)
-        }
+        //#region - Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
+        // split current url path, eliminate any blank elements and trailing or double slashes
+        var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
+        /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
+        if (fullPath.length > 0) if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
+        self.url = fullPath.pop() // not actually used and only gives the last path section of the url anyway
+        self.httpNodeRoot = '/' + fullPath.join('/')
+        self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')
+        self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url (not used): ' + self.url)
+        //#endregion
 
         //#endregion --- variables ---
 
@@ -725,7 +729,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * Example: uibuilder.onChange('msg', function(newValue){ console.log('uibuilder.msg changed! It is now: ', newValue) })
          *
          * @param {string} prop The property of uibuilder that we want to monitor
-         * @param {function(*)} callback The function that will run when the property changes, parameter is the new value of the property after change
+         * @param {function} callback The function that will run when the property changes, parameter is the new value of the property after change
          */
         self.onChange = function(prop, callback) {
             // Note: Property does not have to exist yet
@@ -768,14 +772,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             /** Toast options
              * @type {Object} toastOptions Optional metadata for the toast.
-             * @param {String|vNodes|vNodes[]} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
+             * @param {String|VNode|VNode[]} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
              * @param {Boolean} [toastOptions.appendToast] Optional. Whether to show new toasts below previous ones still on-screen (true). Or to replace previous (false - default)
              * @param {Number} [toastOptions.autoHideDelay] Optional. Ms until toast is auto-hidden.
              */
             let toastOptions = {}
 
             /** Main content of the toast
-             * @type {String|vNodes|vNodes[]}
+             * @type {String|VNode|VNode[]}
              */
             let content = ''
             
@@ -1160,20 +1164,20 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             me: self.me,
 
             /** Startup socket.io comms - must be done manually by user to allow for changes to namespace/path 
-             * @param {Object=|string=} namespace Optional. Object containing ref to vueApp, Object containing settings, or IO Namespace override. changes self.ioNamespace from the default.
+             * @param {Object|string} [namespace] Optional. Object containing ref to vueApp, Object containing settings, or IO Namespace override. changes self.ioNamespace from the default.
              * @param {string=} ioPath Optional. changes self.ioPath from the default
              * @param {Object=} vueApp Optional. reference to the VueJS instance
              */
             start: function(namespace,ioPath,vueApp) {
-                self.uiDebug('log', 'uibuilderfe: start() called')
+                self.uiDebug('log', '[uibuilderfe:start] start() called')
 
                 // If 1st param is an object ...
                 if ( toString.call(namespace) === '[object Object]' ) {
-                    self.uiDebug('log', '✅ namespace IS an object!')
+                    self.uiDebug('log', '✅ [uibuilderfe:start] namespace IS an object!')
 
                     // Is it the vue instance?
                     if ( namespace._isVue === true ) {
-                        self.uiDebug('log', '✅ Vue instance object IS available!')
+                        self.uiDebug('log', '✅ [uibuilderfe:start] Vue instance object IS available!')
                         vueApp = namespace
                         namespace = undefined
                     } else {
@@ -1186,23 +1190,23 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 } else {
                     // If the 1st param wasn't an object, was the vueApp param provided?
                     if ( ! vueApp ) {
-                        self.uiDebug('log', '❌ app1 not available!')
+                        self.uiDebug('log', '❌ [uibuilderfe:start] app1 not available!')
                     } else if ( toString.call(vueApp) === '[object Object]' && vueApp._isVue === true ) {
-                        self.uiDebug('log', '✅ Vue instance object IS available!')
+                        self.uiDebug('log', '✅ [uibuilderfe:start] Vue instance object IS available!')
                     } else {
-                        self.uiDebug('log', '❌ Vue instance object not available!')
+                        self.uiDebug('log', '❌ [uibuilderfe:start] Vue instance object not available!')
                         vueApp = undefined
                     }
                 }
 
-                self.uiDebug('log', 'uibuilder:start: Calling params - namespace', namespace, 'ioPath', ioPath, 'vueApp', vueApp)
+                self.uiDebug('log', '[uibuilderfe:start] Calling params - namespace', namespace, 'ioPath', ioPath, 'vueApp', vueApp)
                 
                 // Save the parameters
                 if (namespace !== undefined && namespace !== null) self.ioNamespace = namespace
                 if (ioPath !== undefined && ioPath !== null) self.ioPath = ioPath
                 if (vueApp !== undefined && vueApp !== null) self.vueApp = vueApp
 
-                self.uiDebug('log', 'uibuilder:start: Final Socket.IO params - namespace', namespace, 'ioPath', ioPath)
+                self.uiDebug('log', '[uibuilderfe:start] Final Socket.IO params - namespace', namespace, 'ioPath', ioPath)
 
                 self.ioSetup()
             },
@@ -1232,14 +1236,50 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              */
             showToast: function(text, ref='globalNotification', options={}) {
                 const msg = {
-                    "_uib": {
-                        "componentRef": ref,
-                        "options": options,
+                    '_uib': {
+                        'componentRef': ref,
+                        'options': options,
                     },
-                    "payload": text,
+                    'payload': text,
                 }
                 self.showToast(msg)
             },
+
+            /** Easily send a msg back to Node-RED on a DOM event
+             * In HTML: `<b-button id="myButton1" @click="doEvent" data-something="hello"></b-button>`
+             * In JS methods: `doEvent: uibuilder.eventSend,`
+             * All `data-` attributes will be passed back to Node-RED, 
+             *    use them instead of arguments in the click function
+             * @param {MouseEvent|any} domevent DOM Event object
+             */
+            eventSend: function(domevent) {
+                // The argument must be a DOM event
+                if ( (! domevent.constructor.name.endsWith('Event')) || (! domevent.currentTarget) ) {
+                    self.uiDebug('log', '[uibuilderfe:eventSend] ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data')
+                    return
+                }
+                const target = domevent.currentTarget
+
+                // Try to get a meaningful ID. id attrib is highest priority, text content is lowest
+                let id = ''
+                try { if (target.textContent !== '') id = target.textContent.substring(0,25) } catch (e) {}
+                try { if (target.name !== '') id = target.name } catch (e) {}
+                try { if (target.id !== '') id = target.id } catch (e) {}
+
+                self.send({
+                    topic: self.msg.topic,  // repeats the topic from the last inbound msg if it exists
+
+                    uibDomEvent: {
+                        sourceId: id,
+                        event: domevent.type,
+                    },
+
+                    // Each `data-xxxx` attribute is added as a property
+                    // - this may be an empty Object if no data attributes defined
+                    payload: target.dataset,
+                })
+            },
+
 
         } // --- End of return callback functions --- //
 
@@ -1251,7 +1291,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
          * load: All resources are loaded
          */
-         /* document.addEventListener('DOMContentLoaded', function(){
+        /* document.addEventListener('DOMContentLoaded', function(){
            self.send({'uibuilderCtrl':'DOMContentLoaded'},self.ioChannels.control)
           }) */
         window.addEventListener('load', function(){
