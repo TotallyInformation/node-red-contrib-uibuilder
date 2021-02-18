@@ -10,6 +10,12 @@ module.exports = {
         'dependencies': [ 'vue', 'bootstrap-vue' ],
         'description': 'The default template since uibuilder v2. Uses VueJS and bootstrap-vue.'
     },
+    'vue-simple': {
+        'name': 'Simple VueJS',
+        'folder': 'vue-simple',
+        'dependencies': [ 'vue', 'bootstrap-vue' ],
+        'description': 'Simplest VueJS and bootstrap-vue template.'
+    },
     blank: {
         'name': 'Blank template, no framework',
         'folder': 'blank',

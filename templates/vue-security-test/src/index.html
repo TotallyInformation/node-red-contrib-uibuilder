@@ -1,18 +1,6 @@
 <!doctype html>
-<!-- Note that adding an appcache really speeds things up after the first load
-    You need to amend the appcache file to meet your needs.
-    Don't forget to change the appcache file if you update ANY
-    of the files in it otherwise the old versions will ALWAYS be used.
-<html lang="en" manifest="./uibuilder.appcache">
--->
-<html lang="en">
-<!--
-    This is the default, template html for uibuilder.
-    It is meant to demonstrate the use of VueJS & bootstrap-vue to dynamically
-    update the ui based on incoming/outgoing messages from/to the
-    Node-RED server.
--->
-<head>
+<html lang="en"><head>
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -113,21 +101,21 @@
         </b-container>
     </div>
 
-    <!-- Dont forget to use minified versions of libraries for production, non-min versions for development only -->
     <!-- These MUST be in the right order. Note no leading / -->
 
     <!-- REQUIRED: Socket.IO is loaded only once for all instances. Without this, you don't get a websocket connection -->
     <script src="../uibuilder/vendor/socket.io/socket.io.js"></script>
 
-    <!-- --- Vendor Libraries - Load in the right order --- -->
+    <!-- Vendor Libraries - Load in the right order, use minified, production versions for speed -->
     <script src="../uibuilder/vendor/vue/dist/vue.js"></script> <!-- dev version with component compiler -->
     <!-- <script src="../uibuilder/vendor/vue/dist/vue.min.js"></script>   prod version with component compiler -->
     <!-- <script src="../uibuilder/vendor/vue/dist/vue.runtime.min.js"></script>   prod version without component compiler -->
-    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.js"></script>
+    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.js"></script> <!-- Dev version -->
+    <!-- <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js"></script>   Prod version -->
 
     <!-- REQUIRED: Sets up Socket listeners and the msg object -->
     <script src="./uibuilderfe.js"></script> <!-- dev version -->
-    <!-- <script src="./uibuilderfe.min.js"></script>     //prod version -->
+    <!-- <script src="./uibuilderfe.min.js"></script>     prod version -->
 
     <!-- OPTIONAL: You probably want this. Put your custom code here -->
     <script src="./index.js"></script>

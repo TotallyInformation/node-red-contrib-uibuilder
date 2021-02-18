@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en"><head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Node-RED UI Builder - VueJS + bootstrap-vue default template</title>
+    <meta name="description" content="Node-RED UI Builder - VueJS + bootstrap-vue default template">
+
+    <link rel="icon" href="./images/node-blue.ico">
+
+    <link type="text/css" rel="stylesheet" href="../uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.css" />
+    <!-- Your own CSS -->
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+
+</head><body>
+
+    <div id="app" v-cloak>
+        <b-container id="app_container">
+
+            <b-img src="./images/node-blue-192x192.png" rounded left v-bind="imgProps" alt="Blue Node-RED" class="mt-1 mr-2"></b-img>
+            <h1>UIbuilder + Vue.js + bootstrap-vue for Node-RED</h1>
+            <p>
+                This is a uibuilder example using <a href="https://vuejs.org/">Vue.js</a> as a front-end library.
+                See the
+                <a
+                    href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
+                README for details on how to use UIbuilder.
+            </p>
+
+            
+            <b-card>
+                <h3 slot="header">Simple input using Vue</h3>
+                
+                Simplest possible way of getting event information back to Node-RED using a uibuilder helper function.
+                The method works with any DOM event. Demonstrated here with a simple button click.
+                
+                <p class="mt-1 pb-3">
+                    <b-button id="myButton1" @click="doEvent" data-something="hello">Send Something To Node-RED</b-button>
+                </p>
+
+                <b-form class="border p-3">
+                    <p>
+                        You can also very simply create a form like this using Vue & bootstrap-vue.
+                        The form sends data back to Node-RED.
+                        Look at the <code>increment</code> method in <code>index.js</code> to see how easy this is.
+                    </p>
+
+                    <p>
+                        <b-form-input v-model="inputText" type="text" placeholder="Enter some text to send to Node-RED"></b-form-input><br>
+                        <b-form-checkbox v-model="inputChkBox">
+                            To tick or not to tick? That is the question
+                        </b-form-checkbox><br>
+                        <b-button id="btn_increment" pill variant="primary" v-on:click="increment">Increment</b-button>
+                            &nbsp;&nbsp;Click Counter: <b>{{counterBtn}}</b>.
+                        <p>Click on the button to increment the counter. It sends the data dynamically back to Node-RED as well.</p>
+                    </p>
+                </b-form>
+            </b-card>
+            
+            <h2>Dynamic Data</h2>
+            <div>
+                <p>Uses Vue to dynamically update in response to messages from Node-RED.</p>
+                <p>
+                    Check out the <code>mounted</code> function in <code>index.js</code> to See
+                    how easy it is to update Vue data from Node-RED.
+                </p>
+
+                <b-card class="mt-3" header="Status" border-variant="info" header-bg-variant="info" header-text-variant="white" align="center" >
+                    <p class="float-left">Socket.io Connection Status: <b>{{socketConnectedState}}</b></p>
+                    <p class="float-right">Time offset between browser and server: <b>{{serverTimeOffset}}</b> hours</p>
+                </b-card>
+
+                <b-card class="mt-3" header="Normal Messages" border-variant="primary" header-bg-variant="primary" header-text-variant="white" align="left" >
+                    <p>
+                        Messages: Received=<b>{{msgsReceived}}</b>, Sent=<b>{{msgsSent}}</b>
+                    </p>
+                    <pre v-html="hLastRcvd" class="syntax-highlight"></pre>
+                    <pre v-html="hLastSent" class="syntax-highlight"></pre>
+                    <p slot="footer" class="mb-0">
+                        The received message is from the input to the uibuilder node.
+                        The send message will appear out of port #1 of the node.
+                    </p>
+                </b-card>
+
+                <b-card class="mt-3" header="Control Messages" border-variant="secondary" header-bg-variant="secondary" header-text-variant="white" align="left" >
+                    <p>
+                        Control Messages: Received=<b>{{msgsControl}}</b>, Sent=<b>{{msgsCtrlSent}}</b>
+                    </p>
+                    <pre v-html="hLastCtrlRcvd" class="syntax-highlight"></pre>
+                    <pre v-html="hLastCtrlSent" class="syntax-highlight"></pre>
+                    <p slot="footer" class="mb-0">
+                        Control messages always appear out of port #2 of the uibuilder node
+                        whether they are from the server or the client. The <code>from</code> property
+                        of the message tells you where it came from.
+                    </p>
+                </b-card>
+            </div>
+
+        </b-container>
+    </div>
+
+    <!-- These MUST be in the right order. Note no leading / -->
+
+    <!-- REQUIRED: Socket.IO is loaded only once for all instances. Without this, you don't get a websocket connection -->
+    <script src="../uibuilder/vendor/socket.io/socket.io.js"></script>
+
+    <!-- Vendor Libraries - Load in the right order, use minified, production versions for speed -->
+    <script src="../uibuilder/vendor/vue/dist/vue.js"></script> <!-- dev version with component compiler -->
+    <!-- <script src="../uibuilder/vendor/vue/dist/vue.min.js"></script>   prod version with component compiler -->
+    <!-- <script src="../uibuilder/vendor/vue/dist/vue.runtime.min.js"></script>   prod version without component compiler -->
+    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.js"></script> <!-- Dev version -->
+    <!-- <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js"></script>   Prod version -->
+
+    <!-- REQUIRED: Sets up Socket listeners and the msg object -->
+    <script src="./uibuilderfe.js"></script> <!-- dev version -->
+    <!-- <script src="./uibuilderfe.min.js"></script>     prod version -->
+
+    <!-- OPTIONAL: You probably want this. Put your custom code here -->
+    <script src="./index.js"></script>
+
+</body></html>

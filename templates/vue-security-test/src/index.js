@@ -18,12 +18,14 @@
 */
 'use strict'
 
-/** @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Front-End-Library---available-properties-and-methods */
+/** @see https://totallyinformation.github.io/node-red-contrib-uibuilder/#/front-end-library */
 
 // eslint-disable-next-line no-unused-vars
-new Vue({
+const app = new Vue({
     el: '#app',
-    data: {
+
+    data() { return {
+
         startMsg    : 'Vue has started, waiting for messages',
         feVersion   : '',
         counterBtn  : 0,
@@ -47,8 +49,11 @@ new Vue({
         userId      : null,
         userPw      : null,
         inputId     : '',
-    }, // --- End of data --- //
+
+    }}, // --- End of data --- //
+
     computed: {
+
         hLastRcvd: function() {
             var msgRecvd = this.msgRecvd
             if (typeof msgRecvd === 'string') return 'Last Message Received = ' + msgRecvd
@@ -70,8 +75,11 @@ new Vue({
             //else return 'Last Message Sent = ' + this.callMethod('syntaxHighlight', [msgCtrlSent])
             else return 'Last Control Message Sent = ' + this.syntaxHighlight(msgCtrlSent)
         },
+
     }, // --- End of computed --- //
+
     methods: {
+
         increment: function(event) {
             console.log('Button Pressed. Event Data: ', event)
 
@@ -121,12 +129,14 @@ new Vue({
             })
             return json
         }, // --- End of syntaxHighlight --- //
+
     }, // --- End of methods --- //
 
     // Available hooks: beforeCreate,created,beforeMount,mounted,beforeUpdate,updated,beforeDestroy,destroyed, activated,deactivated, errorCaptured
 
     /** Called after the Vue app has been created. A good place to put startup code */
     created: function() {
+
         // Example of retrieving data from uibuilder
         this.feVersion = uibuilder.get('version')
 
@@ -141,16 +151,17 @@ new Vue({
         uibuilder.start(this) // Single param passing vue app to allow Vue extensions to be used.
 
         //console.log(this)
-    },
+
+    }, // --- End of created hook --- //
 
     /** Called once all Vue component instances have been loaded and the virtual DOM built */
     mounted: function(){
+
         //console.debug('[indexjs:Vue.mounted] app mounted - setting up uibuilder watchers')
 
         var app = this  // Reference to `this` in case we need it for more complex functions
 
         // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
-        // newVal relates to the attribute being listened to.
         uibuilder.onChange('msg', function(msg){
             //console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', msg)
             app.msgRecvd = msg
@@ -207,7 +218,7 @@ new Vue({
 
         //#endregion ---- Debug info, can be removed for live use ---- //
 
-    } // --- End of mounted hook --- //
+    }, // --- End of mounted hook --- //
 
 }) // --- End of app1 --- //
 

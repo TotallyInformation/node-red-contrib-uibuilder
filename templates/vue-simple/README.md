@@ -1,10 +1,10 @@
-# uibuilder Template: VueJS & bootstrap-vue
+# uibuilder Template: VueJS Simple
 
-**NOTE**: This is the default template for uibuilder. You need to have installed `vue` v2 and `bootstrap-vue` v2 to use this template. uibuilder will warn you if you don't have them installed.
+**NOTE**: You need to have installed `vue` v2 and `bootstrap-vue` v2 to use this template. uibuilder will warn you if you don't have them installed.
 
-It demonstrates the various basic features you are likely to want in a simple, dynamic, data-driven user interface.
+It contains the simplest possible boilerplate for using VueJS. bootstrap-vue is included to help you get a good-lokking UI without any extra effort.
 
-It includes display of control and standard messages to/from Node-RED as well as a simple form with submission back to Node-RED.
+It only includes the bare minimum of code to get you started.
 
 ## Folders
 
