@@ -5,6 +5,7 @@
  * @property {String} uibNode.name Descriptive name, only used by Editor
  * @property {String} uibNode.topic msg.topic overrides incoming msg.topic
  * @property {String} uibNode.url The url path (and folder path) to be used by this instance
+ * @property {String} uibNode.oldUrl The PREVIOUS url path (and folder path) after a url rename
  * @property {boolean} uibNode.fwdInMessages Forward input msgs to output #1?
  * @property {boolean} uibNode.allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} uibNode.allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
