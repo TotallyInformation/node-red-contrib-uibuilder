@@ -87,8 +87,6 @@
 
         // Create a button click listener for the install button for this row
         $('#packageList-button-' + index).click(function(){
-            //console.log('.packageList-row-data button::click', $('#packageList-input-' + index).val() )
-
             // show activity spinner
             $('i.spinner').show()
             
@@ -100,11 +98,10 @@
 
                 // Call the npm installPackage API (it updates the package list)
                 $.get( 'uibnpmmanage?cmd=install&package=' + packageName, function(data){
-                    //console.log('.packageList-row-data get::uibnpmmanage', data )
 
                     if ( data.success === true) {
-                        RED.notify('Successful installation of npm package ' + packageName, 'success')
                         console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName)
+                        RED.notify('Successful installation of npm package ' + packageName, 'success')
 
                         // Replace the input field with the normal package name display
                         myRow.html(packageName)
@@ -112,17 +109,18 @@
                         // Update the master package list
                         packages.push(packageName)
                     } else {
-                        RED.notify('FAILED installation of npm package ' + packageName, 'error')
                         console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName )
                         console.dir( data.result )
+                        RED.notify('FAILED installation of npm package ' + packageName, 'error')
                     }
 
                     // Hide the progress spinner
                     $('i.spinner').hide()
 
-                }).fail(function(_jqXHR, textStatus, errorThrown) {
-                    RED.notify('FAILED installation of npm package ' + packageName, 'error')
+                })
+                .fail(function(_jqXHR, textStatus, errorThrown) {
                     console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
+                    RED.notify('FAILED installation of npm package ' + packageName, 'error')
 
                     $('i.spinner').hide()
                     return 'addPackageRow failed'
@@ -136,7 +134,6 @@
 
     /** RemoveItem function for package list */
     function removePackageRow(packageName) {
-        //console.log('[uibuilder:removePackageRow] PACKAGE NAME: ', packageName)
 
         // If package name is an empty object - user removed an add row so ignore
         if ( (packageName === '') || (typeof packageName !== 'string') ) {
@@ -149,27 +146,27 @@
 
         // Call the npm installPackage API (it updates the package list)
         $.get( 'uibnpmmanage?cmd=remove&package=' + packageName, function(data){
-            //console.log('[uibuilder:removePackageRow:get::uibnpmmanage] ', data )
 
             if ( data.success === true) {
-                RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
                 console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
+                RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
                 
                 // Remove the entry from the master package list
                 const i = packages.indexOf(packageName)
                 if ( i > 0 ) packages.splice(i,1)
             } else {
-                RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
+                RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 // Put the entry back again
                 $('#node-input-packageList').editableList('addItem',packageName)
             }
 
             $('i.spinner').hide()
 
-        }).fail(function(_jqXHR, textStatus, errorThrown) {
-            RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
+        })
+        .fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
+            RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
             
             // Put the entry back again
             $('#node-input-packageList').editableList('addItem',packageName)
@@ -184,8 +181,6 @@
     /** Get list of installed packages via API - save to master list */
     function packageList() {
         $.getJSON('uibvendorpackages', function(vendorPaths) {
-            //console.log('uibuilder:packageList:uibvendorpackages', vendorPaths)
-
             packages = []
             var pkgList = Object.keys(vendorPaths)
             pkgList.forEach(function(packageName,_index){
@@ -265,68 +260,67 @@
                 'cmd': 'listall',
             },
         })
-        .done(function(data, textStatus, jqXHR) {
-            let firstFile = '', indexHtml = false, selected = false
+            .done(function(data, textStatus, jqXHR) {
+                let firstFile = '', indexHtml = false, selected = false
 
-            // build folder list, pre-select src if no current folder selected #node-input-folder - Object.keys(res)
-            const folders = Object.keys(data).sort()
+                // build folder list, pre-select src if no current folder selected #node-input-folder - Object.keys(res)
+                const folders = Object.keys(data).sort()
 
-            // Rebuild folder drop-down
-            $.each(folders, function (i, fldrname) {
-                // For the root folder, use empty string for folders lookup but "root" for display
-                if ( fldrname === '' ) fldrname = 'root'
-                // Build the drop-down
-                $('#node-input-folder').append($('<option>', { 
-                    value: fldrname,
-                    text : fldrname, 
-                }))
+                // Rebuild folder drop-down
+                $.each(folders, function (i, fldrname) {
+                    // For the root folder, use empty string for folders lookup but "root" for display
+                    if ( fldrname === '' ) fldrname = 'root'
+                    // Build the drop-down
+                    $('#node-input-folder').append($('<option>', { 
+                        value: fldrname,
+                        text : fldrname, 
+                    }))
+                })
+                // if currently selected folder doesn't exist
+                if ( !data[folder] ) {
+                    // Use 'src' if it exists otherwise use 'root'
+                    if ( data['src'] ) folder = 'src'
+                    else folder = root
+                }
+                // Selected folder
+                $('#node-input-folder').val(folder)
+                uiace.folder = folder
+                // Persist the folder selection
+                localStorage.setItem('uibuilder.'+url+'.folder', folder)
+
+                let files = []
+                files = data[folder]
+                
+                $.each(files, function (i, filename) {
+                    // Build the drop-down
+                    $('#node-input-filename').append($('<option>', { 
+                        value: filename,
+                        text : filename, 
+                    }))
+                    // Choose the default file. In order: selectedFile param, index.html, 1st returned
+                    if ( i === 0 ) firstFile = filename
+                    if ( filename === 'index.html' ) indexHtml = true
+                    if ( filename === selectedFile ) selected = true
+                })
+                // Set default file name/type. In order: selectedFile param, index.html, 1st returned
+                if ( selected === true ) uiace.fname = selectedFile
+                else if ( indexHtml === true ) uiace.fname = 'index.html'
+                else uiace.fname = firstFile
+                $('#node-input-filename').val(uiace.fname)
+                uiace.format = fileType(uiace.fname)
+                // Persist the file name selection
+                localStorage.setItem('uibuilder.'+url+'.selectedFile', uiace.fname)
+
             })
-            // if currently selected folder doesn't exist
-            if ( !data[folder] ) {
-                // Use 'src' if it exists otherwise use 'root'
-                if ( data['src'] ) folder = 'src'
-                else folder = root
-            }
-            // Selected folder
-            $('#node-input-folder').val(folder)
-            uiace.folder = folder
-            // Persist the folder selection
-            localStorage.setItem('uibuilder.'+url+'.folder', folder)
+            .fail(function(jqXHR, textStatus, errorThrown) {
 
-            //console.log({folder, folders, data})
+                console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
+                uiace.fname = ''
+                uiace.format = 'text'
+                RED.notify(`uibuilder: Folder and file listing error.<br>${errorThrown}`, {type:'error'})
 
-            // build file list for selected folder
-            let files = []
-            files = data[folder]
-            
-            $.each(files, function (i, filename) {
-                // Build the drop-down
-                $('#node-input-filename').append($('<option>', { 
-                    value: filename,
-                    text : filename, 
-                }))
-                // Choose the default file. In order: selectedFile param, index.html, 1st returned
-                if ( i === 0 ) firstFile = filename
-                if ( filename === 'index.html' ) indexHtml = true
-                if ( filename === selectedFile ) selected = true
             })
-            // Set default file name/type. In order: selectedFile param, index.html, 1st returned
-            if ( selected === true ) uiace.fname = selectedFile
-            else if ( indexHtml === true ) uiace.fname = 'index.html'
-            else uiace.fname = firstFile
-            $('#node-input-filename').val(uiace.fname)
-            uiace.format = fileType(uiace.fname)
-            // Persist the file name selection
-            localStorage.setItem('uibuilder.'+url+'.selectedFile', uiace.fname)
-
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            //console.log({jqXHR, textStatus, errorThrown})
-            console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
-            uiace.fname = ''
-            uiace.format = 'text'
-            RED.notify(`uibuilder: Folder and file listing error.<br>${errorThrown}`, {type:'error'})
-
-        }).always(function() {
+            .always(function() {
             getFileContents()
         })
 
@@ -348,8 +342,6 @@
             fname = localStorage.getItem('uibuilder.'+url+'.selectedFile') || uiace.fname 
         // Get the current url
         var url = $('#node-input-url').val()
-
-        //console.log( '[uibuilder:getFileContents] ', url, folder, fname )
 
         // Save the file & folder names
         uiace.folder = folder
@@ -378,13 +370,15 @@
             // Position the cursor in the edit area
             uiace.editor.focus()
 
-        }).fail(function(_jqXHR, textStatus, errorThrown) {
+        })
+        .fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
             uiace.editorSession.setValue('')
             $('#node-input-template-editor').hide()
             $('#node-input-template-editor-no-file').show()
 
-        }).always(function(){
+        })
+        .always(function(){
             fileIsClean(true)
             // Default the language selector in case it wasn't recognised
             if(!$('#node-input-format option:selected').length) $('#node-input-format').val('text')
@@ -410,15 +404,12 @@
             },
         })
         .done(function(data, textStatus, jqXHR) {
-            //console.log({data, textStatus, jqXHR})
             RED.notify(`uibuilder: Folder <code>${folder}</code> Created.`, {type:'success'})
             // Rebuild the file list
             getFileList()
 
             return 'Create folder succeeded'
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            //console.error( '[uibuilder:createNewFolder:post] Error ' + textStatus, errorThrown )
-            //console.log({jqXHR, textStatus, errorThrown})
             RED.notify(`uibuilder: Create Folder Error.<br>${errorThrown}`, {type:'error'})
             return 'Create folder failed'
         })
@@ -452,7 +443,6 @@
             return 'Create file succeeded'
         }).fail(function(jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:createNewFile:post] Error ' + textStatus, errorThrown )
-            //console.log({jqXHR, textStatus, errorThrown})
             RED.notify(`uibuilder: Create File Error.<br>${errorThrown}`, {type:'error'})
             return 'Create file failed'
         })
@@ -476,7 +466,6 @@
             },
         })
         .done(function(data, textStatus, jqXHR) {
-            //console.log({data, textStatus, jqXHR})
             RED.notify(`uibuilder: Folder <code>${folder}</code> deleted.`, {type:'success'})
             // Rebuild the file list
             getFileList()
@@ -484,7 +473,6 @@
             return 'Delete folder succeeded'
         }).fail(function(jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:deleteFolder:delete] Error ' + textStatus, errorThrown )
-            //console.log({jqXHR, textStatus, errorThrown})
             RED.notify(`uibuilder: Delete Folder Error.<br>${errorThrown}`, {type:'error'})
             return 'Delete folder failed'
         })
@@ -511,7 +499,6 @@
             },
         })
         .done(function(data, textStatus, jqXHR) {
-            //console.log({data, textStatus, jqXHR})
             RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Deleted.`, {type:'success'})
             // Rebuild the file list
             getFileList(fname)
@@ -519,7 +506,6 @@
             return 'Delete file succeeded'
         }).fail(function(jqXHR, textStatus, errorThrown) {
             console.error( '[uibuilder:deleteFile:delete] Error ' + textStatus, errorThrown )
-            //console.log({jqXHR, textStatus, errorThrown})
             RED.notify(`uibuilder: Delete File Error.<br>${errorThrown}`, {type:'error'})
             return 'Delete file failed'
         })
@@ -559,7 +545,19 @@
      **/
     function validateUrl(value) {
         // NB: `this` is the node instance configuration as at last press of Done
-        // TODO: Add display comment to help user
+        //     Validation fns are run on every node instance when the Editor is loaded (value is populated but jQuery val is undefined).
+        //     and again when the config panel is opened (because jquery change is fired. value, jquery val and this.url are all the same).
+
+        /** If the url hasn't really changed - no need to validate but might need to allow Done (for other settings)
+         * e.g. user changes is back after trying something different but didn't commit between
+         * Initial flow run and Initial load of admin config ui - don't check for dups as it always will be a dup
+         */
+        if ( value === this.url ) {
+            $('#node-dialog-ok').prop('disabled', false)
+            $('#node-dialog-ok').css( 'cursor', 'pointer' )
+            $('#node-dialog-ok').addClass('primary')
+            return true
+        }
 
         // Max 20 chars
         if ( value.length > 20 ) return false
@@ -574,28 +572,38 @@
         // Cannot be 'templates' as this is a reserved value (for v2)
         if ( value.toLowerCase().substring(0,9) === 'templates' ) return false
 
-        // Initial flow run and Initial load of admin config ui - don't check for dups as it always will be
-        if ( value === this.url ) return true
         
         // Check whether the url is already in use via a call to the admin API `uibindex`
         var exists = false
         $.ajax({
-            dataType: 'json', async: false, 
-            url: 'uibindex?check=' + value,
+            type: 'GET',
+            async: false,
+            dataType: 'json',
+            url: './uibuilder/admin/' + value,
+            data: {
+                'cmd': 'checkurls',
+            },
             success: function(check) {
                 exists = check
             }
         })
 
         /** If the url already exists - prevent the "Done" button from being pressed. */
-         // @ts-ignore ts(2367)
         if ( exists === true ) {
             $('#node-dialog-ok').prop('disabled', true)
             $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
+            $('#node-dialog-ok').removeClass('primary')
+            RED.notify(`<b>ERROR</b>: <p>The chosen URL (${value}) is already in use (or the folder exists).<br>It must be changed before you can save/commit</p>`, {type: 'error'})
             return false
         } else {
             $('#node-dialog-ok').prop('disabled', false)
             $('#node-dialog-ok').css( 'cursor', 'pointer' )
+            $('#node-dialog-ok').addClass('primary')
+
+            // Warn user when changing URL. NOTE: Set/reset old url in the onsave function not here
+            if ( value !== this.url )
+                RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, {type: 'warning'})
+
             return true
         }
 
@@ -620,8 +628,6 @@
 
                 uiace.fullscreen = true
 
-                //console.log('Entered full-screen mode. Element: ', document.fullscreenElement.id, height)
-
             } else {
                 $('#edit-props').css('background-color','').css('padding','')
 
@@ -634,8 +640,6 @@
                 $('#node-function-expand-js').css('background-color','').html('<i class="fa fa-expand"></i>')
 
                 uiace.fullscreen = false
-                
-                //console.log('Leaving full-screen mode.', height)
                 
             }
             
@@ -766,7 +770,8 @@
             useSecurity: { value: false },
             sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
             //jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
-            tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
+            tokenAutoExtend: { value: false },   // TODO add validation if useSecurity=true
+            oldUrl: { value: undefined },        // If the url has been changed, this is the previous url
         },
         credentials: {
             jwtSecret: { type:'password' },  // text or password
@@ -778,6 +783,16 @@
         icon: 'ui_template.png',
         paletteLabel: nodeLabel,
         label: function () { return this.url || this.name || nodeLabel },
+
+        /** Available methods: 
+         * oneditprepare: (function) called when the edit dialog is being built.
+         * oneditsave:   (function) called when the edit dialog is okayed.
+         * oneditcancel: (function) called when the edit dialog is canceled.
+         * oneditdelete: (function) called when the delete button in a configuration node’s edit dialog is pressed.
+         * oneditresize: (function) called when the edit dialog is resized.
+         * onpaletteadd: (function) called when the node type is added to the palette.
+         * onpaletteremove: (function) called when the node type is removed from the palette.
+         */
 
         /** Prepares the Editor panel */
         oneditprepare: function () {
@@ -805,7 +820,10 @@
             $('#node-input-tokenAutoExtend').prop('checked', this.useSecurity)
             //#endregion checkbox states
 
-            // When the url changes (NB: Also see the validation function)
+            /** When the url changes (NB: Also see the validation function) change visible folder names & links
+             * NB: Actual URL change processing is done in validation which also happens on change
+             *     Change happens when config panel is opened as well as for a real change
+             */
             $('#node-input-url').change(function () {
                 var thisurl = $(this).val()
                 // Show the root URL
@@ -1279,6 +1297,13 @@
                 delete uiace.editor
                 uiace.editorLoaded = false
             }
+
+            // Check for url rename - note that validation of new url is done in the validate function
+            if ( $('#node-input-url').val() !== this.url ) {
+                this.oldUrl = this.url
+            } else {
+                this.oldUrl = undefined
+            }
         }, // ---- End of oneditsave ---- //
 
         /** Runs before cancel */
@@ -1293,13 +1318,53 @@
 
         /** Handle window resizing for the editor */
         oneditresize: function(_size) {
-            //console.log('RESIZE', _size)
 
             setACEheight()
 
         }, // ---- End of oneditcancel ---- //
 
+        oneditdelete: function() {
+            const that = this
+            let myNotify = RED.notify(`<b>DELETE</b>: <p>You are deleting a uibuilder instance with url <i>${this.url}</i>.<br>Would you like to also delete the folder?<br><b>WARNING</b>: This cannot be undone.</p>`, {
+                modal: true,
+                fixed: true,
+                type: 'warning', // 'compact', 'success', 'warning', 'error'
+                buttons: [
+                    {
+                        text: "Yes",
+                        click: function(e) {
+                            // Mark folder for Deletion (actually done by the js file in `node.on('close', ..)`, handed off to uiblib:processClose)
+                            $.ajax({
+                                type: 'PUT',
+                                dataType: 'json',
+                                url: './uibuilder/admin/' + that.url,
+                                data: {
+                                    'cmd': 'deleteondelete',
+                                },
+                            })
+                                .fail(function(jqXHR, textStatus, errorThrown) {
+                                    console.error( '[uibuilder:oneditdelete:PUT] Error ' + textStatus, errorThrown )
+                                    RED.notify(`uibuilder: Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, {type:'error'})
+                                })
+
+                            myNotify.close()
+                            RED.notify(`The folder <i>${that.url}</i> will be deleted when you redeploy.`, {type:'compact'})
+                        }
+                    },
+                    {
+                        text: "NO",
+                        class:"primary",
+                        click: function(e) {
+                            myNotify.close()
+                        }
+                    }
+                ]
+        
+            })
+        },
+
     }) // ---- End of registerType() ---- //
+
 })()
 </script>
 
