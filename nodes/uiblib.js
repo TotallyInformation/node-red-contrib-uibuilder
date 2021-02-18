@@ -21,6 +21,11 @@
 
 //#region --- Type Defs --- //
 /**
+ * @typedef {import('../typedefs.js')} 
+ * @typedef {import('node-red')} Red
+ */
+
+/*
  * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
  * Note that any other data may be passed from your front-end code in the _auth.info object.
  * _auth.info.error, _auth.info.validJwt
@@ -31,7 +36,7 @@
  * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
  * @property {Object=} [info] Optional metadata about the user.
  */
-/**
+/*
  * @typedef {object} uibNode Local copy of the node instance config + other info
  * @property {String} id Unique identifier for this instance
  * @property {String} type What type of node is this an instance of? (uibuilder)
@@ -74,7 +79,7 @@ let securitySrc = ''
 let securityjs = null
 let jsonwebtoken = null
 /**  Gives us a standard _auth object to work with
- * @type _auth */
+ * @type MsgAuth */
 const dummyAuth = {
     id: null,
     jwt: undefined,
@@ -133,15 +138,17 @@ module.exports = {
     }, // ---- End of inputHandler function ---- //
 
     /** Do any complex, custom node closure code here
-     * @param {function|null} [done=null]
-     * @param {Object} node
-     * @param {Object} RED
+     * @param {function|null} done Default=null, internal node-red function to indicate processing is complete
+     * @param {uibNode} node Reference to the node instance object
+     * @param {Red} RED Reference to the Node-RED API
+     * @param {Object} uib Reference to the uibuilder master config object
      * @param {Object} ioNs - Instance of Socket.IO Namespace
      * @param {Object} io - Instance of Socket.IO
      * @param {Object} app - Instance of ExpressJS app
      * @param {Object} log - Winston logging instance
+     * @param {Object} instances[] Reference to the currently defined instances of uibuilder
      */
-    processClose: function(done = null, node, RED, ioNs, io, app, log, instances) {
+    processClose: function(done = null, node, RED, uib, ioNs, io, app, log, instances) {
         log.trace(`[${node.url}] nodeGo:on-close:processClose`)
 
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
@@ -188,6 +195,19 @@ module.exports = {
         // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
         for (var i = removePath.length -1; i >= 0; i--) {
             app._router.stack.splice(removePath[i],1)
+        }
+
+        // TODO Remove url folder if requested
+        if ( uib.deleteOnDelete[node.url] === true ) {
+            log.trace(`[uibuilder:uiblib:processClose] Deleting instance folder. URL: ${node.url}`)
+            
+            // Remove the flag in case someone recreates the same url!
+            delete uib.deleteOnDelete[node.url]
+            
+            fs.remove(path.join(uib.rootFolder, node.url))
+                .catch(err => {
+                    log.error(`[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
+                })
         }
 
         // Keep a log of the active instances @since 2019-02-02
@@ -400,7 +420,7 @@ module.exports = {
      * Also check common packages installed against the master package list in case any new ones have been added.
      * Updates the package list file and uib.installedPackages
      * param {Object} vendorPaths Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
-     * @param {string} [newPkg] Optional. Name of a new package to be checked for in addition to existing. 
+     * @param {string} newPkg Default=''. Name of a new package to be checked for in addition to existing. 
      * @param {Object} uib Name of the uibuilder module ('uibuilder' by default)
      * @param {string} userDir Name of the Node-RED userDir folder currently in use
      * @param {Object} log Custom logger instance
@@ -409,7 +429,6 @@ module.exports = {
      */
     checkInstalledPackages: function (newPkg='', uib, userDir, log, app=null) {
         const debug = false
-        //if (debug) console.log('[uibuilder.uiblib] debugging ', {newPkg, uib, userDir})
 
         let installedPackages = uib.installedPackages
         let pkgList = []
@@ -582,7 +601,7 @@ module.exports = {
      * @returns {_auth} An updated _auth object
      */
     authCheck: function(msg, ioNs, node, socket, log) {
-        /** @type _auth */
+        /** @type MsgAuth */
         var _auth = dummyAuth
 
         // Has the client included msg._auth? If not, send back an unauth msg
@@ -642,9 +661,9 @@ module.exports = {
     }, // ---- End of authCheck ---- //
 
     /** Create a new JWT token based on a user id, session length and security string 
-     * @param {_auth} _auth The unique id that identifies the user.
+     * @param {MsgAuth} _auth The unique id that identifies the user.
      * @param {uibNode} node  Reference to the calling uibuilder node instance.
-     * @returns {_auth} Updated _auth including a signed JWT token string, expiry date/time & info flag.
+     * @returns {MsgAuth} Updated _auth including a signed JWT token string, expiry date/time & info flag.
      */
     createToken: function(_auth, node) {
 
@@ -734,7 +753,7 @@ module.exports = {
      */
     logon: function(msg, ioNs, node, socket, log, uib) {
 
-        /** @type _auth */
+        /** @type MsgAuth */
         var _auth = msg._auth || dummyAuth
         if (!_auth.info) _auth.info = {}
         _auth.userValidated = false
@@ -946,7 +965,7 @@ module.exports = {
      * @returns {_auth} Updated _auth
      */
     logoff: function(msg, ioNs, node, socket, log) {
-        /** @type _auth */
+        /** @type MsgAuth */
         var _auth = msg._auth || dummyAuth
         
         // Check that request is valid (has valid token)
@@ -971,7 +990,7 @@ module.exports = {
     }, // ---- End of logoff ---- //
 
     /** Check an _auth object for the correct schema 
-     * @param {_auth} _auth The _auth object to check
+     * @param {MsgAuth} _auth The _auth object to check
      * @param {String=} type Optional. 'short' or 'full'. How much checking to do
      * @returns {Boolean}
     */
