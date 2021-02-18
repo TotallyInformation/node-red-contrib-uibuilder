@@ -143,6 +143,8 @@ Note that if a client disconnects then reconnects it will have a different `_soc
   
 * `version` {String}: Current uibuilder module version (taken from package.json).
 
+* `deleteOnDelete` {Object}: Array of instances that have requested their local instance folders be deleted on deploy - see html file oneditdelete, updated by admin api
+
 ### Other variables
 
 * `userDir` {String}: The current userDir folder. `RED.settings.userDir`.
@@ -221,32 +223,34 @@ In addition, the `node` object has a number of other useful functions and proper
 ```javascript
 /**
  * @typedef {object} uibNode Local copy of the node instance config + other info
- * @property {String} id Unique identifier for this instance
- * @property {String} type What type of node is this an instance of? (uibuilder)
- * @property {String} name Descriptive name, only used by Editor
- * @property {String} topic msg.topic overrides incoming msg.topic
- * @property {String} url The url path (and folder path) to be used by this instance
- * @property {boolean} fwdInMessages Forward input msgs to output #1?
- * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
- * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
- * @property {boolean} copyIndex Copy index.(html|js|css) files from templates if they don't exist?
- * @property {boolean} showfolder Provide a folder index web page?
- * @property {boolean} useSecurity Use uibuilder's built-in security features?
- * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
- * @property {Number} sessionLength Lifespan of token (in seconds)
- * @property {String} jwtSecret Seed string for encryption of JWT
- * @property {String} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
- * @property {Number} ioClientsCount How many Socket clients connected to this instance?
- * @property {Number} rcvMsgCount How many msg's received since last reset or redeploy?
- * @property {Object} ioChannels The channel names for Socket.IO
- * @property {String} ioChannels.control SIO Control channel name 'uiBuilderControl'
- * @property {String} ioChannels.client SIO Client channel name 'uiBuilderClient'
- * @property {String} ioChannels.server SIO Server channel name 'uiBuilder'
- * @property {String} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {Function} send Send a Node-RED msg to an output port
- * @property {Function=} done Dummy done function for pre-Node-RED 1.0 servers
- * @property {Function=} on Event handler
- * @property {Function=} removeListener Event handling
+ * @property {String} uibNode.id Unique identifier for this instance
+ * @property {String} uibNode.type What type of node is this an instance of? (uibuilder)
+ * @property {String} uibNode.name Descriptive name, only used by Editor
+ * @property {String} uibNode.topic msg.topic overrides incoming msg.topic
+ * @property {String} uibNode.url The url path (and folder path) to be used by this instance
+ * @property {String} uibNode.oldUrl The PREVIOUS url path (and folder path) after a url rename
+ * @property {boolean} uibNode.fwdInMessages Forward input msgs to output #1?
+ * @property {boolean} uibNode.allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} uibNode.allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} uibNode.copyIndex Copy index.(html|js|css) files from templates if they don't exist?
+ * @property {String}  uibNode.templateFolder Folder name for the source of the chosen template
+ * @property {boolean} uibNode.showfolder Provide a folder index web page?
+ * @property {boolean} uibNode.useSecurity Use uibuilder's built-in security features?
+ * @property {boolean} uibNode.tokenAutoExtend Extend token life when msg's received from client?
+ * @property {Number} uibNode.sessionLength Lifespan of token (in seconds)
+ * @property {String} uibNode.jwtSecret Seed string for encryption of JWT
+ * @property {String} uibNode.customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {Number} uibNode.ioClientsCount How many Socket clients connected to this instance?
+ * @property {Number} uibNode.rcvMsgCount How many msg's received since last reset or redeploy?
+ * @property {Object} uibNode.ioChannels The channel names for Socket.IO
+ * @property {String} uibNode.ioChannels.control SIO Control channel name 'uiBuilderControl'
+ * @property {String} uibNode.ioChannels.client SIO Client channel name 'uiBuilderClient'
+ * @property {String} uibNode.ioChannels.server SIO Server channel name 'uiBuilder'
+ * @property {String} uibNode.ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ * @property {Function} uibNode.send Send a Node-RED msg to an output port
+ * @property {Function=} uibNode.done Dummy done function for pre-Node-RED 1.0 servers
+ * @property {Function=} uibNode.on Event handler
+ * @property {Function=} uibNode.removeListener Event handling
  * z, wires
  */
 ```
