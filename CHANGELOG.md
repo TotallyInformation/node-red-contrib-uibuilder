@@ -56,6 +56,10 @@ Nothing right now.
     Details on how to use this are contained in the [technical docs](https://totallyinformation.github.io/node-red-contrib-uibuilder) in the `uibuilderfe-js` page.
     You can access these docs directly in Node-RED either using the button in the configuration panel or the link
     in the help panel.
+    
+    The updated default template also contains an example button that uses the new feature. 
+    
+    Note that you can use more than just button clicks. It will work with _any_ DOM event that you attach it to.
 
 ## Changed
 
