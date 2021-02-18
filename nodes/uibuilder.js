@@ -19,7 +19,7 @@
 
 //#region --- Type Defs --- //
 /**
- * @typedef {import('../typedefs.js')._auth} _auth
+ * @typedef {import('../typedefs.js')}
  * @typedef {import('node-red')} Red
  */
 //#endregion --- Type Defs --- //
@@ -103,6 +103,8 @@ const uib = {
      * @see https://expressjs.com/en/resources/middleware/serve-static.html
      */
     staticOpts: {}, //{ maxAge: 31536000, immutable: true, },
+    /** Array of instances that have requested their local instance folders be deleted on deploy - see html file oneditdelete, updated by admin api */
+    deleteOnDelete: {},
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -208,13 +210,18 @@ module.exports = function(/** @type Red */ RED) {
         }
 
         // and copy the common folder from template (contains the default blue node-red icon)
-        fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err){
-            if(err){
-                log.error(`[uibuilder] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
-            } else {
-                log.trace(`[uibuilder] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
-            }
-        })
+        try {
+            fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err){
+                if(err){
+                    log.error(`[uibuilder] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
+                } else {
+                    log.trace(`[uibuilder] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
+                }
+            })
+        } catch (e) {
+            // should never happen
+            log.error(`[uibuilder] COPY OF COMMON FOLDER FAILED`)
+        }
         // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeGo() so available for each instance as `./common/`)
     }
     // If the root folder setup failed, throw an error and give up completely
@@ -299,7 +306,7 @@ module.exports = function(/** @type Red */ RED) {
      */
     function nodeGo(config) {
         // Create the node
-        // @ts-ignore
+        // @ts-expect-error ts(2339)
         RED.nodes.createNode(this, config)
 
         /** @since 2019-02-02 - the current instance name (url) */
@@ -310,7 +317,7 @@ module.exports = function(/** @type Red */ RED) {
         /** A copy of 'this' object in case we need it in context of callbacks of other functions. 
          * @type {uibNode} node
          */
-        // @ts-ignore
+        // @ts-expect-error ts(2322)
         const node = this
         log.trace(`[uibuilder:${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
 
@@ -319,6 +326,7 @@ module.exports = function(/** @type Red */ RED) {
         node.name            = config.name  || ''
         node.topic           = config.topic || ''
         node.url             = config.url   || 'uibuilder'
+        node.oldUrl          = config.oldUrl
         node.fwdInMessages   = config.fwdInMessages === undefined ? false : config.fwdInMessages
         node.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
         node.allowStyles     = config.allowStyles === undefined ? false : config.allowStyles
@@ -327,7 +335,7 @@ module.exports = function(/** @type Red */ RED) {
         node.showfolder      = config.showfolder === undefined ? false : config.showfolder
         node.useSecurity     = config.useSecurity 
         node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
-        // @ts-ignore
+        // @ts-expect-error ts(2339)
         node.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
         node.tokenAutoExtend = config.tokenAutoExtend
         //#endregion ----- Local node config copy ----- //
@@ -338,12 +346,105 @@ module.exports = function(/** @type Red */ RED) {
         uib.instances[node.id] = node.url
         log.trace(`[uibuilder:${uibInstance}] Node uib.Instances Registered`, uib.instances)
 
+        // Keep track of the number of times each instance is deployed.
+        // The initial deployment = 1
+        if ( Object.prototype.hasOwnProperty.call(uib.deployments, node.id) ) uib.deployments[node.id]++
+        else uib.deployments[node.id] = 1
+        log.trace(`[uibuilder:${uibInstance}] Number of uib.Deployments`, uib.deployments[node.id] )
+
+        //#region ----- Local folder structure ----- //
+
         /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
          *   Files in this folder are also served to URL but take preference
          *   over those in the nodes folders (which act as defaults) @type {string}
          */
         node.customFolder = path.join(uib.rootFolder, node.url)
 
+        // Check whether the url has been changed. If so, rename the folder
+        if ( node.oldUrl !== undefined && node.url !== node.oldUrl ) {
+            // rename (move) folder if possible - but don't overwrite
+            try {
+                fs.moveSync(path.join(uib.rootFolder, node.oldUrl), node.customFolder, {overwrite: false})
+            } catch (e) {
+                // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
+                if ( e.code !== 'ENOENT' )
+                    log.error(`[uibuilder] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${node.url}, oldUrl=${node.oldUrl}, Fldr=${node.customFolder}. Error=${e.message}`, e)
+            }
+            // we continue to do the normal checks in case something failed or if this is an initial deploy (so no original folder exists)
+        }
+
+        var customFoldersOK = true
+        // Check if the folder exists and is accessible to Node-RED
+        try {
+            fs.mkdirSync(node.customFolder)
+            fs.accessSync(node.customFolder, fs.constants.W_OK)
+        } catch (e) {
+            if ( e.code !== 'EEXIST' ) {
+                log.error(`[uibuilder:${uibInstance}] Local custom folder ERROR`, e.message)
+                customFoldersOK = false
+            }
+        }
+        // Then make sure the DIST & SRC folders for this node instance exist
+        try {
+            fs.mkdirSync( path.join(node.customFolder, 'dist') )
+            fs.mkdirSync( path.join(node.customFolder, 'src') )
+        } catch (e) {
+            if ( e.code !== 'EEXIST' ) {
+                log.error(`[uibuilder:${uibInstance}] Local custom dist or src folder ERROR`, e.message)
+                customFoldersOK = false
+            }
+        }
+
+        // We've checked that the custom folder is there and has the correct structure
+        if ( uib_rootFolder_OK === true && customFoldersOK === true ) {
+            // local custom folders are there ...
+            log.trace(`[uibuilder:${uibInstance}] Using local front-end folders in`, node.customFolder)
+
+            /** Now copy folders and files from the master template folder
+             *  Don't copy if copy turned off in admin ui 
+             *  Note that the template folder is stored in node.templSel
+             */
+            if ( node.copyIndex ) {
+                const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
+                try {
+                    fs.copy( path.join( uib.masterTemplateFolder, node.templateFolder ), node.customFolder, cpyOpts, function(err){
+                        if(err){
+                            log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates', node.templateFolder)} to ${node.customFolder} Error=${err.message}`, err)
+                        } else {
+                            log.trace(`[uibuilder:${uibInstance}] Copied template files from ${path.join( __dirname, 'templates', node.templateFolder)} to local src (not overwriting)`, node.customFolder )
+                        }
+                    })
+                } catch (e) {
+                    // Should never happen
+                    log.error(`[uibuilder] COPY OF TEMPLATE TO INSTANCE FOLDER FAILED. Fatal. Error=${e.message}`, e)
+                }
+            }
+        } else {
+            // Local custom folders are not right!
+            log.error(`[uibuilder:${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
+        }
+
+        //#region Add static ExpressJS route for instance local custom files
+        var customStatic = function(req, res, next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
+
+        try {
+            // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
+            fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
+            // If the ./dist/index.html exists use the dist folder...
+            log.trace(`[uibuilder:${uibInstance}] Using local dist folder`)
+            customStatic = serveStatic( path.join(node.customFolder, 'dist'), uib.staticOpts )
+            // NOTE: You are expected to have included vendor packages in
+            //       a build process so we are not loading them here
+        } catch (e) {
+            // dist not being used or not accessible, use src
+            log.trace(`[uibuilder:${uibInstance}] Dist folder not in use or not accessible. Using local src folder`, e.message )
+            //TODO: Check if folder actually exists & is accessible
+            customStatic = serveStatic( path.join(node.customFolder, 'src'), uib.staticOpts )
+        }
+        //#endregion -- End of add static route for local custom files -- //
+
+        //#endregion ------ End of Local folder structure ------- //
+        
         //#region ----- Socket.IO instance configuration ----- //
         /** How many Socket clients connected to this instance? @type {integer} */
         node.ioClientsCount = 0
@@ -357,12 +458,6 @@ module.exports = function(/** @type Red */ RED) {
 
         log.trace(`[uibuilder:${uibInstance}] Socket.io details`, { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
         //#endregion ----- socket.io instance config ----- //
-
-        // Keep track of the number of times each instance is deployed.
-        // The initial deployment = 1
-        if ( Object.prototype.hasOwnProperty.call(uib.deployments, node.id) ) uib.deployments[node.id]++
-        else uib.deployments[node.id] = 1
-        log.trace(`[uibuilder:${uibInstance}] Number of uib.Deployments`, uib.deployments[node.id] )
 
         //#region ----- Set up ExpressJS Middleware ----- //
         /** Provide the ability to have a ExpressJS middleware hook.
@@ -402,73 +497,6 @@ module.exports = function(/** @type Red */ RED) {
         }
         //#endregion ----- Express Middleware ----- //
 
-        //#region ----- Create instance local folder structure ----- //
-        var customFoldersOK = true
-        try {
-            fs.mkdirSync(node.customFolder)
-            fs.accessSync(node.customFolder, fs.constants.W_OK)
-        } catch (e) {
-            if ( e.code !== 'EEXIST' ) {
-                log.error(`[uibuilder:${uibInstance}] Local custom folder ERROR`, e.message)
-                customFoldersOK = false
-            }
-        }
-        // Then make sure the DIST & SRC folders for this node instance exist
-        try {
-            fs.mkdirSync( path.join(node.customFolder, 'dist') )
-            fs.mkdirSync( path.join(node.customFolder, 'src') )
-        } catch (e) {
-            if ( e.code !== 'EEXIST' ) {
-                log.error(`[uibuilder:${uibInstance}] Local custom dist or src folder ERROR`, e.message)
-                customFoldersOK = false
-            }
-        }
-
-        // We've checked that the custom folder is there and has the correct structure
-        if ( uib_rootFolder_OK === true && customFoldersOK === true ) {
-            // local custom folders are there ...
-            log.trace(`[uibuilder:${uibInstance}] Using local front-end folders in`, node.customFolder)
-
-            /** Now copy files from the master template folder (instead of master src) @since 2017-10-01
-             *  Note: We don't copy the master dist folder
-             *  Don't copy if copy turned off in admin ui 
-             *  Note that the template folder is stored in node.templSel
-             */
-            if ( node.copyIndex ) {
-                const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-                fs.copy( path.join( uib.masterTemplateFolder, node.templateFolder ), path.join(node.customFolder, 'src'), cpyOpts, function(err){
-                    if(err){
-                        log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates', node.templateFolder)} to ${path.join(node.customFolder, 'src')}`, err)
-                    } else {
-                        log.trace(`[uibuilder:${uibInstance}] Copied template files from ${path.join( __dirname, 'templates', node.templateFolder)} to local src (not overwriting)`, node.customFolder )
-                    }
-                })
-            }
-        } else {
-            // Local custom folders are not right!
-            log.error(`[uibuilder:${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
-        }
-
-        //#region Add static path for instance local custom files
-        var customStatic = function(req, res, next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
-
-        try {
-            // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
-            fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
-            // If the ./dist/index.html exists use the dist folder...
-            log.trace(`[uibuilder:${uibInstance}] Using local dist folder`)
-            customStatic = serveStatic( path.join(node.customFolder, 'dist'), uib.staticOpts )
-            // NOTE: You are expected to have included vendor packages in
-            //       a build process so we are not loading them here
-        } catch (e) {
-            // dist not being used or not accessible, use src
-            log.trace(`[uibuilder:${uibInstance}] Dist folder not in use or not accessible. Using local src folder`, e.message )
-            //TODO: Check if folder actually exists & is accessible
-            customStatic = serveStatic( path.join(node.customFolder, 'src'), uib.staticOpts )
-        }
-        //#endregion -- Added static path for local custom files -- //
-
-        //#endregion ------ End of Create custom folder structure ------- //
 
         /** Apply all of the middleware functions to the current instance url 
          * Must be applied in the right order with the most important first */
@@ -553,7 +581,7 @@ module.exports = function(/** @type Red */ RED) {
                 // If security is active...
                 if (node.useSecurity === true) {
                     /** Check for valid auth and session 
-                     * @type _auth */
+                     * @type MsgAuth */
                     msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log)
                 }
 
@@ -589,7 +617,7 @@ module.exports = function(/** @type Red */ RED) {
                     // If security is active...
                     if (node.useSecurity === true) {
                         /** Check for valid auth and session 
-                         * @type _auth */
+                         * @type MsgAuth */
                         msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log)
                     }
 
@@ -707,7 +735,7 @@ module.exports = function(/** @type Red */ RED) {
 
             // Do any complex close processing here if needed - MUST BE LAST
             //processClose(null, node, RED, ioNs, io, app) // swap with below if needing async
-            uiblib.processClose(done, node, RED, ioNs, io, app, log, uib.instances)
+            uiblib.processClose(done, node, RED, uib, ioNs, io, app, log, uib.instances)
 
             done()
         })
@@ -847,7 +875,8 @@ module.exports = function(/** @type Red */ RED) {
         return res
     } // ---- End of fn chkParamFldr ---- //
 
-    /** uibuilder v3 Admin API router - new API commands should be added here */
+    //#region --- Admin API v3 ---
+    /** uibuilder v3 unified Admin API router - new API commands should be added here */
     RED.httpAdmin.route('/uibuilder/admin/:url')
         // For all routes
         .all(function(req,res,next) {
@@ -859,7 +888,7 @@ module.exports = function(/** @type Red */ RED) {
             // Validate URL - params.url
             const chkUrl = chkParamUrl(params)
             if ( chkUrl.status !== 0 ) {
-                log.error(`[uibuilder:admin-router:GET] Admin API. ${chkUrl.statusMessage}`)
+                log.error(`[uibuilder:admin-router:ALL] Admin API. ${chkUrl.statusMessage}`)
                 res.statusMessage = chkUrl.statusMessage
                 res.status(chkUrl.status).end()
                 return
@@ -875,6 +904,8 @@ module.exports = function(/** @type Red */ RED) {
 
             // List all folders and files for this uibuilder instance
             if ( params.cmd === 'listall' ) {
+                log.trace(`[uibuilder:admin-router:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
+
                 // get list of all (sub)folders (follow symlinks as well)
                 const out = {'root':[]}
                 const root2 = uib.rootFolder.replace(/\\/g, '/')
@@ -897,11 +928,47 @@ module.exports = function(/** @type Red */ RED) {
                         }
                     })
                     .on('end', () => {
-                        log.trace(`[uibuilder:admin-router:GET:getall] Admin API. List of all folders/files requested. url=${params.url}, root fldr=${uib.rootFolder}`)
                         res.statusMessage = 'Folders and Files listed successfully'
                         res.status(200).json(out)
                     })
-            } // -- end of getall -- //
+                return
+                // -- end of listall -- //
+            } else if ( params.cmd === 'checkurls' ) {
+                log.trace(`[uibuilder:admin-router:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
+        
+                /** @returns {boolean} True if the given url exists, else false */
+                let chkInstances = Object.values(uib.instances).includes(params.url)
+                let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+
+                res.statusMessage = 'Instances and Folders checked'
+                res.status(200).json( chkInstances || chkFolders )
+
+                return
+            } else if ( params.cmd === 'listurls' ) {
+                // Return a list of all user urls in use by ExpressJS
+                // TODO Not currently working
+                var route, routes = []
+                app._router.stack.forEach( (middleware) => {
+                    if(middleware.route){ // routes registered directly on the app
+                        let path = middleware.route.path
+                        let methods = middleware.route.methods
+                        routes.push({path: path, methods: methods})
+                    } else if(middleware.name === 'router'){ // router middleware 
+                        middleware.handle.stack.forEach(function(handler){
+                            route = handler.route
+                            route && routes.push(route)
+                        })
+                    }
+                })
+                console.log(app._router.stack[0])
+
+                log.trace(`[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.`)
+                res.statusMessage = 'URLs listed successfully'
+                //res.status(200).json(routes)
+                res.status(200).json(app._router.stack)
+
+                return
+            }
 
         })
         /** TODO Write file contents */
@@ -911,6 +978,15 @@ module.exports = function(/** @type Red */ RED) {
             params.type = 'put'
             
             let fullname = path.join(uib.rootFolder, params.url)
+
+            // Tell uibuilder to delete the instance local folder when this instance is deleted - see html file oneditdelete & uiblib.processClose
+            if ( params.cmd && params.cmd === 'deleteondelete' ) {
+                log.trace(`[uibuilder:admin-router:PUT:deleteondelete] Admin API. url=${params.url}`)
+                uib.deleteOnDelete[params.url] = true
+                res.statusMessage = 'PUT successfully'
+                res.status(200).json({})
+                return
+            }
 
             log.trace(`[uibuilder:admin-router:PUT] Admin API. url=${params.url}`)
             res.statusMessage = 'PUT successfully'
@@ -991,9 +1067,13 @@ module.exports = function(/** @type Red */ RED) {
         })
         /** Delete a folder or a file */
         .delete(function(req,res) {
-            // @ts-ignore
+            // @ts-ignore ts(2339)
             const params = res.allparams
             params.type = 'delete'
+
+            // Several command options available: deletefolder, deletefile
+
+            // deletefolder or deletefile:
 
             // Validate folder name - params.folder
             const chkFldr = chkParamFldr(params)
@@ -1003,7 +1083,7 @@ module.exports = function(/** @type Red */ RED) {
                 res.status(chkFldr.status).end()
                 return
             }
-            // Validate command - must be present and either be 'newfolder' or 'newfile'
+            // Validate command - must be present and either be 'deletefolder' or 'deletefile'
             if ( ! (params.cmd && (params.cmd === 'deletefolder' || params.cmd === 'deletefile')) ) {
                 let statusMsg = `cmd parameter not present or wrong value (must be 'deletefolder' or 'deletefile'). url=${params.url}, cmd=${params.cmd}`
                 log.error(`[uibuilder:admin-router:DELETE] Admin API. ${statusMsg}`)
@@ -1057,7 +1137,8 @@ module.exports = function(/** @type Red */ RED) {
         /** @see https://expressjs.com/en/4x/api.html#app.METHOD for other methods
          *  patch, report, search ?
          */
-    
+    //#endregion --- Admin API v3 ---
+
     /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
      * @param {string} url The admin api url to create
@@ -1194,15 +1275,7 @@ module.exports = function(/** @type Red */ RED) {
     RED.httpAdmin.get('/uibindex', function(req,res) {
         log.trace('[uibindex] User Page/API. List all available uibuilder endpoints')
         
-        /** If GET includes a "check" parameter, see if that uibuilder URL is in use
-         * @returns {boolean} True if the given url exists, else false
-         */
-        if (req.query.check) {
-            res.json( Object.values(uib.instances).includes(req.query.check) )
-            return
-        }
-
-        /** If no check parameter, return full details based on type parameter */
+        /** Return full details based on type parameter */
         switch (req.query.type) {
             case 'json': {
                 res.json(uib.instances)
@@ -1513,7 +1586,7 @@ module.exports = function(/** @type Red */ RED) {
         uiblib.checkInstalledPackages('', uib, userDir, log)
 
         res.json(uib.installedPackages)
-    }) // ---- End of uibindex ---- //
+    }) // ---- End of uibvendorpackages ---- //
 
     /** Call npm. Schema: {name:{(url),cmd}}
      * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib.rootFolder>/<url>
