@@ -20,16 +20,34 @@ Nothing right now.
 
   Expand the "Advanced" settings to see the new dropdown. Note that uibuilder never overwrites your files so you either have to change the selection **before** the first deployment of the node or you have to delete the index.(html|js|css) and README.md files before changing the selection.
 
+  Three templates are currently included, more may be added later:
+
+  - An updated version of the existing default template that uses VueJS and bootstrap-vue. Contains an additional button demonstrating the new simple eventSend function.
+  - A new "Blank" template. This does not contain any front-end libraries or frameworks. It uses just the uibuilderfe library with raw DOM commands.
+  - A simplified Vue template. Contains the bare minimum to get you going.
+
+  Templates are also now more comprehensive and flexible and contain README files for information.
+
+  Templates will also warn you if you are missing a library that they depend on. Install them through the uibuilder library manager.
+
+
 - The Editor will now tell you if you have missing dependencies for your chosen template.
   
   ![missing packages warning](docs/missing-packages-warning.png)
 
   Useful for people who forget to install vue and bootstrap-vue now that they have been removed from the default install.
 
-- New "Blank" template added.
+- When changing an existing node's URL:
   
-  This does not contain any front-end libraries or frameworks. It uses just the uibuilderfe library with raw DOM commands.
+  - **The existing source folder is renamed**
+    
+    No more losing track of existing code!
 
+  - Folders as well as instances are checked for duplicates
+  - You are now warned to redeploy straight away, before doing anything else
+
+- When deleting a uibuilder instance, you are offered the chance to delete the source folder
+  
 - In the `uibuilderfe` front-end library:
 
   - Added a new public method: `eventSend`. You can use this to attach to any HTML DOM event (e.g. a button click). 
@@ -41,10 +59,20 @@ Nothing right now.
 
 ## Changed
 
+- Better warning if you set/change a URL to one that already exists.
+- When changing URL:
+  - **The original folder (if it exists) will be renamed**
+  - The uibuilder instance folders are also checked. The change is rejected if the folder exists.
+  - You are warned that you need to redeploy before doing anything else.
+  
+  **NOTE**: You may have lots of old uibuilder folders lying around. If your url change is rejected and you can't think why, check the folders.
+
+- Check for duplicate url moved to v3 Admin API. API Test file updated.
 - Further improvements to the techical documentation. This is now available [online](https://totallyinformation.github.io/node-red-contrib-uibuilder) as well as from the uibuilder node configuration panel and the help panel in the Editor.
 - Improved links from the Node-RED Editor's help panel, particularly on how to use the uibuilderfe front-end library.
 - Extensive improvements to the 
   [documentation for working with the `uibuilderfe` library](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/front-end-library) in your front-end code.
+- The default Vue template now defines the `data` section as a method instead of an object. This is recommended and prepares for Vue v3.
 
 ## [3.1.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.1...v3.1.3)
 
