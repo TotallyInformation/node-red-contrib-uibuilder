@@ -1151,7 +1151,7 @@ module.exports = {
 
         nodeKeys.sort().forEach( item => {
             let info = node[item]
-            if ( info!== null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
+            if ( info != null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
             page += `
                 <tr>
                     <th>${item}</th>
