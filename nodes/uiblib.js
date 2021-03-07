@@ -506,12 +506,22 @@ module.exports = {
                 installedPackages[pkgName].url = ['..', uib.moduleName, 'vendor', pkgName].join('/')
                 // Find installed version
                 installedPackages[pkgName].version = pj.version
-                // Find main entry point (or '')
-                installedPackages[pkgName].main = pj.main || ''
-                // Find browser entry point (or '')
-                installedPackages[pkgName].browser = pj.browser || ''
                 // Find homepage
                 installedPackages[pkgName].homepage = pj.homepage
+                // Find main entry point (or '')
+                installedPackages[pkgName].main = pj.main || ''
+
+                /** Try to guess the browser entry point (or '')
+                 * @since v3.2.1 Fix for packages misusing the browser property - might be an object see #123
+                 */
+                let browserEntry = ''
+                if ( pj.browser ) {
+                    if ( typeof pj.browser === 'string' ) browserEntry = pj.browser
+                }
+                if ( browserEntry === '' ) {
+                    browserEntry = pj.jsdelivr || pj.unpkg || ''
+                }
+                installedPackages[pkgName].browser = browserEntry
 
                 // Replace generic with specific entries if we know them
                 if ( pkgName === 'socket.io' ) {
@@ -736,7 +746,7 @@ module.exports = {
             response.info.validJwt = false
         }
 
-        console.log(`[uibuilder:uiblib.js:checkToken] response: `, response)
+        console.log('[uibuilder:uiblib.js:checkToken] response: ', response)
         return response
 
     }, // ---- End of checkToken ---- //
@@ -1155,10 +1165,10 @@ module.exports = {
             </table>
             `
 
-        page += ``
-        page += `<div></div>`
+        page += ''
+        page += '<div></div>'
 
-        page += `</body></html>`
+        page += '</body></html>'
 
         return page
     }, // ---- End of showInstanceDetails() ---- //

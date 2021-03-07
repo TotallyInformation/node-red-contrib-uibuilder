@@ -1396,7 +1396,7 @@ module.exports = function(/** @type Red */ RED) {
                             <th>Package</th>
                             <th>Version</th>
                             <th>uibuilder URL <a href="#vl1"><sup>(1)</sup></a></th>
-                            <th>Main Entry Point <a href="#vl2"><sup>(2)</sup></a></th>
+                            <th>Browser Entry Point (est.) <a href="#vl2"><sup>(2)</sup></a></th>
                             <th>Server Filing System Folder</th>
                         </tr></thead><tbody>
                 `
@@ -1407,6 +1407,7 @@ module.exports = function(/** @type Red */ RED) {
                      *  If so, add them to the output as an indicator of where to look.
                      */
                     let mainTxt = '<i>Not Supplied</i>'
+                    console.log('==>> ',httpNodeRoot, pj.url,pj.browser)
                     if ( pj.browser !== '' ) {
                         mainTxt = `<a href="${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.browser)}">${pj.url}/${pj.browser}</a>`
                     } else if ( pj.main !== '' ) {
