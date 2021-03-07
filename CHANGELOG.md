@@ -16,6 +16,7 @@ Nothing right now.
 
 - [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) - Thanks to Sergio Rius for reporting and for [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122)
 - [Issue #123](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/123) - Allow for misuse of `browser` property in package.json for added libraries. Thanks to Steve McLaughlin for reporting and providing a potential fix.
+- Technical Docs - Include favicon, expand search. Exclude missing file from search.
 
 ## [3.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.3...v3.2.0)
 
