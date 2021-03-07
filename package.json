@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "body-parser": "^1.19.0",
-    "express-validator": "^6.9.2",
+    "express-validator": "^6.10.0",
     "fast-glob": "^3.2.5",
     "fs-extra": "^9.1.0",
     "jsonwebtoken": "^8.5.1",
@@ -35,12 +35,12 @@
     "vue": "^2.6.12"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.16",
-    "@babel/core": "^7.12.16",
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.8",
     "@types/jquery": "^3.5.5",
     "@types/node-red": "^1.1.1",
     "babel-minify": "^0.5.1",
-    "uglify-js": "^3.12.4"
+    "uglify-js": "^3.13.0"
   },
   "optionalDependencies": {},
   "node-red": {
@@ -123,8 +123,8 @@
       "url": "https://discourse.nodered.org/u/Steve-Mcl"
     },
     {
-        "name": "Sergio Rius",
-        "url": "https://github.com/SergioRius"
+      "name": "Sergio Rius",
+      "url": "https://github.com/SergioRius"
     }
   ],
   "license": "Apache-2.0",
