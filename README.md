@@ -24,7 +24,7 @@
 
 A Node-RED web user interface builder. uibuilder aims to provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
 
-The key features and benefits are:
+<details open><summary>The key features and benefits are: (Click to show/hide)</summary>
 
 * Designed as an alternative to the Node-RED official Dashboard. Without the overheads and restrictions.
 * Control everything from the Node-RED admin ui. Edit your front-end resource files, manage front-end packages. No need to access the servers command line.
@@ -44,7 +44,9 @@ The key features and benefits are:
 * Optional index web page listing of available files.
 * Two detailed admin info web pages are included to help authors understand where everything is and what is available.
 
-Current limitations are:
+</details>
+
+<details open><summary>Current limitations are: </summary>
 
 * You have to write your own HTML, uibuilder doesn't (yet) do it for you. *This is by design. I hope to have a component design available at some point which will give additional options and make the UI building easier.*
 * You have to know the front-end library locations for installed libraries and edit your HTML accordingly. The `uibindex` admin API (accessible from any node's admin ui) shows you all of the root folders and what the package authors report as the main entry point for all active packages. There is now also a simplified information page for the currently viewed uibuilder node instance, this is access from a button in the configuration panel.
@@ -55,8 +57,11 @@ Current limitations are:
   
   This will use a local package.json file that contains a "build" script. If it exists, uibuilder will expose a build button that will run the script.
 
+</details>
 
 uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework (or none) but at the trade off of having to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
+
+
 
 ## Contents
 <!-- TOC -->
