@@ -210,6 +210,7 @@ module.exports = {
         let debug = false
         let file = null
         try {
+            // @ts-expect-error ts(2559)
             file = fs.readJsonSync( path.join(folder, 'package.json'), 'utf8' )
             if (debug) console.log('[uibuilder] tilib.readPackageJson - read successfully ', folder)
         } catch (err) {
@@ -260,4 +261,26 @@ module.exports = {
         return true
     }, // ----  ---- //
     
+    /** Return only the most important parts of an ExpressJS `req` object
+     * @param {Object} req express.Request
+     * @returns {Object} importantReq
+     */
+    dumpReq: function(req) {
+        return {
+            'headers': {
+                'host': req.headers.host,
+                'referer': req.headers.referer,
+            },
+            'url': req.url,
+            'method': req.method,
+            'baseUrl':req.baseUrl, 
+            'hostname': req.hostname, 
+            'originalUrl': req.originalUrl, 
+            'path': req.path, 
+            'protocol': req.protocol, 
+            'secure': req.secure, 
+            'subdomains': req.subdomains,
+        }
+    }, // ----  ---- //
+
 } // ---- End of module.exports ---- //
