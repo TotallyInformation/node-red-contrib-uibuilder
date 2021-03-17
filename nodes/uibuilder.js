@@ -20,7 +20,7 @@
 //#region --- Type Defs --- //
 /**
  * @typedef {import('../typedefs.js')}
- * @typedef {import('node-red')} Red
+ * typedef {import('node-red')} Red
  */
 //#endregion --- Type Defs --- //
 
@@ -54,7 +54,7 @@ const uib = {
     nodeRoot: '',
     /** Track across redeployments @constant {Object} uib.deployments */
     deployments: {},
-    /** When nodeGo is run, add the node.id as a key with the value being the url
+    /** When nodeInstance is run, add the node.id as a key with the value being the url
      *  then add processing to ensure that the URL's are unique. 
      * Schema: {'<node.id>': '<url>'}
      * @constant {Object} uib.uib.instances
@@ -105,6 +105,11 @@ const uib = {
     staticOpts: {}, //{ maxAge: 31536000, immutable: true, },
     /** Array of instances that have requested their local instance folders be deleted on deploy - see html file oneditdelete, updated by admin api */
     deleteOnDelete: {},
+    /** Optional ExpressJS port number. If defined, uibuilder will use its own ExpressJS server/app
+     * If undefined, uibuilder will use the Node-RED user-facing ExpressJS server
+     * @type {undefined|number}
+     */
+    port: undefined,
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -132,19 +137,8 @@ var commonStaticLoaded = false
 
 /** Export the function that defines the node 
  * @type Red */
-module.exports = function(/** @type Red */ RED) {
-    // NB: entries in settings.js are read-only and shouldn't be read using RED.settings.get, that is only for settings that can change in-flight.
-    //     see Node-RED issue #1543.
-
-    /*  RED.events.on('nodes-started',function() {
-            console.log('****** All nodes have started ******')
-        })
-        RED.events.on('nodes-stopped',function() {
-            console.log('****** All nodes have stopped ******')
-        }) 
-    */
-
-    //#region ----- Constants (& logging) for standard setup ----- //
+module.exports = function(/** @type {runtimeRED} */ RED) {
+    //#region ----- Constants for standard setup ----- //
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
     // @ts-ignore
     userDir = RED.settings.userDir
@@ -161,9 +155,7 @@ module.exports = function(/** @type Red */ RED) {
     uib.configFolder = path.join(uib.rootFolder,uib.configFolderName) 
     uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
     
-    /** Root URL path for http-in/out and uibuilder nodes @constant {string} httpNodeRoot */
-    // @ts-ignore
-    const httpNodeRoot = uib.nodeRoot = RED.settings.httpNodeRoot
+    //#endregion -------- Constants -------- //
 
     //#region ----- back-end debugging ----- //
     // @ts-ignore
@@ -171,14 +163,54 @@ module.exports = function(/** @type Red */ RED) {
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
 
+    //#region ----- ExpressJS Server/app setup ----- //
+
+    /** Optional port. If set, uibuilder will use its own ExpressJS server */
+    if ( RED.settings.uibuilder && RED.settings.uibuilder.port) uib.port = RED.settings.uibuilder.port
+
+    /** Root URL path for http-in/out and uibuilder nodes 
+     * Always set to empty string if a dedicated ExpressJS app is required
+     * @type {string} httpNodeRoot
+     */
+    let httpNodeRoot
+
     /** We need an http server to serve the page and vendor packages. 
      * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
-     * @since v2.0.0 2019-02-23 Moved from instance level (nodeGo()) to module level */
-    const app = RED.httpNode // || RED.httpAdmin
+     * @since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
+     * @since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
+     */
+    let app, server
+    if ( uib.port && uib.port !== RED.settings.uiPort) {
+        // Port has been specified & is different to NR's port so create a new instance of express & app
+        const express = require('express') 
+        app = express()
+        /** Socket.io needs an http(s) server rather than an ExpressJS app
+         * As we want Socket.io on the same port, we have to create out own server
+         * Use https if NR itself is doing so, use same certs as NR
+         * TODO: Allow for https/settings overrides using uibuilder props in settings.js
+         * TODO: Switch from https to http/2?
+         */
+        if ( RED.settings.https ) {
+            server = require('https').createServer(RED.settings.https, app)
+        } else {
+            server = require('http').createServer(app)
+        }
+        // Connect the server to the requested port, domain is the same as Node-RED
+        server.listen(uib.port) 
+        // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change.
+        httpNodeRoot = uib.nodeRoot = ''
+    } else {
+        // Port not specified (default) so reuse Node-RED's ExpressJS server and app
+        app = RED.httpNode // || RED.httpAdmin
+        server = RED.server
+        // Record the httpNodeRoot for later use
+        httpNodeRoot = uib.nodeRoot = RED.settings.httpNodeRoot
+    }
 
-    //#endregion -------- Constants -------- //
+    //#endregion ----- End of ExpressJS server/app setup ----- //
 
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
+
     /** Check uib root folder: create if needed, writable?
      * @since v2.0.0 2019-03-03
      */
@@ -222,15 +254,16 @@ module.exports = function(/** @type Red */ RED) {
             // should never happen
             log.error(`[uibuilder] COPY OF COMMON FOLDER FAILED`)
         }
-        // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeGo() so available for each instance as `./common/`)
+        // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeInstance() so available for each instance as `./common/`)
     }
     // If the root folder setup failed, throw an error and give up completely
     if (uib_rootFolder_OK !== true) {
         throw new Error(`uibuilder: Failed to set up uibuilder root folder structure correctly. Check log for additional error messages. Root folder: ${uib.rootFolder}.`)
     }
+    
     //#endregion ----- root folder ----- //
     
-    /** Serve up vendor packages - updates uib.installedPackages
+    /** Serve up vendor packages. Updates uib.installedPackages
      * This is the first check, the installed packages are rechecked at various times.
      * Reads the packageList and masterPackageList files
      * Adds ExpressJS static paths for each found FE package & saves the details to the vendorPaths variable.
@@ -245,14 +278,11 @@ module.exports = function(/** @type Red */ RED) {
      **/
 
     /** URI path for accessing the socket.io client from FE code. 
-     * @since v2.0.0-dev Now: `../uibuilder/vendor/socket.io/socket.io.js`
      * @constant {string} uib_socketPath */
-    //const uib_socketPath = tilib.urlJoin(httpNodeRoot, uib.moduleName, 'socket.io')
     const uib_socketPath = tilib.urlJoin(httpNodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
     log.trace('[uibuilder:Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
-    var io = socketio.listen(RED.server, {'path': uib_socketPath}) // listen === attach
-    // @ts-ignore
+    var io = socketio.listen(server, {'path': uib_socketPath}) // listen === attach
     io.set('transports', ['polling', 'websocket'])
 
     /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev3 */
@@ -268,10 +298,10 @@ module.exports = function(/** @type Red */ RED) {
 
     //#endregion ----- socket.io server ----- //
 
-    //#region ---- Set up uibuilder master resources (these are applied in nodeGO at instance level) ----
+    //#region ---- Set up uibuilder master resources (these are applied in nodeInstance at instance level) ----
     /** Create a new, additional static http path to enable loading of central static resources for uibuilder
      * Loads standard images, ico file, etc.
-     * @since v2.0.0 2019-03-03 Moved out of nodeGo() only need to do once - but is applied in nodeGo
+     * @since v2.0.0 2019-03-03 Moved out of nodeInstance() only need to do once - but is applied in nodeInstance
      * @type {string}
      */
     var masterStatic = ''
@@ -292,21 +322,25 @@ module.exports = function(/** @type Red */ RED) {
     // the default index.html page can be utilised.
     //#endregion -------- master resources --------
 
-    { // Output startup info to Node-RED log
+    //#region ---- Output startup info to Node-RED log ---- //
         RED.log.info('+-----------------------------------------------------')
         RED.log.info(`| ${uib.moduleName} initialised:`)
+        if ( uib.port && uib.port !== RED.settings.uiPort)
+            RED.log.info(`|   Using own webserver on port ${uib.port}`)
+        else
+            RED.log.info(`|   Using Node-RED's webserver`)
         RED.log.info(`|   root folder: ${uib.rootFolder}`)
         RED.log.info(`|   version . .: ${uib.version}`)
         RED.log.info(`|   packages . : ${Object.keys(uib.installedPackages)}`)
         RED.log.info('+-----------------------------------------------------')
-    }
+    //#endregion ------------------------------------------ //
 
     /** Run the node instance - called from registerType()
-     * @param {Object} config The configuration object passed from the Admin interface (see the matching HTML file)
+     * @type {runtimeNode}
+     * @param {runtimeNodeConfig} config The configuration object passed from the Admin interface (see the matching HTML file)
      */
-    function nodeGo(config) {
+    function nodeInstance(config) {
         // Create the node
-        // @ts-expect-error ts(2339)
         RED.nodes.createNode(this, config)
 
         /** @since 2019-02-02 - the current instance name (url) */
@@ -314,10 +348,9 @@ module.exports = function(/** @type Red */ RED) {
 
         log.trace(`[uibuilder:${uibInstance}] ================ instance registered ================`)
 
-        /** A copy of 'this' object in case we need it in context of callbacks of other functions. 
-         * @type {uibNode} node
+        /** Copy 'this' object in case we need it in context of callbacks of other functions.
+         * @type {uibNode}
          */
-        // @ts-expect-error ts(2322)
         const node = this
         log.trace(`[uibuilder:${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
 
@@ -335,8 +368,7 @@ module.exports = function(/** @type Red */ RED) {
         node.showfolder      = config.showfolder === undefined ? false : config.showfolder
         node.useSecurity     = config.useSecurity 
         node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
-        // @ts-expect-error ts(2339)
-        node.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
+        node.jwtSecret       = node.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
         node.tokenAutoExtend = config.tokenAutoExtend
         //#endregion ----- Local node config copy ----- //
 
@@ -697,7 +729,7 @@ module.exports = function(/** @type Red */ RED) {
          * @param {function} done Per msg finish function, node-red v1+
          **/
         function nodeInputHandler(msg, send, done) {
-            log.trace(`[uibuilder:${uibInstance}] nodeGo:nodeInputHandler - emit received msg - Namespace: ${node.url}`) //debug
+            log.trace(`[uibuilder:${uibInstance}] nodeInstance:nodeInputHandler - emit received msg - Namespace: ${node.url}`) //debug
 
             // If this is pre-1.0, 'send' will be undefined, so fallback to node.send
             send = send || function() { node.send.apply(node,arguments) }
@@ -729,7 +761,7 @@ module.exports = function(/** @type Red */ RED) {
 
         // Do something when Node-RED is closing down which includes when this node instance is redeployed
         node.on('close', function(removed,done) {
-            log.trace(`[uibuilder:${uibInstance}] nodeGo:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
+            log.trace(`[uibuilder:${uibInstance}] nodeInstance:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
 
             node.removeListener('input', nodeInputHandler)
 
@@ -741,23 +773,24 @@ module.exports = function(/** @type Red */ RED) {
         })
 
         // Shows an instance details debug page
-        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, function(req,res) {
-            let page = uiblib.showInstanceDetails(node, uib, userDir, RED)
+        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, function(/** @type {express.Request} */ req, res) {
+            let page = uiblib.showInstanceDetails(req, node, uib, userDir, RED)
             res.status(200).send( page )
         })
 
-    } // ---- End of nodeGo (initialised node instance) ---- //
+    } // ---- End of nodeInstance (initialised node instance) ---- //
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
     // @ts-ignore
-    RED.nodes.registerType(uib.moduleName, nodeGo, {
+    RED.nodes.registerType(uib.moduleName, nodeInstance, {
         credentials: {
             jwtSecret: {type:'password'},
         },
         settings: {
             uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
             uibuilderTemplates: { value: templateConf, exportable: true },
+            uibuilderPort: { value: uib.port || RED.settings.uiPort, exportable: true },
         },
     })
 
@@ -1275,6 +1308,14 @@ module.exports = function(/** @type Red */ RED) {
     RED.httpAdmin.get('/uibindex', function(req,res) {
         log.trace('[uibindex] User Page/API. List all available uibuilder endpoints')
         
+        // If using own Express server, correct the URL's
+        const url = new URL(req.headers.referer)
+        url.pathname = ''
+        if (uib.port && uib.port !== RED.settings.uiPort) {
+            url.port = uib.port
+        }
+        const urlPrefix = url.href
+        
         /** Return full details based on type parameter */
         switch (req.query.type) {
             case 'json': {
@@ -1335,8 +1376,8 @@ module.exports = function(/** @type Red */ RED) {
                 let page = `
                     <!doctype html><html lang="en"><head>
                         <title>Uibuilder Index</title>
-                        <link type="text/css" href="${uib.nodeRoot}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
-                        <link rel="icon" href="${uib.nodeRoot}${uib.moduleName}/common/images/node-blue.ico">
+                        <link type="text/css" href="${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+                        <link rel="icon" href="${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}/common/images/node-blue.ico">
                         <style type="text/css" media="all">
                             h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                             .col3i tbody>tr>:nth-child(3){ font-style:italic; }
@@ -1362,7 +1403,7 @@ module.exports = function(/** @type Red */ RED) {
                 Object.keys(uib.instances).forEach(key => {
                     page += `
                         <tr>
-                            <td><a href="${tilib.urlJoin(httpNodeRoot, uib.instances[key])}" target="_blank">${uib.instances[key]}</a></td>
+                            <td><a href="${urlPrefix}${tilib.urlJoin(httpNodeRoot, uib.instances[key]).replace('/','')}" target="_blank">${uib.instances[key]}</a></td>
                             <td>${key}</td>
                             <td>${path.join(uib.rootFolder, uib.instances[key])}</td>
                         </tr>
@@ -1407,11 +1448,11 @@ module.exports = function(/** @type Red */ RED) {
                      *  If so, add them to the output as an indicator of where to look.
                      */
                     let mainTxt = '<i>Not Supplied</i>'
-                    console.log('==>> ',httpNodeRoot, pj.url,pj.browser)
+                    //console.log('==>> ',httpNodeRoot, pj.url,pj.browser)
                     if ( pj.browser !== '' ) {
-                        mainTxt = `<a href="${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.browser)}">${pj.url}/${pj.browser}</a>`
+                        mainTxt = `<a href="${urlPrefix}${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.browser).replace('/','')}">${pj.url}/${pj.browser}</a>`
                     } else if ( pj.main !== '' ) {
-                        mainTxt = `<a href="${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.main)}">${pj.url}/${pj.main}</a>`
+                        mainTxt = `<a href="${urlPrefix}${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.main).replace('/','')}">${pj.url}/${pj.main}</a>`
                     }
 
                     page += `
