@@ -1031,20 +1031,29 @@ module.exports = {
     }, // ---- End of chkAuth() ---- //
 
     /** Create instance details web page
+     * @param {Object} req ExpressJS Request object
      * @param {Object} node configuration data for this instance
      * @param {Object} uib uibuilder "globals" common to all instances
      * @param {string} userDir The Node-RED userDir folder
-     * @param {Object} RED The Node-RED object
+     * @param {runtimeRED} RED The Node-RED runtime object
      * @return {string} page html
      */
-    showInstanceDetails: function(node, uib, userDir, RED) {
+    showInstanceDetails: function(req, node, uib, userDir, RED) {
         let page = ''
+
+        // If using own Express server, correct the URL's
+        const url = new URL(req.headers.referer)
+        url.pathname = ''
+        if (uib.port && uib.port !== RED.settings.uiPort) {
+            url.port = uib.port
+        }
+        const urlPrefix = url.href
 
         page += `
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
-                <link type="text/css" href="${uib.nodeRoot}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
-                <link rel="icon" href="${uib.nodeRoot}${uib.moduleName}/common/images/node-blue.ico">
+                <link type="text/css" href="${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+                <link rel="icon" href="${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}/common/images/node-blue.ico">
                 <style type="text/css" media="all">
                     h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                     .col3i tbody>tr>:nth-child(3){ font-style:italic; }
@@ -1075,8 +1084,8 @@ module.exports = {
                         </td>
                     </tr>
                     <tr>
-                        <th>URL for the front-end resources - index.html page will be shown</th>
-                        <td><a href=${tilib.urlJoin(uib.nodeRoot, node.url)} target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a></td>
+                        <th>URL for the front-end resources</th>
+                        <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, node.url).replace('/','')}" target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
                     </tr>
                     <tr>
                         <th>Node-RED userDir folder</th>
@@ -1087,7 +1096,7 @@ module.exports = {
                     </tr>
                     <tr>
                         <th>URL for vendor resources</th>
-                        <td><a href=${tilib.urlJoin(uib.nodeRoot, 'uibuilder', 'vendor')} target="_blank">../uibuilder/vendor/</a><br>
+                        <td>../uibuilder/vendor/<br>
                             See the <a href="../../uibindex" target="_blank">Detailed Information Page</a> for more details.
                         </td>
                     </tr>
