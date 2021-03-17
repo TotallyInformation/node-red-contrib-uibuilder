@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 /**
  * @typedef {Object} editorRED The Node-RED core object available to a custom node's .html file
  * 
