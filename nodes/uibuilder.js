@@ -252,7 +252,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             })
         } catch (e) {
             // should never happen
-            log.error(`[uibuilder] COPY OF COMMON FOLDER FAILED`)
+            log.error('[uibuilder] COPY OF COMMON FOLDER FAILED')
         }
         // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeInstance() so available for each instance as `./common/`)
     }
@@ -260,7 +260,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     if (uib_rootFolder_OK !== true) {
         throw new Error(`uibuilder: Failed to set up uibuilder root folder structure correctly. Check log for additional error messages. Root folder: ${uib.rootFolder}.`)
     }
-    
+
     //#endregion ----- root folder ----- //
     
     /** Serve up vendor packages. Updates uib.installedPackages
@@ -323,16 +323,16 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     //#endregion -------- master resources --------
 
     //#region ---- Output startup info to Node-RED log ---- //
-        RED.log.info('+-----------------------------------------------------')
-        RED.log.info(`| ${uib.moduleName} initialised:`)
-        if ( uib.port && uib.port !== RED.settings.uiPort)
-            RED.log.info(`|   Using own webserver on port ${uib.port}`)
-        else
-            RED.log.info(`|   Using Node-RED's webserver`)
-        RED.log.info(`|   root folder: ${uib.rootFolder}`)
-        RED.log.info(`|   version . .: ${uib.version}`)
-        RED.log.info(`|   packages . : ${Object.keys(uib.installedPackages)}`)
-        RED.log.info('+-----------------------------------------------------')
+    RED.log.info('+-----------------------------------------------------')
+    RED.log.info(`| ${uib.moduleName} initialised:`)
+    if ( uib.port && uib.port !== RED.settings.uiPort)
+        RED.log.info(`|   Using own webserver on port ${uib.port}`)
+    else
+        RED.log.info('|   Using Node-RED\'s webserver')
+    RED.log.info(`|   root folder: ${uib.rootFolder}`)
+    RED.log.info(`|   version . .: ${uib.version}`)
+    RED.log.info(`|   packages . : ${Object.keys(uib.installedPackages)}`)
+    RED.log.info('+-----------------------------------------------------')
     //#endregion ------------------------------------------ //
 
     /** Run the node instance - called from registerType()
@@ -782,7 +782,6 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
-    // @ts-ignore
     RED.nodes.registerType(uib.moduleName, nodeInstance, {
         credentials: {
             jwtSecret: {type:'password'},
@@ -995,7 +994,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 })
                 console.log(app._router.stack[0])
 
-                log.trace(`[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.`)
+                log.trace('[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.')
                 res.statusMessage = 'URLs listed successfully'
                 //res.status(200).json(routes)
                 res.status(200).json(app._router.stack)
