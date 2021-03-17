@@ -1,3 +1,125 @@
+/**
+ * @typedef {Object} editorRED The Node-RED core object available to a custom node's .html file
+ * 
+ */
+/* RED
+ {
+    "loader": {},
+    "events": {},
+    "i18n": {},
+    "settings": {
+        "apiRootUrl": "",
+        "httpNodeRoot": "/nr/",
+        "version": "1.2.7",
+        "user": {
+            "anonymous": true,
+            "permissions": "*"
+        },
+        "context": {
+            "default": "default",
+            "stores": [
+                "default",
+                "file"
+            ]
+        },
+        "flowFilePretty": true,
+        "flowEncryptionType": "user",
+        "tlsConfigDisableLocalFiles": false,
+        "uibuilderNodeEnv": "development", // === CUSTOM ===
+        "uibuilderTemplates": {}, // === CUSTOM ===
+        "uibuilderPort": 3000, // === CUSTOM ===
+        "editorTheme": {},
+
+        "get": function,
+        init: function,
+        load: function,
+        loadUserSettings: function,
+        remove: function,
+        set: function,
+        theme: function,
+    "user": {},
+    "comms": {},
+    "text": {},
+    "state": {},
+    "nodes": {},
+    "history": {},
+    "validators": {},
+    "utils": {},
+    "menu": {},
+    "panels": {},
+    "popover": {},
+    "tabs": {},
+    "stack": {},
+    "colorPicker": {},
+    "actions": {},
+    "deploy": {},
+    "diff": {},
+    "keyboard": {},
+    "workspaces": {},
+    "statusBar": {},
+    "view": {
+        "navigator": {},
+        "tools": {}
+    },
+    "sidebar": {},
+    "palette": {},
+    "editor": {},
+    "eventLog": {},
+    "tray": {},
+    "clipboard": {},
+    "library": {},
+    "notifications": {},
+    "search": {},
+    "actionList": {},
+    "typeSearch": {},
+    "subflow": {},
+    "group": {},
+    "userSettings": {},
+    "projects": {},
+    "touch": {},
+    "debug": {}
+}
+ */
+/* this
+{ 
+    name: ""
+    topic: ""
+    //... other vars ...//
+
+    credentials: { has_jwtSecret: false, _: { … } }
+
+    changed: false
+    dirty: false
+    icon: undefined
+    id: "b18a50dd.f7e5c"
+    info: undefined
+    infoEditor: w { $toDestroy: Array(46), container: div.red - ui - editor - text - container.ace_editor.ace_hidpi.red - ui - editor - text - container - toolbar.ace - tomo…, renderer: y, id: "editor2", commands: o, … } 
+    inputLabels: ""
+    inputs: 1
+    outputLabels: ['','']
+    outputs: 2
+    resize: false
+    selected: true
+    status: { text: "Node Initialised", fill: "blue", shape: "dot" } 
+    type: "uibuilder"
+    valid: true
+    validationErrors: []
+
+    g: "c49c82f3.7e716"
+    h: 30
+    l: true
+    w: 120
+    x: 530
+    y: 120
+    z: "18cb249f.38bafb"
+
+    _: ƒ()
+    __outputs: 2
+    _config: { name: """", topic: """", url: ""vue - file"", fwdInMessages: "false", allowScripts: "false", … } 
+    _def: { category: "uibuilder", color: "#E6E0F8", defaults: { … }, credentials: { … }, inputs: 1, … }
+}
+ */
+
 /** See settings.js for static settings.
  * @typedef {Object} runtimeSettings Static and Dynamic settings for Node-RED runtime
  * 
