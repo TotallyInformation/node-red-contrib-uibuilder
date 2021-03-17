@@ -10,9 +10,38 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing right now.
 
+## [3.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.1...v3.3.0)
+
+### New
+
+- uibuilder is now able to work on its own webserver instead of using Node-RED's.
+
+  ** The main purpose of this is that it lets you use a reverse proxy to securely expose _only_ uibuilder's endpoints without exposing Node-RED itself.** It also gives you more control over headers and other settings.
+
+  It will still use Node-RED's Admin server but your own front-end code and all of the installed vendor packages and middleware (including Socket.IO) will now use a separate http(s) server and ExpressJS app.
+
+  If you specify https for Node-RED, your custom server will also use https and will automatically pick up the certificate and key files from settings.js.
+
+  **NOTE**: That _all_ instances of uibuilder nodes will all use the same webserver. Allowing multiple servers requires a significant development effort but is on the backlog (just a very long way down).
+
+  To use a different webserver, you have to add the following into the `module.exports` part of your `settings.js` file:
+
+  ```javascript
+    /** Custom settings for all uibuilder node instances */
+    uibuilder: {
+        /** Optional HTTP PORT. 
+         * If set and different to Node-RED's uiPort, uibuilder will create
+         * a separate webserver for its own use.
+         */
+        port: process.env.UIBPORT || 3000,
+    },
+  ```
+
+  Note that the above will let you use an environment variable called `UIBPORT` to set the port. This must be done before starting Node-RED. The port setting is not dynamic.
+
 ## [3.2.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.0...v3.2.1)
 
-## Fixed
+### Fixed
 
 - [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) - Thanks to Sergio Rius for reporting and for [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122)
 - [Issue #123](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/123) - Allow for misuse of `browser` property in package.json for added libraries. Thanks to Steve McLaughlin for reporting and providing a potential fix.
@@ -20,7 +49,7 @@ Nothing right now.
 
 ## [3.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.3...v3.2.0)
 
-## New
+### New
 
 - You can now choose between front-end templates. 
   
@@ -69,7 +98,7 @@ Nothing right now.
     
     Note that you can use more than just button clicks. It will work with _any_ DOM event that you attach it to.
 
-## Changed
+### Changed
 
 - Better warning if you set/change a URL to one that already exists.
 - When changing URL:

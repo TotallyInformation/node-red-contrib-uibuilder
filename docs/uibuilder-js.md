@@ -16,11 +16,15 @@ Once a uibuilder node is added to any flow, the uibuilder module will be initial
 
 Everything in the `module.exports` function is run at this point. That creates all of the uibuilder "global" variables, functions and API's.
 
+The runtime `RED` object is available from this point onwards.
+
+The webserver, Socket.IO and other common variables are set up here. Admin and end-user API's are also defined at this level.
+
 ### Instance Initialisation
 
 Each instance of uibuilder is initialised when flows start.
 
-The global function `nodeGo` is called for each instance. It 
+The global function `nodeInstance` is called for each instance.
 
 ### Adding staticServer paths for vendor packages
 
@@ -145,6 +149,8 @@ Note that if a client disconnects then reconnects it will have a different `_soc
 
 * `deleteOnDelete` {Object}: Array of instances that have requested their local instance folders be deleted on deploy - see html file oneditdelete, updated by admin api
 
+* `port` {number} HTTP PORT number to be used for the webserver and ExpressJS app used by all uibuilder instances. If set to something other than Node-RED's port, an independent webserver and app is created. HTTPS will be used if defined for Node-RED and the same certificate and key will be used.
+
 ### Other variables
 
 * `userDir` {String}: The current userDir folder. `RED.settings.userDir`.
@@ -220,6 +226,8 @@ Credentials in Node-RED are node configuration settings that are stored encrypte
 
 In addition, the `node` object has a number of other useful functions and properties.
 
+Note that the file `typedefs.js` may have a more up-to-date version of this.
+
 ```javascript
 /**
  * @typedef {object} uibNode Local copy of the node instance config + other info
@@ -262,7 +270,7 @@ In addition, the `node` object has a number of other useful functions and proper
 * `log`: Default `RED.log`. Logging functions.
 * `app`: Default `RED.httpNode`. Reference to the ExpressJS app.
 * `io`: Reference to the Socket.IO server.
-* `nodeGo`: The function passed to the node `registerType` function.
+* `nodeInstance`: The function passed to the node `registerType` function.
 
 ### Instance level
 
