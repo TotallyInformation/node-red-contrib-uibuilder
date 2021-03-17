@@ -1,3 +1,158 @@
+/** See settings.js for static settings.
+ * @typedef {Object} runtimeSettings Static and Dynamic settings for Node-RED runtime
+ * 
+ * @property {string} uiPort The port used by Node-RED (default=1880)
+ * @property {string} uiHost The host IP used by Node-RED (default=0.0.0.0)
+ * @property {string} userDir The userDir folder
+ * @property {string} httpNodeRoot Optional base URL. All user url's will be under this. Default empty string.
+ * @property {Object} functionGlobalContext Add values, functions, packages to the Global context variable store.
+ * @property {function} mqttReconnectTime: [Getter/Setter],
+ * @property {function} serialReconnectTime: [Getter/Setter],
+ * @property {function} debugMaxLength: [Getter/Setter],
+ * @property {function} debugUseColors: [Getter/Setter],
+ * @property {string} flowFile: [Getter/Setter],
+ * @property {function} flowFilePretty: [Getter/Setter],
+ * @property {string} credentialSecret: [Getter/Setter],
+ * @property {string} httpAdminRoot: [Getter/Setter],
+ * @property {string} httpNodeRoot: [Getter/Setter],
+ * @property {string} httpStatic: [Getter/Setter],
+ * @property {function} adminAuth: [Getter/Setter],
+ * @property {function} httpNodeMiddleware: [Getter/Setter],
+ * @property {function} httpAdminMiddleware: [Getter/Setter],
+ * @property {function} httpServerOptions: [Getter/Setter],
+ * @property {function} webSocketNodeVerifyClient: [Getter/Setter],
+ * @property {function} functionGlobalContext: [Getter/Setter],
+ * @property {function} exportGlobalContextKeys: [Getter/Setter],
+ * @property {function} contextStorage: [Getter/Setter],
+ * @property {function} logging: [Getter/Setter],
+ * @property {function} editorTheme: [Getter/Setter],
+ * @property {string} settingsFile: [Getter/Setter],
+ * @property {string} httpRoot: [Getter/Setter],
+ * @property {function} disableEditor: [Getter/Setter],
+ * @property {function} httpAdminAuth: [Getter/Setter],
+ * @property {function} httpNodeAuth: [Getter/Setter],
+ * @property {Object|function} [https] If present, https will be used for ExpressJS servers.
+ * 
+ * @property {string} coreNodesDir Folder containing Node-RED core nodes
+ * @property {string} version Node-RED version
+ * 
+ * @property {Object} logging Controls the type and amount of logging output
+ * @property {Object} logging.console Controls output levels and types to the console log
+ * @property {string} logging.console.level What level of output? (fatal, error, warn, info, debug, trace)
+ * @property {boolean} logging.console.metrics Should metrics also be shown?
+ * @property {boolean} logging.console.audit Should audit also be shown?
+ * 
+ * @property {function} get Get dynamic settings. NB: entries in settings.js are read-only and shouldn't be read using RED.settings.get, that is only for settings that can change in-flight.
+ * @property {function} set Set dynamic settings
+ * @property {function} delete
+ * @property {function} available
+ * 
+ * @property {function} registerNodeSettings: [Function: registerNodeSettings],
+ * @property {function} exportNodeSettings: [Function: exportNodeSettings],
+ * @property {function} enableNodeSettings: [Function: enableNodeSettings],
+ * @property {function} disableNodeSettings: [Function: disableNodeSettings],
+ * 
+ * @property {function} getUserSettings: [Function: getUserSettings],
+ * @property {function} setUserSettings: [Function: setUserSettings],
+ */
+
+/** 
+ * @typedef {Object} runtimeLogging Logging. Levels that are output to the Node-RED log are controlled by the logging.console.level setting in settings.js
+ * @property {function} fatal Lvel 0. Lowest level, things that have broken Node-RED only.
+ * @property {function} error Level 1. Copy is sent to Editor debug panel as well as error log.
+ * @property {function} warn Level 2.
+ * @property {function} info Level 3.
+ * @property {function} debug Level 4.
+ * @property {function} trace Level 5. Very verbose output. Should tell the operator everything that is going on.
+ * @property {function} metric
+ * @property {function} audit
+ * @property {function} addHandler
+ * @property {function} removeHandler
+ */
+
+/** 
+ * @typedef {Object} runtimeNodes Gives access to other active nodes in the flows.
+ * @property {function} registerType Register a new type of node to Node-RED.
+ * @property {function} createNode Create a node instance (called from within registerType function).
+ * @property {function} getNode Get a reference to another node instance in the current flows. Can then access its properties.
+ * @property {function} eachNode: [Function: eachNode],
+ * @property {function} addCredentials: [Function: add],
+ * @property {function} getCredentials: [Function: get],
+ * @property {function} deleteCredentials: [Function: delete],
+ */
+
+/**
+ * @typedef {Object} runtimeRED The core Node-RED runtime object
+ * @property {expressApp} httpAdmin Reference to the ExpressJS app for Node-RED Admin including the Editor
+ * @property {expressApp} httpNode Reference to the ExpressJS app for Node-RED user-facing nodes including http-in/-out and Dashboard
+ * @property {Object} server Node.js http(s) Server object
+ * @property {runtimeLogging} log Logging.
+ * @property {runtimeNodes} nodes Gives access to other active nodes in the flows.
+ * @property {runtimeSettings} settings Static and Dynamic settings for Node-RED runtime
+ * 
+ * @property {function} version Get the Node-RED version
+ * @property {function} require: [Function: requireModule],
+ * @property {function} comms: { publish: [Function: publish] },
+ * @property {function} library: { register: [Function: register] },
+ * @property {function} auth: { needsPermission: [Function: needsPermission] },
+ * 
+ * @property {Object} events Event handler object
+ * @property {function} events.on Event Listener function. Types: 'nodes-started', 'nodes-stopped'
+ * @property {function} events.once
+ * @property {function} events.addListener
+ * 
+ * @property {Object} hooks
+ * @property {function} hooks.has
+ * @property {function} hooks.clear
+ * @property {function} hooks.add
+ * @property {function} hooks.remove
+ * @property {function} hooks.trigger
+ * 
+ * @property {Object} util
+ * @property {function} util.encodeObject: [Function: encodeObject],
+ * @property {function} util.ensureString: [Function: ensureString],
+ * @property {function} util.ensureBuffer: [Function: ensureBuffer],
+ * @property {function} util.cloneMessage: [Function: cloneMessage],
+ * @property {function} util.compareObjects: [Function: compareObjects],
+ * @property {function} util.generateId: [Function: generateId],
+ * @property {function} util.getMessageProperty: [Function: getMessageProperty],
+ * @property {function} util.setMessageProperty: [Function: setMessageProperty],
+ * @property {function} util.getObjectProperty: [Function: getObjectProperty],
+ * @property {function} util.setObjectProperty: [Function: setObjectProperty],
+ * @property {function} util.evaluateNodeProperty: [Function: evaluateNodeProperty],
+ * @property {function} util.normalisePropertyExpression: [Function: normalisePropertyExpression],
+ * @property {function} util.normaliseNodeTypeName: [Function: normaliseNodeTypeName],
+ * @property {function} util.prepareJSONataExpression: [Function: prepareJSONataExpression],
+ * @property {function} util.evaluateJSONataExpression: [Function: evaluateJSONataExpression],
+ * @property {function} util.parseContextStore: [Function: parseContextStore]
+ */
+
+/**
+ * @typedef {object} runtimeNode Local copy of the node instance config + other info
+ * @property {Function} send Send a Node-RED msg to an output port
+ * @property {Function} done Dummy done function for pre-Node-RED 1.0 servers
+ * @property {function} context get/set context data. Also .flow and .global contexts
+ * @property {function} on Event listeners for the node instance ('input', 'close')
+ * @property {Function} removeListener Event handling
+ * @property {function} error Error log output, also logs to the Editor's debug panel
+ * @property {Object=} credentials Optional secured credentials
+ * @property {Object=} name Internal.
+ * @property {Object=} id Internal. uid of node instance.
+ * @property {Object=} type Internal. Type of node instance.
+ * @property {Object=} z Internal. uid of ???
+ * @property {[Array<string>]=} wires Internal. Array of Array of Strings. The wires attached to this node instance (uid's)
+ */
+
+/**
+ * @typedef {object} runtimeNodeConfig Configuration of node instance. Will also have Editor panel's defined variables as properties.
+ * @property {Object=} id Internal. uid of node instance.
+ * @property {Object=} type Internal. Type of node instance.
+ * @property {Object=} x Internal
+ * @property {Object=} y Internal
+ * @property {Object=} z Internal
+ * @property {Object=} wires Internal. The wires attached to this node instance (uid's)
+ */
+
 /**
  * @typedef {object} uibNode Local copy of the node instance config + other info
  * @property {String} uibNode.id Unique identifier for this instance
@@ -28,7 +183,9 @@
  * @property {Function=} uibNode.done Dummy done function for pre-Node-RED 1.0 servers
  * @property {Function=} uibNode.on Event handler
  * @property {Function=} uibNode.removeListener Event handling
- * z, wires
+ * @property {Object=} uibNode.credentials Optional secured credentials
+ * @property {Object=} uibNode.z Internal
+ * @property {Object=} uibNode.wires Internal. The wires attached to this node instance (uid's)
  */
 
 /**
@@ -77,4 +234,182 @@
  * @property {Props} VNode.props
  * @property {Children} VNode.children
  * @property {Key} [VNode.key]
+ */
+
+// ==== vvv These need some work vvv ==== //
+
+// ExpressJS App
+/**
+ * @typedef {Object} expressApp ExpessJS `app` object
+ * @property {Object} _events: [Object: null prototype] { mount: [Function: onmount] },
+ * @property {number} _eventsCount: 1,
+ * @property {number} _maxListeners: undefined,
+ * @property {function} setMaxListeners: [Function: setMaxListeners],
+ * @property {function} getMaxListeners: [Function: getMaxListeners],
+ * @property {function} emit: [Function: emit],
+ * @property {function} addListener: [Function: addListener],
+ * @property {function} on: [Function: addListener],
+ * @property {function} prependListener: [Function: prependListener],
+ * @property {function} once: [Function: once],
+ * @property {function} prependOnceListener: [Function: prependOnceListener],
+ * @property {function} removeListener: [Function: removeListener],
+ * @property {function} off: [Function: removeListener],
+ * @property {function} removeAllListeners: [Function: removeAllListeners],
+ * @property {function} listeners: [Function: listeners],
+ * @property {function} rawListeners: [Function: rawListeners],
+ * @property {function} listenerCount: [Function: listenerCount],
+ * @property {function} eventNames: [Function: eventNames],
+ * @property {function} init: [Function: init],
+ * @property {function} defaultConfiguration: [Function: defaultConfiguration],
+ * @property {function} lazyrouter: [Function: lazyrouter],
+ * @property {function} handle: [Function: handle],
+ * @property {function} use: [Function: use],
+ * @property {function} route: [Function: route],
+ * @property {function} engine: [Function: engine],
+ * @property {function} param: [Function: param],
+ * @property {function} set: [Function: set],
+ * @property {function} path: [Function: path],
+ * @property {function} enabled: [Function: enabled],
+ * @property {function} disabled: [Function: disabled],
+ * @property {function} enable: [Function: enable],
+ * @property {function} disable: [Function: disable],
+ * @property {function} acl: [Function (anonymous)],
+ * @property {function} bind: [Function (anonymous)],
+ * @property {function} checkout: [Function (anonymous)],
+ * @property {function} connect: [Function (anonymous)],
+ * @property {function} copy: [Function (anonymous)],
+ * @property {function} delete: [Function (anonymous)],
+ * @property {function} get: [Function (anonymous)],
+ * @property {function} head: [Function (anonymous)],
+ * @property {function} link: [Function (anonymous)],
+ * @property {function} lock: [Function (anonymous)],
+ * @property {function} 'm-search': [Function (anonymous)],
+ * @property {function} merge: [Function (anonymous)],
+ * @property {function} mkactivity: [Function (anonymous)],
+ * @property {function} mkcalendar: [Function (anonymous)],
+ * @property {function} mkcol: [Function (anonymous)],
+ * @property {function} move: [Function (anonymous)],
+ * @property {function} notify: [Function (anonymous)],
+ * @property {function} options: [Function (anonymous)],
+ * @property {function} patch: [Function (anonymous)],
+ * @property {function} post: [Function (anonymous)],
+ * @property {function} pri: [Function (anonymous)],
+ * @property {function} propfind: [Function (anonymous)],
+ * @property {function} proppatch: [Function (anonymous)],
+ * @property {function} purge: [Function (anonymous)],
+ * @property {function} put: [Function (anonymous)],
+ * @property {function} rebind: [Function (anonymous)],
+ * @property {function} report: [Function (anonymous)],
+ * @property {function} search: [Function (anonymous)],
+ * @property {function} source: [Function (anonymous)],
+ * @property {function} subscribe: [Function (anonymous)],
+ * @property {function} trace: [Function (anonymous)],
+ * @property {function} unbind: [Function (anonymous)],
+ * @property {function} unlink: [Function (anonymous)],
+ * @property {function} unlock: [Function (anonymous)],
+ * @property {function} unsubscribe: [Function (anonymous)],
+ * @property {function} all: [Function: all],
+ * @property {function} del: [Function (anonymous)],
+ * @property {function} render: [Function: render],
+ * @property {function} listen: [Function: listen],
+ * @property {function} request: IncomingMessage { app: [Circular *1] },
+ * @property {function} response: ServerResponse { app: [Circular *1] },
+ * @property {Object} cache: {},
+ * @property {Object} engines: {},
+ * 
+ * @property {Object} settings: {
+ * @property {boolean}  settings.'x-powered-by': true,
+ * @property {string}   settings.etag: 'weak',
+ * @property {function} settings.'etag fn': [Function: generateETag],
+ * @property {string}   settings.env: 'development',
+ * @property {string}   settings.'query parser': 'extended',
+ * @property {function} settings.'query parser fn': [Function: parseExtendedQueryString],
+ * @property {number}   settings.'subdomain offset': 2,
+ * @property {function} settings.view: [Function: View],
+ * @property {string}   settings.views: 'C:\\src\\nr2\\views',
+ * @property {string}   settings.'jsonp callback name': 'callback'
+ * 
+ * @property {Object} locals: [Object: null prototype] { settings: [Object] },
+ * @property {string} mountpath: '/nr/',
+ * 
+ * @property {function} parent: [Function: app] {
+ * @property {function}   parent._events: [Object: null prototype],
+ * @property {function}   parent._eventsCount: 1,
+ * @property {function}   parent._maxListeners: undefined,
+ * @property {function}   parent.setMaxListeners: [Function: setMaxListeners],
+ * @property {function}   parent.getMaxListeners: [Function: getMaxListeners],
+ * @property {function}   parent.emit: [Function: emit],
+ * @property {function}   parent.addListener: [Function: addListener],
+ * @property {function}   parent.on: [Function: addListener],
+ * @property {function}   parent.prependListener: [Function: prependListener],
+ * @property {function}   parent.once: [Function: once],
+ * @property {function}   parent.prependOnceListener: [Function: prependOnceListener],
+ * @property {function}   parent.removeListener: [Function: removeListener],
+ * @property {function}   parent.off: [Function: removeListener],
+ * @property {function}   parent.removeAllListeners: [Function: removeAllListeners],
+ * @property {function}   parent.listeners: [Function: listeners],
+ * @property {function}   parent.rawListeners: [Function: rawListeners],
+ * @property {function}   parent.listenerCount: [Function: listenerCount],
+ * @property {function}   parent.eventNames: [Function: eventNames],
+ * @property {function}   parent.init: [Function: init],
+ * @property {function}   parent.defaultConfiguration: [Function: defaultConfiguration],
+ * @property {function}   parent.lazyrouter: [Function: lazyrouter],
+ * @property {function}   parent.handle: [Function: handle],
+ * @property {function}   parent.use: [Function: use],
+ * @property {function}   parent.route: [Function: route],
+ * @property {function}   parent.engine: [Function: engine],
+ * @property {function}   parent.param: [Function: param],
+ * @property {function}   parent.set: [Function: set],
+ * @property {function}   parent.path: [Function: path],
+ * @property {function}   parent.enabled: [Function: enabled],
+ * @property {function}   parent.disabled: [Function: disabled],
+ * @property {function}   parent.enable: [Function: enable],
+ * @property {function}   parent.disable: [Function: disable],
+ * @property {function}   parent.acl: [Function (anonymous)],
+ * @property {function}   parent.bind: [Function (anonymous)],
+ * @property {function}   parent.checkout: [Function (anonymous)],
+ * @property {function}   parent.connect: [Function (anonymous)],
+ * @property {function}   parent.copy: [Function (anonymous)],
+ * @property {function}   parent.delete: [Function (anonymous)],
+ * @property {function}   parent.get: [Function (anonymous)],
+ * @property {function}   parent.head: [Function (anonymous)],
+ * @property {function}   parent.link: [Function (anonymous)],
+ * @property {function}   parent.lock: [Function (anonymous)],
+ * @property {function}   parent.'m-search': [Function (anonymous)],
+ * @property {function}   parent.merge: [Function (anonymous)],
+ * @property {function}   parent.mkactivity: [Function (anonymous)],
+ * @property {function}   mkcalendar: [Function (anonymous)],
+ * @property {function}   mkcol: [Function (anonymous)],
+ * @property {function}   move: [Function (anonymous)],
+ * @property {function}   notify: [Function (anonymous)],
+ * @property {function}   options: [Function (anonymous)],
+ * @property {function}   patch: [Function (anonymous)],
+ * @property {function}   post: [Function (anonymous)],
+ * @property {function}   pri: [Function (anonymous)],
+ * @property {function}   propfind: [Function (anonymous)],
+ * @property {function}   proppatch: [Function (anonymous)],
+ * @property {function}   purge: [Function (anonymous)],
+ * @property {function}   put: [Function (anonymous)],
+ * @property {function}   rebind: [Function (anonymous)],
+ * @property {function}   report: [Function (anonymous)],
+ * @property {function}   search: [Function (anonymous)],
+ * @property {function}   source: [Function (anonymous)],
+ * @property {function}   subscribe: [Function (anonymous)],
+ * @property {function}   trace: [Function (anonymous)],
+ * @property {function}   unbind: [Function (anonymous)],
+ * @property {function}   unlink: [Function (anonymous)],
+ * @property {function}   unlock: [Function (anonymous)],
+ * @property {function}   unsubscribe: [Function (anonymous)],
+ * @property {function}   all: [Function: all],
+ * @property {function}   del: [Function (anonymous)],
+ * @property {function}   render: [Function: render],
+ * @property {function}   listen: [Function: listen],
+ * @property {function}   request: [IncomingMessage],
+ * @property {function}   response: [ServerResponse],
+ * @property {function}   cache: {},
+ * @property {function}   engines: {},
+ * @property {function}   settings: [Object],
+ * @property {function}   locals: [Object: null prototype],
+ * @property {function}   mountpath: '/',
+ * @property {function}   _router: [Function]
  */
