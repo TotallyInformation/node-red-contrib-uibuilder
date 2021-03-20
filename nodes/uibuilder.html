@@ -830,7 +830,7 @@
                 var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
                 $('#info-webserver').empty()
                 if (RED.settings.uibuilderPort && RED.settings.uibuilderPort !== nrPort) {
-                    console.log(`[uibuilder:port-check] uibuilderPort: ${RED.settings.uibuilderPort}, NR port: ${nrPort}`)
+                    console.log(`[uibuilder:port-check] uibuilderPort: ${RED.settings.uibuilderPort}, NR port: ${nrPort}, eUrlSplit[2]: ${eUrlSplit[2]}`)
                     eUrlSplit[2] = RED.settings.uibuilderPort
                     nodeRoot = ''
                     $('#info-webserver')
