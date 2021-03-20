@@ -830,9 +830,11 @@
                 var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
                 $('#info-webserver').empty()
                 if (RED.settings.uibuilderPort && RED.settings.uibuilderPort !== nrPort) {
+                    console.log(`[uibuilder:port-check] uibuilderPort: ${RED.settings.uibuilderPort}, NR port: ${nrPort}`)
                     eUrlSplit[2] = RED.settings.uibuilderPort
                     nodeRoot = ''
-                    $('#info-webserver').append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
+                    $('#info-webserver')
+                        .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
                 }
                 var urlPrefix = eUrlSplit.join(':') + '/'
                 // Show the root URL
