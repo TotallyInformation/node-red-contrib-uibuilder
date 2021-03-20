@@ -829,13 +829,13 @@
                 var nrPort = Number(eUrlSplit[2])
                 var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
                 $('#info-webserver').empty()
-                if (RED.settings.uibuilderPort && RED.settings.uibuilderPort !== nrPort) {
-                    console.log(`[uibuilder:port-check] uibuilderPort: ${RED.settings.uibuilderPort}, NR port: ${nrPort}, eUrlSplit[2]: ${eUrlSplit[2]}`)
+                if (RED.settings.uibuilderCustomServer === true) {
                     eUrlSplit[2] = RED.settings.uibuilderPort
                     nodeRoot = ''
                     $('#info-webserver')
                         .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
                 }
+                console.log(`[uibuilder:port-check] Custom Svr? ${RED.settings.uibuilderCustomServer}, uibuilderPort: ${RED.settings.uibuilderPort}, NR port: ${nrPort}, eUrlSplit[2]: ${eUrlSplit[2]}, URL: ${eUrlSplit.join(':') + '/'}`)
                 var urlPrefix = eUrlSplit.join(':') + '/'
                 // Show the root URL
                 $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl).text('Open ' + nodeRoot + thisurl)

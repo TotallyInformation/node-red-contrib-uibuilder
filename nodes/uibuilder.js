@@ -796,7 +796,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         settings: {
             uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
             uibuilderTemplates: { value: templateConf, exportable: true },
-            uibuilderPort: { value: uib.port || RED.settings.uiPort, exportable: true },
+            uibuilderPort: { value: uib.port, exportable: true },
+            uibuilderCustomServer: { value: (uib.port && uib.port !== RED.settings.uiPort), exportable: true },
         },
     })
 
