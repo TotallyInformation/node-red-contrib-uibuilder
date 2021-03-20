@@ -823,19 +823,25 @@
              * NB: Actual URL change processing is done in validation which also happens on change
              *     Change happens when config panel is opened as well as for a real change
              */
+            console.log('======', RED.settings.uibuilderCustomServer, '======', RED.settings)
             $('#node-input-url').change(function () {
                 var thisurl = $(this).val()
                 var eUrlSplit = window.origin.split(':')
                 var nrPort = Number(eUrlSplit[2])
                 var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
                 $('#info-webserver').empty()
-                if (RED.settings.uibuilderCustomServer === true) {
-                    eUrlSplit[2] = RED.settings.uibuilderPort
+                // Is uibuilder using a custom server?
+                if (RED.settings.uibuilderCustomServer.port) {
+                    // Use the correct protocol (http or https)
+                    eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2','https')
+                    // Use the correct port
+                    eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
+                    // When using custom server, no base path is used
                     nodeRoot = ''
                     $('#info-webserver')
                         .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
                 }
-                console.log(`[uibuilder:port-check] Custom Svr? ${RED.settings.uibuilderCustomServer}, uibuilderPort: ${RED.settings.uibuilderPort}, NR port: ${nrPort}, eUrlSplit[2]: ${eUrlSplit[2]}, URL: ${eUrlSplit.join(':') + '/'}`)
+                console.log('[uibuilder:port-check] Custom Svr?', RED.settings.uibuilderCustomServer, '. url split: ', eUrlSplit, 'RED.settings: ', RED.settings)
                 var urlPrefix = eUrlSplit.join(':') + '/'
                 // Show the root URL
                 $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl).text('Open ' + nodeRoot + thisurl)

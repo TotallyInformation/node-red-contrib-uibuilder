@@ -105,11 +105,18 @@ const uib = {
     staticOpts: {}, //{ maxAge: 31536000, immutable: true, },
     /** Array of instances that have requested their local instance folders be deleted on deploy - see html file oneditdelete, updated by admin api */
     deleteOnDelete: {},
-    /** Optional ExpressJS port number. If defined, uibuilder will use its own ExpressJS server/app
-     * If undefined, uibuilder will use the Node-RED user-facing ExpressJS server
-     * @type {undefined|number}
-     */
-    port: undefined,
+    /** Parameters for custom webserver if required. Port is undefined if using Node-RED's webserver. */
+    customServer: {
+        /** Optional TCP/IP port number. If defined, uibuilder will use its own ExpressJS server/app
+         * If undefined, uibuilder will use the Node-RED user-facing ExpressJS server
+         * @type {undefined|number} If undefined, means that uibuilder is using Node-RED's webserver
+         */
+        port: undefined,
+        /** @type {string} Node.js server type. ['http', 'https', 'http2']  */
+        type: 'http',
+        /** @type {undefined|string} uibuilder Host. sub(domain) name or IP Address */
+        host: undefined,
+    },
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -166,7 +173,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     //#region ----- ExpressJS Server/app setup ----- //
 
     /** Optional port. If set, uibuilder will use its own ExpressJS server */
-    if ( RED.settings.uibuilder && RED.settings.uibuilder.port) uib.port = RED.settings.uibuilder.port
+    if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port !== RED.settings.uiPort) 
+        uib.customServer.port = RED.settings.uibuilder.port
 
     /** Root URL path for http-in/out and uibuilder nodes 
      * Always set to empty string if a dedicated ExpressJS app is required
@@ -180,7 +188,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
      */
     let app, server
-    if ( uib.port && uib.port !== RED.settings.uiPort) {
+    if ( uib.customServer.port ) {
         // Port has been specified & is different to NR's port so create a new instance of express & app
         const express = require('express') 
         app = express()
@@ -191,19 +199,24 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
          * TODO: Switch from https to http/2?
          */
         if ( RED.settings.https ) {
+            uib.customServer.type = 'https'
             server = require('https').createServer(RED.settings.https, app)
         } else {
             server = require('http').createServer(app)
         }
         // Connect the server to the requested port, domain is the same as Node-RED
-        try {
-            server.listen(uib.port)
-        } catch (err) {
-            RED.log.error(
-                `[uibuilder:CreateServer] ERROR: Port ${uib.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`,
-                err
-            )
-        }
+        server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                server.close()
+                RED.log.error(
+                    `[uibuilder:CreateServer] ERROR: Port ${uib.customServer.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`
+                )
+                return
+            }    
+        })
+        server.listen(uib.customServer.port, function() {
+            uib.customServer.host = server.address().address
+        })
         // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change.
         httpNodeRoot = uib.nodeRoot = ''
     } else {
@@ -332,8 +345,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     //#region ---- Output startup info to Node-RED log ---- //
     RED.log.info('+-----------------------------------------------------')
     RED.log.info(`| ${uib.moduleName} initialised:`)
-    if ( uib.port && uib.port !== RED.settings.uiPort)
-        RED.log.info(`|   Using own webserver on port ${uib.port}`)
+    if ( uib.customServer.port )
+        RED.log.info(`|   Using custom ${uib.customServer.type} webserver on port ${uib.customServer.port}`)
     else
         RED.log.info('|   Using Node-RED\'s webserver')
     RED.log.info(`|   root folder: ${uib.rootFolder}`)
@@ -789,6 +802,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
+    console.log('===========', uib.customServer, '==============')
     RED.nodes.registerType(uib.moduleName, nodeInstance, {
         credentials: {
             jwtSecret: {type:'password'},
@@ -796,8 +810,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         settings: {
             uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
             uibuilderTemplates: { value: templateConf, exportable: true },
-            uibuilderPort: { value: uib.port, exportable: true },
-            uibuilderCustomServer: { value: (uib.port && uib.port !== RED.settings.uiPort), exportable: true },
+            uibuilderCustomServer: { value: (uib.customServer), exportable: true },
         },
     })
 
@@ -1318,8 +1331,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         // If using own Express server, correct the URL's
         const url = new URL(req.headers.referer)
         url.pathname = ''
-        if (uib.port && uib.port !== RED.settings.uiPort) {
-            url.port = uib.port
+        if (uib.customServer.port) {
+            url.port = uib.customServer.port
         }
         const urlPrefix = url.href
         
