@@ -196,7 +196,14 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             server = require('http').createServer(app)
         }
         // Connect the server to the requested port, domain is the same as Node-RED
-        server.listen(uib.port) 
+        try {
+            server.listen(uib.port)
+        } catch (err) {
+            RED.log.error(
+                `[uibuilder:CreateServer] ERROR: Port ${uib.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`,
+                err
+            )
+        }
         // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change.
         httpNodeRoot = uib.nodeRoot = ''
     } else {
