@@ -1,6 +1,6 @@
 /* globals module */
 /**
- * Copyright (c) 2020 Julian Knight (Totally Information)
+ * Copyright (c) 2020-2021 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -37,6 +37,7 @@
  */
 'use strict'
 
+//#region ----- Variable and parameter definitions - can be removed if not wanted ----- //
 /**
  * Standard msg._auth object exchanged in msg's between front-end and server
  * @typedef {import('../../index').MsgAuth} MsgAuth
@@ -46,12 +47,16 @@
  * typedef {import('./security').userValidation} userValidation 
  */
 
-const TYPEDEFS = require('../../typedefs.js')
+try { // Partially fixes #126
+    const TYPEDEFS = require('../../typedefs.js')
+} catch (e) {}
 /**
  * typedef {TYPEDEFS.MsgAuth} MsgAuth
  * @typedef {TYPEDEFS.userValidation} userValidation
  * @typedef {TYPEDEFS.userMetadata} userMetadata
  */
+
+//#endregion ----- ------------------------------------------------------------- ----- //
 
 module.exports = {
     /** Validate user against your own user data.
@@ -93,7 +98,6 @@ module.exports = {
         // }
         
     } // ---- End of userValidate ---- //
-
 
 }
 

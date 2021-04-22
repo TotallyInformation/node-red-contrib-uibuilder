@@ -695,6 +695,7 @@ module.exports = {
 
             _auth.jwt = jsonwebtoken.sign(jwtData, node.jwtSecret)
             _auth.sessionExpiry = sessionExpiry * 1000 // Javascript ms not unix sec
+            if (!_auth.info) _auth.info = {}
             _auth.info.validJwt = true
 
         } catch(e) {
