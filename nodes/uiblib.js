@@ -323,7 +323,7 @@ module.exports = {
         //     let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
         //     log.trace(`[uibuilder:uiblib:addPackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
         //     try {
-        //         app.use( vendorPath, /**function (req, res, next) {
+        //         app.use( vendorPath, /**function (/** @type {import("express").Request} */ req, /** @type {import("express").Response} */ res, /** @type {import("express").NextFunction} */ next) {
         //             // TODO Allow for a test to turn this off
         //             // if (true !== true) {
         //             //     next('router')
@@ -563,7 +563,7 @@ module.exports = {
 
     /** Validate a url query parameter - DEPRECATED in v3.1.0
      * @param {string} url uibuilder URL to check (not a full url, the name used by uibuilder)
-     * @param {Object} res The ExpressJS response variable
+     * @param {import("express").Response} res The ExpressJS response variable
      * @param {string} caller A string indicating the calling function - used for logging only
      * @param {Object} log The uibuilder log Object
      * @return {boolean} True if the url is valid, false otherwise (having set the response object)
@@ -1032,7 +1032,7 @@ module.exports = {
     }, // ---- End of chkAuth() ---- //
 
     /** Create instance details web page
-     * @param {Object} req ExpressJS Request object
+     * @param {import("express").Request} req ExpressJS Request object
      * @param {Object} node configuration data for this instance
      * @param {Object} uib uibuilder "globals" common to all instances
      * @param {string} userDir The Node-RED userDir folder

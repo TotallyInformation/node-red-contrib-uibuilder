@@ -477,7 +477,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         }
 
         //#region Add static ExpressJS route for instance local custom files
-        var customStatic = function(req, res, next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
+        var customStatic = function(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
 
         try {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
@@ -515,7 +515,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         /** Provide the ability to have a ExpressJS middleware hook.
          * This can be used for custom authentication/authorisation or anything else.
          */
-        var httpMiddleware = function(req,res,next) { next() }
+        var httpMiddleware = function(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) { next() }
         /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
         let uibMwPath = path.join(uib.configFolder, 'uibMiddleware.js')
         try {
@@ -529,7 +529,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
         /** This ExpressJS middleware runs when the uibuilder page loads - set cookies and headers
          * @see https://expressjs.com/en/guide/using-middleware.html */
-        function masterMiddleware (req, res, next) {
+        function masterMiddleware (/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
             //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             // Help reduce risk of XSS and other attacks
             res.setHeader('X-XSS-Protection','1;mode=block')
@@ -793,7 +793,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         })
 
         // Shows an instance details debug page
-        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, function(/** @type {express.Request} */ req, res) {
+        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             let page = uiblib.showInstanceDetails(req, node, uib, userDir, RED)
             res.status(200).send( page )
         })
@@ -932,7 +932,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     /** uibuilder v3 unified Admin API router - new API commands should be added here */
     RED.httpAdmin.route('/uibuilder/admin/:url')
         // For all routes
-        .all(function(req,res,next) {
+        .all(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
             // @ts-ignore
             const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
             params.type = 'all'
@@ -950,7 +950,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             next()
         })
         /** Get something and return it */
-        .get(function(req,res) {
+        .get(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             // @ts-ignore
             const params = res.allparams
             params.type = 'get'
@@ -1025,7 +1025,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
         })
         /** TODO Write file contents */
-        .put(function(req,res) {
+        .put(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             // @ts-ignore
             const params = res.allparams
             params.type = 'put'
@@ -1050,7 +1050,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
         })
         /** Create a new folder or file */
-        .post(function(req,res) {
+        .post(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             // @ts-ignore
             const params = res.allparams
             params.type = 'post'
@@ -1119,7 +1119,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             })
         })
         /** Delete a folder or a file */
-        .delete(function(req,res) {
+        .delete(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             // @ts-ignore ts(2339)
             const params = res.allparams
             params.type = 'delete'
@@ -1198,7 +1198,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @param {Object} permissions The permissions required for access
      * @param {function} cb
      **/
-    RED.httpAdmin.get('/uibgetfile', function(req,res) {
+    RED.httpAdmin.get('/uibgetfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         //#region --- Parameter validation ---
         /** req.query parameters
          * url
@@ -1272,7 +1272,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @param {Object} permissions The permissions required for access (Express middleware)
      * @param {function} cb
      **/
-    RED.httpAdmin.post('/uibputfile', function(req,res) {
+    RED.httpAdmin.post('/uibputfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         //#region --- Parameter validation ---
         const params = req.body
 
@@ -1325,7 +1325,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
      * @since 2019-02-04 v1.1.0-beta6
      */
-    RED.httpAdmin.get('/uibindex', function(req,res) {
+    RED.httpAdmin.get('/uibindex', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         log.trace('[uibindex] User Page/API. List all available uibuilder endpoints')
         
         // If using own Express server, correct the URL's
@@ -1643,7 +1643,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     }) // ---- End of uibindex ---- //
 
     /** Check & update installed front-end library packages, return list as JSON */
-    RED.httpAdmin.get('/uibvendorpackages', function(req,res) {
+    RED.httpAdmin.get('/uibvendorpackages', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         // Update the installed packages list
         uiblib.checkInstalledPackages('', uib, userDir, log)
 
@@ -1658,7 +1658,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
      * @param {string} req.query.cmd Command to run (see notes for this function)
      */
-    RED.httpAdmin.get('/uibnpmmanage', function(req,res) {
+    RED.httpAdmin.get('/uibnpmmanage', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         //#region --- Parameter validation (cmd, package) ---
         const params = req.query
         
