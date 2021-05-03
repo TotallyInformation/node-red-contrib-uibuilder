@@ -88,14 +88,14 @@ module.exports = {
         } else {
 
             // In all other cases, fail the validation - optionally, you can include more info here as well.
-            _auth.userValidated = true
+            _auth.userValidated = false
             _auth.info = {
                 message: 'Ouch! Sorry, that login is not valid'
             }
         }
         
         return _auth
-        
+
     } // ---- End of userValidate ---- //
 
 }
