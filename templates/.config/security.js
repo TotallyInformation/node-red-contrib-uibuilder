@@ -67,35 +67,34 @@ module.exports = {
      * @return {boolean|userValidation} Either true/false or Object of type userValidation
      */
     userValidate: function(_auth) {
-        console.log(`[uibuilder:security.js] userValidate Security from ${__filename} used. Replace this template with your own code. _auth:`, _auth)
+        console.log(`[uibuilder:.common/security.js] userValidate Security from '${__filename}' used. Replace this template with your own code. _auth:`, _auth)
 
+        // Always start by invalidating the user credentials
+        _auth.userValidated = false
+        
         /** Manual "test" ID validates - this will be replaced with a suitable lookup in your code - maybe from a database or a file.
          * You will also want to pass through some kind of password to validate the user.
          */
         if ( _auth.id === 'test' ) {
-            console.log(`[uibuilder:security.js] User id ${_auth.id} has been validated`)
 
-            // Example of simple boolean return
-            return true
+            console.log(`[uibuilder:.common/security.js] User id '${_auth.id}' has been validated`)
 
-            //Example of object return with additional data that gets passed back to the client
-            // return {
-            //     userValidated: true,
-            //     authData: {
-            //         name: 'Me',
-            //         message: 'Hi you, don\'t forget to change your password :)'
-            //     }
-            // }
+            _auth.userValidated = true
+            _auth.info = {
+                name: 'Jimbob',
+                message: 'Hi Jimbob, don\'t forget to change your password :)'
+            }
+
+        } else {
+
+            // In all other cases, fail the validation - optionally, you can include more info here as well.
+            _auth.userValidated = true
+            _auth.info = {
+                message: 'Ouch! Sorry, that login is not valid'
+            }
         }
-
-        // In all other cases, fail the validation - optionally, you can include more info here by returning an object.
-        return false
-        // return {
-        //     userValidated: false,
-        //     authData: {
-        //         message: `Login failed, User id ${_auth.id} not recognised.`
-        //     }
-        // }
+        
+        return _auth
         
     } // ---- End of userValidate ---- //
 
