@@ -898,13 +898,14 @@ module.exports = {
         // Use security module to validate user - updates _auth
         _auth = securityjs.userValidate(_auth)
 
-        // Remove _auth.password!
+        // Ensure that _auth.password is not present
         delete _auth.password
 
-        // Validate the _auth object
+        // Validate the _auth object - full ensure the following props exist: id, userValidated, info. And ensures that password DOES NOT EXIST
         if ( ! this.chkAuth(_auth, 'full') ) {
-            log.error('[uibuilder:uiblib:logon] Security is ON but `security.js` does not contain the required function(s). Cannot process logon. Check docs and change file.')
-            return false
+            log.error(`[uibuilder:uiblib:logon] _auth is not valid, logon cancelled. Please check 'userValidate()' in '${uib.configFolder}/security.js'.\n\t\tIt MUST return an object with at least id, userValidated, info props. info must be an object.`)
+            console.log('[uibuilder:uiblib:logon] _auth=',_auth)  // NB: leave this console log in place for error reporting
+            return false 
         }
 
         console.log('[uibuilder:uiblib.js:logon] Updated _auth: ', _auth)
@@ -949,11 +950,7 @@ module.exports = {
                 },
              }]) */
         } else { // _auth.userValidated <> true
-            if ( ! Object.prototype.hasOwnProperty.call(_auth, 'info') ) {
-                console.log(_auth)
-                _auth.info = {}
-            }
-            _auth.info.error = 'Logon failed. Invalid id or password'
+            _auth.info.error = 'Logon failed. Invalid id or password'  // NB _auth.info is created further up if it doesn't already exist, it is validated as an object
 
             // Report fail to client & Send output to port #2
             this.sendControl({
@@ -1028,8 +1025,8 @@ module.exports = {
             if ( _auth.userValidated === true || _auth.userValidated === false ) chk1 = true
             else chk1 = false
             
-            // info
-            if ( _auth.info  ) chk2 = true
+            // info - exists and is an object
+            if ( _auth.info && (_auth.info !== null && _auth.info.constructor.name === 'Object') ) chk2 = true
             else chk2 = false
 
             // MUST NOT EXIST password
