@@ -1006,29 +1006,39 @@ module.exports = {
      * @returns {Boolean}
     */
     chkAuth: function(_auth, type='short') {
+        // Has to be an object
+        if ( ! (_auth!== null && _auth.constructor.name === 'Object') ) {
+            return false
+        }
+
         let chk = false
+        let chk1, chk2, chk3
 
         // --- REQUIRED --- //
         // ID? (user id)
         try {
             if ( _auth.id !== '' ) chk = true
         } catch (e) {
-            //
+            chk = false
         }
 
+        // --- FULL CHECK --- //
         if ( type === 'full' ) {
             // userValidated
-            if ( _auth.userValidated === true ||_auth.userValidated === false ) chk = true
-            else chk = false
+            if ( _auth.userValidated === true || _auth.userValidated === false ) chk1 = true
+            else chk1 = false
+            
             // info
-            if ( _auth.info  ) chk = true
-            else chk = false
+            if ( _auth.info  ) chk2 = true
+            else chk2 = false
+
             // MUST NOT EXIST password
-            if ( ! _auth.password  ) chk = true
-            else chk = false
+            if ( ! _auth.password  ) chk3 = true
+            else chk3 = false
         }
 
-        return chk
+        if ( chk && chk1 && chk2 && chk3 ) return true
+        else return false
     }, // ---- End of chkAuth() ---- //
 
     /** Create instance details web page
