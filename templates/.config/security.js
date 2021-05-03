@@ -41,7 +41,7 @@
  * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
  * Note that any other data may be passed from your front-end code in the uibAuth object.
  * @property {String} id Required. A unique user identifier.
- * @property {String} [password] Required for login only.
+ * @property {String} [password] Required for input to login only.
  * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
  * @property {String} [sessionExpiry] Required if logged in. ISO8601 formatted date/time string. Needed for ongoing session validation and management.
  * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
