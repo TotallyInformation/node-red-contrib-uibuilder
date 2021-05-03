@@ -37,34 +37,24 @@
  */
 'use strict'
 
-//#region ----- Variable and parameter definitions - can be removed if not wanted ----- //
-/**
- * Standard msg._auth object exchanged in msg's between front-end and server
- * @typedef {import('../../index').MsgAuth} MsgAuth
- */ 
-/**
- * Validated user object returned by the userValidate function
- * typedef {import('./security').userValidation} userValidation 
+/** Define the _auth object
+ * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
+ * Note that any other data may be passed from your front-end code in the uibAuth object.
+ * @property {String} id Required. A unique user identifier.
+ * @property {String} [password] Required for login only.
+ * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
+ * @property {String} [sessionExpiry] Required if logged in. ISO8601 formatted date/time string. Needed for ongoing session validation and management.
+ * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
+ * @property {Object=} [info] Optional metadata about the user.
  */
-
-try { // Partially fixes #126
-    const TYPEDEFS = require('../../typedefs.js')
-} catch (e) {}
-/**
- * typedef {TYPEDEFS.MsgAuth} MsgAuth
- * @typedef {TYPEDEFS.userValidation} userValidation
- * @typedef {TYPEDEFS.userMetadata} userMetadata
- */
-
-//#endregion ----- ------------------------------------------------------------- ----- //
 
 module.exports = {
     /** Validate user against your own user data.
      * The minimum input data is _auth.id which must represent a unique ID.
      * Called from the logon function (uiblib.js::logon) which is triggered by a uibuilder control msg from the client of type 'logon'.
      * May also be called to revalidate users at any time.
-     * @param {MsgAuth} _auth Required. 
-     * @return {boolean|userValidation} Either true/false or Object of type userValidation
+     * @param {_auth} _auth Required. 
+     * @return {_auth} Object of type _auth
      */
     userValidate: function(_auth) {
         console.log(`[uibuilder:.common/security.js] userValidate Security from '${__filename}' used. Replace this template with your own code. _auth:`, _auth)
