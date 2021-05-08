@@ -43,7 +43,7 @@ A Node-RED web user interface builder. uibuilder aims to provide an easy to use 
 * VueJS, MoonJS extended and caching example flows included.
 * Optional index web page listing of available files.
 * Two detailed admin info web pages are included to help authors understand where everything is and what is available.
-* Uses Node-RED's own webservers by default but can use its own on a separate port if desired.
+* Uses Node-RED's own webservers by default. (Will soon gain ability to its own on a separate port if desired).
 
 </details>
 
@@ -318,6 +318,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Scott Page - IndySoft](https://github.com/scottpageindysoft) - thanks for Issue #73/PR #74.
 - [Stephen McLaughlin - Steve-Mcl](https://discourse.nodered.org/u/Steve-Mcl) - thanks for the fix for [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71) and for the enhancement idea [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102).
 - [Sergio Rius](https://github.com/SergioRius) - thanks for reporting [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) and providing [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122) as a fix.
+- [Thorsten von Eicken](https://github.com/tve) - thanks for providing [PR #131](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/131) to improve CORS handling for Socket.IO.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 

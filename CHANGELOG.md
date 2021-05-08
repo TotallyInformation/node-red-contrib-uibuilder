@@ -14,30 +14,35 @@ Nothing right now.
 
 ### New
 
-- uibuilder is now able to work on its own webserver instead of using Node-RED's.
+* Added initial documentation for front-end build tooling to technical documentation (general info and Snowpack)
 
-  ** The main purpose of this is that it lets you use a reverse proxy to securely expose _only_ uibuilder's endpoints without exposing Node-RED itself.** It also gives you more control over headers and other settings.
+### Fixed
 
-  It will still use Node-RED's Admin server but your own front-end code and all of the installed vendor packages and middleware (including Socket.IO) will now use a separate http(s) server and ExpressJS app.
+* [Issue #126](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/126) - Security not turning on even if TLS is used
+* Update security.js template to remove simple false return if authentication fails - this is no longer valid.
 
-  If you specify https for Node-RED, your custom server will also use https and will automatically pick up the certificate and key files from settings.js.
+### Updated
 
-  **NOTE**: That _all_ instances of uibuilder nodes will all use the same webserver. Allowing multiple servers requires a significant development effort but is on the backlog (just a very long way down).
+* Bump dependencies to latest
+* Add collapsable summaries to README.md
+* Various updates to technical documentation
+* Update chkAuth validation function to make it more robust
+* Improve auth process logging and msg._auth.info checks
+* Remove simple true/false return from auth processing as this is no longer valid
+* uibuilderfe
+  
+  * Added initial code for a simple alert - not yet ready for use.
 
-  To use a different webserver, you have to add the following into the `module.exports` part of your `settings.js` file:
+* Internal code refactoring
+  
+  * Prep for adding the ability for uibuilder to use its own independent ExpressJS server
+  * Rename uibuilder.js nodeGo() to nodeInstance() for clarity
+  * Add dumptReq to tilib.js - returns the important bits of an ExpressJS REQ object
+  * Begin to add Node-RED type definitions
+  * Add ExpressJS type definitions
+  * Other linting improvements
 
-  ```javascript
-    /** Custom settings for all uibuilder node instances */
-    uibuilder: {
-        /** Optional HTTP PORT. 
-         * If set and different to Node-RED's uiPort, uibuilder will create
-         * a separate webserver for its own use.
-         */
-        port: process.env.UIBPORT || 3000,
-    },
-  ```
-
-  Note that the above will let you use an environment variable called `UIBPORT` to set the port. This must be done before starting Node-RED. The port setting is not dynamic.
+* Include PR #131 - add Socket.IO CORS support
 
 ## [3.2.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.0...v3.2.1)
 

@@ -823,7 +823,6 @@
              * NB: Actual URL change processing is done in validation which also happens on change
              *     Change happens when config panel is opened as well as for a real change
              */
-            console.log('======', RED.settings.uibuilderCustomServer, '======', RED.settings)
             $('#node-input-url').change(function () {
                 var thisurl = $(this).val()
                 var eUrlSplit = window.origin.split(':')
@@ -841,7 +840,6 @@
                     $('#info-webserver')
                         .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
                 }
-                console.log('[uibuilder:port-check] Custom Svr?', RED.settings.uibuilderCustomServer, '. url split: ', eUrlSplit, 'RED.settings: ', RED.settings)
                 var urlPrefix = eUrlSplit.join(':') + '/'
                 // Show the root URL
                 $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl).text('Open ' + nodeRoot + thisurl)
