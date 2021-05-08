@@ -1,6 +1,6 @@
 /* global Vue */
 /*
-  Copyright (c) 2021 Julian Knight (Totally Information)
+  Copyright (c) 2017-2021 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '3.2.0'
+        self.version = '3.3.0'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-ignore
@@ -948,7 +948,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             let vueApp = self.vueApp
             let componentRef = msg._uib.componentRef
 
-            // Return ctrl msg containing component instance details
+            // 1) Return ctrl msg containing component instance details
             if ( msg._uib.requestDetails ) {
                 let m = self.showComponentDetails(componentRef)
                 if (m) {
@@ -958,14 +958,21 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 return
             }
 
-            // Deal with toast requests first (notifications)
+            // 2) Deal with toast requests (notifications)
             if (componentRef === 'globalNotification') {
                 // This dynamically inserts a toast into the DOM
                 self.showToast(msg)
                 return
             }
             
-            // Does the component ref exist? Remember to include a ref="xxxx" on each component instance in your html
+            // 3) Deal with alert requests (using b-modal message boxes)
+            if (componentRef === 'globalAlert') {
+                // This dynamically inserts an alert into the DOM
+                self.showAlert(msg)
+                return
+            }
+
+            // 4) Does the component ref exist? Remember to include a ref="xxxx" on each component instance in your html - note: this doesn't always work, depends on component
             if ( componentRef in vueApp.$refs ) {
 
                 /** Copy each prop direct into the component (updates the DOM if needed) */

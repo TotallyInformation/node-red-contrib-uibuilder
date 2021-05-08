@@ -323,7 +323,7 @@ module.exports = {
         //     let vendorPath = tilib.urlJoin(moduleName, 'vendor', packageName)
         //     log.trace(`[uibuilder:uiblib:addPackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
         //     try {
-        //         app.use( vendorPath, /**function (req, res, next) {
+        //         app.use( vendorPath, /**function (/** @type {import("express").Request} */ req, /** @type {import("express").Response} */ res, /** @type {import("express").NextFunction} */ next) {
         //             // TODO Allow for a test to turn this off
         //             // if (true !== true) {
         //             //     next('router')
@@ -563,7 +563,7 @@ module.exports = {
 
     /** Validate a url query parameter - DEPRECATED in v3.1.0
      * @param {string} url uibuilder URL to check (not a full url, the name used by uibuilder)
-     * @param {Object} res The ExpressJS response variable
+     * @param {import("express").Response} res The ExpressJS response variable
      * @param {string} caller A string indicating the calling function - used for logging only
      * @param {Object} log The uibuilder log Object
      * @return {boolean} True if the url is valid, false otherwise (having set the response object)
@@ -695,6 +695,7 @@ module.exports = {
 
             _auth.jwt = jsonwebtoken.sign(jwtData, node.jwtSecret)
             _auth.sessionExpiry = sessionExpiry * 1000 // Javascript ms not unix sec
+            if (!_auth.info) _auth.info = {}
             _auth.info.validJwt = true
 
         } catch(e) {
@@ -897,13 +898,14 @@ module.exports = {
         // Use security module to validate user - updates _auth
         _auth = securityjs.userValidate(_auth)
 
-        // Remove _auth.password!
+        // Ensure that _auth.password is not present
         delete _auth.password
 
-        // Validate the _auth object
+        // Validate the _auth object - full ensure the following props exist: id, userValidated, info. And ensures that password DOES NOT EXIST
         if ( ! this.chkAuth(_auth, 'full') ) {
-            log.error('[uibuilder:uiblib:logon] Security is ON but `security.js` does not contain the required function(s). Cannot process logon. Check docs and change file.')
-            return false
+            log.error(`[uibuilder:uiblib:logon] _auth is not valid, logon cancelled. Please check 'userValidate()' in '${uib.configFolder}/security.js'.\n\t\tIt MUST return an object with at least id, userValidated, info props. info must be an object.`)
+            console.log('[uibuilder:uiblib:logon] _auth=',_auth)  // NB: leave this console log in place for error reporting
+            return false 
         }
 
         console.log('[uibuilder:uiblib.js:logon] Updated _auth: ', _auth)
@@ -948,11 +950,7 @@ module.exports = {
                 },
              }]) */
         } else { // _auth.userValidated <> true
-            if ( ! Object.prototype.hasOwnProperty.call(_auth, 'info') ) {
-                console.log(_auth)
-                _auth.info = {}
-            }
-            _auth.info.error = 'Logon failed. Invalid id or password'
+            _auth.info.error = 'Logon failed. Invalid id or password'  // NB _auth.info is created further up if it doesn't already exist, it is validated as an object
 
             // Report fail to client & Send output to port #2
             this.sendControl({
@@ -1005,46 +1003,65 @@ module.exports = {
      * @returns {Boolean}
     */
     chkAuth: function(_auth, type='short') {
+        // Has to be an object
+        if ( ! (_auth!== null && _auth.constructor.name === 'Object') ) {
+            return false
+        }
+
         let chk = false
+        let chk1, chk2, chk3
 
         // --- REQUIRED --- //
         // ID? (user id)
         try {
             if ( _auth.id !== '' ) chk = true
         } catch (e) {
-            //
+            chk = false
         }
 
+        // --- FULL CHECK --- //
         if ( type === 'full' ) {
             // userValidated
-            if ( _auth.userValidated === true ||_auth.userValidated === false ) chk = true
-            else chk = false
-            // info
-            if ( _auth.info  ) chk = true
-            else chk = false
+            if ( _auth.userValidated === true || _auth.userValidated === false ) chk1 = true
+            else chk1 = false
+            
+            // info - exists and is an object
+            if ( _auth.info && (_auth.info !== null && _auth.info.constructor.name === 'Object') ) chk2 = true
+            else chk2 = false
+
             // MUST NOT EXIST password
-            if ( ! _auth.password  ) chk = true
-            else chk = false
+            if ( ! _auth.password  ) chk3 = true
+            else chk3 = false
         }
 
-        return chk
+        if ( chk && chk1 && chk2 && chk3 ) return true
+        else return false
     }, // ---- End of chkAuth() ---- //
 
     /** Create instance details web page
+     * @param {import("express").Request} req ExpressJS Request object
      * @param {Object} node configuration data for this instance
      * @param {Object} uib uibuilder "globals" common to all instances
      * @param {string} userDir The Node-RED userDir folder
-     * @param {Object} RED The Node-RED object
+     * @param {runtimeRED} RED The Node-RED runtime object
      * @return {string} page html
      */
-    showInstanceDetails: function(node, uib, userDir, RED) {
+    showInstanceDetails: function(req, node, uib, userDir, RED) {
         let page = ''
+
+        // If using own Express server, correct the URL's
+        const url = new URL(req.headers.referer)
+        url.pathname = ''
+        if (uib.port && uib.port !== RED.settings.uiPort) {
+            url.port = uib.port
+        }
+        const urlPrefix = url.href
 
         page += `
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
-                <link type="text/css" href="${uib.nodeRoot}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
-                <link rel="icon" href="${uib.nodeRoot}${uib.moduleName}/common/images/node-blue.ico">
+                <link type="text/css" href="${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+                <link rel="icon" href="${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}/common/images/node-blue.ico">
                 <style type="text/css" media="all">
                     h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                     .col3i tbody>tr>:nth-child(3){ font-style:italic; }
@@ -1075,8 +1092,8 @@ module.exports = {
                         </td>
                     </tr>
                     <tr>
-                        <th>URL for the front-end resources - index.html page will be shown</th>
-                        <td><a href=${tilib.urlJoin(uib.nodeRoot, node.url)} target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a></td>
+                        <th>URL for the front-end resources</th>
+                        <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, node.url).replace('/','')}" target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
                     </tr>
                     <tr>
                         <th>Node-RED userDir folder</th>
@@ -1087,7 +1104,7 @@ module.exports = {
                     </tr>
                     <tr>
                         <th>URL for vendor resources</th>
-                        <td><a href=${tilib.urlJoin(uib.nodeRoot, 'uibuilder', 'vendor')} target="_blank">../uibuilder/vendor/</a><br>
+                        <td>../uibuilder/vendor/<br>
                             See the <a href="../../uibindex" target="_blank">Detailed Information Page</a> for more details.
                         </td>
                     </tr>

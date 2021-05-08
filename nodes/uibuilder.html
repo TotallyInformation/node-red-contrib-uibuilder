@@ -753,7 +753,6 @@
     //#endregion ------------------------------------------------- //
 
     // Register the node type, defaults and set up the edit fns 
-     //@ts-ignore 
     RED.nodes.registerType(moduleName, {
         category: paletteCategory,
         color: paletteColor,
@@ -769,9 +768,9 @@
             showfolder: { value: false },      // Should a web index view of all source files be made available?
             useSecurity: { value: false },
             sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
-            //jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
             tokenAutoExtend: { value: false },   // TODO add validation if useSecurity=true
             oldUrl: { value: undefined },        // If the url has been changed, this is the previous url
+            //jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
         },
         credentials: {
             jwtSecret: { type:'password' },  // text or password
@@ -826,9 +825,25 @@
              */
             $('#node-input-url').change(function () {
                 var thisurl = $(this).val()
+                var eUrlSplit = window.origin.split(':')
+                var nrPort = Number(eUrlSplit[2])
+                var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
+                $('#info-webserver').empty()
+                // Is uibuilder using a custom server?
+                if (RED.settings.uibuilderCustomServer.port) {
+                    // Use the correct protocol (http or https)
+                    eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2','https')
+                    // Use the correct port
+                    eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
+                    // When using custom server, no base path is used
+                    nodeRoot = ''
+                    $('#info-webserver')
+                        .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
+                }
+                var urlPrefix = eUrlSplit.join(':') + '/'
                 // Show the root URL
-                $('#uibuilderurl').prop('href', RED.settings.httpNodeRoot + thisurl).text('Open ' + RED.settings.httpNodeRoot + thisurl)
-                $('#node-input-showfolder-url').empty().append('<a href="' + RED.settings.httpNodeRoot + $(this).val() + '/idx" target="_blank">' + RED.settings.httpNodeRoot + $(this).val() + '/idx</a>')
+                $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl).text('Open ' + nodeRoot + thisurl)
+                $('#node-input-showfolder-url').empty().append('<a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank">' + nodeRoot + $(this).val() + '/idx</a>')
                 $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
             })
 
@@ -1645,6 +1660,7 @@
         <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Shows detailed configuration for this instance of uibuilder">Instance Details</a>
         <a href="./uibuilder/techdocs" target="_blank" class="red-ui-button editor-button" title="Shows the uibuilder technical documentation as a new page">Tech Docs</a>
     </div>
+    <div class="form-row" id="info-webserver"></div>
     <!-- #endregion -->
 
 </script>

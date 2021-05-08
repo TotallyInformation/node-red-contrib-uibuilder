@@ -10,9 +10,43 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing right now.
 
+## [3.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.1...v3.3.0)
+
+### New
+
+* Added initial documentation for front-end build tooling to technical documentation (general info and Snowpack)
+
+### Fixed
+
+* [Issue #126](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/126) - Security not turning on even if TLS is used
+* Update security.js template to remove simple false return if authentication fails - this is no longer valid.
+
+### Updated
+
+* Bump dependencies to latest
+* Add collapsable summaries to README.md
+* Various updates to technical documentation
+* Update chkAuth validation function to make it more robust
+* Improve auth process logging and msg._auth.info checks
+* Remove simple true/false return from auth processing as this is no longer valid
+* uibuilderfe
+  
+  * Added initial code for a simple alert - not yet ready for use.
+
+* Internal code refactoring
+  
+  * Prep for adding the ability for uibuilder to use its own independent ExpressJS server
+  * Rename uibuilder.js nodeGo() to nodeInstance() for clarity
+  * Add dumptReq to tilib.js - returns the important bits of an ExpressJS REQ object
+  * Begin to add Node-RED type definitions
+  * Add ExpressJS type definitions
+  * Other linting improvements
+
+* Include PR #131 - add Socket.IO CORS support
+
 ## [3.2.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.0...v3.2.1)
 
-## Fixed
+### Fixed
 
 - [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) - Thanks to Sergio Rius for reporting and for [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122)
 - [Issue #123](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/123) - Allow for misuse of `browser` property in package.json for added libraries. Thanks to Steve McLaughlin for reporting and providing a potential fix.
@@ -20,7 +54,7 @@ Nothing right now.
 
 ## [3.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.1.3...v3.2.0)
 
-## New
+### New
 
 - You can now choose between front-end templates. 
   
@@ -69,7 +103,7 @@ Nothing right now.
     
     Note that you can use more than just button clicks. It will work with _any_ DOM event that you attach it to.
 
-## Changed
+### Changed
 
 - Better warning if you set/change a URL to one that already exists.
 - When changing URL:

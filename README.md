@@ -43,6 +43,7 @@ A Node-RED web user interface builder. uibuilder aims to provide an easy to use 
 * VueJS, MoonJS extended and caching example flows included.
 * Optional index web page listing of available files.
 * Two detailed admin info web pages are included to help authors understand where everything is and what is available.
+* Uses Node-RED's own webservers by default. (Will soon gain ability to its own on a separate port if desired).
 
 </details>
 
@@ -238,6 +239,31 @@ _[back to top](#contents)_
 
   Better still, see the <kbd>uibuilder details</kbd> and <kbd>instance details</kbd> buttons in the uibuilder configuration panel in the Node-RED Editor, these will show pages of more detailed information.
 
+- You can use a separate webserver from the Node-RED internal webserver by specifying a port in `settings.js`
+
+  ** The main purpose of this is that it lets you use a reverse proxy to securely expose _only_ uibuilder's endpoints without exposing Node-RED itself.** It also gives you more control over headers and other settings.
+
+  It will still use Node-RED's Admin server but your own front-end code and all of the installed vendor packages and middleware (including Socket.IO) will now use a separate http(s) server and ExpressJS app.
+
+  If you specify https for Node-RED, your custom server will also use https and will automatically pick up the certificate and key files from settings.js.
+
+  **NOTE**: That _all_ instances of uibuilder nodes will all use the same webserver. Allowing multiple servers requires a significant development effort but is on the backlog (just a very long way down).
+
+  To use a different webserver, you have to add the following into the `module.exports` part of your `settings.js` file:
+
+  ```javascript
+    /** Custom settings for all uibuilder node instances */
+    uibuilder: {
+        /** Optional HTTP PORT. 
+         * If set and different to Node-RED's uiPort, uibuilder will create
+         * a separate webserver for its own use.
+         */
+        port: process.env.UIBPORT || 3000,
+    },
+  ```
+
+  Note that the above will let you use an environment variable called `UIBPORT` to set the port. This must be done before starting Node-RED. The port setting is not dynamic.
+
 - Some VueJS helper functions are now included with the front-end library. The idea being to bridge the complexity gap between the Node-RED Dashboard and uibuilder for novice 
   front-end programmers. See the technical docs for details.
 
@@ -292,6 +318,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Scott Page - IndySoft](https://github.com/scottpageindysoft) - thanks for Issue #73/PR #74.
 - [Stephen McLaughlin - Steve-Mcl](https://discourse.nodered.org/u/Steve-Mcl) - thanks for the fix for [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71) and for the enhancement idea [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102).
 - [Sergio Rius](https://github.com/SergioRius) - thanks for reporting [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) and providing [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122) as a fix.
+- [Thorsten von Eicken](https://github.com/tve) - thanks for providing [PR #131](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/131) to improve CORS handling for Socket.IO.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 
