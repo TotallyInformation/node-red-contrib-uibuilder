@@ -251,7 +251,21 @@ module.exports = function(/** @type Red */ RED) {
     const uib_socketPath = tilib.urlJoin(httpNodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
     log.trace('[uibuilder:Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
-    var io = socketio.listen(RED.server, {'path': uib_socketPath}) // listen === attach
+    let ioOptions = {
+        'path': uib_socketPath,
+        // for CORS need to handle preflight request explicitly 'cause there's an
+        // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v2/handling-cors/
+        handlePreflightRequest: (req, res) => {
+            res.writeHead(204, {
+              "Access-Control-Allow-Origin": req.headers["origin"],
+              "Access-Control-Allow-Methods": "GET,POST",
+              "Access-Control-Allow-Headers": "X-ClientId",
+              "Access-Control-Allow-Credentials": true,
+            });
+            res.end();
+        },
+    }
+    var io = socketio.listen(RED.server, ioOptions) // listen === attach
     // @ts-ignore
     io.set('transports', ['polling', 'websocket'])
 
