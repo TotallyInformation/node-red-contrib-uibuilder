@@ -231,7 +231,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.set = function (prop, val) {
             self[prop] = val
             //self.uiDebug('debug', `uibuilderfe: prop set - prop: ${prop}, val: ${(typeof val === 'object') ? JSON.stringify(val) : val}` )
-            self.uiDebug('debug', 'uibuilderfe: prop set - prop: ' + prop + ', val: ' + (typeof val === 'object') ? JSON.stringify(val) : val )
+            self.uiDebug('debug', 'uibuilderfe: prop set - prop: ' + prop + ', val: ' + ((typeof val === 'object') ? JSON.stringify(val) : val) )
 
             // Trigger this prop's event callbacks (listeners)
             self.emit(prop, val)
@@ -538,7 +538,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             if (self._auth === undefined && _auth === undefined) return
 
             // If _auth not provided, use self._auth
-            if ( _auth === undefined ) _auth = self._auth
+            //if ( _auth === undefined ) _auth = self._auth
 
             // Reset auth info
             _auth = self.dummyAuth
@@ -746,7 +746,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
         } // ---- End of onChange() ---- //
 
-
         //#region ========== Our own event handling system ========== //
 
         self.events = {}  // placeholder for event listener callbacks by property name
@@ -828,7 +827,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 return
             }
             /** Make sure that we have a msg._uib object */
-            if ( ! msg._uib && msg._uib !== null && msg._uib.constructor.name === 'Object' ) {
+            if ( ! msg._uib || msg._uib === null || msg._uib.constructor.name !== 'Object') ) {
                 console.warn('[uibuilder:toast] Incoming msg requires msg._uib object, cannot create a toast')
                 return
             }
