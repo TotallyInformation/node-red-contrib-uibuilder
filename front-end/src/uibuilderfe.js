@@ -827,7 +827,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 return
             }
             /** Make sure that we have a msg._uib object */
-            if ( ! msg._uib || msg._uib === null || msg._uib.constructor.name !== 'Object') ) {
+            if ( ! msg._uib || msg._uib === null || msg._uib.constructor.name !== 'Object' ) {
                 console.warn('[uibuilder:toast] Incoming msg requires msg._uib object, cannot create a toast')
                 return
             }

@@ -923,7 +923,7 @@ module.exports = {
                 // Add success reason and add any optional data from the user validation
                 _auth.info.message = 'Logon successful'
             } else {
-                _auth.userValidated === false
+                _auth.userValidated = false
             }
 
             // Report success & send token to client & to port #2
@@ -1026,7 +1026,7 @@ module.exports = {
             else chk1 = false
             
             // info - exists and is an object
-            if ( _auth.info && (_auth.info !== null && _auth.info.constructor.name === 'Object') ) chk2 = true
+            if ( _auth.info && _auth.info !== null && _auth.info.constructor.name === 'Object' ) chk2 = true
             else chk2 = false
 
             // MUST NOT EXIST password
