@@ -746,131 +746,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
         } // ---- End of onChange() ---- //
 
-        /** Simple function to create a toast notification from an incoming msg
-         * Requires a reference to a VueJS instance and a msg object from Node-RED.
-         * Place inside the uibuilder.on('msg', ...) function inside your Vue app's
-         * mounted section.
-         * @see https://bootstrap-vue.org/docs/components/toast
-         * @param {Object} msg A msg from Node-RED with appropriate formatting
-         */
-        self.showToast = function(msg) {                
-
-            // We need self.vueApp to be set
-            if ( ! self.vueApp ) {
-                console.warn('[uibuilder:toast] Vue app object not available, cannot create a toast')
-                return
-            }
-
-            // Make sure that we have Vue loaded with the $bvToast function
-            // That lets us dynamically create a toast object directly in the virtual DOM
-            if ( ! self.vueApp.$bvToast ) {
-                console.warn('[uibuilder:toast] bootstrap-vue toast component not available, cannot create a toast')
-                return
-            }
-
-            // $createElement is a Vue function that lets you create Vue virtual DOM
-            // elements. We use it here to let us render HTML in the toast.
-            const h = self.vueApp.$createElement
-
-            /** Toast options
-             * @type {Object} toastOptions Optional metadata for the toast.
-             * @param {String|VNode|VNode[]} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
-             * @param {Boolean} [toastOptions.appendToast] Optional. Whether to show new toasts below previous ones still on-screen (true). Or to replace previous (false - default)
-             * @param {Number} [toastOptions.autoHideDelay] Optional. Ms until toast is auto-hidden.
-             */
-            let toastOptions = {}
-
-            /** Main content of the toast
-             * @type {String|VNode|VNode[]}
-             */
-            let content = ''
-            
-            // Main body content
-            if ( msg.payload ) content += msg.payload
-            if ( msg._uib.options.content ) content += msg._uib.options.content
-            // Assume that the input content is or could be HTML. create a virtual DOM element
-            const vNodesContent = h(
-                'p', {
-                    domProps: {
-                        innerHTML: content
-                    }
-                }
-            )
-
-            if ( msg._uib.options ) toastOptions = Object.assign({}, msg._uib.options) // Need a copy here otherwise debug output breaks
-
-            // The title is also allowed to have HTML
-            if ( msg._uib.options.title ) toastOptions.title = h(
-                'p', {
-                    domProps: {
-                        innerHTML: msg._uib.options.title
-                    }
-                }
-            )
-
-            // Do we want new toasts to be shown at the bottom of the list (true) instead of the top (false - default)?
-            if ( msg._uib.options.append ) toastOptions.appendToast = msg._uib.options.append
-
-            // If set, number of ms until toast is auto-hidden
-            if ( msg._uib.options.autoHideDelay ) {
-                toastOptions.autohide = true
-                toastOptions.delay = msg._uib.options.autoHideDelay
-            }
-
-            // Toast wont show anyway if content is empty, may as well warn user
-            if ( content === '' ) {
-                console.warn('[uibuilder:toast] Toast content is blank. Not shown.')
-                return
-            }
-
-            // Dynamically insert the toast to the virtual DOM
-            // Will show at top-right of the HTML element that is the app root
-            // unless you include a <b-toaster> element
-            self.vueApp.$bvToast.toast(vNodesContent, toastOptions)
-
-        } // --- End of makeToast() --- //
-
-        /** Return a control msg containing the props/attribs/etc of a given Vue Component instance
-         * @param {String} componentRef The ref value of the component instance to be queried
-         * @returns {Object} msg - a uibuilder control msg object
-         */
-        self.showComponentDetails = function(componentRef) {
-            // Only if Vue is in use and a reference to the Vue master app is available ...
-            if ( !self.vueApp ) return
-
-            if ( ! self.vueApp.$refs[componentRef] ) return
-
-            let ref = self.vueApp.$refs[componentRef]
-
-            let msg = {}
-
-            // It is possible that what looks like a component is only a set of HTML elements
-            // So we have to test for that.
-            if ( ref.$options ) {
-                msg = {
-                    'uibuilderCtrl': 'vue component details',
-                    'componentDetails': {
-                        'ref': componentRef,
-                        'tag': ref.$options._componentTag,
-                        'props': ref.$options._propKeys,
-                    },
-                }
-            } else {
-                let warning = `[uibuilderfe:showComponentDetails] ref="${componentRef}" is not a Vue Component. Details cannot be returned.`
-                self.uiDebug('warn', warning )
-                msg = {
-                    'uibuilderCtrl': 'vue component details',
-                    'componentDetails': {
-                        'warning': warning,
-                        'ref': componentRef,
-                        'tag': null,
-                        'props': null,
-                    },
-                }
-            }
-
-            return msg
-        }
 
         //#region ========== Our own event handling system ========== //
 
@@ -930,7 +805,136 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#endregion ====== End of Handle incoming code via received msg ====== //
 
-        //#endregion --- end of internal functions --- //
+        //#region ========== VueJS Specific functions ========== //
+        /** Simple function to create a toast notification from an incoming msg
+         * Requires a reference to a VueJS instance and a msg object from Node-RED.
+         * Place inside the uibuilder.on('msg', ...) function inside your Vue app's
+         * mounted section.
+         * @see https://bootstrap-vue.org/docs/components/toast
+         * @param {Object} msg A msg from Node-RED with appropriate formatting
+         */
+        self.showToast = function(msg) {                
+
+            // We need self.vueApp to be set
+            if ( ! self.vueApp ) {
+                console.warn('[uibuilder:toast] Vue app object not available, cannot create a toast')
+                return
+            }
+
+            /** Make sure that we have Vue loaded with the $bvToast function
+             *  That lets us dynamically create a toast object directly in the virtual DOM */
+            if ( ! self.vueApp.$bvToast ) {
+                console.warn('[uibuilder:toast] bootstrap-vue toast component not available, cannot create a toast')
+                return
+            }
+            /** Make sure that we have a msg._uib object */
+            if ( ! msg._uib && msg._uib !== null && msg._uib.constructor.name === 'Object' ) {
+                console.warn('[uibuilder:toast] Incoming msg requires msg._uib object, cannot create a toast')
+                return
+            }
+
+            // $createElement is a Vue function that lets you create Vue virtual DOM
+            // elements. We use it here to let us render HTML in the toast.
+            const h = self.vueApp.$createElement
+
+            /** Toast options
+             * @type {Object} toastOptions Optional metadata for the toast.
+             * @param {String|VNode|VNode[]} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
+             * @param {Boolean} [toastOptions.appendToast] Optional. Whether to show new toasts below previous ones still on-screen (true). Or to replace previous (false - default)
+             * @param {Number} [toastOptions.autoHideDelay] Optional. Ms until toast is auto-hidden.
+             */
+            let toastOptions = {}
+            if ( msg._uib.options ) toastOptions = Object.assign({}, msg._uib.options) // Need a copy here otherwise debug output breaks
+
+            /** Main content of the toast
+             * @type {String|VNode|VNode[]}
+             */
+            let content = ''
+            
+            // Main body content
+            if ( msg.payload ) content += msg.payload
+            if ( toastOptions.content ) content += toastOptions.content
+            // Assume that the input content is or could be HTML. create a virtual DOM element
+            const vNodesContent = h(
+                'p', {
+                    domProps: {
+                        innerHTML: content
+                    }
+                }
+            )
+
+            // The title is also allowed to have HTML
+            if ( toastOptions.title ) toastOptions.title = h(
+                'p', {
+                    domProps: {
+                        innerHTML: toastOptions.title
+                    }
+                }
+            )
+
+            // Do we want new toasts to be shown at the bottom of the list (true) instead of the top (false - default)?
+            if ( toastOptions.append ) toastOptions.appendToast = toastOptions.append
+
+            // If set, number of ms until toast is auto-hidden
+            if ( toastOptions.autoHideDelay ) {
+                toastOptions.autohide = true
+                toastOptions.delay = toastOptions.autoHideDelay
+            }
+
+            // Toast wont show anyway if content is empty, may as well warn user
+            if ( content === '' ) {
+                console.warn('[uibuilder:toast] Toast content is blank. Not shown.')
+                return
+            }
+
+            // Dynamically insert the toast to the virtual DOM
+            // Will show at top-right of the HTML element that is the app root
+            // unless you include a <b-toaster> element
+            self.vueApp.$bvToast.toast(vNodesContent, toastOptions)
+
+        } // --- End of makeToast() --- //
+
+        /** Return a control msg containing the props/attribs/etc of a given Vue Component instance
+         * @param {String} componentRef The ref value of the component instance to be queried
+         * @returns {Object} msg - a uibuilder control msg object
+         */
+        self.showComponentDetails = function(componentRef) {
+            // Only if Vue is in use and a reference to the Vue master app is available ...
+            if ( !self.vueApp ) return
+
+            if ( ! self.vueApp.$refs[componentRef] ) return
+
+            let ref = self.vueApp.$refs[componentRef]
+
+            let msg = {}
+
+            // It is possible that what looks like a component is only a set of HTML elements
+            // So we have to test for that.
+            if ( ref.$options ) {
+                msg = {
+                    'uibuilderCtrl': 'vue component details',
+                    'componentDetails': {
+                        'ref': componentRef,
+                        'tag': ref.$options._componentTag,
+                        'props': ref.$options._propKeys,
+                    },
+                }
+            } else {
+                let warning = `[uibuilderfe:showComponentDetails] ref="${componentRef}" is not a Vue Component. Details cannot be returned.`
+                self.uiDebug('warn', warning )
+                msg = {
+                    'uibuilderCtrl': 'vue component details',
+                    'componentDetails': {
+                        'warning': warning,
+                        'ref': componentRef,
+                        'tag': null,
+                        'props': null,
+                    },
+                }
+            }
+
+            return msg
+        }
 
         /** If Vue is in use and we have a reference to the main app, this fn can send data and config direct to a Vue componant instance
          *  if that component has been written in the right way.
@@ -1021,6 +1025,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
 
         }) // ---- End of internal onChange(msg) handler ---- //
+        //#endregion ========== VueJS Specific functions ========== //
+
+        //#endregion --- end of internal functions --- //
 
         // uiReturn contains a set of functions that are returned when this function
         // self-executes (on-load)
@@ -1291,6 +1298,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 })
             },
 
+            /** auto map msg.topic's to variables */
+            automap: self.automap,
 
         } // --- End of return callback functions --- //
 

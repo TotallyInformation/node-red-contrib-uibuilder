@@ -20,6 +20,8 @@ See the [Toasts documentation for bootstrap-vue](https://bootstrap-vue.org/docs/
 and the [Toasts documentation for bootstrap](https://bootstrap-vue.org/docs/components/toast)
 for more details in the use of notifications.
 
+Note that toasts will stack so that multiple can be visible.
+
 ### Message schema
 
 This is the structure of the `msg` to send through the uibuilder node in Node-RED.
@@ -32,10 +34,11 @@ This is the structure of the `msg` to send through the uibuilder node in Node-RE
         "componentRef": "globalNotification",
         // Optional.
         "options": {
-            "title": "Notification Title", // Optional. String or HTML.
+            "title": "Notification Title", // Optional. String or HTML. Title is not bolded by default, add style or surround with h4 if needed.
             "content": "Optional. A string. Will appear second in the resulting pop-up. Can be HTML.",
             "append": false, // Optional. If TRUE, new notifications are added to the END of the list instead of the start.
-            "autoHideDelay": 500, // Optional. If set, must be the number of milliseconds to display the notification.
+            "autoHideDelay": 500, // Optional. If set, must be the number of milliseconds to display the notification. Default is 500ms
+            "noAutoHide": true, // Optional. If set to true, the toast will not auto-hide.
 
             // Other Toasts options may also be included, see the bootstrap-vue and bootstrap documentation for details.
         }
@@ -44,6 +47,18 @@ This is the structure of the `msg` to send through the uibuilder node in Node-RE
 }
 ```
 
+### Example
+
+```json
+{
+    "componentRef": "globalNotification",
+    "options": {
+        "title": "<h4>Notification <u>Title</u></h4>",
+        "content": "<span style='color:red;background-color:yellow;'>Optional</span>. A string. Will appear second in the resulting pop-up. Can be HTML.",
+        "noAutoHide": true
+    }
+}
+```
 
 ## Discover a Vue components capabilities
 
