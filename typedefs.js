@@ -293,6 +293,7 @@
  * @property {boolean} uibNode.useSecurity Use uibuilder's built-in security features?
  * @property {boolean} uibNode.tokenAutoExtend Extend token life when msg's received from client?
  * @property {Number} uibNode.sessionLength Lifespan of token (in seconds)
+ * @property {boolean} uibNode.reload If true, notify all clients to reload on a change to any source file
  * @property {String} uibNode.jwtSecret Seed string for encryption of JWT
  * @property {String} uibNode.customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {Number} uibNode.ioClientsCount How many Socket clients connected to this instance?

@@ -12,6 +12,7 @@ Documents the different types of uibuilder messages between a Node-RED uibuilder
   * [From Node-RED uibuilder node to the front-end (browser)](#from-node-red-uibuilder-node-to-the-front-end-browser)
     * [Client (re)Connection (Control Message)](#client-reconnection-control-message)
     * [VueJS UI Notification [Toast] (Control Message)](#vuejs-ui-notification-toast-control-message)
+    * [Browser client reload page](#browser-client-reload-page)
   * [From the front-end (browser) to the Node-RED uibuilder node](#from-the-front-end-browser-to-the-node-red-uibuilder-node)
     * [Client Ready for Content (Control Message)](#client-ready-for-content-control-message)
     * [DOM Event (standard message from eventSend function)](#dom-event-standard-message-from-eventsend-function)
@@ -84,7 +85,7 @@ This would send a notification to all connected clients. May be injected to a ui
 
 ```json
 {
-    "_vue": {  // Required. VueJS Component data
+    "_uib": {  // Required. VueJS Component data
         "componentRef": "globalNotification", // Required.
     },
     "payload": "This is a notification from Node-RED!", // Optional. Will be added to the notification message (content). May be HTML.       
@@ -126,6 +127,21 @@ This would send a notification to all connected clients. May be injected to a ui
     "payload": "<any>",      // Optional. Will be added to the notification message (content). May be HTML.       
 
     "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",    // Optional. ID of client (from Socket.IO) - msg would only be sent to this client.
+}
+```
+
+### Browser client reload page
+
+Sending this message (uibuilder v3.3+) to the client will cause the client to reload the page.
+
+#### Msg Schema
+
+```json
+{
+    "_uib": {  // Required. VueJS Component data
+        "reload": true, // Required.
+    }
+    // Everything else is ignored       
 }
 ```
 

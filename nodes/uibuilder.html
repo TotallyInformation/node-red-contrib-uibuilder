@@ -768,8 +768,9 @@
             showfolder: { value: false },      // Should a web index view of all source files be made available?
             useSecurity: { value: false },
             sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
-            tokenAutoExtend: { value: false },   // TODO add validation if useSecurity=true
-            oldUrl: { value: undefined },        // If the url has been changed, this is the previous url
+            tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
+            oldUrl: { value: undefined },      // If the url has been changed, this is the previous url
+            reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
             //jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
         },
         credentials: {
@@ -817,6 +818,7 @@
             $('#node-input-showfolder').prop('checked', this.showfolder)
             $('#node-input-useSecurity').prop('checked', this.useSecurity)
             $('#node-input-tokenAutoExtend').prop('checked', this.useSecurity)
+            $('#node-input-reload').prop('checked', this.reload)
             //#endregion checkbox states
 
             /** When the url changes (NB: Also see the validation function) change visible folder names & links
@@ -1098,9 +1100,12 @@
                 
                 // Post the updated content of the file via the admin API
                 // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
+                // Clients will be reloaded if the reload checkbox is set.
                 var request = new XMLHttpRequest()
                 var params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
-                    '&url=' + $('#node-input-url').val() + '&data=' + encodeURIComponent(uiace.editorSession.getValue())
+                    '&url=' + $('#node-input-url').val() + 
+                    '&reload=' + $('#node-input-reload').val() + 
+                    '&data=' + encodeURIComponent(uiace.editorSession.getValue())
                 request.open('POST', 'uibputfile', true)
                 request.onreadystatechange = function() {
                     if (this.readyState === XMLHttpRequest.DONE) {
@@ -1611,6 +1616,16 @@
         <!-- file data (hidden), language selector -->
         <div class="form-row">
             <button id="node-function-expand-js" class="editor-button"><i class="fa fa-expand"></i></button>
+
+            <!-- Option to reload any connected client pages after edit-save -->
+            <!--
+            <input type="checkbox" id="node-input-reload" 
+                   style="display: inline-block; width: auto; vertical-align: top;"
+                   title="If set, all connected clients will reload the page they are on when any change is saved."
+                >
+            <label for="node-input-reload" style="width:80%">Reload connected clients on save?.</label>
+            -->
+
             <input type="hidden" id="node-input-template" autofocus="autofocus" data-isClean="true">
             <div style="position: absolute; right:1.6em;display:inline-block; text-align: right;">
                 <select id="node-input-format" style="width:110px; padding:0;">

@@ -14,6 +14,7 @@ Nothing right now.
 
 ### New
 
+* Add [new pre-defined msg](./docs/pre-defined-msgs.md) from Node-RED that will cause the client to reload
 * Added initial documentation for front-end build tooling to technical documentation (general info and Snowpack)
 
 ### Fixed

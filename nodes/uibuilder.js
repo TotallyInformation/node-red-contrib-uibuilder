@@ -386,6 +386,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         /** Copy 'this' object in case we need it in context of callbacks of other functions.
          * @type {uibNode}
          */
+        // @ts-expect-error ts(2322)
         const node = this
         log.trace(`[uibuilder:${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
 
@@ -405,6 +406,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
         node.jwtSecret       = node.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
         node.tokenAutoExtend = config.tokenAutoExtend
+        node.reload          = config.reload
         //#endregion ----- Local node config copy ----- //
 
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })
@@ -1316,7 +1318,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         }
         //#endregion ---- ----
         
-        log.trace(`[uibuilder:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}`)
+        log.trace(`[uibuilder:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
 
         const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
 

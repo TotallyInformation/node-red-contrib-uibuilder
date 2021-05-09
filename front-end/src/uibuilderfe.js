@@ -805,7 +805,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         //#endregion ====== End of Handle incoming code via received msg ====== //
 
         //#region ========== VueJS Specific functions ========== //
-        /** Simple function to create a toast notification from an incoming msg
+        /** Simple function to create a bootstrap-vue toast notification from an incoming msg
          * Requires a reference to a VueJS instance and a msg object from Node-RED.
          * Place inside the uibuilder.on('msg', ...) function inside your Vue app's
          * mounted section.
@@ -893,6 +893,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         } // --- End of makeToast() --- //
 
+        /** Simple function to show a bootstrap-vue alert (globalAlerts) */
+        self.showAlert = function() {}
+
         /** Return a control msg containing the props/attribs/etc of a given Vue Component instance
          * @param {String} componentRef The ref value of the component instance to be queried
          * @returns {Object} msg - a uibuilder control msg object
@@ -944,8 +947,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // Only if Vue is in use and a reference to the Vue master app is available ...
             if ( !self.vueApp ) return
             
-            // Do nothing if the msg doesn't have a component ref
+            // Do nothing if the msg doesn't have a _uib property
             if ( !msg._uib ) return
+
+            // Process a client reload request from Node-RED - as the page is reloaded, everything else is ignored
+            if ( msg._uib.reload === true ) location.reload()
+
+            // Do nothing if the msg doesn't have a component ref
             if ( !msg._uib.componentRef ) return
 
             let vueApp = self.vueApp
