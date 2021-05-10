@@ -8,13 +8,14 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.0...master)
 
-Nothing right now.
+<!-- Nothing right now.
 
-## [3.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.1...v3.3.0)
+## [3.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.1...v3.3.0) -->
 
 ### New
 
 * Add [new pre-defined msg](./docs/pre-defined-msgs.md) from Node-RED that will cause the client to reload
+* Add auto-reload flag to file editor - if set, any connected clients will automatically reload when a file is saved
 * Added initial documentation for front-end build tooling to technical documentation (general info and Snowpack)
 
 ### Fixed
@@ -42,6 +43,21 @@ Nothing right now.
   * Begin to add Node-RED type definitions
   * Add ExpressJS type definitions
   * Other linting improvements
+  
+  * **Moved Socket.IO processing to its own Singleton class.**
+    
+    This means that any Node-RED related module can potentially `require` the `socket.js` module and get
+    access to the list of Socket.IO namespace's for all uibuilder node instances. All you need is the uibuilder URL setting.
+
+    It also means that any module can send messages to connected front-end clients simply by referencing the module and knowing
+    the url.
+
+    Note that this currently only works once the class has been instantiated **and** a setup method called. 
+    That requires a number of objects to be passed to it. This happens when you have added and deployed a uibuilder
+    node to your flows. In theory, you could also do this in your own code though this isn't tested.
+
+    But it does mean that you could now write another custom node that could make use of the uibuilder communications
+    channel. Of course, it also opens the way for new nodes to be added to uibuilder.
 
 * Include PR #131 - add Socket.IO CORS support
 
