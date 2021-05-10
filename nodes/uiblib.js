@@ -666,13 +666,13 @@ module.exports = {
         //         'uibuilderCtrl': 'session valid',
         //         'topic': node.topic || undefined,
         //         '_auth': _auth
-        //     }, ioNs, node, socket.id, false)
+        //     }, ioNs, node, socket.id, false, uib)
         // } else {
         //     uiblib.sendControl({
         //         'uibuilderCtrl': 'session invalid',
         //         'topic': node.topic || undefined,
         //         '_auth': _auth
-        //     }, ioNs, node, socket.id, false)
+        //     }, ioNs, node, socket.id, false, uib)
         // }
 
         return _auth
@@ -787,7 +787,7 @@ module.exports = {
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
-            }, ioNs, node, socket.id, false)
+            }, ioNs, node, socket.id, false, uib)
 
             return _auth.userValidated
         }
@@ -826,7 +826,7 @@ module.exports = {
                     uibuilderCtrl: 'authorisation failure',
                     topic: msg.topic || node.topic,
                     '_auth': _auth,
-                }, ioNs, node, socket.id, false)
+                }, ioNs, node, socket.id, false, uib)
 
                 return _auth.userValidated
             }
@@ -845,7 +845,7 @@ module.exports = {
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
-            }, ioNs, node, socket.id, true)
+            }, ioNs, node, socket.id, true, uib)
 
             return _auth.userValidated
         }
@@ -939,7 +939,7 @@ module.exports = {
                 'uibuilderCtrl': 'authorised',
                 'topic': msg.topic || node.topic,
                 '_auth': _auth,
-            }, ioNs, node, socket.id, true)
+            }, ioNs, node, socket.id, true, uib)
 
             // Send output to port #2 manually (because we only include a subset of _auth)
             /* node.send([null, {
@@ -965,7 +965,7 @@ module.exports = {
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
-            }, ioNs, node, socket.id, true)
+            }, ioNs, node, socket.id, true, uib)
         }
 
         return _auth.userValidated
@@ -980,7 +980,7 @@ module.exports = {
      * @param {Object} log Custom logger instance
      * @returns {_auth} Updated _auth
      */
-    logoff: function(msg, ioNs, node, socket, log) { // eslint-disable-line no-unused-vars
+    logoff: function(msg, ioNs, node, socket, log, uib) { // eslint-disable-line no-unused-vars
         /** @type MsgAuth */
         var _auth = msg._auth || dummyAuth
         
@@ -1000,7 +1000,7 @@ module.exports = {
             uibuilderCtrl: 'logged off',
             topic: msg.topic || node.topic,
             '_auth': _auth,
-        }, ioNs, node, socket.id, true)
+        }, ioNs, node, socket.id, true, uib)
 
         return _auth
     }, // ---- End of logoff ---- //
