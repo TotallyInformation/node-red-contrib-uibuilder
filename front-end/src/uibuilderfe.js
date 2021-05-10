@@ -77,8 +77,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.version = '3.3.0'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
-        // @ts-ignore
-        self.isUnminified = /param/.test(function(param) {}) // Tests loaded ver of lib to see if minified
+        // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
+        self.isUnminified = /param/.test(function(param) {}) // eslint-disable-line no-unused-vars
         /** Empty User info template
          * @type {_auth} */
         self.dummyAuth = {
@@ -951,7 +951,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             if ( !msg._uib ) return
 
             // Process a client reload request from Node-RED - as the page is reloaded, everything else is ignored
-            if ( msg._uib.reload === true ) location.reload()
+            if ( msg._uib.reload === true ) {
+                console.log('reloading')
+                location.reload()
+            }
 
             // Do nothing if the msg doesn't have a component ref
             if ( !msg._uib.componentRef ) return

@@ -1,3 +1,4 @@
+/* eslint-disable max-params */
 /* eslint-env node es2017 */
 /**
  * Utility library for uibuilder
@@ -73,6 +74,7 @@ const fs = require('fs-extra')
 const tilib = require('./tilib.js')
 const util = require('util')
 const serveStatic = require('serve-static')
+// NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 // Make sure that we only work out where the security.js file exists only ONCE - see the logon() function
 let securitySrc = ''
@@ -93,38 +95,37 @@ const dummyAuth = {
 }
 
 module.exports = {
-
     /** Complex, custom code when processing an incoming msg to uibuilder node input should go here
      * Needs to return the msg object. Not for processing msgs coming back from front-end.
      */
-    inputHandler: function(msg, send, done, node, RED, io, ioNs, log) {
+    inputHandler: function(msg, send, done, node, RED, io, ioNs, log, uib) {
         node.rcvMsgCount++
         log.trace(`[uiblib:${node.url}] msg received via FLOW. ${node.rcvMsgCount} messages received`, msg)
 
         // If the input msg is a uibuilder control msg, then drop it to prevent loops
-        if ( msg.hasOwnProperty('uibuilderCtrl') ) return null
+        if ( Object.prototype.hasOwnProperty.call(msg, 'uibuilderCtrl') ) return null
 
         //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + node.rcvMsgCount}, node)
 
         // Remove script/style content if admin settings don't allow
         if ( node.allowScripts !== true ) {
-            if ( msg.hasOwnProperty('script') ) delete msg.script
+            if ( Object.prototype.hasOwnProperty.call(msg, 'script') ) delete msg.script
         }
         if ( node.allowStyles !== true ) {
-            if ( msg.hasOwnProperty('style') ) delete msg.style
+            if ( Object.prototype.hasOwnProperty.call(msg, 'style') ) delete msg.style
         }
 
         // pass the complete msg object to the uibuilder client
         // TODO: This should have some safety validation on it!
         if (msg._socketId) {
-            //! If security is active ...
+            //! TODO If security is active ...
             //  ...If socketId not validated as having a current session, don't send
-            log.trace(`[${node.url}] msg sent on to client ${msg._socketId}. Channel: ${node.ioChannels.server}`, msg)
-            ioNs.to(msg._socketId).emit(node.ioChannels.server, msg)
+            log.trace(`[${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}`, msg)
+            ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
         } else {
             //? - is there any way to prevent sending to clients not logged in?
-            log.trace(`[${node.url}] msg sent on to ALL clients. Channel: ${node.ioChannels.server}`, msg)
-            ioNs.emit(node.ioChannels.server, msg)
+            log.trace(`[${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}`, msg)
+            ioNs.emit(uib.ioChannels.server, msg)
         }
 
         if (node.fwdInMessages) {
@@ -140,21 +141,24 @@ module.exports = {
     /** Do any complex, custom node closure code here
      * @param {function|null} done Default=null, internal node-red function to indicate processing is complete
      * @param {uibNode} node Reference to the node instance object
-     * @param {Red} RED Reference to the Node-RED API
+     * @param {runtimeRED} RED Reference to the Node-RED API
      * @param {Object} uib Reference to the uibuilder master config object
      * @param {Object} ioNs - Instance of Socket.IO Namespace
      * @param {Object} io - Instance of Socket.IO
      * @param {Object} app - Instance of ExpressJS app
      * @param {Object} log - Winston logging instance
-     * @param {Object} instances[] Reference to the currently defined instances of uibuilder
+     * 
      */
-    processClose: function(done = null, node, RED, uib, ioNs, io, app, log, instances) {
+    processClose: function(done = null, node, RED, uib, ioNs, io, app, log) {
         log.trace(`[${node.url}] nodeGo:on-close:processClose`)
+
+        /** @type {Object} instances[] Reference to the currently defined instances of uibuilder */
+        const instances = uib.instances
 
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
-        // Let all the clients know we are closing down
-        this.sendControl({ 'uibuilderCtrl': 'shutdown' }, ioNs, node)
+        // Let all the clients know we are closing down (msg, ioNs, node, socketId, output, uib)
+        this.sendControl({ 'uibuilderCtrl': 'shutdown' }, ioNs, node, undefined, false, uib)
 
         // Disconnect all Socket.IO clients
         const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
@@ -164,7 +168,7 @@ module.exports = {
             })
         }
         ioNs.removeAllListeners() // Remove all Listeners for the event emitter
-        delete io.nsps[node.ioNamespace] // Remove from the server namespaces
+        delete io.nsps[node.url] // Remove from the server namespaces
 
         // We need to remove the app.use paths too as they will be recreated on redeploy
         // we check whether the regex string matches the current node.url, if so, we splice it out of the stack array
@@ -172,7 +176,7 @@ module.exports = {
         var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
         var urlReVendor = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
         // For each entry on ExpressJS's server stack...
-        app._router.stack.forEach( function(r, i, _stack) {
+        app._router.stack.forEach( function(r, i, _stack) { // eslint-disable-line no-unused-vars
             // Check whether the URL matches a vendor path...
             let rUrlVendor = r.regexp.toString().replace(urlReVendor, '')
             // If it DOES NOT, then...
@@ -269,7 +273,7 @@ module.exports = {
      * @param {string=} socketId Optional. If included, only send to specific client id
      * @param {boolean=} output Optional. If included, also output to port #2 of the node @since 2020-01-03
      */
-    sendControl: function(msg, ioNs, node, socketId, output) {
+    sendControl: function(msg, ioNs, node, socketId, output, uib) {
         if (output === undefined || output === null) output = true
 
         msg.from = 'server'
@@ -277,10 +281,10 @@ module.exports = {
         if (socketId) msg._socketId = socketId
 
         // Send to specific client if required
-        if (msg._socketId) ioNs.to(msg._socketId).emit(node.ioChannels.control, msg)
-        else ioNs.emit(node.ioChannels.control, msg)
+        if (msg._socketId) ioNs.to(msg._socketId).emit(uib.ioChannels.control, msg)
+        else ioNs.emit(uib.ioChannels.control, msg)
 
-        if ( (! msg.hasOwnProperty('topic')) && (node.topic !== '') ) msg.topic = node.topic
+        if ( (! Object.prototype.hasOwnProperty.call(msg, 'topic')) && (node.topic !== '') ) msg.topic = node.topic
 
         // copy msg to output port #2 if required
         if ( output === true ) node.send([null, msg])
@@ -298,6 +302,7 @@ module.exports = {
     }, // ---- End of setNodeStatus ---- //
 
     /** DEPRECATED - Add an ExpressJS url for an already npm installed package (doesn't update vendorPaths var)
+     * @deprecated
      * @param {string} packageName Name of the front-end npm package we are trying to add
      * @param {string} installFolder The filing system location of the package (if '', will use findPackage() to search for it)
      * @param {string} moduleName Name of the uibuilder module ('uibuilder')
@@ -308,7 +313,7 @@ module.exports = {
      * @param {Object} RED RED object instance (for error logging)
      * @returns {null|{url:string,folder:string}} Vendor url & fs path
      */
-    addPackage: function(packageName, installFolder='', moduleName, userDir, log, app, serveStatic, RED) {
+    addPackage: function(packageName, installFolder='', moduleName, userDir, log, app, serveStatic, RED) { // eslint-disable-line no-unused-vars
         RED.log.error( '[uibuilder:uiblib:addPackage] THIS FUNCTION IS DEPRECATED. Please raise a GitHub issue.' )
         return
 
@@ -353,7 +358,7 @@ module.exports = {
         let installedPackages = uib.installedPackages
 
         // uib.installedPackages[packageName] MUST exist and be populated (done by uiblib.checkInstalledPackages())
-        if ( installedPackages.hasOwnProperty(packageName) ) {
+        if ( Object.prototype.hasOwnProperty.call(installedPackages, packageName) ) {
             pkgDetails = installedPackages[packageName]
         } else {
             log.error('[uibuilder:uiblib.servePackage] Failed to find package in uib.installedPackages')
@@ -366,28 +371,29 @@ module.exports = {
         if (installFolder === '' ) {
             log.error(`[uibuilder:uiblib.servePackage] Failed to add user vendor path - no install folder found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
             return false
-        } else {
-            // What is the URL for this package? Remove the leading "../"
-            try {
-                var vendorPath = pkgDetails.url.replace('../','/') // "../uibuilder/vendor/socket.io" tilib.urlJoin(uib.moduleName, 'vendor', packageName)
-            } catch (e) {
-                log.error(`[uibuilder:uiblib.servePackage] ${packageName} `, e)
-                return false
-            }
-            log.trace(`[uibuilder:uiblib.servePackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
-            try {
-                app.use( vendorPath, /**function (req, res, next) {
-                    // TODO Allow for a test to turn this off
-                    // if (true !== true) {
-                    //     next('router')
-                    // }
-                    next() // pass control to the next handler
-                }, */ serveStatic(installFolder, uib.staticOpts) )
-                return true
-            } catch (e) {
-                log.error(`[uibuilder:uiblib.servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
-                return false
-            }
+        }
+
+        // What is the URL for this package? Remove the leading "../"
+        var vendorPath
+        try {
+            vendorPath = pkgDetails.url.replace('../','/') // "../uibuilder/vendor/socket.io" tilib.urlJoin(uib.moduleName, 'vendor', packageName)
+        } catch (e) {
+            log.error(`[uibuilder:uiblib.servePackage] ${packageName} `, e)
+            return false
+        }
+        log.trace(`[uibuilder:uiblib.servePackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
+        try {
+            app.use( vendorPath, /**function (req, res, next) {
+                // TODO Allow for a test to turn this off
+                // if (true !== true) {
+                //     next('router')
+                // }
+                next() // pass control to the next handler
+            }, */ serveStatic(installFolder, uib.staticOpts) )
+            return true
+        } catch (e) {
+            log.error(`[uibuilder:uiblib.servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
+            return false
         }
     }, // ---- End of servePackage ---- //
 
@@ -465,7 +471,7 @@ module.exports = {
         merged = tilib.mergeDedupe(Object.keys(installedPackages), pkgList, masterPkgList)
 
         // For each entry in the complete list ...
-        merged.forEach( (pkgName, _i) => {
+        merged.forEach( (pkgName, _i) => { // eslint-disable-line no-unused-vars
             // flags
             let pkgExists = false
 
@@ -484,14 +490,14 @@ module.exports = {
                  *  still exist when we check. But the package.json will have been removed
                  *  so we don't process the entry unless package.json actually exists
                  */
-                if ( ! pj.hasOwnProperty('ERROR')) {
+                if ( ! Object.prototype.hasOwnProperty.call(pj, 'ERROR') ) {
                     // We only know for sure package exists now
                     pkgExists = true
                 }
             }
 
             // Check to see if the package is in the current list
-            const isInCurrent = installedPackages.hasOwnProperty(pkgName)
+            const isInCurrent = Object.prototype.hasOwnProperty.call(installedPackages, pkgName)
 
             if ( pkgExists ) {
                 // If package does NOT exist in current - add it now
@@ -537,7 +543,7 @@ module.exports = {
 
             } else { // (package not actually installed)
                 // If in current, flag for unloading then delete from current
-                if ( isInCurrent ) {
+                if ( isInCurrent ) { // eslint-disable-line no-lonely-if
                     if ( app !== null) {
                         installedPackages[pkgName].loaded = this.unservePackage(pkgName, installedPackages, userDir, log, app)
                         if (debug) console.log('[uibuilder.uiblib] checkInstalledPackages - package unserved ', pkgName)
@@ -562,6 +568,7 @@ module.exports = {
     }, // ---- End of checkInstalledPackages ---- //
 
     /** Validate a url query parameter - DEPRECATED in v3.1.0
+     * @deprecated
      * @param {string} url uibuilder URL to check (not a full url, the name used by uibuilder)
      * @param {import("express").Response} res The ExpressJS response variable
      * @param {string} caller A string indicating the calling function - used for logging only
@@ -610,7 +617,7 @@ module.exports = {
      * @param {Object} log Custom logger instance
      * @returns {_auth} An updated _auth object
      */
-    authCheck: function(msg, ioNs, node, socket, log) {
+    authCheck: function(msg, ioNs, node, socket, log) { // eslint-disable-line no-unused-vars
         /** @type MsgAuth */
         var _auth = dummyAuth
 
@@ -632,7 +639,7 @@ module.exports = {
         // Has the client included msg._auth.id? If not, send back an unauth msg
         // TODO: Only send if msg was on std channel NOT on control channel
         if (!msg._auth.id) {
-            _auth.info.error = 'Client did not provide an _auth.id',
+            _auth.info.error = 'Client did not provide an _auth.id'
 
             this.sendControl({
                 'uibuilderCtrl': 'Auth Failure',
@@ -859,7 +866,7 @@ module.exports = {
                     if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
                         log.warn('[uibuilder:uiblib:logon] Security is ON but no `security.js` found. Using master template. Please replace with your own code.')
 
-                        if (node.copyIndex === true) {
+                        if (node.copyIndex === true) { // eslint-disable-line max-depth
                             log.warn('[uibuilder:uiblib:logon] copyIndex flag is ON so copying master template `security.js` to the <usbRoot>/.config` folder.')
                             fs.copy(securitySrc, path.join(uib.configFolderName,'security.js'), {overwrite:false, preserveTimestamps:true}, err => {
                                 if (err) log.error('[uibuilder:uiblib:logon] Copy of master template `security.js` FAILED.', err)
@@ -972,7 +979,7 @@ module.exports = {
      * @param {Object} log Custom logger instance
      * @returns {_auth} Updated _auth
      */
-    logoff: function(msg, ioNs, node, socket, log) {
+    logoff: function(msg, ioNs, node, socket, log) { // eslint-disable-line no-unused-vars
         /** @type MsgAuth */
         var _auth = msg._auth || dummyAuth
         
@@ -1035,7 +1042,7 @@ module.exports = {
         }
 
         if ( chk && chk1 && chk2 && chk3 ) return true
-        else return false
+        return false
     }, // ---- End of chkAuth() ---- //
 
     /** Create instance details web page
@@ -1168,7 +1175,7 @@ module.exports = {
 
         nodeKeys.sort().forEach( item => {
             let info = node[item]
-            if ( info != null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
+            if ( info !== null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
             page += `
                 <tr>
                     <th>${item}</th>
@@ -1182,7 +1189,7 @@ module.exports = {
             </table>
             `
 
-        page += ''
+        page += '' // eslint-disable-line no-implicit-coercion
         page += '<div></div>'
 
         page += '</body></html>'

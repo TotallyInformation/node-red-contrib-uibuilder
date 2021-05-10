@@ -29,6 +29,7 @@
 const uiblib        = require('./uiblib')  // Utility library for uibuilder
 const tilib         = require('./tilib')   // General purpose library (by Totally Information)
 const templateConf  = require('../templates/template_dependencies') // Template configuration metadata
+const sockets       = require('./socket.js') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 
 // Core node.js
 const path          = require('path')
@@ -38,7 +39,7 @@ const child_process = require('child_process')
 // 3rd-party
 const serveStatic   = require('serve-static')
 const serveIndex    = require('serve-index')
-const socketio      = require('socket.io')
+//const socketio      = require('socket.io')
 const fs            = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 const fg            = require('fast-glob') // https://github.com/mrmlnc/fast-glob
 
@@ -96,6 +97,8 @@ const uib = {
     commonFolderName: 'common',
     /** Name of the Socket.IO Use Middleware */
     sioUseMwName: 'sioUse.js',
+    /** The channel names for Socket.IO @type {Object} */
+    ioChannels: {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'},
     /** What version of Node.JS are we running under? Impacts some file processing. 
      * @type {Array.<number|string>} */
     nodeVersion: process.version.replace('v','').split('.'),
@@ -143,7 +146,7 @@ var commonStaticLoaded = false
 //#endregion ----- uibuilder module-level globals ----- //
 
 /** Export the function that defines the node 
- * @type Red */
+ * @type {runtimeRED} */
 module.exports = function(/** @type {runtimeRED} */ RED) {
     //#region ----- Constants for standard setup ----- //
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
@@ -283,55 +286,15 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     //#endregion ----- root folder ----- //
     
+    /** Pass core objects to the Socket.IO handler module */
+    sockets.setup(RED, uib, log, server) // Singleton wrapper for Socket.IO
+
     /** Serve up vendor packages. Updates uib.installedPackages
      * This is the first check, the installed packages are rechecked at various times.
      * Reads the packageList and masterPackageList files
      * Adds ExpressJS static paths for each found FE package & saves the details to the vendorPaths variable.
      */
     uiblib.checkInstalledPackages('', uib, userDir, log, app)
-
-    //#region ----- Set up Socket.IO server & middleware ----- //
-    /** Holder for Socket.IO - we want this to survive redeployments of each node instance
-     *  so that existing clients can be reconnected.
-     * Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
-     * modules that might also use it (path). This is only needed ONCE for ALL uib.instances of this node.
-     **/
-
-    /** URI path for accessing the socket.io client from FE code. 
-     * @constant {string} uib_socketPath */
-    const uib_socketPath = tilib.urlJoin(httpNodeRoot, uib.moduleName, 'vendor', 'socket.io')
-
-    log.trace('[uibuilder:Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
-    let ioOptions = {
-        'path': uib_socketPath,
-        // for CORS need to handle preflight request explicitly 'cause there's an
-        // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v2/handling-cors/
-        handlePreflightRequest: (req, res) => {
-            res.writeHead(204, {
-                'Access-Control-Allow-Origin': req.headers['origin'],
-                'Access-Control-Allow-Methods': 'GET,POST',
-                'Access-Control-Allow-Headers': 'X-ClientId',
-                'Access-Control-Allow-Credentials': true,
-            })
-            res.end()
-        },
-    }
-    var io = socketio.listen(server, ioOptions) // listen === attach
-    // @ts-expect-error ts(2339)
-    io.set('transports', ['polling', 'websocket'])
-
-    /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev3 */
-    let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
-    try {
-        const sioMiddleware = require(sioMwPath)
-        if ( typeof sioMiddleware === 'function' ) {
-            io.use(require(sioMwPath))
-        }    
-    } catch (e) {
-        log.trace('[uibuilder:Module] Socket.IO Middleware failed to load. Reason: ', e.message)
-    }
-
-    //#endregion ----- socket.io server ----- //
 
     //#region ---- Set up uibuilder master resources (these are applied in nodeInstance at instance level) ----
     /** Create a new, additional static http path to enable loading of central static resources for uibuilder
@@ -371,8 +334,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     //#endregion ------------------------------------------ //
 
     /** Run the node instance - called from registerType()
-     * @type {runtimeNode}
-     * @param {runtimeNodeConfig} config The configuration object passed from the Admin interface (see the matching HTML file)
+     * type {runtimeNode}
+     * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
      */
     function nodeInstance(config) {
         // Create the node
@@ -386,7 +349,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         /** Copy 'this' object in case we need it in context of callbacks of other functions.
          * @type {uibNode}
          */
-        // @ts-expect-error ts(2322)
+        // @ts-ignore
         const node = this
         log.trace(`[uibuilder:${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
 
@@ -405,8 +368,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         node.useSecurity     = config.useSecurity 
         node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
         node.jwtSecret       = node.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
-        node.tokenAutoExtend = config.tokenAutoExtend
-        node.reload          = config.reload
+        node.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
+        node.reload          = config.reload === undefined ? false : config.reload
         //#endregion ----- Local node config copy ----- //
 
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })
@@ -514,20 +477,6 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
         //#endregion ------ End of Local folder structure ------- //
         
-        //#region ----- Socket.IO instance configuration ----- //
-        /** How many Socket clients connected to this instance? @type {integer} */
-        node.ioClientsCount = 0
-        /** How many msg's received since last reset or redeploy? @type {integer} */
-        node.rcvMsgCount = 0
-        /** The channel names for Socket.IO @type {Object} */
-        node.ioChannels = {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'}
-        /** Make sure each node instance uses a separate Socket.IO namespace - WARNING: This HAS to match the one derived in uibuilderfe.js
-         * @since v1.0.10, changed namespace creation to correct a missing / if httpNodeRoot had been changed from the default. @type {string} */
-        node.ioNamespace = node.url //tilib.urlJoin(httpNodeRoot, node.url)
-
-        log.trace(`[uibuilder:${uibInstance}] Socket.io details`, { 'ClientCount': node.ioClientsCount, 'rcvdMsgCount': node.rcvMsgCount, 'Channels': node.ioChannels, 'Namespace': node.ioNamespace } )
-        //#endregion ----- socket.io instance config ----- //
-
         //#region ----- Set up ExpressJS Middleware ----- //
         /** Provide the ability to have a ExpressJS middleware hook.
          * This can be used for custom authentication/authorisation or anything else.
@@ -559,8 +508,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
             // Tell the client what Socket.IO namespace to use,
             // trim the leading slash because the cookie will turn it into a %2F
-            res.setHeader('uibuilder-namespace', node.ioNamespace)
-            res.cookie('uibuilder-namespace', node.ioNamespace, {path: node.url, sameSite: true}) // tilib.trimSlashes(node.ioNamespace), {path: node.url, sameSite: true})
+            res.setHeader('uibuilder-namespace', node.url)
+            res.cookie('uibuilder-namespace', node.url, {path: node.url, sameSite: true}) // tilib.trimSlashes(node.url), {path: node.url, sameSite: true})
 
             next()
         }
@@ -600,164 +549,10 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         // We only do the following if io is not already assigned (e.g. after a redeploy)
         uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
 
+        //#region ----- Socket.IO instance configuration ----- //
         /** Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
-        const ioNs = io.of(node.ioNamespace)
-
-        /** When someone loads the page, it will try to connect over Socket.IO
-         *  note that the connection returns the socket instance to monitor for responses from
-         *  the ui client instance */
-        ioNs.on('connection', function(socket) {
-            node.ioClientsCount++
-
-            // Try to load the sioUse middleware function
-            try {
-                const sioUseMw = require( path.join(uib.configFolder, uib.sioUseMwName) )
-                if ( typeof sioUseMw === 'function' ) socket.use(sioUseMw)
-            } catch(e) {
-                log.trace(`[uibuilder:${uibInstance}] Socket.use Failed to load Use middleware. Reason: `, e.message)
-            }
-            
-            log.trace(`[uibuilder:${uibInstance}] Socket connected, clientCount: ${node.ioClientsCount}, ID: ${socket.id}`)
-
-            uiblib.setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
-
-            // Let the clients (and output #2) know we are connecting
-            uiblib.sendControl({
-                'uibuilderCtrl': 'client connect',
-                'cacheControl': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
-                // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
-                // time difference (UTC->Local) without needing clever libraries.
-                'serverTimestamp': (new Date()),
-                topic: node.topic || undefined,
-            }, ioNs, node, socket.id, true)
-            //ioNs.emit( node.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
-
-            // Listen for msgs from clients only on specific input channels:
-            socket.on(node.ioChannels.client, function(msg) {
-                log.trace(`[uibuilder:${uibInstance}] Data received from client, ID: ${socket.id}, Msg:`, msg)
-
-                // Make sure the incoming msg is a correctly formed Node-RED msg
-                switch ( typeof msg ) {
-                    case 'string':
-                    case 'number':
-                    case 'boolean':
-                        msg = { 'topic': node.topic, 'payload': msg}
-                }
-
-                // If the sender hasn't added msg._socketId, add the Socket.id now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
-
-                // If security is active...
-                if (node.useSecurity === true) {
-                    /** Check for valid auth and session 
-                     * @type MsgAuth */
-                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log)
-                }
-
-                // Send out the message for downstream flows
-                // TODO: This should probably have safety validations!
-                node.send(msg)
-            })
-            socket.on(node.ioChannels.control, function(msg) {
-                log.trace(`[uibuilder:${uibInstance}] Control Msg from client, ID: ${socket.id}, Msg:`, msg)
-
-                // Make sure the incoming msg is a correctly formed Node-RED msg
-                switch ( typeof msg ) {
-                    case 'string':
-                    case 'number':
-                    case 'boolean':
-                        msg = { 'uibuilderCtrl': msg }
-                }
-
-                // If the sender hasn't added Socket.id, add it now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
-
-                // @since 2017-11-05 v0.4.9 If the sender hasn't added msg.from, add it now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, 'from') ) msg.from = 'client'
-
-                /** If a logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
-                if ( msg.uibuilderCtrl === 'logon') {
-                    uiblib.logon(msg, ioNs, node, socket, log, uib)
-
-                } else if ( msg.uibuilderCtrl === 'logoff') {
-                    uiblib.logoff(msg, ioNs, node, socket, log)
-
-                } else {
-                    // If security is active...
-                    if (node.useSecurity === true) {
-                        /** Check for valid auth and session 
-                         * @type MsgAuth */
-                        msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log)
-                    }
-
-                    // Send out the message on port #2 for downstream flows
-                    if ( ! msg.topic ) msg.topic = node.topic
-                    node.send([null,msg])
-                }
-
-            })
-
-            socket.on('disconnect', function(reason) {
-                node.ioClientsCount--
-                log.trace(
-                    `[uibuilder:${uibInstance}] Socket disconnected, clientCount: ${node.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
-                )
-                if ( node.ioClientsCount <= 0) uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + node.ioClientsCount }, node )
-                else uiblib.setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + node.ioClientsCount }, node )
-                // Let the control output port know a client has disconnected
-                uiblib.sendControl({
-                    'uibuilderCtrl': 'client disconnect',
-                    'reason': reason,
-                    topic: node.topic || undefined,
-                }, ioNs, node, socket.id, true)
-                //node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'topic': node.topic}])
-            })
-
-            socket.on('error', function(err) {
-                log.error(`[uibuilder:${uibInstance}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
-                // Let the control output port know there has been an error
-                uiblib.sendControl({
-                    'uibuilderCtrl': 'socket error',
-                    'error': err.message,
-                    topic: node.topic || undefined,
-                }, ioNs, node, socket.id, true)
-            })
-
-            /* More Socket.IO events but we really don't need to monitor them
-                socket.on('disconnecting', function(reason) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' DISCONNECTING received', 'ID': socket.id,
-                        'data': reason
-                    })
-                })
-                socket.on('newListener', function(data) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' NEWLISTENER received', 'ID': socket.id,
-                        'data': data
-                    })
-                })
-                socket.on('removeListener', function(data) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' REMOVELISTENER received', 'ID': socket.id,
-                        'data': data
-                    })
-                })
-                // ping is received every 30 sec
-                socket.on('ping', function(data) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' PING received', 'ID': socket.id,
-                        'data': data
-                    })
-                })
-                socket.on('pong', function(data) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' PONG received', 'ID': socket.id,
-                        'data': data
-                    })
-                })
-            */
-
-        }) // ---- End of ioNs.on connection ---- //
+        const ioNs = sockets.addNS(node) // NB: Namespace is set from url
+        //#endregion ----- socket.io instance config ----- //
 
         /** Handler function for node flow input events (when a node instance receives a msg from the flow)
          * @see https://nodered.org/blog/2019/09/20/node-done 
@@ -789,7 +584,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             }
 
             // Keep this fn small for readability so offload any further, more customised code to another fn
-            msg = uiblib.inputHandler(msg, send, done, node, RED, io, ioNs, log)
+            msg = uiblib.inputHandler(msg, send, done, node, RED, sockets.io, ioNs, log, uib)
 
         } // -- end of flow msg received processing -- //
 
@@ -803,8 +598,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             node.removeListener('input', nodeInputHandler)
 
             // Do any complex close processing here if needed - MUST BE LAST
-            //processClose(null, node, RED, ioNs, io, app) // swap with below if needing async
-            uiblib.processClose(done, node, RED, uib, ioNs, io, app, log, uib.instances)
+            //processClose(null, node, RED, ioNs, app) // swap with below if needing async
+            uiblib.processClose(done, node, RED, uib, ioNs, sockets.io, app, log)
 
             done()
         })
@@ -1334,6 +1129,14 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 log.trace(`[uibuilder:uibputfile] Admin API. File write SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
                 res.statusMessage = 'File written successfully'
                 res.status(200).end()
+                // Reload connected clients if required by sending them a reload msg
+                if ( params.reload ) {
+                    sockets.send({
+                        '_uib': {
+                            'reload': true,
+                        }
+                    }, params.url)
+                }
             }
         })
     }) // ---- End of uibputfile ---- //
@@ -1349,6 +1152,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         const url = new URL(req.headers.referer)
         url.pathname = ''
         if (uib.customServer.port) {
+            // @ts-expect-error ts(2322)
             url.port = uib.customServer.port
         }
         const urlPrefix = url.href
@@ -1553,7 +1357,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                         </tr>
                         <tr title="">
                             <th>uib_socketPath</th>
-                            <td>${uib_socketPath}</td>
+                            <td>${sockets.uib_socketPath}</td>
                             <td>Unique path given to Socket.IO to ensure isolation from other Nodes that might also use it</td>
                         </tr>
                         <tr>
@@ -1833,7 +1637,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     }) // ---- End of npmmanage ---- //
 
     /** Serve up the package docs folder (uses docsify)
-     * @see [Issue #108](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108)
+     * @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108
      */
     // @ts-ignore
     RED.httpAdmin.use('/uibuilder/techdocs', serveStatic( path.join(__dirname, '..', 'docs'), uib.staticOpts ) )
