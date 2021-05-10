@@ -14,19 +14,19 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### New
 
-* Add [new pre-defined msg](./docs/pre-defined-msgs.md) from Node-RED that will cause the client to reload
-* Add auto-reload flag to file editor - if set, any connected clients will automatically reload when a file is saved
-* Added initial documentation for front-end build tooling to technical documentation (general info and Snowpack)
+* Add [new pre-defined msg](./docs/pre-defined-msgs.md) from Node-RED that will cause the front-end client (browser) to reload.
+* Add auto-reload flag to file editor - if set, any connected clients will automatically reload when a file is saved. (Only from the file editor in Node-RED for now, later I'll extend this to work if you are editing files using external editors).
+* Added initial documentation for front-end build tooling to technical documentation (general info and Snowpack).
 
 ### Fixed
 
-* [Issue #126](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/126) - Security not turning on even if TLS is used
+* [Issue #126](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/126) - Security not turning on even if TLS is used.
 * Update security.js template to remove simple false return if authentication fails - this is no longer valid.
 
 ### Updated
 
 * Bump dependencies to latest
-* Add collapsable summaries to README.md
+* Add collapsible summaries to README.md
 * Various updates to technical documentation
 * Update chkAuth validation function to make it more robust
 * Improve auth process logging and msg._auth.info checks
@@ -38,16 +38,16 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * Internal code refactoring
   
   * Prep for adding the ability for uibuilder to use its own independent ExpressJS server
-  * Rename uibuilder.js nodeGo() to nodeInstance() for clarity
-  * Add dumptReq to tilib.js - returns the important bits of an ExpressJS REQ object
+  * Rename uibuilder.js's `nodeGo()` function to `nodeInstance()` for clarity
+  * Add `dumpReq()` to tilib.js - returns the important bits of an ExpressJS REQ object
   * Begin to add Node-RED type definitions
   * Add ExpressJS type definitions
   * Other linting improvements
   
-  * **Moved Socket.IO processing to its own Singleton class.**
+  * **Moved Socket.IO processing to its own Singleton class module.**
     
     This means that any Node-RED related module can potentially `require` the `socket.js` module and get
-    access to the list of Socket.IO namespace's for all uibuilder node instances. All you need is the uibuilder URL setting.
+    access to the list of Socket.IO namespace's for all uibuilder node instances. All you need is the uibuilder URL name.
 
     It also means that any module can send messages to connected front-end clients simply by referencing the module and knowing
     the url.

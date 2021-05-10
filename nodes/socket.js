@@ -248,7 +248,7 @@ class UibSockets {
                 if (node.useSecurity === true) {
                     /** Check for valid auth and session 
                      * @type MsgAuth */
-                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log)
+                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log, uib)
                 }
 
                 // Send out the message for downstream flows
@@ -284,7 +284,7 @@ class UibSockets {
                     if (node.useSecurity === true) {
                         /** Check for valid auth and session 
                          * @type MsgAuth */
-                        msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log)
+                        msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log, uib)
                     }
 
                     // Send out the message on port #2 for downstream flows

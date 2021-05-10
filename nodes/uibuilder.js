@@ -614,7 +614,6 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
-    console.log('===========', uib.customServer, '==============')
     RED.nodes.registerType(uib.moduleName, nodeInstance, {
         credentials: {
             jwtSecret: {type:'password'},

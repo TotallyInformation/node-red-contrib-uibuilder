@@ -615,9 +615,10 @@ module.exports = {
      * @param {uibNode} node The node object
      * @param {SocketIO.Socket} socket 
      * @param {Object} log Custom logger instance
+     * @param {Object} uib Reference to the core uibuilder config object
      * @returns {_auth} An updated _auth object
      */
-    authCheck: function(msg, ioNs, node, socket, log) { // eslint-disable-line no-unused-vars
+    authCheck: function(msg, ioNs, node, socket, log, uib) { // eslint-disable-line no-unused-vars
         /** @type MsgAuth */
         var _auth = dummyAuth
 
@@ -631,7 +632,7 @@ module.exports = {
                 'topic': node.topic || undefined,
                 /** @type _auth */
                 '_auth': _auth,
-            }, ioNs, node, socket.id, false)
+            }, ioNs, node, socket.id, false, uib)
 
             return _auth
         }
@@ -646,7 +647,7 @@ module.exports = {
                 'topic': node.topic || undefined,
                 /** @type _auth */
                 '_auth': _auth,
-            }, ioNs, node, socket.id, false)
+            }, ioNs, node, socket.id, false, uib)
 
             return _auth
         }
