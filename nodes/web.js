@@ -19,6 +19,12 @@
  */
 'use strict'
 
+const path = require('path')
+const util = require('util')
+const fs = require('fs-extra')
+const tilib = require('./tilib.js')
+const serveStatic = require('serve-static')
+
 class Web {
     /** Called when class is instantiated */
     constructor() {
@@ -78,13 +84,7 @@ class Web {
          * Always set to empty string if a dedicated ExpressJS app is required
          * Otherwise it is set to RED.settings.httpNodeRoot */
 
-        /** We need an http server to serve the page and vendor packages. 
-         * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
-         * @since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
-         * @since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
-         */
-        //let app = this.app
-        //let server = this.server
+        /** We need an http server to serve the page and vendor packages. The app is used to serve up the Socket.IO client. */
         
         if ( uib.customServer.port ) {
             // Port has been specified & is different to NR's port so create a new instance of express & app
@@ -126,6 +126,236 @@ class Web {
         }
 
     } // --- End of webSetup() --- //
+
+    /** Compare the in-memory package list against packages actually installed.
+     * Also check common packages installed against the master package list in case any new ones have been added.
+     * Updates the package list file and uib.installedPackages
+     * param {Object} vendorPaths Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
+     * @param {string} newPkg Default=''. Name of a new package to be checked for in addition to existing. 
+     * @return {Object} uib.installedPackages
+     */
+    checkInstalledPackages(newPkg='') {
+        // Reference static vars
+        const uib = this.uib
+        const RED = this.RED
+        const log = this.log
+        const app = this.app
+
+        const debug = false
+        const userDir = RED.settings.userDir
+
+        let installedPackages = uib.installedPackages
+        let pkgList = []
+        let masterPkgList = []
+        let merged = []
+
+        //region --- get package lists from files --- //
+        // Read packageList and masterPackageList from their files
+        try {
+            pkgList = fs.readJsonSync(path.join(uib.configFolder, uib.packageListFilename))
+        } catch (err) {
+            // not an issue
+        }
+        try {
+            masterPkgList = fs.readJsonSync(path.join(uib.configFolder, uib.masterPackageListFilename))
+        } catch (err) {
+            // no op
+        }
+        // If neither can be found, that's an error
+        if ( (pkgList.length === 0) && (masterPkgList.length === 0) ) {
+            log.error(`[uibuilder:uiblib.checkInstalledPackages] Neither packageList nor masterPackageList could be read from: ${uib.configFolder}`)
+            return null
+        }
+        // Make sure we have socket.io in the list
+        masterPkgList.push('socket.io')
+        //endregion --- get package lists from files --- //
+
+        // Add in the new package as well if requested
+        if (newPkg !== '') {
+            pkgList.push(newPkg)
+        }
+
+        // Merge and de-dup to get a complete list
+        merged = tilib.mergeDedupe(Object.keys(installedPackages), pkgList, masterPkgList)
+
+        // For each entry in the complete list ...
+        merged.forEach( (pkgName, _i) => { // eslint-disable-line no-unused-vars
+            // flags
+            let pkgExists = false
+
+            let pj = null // package details if found
+
+            // Check to see if folder names present in <userDir>/node_modules
+            const pkgFolder = tilib.findPackage(pkgName, userDir)
+
+            // Check whether package is really installed (exists)
+            if ( pkgFolder !== null ) {
+                
+                // Get the package.json
+                pj = tilib.readPackageJson( pkgFolder )
+
+                /** The folder delete for npm remove happens async so it may
+                 *  still exist when we check. But the package.json will have been removed
+                 *  so we don't process the entry unless package.json actually exists
+                 */
+                if ( ! Object.prototype.hasOwnProperty.call(pj, 'ERROR') ) {
+                    // We only know for sure package exists now
+                    pkgExists = true
+                }
+            }
+
+            // Check to see if the package is in the current list
+            const isInCurrent = Object.prototype.hasOwnProperty.call(installedPackages, pkgName)
+
+            if ( pkgExists ) {
+                // If package does NOT exist in current - add it now
+                if ( ! isInCurrent ) {
+                    // Add to current & mark for loading
+                    installedPackages[pkgName] = {}
+                    installedPackages[pkgName].loaded = false
+                }
+
+                // Update package info
+                installedPackages[pkgName].folder = pkgFolder
+                installedPackages[pkgName].url = ['..', uib.moduleName, 'vendor', pkgName].join('/')
+                // Find installed version
+                installedPackages[pkgName].version = pj.version
+                // Find homepage
+                installedPackages[pkgName].homepage = pj.homepage
+                // Find main entry point (or '')
+                installedPackages[pkgName].main = pj.main || ''
+
+                /** Try to guess the browser entry point (or '')
+                 * @since v3.2.1 Fix for packages misusing the browser property - might be an object see #123
+                 */
+                let browserEntry = ''
+                if ( pj.browser ) {
+                    if ( typeof pj.browser === 'string' ) browserEntry = pj.browser
+                }
+                if ( browserEntry === '' ) {
+                    browserEntry = pj.jsdelivr || pj.unpkg || ''
+                }
+                installedPackages[pkgName].browser = browserEntry
+
+                // Replace generic with specific entries if we know them
+                if ( pkgName === 'socket.io' ) {
+                    //installedPackages[pkgName].url  = '../uibuilder/socket.io/socket.io.js'
+                    installedPackages[pkgName].main = 'socket.io.js'
+                }
+
+                // If we need to load it & we have app available
+                if ( (installedPackages[pkgName].loaded === false) && (app !== undefined) ) {
+                    /** Add a static path to serve up the files */
+                    installedPackages[pkgName].loaded = this.servePackage(pkgName)
+                }
+
+            } else { // (package not actually installed)
+                // If in current, flag for unloading then delete from current
+                if ( isInCurrent ) { // eslint-disable-line no-lonely-if
+                    if ( app !== undefined) {
+                        installedPackages[pkgName].loaded = this.unservePackage(pkgName)
+                        if (debug) console.log('[uibuilder.uiblib] checkInstalledPackages - package unserved ', pkgName)
+                    }
+                    delete installedPackages[pkgName]
+                    if (debug) console.log('[uibuilder.uiblib] checkInstalledPackages - package deleted from installedPackages ', pkgName)
+                }
+            }
+        })
+
+        //uib.installedPackages = installedPackages
+        
+        // Write packageList back to file
+        try {
+            fs.writeJsonSync(path.join(uib.configFolder,uib.packageListFilename), Object.keys(installedPackages), {spaces:2})
+        } catch(e) {
+            log.error(`[uibuilder:uiblib.checkInstalledPackages] Could not write ${uib.packageListFilename} in ${uib.configFolder}`, e)
+        }
+
+        return uib.installedPackages
+
+    } // ---- End of checkInstalledPackages ---- //
+
+    /** Add an installed package to the ExpressJS app to allow access from URLs
+     * @param {string} packageName Name of the front-end npm package we are trying to add
+     * @returns {boolean} True if loaded, false otherwise
+     */
+    servePackage(packageName) {
+        // Reference static vars
+        const uib = this.uib
+        const RED = this.RED
+        const log = this.log
+        const app = this.app
+
+        let userDir = RED.settings.userDir        
+        let pkgDetails = null
+        let installedPackages = uib.installedPackages
+
+        // uib.installedPackages[packageName] MUST exist and be populated (done by uiblib.checkInstalledPackages())
+        if ( Object.prototype.hasOwnProperty.call(installedPackages, packageName) ) {
+            pkgDetails = installedPackages[packageName]
+        } else {
+            log.error('[uibuilder:uiblib.servePackage] Failed to find package in uib.installedPackages')
+            return false
+        }
+
+        // Where is the node_modules folder for this package?
+        const installFolder = pkgDetails.folder
+
+        if (installFolder === '' ) {
+            log.error(`[uibuilder:uiblib.servePackage] Failed to add user vendor path - no install folder found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
+            return false
+        }
+
+        // What is the URL for this package? Remove the leading "../"
+        var vendorPath
+        try {
+            vendorPath = pkgDetails.url.replace('../','/') // "../uibuilder/vendor/socket.io" tilib.urlJoin(uib.moduleName, 'vendor', packageName)
+        } catch (e) {
+            log.error(`[uibuilder:uiblib.servePackage] ${packageName} `, e)
+            return false
+        }
+        log.trace(`[uibuilder:uiblib.servePackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
+        try {
+            app.use( vendorPath, /**function (req, res, next) {
+                // TODO Allow for a test to turn this off
+                // if (true !== true) {
+                //     next('router')
+                // }
+                next() // pass control to the next handler
+            }, */ serveStatic(installFolder, uib.staticOpts) )
+            return true
+        } catch (e) {
+            log.error(`[uibuilder:uiblib.servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
+            return false
+        }
+    } // ---- End of servePackage ---- //
+
+    /** Remove an installed package from the ExpressJS app
+     * @param {string} packageName Name of the front-end npm package we are trying to add
+     * @returns {boolean} True if unserved, false otherwise
+     */
+    unservePackage(packageName) {
+        // Reference static vars
+        //const uib = this.uib
+        //const RED = this.RED
+        //const log = this.log
+        const app = this.app
+        
+        let pkgReStr = `/^\\/uibuilder\\/vendor\\/${packageName}\\/?(?=\\/|$)/i`
+        let done = false
+        // For each entry on ExpressJS's server stack...
+        app._router.stack.some( function(r, i) {
+            if ( r.regexp.toString() === pkgReStr ) {
+                // We can splice inside the array only because we will only do a single one.
+                app._router.stack.splice(i,1)
+                done = true
+                return true
+            }
+            return false
+        })
+
+        return done
+    } // ---- End of unservePackage ---- //
 
 } // ==== End of Web Class Definition ==== //
 

@@ -55,7 +55,7 @@ const uib = {
     me: fs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
     /** Module name must match this nodes html file @constant {string} uib.moduleName */
     moduleName: 'uibuilder',
-    /** URL path prefix set in settings.js - prefixes all URL's */
+    /** URL path prefix set in settings.js - prefixes all URL's - equiv of httpNodeRoot from settings.js */
     nodeRoot: '',
     /** Track across redeployments @constant {Object} uib.deployments */
     deployments: {},
@@ -261,7 +261,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * Reads the packageList and masterPackageList files
      * Adds ExpressJS static paths for each found FE package & saves the details to the vendorPaths variable.
      */
-    uiblib.checkInstalledPackages('', uib, userDir, log, web.app)
+    web.checkInstalledPackages()
 
     //#region ---- Set up uibuilder master resources (these are applied in nodeInstance at instance level) ----
     /** Create a new, additional static http path to enable loading of central static resources for uibuilder
@@ -320,7 +320,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         const node = this
         log.trace(`[uibuilder:${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
 
-        //#region ----- Create local copies of the node configuration (as defined in the .html file) ----- //
+        //#region ====== Create local copies of the node configuration (as defined in the .html file) ====== //
         // NB: node.id and node.type are also available
         node.name            = config.name  || ''
         node.topic           = config.topic || ''
@@ -337,8 +337,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         node.jwtSecret       = node.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
         node.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
         node.reload          = config.reload === undefined ? false : config.reload
-        //#endregion ----- Local node config copy ----- //
+        //#endregion ====== Local node config copy ====== //
 
+        //#region ====== Instance logging/audit ====== //
         log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })
         
         // Keep a log of the active uib.instances @since 2019-02-02
@@ -350,8 +351,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         if ( Object.prototype.hasOwnProperty.call(uib.deployments, node.id) ) uib.deployments[node.id]++
         else uib.deployments[node.id] = 1
         log.trace(`[uibuilder:${uibInstance}] Number of uib.Deployments`, uib.deployments[node.id] )
+        //#endregion ====== Instance logging/audit ====== //
 
-        //#region ----- Local folder structure ----- //
+        //#region ====== Local folder structure ====== //
 
         /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
          *   Files in this folder are also served to URL but take preference
@@ -440,11 +442,11 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             //TODO: Check if folder actually exists & is accessible
             customStatic = serveStatic( path.join(node.customFolder, 'src'), uib.staticOpts )
         }
-        //#endregion -- End of add static route for local custom files -- //
+        //#endregion == End of add static route for local custom files == //
 
-        //#endregion ------ End of Local folder structure ------- //
+        //#endregion ====== End of Local folder structure ====== //
         
-        //#region ----- Set up ExpressJS Middleware ----- //
+        //#region ====== Set up ExpressJS Middleware ====== //
         /** Provide the ability to have a ExpressJS middleware hook.
          * This can be used for custom authentication/authorisation or anything else.
          */
@@ -480,7 +482,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
             next()
         }
-        //#endregion ----- Express Middleware ----- //
+        //#endregion ====== Express Middleware ====== //
 
 
         /** Apply all of the middleware functions to the current instance url 
@@ -520,10 +522,10 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         // We only do the following if io is not already assigned (e.g. after a redeploy)
         uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
 
-        //#region ----- Socket.IO instance configuration ----- //
+        //#region ====== Socket.IO instance configuration ====== //
         /** Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
         const ioNs = sockets.addNS(node) // NB: Namespace is set from url
-        //#endregion ----- socket.io instance config ----- //
+        //#endregion ====== socket.io instance config ====== //
 
         /** Handler function for node flow input events (when a node instance receives a msg from the flow)
          * @see https://nodered.org/blog/2019/09/20/node-done 
@@ -596,7 +598,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         },
     })
 
-    //#region --- Admin API's ---
+    //#region ====== Admin API's ====== //
 
     /** Validate url query parameter
      * @param {Object} params The GET (res.query) or POST (res.body) parameters
@@ -710,7 +712,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         return res
     } // ---- End of fn chkParamFldr ---- //
 
-    //#region --- Admin API v3 ---
+    //#region ====== Admin API v3 ====== //
     /** uibuilder v3 unified Admin API router - new API commands should be added here */
     RED.httpAdmin.route('/uibuilder/admin/:url')
         // For all routes
@@ -972,7 +974,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         /** @see https://expressjs.com/en/4x/api.html#app.METHOD for other methods
          *  patch, report, search ?
          */
-    //#endregion --- Admin API v3 ---
+    //#endregion ====== Admin API v3 ====== //
 
     /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
@@ -1055,7 +1057,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @param {function} cb
      **/
     RED.httpAdmin.post('/uibputfile', function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
-        //#region --- Parameter validation ---
+        //#region ====== Parameter validation ====== //
         const params = req.body
 
         const chkUrl = chkParamUrl(params)
@@ -1081,7 +1083,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             res.status(chkFldr.status).end()
             return
         }
-        //#endregion ---- ----
+        //#endregion ====== ====== //
         
         log.trace(`[uibuilder:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
 
@@ -1145,7 +1147,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 //console.log('Restify - server.router.mounts: ', server.router.mounts) // Restify
 
                 // Update the uib.vendorPaths master variable
-                uiblib.checkInstalledPackages('', uib, userDir, log)
+                web.checkInstalledPackages()
 
                 // Include socket.io as a client library (but don't add to vendorPaths)
                 // let sioFolder = tilib.findPackage('socket.io', userDir)
@@ -1436,7 +1438,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     /** Check & update installed front-end library packages, return list as JSON */
     RED.httpAdmin.get('/uibvendorpackages', function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
         // Update the installed packages list
-        uiblib.checkInstalledPackages('', uib, userDir, log)
+        web.checkInstalledPackages()
 
         res.json(uib.installedPackages)
     }) // ---- End of uibvendorpackages ---- //
@@ -1560,7 +1562,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
             // Update the packageList
             // @ts-ignore
-            uib.installedPackages = uiblib.checkInstalledPackages(params.package, uib, userDir, log)
+            uib.installedPackages = web.checkInstalledPackages(params.package)
 
             // Check the results of the command
             switch (params.cmd) {
@@ -1570,8 +1572,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                     if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
                     if (success === true) {
                         // Add an ExpressJS URL
-                        // @ts-ignore
-                        uiblib.servePackage(params.package, uib, userDir, log, web.app)
+                        web.servePackage( /** @type {string} */ (params.package) )
                     }
                     break
                 }
@@ -1582,7 +1583,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                     if (success === true) {
                         // Remove ExpressJS URL
                         // @ts-ignore
-                        uiblib.unservePackage(params.package, uib, userDir, log, web.app)
+                        web.unservePackage(params.package)
                     }
                     break
                 }
@@ -1612,7 +1613,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     // @ts-ignore
     RED.httpAdmin.use('/uibuilder/techdocs', serveStatic( path.join(__dirname, '..', 'docs'), uib.staticOpts ) )
 
-    //#region ------ DEPRECATED API's ------- //
+    //#region ====== DEPRECATED API's ====== //
 
     /** DEPRECATED in v3.1.0. Do not use, will be removed soon. Create a simple NR admin API to return the list of files in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
@@ -1815,11 +1816,11 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         }
     }) // ---- End of uibdeletefile ---- //
 
-    //#endregion --- end of deprecated admin api's --- //
+    //#endregion ====== end of deprecated admin api's ====== //
 
-    //#endregion --- Admin API's ---
+    //#endregion ====== Admin API's ====== //
 
-    //#region --- End User API's ---
+    //#region ====== End User API's ======
     //app = RED.httpNode
     /** Login 
      * TODO: Change to an external module
@@ -1880,7 +1881,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         return res.status(200).json(req.body)
     }) // --- End of uiblogin api --- //
 
-    //#endregion --- End User API's ---
+    //#endregion ====== End User API's ====== //
 
 } // ==== End of module.exports ==== // 
 
