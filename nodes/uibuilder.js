@@ -18,8 +18,10 @@
 'use strict'
 
 //#region --- Type Defs --- //
+// <reference types="Express" />
 /**
  * @typedef {import('../typedefs.js')}
+ * typedef {import('Express')} Express
  * typedef {import('node-red')} Red
  */
 //#endregion --- Type Defs --- //
@@ -30,6 +32,7 @@ const uiblib        = require('./uiblib')  // Utility library for uibuilder
 const tilib         = require('./tilib')   // General purpose library (by Totally Information)
 const templateConf  = require('../templates/template_dependencies') // Template configuration metadata
 const sockets       = require('./socket.js') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
+const web           = require('./web.js') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 
 // Core node.js
 const path          = require('path')
@@ -40,6 +43,7 @@ const child_process = require('child_process')
 const serveStatic   = require('serve-static')
 const serveIndex    = require('serve-index')
 //const socketio      = require('socket.io')
+const Express = require('express') // eslint-disable-line no-unused-vars
 const fs            = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 const fg            = require('fast-glob') // https://github.com/mrmlnc/fast-glob
 
@@ -173,65 +177,6 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
 
-    //#region ----- ExpressJS Server/app setup ----- //
-
-    /** Optional port. If set, uibuilder will use its own ExpressJS server */
-    if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port !== RED.settings.uiPort) 
-        uib.customServer.port = RED.settings.uibuilder.port
-
-    /** Root URL path for http-in/out and uibuilder nodes 
-     * Always set to empty string if a dedicated ExpressJS app is required
-     * @type {string} httpNodeRoot
-     */
-    let httpNodeRoot
-
-    /** We need an http server to serve the page and vendor packages. 
-     * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
-     * @since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
-     * @since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
-     */
-    let app, server
-    if ( uib.customServer.port ) {
-        // Port has been specified & is different to NR's port so create a new instance of express & app
-        const express = require('express') 
-        app = express()
-        /** Socket.io needs an http(s) server rather than an ExpressJS app
-         * As we want Socket.io on the same port, we have to create out own server
-         * Use https if NR itself is doing so, use same certs as NR
-         * TODO: Allow for https/settings overrides using uibuilder props in settings.js
-         * TODO: Switch from https to http/2?
-         */
-        if ( RED.settings.https ) {
-            uib.customServer.type = 'https'
-            server = require('https').createServer(RED.settings.https, app)
-        } else {
-            server = require('http').createServer(app)
-        }
-        // Connect the server to the requested port, domain is the same as Node-RED
-        server.on('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-                server.close()
-                RED.log.error(
-                    `[uibuilder:CreateServer] ERROR: Port ${uib.customServer.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`
-                )
-                return
-            }    
-        })
-        server.listen(uib.customServer.port, function() {
-            uib.customServer.host = server.address().address
-        })
-        // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change.
-        httpNodeRoot = uib.nodeRoot = ''
-    } else {
-        // Port not specified (default) so reuse Node-RED's ExpressJS server and app
-        app = RED.httpNode // || RED.httpAdmin
-        server = RED.server
-        // Record the httpNodeRoot for later use
-        httpNodeRoot = uib.nodeRoot = RED.settings.httpNodeRoot
-    }
-
-    //#endregion ----- End of ExpressJS server/app setup ----- //
-
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable?
@@ -286,15 +231,37 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     //#endregion ----- root folder ----- //
     
+    //#region ----- ExpressJS Server/app setup ----- //
+
+    /** Optional port. If set, uibuilder will use its own ExpressJS server */
+    if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port !== RED.settings.uiPort) 
+        uib.customServer.port = RED.settings.uibuilder.port
+
+    /** We need an http server to serve the page and vendor packages. 
+     * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
+     * @since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
+     * @since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
+     */
+    web.setup(RED, uib, log)
+    //let app = web.app
+
+    /** Root URL path for http-in/out and uibuilder nodes 
+     * Always set to empty string if a dedicated ExpressJS app is required
+     * @type {string} httpNodeRoot
+     */
+    //let httpNodeRoot = uib.nodeRoot
+
+    //#endregion ----- End of ExpressJS server/app setup ----- //
+    
     /** Pass core objects to the Socket.IO handler module */
-    sockets.setup(RED, uib, log, server) // Singleton wrapper for Socket.IO
+    sockets.setup(RED, uib, log, web.server) // Singleton wrapper for Socket.IO
 
     /** Serve up vendor packages. Updates uib.installedPackages
      * This is the first check, the installed packages are rechecked at various times.
      * Reads the packageList and masterPackageList files
      * Adds ExpressJS static paths for each found FE package & saves the details to the vendorPaths variable.
      */
-    uiblib.checkInstalledPackages('', uib, userDir, log, app)
+    uiblib.checkInstalledPackages('', uib, userDir, log, web.app)
 
     //#region ---- Set up uibuilder master resources (these are applied in nodeInstance at instance level) ----
     /** Create a new, additional static http path to enable loading of central static resources for uibuilder
@@ -457,7 +424,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         }
 
         //#region Add static ExpressJS route for instance local custom files
-        var customStatic = function(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
+        var customStatic = function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
 
         try {
             // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
@@ -481,7 +448,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         /** Provide the ability to have a ExpressJS middleware hook.
          * This can be used for custom authentication/authorisation or anything else.
          */
-        var httpMiddleware = function(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) { next() }
+        var httpMiddleware = function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) { next() }
         /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
         let uibMwPath = path.join(uib.configFolder, 'uibMiddleware.js')
         try {
@@ -495,7 +462,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
         /** This ExpressJS middleware runs when the uibuilder page loads - set cookies and headers
          * @see https://expressjs.com/en/guide/using-middleware.html */
-        function masterMiddleware (/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
+        function masterMiddleware (/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) {
             //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             // Help reduce risk of XSS and other attacks
             res.setHeader('X-XSS-Protection','1;mode=block')
@@ -519,29 +486,33 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         /** Apply all of the middleware functions to the current instance url 
          * Must be applied in the right order with the most important first */
         let mStatic = serveStatic( masterStatic, uib.staticOpts )
-        app.use( 
+        web.app.use( 
+            // @ts-ignore
             tilib.urlJoin(node.url), 
             httpMiddleware, masterMiddleware, customStatic, 
             mStatic
         )
         /** If enabled, allow for directory listing of the custom instance folder */
         if ( node.showfolder === true ) {
-            app.use( tilib.urlJoin(node.url, 'idx'), 
+            // @ts-ignore
+            web.app.use( tilib.urlJoin(node.url, 'idx'), 
                 serveIndex( node.customFolder, {'icons':true, 'view':'details'} ), 
                 serveStatic( node.customFolder, uib.staticOpts ) 
             )
         }
         /** Serve up the uibuilder static common folder on `<url>/<commonFolderName>` and `uibuilder/<commonFolderName>` */
         let commonStatic = serveStatic( uib.commonFolder, uib.staticOpts )
-        app.use( tilib.urlJoin(node.url, uib.commonFolderName), commonStatic )
+        // @ts-ignore
+        web.app.use( tilib.urlJoin(node.url, uib.commonFolderName), commonStatic )
         if ( commonStaticLoaded === false ) {
             // Only load this once for all instances
             //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
-            app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
+            // @ts-ignore
+            web.app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
             commonStaticLoaded = true
         }
 
-        const fullPath = tilib.urlJoin( httpNodeRoot, node.url )
+        const fullPath = tilib.urlJoin( uib.nodeRoot, node.url )
 
         log.debug(`uibuilder : ${uibInstance} : URL . . . . .  : ${fullPath}`)
         log.debug(`uibuilder : ${uibInstance} : Source files . : ${node.customFolder}`)
@@ -599,13 +570,13 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
             // Do any complex close processing here if needed - MUST BE LAST
             //processClose(null, node, RED, ioNs, app) // swap with below if needing async
-            uiblib.processClose(done, node, RED, uib, ioNs, sockets.io, app, log)
+            uiblib.processClose(done, node, RED, uib, ioNs, sockets.io, web.app, log)
 
             done()
         })
 
         // Shows an instance details debug page
-        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
             let page = uiblib.showInstanceDetails(req, node, uib, userDir, RED)
             res.status(200).send( page )
         })
@@ -743,7 +714,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     /** uibuilder v3 unified Admin API router - new API commands should be added here */
     RED.httpAdmin.route('/uibuilder/admin/:url')
         // For all routes
-        .all(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
+        .all(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) {
             // @ts-ignore
             const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
             params.type = 'all'
@@ -761,7 +732,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             next()
         })
         /** Get something and return it */
-        .get(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+        .get(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
             // @ts-ignore
             const params = res.allparams
             params.type = 'get'
@@ -812,7 +783,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 // Return a list of all user urls in use by ExpressJS
                 // TODO Not currently working
                 var route, routes = []
-                app._router.stack.forEach( (middleware) => {
+                web.app._router.stack.forEach( (middleware) => {
                     if(middleware.route){ // routes registered directly on the app
                         let path = middleware.route.path
                         let methods = middleware.route.methods
@@ -824,19 +795,19 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                         })
                     }
                 })
-                console.log(app._router.stack[0])
+                console.log(web.app._router.stack[0])
 
                 log.trace('[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.')
                 res.statusMessage = 'URLs listed successfully'
                 //res.status(200).json(routes)
-                res.status(200).json(app._router.stack)
+                res.status(200).json(web.app._router.stack)
 
                 return
             }
 
         })
         /** TODO Write file contents */
-        .put(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+        .put(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
             // @ts-ignore
             const params = res.allparams
             params.type = 'put'
@@ -861,7 +832,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
         })
         /** Create a new folder or file */
-        .post(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+        .post(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
             // @ts-ignore
             const params = res.allparams
             params.type = 'post'
@@ -930,7 +901,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             })
         })
         /** Delete a folder or a file */
-        .delete(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+        .delete(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
             // @ts-ignore ts(2339)
             const params = res.allparams
             params.type = 'delete'
@@ -1009,7 +980,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @param {Object} permissions The permissions required for access
      * @param {function} cb
      **/
-    RED.httpAdmin.get('/uibgetfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    RED.httpAdmin.get('/uibgetfile', function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
         //#region --- Parameter validation ---
         /** req.query parameters
          * url
@@ -1083,7 +1054,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @param {Object} permissions The permissions required for access (Express middleware)
      * @param {function} cb
      **/
-    RED.httpAdmin.post('/uibputfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    RED.httpAdmin.post('/uibputfile', function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
         //#region --- Parameter validation ---
         const params = req.body
 
@@ -1144,7 +1115,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
      * @since 2019-02-04 v1.1.0-beta6
      */
-    RED.httpAdmin.get('/uibindex', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    RED.httpAdmin.get('/uibindex', function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
         log.trace('[uibindex] User Page/API. List all available uibuilder endpoints')
         
         // If using own Express server, correct the URL's
@@ -1185,7 +1156,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
                 // req.app._router.stack.forEach( function(r, i, stack) { // shows Node-RED admin server paths
                 // eslint-disable-next-line no-unused-vars
-                app._router.stack.forEach( function(r, i, stack) { // shows Node-RED user server paths
+                web.app._router.stack.forEach( function(r, i, stack) { // shows Node-RED user server paths
                     let rUrl = r.regexp.toString().replace(urlRe, '')
                     if ( rUrl === '' ) {
                         uibPaths.push( {
@@ -1243,7 +1214,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 Object.keys(uib.instances).forEach(key => {
                     page += `
                         <tr>
-                            <td><a href="${urlPrefix}${tilib.urlJoin(httpNodeRoot, uib.instances[key]).replace('/','')}" target="_blank">${uib.instances[key]}</a></td>
+                            <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, uib.instances[key]).replace('/','')}" target="_blank">${uib.instances[key]}</a></td>
                             <td>${key}</td>
                             <td>${path.join(uib.rootFolder, uib.instances[key])}</td>
                         </tr>
@@ -1288,11 +1259,11 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                      *  If so, add them to the output as an indicator of where to look.
                      */
                     let mainTxt = '<i>Not Supplied</i>'
-                    //console.log('==>> ',httpNodeRoot, pj.url,pj.browser)
+                    //console.log('==>> ',uib.nodeRoot, pj.url,pj.browser)
                     if ( pj.browser !== '' ) {
-                        mainTxt = `<a href="${urlPrefix}${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.browser).replace('/','')}">${pj.url}/${pj.browser}</a>`
+                        mainTxt = `<a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, pj.url.replace('..',''), pj.browser).replace('/','')}">${pj.url}/${pj.browser}</a>`
                     } else if ( pj.main !== '' ) {
-                        mainTxt = `<a href="${urlPrefix}${tilib.urlJoin(httpNodeRoot, pj.url.replace('..',''), pj.main).replace('/','')}">${pj.url}/${pj.main}</a>`
+                        mainTxt = `<a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, pj.url.replace('..',''), pj.main).replace('/','')}">${pj.url}/${pj.main}</a>`
                     }
 
                     page += `
@@ -1418,14 +1389,14 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                         Note that ExpressJS Views are not current used by uibuilder
                     </p>
                     <table class="table">
-                        <tr><th>Views Folder</th><td>${app.get('views')}</td></tr>
-                        <tr><th>Views Engine</th><td>${app.get('view engine')}</td></tr>
-                        <tr><th>Views Cache</th><td>${app.get('view cache')}</td></tr>
+                        <tr><th>Views Folder</th><td>${web.app.get('views')}</td></tr>
+                        <tr><th>Views Engine</th><td>${web.app.get('view engine')}</td></tr>
+                        <tr><th>Views Cache</th><td>${web.app.get('view cache')}</td></tr>
                     </table>
                     <h4>app.locals</h4>
-                    <pre>${tilib.syntaxHighlight( app.locals )}</pre>
+                    <pre>${tilib.syntaxHighlight( web.app.locals )}</pre>
                     <h4>app.mountpath</h4>
-                    <pre>${tilib.syntaxHighlight( app.mountpath )}</pre>
+                    <pre>${tilib.syntaxHighlight( web.app.mountpath )}</pre>
                 `
 
                 /** Installed Packages */
@@ -1463,7 +1434,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     }) // ---- End of uibindex ---- //
 
     /** Check & update installed front-end library packages, return list as JSON */
-    RED.httpAdmin.get('/uibvendorpackages', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    RED.httpAdmin.get('/uibvendorpackages', function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
         // Update the installed packages list
         uiblib.checkInstalledPackages('', uib, userDir, log)
 
@@ -1478,7 +1449,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
      * @param {string} req.query.cmd Command to run (see notes for this function)
      */
-    RED.httpAdmin.get('/uibnpmmanage', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    RED.httpAdmin.get('/uibnpmmanage', function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
         //#region --- Parameter validation (cmd, package) ---
         const params = req.query
         
@@ -1600,7 +1571,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                     if (success === true) {
                         // Add an ExpressJS URL
                         // @ts-ignore
-                        uiblib.servePackage(params.package, uib, userDir, log, app)
+                        uiblib.servePackage(params.package, uib, userDir, log, web.app)
                     }
                     break
                 }
@@ -1611,7 +1582,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                     if (success === true) {
                         // Remove ExpressJS URL
                         // @ts-ignore
-                        uiblib.unservePackage(params.package, uib, userDir, log, app)
+                        uiblib.unservePackage(params.package, uib, userDir, log, web.app)
                     }
                     break
                 }
@@ -1853,7 +1824,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     /** Login 
      * TODO: Change to an external module
     */
-    const bodyParser = require('body-parser')
+    const jsonBodyParser = require('body-parser').json()
     //const jwt = require('jsonwebtoken')
     const { checkSchema, validationResult } = require('express-validator')
 
@@ -1885,7 +1856,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     //TODO
     // @ts-ignore
-    app.post('/uiblogin', bodyParser.json(),checkSchema(loginSchema), (req, res) => {
+    web.app.post('/uiblogin', jsonBodyParser, checkSchema(loginSchema), (req, res) => {
 
         console.log('[uiblogin] BODY: ', req.body)
         //console.log('[uiblogin] HEADERS: ', req.headers)

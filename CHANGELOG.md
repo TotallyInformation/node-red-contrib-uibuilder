@@ -57,10 +57,22 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
     Note that this currently only works once the class has been instantiated **and** a setup method called. 
     That requires a number of objects to be passed to it. This happens when you have added and deployed a uibuilder
-    node to your flows. In theory, you could also do this in your own code though this isn't tested.
+    node to your flows.
 
-    But it does mean that you could now write another custom node that could make use of the uibuilder communications
-    channel. Of course, it also opens the way for new nodes to be added to uibuilder.
+    But it does mean that, in theory at least, you could now write another custom node that could make use of the uibuilder communications
+    channel. Of course, it also opens the way for new nodes to be added to uibuilder. However, a slight caveat to that would be that
+    loading order would be important and you really must deploy uibuilder _before_ any other node that might want to use the module.
+
+  * **Started moving ExpressJS web server handling to its own Singleton class module**
+
+    Again, this will mean that any module running in Node-RED could potentially tie into the module
+    and be able to access/influence uibuilders web server capability.
+
+    Works similarly to the Socket.IO class above. So it has to be initialised using a number of properties
+    from the core uibuilder node.
+
+    Currently, only the core ExpressJS app and server references are handled by the class. More work
+    is required to move other processing into it.
 
 * Include PR #131 - add Socket.IO CORS support
 
