@@ -16,6 +16,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 * Add [new pre-defined msg](./docs/pre-defined-msgs.md) from Node-RED that will cause the front-end client (browser) to reload.
 * Add auto-reload flag to file editor - if set, any connected clients will automatically reload when a file is saved. (Only from the file editor in Node-RED for now, later I'll extend this to work if you are editing files using external editors).
+* Add new function to uibuilderfe.js - `uibuilder.clearEventListeners()` - Will forcably clear any `onChange` event listeners that have been created. Partial update for [Issue #134](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/134).
 * Added initial documentation for front-end build tooling to technical documentation (general info and Snowpack).
 
 ### Fixed
@@ -33,6 +34,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * Remove simple true/false return from auth processing as this is no longer valid
 * uibuilderfe
   
+  * Added check for `uibuilder.start()` having already been called and prevent it being run more than once. Partial update for [Issue #134](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/134).
+  * Add new function `uibuilder.clearEventListeners()` - see details in [New](#new) above.
   * Added initial code for a simple alert - not yet ready for use.
 
 * Internal code refactoring

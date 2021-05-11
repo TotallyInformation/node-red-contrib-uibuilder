@@ -95,6 +95,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         /** Retained User info
          * @type {_auth|undefined} */
         self._auth = undefined
+        /** Flag to know whether `uibuilder.start()` has been run */
+        self.started = false
 
         /** Debugging function
          * @param {string} type One of log|error|warn|info|dir, etc
@@ -746,6 +748,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }
         } // ---- End of onChange() ---- //
 
+        /** Forcably removes all event listeners from the events array
+         * Use if you need to re-initialise the environment
+         */
+        self.clearEventListeners = function() {
+            self.events = []
+        } // ---- End of clearEventListeners() ---- //
+
         //#region ========== Our own event handling system ========== //
 
         self.events = {}  // placeholder for event listener callbacks by property name
@@ -1142,6 +1151,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              */
             onChange: self.onChange,
 
+            /** Forcably removes all event listeners from the events array
+             * Use if you need to re-initialise the environment
+             */
+            clearEventListeners: self.clearEventListeners,
+
             /** Helper fn, shortcut to return current value of msg
              * Use instead of having to do: uibuilder.get('msg')
              * Example: console.log( uibuilder.msg )
@@ -1195,6 +1209,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              * @param {Object=} vueApp Optional. reference to the VueJS instance
              */
             start: function(namespace,ioPath,vueApp) {
+                if ( self.started === true ) {
+                    self.uiDebug('log', '❌ [uibuilderfe:start] Start function already called. Do not call more than once.')
+                    return
+                }
+
                 self.uiDebug('log', '[uibuilderfe:start] start() called')
 
                 // If 1st param is an object ...
@@ -1235,6 +1254,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 self.uiDebug('log', '[uibuilderfe:start] Final Socket.IO params - namespace', namespace, 'ioPath', ioPath)
 
                 self.ioSetup()
+
+                self.started = true
             },
 
             /** Send a logon request control message
