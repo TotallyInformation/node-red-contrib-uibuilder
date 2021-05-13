@@ -84,14 +84,15 @@ class UibSockets {
     /** Output a control msg to the front-end
      * Sends to all connected clients & outputs a msg to port 2 if required
      * @param {Object} msg The message to output
-     * @param {Object} ioNs Socket.IO instance to use
      * @param {Object} node The node object
      * @param {string=} socketId Optional. If included, only send to specific client id
      * @param {boolean=} output Optional. If included, also output to port #2 of the node @since 2020-01-03
      */
-    sendControl( msg, ioNs, node, socketId, output) {
+    sendControl( msg, node, socketId, output) {
         /** @type {Object} Reference to the core uibuilder config object */
         const uib = this.uib
+
+        const ioNs = this.ioNamespaces[node.url]
 
         if (output === undefined || output === null) output = true
 
@@ -226,7 +227,7 @@ class UibSockets {
                 // time difference (UTC->Local) without needing clever libraries.
                 'serverTimestamp': (new Date()),
                 topic: node.topic || undefined,
-            }, ioNs, node, socket.id, true)
+            }, node, socket.id, true)
             //ioNs.emit( uib.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
             
             // Listen for msgs from clients only on specific input channels:
@@ -306,7 +307,7 @@ class UibSockets {
                     'uibuilderCtrl': 'client disconnect',
                     'reason': reason,
                     topic: node.topic || undefined,
-                }, ioNs, node, socket.id, true)
+                }, node, socket.id, true)
                 //node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'topic': node.topic}])
             }) // --- End of on-connection::on-disconnect() --- //
 
@@ -317,7 +318,7 @@ class UibSockets {
                     'uibuilderCtrl': 'socket error',
                     'error': err.message,
                     topic: node.topic || undefined,
-                }, ioNs, node, socket.id, true)
+                }, node, socket.id, true)
             }) // --- End of on-connection::on-error() --- //
 
             /* More Socket.IO events but we really don't need to monitor them
@@ -357,9 +358,26 @@ class UibSockets {
         }) // --- End of addNS() --- //
 
         return ioNs
-    }
+    } // --- End of addNS() --- //
 
-    // TODO: Need to rename/remove namespaces as well - currently done in uiblib:processclose
+    /** Remove the current clients and namespace for this node.
+     *  Called from uiblib.processClose.
+     */
+    removeNS(node) {
+
+        const ioNs = this.ioNamespaces[node.url]
+
+        // Disconnect all Socket.IO clients from this NS
+        const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
+        if ( connectedNameSpaceSockets.length >0 ) {
+            connectedNameSpaceSockets.forEach(socketId => {
+                ioNs.connected[socketId].disconnect() // Disconnect Each socket
+            })
+        }
+        ioNs.removeAllListeners() // Remove all Listeners for the event emitter
+        delete this.io.nsps[node.url] // Remove from the server namespaces
+
+    } // --- End of removeNS() --- //
 
 } // ==== End of UibSockets Class Definition ==== //
 

@@ -24,6 +24,9 @@ const util = require('util')
 const fs = require('fs-extra')
 const tilib = require('./tilib.js')
 const serveStatic = require('serve-static')
+const serveIndex    = require('serve-index')
+// Only used for type checking
+const Express = require('express') // eslint-disable-line no-unused-vars
 
 class Web {
     /** Called when class is instantiated */
@@ -50,6 +53,16 @@ class Web {
          */
         this.server = undefined
 
+        /** Which folder to use for the fall-back front-end code (in the uibuilder module folders) */
+        /** Set which folder to use for the central, static, front-end resources
+         *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
+         * @type {string}
+         */
+        this.masterStatic = undefined
+
+        /** Set up a dummy ExpressJS Middleware Function */
+        this.dummyMiddleware = function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) { next() }
+
         //#endregion ---- ---- //
 
     } // --- End of constructor() --- //
@@ -70,7 +83,12 @@ class Web {
         if ( uib ) this.log = log
         //if ( uib ) this.server = server
 
+        /** Optional port. If set, uibuilder will use its own ExpressJS server */
+        // @ts-ignore
+        if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port !== RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port
+
         this.webSetup()
+        this.setMasterStaticFolder()
     } // --- End of setup() --- //
 
     /** Set up the appropriate ExpressJS web server references */
@@ -107,7 +125,7 @@ class Web {
                 if (err.code === 'EADDRINUSE') {
                     this.server.close()
                     RED.log.error(
-                        `[uibuilder:CreateServer] ERROR: Port ${uib.customServer.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`
+                        `[uibuilder:web:webSetup:CreateServer] ERROR: Port ${uib.customServer.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`
                     )
                     return
                 }    
@@ -126,6 +144,199 @@ class Web {
         }
 
     } // --- End of webSetup() --- //
+
+    /** Set which folder to use for the central, static, front-end resources
+     *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages */
+    setMasterStaticFolder() {
+        // Reference static vars
+        const uib = this.uib
+        //const RED = this.RED
+        const log = this.log
+        
+        try {
+            /** Will we use "compiled" version of module front-end code? */
+            fs.accessSync( path.join(uib.masterStaticDistFolder, 'index.html'), fs.constants.R_OK )
+            log.trace('[uibuilder:web:setMasterStaticFolder] Using master production build folder')
+            // If the ./../front-end/dist/index.html exists use the dist folder...
+            this.masterStatic = uib.masterStaticDistFolder
+        } catch (e) {
+            // ... otherwise, use dev resources at ./../front-end/src/
+            //TODO: Check if path.join(__dirname, 'src') actually exists & is accessible - else fail completely
+            log.trace('[uibuilder:web:setMasterStaticFolder] Using master src folder')
+            log.trace('                   Reason for not using master dist folder: ', e.message )
+            this.masterStatic = uib.masterStaticSrcFolder
+        }
+    } // --- End of setMasterStaticFolder() --- //
+
+    //#region ====== Per-node instance processing ====== //
+
+    /** Setup the web resources for a specific uibuilder instance
+     * @param {uibNode} node
+     */
+    instanceSetup(node) {
+        // Reference static vars
+        const uib = this.uib
+        //const RED = this.RED
+        //const log = this.log
+
+        /** Make sure that the common static folder is only loaded once */
+        node.commonStaticLoaded = false
+
+        // We want to add services in the right order - first load takes preference
+
+        // (1) httpMiddleware - Optional middleware from a file
+        this.addMiddlewareFile(node)
+        // (2) masterMiddleware - Generic dynamic middleware to add uibuilder specific headers & cookie
+        this.addMasterMiddleware(node)
+        // (3) customStatic - Add static route for instance local custom files
+        this.addInstanceStaticRoute(node)
+        // @ts-ignore (4) Master Static - Add static route for instance local custom files
+        this.app.use( tilib.urlJoin(node.url), serveStatic( this.masterStatic, uib.staticOpts ) )
+
+        /** If enabled, allow for directory listing of the custom instance folder */
+        if ( node.showfolder === true ) {
+            // @ts-ignore
+            this.app.use( tilib.urlJoin(node.url, 'idx'), 
+                serveIndex( node.customFolder, {'icons':true, 'view':'details'} ), 
+                serveStatic( node.customFolder, uib.staticOpts ) 
+            )
+        }
+
+        /** Serve up the uibuilder static common folder on `<url>/<commonFolderName>` and `uibuilder/<commonFolderName>` */
+        let commonStatic = serveStatic( uib.commonFolder, uib.staticOpts )
+        // @ts-ignore
+        this.app.use( tilib.urlJoin(node.url, uib.commonFolderName), commonStatic )
+        if ( node.commonStaticLoaded === false ) {
+            // Only load this once for all instances
+            //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
+            // @ts-ignore
+            this.app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
+            node.commonStaticLoaded = true
+        }
+    }
+
+    /** (1) Optional middleware from a file */
+    addMiddlewareFile(node) {
+        // Reference static vars
+        const uib = this.uib
+        //const RED = this.RED
+        const log = this.log
+
+        /** Provide the ability to have a ExpressJS middleware hook.
+         * This can be used for custom authentication/authorisation or anything else.
+         */
+
+        /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
+        let uibMwPath = path.join(uib.configFolder, 'uibMiddleware.js')
+        try {
+            const uibMiddleware = require(uibMwPath)
+            if ( typeof uibMiddleware === 'function' ) {
+                //! TODO: Add some more checks in here (e.g. does the function have a next()?)
+                // @ts-ignore
+                this.app.use( tilib.urlJoin(node.url), uibMiddleware )
+                log.trace(`[uibuilder:web:addMiddlewareFile:${node.url}] uibuilder Middleware file loaded.`)
+            }    
+        } catch (e) {
+            log.trace(`[uibuilder:web:addMiddlewareFile:${node.url}] uibuilder Middleware file failed to load. Reason: `, e.message)
+        }
+    } // --- End of addMiddlewareFile() --- //
+
+    /** (2) Generic dynamic middleware to add uibuilder specific headers & cookies */
+    addMasterMiddleware(node) {
+        // Reference static vars
+        //const uib = this.uib
+        //const RED = this.RED
+        //const log = this.log
+
+        let masterMiddleware = function masterMiddleware (/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) {
+            //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
+            // Help reduce risk of XSS and other attacks
+            res.setHeader('X-XSS-Protection','1;mode=block')
+            res.setHeader('X-Content-Type-Options','nosniff')
+            //res.setHeader('X-Frame-Options','SAMEORIGIN')
+            //res.setHeader('Content-Security-Policy',"script-src 'self'")
+
+            // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
+            res.setHeader('x-powered-by','uibuilder')
+
+            // Tell the client what Socket.IO namespace to use,
+            // trim the leading slash because the cookie will turn it into a %2F
+            res.setHeader('uibuilder-namespace', node.url)
+            res.cookie('uibuilder-namespace', node.url, {path: node.url, sameSite: true}) // tilib.trimSlashes(node.url), {path: node.url, sameSite: true})
+
+            next()
+        }
+
+        // @ts-ignore
+        this.app.use( tilib.urlJoin(node.url), masterMiddleware )
+    } // --- End of addMasterMiddleware() --- //
+
+    /** (3) Add static ExpressJS route for instance local custom files */
+    addInstanceStaticRoute(node) {
+        // Reference static vars
+        const uib = this.uib
+        //const RED = this.RED
+        const log = this.log
+
+        let customStatic = 'dist'
+
+        try {
+            // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
+            fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
+            // If the ./dist/index.html exists use the dist folder...
+            log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Using local dist folder`)
+            // NOTE: You are expected to have included vendor packages in
+            //       a build process so we are not loading them here
+        } catch (e) {
+            // dist not being used or not accessible, use src
+            log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Dist folder not in use or not accessible. Using local src folder`, e.message )
+            //TODO: Check if folder actually exists & is accessible
+            customStatic = 'src'
+        }
+        
+        // @ts-ignore
+        this.app.use( tilib.urlJoin(node.url), serveStatic( path.join(node.customFolder, customStatic), uib.staticOpts ) )
+
+    } // --- End of addInstanceStaticRoute() --- //
+
+    /** Remove all of the app.use middleware for this instance */
+    removeInstanceMiddleware(node) {
+        
+        // We need to remove the app.use paths too as they will be recreated on redeploy
+        // we check whether the regex string matches the current node.url, if so, we splice it out of the stack array
+        var removePath = []
+        var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
+        var urlReVendor = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
+        // For each entry on ExpressJS's server stack...
+        this.app._router.stack.forEach( function(r, i, _stack) { // eslint-disable-line no-unused-vars
+            // Check whether the URL matches a vendor path...
+            let rUrlVendor = r.regexp.toString().replace(urlReVendor, '')
+            // If it DOES NOT, then...
+            if (rUrlVendor !== '') {
+                // Check whether the URL is a uibuilder one...
+                let rUrl = r.regexp.toString().replace(urlRe, '')
+                // If it IS ...
+                if ( rUrl === '' ) {
+                    // Mark it for removal because it will be re-created by nodeGo() when the nodes restart
+                    removePath.push( i )
+                    // @since 2017-10-15 Nasty bug! Splicing changes the length of the array so the next splice is wrong!
+                    //app._router.stack.splice(i,1)
+                }
+            }
+            // NB: We do not want to remove the vendor URL's because they are only created ONCE when Node-RED initialises
+        })
+        // TODO Remove instance debug admin route `RED.httpAdmin.get('/uib/instance/${node.url}')`
+
+        // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
+        for (var i = removePath.length -1; i >= 0; i--) {
+            this.app._router.stack.splice(removePath[i],1)
+        }
+
+    } // --- End of removeAllMiddleware() --- //
+
+    //#endregion ====== Per-node instance processing ====== //
+
+    //#region ====== Package Management ====== //
 
     /** Compare the in-memory package list against packages actually installed.
      * Also check common packages installed against the master package list in case any new ones have been added.
@@ -163,7 +374,7 @@ class Web {
         }
         // If neither can be found, that's an error
         if ( (pkgList.length === 0) && (masterPkgList.length === 0) ) {
-            log.error(`[uibuilder:uiblib.checkInstalledPackages] Neither packageList nor masterPackageList could be read from: ${uib.configFolder}`)
+            log.error(`[uibuilder:web:checkInstalledPackages] Neither packageList nor masterPackageList could be read from: ${uib.configFolder}`)
             return null
         }
         // Make sure we have socket.io in the list
@@ -254,10 +465,10 @@ class Web {
                 if ( isInCurrent ) { // eslint-disable-line no-lonely-if
                     if ( app !== undefined) {
                         installedPackages[pkgName].loaded = this.unservePackage(pkgName)
-                        if (debug) console.log('[uibuilder.uiblib] checkInstalledPackages - package unserved ', pkgName)
+                        if (debug) console.log('[uibuilder:web:checkInstalledPackages] package unserved ', pkgName)
                     }
                     delete installedPackages[pkgName]
-                    if (debug) console.log('[uibuilder.uiblib] checkInstalledPackages - package deleted from installedPackages ', pkgName)
+                    if (debug) console.log('[uibuilder:web:checkInstalledPackages] package deleted from installedPackages ', pkgName)
                 }
             }
         })
@@ -268,7 +479,7 @@ class Web {
         try {
             fs.writeJsonSync(path.join(uib.configFolder,uib.packageListFilename), Object.keys(installedPackages), {spaces:2})
         } catch(e) {
-            log.error(`[uibuilder:uiblib.checkInstalledPackages] Could not write ${uib.packageListFilename} in ${uib.configFolder}`, e)
+            log.error(`[uibuilder:web:checkInstalledPackages] Could not write ${uib.packageListFilename} in ${uib.configFolder}`, e)
         }
 
         return uib.installedPackages
@@ -294,7 +505,7 @@ class Web {
         if ( Object.prototype.hasOwnProperty.call(installedPackages, packageName) ) {
             pkgDetails = installedPackages[packageName]
         } else {
-            log.error('[uibuilder:uiblib.servePackage] Failed to find package in uib.installedPackages')
+            log.error('[uibuilder:web:servePackage] Failed to find package in uib.installedPackages')
             return false
         }
 
@@ -302,7 +513,7 @@ class Web {
         const installFolder = pkgDetails.folder
 
         if (installFolder === '' ) {
-            log.error(`[uibuilder:uiblib.servePackage] Failed to add user vendor path - no install folder found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
+            log.error(`[uibuilder:web:servePackage] Failed to add user vendor path - no install folder found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
             return false
         }
 
@@ -311,10 +522,10 @@ class Web {
         try {
             vendorPath = pkgDetails.url.replace('../','/') // "../uibuilder/vendor/socket.io" tilib.urlJoin(uib.moduleName, 'vendor', packageName)
         } catch (e) {
-            log.error(`[uibuilder:uiblib.servePackage] ${packageName} `, e)
+            log.error(`[uibuilder:web:servePackage] ${packageName} `, e)
             return false
         }
-        log.trace(`[uibuilder:uiblib.servePackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
+        log.trace(`[uibuilder:web:servePackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
         try {
             app.use( vendorPath, /**function (req, res, next) {
                 // TODO Allow for a test to turn this off
@@ -325,7 +536,7 @@ class Web {
             }, */ serveStatic(installFolder, uib.staticOpts) )
             return true
         } catch (e) {
-            log.error(`[uibuilder:uiblib.servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
+            log.error(`[uibuilder:web:servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
             return false
         }
     } // ---- End of servePackage ---- //
@@ -356,6 +567,8 @@ class Web {
 
         return done
     } // ---- End of unservePackage ---- //
+
+    //#endregion ====== Package Management ====== //
 
 } // ==== End of Web Class Definition ==== //
 

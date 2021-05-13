@@ -137,17 +137,15 @@ module.exports = {
     }, // ---- End of inputHandler function ---- //
 
     /** Do any complex, custom node closure code here
-     * @param {function|null} done Default=null, internal node-red function to indicate processing is complete
      * @param {uibNode} node Reference to the node instance object
      * @param {runtimeRED} RED Reference to the Node-RED API
      * @param {Object} uib Reference to the uibuilder master config object
-     * @param {Object} ioNs - Instance of Socket.IO Namespace
-     * @param {Object} io - Instance of Socket.IO
-     * @param {Object} app - Instance of ExpressJS app
+     * @param {Object} sockets - Instance of Socket.IO handler singleton
+     * @param {Object} web - Instance of ExpressJS handler singleton
      * @param {Object} log - Winston logging instance
-     * 
+     * @param {function|null} done Default=null, internal node-red function to indicate processing is complete
      */
-    processClose: function(done = null, node, RED, uib, ioNs, io, app, log) {
+    instanceClose: function(node, RED, uib, sockets, web, log, done = null) {
         log.trace(`[${node.url}] nodeGo:on-close:processClose`)
 
         /** @type {Object} instances[] Reference to the currently defined instances of uibuilder */
@@ -155,51 +153,15 @@ module.exports = {
 
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
 
-        // Let all the clients know we are closing down (msg, ioNs, node, socketId, output, uib)
-        this.sendControl({ 'uibuilderCtrl': 'shutdown' }, ioNs, node, undefined, false, uib)
+        // Let all the clients know we are closing down
+        sockets.sendControl({ 'uibuilderCtrl': 'shutdown' }, node, undefined, false)
 
-        // Disconnect all Socket.IO clients
-        const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
-        if ( connectedNameSpaceSockets.length >0 ) {
-            connectedNameSpaceSockets.forEach(socketId => {
-                ioNs.connected[socketId].disconnect() // Disconnect Each socket
-            })
-        }
-        ioNs.removeAllListeners() // Remove all Listeners for the event emitter
-        delete io.nsps[node.url] // Remove from the server namespaces
+        // Disconnect all Socket.IO clients for this node instance
+        sockets.removeNS(node)
 
-        // We need to remove the app.use paths too as they will be recreated on redeploy
-        // we check whether the regex string matches the current node.url, if so, we splice it out of the stack array
-        var removePath = []
-        var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
-        var urlReVendor = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
-        // For each entry on ExpressJS's server stack...
-        app._router.stack.forEach( function(r, i, _stack) { // eslint-disable-line no-unused-vars
-            // Check whether the URL matches a vendor path...
-            let rUrlVendor = r.regexp.toString().replace(urlReVendor, '')
-            // If it DOES NOT, then...
-            if (rUrlVendor !== '') {
-                // Check whether the URL is a uibuilder one...
-                let rUrl = r.regexp.toString().replace(urlRe, '')
-                // If it IS ...
-                if ( rUrl === '' ) {
-                    // Mark it for removal because it will be re-created by nodeGo() when the nodes restart
-                    removePath.push( i )
-                    // @since 2017-10-15 Nasty bug! Splicing changes the length of the array so the next splice is wrong!
-                    //app._router.stack.splice(i,1)
-                }
-            }
-            // NB: We do not want to remove the vendor URL's because they are only created ONCE when Node-RED initialises
-        })
-        // TODO Remove instance debug admin route `RED.httpAdmin.get('/uib/instance/${node.url}')`
+        web.removeInstanceMiddleware(node)
 
-
-        // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
-        for (var i = removePath.length -1; i >= 0; i--) {
-            app._router.stack.splice(removePath[i],1)
-        }
-
-        // TODO Remove url folder if requested
+        // Remove url folder if requested
         if ( uib.deleteOnDelete[node.url] === true ) {
             log.trace(`[uibuilder:uiblib:processClose] Deleting instance folder. URL: ${node.url}`)
             
@@ -268,10 +230,11 @@ module.exports = {
      * @param {Object} msg The message to output
      * @param {Object} ioNs Socket.IO instance to use
      * @param {Object} node The node object
+     * @param {Object} uib Reference to the uibuilder configuration object
      * @param {string=} socketId Optional. If included, only send to specific client id
      * @param {boolean=} output Optional. If included, also output to port #2 of the node @since 2020-01-03
      */
-    sendControl: function(msg, ioNs, node, socketId, output, uib) {
+    sendControl: function(msg, ioNs, node, uib, socketId, output) {
         if (output === undefined || output === null) output = true
 
         msg.from = 'server'
@@ -364,7 +327,7 @@ module.exports = {
                 'topic': node.topic || undefined,
                 /** @type _auth */
                 '_auth': _auth,
-            }, ioNs, node, socket.id, false, uib)
+            }, ioNs, node, uib, socket.id, false)
 
             return _auth
         }
@@ -379,7 +342,7 @@ module.exports = {
                 'topic': node.topic || undefined,
                 /** @type _auth */
                 '_auth': _auth,
-            }, ioNs, node, socket.id, false, uib)
+            }, ioNs, node, uib, socket.id, false)
 
             return _auth
         }
@@ -519,7 +482,7 @@ module.exports = {
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
-            }, ioNs, node, socket.id, false, uib)
+            }, ioNs, node, uib, socket.id, false)
 
             return _auth.userValidated
         }
@@ -558,7 +521,7 @@ module.exports = {
                     uibuilderCtrl: 'authorisation failure',
                     topic: msg.topic || node.topic,
                     '_auth': _auth,
-                }, ioNs, node, socket.id, false, uib)
+                }, ioNs, node, uib, socket.id, false)
 
                 return _auth.userValidated
             }
@@ -577,7 +540,7 @@ module.exports = {
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
-            }, ioNs, node, socket.id, true, uib)
+            }, ioNs, node, uib, socket.id, true)
 
             return _auth.userValidated
         }
@@ -671,7 +634,7 @@ module.exports = {
                 'uibuilderCtrl': 'authorised',
                 'topic': msg.topic || node.topic,
                 '_auth': _auth,
-            }, ioNs, node, socket.id, true, uib)
+            }, ioNs, node, uib, socket.id, true)
 
             // Send output to port #2 manually (because we only include a subset of _auth)
             /* node.send([null, {
@@ -697,7 +660,7 @@ module.exports = {
                 uibuilderCtrl: 'authorisation failure',
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
-            }, ioNs, node, socket.id, true, uib)
+            }, ioNs, node, uib, socket.id, true)
         }
 
         return _auth.userValidated
@@ -732,7 +695,7 @@ module.exports = {
             uibuilderCtrl: 'logged off',
             topic: msg.topic || node.topic,
             '_auth': _auth,
-        }, ioNs, node, socket.id, true, uib)
+        }, ioNs, node, uib, socket.id, true)
 
         return _auth
     }, // ---- End of logoff ---- //

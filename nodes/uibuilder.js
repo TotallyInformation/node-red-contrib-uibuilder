@@ -41,7 +41,7 @@ const child_process = require('child_process')
 
 // 3rd-party
 const serveStatic   = require('serve-static')
-const serveIndex    = require('serve-index')
+//const serveIndex    = require('serve-index')
 //const socketio      = require('socket.io')
 const Express = require('express') // eslint-disable-line no-unused-vars
 const fs            = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
@@ -144,9 +144,6 @@ var log = dummyLog // reset to RED.log or anything else you fancy at any point
 // Placeholder - set in export
 var userDir = ''
 
-// Only serve the common static folder once
-var commonStaticLoaded = false
-
 //#endregion ----- uibuilder module-level globals ----- //
 
 /** Export the function that defines the node 
@@ -231,27 +228,12 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     //#endregion ----- root folder ----- //
     
-    //#region ----- ExpressJS Server/app setup ----- //
-
-    /** Optional port. If set, uibuilder will use its own ExpressJS server */
-    if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port !== RED.settings.uiPort) 
-        uib.customServer.port = RED.settings.uibuilder.port
-
-    /** We need an http server to serve the page and vendor packages. 
+    /** We need an ExpressJS web server to serve the page and vendor packages. 
      * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
      * @since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
      * @since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
      */
-    web.setup(RED, uib, log)
-    //let app = web.app
-
-    /** Root URL path for http-in/out and uibuilder nodes 
-     * Always set to empty string if a dedicated ExpressJS app is required
-     * @type {string} httpNodeRoot
-     */
-    //let httpNodeRoot = uib.nodeRoot
-
-    //#endregion ----- End of ExpressJS server/app setup ----- //
+    web.setup(RED, uib, log) // Singleton wrapper for ExpressJS
     
     /** Pass core objects to the Socket.IO handler module */
     sockets.setup(RED, uib, log, web.server) // Singleton wrapper for Socket.IO
@@ -262,30 +244,6 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * Adds ExpressJS static paths for each found FE package & saves the details to the vendorPaths variable.
      */
     web.checkInstalledPackages()
-
-    //#region ---- Set up uibuilder master resources (these are applied in nodeInstance at instance level) ----
-    /** Create a new, additional static http path to enable loading of central static resources for uibuilder
-     * Loads standard images, ico file, etc.
-     * @since v2.0.0 2019-03-03 Moved out of nodeInstance() only need to do once - but is applied in nodeInstance
-     * @type {string}
-     */
-    var masterStatic = ''
-    try {
-        /** Will we use "compiled" version of module front-end code? @since 2020-06-17 Moved */
-        fs.accessSync( path.join(uib.masterStaticDistFolder, 'index.html'), fs.constants.R_OK )
-        log.trace('[uibuilder:Module] Using master production build folder')
-        // If the ./../front-end/dist/index.html exists use the dist folder...
-        masterStatic = uib.masterStaticDistFolder
-    } catch (e) {
-        // ... otherwise, use dev resources at ./../front-end/src/
-        //TODO: Check if path.join(__dirname, 'src') actually exists & is accessible - else fail completely
-        log.trace('[uibuilder:Module] Using master src folder')
-        log.trace('                   Reason for not using master dist folder: ', e.message )
-        masterStatic = uib.masterStaticSrcFolder
-    }
-    // These are NOT applied here since they have to be applied at the instance level so that
-    // the default index.html page can be utilised.
-    //#endregion -------- master resources --------
 
     //#region ---- Output startup info to Node-RED log ---- //
     RED.log.info('+-----------------------------------------------------')
@@ -310,9 +268,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
         /** @since 2019-02-02 - the current instance name (url) */
         var uibInstance = config.url // for logging
-
         log.trace(`[uibuilder:${uibInstance}] ================ instance registered ================`)
-
         /** Copy 'this' object in case we need it in context of callbacks of other functions.
          * @type {uibNode}
          */
@@ -425,107 +381,19 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             log.error(`[uibuilder:${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
         }
 
-        //#region Add static ExpressJS route for instance local custom files
-        var customStatic = function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) { next() } // Dummy ExpressJS middleware, replaced by local static folder if needed
-
-        try {
-            // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
-            fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
-            // If the ./dist/index.html exists use the dist folder...
-            log.trace(`[uibuilder:${uibInstance}] Using local dist folder`)
-            customStatic = serveStatic( path.join(node.customFolder, 'dist'), uib.staticOpts )
-            // NOTE: You are expected to have included vendor packages in
-            //       a build process so we are not loading them here
-        } catch (e) {
-            // dist not being used or not accessible, use src
-            log.trace(`[uibuilder:${uibInstance}] Dist folder not in use or not accessible. Using local src folder`, e.message )
-            //TODO: Check if folder actually exists & is accessible
-            customStatic = serveStatic( path.join(node.customFolder, 'src'), uib.staticOpts )
-        }
-        //#endregion == End of add static route for local custom files == //
-
         //#endregion ====== End of Local folder structure ====== //
-        
-        //#region ====== Set up ExpressJS Middleware ====== //
-        /** Provide the ability to have a ExpressJS middleware hook.
-         * This can be used for custom authentication/authorisation or anything else.
-         */
-        var httpMiddleware = function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) { next() }
-        /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
-        let uibMwPath = path.join(uib.configFolder, 'uibMiddleware.js')
-        try {
-            const uibMiddleware = require(uibMwPath)
-            if ( typeof uibMiddleware === 'function' ) {
-                httpMiddleware = uibMiddleware
-            }    
-        } catch (e) {
-            log.trace(`[uibuilder:${uibInstance}] uibuilder Middleware failed to load. Reason: `, e.message)
-        }
 
-        /** This ExpressJS middleware runs when the uibuilder page loads - set cookies and headers
-         * @see https://expressjs.com/en/guide/using-middleware.html */
-        function masterMiddleware (/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) {
-            //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
-            // Help reduce risk of XSS and other attacks
-            res.setHeader('X-XSS-Protection','1;mode=block')
-            res.setHeader('X-Content-Type-Options','nosniff')
-            //res.setHeader('X-Frame-Options','SAMEORIGIN')
-            //res.setHeader('Content-Security-Policy',"script-src 'self'")
+        // Set up web services for this instance (static folders, middleware, etc)
+        web.instanceSetup(node)
 
-            // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
-            res.setHeader('x-powered-by','uibuilder')
+        /** Socket.IO instance configuration. Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
+        const ioNs = sockets.addNS(node) // NB: Namespace is set from url
 
-            // Tell the client what Socket.IO namespace to use,
-            // trim the leading slash because the cookie will turn it into a %2F
-            res.setHeader('uibuilder-namespace', node.url)
-            res.cookie('uibuilder-namespace', node.url, {path: node.url, sameSite: true}) // tilib.trimSlashes(node.url), {path: node.url, sameSite: true})
-
-            next()
-        }
-        //#endregion ====== Express Middleware ====== //
-
-
-        /** Apply all of the middleware functions to the current instance url 
-         * Must be applied in the right order with the most important first */
-        let mStatic = serveStatic( masterStatic, uib.staticOpts )
-        web.app.use( 
-            // @ts-ignore
-            tilib.urlJoin(node.url), 
-            httpMiddleware, masterMiddleware, customStatic, 
-            mStatic
-        )
-        /** If enabled, allow for directory listing of the custom instance folder */
-        if ( node.showfolder === true ) {
-            // @ts-ignore
-            web.app.use( tilib.urlJoin(node.url, 'idx'), 
-                serveIndex( node.customFolder, {'icons':true, 'view':'details'} ), 
-                serveStatic( node.customFolder, uib.staticOpts ) 
-            )
-        }
-        /** Serve up the uibuilder static common folder on `<url>/<commonFolderName>` and `uibuilder/<commonFolderName>` */
-        let commonStatic = serveStatic( uib.commonFolder, uib.staticOpts )
-        // @ts-ignore
-        web.app.use( tilib.urlJoin(node.url, uib.commonFolderName), commonStatic )
-        if ( commonStaticLoaded === false ) {
-            // Only load this once for all instances
-            //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
-            // @ts-ignore
-            web.app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
-            commonStaticLoaded = true
-        }
-
-        const fullPath = tilib.urlJoin( uib.nodeRoot, node.url )
-
-        log.debug(`uibuilder : ${uibInstance} : URL . . . . .  : ${fullPath}`)
+        log.debug(`uibuilder : ${uibInstance} : URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, node.url )}`)
         log.debug(`uibuilder : ${uibInstance} : Source files . : ${node.customFolder}`)
 
         // We only do the following if io is not already assigned (e.g. after a redeploy)
         uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
-
-        //#region ====== Socket.IO instance configuration ====== //
-        /** Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
-        const ioNs = sockets.addNS(node) // NB: Namespace is set from url
-        //#endregion ====== socket.io instance config ====== //
 
         /** Handler function for node flow input events (when a node instance receives a msg from the flow)
          * @see https://nodered.org/blog/2019/09/20/node-done 
@@ -572,7 +440,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
             // Do any complex close processing here if needed - MUST BE LAST
             //processClose(null, node, RED, ioNs, app) // swap with below if needing async
-            uiblib.processClose(done, node, RED, uib, ioNs, sockets.io, web.app, log)
+            //uiblib.processClose(node, RED, uib, ioNs, sockets.io, web.app, log, done)
+            uiblib.instanceClose(node, RED, uib, sockets, web, log, done)
 
             done()
         })

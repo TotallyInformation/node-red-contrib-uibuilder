@@ -46,6 +46,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   * Begin to add Node-RED type definitions
   * Add ExpressJS type definitions
   * Other linting improvements
+  * The refactoring has removed several hundred lines of code from the main js file and
+    simplified quite a few function calls.
   
   * **Moved Socket.IO processing to its own Singleton class module.**
     

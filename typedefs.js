@@ -328,6 +328,8 @@
  * @property {Object=} uibNode.credentials Optional secured credentials
  * @property {Object=} uibNode.z Internal
  * @property {Object=} uibNode.wires Internal. The wires attached to this node instance (uid's)
+ * 
+ * @property {boolean} uibNode.commonStaticLoaded Whether the common static folder has been added
  */
 
 /**
