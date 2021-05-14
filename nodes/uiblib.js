@@ -874,7 +874,7 @@ module.exports = {
             try {
                 if ( info !== null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
             } catch (e) {
-                RED.log.warn(`[uibuilder:uiblib:showInstanceDetails] ${node.id}, ${url}: Item '${item}' failed to stringify.`)
+                RED.log.warn(`[uibuilder:uiblib:showInstanceDetails] ${node.id}, ${url}: Item '${item}' failed to stringify. ${e.message}`)
             }
             page += `
                 <tr>

@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. VueJS and bootstrap-vue included but change as desired.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -9,6 +9,8 @@
     "pull": "git pull origin",
     "presync": "npm run pull",
     "sync": "npm run push",
+    "build": "esbuild ./nodes/uibuilder.js --platform=node --outfile=./nodes/uibuilder.min.js",
+    "buildfe": "esbuild ./front-end/src/uibuilderfe.js --bundle --minify --sourcemap --outfile=./front-end/src/uibuilderfe.dev.js ",
     "packfe": "minify ./front-end/src/uibuilderfe.js --out-file ./front-end/src/uibuilderfe.min.js",
     "prepublishOnly": "npm run packfe",
     "listbin": "ls ./node_modules/bin",
