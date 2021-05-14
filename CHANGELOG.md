@@ -8,9 +8,9 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.0...master)
 
-<!-- Nothing right now.
+Nothing right now.
 
-## [3.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.1...v3.3.0) -->
+## [3.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.1...v3.3.0)
 
 ### New
 
