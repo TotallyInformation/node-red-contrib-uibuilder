@@ -10,6 +10,12 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing right now.
 
+## [3.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.3.0...v3.3.1)
+
+### Fixed
+
+Added try/catch around Untrapped `JSON.stringify` in uiblib.js `showInstanceDetails()`. Prevent crash.
+
 ## [3.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.1...v3.3.0)
 
 ### New
