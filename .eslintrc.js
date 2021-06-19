@@ -14,16 +14,19 @@ module.exports = {
     env: {
         browser: true,
         commonjs: true,
-        es2017: true,
+        //es2017: true,
+        es2018: true,
         jquery: true,
         node: true,
         "shared-node-browser": true
     },
-    extends: "eslint:recommended",
     parserOptions: {
         ecmaVersion: 2018,
         sourceType: "script"
     },
+    root: true,
+    plugins: ['jsdoc'],
+    extends: ['eslint:recommended','plugin:jsdoc/recommended'],
     rules: {
         "accessor-pairs": "error",
         "array-bracket-newline": "error",
@@ -328,6 +331,4 @@ module.exports = {
             "never"
         ]
     },
-    root: true,
-    plugins: []
 }
