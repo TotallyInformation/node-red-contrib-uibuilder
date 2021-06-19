@@ -6,9 +6,20 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.2.0...master)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.3.1...main)
 
-Nothing right now.
+Bumped version to v4.0.0 because from this version, the minimum version of node.js supported is v12 and the minimum version of Node-RED supported is v1.3 (which also only supports node.js v12+)
+
+## Updated
+
+* Update fs-extra to [v10](https://github.com/jprichardson/node-fs-extra/compare/9.1.0...10.0.0). No longer supports node.js v10
+* Make some class methods private in web.js and socket.js. Requires node.js v12 as a minimum as it uses an ECMA2018 feature.
+* web.setup and socket.setup can only be called once.
+
+## New
+
+* Added web.isConfigured to allow a check to see whether web.setup has been called.
+* Added socket.isConfigured to allow a check to see whether socket.setup has been called.
 
 ## [3.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.3.0...v3.3.1)
 
