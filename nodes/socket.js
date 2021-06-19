@@ -25,9 +25,17 @@ const uiblib        = require('./uiblib')  // Utility library for uibuilder
 const path          = require('path')
 
 class UibSockets {
+    /** Flag to indicate whether setup() has been run
+     * @type {boolean}
+     * @protected 
+     */
+     #isConfigured
 
     /** Called when class is instantiated */
     constructor() {
+        // setup() has not yet been run
+        this.#isConfigured = false
+
         //#region ---- References to core Node-RED & uibuilder objects ---- //
         /** @type {runtimeRED} */
         this.RED = undefined
@@ -74,12 +82,75 @@ class UibSockets {
      * @param {Object} server reference to ExpressJS server being used by uibuilder
      */
     setup( RED, uib, log, server ) {
+        // Prevent setup from being called more than once
+        if ( this.#isConfigured === true ) {
+            log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
+            return
+        }
+
         if ( RED ) this.RED = RED
         if ( uib ) this.uib = uib
         if ( uib ) this.log = log
         if ( uib ) this.server = server
-        this.socketIoSetup()
+        this.#socketIoSetup()
+
+        this.#isConfigured = true
+
     } // --- End of setup() --- //
+
+    /**  Holder for Socket.IO - we want this to survive redeployments of each node instance
+     *   so that existing clients can be reconnected.
+     * Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
+     * modules that might also use it (path). This is only needed ONCE for ALL uib.instances of this node.
+     * Must only be run once and so is made an ECMA2018 private class method
+     * @private
+     */
+    #socketIoSetup() {
+        // Reference static vars
+        const uib = this.uib
+        //const RED = this.RED
+        const log = this.log
+        const server = this.server
+        const uib_socketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
+
+        log.trace('[uibuilder:Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
+        let ioOptions = {
+            'path': uib_socketPath,
+            // for CORS need to handle preflight request explicitly 'cause there's an
+            // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v2/handling-cors/
+            handlePreflightRequest: (req, res) => {
+                res.writeHead(204, {
+                    'Access-Control-Allow-Origin': req.headers['origin'], // eslint-disable-line dot-notation
+                    'Access-Control-Allow-Methods': 'GET,POST',
+                    'Access-Control-Allow-Headers': 'X-ClientId',
+                    'Access-Control-Allow-Credentials': true,
+                })
+                res.end()
+            },
+        }
+
+        const io = this.io = socketio.listen(server, ioOptions) // listen === attach
+
+        io.set('transports', ['polling', 'websocket'])
+
+        /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev3 */
+        let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
+        try {
+            const sioMiddleware = require(sioMwPath)
+            if ( typeof sioMiddleware === 'function' ) {
+                // @ts-ignore ts(2339)
+                io.use(require(sioMwPath))
+            }    
+        } catch (e) {
+            log.trace('[uibuilder:Module] Socket.IO Middleware failed to load. Reason: ', e.message)
+        }
+
+    } // --- End of socketIoSetup() --- //
+
+    /** Allow the isConfigured flag to be read (not written) externally */
+    get isConfigured() {
+        return this.#isConfigured
+    }
 
     /** Output a control msg to the front-end
      * Sends to all connected clients & outputs a msg to port 2 if required
@@ -134,55 +205,6 @@ class UibSockets {
         }
     }
     
-    socketIoSetup() {
-        //#region ----- Set up Socket.IO server & middleware ----- //
-        /** Holder for Socket.IO - we want this to survive redeployments of each node instance
-         *  so that existing clients can be reconnected.
-         * Start Socket.IO - make sure the right version of SIO is used so keeping this separate from other
-         * modules that might also use it (path). This is only needed ONCE for ALL uib.instances of this node.
-         **/
-
-        // Reference static vars
-        const uib = this.uib
-        //const RED = this.RED
-        const log = this.log
-        const server = this.server
-        const uib_socketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
-
-        log.trace('[uibuilder:Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
-        let ioOptions = {
-            'path': uib_socketPath,
-            // for CORS need to handle preflight request explicitly 'cause there's an
-            // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v2/handling-cors/
-            handlePreflightRequest: (req, res) => {
-                res.writeHead(204, {
-                    'Access-Control-Allow-Origin': req.headers['origin'], // eslint-disable-line dot-notation
-                    'Access-Control-Allow-Methods': 'GET,POST',
-                    'Access-Control-Allow-Headers': 'X-ClientId',
-                    'Access-Control-Allow-Credentials': true,
-                })
-                res.end()
-            },
-        }
-
-        const io = this.io = socketio.listen(server, ioOptions) // listen === attach
-
-        // @ts-expect-error ts(2339)
-        io.set('transports', ['polling', 'websocket'])
-
-        /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev3 */
-        let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
-        try {
-            const sioMiddleware = require(sioMwPath)
-            if ( typeof sioMiddleware === 'function' ) {
-                io.use(require(sioMwPath))
-            }    
-        } catch (e) {
-            log.trace('[uibuilder:Module] Socket.IO Middleware failed to load. Reason: ', e.message)
-        }
-
-    } // --- End of socketIoSetup() --- //
-
     /** Add a new Socket.IO NAMESPACE
      * Each namespace correstponds to a uibuilder node instance and must have a unique namespace name that matches the unique URL parameter for the node.
      * The namespace is stored in the this.ioNamespaces object against a property name matching the URL so that it can be referenced later.

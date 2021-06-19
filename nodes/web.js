@@ -28,7 +28,13 @@ const serveIndex    = require('serve-index')
 // Only used for type checking
 const Express = require('express') // eslint-disable-line no-unused-vars
 
-class Web {
+class UibWeb {
+    /** Flag to indicate whether setup() has been run
+     * @type {boolean}
+     * @protected 
+     */
+    #isConfigured
+
     /** Called when class is instantiated */
     constructor() {
         //#region ---- References to core Node-RED & uibuilder objects ---- //
@@ -65,6 +71,9 @@ class Web {
 
         //#endregion ---- ---- //
 
+        // setup() has not yet been run
+        this.#isConfigured = false
+
     } // --- End of constructor() --- //
 
     /** Assign uibuilder and Node-RED core vars to Class static vars.
@@ -78,6 +87,12 @@ class Web {
      */
     //setup( RED, uib, log, server ) {
     setup( RED, uib, log ) {
+        // Prevent setup from being called more than once
+        if ( this.#isConfigured === true ) {
+            log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
+            return
+        }
+
         if ( RED ) this.RED = RED
         if ( uib ) this.uib = uib
         if ( uib ) this.log = log
@@ -87,12 +102,16 @@ class Web {
         // @ts-ignore
         if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port !== RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port
 
-        this.webSetup()
-        this.setMasterStaticFolder()
+        this.#webSetup()
+        this.#setMasterStaticFolder()
+
+        this.#isConfigured = true
     } // --- End of setup() --- //
 
-    /** Set up the appropriate ExpressJS web server references */
-    webSetup() {
+    /** Set up the appropriate ExpressJS web server references
+     * @protected
+     */
+    #webSetup() {
         // Reference static vars
         const uib = this.uib
         const RED = this.RED
@@ -146,8 +165,9 @@ class Web {
     } // --- End of webSetup() --- //
 
     /** Set which folder to use for the central, static, front-end resources
-     *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages */
-    setMasterStaticFolder() {
+     *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
+     * @protected */
+    #setMasterStaticFolder() {
         // Reference static vars
         const uib = this.uib
         //const RED = this.RED
@@ -167,6 +187,11 @@ class Web {
             this.masterStatic = uib.masterStaticSrcFolder
         }
     } // --- End of setMasterStaticFolder() --- //
+
+    /** Allow the isConfigured flag to be read (not written) externally */
+    get isConfigured() {
+        return this.#isConfigured
+    }
 
     //#region ====== Per-node instance processing ====== //
 
@@ -572,9 +597,9 @@ class Web {
 
 } // ==== End of Web Class Definition ==== //
 
-/** Singleton model. Only 1 instance of UibSockets should ever exist.
- * Use as: `const sockets = require('./socket.js')`
+/** Singleton model. Only 1 instance of UibWeb should ever exist.
+ * Use as: `const web = require('./web.js')`
  */
-module.exports = new Web()
+module.exports = new UibWeb()
 
 // EOF
