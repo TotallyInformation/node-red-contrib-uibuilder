@@ -29,7 +29,7 @@ class UibSockets {
      * @type {boolean}
      * @protected 
      */
-     #isConfigured
+    #isConfigured
 
     /** Called when class is instantiated */
     constructor() {
@@ -116,33 +116,36 @@ class UibSockets {
         log.trace('[uibuilder:Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
         let ioOptions = {
             'path': uib_socketPath,
+            // Socket.Io 3+ CORS is disabled by default, also options have changed.
             // for CORS need to handle preflight request explicitly 'cause there's an
             // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v2/handling-cors/
-            handlePreflightRequest: (req, res) => {
-                res.writeHead(204, {
-                    'Access-Control-Allow-Origin': req.headers['origin'], // eslint-disable-line dot-notation
-                    'Access-Control-Allow-Methods': 'GET,POST',
-                    'Access-Control-Allow-Headers': 'X-ClientId',
-                    'Access-Control-Allow-Credentials': true,
-                })
-                res.end()
-            },
+            // handlePreflightRequest: (req, res) => {
+            //     res.writeHead(204, {
+            //         'Access-Control-Allow-Origin': req.headers['origin'], // eslint-disable-line dot-notation
+            //         'Access-Control-Allow-Methods': 'GET,POST',
+            //         'Access-Control-Allow-Headers': 'X-ClientId',
+            //         'Access-Control-Allow-Credentials': true,
+            //     })
+            //     res.end()
+            // },
         }
 
-        const io = this.io = socketio.listen(server, ioOptions) // listen === attach
+        // @ts-ignore ts(2349)
+        const io = this.io = socketio(server, ioOptions) // listen === attach
 
-        io.set('transports', ['polling', 'websocket'])
+        // Socket.IO v3+ no longer needed (default) and io.set no longer allowed
+        //io.set('transports', ['polling', 'websocket'])
 
         /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev3 */
         let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
         try {
             const sioMiddleware = require(sioMwPath)
             if ( typeof sioMiddleware === 'function' ) {
-                // @ts-ignore ts(2339)
+                // TODO as of socket.io v3, this won't trigger, move to namespace
                 io.use(require(sioMwPath))
             }    
         } catch (e) {
-            log.trace('[uibuilder:Module] Socket.IO Middleware failed to load. Reason: ', e.message)
+            log.trace('[uibuilder:socket:socketIoSetup] Socket.IO Middleware failed to load. Reason: ', e.message)
         }
 
     } // --- End of socketIoSetup() --- //
@@ -389,13 +392,11 @@ class UibSockets {
 
         const ioNs = this.ioNamespaces[node.url]
 
-        // Disconnect all Socket.IO clients from this NS
-        const connectedNameSpaceSockets = Object.keys(ioNs.connected) // Get Object with Connected SocketIds as properties
-        if ( connectedNameSpaceSockets.length >0 ) {
-            connectedNameSpaceSockets.forEach(socketId => {
-                ioNs.connected[socketId].disconnect() // Disconnect Each socket
-            })
+        // loop through all connected sockets for this namespace (Socket.io v3+) and disconnect them
+        for (const [socketId, socket] of ioNs.sockets) {
+            socket.disconnect()
         }
+
         ioNs.removeAllListeners() // Remove all Listeners for the event emitter
         delete this.io.nsps[node.url] // Remove from the server namespaces
 
@@ -409,3 +410,4 @@ class UibSockets {
 module.exports = new UibSockets()
 
 // EOF
+ 
