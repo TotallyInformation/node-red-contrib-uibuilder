@@ -392,10 +392,8 @@ class UibSockets {
 
         const ioNs = this.ioNamespaces[node.url]
 
-        // loop through all connected sockets for this namespace (Socket.io v3+) and disconnect them
-        for (const [socketId, socket] of ioNs.sockets) {
-            socket.disconnect()
-        }
+        // Disconnect all connected sockets for this Namespace (Socket.io v4+)
+        ioNs.disconnectSockets()
 
         ioNs.removeAllListeners() // Remove all Listeners for the event emitter
         delete this.io.nsps[node.url] // Remove from the server namespaces
