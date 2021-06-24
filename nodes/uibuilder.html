@@ -704,8 +704,9 @@
     /** Populate the template selection dropdown
      * Uses a file that is `require`d in uibuilder.js
     */
-    function populateTemplateDropdown() {
-        if ( $('#node-input-copyIndex').prop('checked') !== true ) return
+    function populateTemplateDropdown(that) {
+
+        let templateFolder = that.templateFolder
 
         // Load each option - first entry will be the default
         Object.values(RED.settings.uibuilderTemplates).forEach( templ => {
@@ -716,8 +717,18 @@
             }))
         })
 
+        // Just in case name doesn't exist in template list, default to blank
+        if ( ! RED.settings.uibuilderTemplates[templateFolder] ) {
+            templateFolder = 'blank'
+        }
+
+        $(`#node-input-templSel option[value="${templateFolder}"]`).prop('selected', true)
+        $('#node-input-templSel').val(templateFolder)
+
         // 1st entry is default - populate the description help tip
-        $('#node-templSel-info').text(Object.values(RED.settings.uibuilderTemplates)[0].description) 
+        $('#node-templSel-info').text(RED.settings.uibuilderTemplates[templateFolder].description)
+
+        return templateFolder
     } // --- end of function populateTemplateDropdown --- //
 
     /** Check whether the currently selected template's npm dependencies are installed
@@ -725,6 +736,12 @@
      */
     function checkDependencies() {
         const folder = $('#node-input-templSel').val()
+
+        if ( ! RED.settings.uibuilderTemplates[folder] ) {
+            console.error(`[uibuilder:checkDependencies] Template name not found: ${folder}`)
+            return
+        }
+
         const deps = RED.settings.uibuilderTemplates[folder].dependencies || []
         const missing = []
 
@@ -764,7 +781,7 @@
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
             copyIndex: { value: true },        // Should the default template files be copied to the instance src folder?
-            templateFolder: { value: undefined }, // Folder for selected template
+            templateFolder: { value: 'vue' }, // Folder for selected template
             showfolder: { value: false },      // Should a web index view of all source files be made available?
             useSecurity: { value: false },
             sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
@@ -798,10 +815,14 @@
         oneditprepare: function () {
             var that = this
 
+            // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
+            if ( that.templateFolder === undefined || that.templateFolder === '' ) that.templateFolder = 'vue'
+
             //#region Start with the edit section hidden & main section visible
             $('#main-props').show()
             $('#edit-props').hide()
             $('#npm-props').hide()
+            $('#templ-props').hide()
             $('#adv-props').hide()
             $('#sec-props').hide()
             $('#info-props').hide()
@@ -847,6 +868,17 @@
                 $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl).text('Open ' + nodeRoot + thisurl)
                 $('#node-input-showfolder-url').empty().append('<a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank">' + nodeRoot + $(this).val() + '/idx</a>')
                 $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
+            })
+
+            // Show/Hide the template settings
+            $('#show-templ-props').css( 'cursor', 'pointer' )
+            $('#show-templ-props').click(function(_e) {
+                $('#adv-templ').toggle()
+                if ( $('#adv-templ').is(':visible') ) {
+                    $('#show-adv-templ').html('<i class="fa fa-caret-down"></i> Advanced Settings')
+                } else {
+                    $('#show-adv-templ').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                }
             })
 
             // Show/Hide the advanced settings
@@ -922,16 +954,15 @@
             $('#nrMode').text(RED.settings.uibuilderNodeEnv)
 
             // Populate the template selection drop-down and select default (in advanced)
-            populateTemplateDropdown()
-            if ( that.templateFolder ) $('#node-input-templSel').val(that.templateFolder)
-            else $('#node-input-templSel').prop('selectedIndex',0)
+            populateTemplateDropdown(that)
             checkDependencies()
-            // Change change of template
+            // Handle change of template
             $('#node-input-templSel').change(function(_e) {
                 // save the selected template folder name
                 that.templateFolder = $('#node-input-templSel').val()
                 // update the help tip
-                $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
+                if ( RED.settings.uibuilderTemplates[that.templateFolder] )
+                    $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
                 // Check if the dependencies are installed, warn if not
                 checkDependencies()
             })
@@ -1389,28 +1420,23 @@
 </script>
 
 <script type="text/html" data-template-name="uibuilder">
-    <!-- #region ---- Hideable main properties section ---- -->
-    <div id="main-props">
-        <!-- Node Name -->
-        <div class="form-row">
+    <div id="main-props" desc="Hideable main properties section">
+        <div desc="Node Name" class="form-row" title="Node Name (descriptive only)">
             <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
             <input type="text" id="node-input-name">
         </div>
 
-        <!-- Topic -->
-        <div class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+        <div desc="Topic"     class="form-row" title="Adds a msg.topic to input msgs if not already provided">
             <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
             <input type="text" id="node-input-topic">
         </div>
 
-        <!-- Home "page" id - defines the URL used -->
-        <div class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
+        <div desc="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
             <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
             <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
         </div>
 
-        <!-- Buttons to show "edit files" & "mng front-end libs", hide this section -->
-        <div class="form-row">
+        <div desc="Buttons to show 'edit files' & 'mng front-end libs', hide this section" class="form-row">
             <button class="btn" id="show-edit-props" title="Edit the front-end code">
                 Edit Files
             </button>
@@ -1419,19 +1445,11 @@
             </button>
         </div>
 
-        <!-- Show advanced edit properties -->
-        <div class="form-row">
-            <b id="show-adv-props" title="Show&sol;Hide the advanced configuration settings">
-                <i class="fa fa-caret-right"></i> Advanced Settings
+        <div desc="Show template selection, collapsible" class="form-row">
+            <b id="show-templ-props" title="Show&sol;Hide the template selection settings">
+                <i class="fa fa-caret-right"></i> Template Settings
             </b>
-            <!-- #region ---- Hideable Advanced Settings Section ---- -->
-            <div id="adv-props" style="display:hidden;border:1px solid silver;padding:.5em;">
-                <!-- How long do we want resources to be cached for? *** NOT READY *** 
-                <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
-                    <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
-                    <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
-                </div> -->
-                
+            <div id="adv-templ" desc="Hideable Template Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
                 <!-- Copy index.(html|css|js) to local assets if they dont exist? -->
                 <div class="form-row" title="Select if and what template code you would like to use.">
                     <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
@@ -1439,6 +1457,7 @@
 
                     <label for="node-input-templSel" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
                     <select id="node-input-templSel" style="width:73%;"></select>
+
                     <div id="node-templSel-info" class="form-tips node-help"></div>
 
                     <div class="form-tips node-help">
@@ -1447,7 +1466,20 @@
                         You must also delete your index files so that they are recreated from the template.
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <div desc="Show advanced edit properties, collapsible" class="form-row">
+            <b id="show-adv-props" title="Show&sol;Hide the advanced configuration settings">
+                <i class="fa fa-caret-right"></i> Advanced Settings
+            </b>
+            <div id="adv-props" desc="Hideable Advanced Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
+                <!-- How long do we want resources to be cached for? *** NOT READY *** 
+                <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
+                    <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
+                    <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
+                </div> -->
+                
                 <!-- Provide a searchable file index view? -->
                 <div class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
                     <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
@@ -1475,11 +1507,9 @@
                     </label>
                 </div>
             </div>
-            <!-- #endregion -->
         </div>
 
-        <!-- Show security properties -->
-        <div class="form-row">
+        <div desc="Show security properties, collapsible" class="form-row">
             <b id="show-security-props" title="Show&sol;Hide security settings">
                 <i class="fa fa-caret-right"></i> Security Settings
             </b>
@@ -1525,9 +1555,7 @@
                 </div>
             </div>
         </div>
-
     </div>
-    <!-- #endregion -->
 
     <!-- #region ---- Hideable File Editor Section ---- -->
     <div id="edit-props">
