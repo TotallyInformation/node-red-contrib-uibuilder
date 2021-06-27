@@ -16,7 +16,7 @@
 
 **Please Note** that:
 
-* v3.3 will be the last version compatible with Node.js v10 due to upstream dependencies.
+* v3.3.1 was the last version compatible with Node.js v10 due to upstream dependencies.
 * v3.1.3+ no longer installs vue and bootstrap-vue, if you want to use those, install them separately.
 * v3+ no longer supports Internet Explorer, it requires Node.js v10+ and Node-RED v1+
 * v3+ includes breaking changes from v2, please see the [CHANGELOG](CHANGELOG.md) for details.
@@ -30,18 +30,17 @@ A Node-RED web user interface builder. uibuilder aims to provide an easy to use 
 
 * Designed as an alternative to the Node-RED official Dashboard. Without the overheads and restrictions.
 * Control everything from the Node-RED admin ui. Edit your front-end resource files, manage front-end packages. No need to access the servers command line.
-* Installs a simple front-end template that uses VueJS and bootstrap-vue by default giving you a very easy start with minimal boiler-plate.
+* Manage startup templates. Internal templates for VueJS and bootstrap-vue available. Load templates from other repositories via _degit_. Makes it easy to share templates that provide a whole app or just deal with boilerplate.
 * Have as many custom user interfaces as you want. Just 1 node is needed for each entry point. Use link nodes to send data from other parts of your flows.
 * Has a control interface separate to the message interface. Know when a browser connects or disconnects, send cached data.
-* Much lighter in weight and more mobile friendly than the Node-RED official Dashboard (assuming you don't use Angular as your framework).
-* Finds these front-end framework packages automatically if installed to your `userDir` folder. Makes them available via the built-in Node-RED web server: vue, bootstrap, bootstrap-vue, jquery, moonjs, reactjs, riot, angular, picnic, umbrellajs (note this list may expand).
+* Can be a lot lighter in weight and more mobile friendly than the Node-RED official Dashboard.
+* Finds these front-end framework packages automatically if installed to your `userDir` folder. Makes them available via the built-in Node-RED web server: vue, bootstrap, bootstrap-vue, Svelte, jquery, moonjs, reactjs, riot, angular, picnic, umbrellajs (note this list may expand).
 * Use **any** front-end framework you like. Tested with at least [JQuery](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-JQuery), [VueJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Simple-Example-using-VueJS), [MoonJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example,-MoonJS-with-Mini.CSS), [REACT](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example:-ReactJS), [UmbrellaJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Example-Umbrella-JS-and-Picnic-CSS) and [Riot](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Basic-uibuilder-RIOT-example-displaying-values,-switch-and-select-box). Simply install via the built-in library manager.
 * Use without any front-end framework if you like. Keep it light and simple. Try this out with the "Blank" template.
 * The included front-end library (uibuilderfe) provides connectivity to Node-RED and msg event handling.
 * Write your own HTML, CSS and JavaScript to define the perfect front-end user interface for your needs.
-* Edit your custom front-end code from within the Node-RED Editor, little to no need for access to the server's filing system.
+* Edit your custom front-end code from within the Node-RED Editor, little to no need for access to the server's filing system. Auto-reload your clients on changes to the code. Great for rapid development.
 * Needs almost no boilerplate in your front-end code in order to work.
-* Simple included example works out-of-the-box, no need to install anything other than the node.
 * VueJS, MoonJS extended and caching example flows included.
 * Optional index web page listing of available files.
 * Two detailed admin info web pages are included to help authors understand where everything is and what is available.
@@ -62,7 +61,9 @@ A Node-RED web user interface builder. uibuilder aims to provide an easy to use 
 
 </details>
 
-uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is designed to make it very easy to create a UI but trades that off with some limitations, this is designed to let you do anything you can think of with any framework (or none) but at the trade off of having to write your own front-end code. This node should also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
+uibuilder is rather the opposite of Node-RED's Dashboard. Whereas Dashboard is designed to make it very easy to create a UI but trades that off with some limitations, uibuilder is designed to let you do anything you can think of with any framework (or none) but at the trade off of having to write your own front-end code. 
+
+uibuilder should generally also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
 
 
 
@@ -77,7 +78,7 @@ uibuilder is rather the opposite of Node-RED's Dashboard. Whereas that is design
     * [2.2. Simple flow](#22-simple-flow)
     * [2.3. Edit the source files](#23-edit-the-source-files)
     * [2.4. Install additional front-end libraries](#24-install-additional-front-end-libraries)
-    * [2.5. Additional Documentation in the WIKI](#25-additional-documentation-in-the-wiki)
+    * [2.5. Additional Documentation](#25-additional-documentation)
   * [3. Features](#3-features)
   * [4. Known Issues](#4-known-issues)
   * [5. Discussions and suggestions](#5-discussions-and-suggestions)
@@ -97,14 +98,14 @@ There is a lot more information available in the [WIKI](https://github.com/Total
 
 To install the current live version, please use Node-RED's Palette Manager.
 
-**NOTE**: As of v3.1.3, npm cannot safely install the VueJS and bootstrap-vue default dependencies. If you want to use the provided default templates, you must install these yourself. Either use uibuilder's library manager or manually install from the command line:
+**NOTE**: As of v3.1.3, npm cannot safely install the VueJS and bootstrap-vue default dependencies. If you want to use the provided VueJS templates, you must install these yourself. Either use uibuilder's library manager or manually install from the command line:
 
 ```bash
 #cd <userDir>
 npm install vue@"2.*" bootstrap-vue@"2.*"
 ```
 
-To install a specific development or test branch from GitHub, use `npm install TotallyInformation/node-red-contrib-uibuilder#<BRANCH-NAME>` from the command line on the server, having first changed to the `userDir` folder (normally `~/.node-red`). If you just want the `main` branch which contains the latest development build, you can do `npm install TotallyInformation/node-red-contrib-uibuilder`
+To install a specific uibuilder development or test branch from GitHub, use `npm install TotallyInformation/node-red-contrib-uibuilder#<BRANCH-NAME>` from the command line on the server, having first changed to the `userDir` folder (normally `~/.node-red`). If you just want the `main` branch which contains the latest development build, you can do `npm install TotallyInformation/node-red-contrib-uibuilder`
 
 To install a specific release from npm, use `npm install node-red-contrib-uibuilder@<VERSION>`. In addition to release versions (e.g. 1.2.2), you can also use `latest` and `v1-last`. Sometimes, `next` may also be available. Check out the [Versions tab](https://www.npmjs.com/package/node-red-contrib-uibuilder?activeTab=versions) on the npm site for available versions.
 
@@ -123,7 +124,7 @@ Once installed,
 3) double click on the uibuilder node, 
 4) click on the web page url.
 
-That will show you a simple page that makes use of [VueJS](https://github.com/vuejs/vue#readme) and [bootstrap-vue](https://bootstrap-vue.js.org/). It shows the messages being sent and recieved and has a button that inrements a counter while sending the updated count back to Node-RED.
+That will show you a simple page that will show you a formatted view of any msg send from Node-RED into the node. No additional libraries or frameworks are needed for that & the only dependencies are to load the `uibuilderfe.js` library, start the library using `uibuilder.start()` and then create a listener for incoming messages.
 
 ### 2.3. Edit the source files
 
@@ -135,8 +136,6 @@ Click on the <kbd>Save</kbd> button to save changes, <kbd>Reset</kbd> to revert 
 
 You can create a new file and delete files and folders as well with the appropriate buttons. If you delete one of the default `index.(html|css|js)` files and have the _Copy Index_ flag set (in advanced settings), the file will be replaced automatically with the default template file. Useful if you get into a complete mess.
 
-The default included [VueJS](https://github.com/vuejs/vue#readme), [bootstrap](https://getbootstrap.com/) and [bootstrap-vue](https://bootstrap-vue.js.org/) packages make for a really easy to use initial setup that is very easy to use but powerful to build any kind of web user interface. The default template files should give you some ideas on how to use everything.
-
 ### 2.4. Install additional front-end libraries
 
 Click the "Manage front-end libraries" button. Then click the <kbd>+ add</kbd> button and type in the name of the package as it is defined in npm.
@@ -145,19 +144,17 @@ You can also remove installed libraries from here.
 
 The uibuilder _Detailed Information_ API page (link in the configuration panel) shows details of all packages installed, their URL for your html pages and their physical location on the server (so that you can track down the right file to include in your HTML).
 
-### 2.5. Additional Documentation in the WIKI
+#### 2.4.a Using VueJS
+
+If you want to use the VueJS based templates, you will need to install `vue` and `bootstrap-vue` libraries.
+
+The included [VueJS](https://github.com/vuejs/vue#readme), [bootstrap](https://getbootstrap.com/) and [bootstrap-vue](https://bootstrap-vue.js.org/) templates make for a really easy to use initial setup that is very easy to use but powerful to build any kind of web user interface. The template files should give you some ideas on how to use everything.
+
+### 2.5. Additional Documentation
 
 Check out the [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki) for more information, help and examples.
 
-In addition to various examples, the WIKI includes:
-
-* [v2 URL Paths](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths)
-* [v2 Breaking Changes](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/v2-Breaking-Changes)
-* [Structure & type of control messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure)
-* [Front-end library available properties & methods](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Front-End-Library---available-properties-and-methods)
-* [How to cache and replay messages](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Cache-and-Replay-Messages-without-using-node-red-contrib-infocache)
-* [Creating pages in sub-folders](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Create-a-web-page-in-a-sub-path)
-* [Getting Started with VueJS](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Getting-Started-with-VueJS)
+Also check out the [technical documentation](https://totallyinformation.github.io/node-red-contrib-uibuilder) site. This is also available from within the Node-RED Editor by selecting a uibuilder node and clicking on the link in the help sidebar or by opening the configuration for a uibuilder node and clicking on the "Tech Docs" button.
 
 _[back to top](#contents)_
 
@@ -196,7 +193,7 @@ _[back to top](#contents)_
 
 - npm packages can be installed (or removed or updated) using the node's admin ui in Node-RED. This allows you to manage the availability of front-end libraries very easily. No need to have access to the servers command line. Any front-end library that is available as an npm package can be managed this way. Installed packages will be made available to your web app.
 
-- The node's module contains default html, JavaScript and CSS master template files that are copied to your local src folder for you to edit as required. This can be turned off via a flag. It gives you a simple to follow template that kick-starts your web app development.
+- Typically, very little code is needed to create a simple, data-driven web UI. The node's module contains default html, JavaScript and CSS master template files that are copied to your local src folder for you to edit as required. It gives you a simple to follow template that kick-starts your web app development. Additional templates are available (even external ones can be used) that help kickstart your development.
 
 - Messages sent from Node-RED to your web app can have a `msg.script` and `msg.style` property that will dynamically add that code to the web page - if allowed by the settings (default is off).
 
@@ -221,11 +218,26 @@ _[back to top](#contents)_
   
   If you are using Node-RED's projects feature, the folder will be created within your project folder instead.
 
+  From v4.0.0, you can change the location of this root folder by specifying a location in Node-RED's `settings.js` file.
+
+```javascript
+    /** Custom settings for all uibuilder node instances */
+    uibuilder: {
+        /** Optional uibRoot folder. 
+         * By default, uibuilder will use `<userDir>/uibuilder`
+         * Use this setting to change that.
+         */
+        uibRoot: process.env.UIBROOT || '/where/i/want/it',
+    },
+  ```
+
 - On deployment of any new instance, a new sub-folder within `uibuilder` is created.
   
   The name is the same as the URL path specified in the node instance's settings. (defaults to `uibuilder`). `src` and `dist` sub-folders are also created. The `url` name is limited to a maximum of 20 characters and cannot be `templates` as this is reserved.
 
   The files in these folders can be edited from within the node's configuration panel in Node-RED's Editor. No need for command line or other file access on the server.
+
+  If you remove the node from your flows, Node-RED will offer to delete the folder as well. If you change the `url`, Node-RED will try to rename the folder.
 
 - If the local `dist` folder contains an `index.html` file, the `dist` folder will be served,
   otherwise the `src` folder will be served. This allows you to run a build step (e.g. webpack/babel). The WIKI has instructions on how to do a build step.
@@ -275,7 +287,7 @@ _[back to top](#contents)_
 
 These are things to be aware of & that I'd like to tidy up at some point.
 
-- v3.0.0 does not have a completely working security model. It is not fully tested and may not work. Do not use this part in production. Everything else is fine.
+- v4.0.0 does not have a completely working security model. It is not fully tested and may not work. Do not use this part in production. Everything else is fine.
   
 - Some of the VueJS helpers in the front-end library have edge-cases where they don't work.
   
@@ -293,13 +305,13 @@ _[back to top](#contents)_
 
 ## 5. Discussions and suggestions
 
-Use the `Dashboard` category in the [Node-RED Discourse forum](https://discourse.nodered.org/c/dashboard). This is the best place to have a discussion or ask a question.
+The best place to ask questions about uibuilder is the [Node-RED Forum](https://discourse.nodered.org/).
 
 Alternatively, use the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements and the [GitHub Discussions page](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) for general questions, suggestions, etc.
 
 Please note that I rarely have time to monitor the [#uibuilder channel](https://node-red.slack.com/messages/C7K77MG06) in Slack any more, it is best to use Discourse or raise an issue.
 
-I do try to look out for [uibuilder related questions on Stack Overflow](https://stackoverflow.com/search?tab=newest&q=%5bnode-red%5d%20uibuilder) but again, time does not always let me do this.
+I do occasionally try to look out for [uibuilder related questions on Stack Overflow](https://stackoverflow.com/search?tab=newest&q=%5bnode-red%5d%20uibuilder) but again, time does not always let me do this.
 
 
 ## 6. Contributing
