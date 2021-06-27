@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-/**
+/** editorRED
  * @typedef {Object} editorRED The Node-RED core object available to a custom node's .html file
  * 
  */
@@ -139,7 +139,7 @@
 }
  */
 
-/** See settings.js for static settings.
+/** runtimeSettings - See settings.js for static settings.
  * @typedef {Object} runtimeSettings Static and Dynamic settings for Node-RED runtime
  * 
  * @property {string} uiPort The port used by Node-RED (default=1880)
@@ -197,7 +197,7 @@
  * @property {function} setUserSettings: [Function: setUserSettings],
  */
 
-/** 
+/** runtimeLogging
  * @typedef {Object} runtimeLogging Logging. Levels that are output to the Node-RED log are controlled by the logging.console.level setting in settings.js
  * @property {function} fatal Lvel 0. Lowest level, things that have broken Node-RED only.
  * @property {function} error Level 1. Copy is sent to Editor debug panel as well as error log.
@@ -211,7 +211,7 @@
  * @property {function} removeHandler
  */
 
-/** 
+/** runtimeNodes
  * @typedef {Object} runtimeNodes Gives access to other active nodes in the flows.
  * @property {function} registerType Register a new type of node to Node-RED.
  * @property {function} createNode Create a node instance (called from within registerType function).
@@ -222,7 +222,7 @@
  * @property {function} deleteCredentials: [Function: delete],
  */
 
-/**
+/** runtimeRED
  * @typedef {Object} runtimeRED The core Node-RED runtime object
  * @property {expressApp} httpAdmin Reference to the ExpressJS app for Node-RED Admin including the Editor
  * @property {expressApp} httpNode Reference to the ExpressJS app for Node-RED user-facing nodes including http-in/-out and Dashboard
@@ -268,7 +268,7 @@
  * @property {function} util.parseContextStore: [Function: parseContextStore]
  */
 
-/**
+/** runtimeNode
  * @typedef {object} runtimeNode Local copy of the node instance config + other info
  * @property {Function} send Send a Node-RED msg to an output port
  * @property {Function} done Dummy done function for pre-Node-RED 1.0 servers
@@ -284,7 +284,7 @@
  * @property {[Array<string>]=} wires Internal. Array of Array of Strings. The wires attached to this node instance (uid's)
  */
 
-/**
+/** runtimeNodeConfig
  * @typedef {object} runtimeNodeConfig Configuration of node instance. Will also have Editor panel's defined variables as properties.
  * @property {Object=} id Internal. uid of node instance.
  * @property {Object=} type Internal. Type of node instance.
@@ -294,7 +294,7 @@
  * @property {Object=} wires Internal. The wires attached to this node instance (uid's)
  */
 
-/**
+/** uibNode
  * @typedef {object} uibNode Local copy of the node instance config + other info
  * @property {String} uibNode.id Unique identifier for this instance
  * @property {String} uibNode.type What type of node is this an instance of? (uibuilder)
@@ -305,8 +305,9 @@
  * @property {boolean} uibNode.fwdInMessages Forward input msgs to output #1?
  * @property {boolean} uibNode.allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} uibNode.allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
- * @property {boolean} uibNode.copyIndex Copy index.(html|js|css) files from templates if they don't exist?
+ * @property {boolean} uibNode.copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist? 
  * @property {String}  uibNode.templateFolder Folder name for the source of the chosen template
+ * @property {String}  uibNode.extTemplate Degit url reference for an external template (e.g. from GitHub)
  * @property {boolean} uibNode.showfolder Provide a folder index web page?
  * @property {boolean} uibNode.useSecurity Use uibuilder's built-in security features?
  * @property {boolean} uibNode.tokenAutoExtend Extend token life when msg's received from client?
@@ -330,9 +331,10 @@
  * @property {Object=} uibNode.wires Internal. The wires attached to this node instance (uid's)
  * 
  * @property {boolean} uibNode.commonStaticLoaded Whether the common static folder has been added
+ * @property {boolean} uibNode.initCopyDone Has the initial template copy been done?
  */
 
-/**
+/** MsgAuth
  * @typedef {Object} MsgAuth The standard auth object used by uibuilder security. See docs for details.
  * Note that any other data may be passed from your front-end code in the _auth.info object.
  * _auth.info.error, _auth.info.validJwt, _auth.info.message, _auth.info.warning
@@ -344,13 +346,13 @@
  * @property {Object=} [MsgAuth.info] Optional metadata about the user.
  */
 
-/**
+/** userValidation
  * @typedef {Object} userValidation Optional return object that is able to pass on additional use metadata back to the client.
  * @property {boolean} userValidation.userValidated Required. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
  * @property {userMetadata} [userValidation.authData] Optional return metadata about the user. Will be added to the output msg's _auth object
  */
 
-/**
+/** userMetadata
  * @typedef {Object} userMetadata Optional. Metadata about the user. Will be added to the output msg's _auth object.
  * This is just an example of what you might want to return, you can send anything you like.
  * @property {String} [userMetadata.name] Users full name or screen name.
@@ -361,17 +363,14 @@
  * @property {Date} [userMetadata.subsExpiry] Date/time the users subscription expires.
  */
 
-/**
- * Props define attributes on a virtual node.
+/** Props define attributes on a virtual node.
  * @typedef {Object.<string, any> | {}} Props
  * @property {Children} Props.children
  */
-/**
- * The vnode children of a virtual node.
+/** The vnode children of a virtual node.
  * @typedef {VNode[]} Children
  */
-/**
- * Define a custom type for virtual nodes:
+/** Define a custom type for virtual nodes:
  * @typedef {string | number | Function} Type
  * @typedef {Object.<string, any>} VNode
  * @property {Type} VNode.type
