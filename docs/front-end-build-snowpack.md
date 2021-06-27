@@ -1,4 +1,10 @@
-# How-to configure and use a front-end build step using Snowpack
+---
+title: How-to configure and use a front-end build step using Snowpack
+description: >
+   Describes how to use Snowpack to build your front-end code.
+created: 2021-04-22 09:53:00
+lastUpdated: 2021-06-27 17:39:08
+---
 
 Status: **Incomplete**
 
