@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "body-parser": "^1.19.0",
+    "degit": "^2.8.4",
     "express": "^4.17.1",
     "express-validator": "^6.12.0",
     "fast-glob": "^3.2.5",
@@ -46,6 +47,7 @@
     "@types/node-red": "^1.1.1",
     "babel-minify": "^0.5.1",
     "eslint": "^7.29.0",
+    "eslint-plugin-html": "^6.1.2",
     "eslint-plugin-jsdoc": "^35.4.0",
     "uglify-js": "^3.13.9"
   },
