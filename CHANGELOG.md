@@ -45,16 +45,21 @@ Nothing currently.
 * web.setup and socket.setup can only be called once.
 * Socket.IO updated from v2 to v4.
 * Added Admin API check for whether a url has a matching instance root folder. (Was an outstanding to-do)
+* Technical Docs have been improved in line with some other work I did recently on enterprise standards.
+
+  The docsify configuration has been greatly improved with a new theme and some automation for dates and document front-matter.
 
 ## New
 
-* Added web.isConfigured to allow a check to see whether web.setup has been called.
-* Added socket.isConfigured to allow a check to see whether socket.setup has been called.
-
+* `nodes/web.js` - Added web.isConfigured to allow a check to see whether web.setup has been called.
+* `nodes/sockets.js` - Added socket.isConfigured to allow a check to see whether socket.setup has been called.
 
 ## Fixed
 
 * Node-RED edge-case for credentials was causing node to be marked as changed whenever "Done" button pressed even if no changes made. Turns out to be an issue if you don't give a password-type credential an actual value (e.g. leave it blank). Gave the `JWTsecret` a default value even when it isn't really needed.
+
+
+---
 
 ## [3.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.3.0...v3.3.1)
 
@@ -497,17 +502,16 @@ _Security is mostly controlled via websocket messages, not by HTTP. The web UI i
 
 ----
 
-----
-
 Because of the many changes in v3, the v2 changelog has been moved to a separate file: [v2 Changelog](/docs/CHANGELOG-v2.md).
 Similarly, v1 chanegs are now in the [v1 Changelog](/docs/CHANGELOG-v1.md).
 
 ----
 
-Types of changes
-Added for new features.
-Changed for changes in existing functionality.
-Deprecated for soon-to-be removed features.
-Removed for now removed features.
-Fixed for any bug fixes.
-Security in case of vulnerabilities.
+## Types of changes
+
+- **Added** for new features.
+- **Changed** for changes in existing functionality.
+- **Deprecated** for soon-to-be removed features.
+- **Removed** for now removed features.
+- **Fixed** for any bug fixes.
+- **Security** in case of vulnerabilities.

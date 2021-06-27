@@ -16,6 +16,7 @@
 
 **Please Note** that:
 
+* v4.0.0 has breaking changes from v3.3.1, please see the [CHANGELOG](CHANGELOG.md) for details.
 * v3.3.1 was the last version compatible with Node.js v10 due to upstream dependencies.
 * v3.1.3+ no longer installs vue and bootstrap-vue, if you want to use those, install them separately.
 * v3+ no longer supports Internet Explorer, it requires Node.js v10+ and Node-RED v1+
