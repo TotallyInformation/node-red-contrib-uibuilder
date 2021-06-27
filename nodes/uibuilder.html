@@ -573,7 +573,7 @@
         if ( value.toLowerCase().substring(0,9) === 'templates' ) return false
 
         
-        // Check whether the url is already in use via a call to the admin API `uibindex`
+        // Check whether the url is already in use via a call to the admin API
         var exists = false
         $.ajax({
             type: 'GET',
@@ -765,7 +765,69 @@
                 ]
             })
         }
-    }
+
+    } // --- end of function checkDependencies --- //
+
+    /** Load a new template */
+    function btnTemplate() {
+
+        // Check first
+        var myNotification = RED.notify(
+            `WARNING<br /><br />
+            Are you <b>SURE</b> you want to overwrite your code
+            with the template <b><code>${ $('#node-input-templSel').val() }</code></b>?<br /><br />
+            <b>THIS CANNOT BE UNDONE.</b>`,
+            {
+                type: 'warning',
+                modal: true,
+                fixed: true,
+                buttons: [
+                    {
+                        text: "Cancel, don't overwrite",
+                        class:"primary",
+                        click: function(e) {
+                            myNotification.close()
+                        }
+                    },
+                    {
+                        text: "OK, overwrite",
+                        //class:"primary",
+                        click: function(e) {
+                            loadTemplate()
+                            myNotification.close()
+                        }
+                    }
+                ]
+            }
+        )
+
+    } // --- End of btnTemplate() --- //
+    function loadTemplate() {
+        // Get the current file, folder & url
+        var template = $('#node-input-templSel').val()
+        var extTemplate = $('#node-input-extTemplate').val()
+        var url = $('#node-input-url').val()
+
+        $.ajax({
+            type: 'POST',
+            dataType: 'json',
+            url: './uibuilder/admin/' + url,
+            data: {
+                'template': template,
+                'extTemplate': extTemplate,
+                'cmd': 'replaceTemplate',
+            },
+        })
+        .done(function(data, textStatus, jqXHR) {
+            RED.notify(`<b>uibuilder</b>:<br><br>${jqXHR.statusText}<br>`, {type:'success'})
+            return 'Template load succeeded'
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( '[uibuilder:loadTemplate] Error ' + textStatus, errorThrown )
+            RED.notify(`<b>uibuilder</b>:<br><br>Template Load Error.<br><br>${errorThrown}<br>`, {type:'error'})
+            return 'Template load failed'
+        })
+    } // --- End of loadTemplate() --- //
 
     //#endregion ------------------------------------------------- //
 
@@ -780,8 +842,9 @@
             fwdInMessages: { value: false },   // Should we send input msg's direct to output as well as the front-end?
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
-            copyIndex: { value: true },        // Should the default template files be copied to the instance src folder?
-            templateFolder: { value: 'vue' }, // Folder for selected template
+            copyIndex: { value: true },        // DEPRECATED Should the default template files be copied to the instance src folder?
+            templateFolder: { value: 'blank' },  // Folder for selected template
+            extTemplate: { value: '' }, // Only if templateFolder=external, degit name
             showfolder: { value: false },      // Should a web index view of all source files be made available?
             useSecurity: { value: false },
             sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
@@ -813,23 +876,21 @@
 
         /** Prepares the Editor panel */
         oneditprepare: function () {
+            //console.log('[uibuilder:oneditprepare] THIS: ', this)
+
             var that = this
 
             // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
-            if ( that.templateFolder === undefined || that.templateFolder === '' ) that.templateFolder = 'vue'
+            if ( that.templateFolder === undefined || that.templateFolder === '' ) that.templateFolder = 'blank'
 
             //#region Start with the edit section hidden & main section visible
             $('#main-props').show()
             $('#edit-props').hide()
             $('#npm-props').hide()
-            $('#templ-props').hide()
             $('#adv-props').hide()
             $('#sec-props').hide()
             $('#info-props').hide()
             //#endregion
-
-            // Hide the folder buttons until needed
-            //$('#fldr-buttons').hide()
 
             //#region Set the checkbox states
             $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
@@ -870,28 +931,48 @@
                 $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
             })
 
-            // Show/Hide the template settings
+            //#region ---- Template settings ---- //
+
+            $('#adv-templ').hide()
             $('#show-templ-props').css( 'cursor', 'pointer' )
             $('#show-templ-props').click(function(_e) {
                 $('#adv-templ').toggle()
                 if ( $('#adv-templ').is(':visible') ) {
-                    $('#show-adv-templ').html('<i class="fa fa-caret-down"></i> Advanced Settings')
+                    $('#show-templ-props').html('<i class="fa fa-caret-down"></i> Template Settings')
                 } else {
-                    $('#show-adv-templ').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                    $('#show-templ-props').html('<i class="fa fa-caret-right"></i> Template Settings')
                 }
             })
-
-            // Show/Hide the advanced settings
-            $('#show-adv-props').css( 'cursor', 'pointer' )
-            $('#show-adv-props').click(function(_e) {
-                $('#adv-props').toggle()
-                if ( $('#adv-props').is(':visible') ) {
-                    $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Advanced Settings')
-                } else {
-                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                }
+            // Populate the template selection drop-down and select default (in advanced)
+            populateTemplateDropdown(that)
+            checkDependencies()
+            // Unhide the external template name input if external selected
+            if ( $('#node-input-templSel').val() === 'external' ) $('#et-input').show()
+            // Handle change of template
+            $('#node-input-templSel').change(function(_e) {
+                // save the selected template folder name
+                that.templateFolder = $('#node-input-templSel').val()
+                // update the help tip
+                if ( RED.settings.uibuilderTemplates[that.templateFolder] )
+                    $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
+                // Check if the dependencies are installed, warn if not
+                checkDependencies()
+                // Unhide the external template name input if external selected
+                if ( $('#node-input-templSel').val() === 'external' )
+                    $('#et-input').show()
+                else
+                    $('#et-input').hide()
             })
+            // Button press for loading new template
+            $('#btn-load-template').click(function(e){
+                e.preventDefault() // don't trigger normal click event
+                btnTemplate()
+            })
+            
+            //#endregion ---- ---- //
 
+            //#region ---- security settings ---- //
+            
             // Show/Hide the security settings
             $('#show-security-props').css( 'cursor', 'pointer' )
             $('#show-security-props').click(function(_e) {
@@ -904,12 +985,12 @@
             })
 
             // One-off check for default settings
+            if ( $('#node-input-jwtSecret').val().length === 0 ) {
+                $('#node-input-jwtSecret').val(defaultJwtSecret)
+            }
             if ( $('#node-input-useSecurity').is(':checked') ) {
                 if ( $('#node-input-sessionLength').val().length === 0 ) {
                     $('#node-input-sessionLength').val(defaultSessionLength)
-                }
-                if ( $('#node-input-jwtSecret').val().length === 0 ) {
-                    $('#node-input-jwtSecret').val(defaultJwtSecret)
                 }
             }
 
@@ -953,18 +1034,17 @@
             // What mode is Node-RED running in? development or something else?
             $('#nrMode').text(RED.settings.uibuilderNodeEnv)
 
-            // Populate the template selection drop-down and select default (in advanced)
-            populateTemplateDropdown(that)
-            checkDependencies()
-            // Handle change of template
-            $('#node-input-templSel').change(function(_e) {
-                // save the selected template folder name
-                that.templateFolder = $('#node-input-templSel').val()
-                // update the help tip
-                if ( RED.settings.uibuilderTemplates[that.templateFolder] )
-                    $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
-                // Check if the dependencies are installed, warn if not
-                checkDependencies()
+            //#endregion ---- security settings ---- //
+
+            // Show/Hide the advanced settings
+            $('#show-adv-props').css( 'cursor', 'pointer' )
+            $('#show-adv-props').click(function(_e) {
+                $('#adv-props').toggle()
+                if ( $('#adv-props').is(':visible') ) {
+                    $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Advanced Settings')
+                } else {
+                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
+                }
             })
 
             //#region ---- File Editor ---- //
@@ -1353,8 +1433,9 @@
             if ( $('#node-input-url').val() !== this.url ) {
                 this.oldUrl = this.url
             } else {
-                this.oldUrl = undefined
+                if ( this.oldUrl !== undefined ) this.oldUrl = undefined
             }
+
         }, // ---- End of oneditsave ---- //
 
         /** Runs before cancel */
@@ -1450,22 +1531,23 @@
                 <i class="fa fa-caret-right"></i> Template Settings
             </b>
             <div id="adv-templ" desc="Hideable Template Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
-                <!-- Copy index.(html|css|js) to local assets if they dont exist? -->
-                <div class="form-row" title="Select if and what template code you would like to use.">
-                    <input type="checkbox" id="node-input-copyIndex" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-copyIndex" style="width: 90%;">Copy index.(html|css|js) from templates to this instance if they don't exist?</label>
-
-                    <label for="node-input-templSel" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
-                    <select id="node-input-templSel" style="width:73%;"></select>
-
-                    <div id="node-templSel-info" class="form-tips node-help"></div>
-
-                    <div class="form-tips node-help">
-                        Change the template BEFORE deploying for the first time.<br>
-                        Changing selection on its own will not do anything.
-                        You must also delete your index files so that they are recreated from the template.
-                    </div>
+                <div>
+                    By default, uibuilder creates a template folder with a minimal template.
+                    If you wish to use a different template, select and load it here.<br>
+                    <b>Note that loading will overwrite existing files.</b>
                 </div>
+
+                <label for="node-input-templSel" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
+                <select id="node-input-templSel" style="width:73%;"></select>
+
+                <div desc="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation/uib-template-test" style="display:none">
+                    <label for="node-input-extTemplate"><i class="fa fa-globe"></i> Ext. Template</label>
+                    <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
+                </div>
+
+                <button class="btn" id="btn-load-template" style="margin-top: 0.3em;" title="Load selected template, overwriting existing files">
+                    Load & Overwrite
+                </button>
             </div>
         </div>
 
