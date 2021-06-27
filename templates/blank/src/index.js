@@ -1,6 +1,8 @@
-/* jshint browser: true, esversion: 5, asi: true */
+/* jshint browser: true, esversion: 6, asi: true */
 /* globals uibuilder */
 // @ts-nocheck
+
+/** Minimalist code for uibuilder and Node-RED */
 
 // return formatted HTML version of JSON object
 function syntaxHighlight(json) {

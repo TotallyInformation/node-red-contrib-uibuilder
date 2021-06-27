@@ -3,7 +3,7 @@
     "node": false,
     "browser": true,
     "jquery": false,
-    "es6": false
+    "es6": true
   },
   "globals": {
     "Vue": true,
