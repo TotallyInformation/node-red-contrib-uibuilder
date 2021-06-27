@@ -20,8 +20,12 @@
 * Testing
   * [Regression Tests](regression-tests.md)
 * [Glossary of Terms](glossary.md)
-* [Change Log](changelog)
+* [Changelog](changelog)
 * [Main Readme](uibhome)
+* Archives
+  * [v2 Breaking Changes](v2-breaking-changes.md)
+  * [v2 Changelog](CHANGELOG-v2.md)
+  * [v1 Changelog](CHANGELOG-v1.md)
 
 - **Links**
 - [uibuilder License](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
