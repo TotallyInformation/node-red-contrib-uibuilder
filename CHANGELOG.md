@@ -12,19 +12,49 @@ Nothing currently.
 
 ## [4.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.3.1...v4.0.0)
 
-Bumped version to v4.0.0 because from this version, the minimum version of node.js supported is v12 and the minimum version of Node-RED supported is v1.3 (which also only supports node.js v12+)
+## Major Changes
+
+* Node.js v12+ is the minimum supported environment for Node-RED.
+* Only "modern" browsers now supported for both the Editor and the uibuilderfe front-end library as ES6 (ECMA2015) code is used. 
+
+  Let me know if this is a problem and I can build a backwards compatible version.
+  
+* **Template handling is significantly changed in this major release**.
+  
+  New instances of uibuilder nodes will only be given the "blank" template which uses no front-end frameworks.
+
+  You can load a different template using the "Template Settings" in the Editor.
+
+  **Loading a new template WILL overwrite any files with the same name**. A warning is given though so even if you press the button, you can still back out.
+
+  You can choose from the following internal templates:
+
+  * _VueJS & bootstrap-vue_ - The previous default template.
+  * _Simple VueJS_ - A minimal VueJS example.
+  * _Blank_ - The new default.
+  * _External_ - See below.
+  
+  **But**, you can now also chose an **EXTERNAL** template! This will let you choose from [any remote location supported by **degit**](https://github.com/Rich-Harris/degit#basics). You can use `TotallyInformation/uib-template-test` as an example (on [GitHub](https://github.com/TotallyInformation/uib-template-test)).
+
+  **NOTE**: When using an external template, no check is currently done on dependencies, you must install these yourself. I will try to add this feature in the future.
 
 ## Updated
 
-* Update fs-extra to [v10](https://github.com/jprichardson/node-fs-extra/compare/9.1.0...10.0.0). No longer supports node.js v10
+* Update fs-extra to [v10](https://github.com/jprichardson/node-fs-extra/compare/9.1.0...10.0.0). No longer supports node.js v10, requires v12+.
 * Make some class methods private in web.js and socket.js. Requires node.js v12 as a minimum as it uses an ECMA2018 feature.
 * web.setup and socket.setup can only be called once.
 * Socket.IO updated from v2 to v4.
+* Added Admin API check for whether a url has a matching instance root folder. (Was an outstanding to-do)
 
 ## New
 
 * Added web.isConfigured to allow a check to see whether web.setup has been called.
 * Added socket.isConfigured to allow a check to see whether socket.setup has been called.
+
+
+## Fixed
+
+* Node-RED edge-case for credentials was causing node to be marked as changed whenever "Done" button pressed even if no changes made. Turns out to be an issue if you don't give a password-type credential an actual value (e.g. leave it blank). Gave the `JWTsecret` a default value even when it isn't really needed.
 
 ## [3.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.3.0...v3.3.1)
 

@@ -25,7 +25,7 @@ module.exports = {
         sourceType: "script"
     },
     root: true,
-    plugins: ['jsdoc'],
+    plugins: ['jsdoc', 'eslint-plugin-html'],
     extends: ['eslint:recommended','plugin:jsdoc/recommended'],
     rules: {
         "accessor-pairs": "error",
