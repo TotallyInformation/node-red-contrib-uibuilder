@@ -15,6 +15,8 @@
   * [`nodes/uibuilder.html`](uibuilder-html.md)
   * [`nodes/uiblib.js`](uiblib-js.md)
   * [`nodes/tilib.js`](tilib-js.md)
+  * [`nodes/web.js`](web-js.md)
+  * [`nodes/sockets.js`](sockets-js.md)
 * Testing
   * [Regression Tests](regression-tests.md)
 * [Glossary of Terms](glossary.md)

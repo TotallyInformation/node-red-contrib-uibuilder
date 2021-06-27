@@ -1,8 +1,33 @@
-# Developer documentation for `uibuilder.js`
-
-`uibuilder.js` is the main file that defines the uibuilder node. It is this that is _required_ into Node-RED when it starts.
+---
+title: Developer documentation for `uibuilder.js`
+description: >
+   `uibuilder.js` is the main file that defines the uibuilder node. It is this that is _required_ into Node-RED when it starts.
+created: 2019-05-18 18:25:00
+lastUpdated: 2021-06-27 21:18:53
+---
 
 Note that uibuilder [URI paths are documented in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths).
+
+* [Key processing elements](#key-processing-elements)
+  * [Installation](#installation)
+  * [Global Initialisation](#global-initialisation)
+  * [Instance Initialisation](#instance-initialisation)
+  * [Adding staticServer paths for vendor packages](#adding-staticserver-paths-for-vendor-packages)
+  * [Client Connection](#client-connection)
+  * [Client Disconnection](#client-disconnection)
+* [Global/Module Variables](#globalmodule-variables)
+  * [`uib` {Object} [Module global]](#uib-object-module-global)
+  * [Other variables](#other-variables)
+* [uibuilder Node Instance Variables](#uibuilder-node-instance-variables)
+  * [From the admin Editor ui](#from-the-admin-editor-ui)
+  * [Locally configured (not set in Editor)](#locally-configured-not-set-in-editor)
+  * [Internals & Typedef](#internals--typedef)
+* [Functions/Methods](#functionsmethods)
+  * [Module level](#module-level)
+  * [Instance level](#instance-level)
+  * [Utility Classes](#utility-classes)
+  * [Utility Functions](#utility-functions)
+* [Admin API's](#admin-apis)
 
 ## Key processing elements
 
@@ -121,8 +146,6 @@ Note that if a client disconnects then reconnects it will have a different `_soc
   (e.g. the master library `uibuilderfe.js`).
   Only used if the `dist` folder is not used.
 
-* `masterTemplate` {String}: 'vue'. What template to use as master? Must match a folder in the masterTemplateFolder.
-  
 * `masterTemplateFolder` {String}: Default: `__dirname/../templates`. 
   Location of master template folders (containing default front-end code).
   Holds a set of master templates to use. These are copied over to the instance src folder when needed.
@@ -149,7 +172,24 @@ Note that if a client disconnects then reconnects it will have a different `_soc
 
 * `deleteOnDelete` {Object}: Array of instances that have requested their local instance folders be deleted on deploy - see html file oneditdelete, updated by admin api
 
-* `port` {number} HTTP PORT number to be used for the webserver and ExpressJS app used by all uibuilder instances. If set to something other than Node-RED's port, an independent webserver and app is created. HTTPS will be used if defined for Node-RED and the same certificate and key will be used.
+* `customServer` {Object}: Definition for the optional custom ExpressJS server. Not used if the built-in Node-RED ExpressJS server is used.
+
+    ```js
+    /** Parameters for custom webserver if required. Port is undefined if using Node-RED's webserver. */
+    customServer: {
+        /** Optional TCP/IP port number. If defined, uibuilder will use its own ExpressJS server/app
+         * If undefined, uibuilder will use the Node-RED user-facing ExpressJS server
+         * @type {undefined|number} If undefined, means that uibuilder is using Node-RED's webserver
+         */
+        port: undefined,
+        /** @type {string} Node.js server type. ['http', 'https', 'http2']  */
+        type: 'http',
+        /** @type {undefined|string} uibuilder Host. sub(domain) name or IP Address */
+        host: undefined,
+    },
+    ```
+
+* `degitEmitter` {Function}: Event emitter for degit, populated on 1st use. See POST admin API. Only used if an external template is loaded.
 
 ### Other variables
 
@@ -229,7 +269,7 @@ In addition, the `node` object has a number of other useful functions and proper
 Note that the file `typedefs.js` may have a more up-to-date version of this.
 
 ```javascript
-/**
+/** uibNode
  * @typedef {object} uibNode Local copy of the node instance config + other info
  * @property {String} uibNode.id Unique identifier for this instance
  * @property {String} uibNode.type What type of node is this an instance of? (uibuilder)
@@ -240,12 +280,14 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
  * @property {boolean} uibNode.fwdInMessages Forward input msgs to output #1?
  * @property {boolean} uibNode.allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} uibNode.allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
- * @property {boolean} uibNode.copyIndex Copy index.(html|js|css) files from templates if they don't exist?
+ * @property {boolean} uibNode.copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist? 
  * @property {String}  uibNode.templateFolder Folder name for the source of the chosen template
+ * @property {String}  uibNode.extTemplate Degit url reference for an external template (e.g. from GitHub)
  * @property {boolean} uibNode.showfolder Provide a folder index web page?
  * @property {boolean} uibNode.useSecurity Use uibuilder's built-in security features?
  * @property {boolean} uibNode.tokenAutoExtend Extend token life when msg's received from client?
  * @property {Number} uibNode.sessionLength Lifespan of token (in seconds)
+ * @property {boolean} uibNode.reload If true, notify all clients to reload on a change to any source file
  * @property {String} uibNode.jwtSecret Seed string for encryption of JWT
  * @property {String} uibNode.customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {Number} uibNode.ioClientsCount How many Socket clients connected to this instance?
@@ -259,7 +301,12 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
  * @property {Function=} uibNode.done Dummy done function for pre-Node-RED 1.0 servers
  * @property {Function=} uibNode.on Event handler
  * @property {Function=} uibNode.removeListener Event handling
- * z, wires
+ * @property {Object=} uibNode.credentials Optional secured credentials
+ * @property {Object=} uibNode.z Internal
+ * @property {Object=} uibNode.wires Internal. The wires attached to this node instance (uid's)
+ * 
+ * @property {boolean} uibNode.commonStaticLoaded Whether the common static folder has been added
+ * @property {boolean} uibNode.initCopyDone Has the initial template copy been done?
  */
 ```
 
@@ -276,6 +323,18 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
 
 * `ioNs`: Reference to Socket.IO namespace used for the instance.
 * `nodeInputHandler`: Function that handles incoming messages for a uibuilder instance.
+
+### Utility Classes
+
+* [UibWeb (`nodes/web.js`)](web-js.md) - A singleton class that manages the interactions with ExpressJS and so provides all of the web server capabilities.
+* [UibSockets (`socket.js`)](sockets-js.md) - A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
+
+?> Note that a singleton class is one that can only be instantiated once. Thanks to the way that Node.js's `require` function works, whenever a singleton class is required, the same instance will always be used.
+
+### Utility Functions
+
+* [`nodes/tilib.js`](tilib-js.md) - Contains generic utility functions that do not rely on Node-RED.
+* [`nodes/uiblib.js`](uiblib-js.md) - Contains utility functions specific to uibuilder that require Node-RED and related classes, objects and data.
 
 ## Admin API's
 

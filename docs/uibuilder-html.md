@@ -1,14 +1,25 @@
-# Developer documentation for `uibuilder.html`
+---
+title: Developer documentation for `uibuilder.html`
+description: >
+   Documents the processing of the html file that defines the Node-RED admin UI panel for uibuilder. Shown when double-clicking on a uibuilder node in a flow.
+created: 2019-06-15 14:26:00
+lastUpdated: 2021-06-27 21:19:47
+---
 
-Documents the processing of the html file that defines the Node-RED admin UI panel for uibuilder. Shown when double-clicking on a uibuilder node in a flow.
-
-###
+* [Variables](#variables)
+  * [Properties](#properties)
+  * [Credentials](#credentials)
+  * [Pseudo Settings](#pseudo-settings)
+* [Package List](#package-list)
+  * [packageList Function](#packagelist-function)
+  * [Add button](#add-button)
+  * [addPackageRow(element,index,data) Function](#addpackagerowelementindexdata-function)
 
 ## Variables
 
 ### Properties
 
-See the `node.` variables in [docs/uibuilder-js](./uibuilder-js.md).
+See the `node.` variables in [uibuilder-js](uibuilder-js.md).
 
 ### Credentials
 
