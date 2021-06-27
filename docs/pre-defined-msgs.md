@@ -1,23 +1,26 @@
-# Pre-defined uibuilder messages
+---
+title: Pre-defined uibuilder messages
+description: >
+   Documents the different types of uibuilder messages between a Node-RED uibuilder node and a uibuilder front-end.
+created: 2020-09-24 18:14:00
+lastUpdated: 2021-06-27 18:02:55
+---
 
-Documents the different types of uibuilder messages between a Node-RED uibuilder node and a uibuilder front-end.
-
-* [Pre-defined uibuilder messages](#pre-defined-uibuilder-messages)
-  * [Standard msg properties used by uibuilder](#standard-msg-properties-used-by-uibuilder)
-    * [msg._auth `{Object}` (uibuilder v3+)](#msg_auth-object-uibuilder-v3)
-    * [msg.script `{String}`](#msgscript-string)
-    * [msg.style `{String}`](#msgstyle-string)
-    * [msg._uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
-    * [msg.uibDomEvent `{Object}` (uibuilder v3.2+)](#msguibdomevent-object-uibuilder-v32)
-  * [From Node-RED uibuilder node to the front-end (browser)](#from-node-red-uibuilder-node-to-the-front-end-browser)
-    * [Client (re)Connection (Control Message)](#client-reconnection-control-message)
-    * [VueJS UI Notification [Toast] (Control Message)](#vuejs-ui-notification-toast-control-message)
-    * [Browser client reload page](#browser-client-reload-page)
-  * [From the front-end (browser) to the Node-RED uibuilder node](#from-the-front-end-browser-to-the-node-red-uibuilder-node)
-    * [Client Ready for Content (Control Message)](#client-ready-for-content-control-message)
-    * [DOM Event (standard message from eventSend function)](#dom-event-standard-message-from-eventsend-function)
-  * [From either Node-RED or the client](#from-either-node-red-or-the-client)
-    * [Clear Cache (Control Message)](#clear-cache-control-message)
+* [Standard msg properties used by uibuilder](#standard-msg-properties-used-by-uibuilder)
+  * [msg._auth `{Object}` (uibuilder v3+)](#msg_auth-object-uibuilder-v3)
+  * [msg.script `{String}`](#msgscript-string)
+  * [msg.style `{String}`](#msgstyle-string)
+  * [msg._uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
+  * [msg.uibDomEvent `{Object}` (uibuilder v3.2+)](#msguibdomevent-object-uibuilder-v32)
+* [From Node-RED uibuilder node to the front-end (browser)](#from-node-red-uibuilder-node-to-the-front-end-browser)
+  * [Client (re)Connection (Control Message)](#client-reconnection-control-message)
+  * [VueJS UI Notification [Toast] (Control Message)](#vuejs-ui-notification-toast-control-message)
+  * [Browser client reload page](#browser-client-reload-page)
+* [From the front-end (browser) to the Node-RED uibuilder node](#from-the-front-end-browser-to-the-node-red-uibuilder-node)
+  * [Client Ready for Content (Control Message)](#client-ready-for-content-control-message)
+  * [DOM Event (standard message from eventSend function)](#dom-event-standard-message-from-eventsend-function)
+* [From either Node-RED or the client](#from-either-node-red-or-the-client)
+  * [Clear Cache (Control Message)](#clear-cache-control-message)
 
 ## Standard msg properties used by uibuilder
 

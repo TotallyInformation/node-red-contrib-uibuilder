@@ -1,10 +1,14 @@
-# uibuilder Glossary
-
-
+---
+title: uibuilder Glossary
+description: >
+   Terms used in this documentation and their meanings.
+created: 2019-05-27 17:13:00
+lastUpdated: 2021-06-27 17:59:43
+---
 
 | Term      | Meaning                                                      |
 | --------- | ------------------------------------------------------------ |
-| <xxxx>    | When a word is shown between angle brackets in the uibuilder documentation, it indicates that this is a variable. (unless it is clearly an HTML tag). |
+| `<xxxx>`  | When a word is shown between angle brackets in the uibuilder documentation, it indicates that this is a variable. (unless it is clearly an HTML tag). |
 |           |                                                              |
 | instance  | In Node-RED, when a node is added to a flow, it is said that this is an instance of a node. Unlike the Node-RED Dashboard, uibuilder can have many instances, each on a separate url. |
 | library   | One or more programme files that are utilised by other programs. Often installed as a _package_. |

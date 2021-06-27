@@ -1,8 +1,10 @@
-# uibuilder Technical Documentation
-
-uibuilder is a low-code solution for building data-driven web sites and web apps.
-
-It works in conjunction with Node-RED.
+---
+title: uibuilder Technical Documentation
+description: >
+   uibuilder is a low-code solution for easily building data-driven web sites and web apps in conjunction with Node-RED.
+created: 2019-06-16 16:16:00
+lastUpdated: 2021-06-27 18:07:59
+---
 
 All you need is a uibuilder node added to your flows. Select a suitable URL path and deploy.
 Now you can send messages to your front end.

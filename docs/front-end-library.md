@@ -1,4 +1,10 @@
-# Working with the uibuilderfe Front-End Library
+---
+title: Working with the uibuilderfe Front-End Library
+description: >
+   How to work with uibuilder's front-end library in your own UI code.
+created: 2021-02-17 14:28:00
+lastUpdated: 2021-06-27 17:51:09
+---
 
 `uibuildefe.js` is the library that lets you interact with your uibuilder nodes in Node-RED.
 
@@ -6,35 +12,31 @@ It manages the communications and provides a number of helper functions to make 
 
 The detailed documentation for the library is in the [uibuildefe developer documentation](uibuilderfe-js). If you don't find what you need here, please look there.
 
-## ToC
-
-* [Working with the uibuilderfe Front-End Library](#working-with-the-uibuilderfe-front-end-library)
-  * [ToC](#toc)
-  * [Startup](#startup)
-    * [Startup Optional Parameters](#startup-optional-parameters)
-    * [Examples](#examples)
-    * [Errors](#errors)
-  * [Events](#events)
-    * [Example onChange event handler](#example-onchange-event-handler)
-    * [Currently available pre-defined events](#currently-available-pre-defined-events)
-  * [Variable Handling](#variable-handling)
-  * [Helper Methods (functions)](#helper-methods-functions)
-    * [`autoSendReady` Turn on/off the ready for content control msg](#autosendready-turn-onoff-the-ready-for-content-control-msg)
-    * [`debug` Turn on/off debugging console messages](#debug-turn-onoff-debugging-console-messages)
-    * [`eventSend` Helper fn to send event data](#eventsend-helper-fn-to-send-event-data)
-    * [`get` Get the value of a uibuilder variable](#get-get-the-value-of-a-uibuilder-variable)
-    * [`logon` Send a logon (authentication) control request to Node-RED](#logon-send-a-logon-authentication-control-request-to-node-red)
-    * [`logoff` Send a logoff control request to Node-RED](#logoff-send-a-logoff-control-request-to-node-red)
-    * [`me` Return uibuilder info](#me-return-uibuilder-info)
-    * [`msg` Convenience method to access the last standard msg from Node-RED](#msg-convenience-method-to-access-the-last-standard-msg-from-node-red)
-    * [`onChange` Subscribe to a uibuilder variable change event](#onchange-subscribe-to-a-uibuilder-variable-change-event)
-    * [`send` Send a standard msg to Node-RED](#send-send-a-standard-msg-to-node-red)
-    * [`sendCtrl` Send a control msg to Node-RED](#sendctrl-send-a-control-msg-to-node-red)
-    * [`set` Set the value of a uibuilder variable, creates subscribable event for changes](#set-set-the-value-of-a-uibuilder-variable-creates-subscribable-event-for-changes)
-    * [`showComponentDetails` (VueJS only) Return a control msg contining details of a Vue component](#showcomponentdetails-vuejs-only-return-a-control-msg-contining-details-of-a-vue-component)
-    * [`showToast` (VueJS only) Shows a popup message in the UI](#showtoast-vuejs-only-shows-a-popup-message-in-the-ui)
-    * [`start` Start up the front-end library](#start-start-up-the-front-end-library)
-    * [`uiDebug` Conditional debug output (controlled by debug setting)](#uidebug-conditional-debug-output-controlled-by-debug-setting)
+* [Startup](#startup)
+  * [Startup Optional Parameters](#startup-optional-parameters)
+  * [Examples](#examples)
+  * [Errors](#errors)
+* [Events](#events)
+  * [Example onChange event handler](#example-onchange-event-handler)
+  * [Currently available pre-defined events](#currently-available-pre-defined-events)
+* [Variable Handling](#variable-handling)
+* [Helper Methods (functions)](#helper-methods-functions)
+  * [`autoSendReady` Turn on/off the ready for content control msg](#autosendready-turn-onoff-the-ready-for-content-control-msg)
+  * [`debug` Turn on/off debugging console messages](#debug-turn-onoff-debugging-console-messages)
+  * [`eventSend` Helper fn to send event data](#eventsend-helper-fn-to-send-event-data)
+  * [`get` Get the value of a uibuilder variable](#get-get-the-value-of-a-uibuilder-variable)
+  * [`logon` Send a logon (authentication) control request to Node-RED](#logon-send-a-logon-authentication-control-request-to-node-red)
+  * [`logoff` Send a logoff control request to Node-RED](#logoff-send-a-logoff-control-request-to-node-red)
+  * [`me` Return uibuilder info](#me-return-uibuilder-info)
+  * [`msg` Convenience method to access the last standard msg from Node-RED](#msg-convenience-method-to-access-the-last-standard-msg-from-node-red)
+  * [`onChange` Subscribe to a uibuilder variable change event](#onchange-subscribe-to-a-uibuilder-variable-change-event)
+  * [`send` Send a standard msg to Node-RED](#send-send-a-standard-msg-to-node-red)
+  * [`sendCtrl` Send a control msg to Node-RED](#sendctrl-send-a-control-msg-to-node-red)
+  * [`set` Set the value of a uibuilder variable, creates subscribable event for changes](#set-set-the-value-of-a-uibuilder-variable-creates-subscribable-event-for-changes)
+  * [`showComponentDetails` (VueJS only) Return a control msg contining details of a Vue component](#showcomponentdetails-vuejs-only-return-a-control-msg-contining-details-of-a-vue-component)
+  * [`showToast` (VueJS only) Shows a popup message in the UI](#showtoast-vuejs-only-shows-a-popup-message-in-the-ui)
+  * [`start` Start up the front-end library](#start-start-up-the-front-end-library)
+  * [`uiDebug` Conditional debug output (controlled by debug setting)](#uidebug-conditional-debug-output-controlled-by-debug-setting)
 
 ## Startup
 

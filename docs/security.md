@@ -1,18 +1,29 @@
-# uibuilder Security Documentation
+---
+title: uibuilder Security Documentation
+description: >
+   Some thoughts on how to correctly and safely secure a uibuilder app.
+created: 2020-01-05 20:45:00
+lastUpdated: 2021-06-27 18:19:13
+---
 
 uibuilder provides its own security process based on simple standards.
 
 This enables anyone to implement simple but effective multi-user security on their uibuilder based front-end's. You don't have to be an expert in ExpressJS or PassportJS. Nor do you need to understand much about web security, JWT, etc - though you will need some basic understanding if you really want to be sure about securing your user interfaces.
 
-> **WARNING**: I am **not** a professional developer, nor am I an operational DevOps person. I make no claims nor do I provide any warrenties or guarantees about the fundamental security of a web app developed with uibuilder. If you are unsure, you need to pay a professional to audit and penetration test your specific configuration as well as my code.
-> 
-> Having said that, if you or anyone else discovers flaws in the programming, I will work with you/them as well as I can in order to fix things. But this is not a paid-for development and I don't always have much time. I'm also open to Pull Requests to fix specific issues.
+!> **WARNING**: I am **not** a professional developer, nor am I an operational DevOps person. I make no claims nor do I provide any warrenties or guarantees about the fundamental security of a web app developed with uibuilder. If you are unsure, you need to pay a professional to audit and penetration test your specific configuration as well as my code.
+
+?> Having said that, if you or anyone else discovers flaws in the programming, I will work with you/them as well as I can in order to fix things. But this is not a paid-for development and I don't always have much time. I'm also open to Pull Requests to fix specific issues.
+
+* [How do I secure my uibuilder app?](#how-do-i-secure-my-uibuilder-app)
+* [Configuring Node-RED for TLS](#configuring-node-red-for-tls)
+* [Standard Schema for `msg._auth`](#standard-schema-for-msg_auth)
+* [Additional Information](#additional-information)
 
 ## How do I secure my uibuilder app?
 
 1. Configure Node-RED to use TLS. The security documentation for Node-RED contains the details. There are also various threads on the Node-RED Discourse forum that explain what people have done to make use of Let's Encrypt or self-signed certificates.
    
-   **WARNING**: Do not - EVER - use any kind of web login process without first setting up TLS. It is unsafe and sends your sensitive user data unencrypted over the network (potentially over the Internet).
+   !> **WARNING**: Do not - EVER - use any kind of web login process without first setting up TLS. It is unsafe and sends your sensitive user data unencrypted over the network (potentially over the Internet).
 
    If you have configured Node-RED to work in a non-development mode (e.g. the NODE_ENV environment variable was set to somethnig other than "development"), uibuilder will _refuse_ to turn on security unless TLS is properly configured. In development mode, it will allow it but will output a security warning every time a user connects.
 

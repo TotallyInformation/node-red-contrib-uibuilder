@@ -19,7 +19,8 @@
     <link rel="stylesheet alternative" href="https://cdn.jsdelivr.net/npm/docsify-themeable@latest/dist/css/theme-simple-dark.css" title="dark">
     <style>
         :root {
-            --base-font-size: 16px;
+            --base-font-size: 20px;
+            --sidebar-width: 22em;
             /* --base-font-family: Frutiger W01, Arial, Sans-serif; */
             /*--sidebar-background: #005EB8;*/
         }
@@ -32,16 +33,11 @@
         }
     </style>
 </head><body>
-    <!-- <nav>
-        <a href="#/" style="font-size:200%">uibuilder Technical Documentation v3</a>
-        <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki">WIKI</a>
-        <a href="https://it.knightnet.org.uk">Much Ado About IT (Blog)</a>
-        <a href="https://nodered.org/">Node-RED</a>
-    </nav> -->
     <div id="app">Loading, please wait ...</div>
     <script src="https://unpkg.com/docsify-edit-on-github/index.js"></script>
     <script>
         // https://docsify.js.org/
+        // https://jhildenbiddle.github.io/docsify-themeable
         window.$docsify = {
             name: 'uibuilder Technical Documentation v3',
             repo: 'TotallyInformation/node-red-contrib-uibuilder',
@@ -56,6 +52,8 @@
             auto2top: true,
             alias: {
                 '/.*/_sidebar.md': '/_sidebar.md', // use the same sidebar everywhere. See #301
+                '.*?/changelog': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/CHANGELOG.md',
+                '.*?/uibhome': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/README.md',
                 '/docs/(.*)': '/$1',
             },
             subMaxLevel: 2,
