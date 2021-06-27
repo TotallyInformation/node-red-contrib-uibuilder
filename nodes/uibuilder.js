@@ -43,7 +43,7 @@ const child_process = require('child_process')
 const serveStatic   = require('serve-static')
 //const serveIndex    = require('serve-index')
 //const socketio      = require('socket.io')
-const Express = require('express') // eslint-disable-line no-unused-vars
+const Express       = require('express') // eslint-disable-line no-unused-vars
 const fs            = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 const fg            = require('fast-glob') // https://github.com/mrmlnc/fast-glob
 
@@ -76,10 +76,6 @@ const uib = {
     installedPackages: {},
     /** Location of master template folders (containing default front-end code) @constant {string} uib.masterTemplateFolder */
     masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
-    /** DEFAULT template to use as master? Must match a folder in the masterTemplateFolder
-     * Each instance can have its own template, stored in node.templSel
-     */
-    masterTemplate: 'vue',
     /** Location of master dist folder (containing built core front-end code) @constant {string} uib.masterStaticDistFolder */
     masterStaticDistFolder: path.join( __dirname, '..', 'front-end', 'dist' ),
     /** Location of master src folder (containing src core front-end code) @constant {string} uib.masterStaticSrcFolder */
@@ -124,6 +120,8 @@ const uib = {
         /** @type {undefined|string} uibuilder Host. sub(domain) name or IP Address */
         host: undefined,
     },
+    /** Event emitter for degit, populated on 1st use. See POST admin API */
+    degitEmitter: undefined,
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -285,8 +283,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         node.fwdInMessages   = config.fwdInMessages === undefined ? false : config.fwdInMessages
         node.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
         node.allowStyles     = config.allowStyles === undefined ? false : config.allowStyles
-        node.copyIndex       = config.copyIndex === undefined ? true : config.copyIndex
+        node.copyIndex       = config.copyIndex === undefined ? true : config.copyIndex // DEPRECATED
         node.templateFolder  = config.templateFolder || templateConf.vue.folder
+        node.extTemplate     = config.extTemplate
         node.showfolder      = config.showfolder === undefined ? false : config.showfolder
         node.useSecurity     = config.useSecurity 
         node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
@@ -324,30 +323,30 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 fs.moveSync(path.join(uib.rootFolder, node.oldUrl), node.customFolder, {overwrite: false})
             } catch (e) {
                 // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
-                if ( e.code !== 'ENOENT' )
+                if ( e.code !== 'ENOENT' ) {
                     log.error(`[uibuilder] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${node.url}, oldUrl=${node.oldUrl}, Fldr=${node.customFolder}. Error=${e.message}`, e)
+                }
             }
             // we continue to do the normal checks in case something failed or if this is an initial deploy (so no original folder exists)
         }
 
+        // Does the custom folder exist? If not, create it and copy blank template to it. Otherwise make sure it is accessible.
         var customFoldersOK = true
-        // Check if the folder exists and is accessible to Node-RED
-        try {
-            fs.mkdirSync(node.customFolder)
-            fs.accessSync(node.customFolder, fs.constants.W_OK)
-        } catch (e) {
-            if ( e.code !== 'EEXIST' ) {
-                log.error(`[uibuilder:${uibInstance}] Local custom folder ERROR`, e.message)
+        if ( ! fs.existsSync(node.customFolder) ) {
+            const cpyOpts = {'preserveTimestamps':true}
+            let copyFrom = path.join( uib.masterTemplateFolder, 'blank' )
+            try {
+                fs.copySync( copyFrom, node.customFolder, cpyOpts)
+                log.trace(`[uibuilder:${uibInstance}] Created instance folder ${node.customFolder} and copied template files from ${copyFrom}` )
+            } catch (e) {
+                log.error(`[uibuilder] CREATE OF INSTANCE FOLDER '${node.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
                 customFoldersOK = false
-            }
-        }
-        // Then make sure the DIST & SRC folders for this node instance exist
-        try {
-            fs.mkdirSync( path.join(node.customFolder, 'dist') )
-            fs.mkdirSync( path.join(node.customFolder, 'src') )
-        } catch (e) {
-            if ( e.code !== 'EEXIST' ) {
-                log.error(`[uibuilder:${uibInstance}] Local custom dist or src folder ERROR`, e.message)
+            }    
+        } else {
+            try {
+                fs.accessSync(node.customFolder, fs.constants.W_OK)
+            } catch (e) {
+                log.error(`[uibuilder:${uibInstance}] Local custom folder ERROR`, e.message)
                 customFoldersOK = false
             }
         }
@@ -356,26 +355,6 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         if ( uib_rootFolder_OK === true && customFoldersOK === true ) {
             // local custom folders are there ...
             log.trace(`[uibuilder:${uibInstance}] Using local front-end folders in`, node.customFolder)
-
-            /** Now copy folders and files from the master template folder
-             *  Don't copy if copy turned off in admin ui 
-             *  Note that the template folder is stored in node.templSel
-             */
-            if ( node.copyIndex ) {
-                const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-                try {
-                    fs.copy( path.join( uib.masterTemplateFolder, node.templateFolder ), node.customFolder, cpyOpts, function(err){
-                        if(err){
-                            log.error(`[uibuilder:${uibInstance}] Error copying template files from ${path.join( __dirname, 'templates', node.templateFolder)} to ${node.customFolder} Error=${err.message}`, err)
-                        } else {
-                            log.trace(`[uibuilder:${uibInstance}] Copied template files from ${path.join( __dirname, 'templates', node.templateFolder)} to local src (not overwriting)`, node.customFolder )
-                        }
-                    })
-                } catch (e) {
-                    // Should never happen
-                    log.error(`[uibuilder] COPY OF TEMPLATE TO INSTANCE FOLDER FAILED. Fatal. Error=${e.message}`, e)
-                }
-            }
         } else {
             // Local custom folders are not right!
             log.error(`[uibuilder:${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
@@ -469,6 +448,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     //#region ====== Admin API's ====== //
 
+    //#region === Validation functions === //
     /** Validate url query parameter
      * @param {Object} params The GET (res.query) or POST (res.body) parameters
      * @param {string} params.url The uibuilder url to check
@@ -483,18 +463,24 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             res.status = 500
             return res
         }
+
+        // Trim the url
+        params.url = params.url.trim()
+
         // URL must not exceed 20 characters
         if ( params.url.length > 20 ) {
             res.statusMessage = `url parameter is too long. Max 20 characters: ${params.url}`
             res.status = 500
             return res
         }
+
         // URL must be more than 0 characters
         if ( params.url.length < 1 ) {
             res.statusMessage = 'url parameter is empty, please provide a value'
             res.status = 500
             return res
         }
+
         // URL cannot contain .. to prevent escaping sub-folder structure
         if ( params.url.includes('..') ) {
             res.statusMessage = `url parameter may not contain "..": ${params.url}`
@@ -502,7 +488,12 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             return res
         }
 
-        // TODO: Does the url exist?
+        // Does this url have a matching instance root folder?
+        if ( ! fs.existsSync(path.join(uib.rootFolder, params.url)) ) {
+            res.statusMessage = `url does not have a matching instance root folder. url='${params.url}', Master root folder='uib.rootFolder'`
+            res.status = 500
+            return res
+        }
 
         return res
     } // ---- End of fn chkParamUrl ---- //
@@ -580,11 +571,13 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         
         return res
     } // ---- End of fn chkParamFldr ---- //
+    //#endregion === Validation functions === //
 
-    //#region ====== Admin API v3 ====== //
+    //#region === Admin API v3 === //
+
     /** uibuilder v3 unified Admin API router - new API commands should be added here */
     RED.httpAdmin.route('/uibuilder/admin/:url')
-        // For all routes
+        // For all routes (this function is called before more specific ones)
         .all(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) {
             // @ts-ignore
             const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
@@ -702,75 +695,158 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             })
 
         })
-        /** Create a new folder or file */
+        /** Load new template or Create a new folder or file */
         .post(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
             // @ts-ignore
             const params = res.allparams
             params.type = 'post'
 
-            // Validate folder name - params.folder
-            const chkFldr = chkParamFldr(params)
-            if ( chkFldr.status !== 0 ) {
-                log.error(`[uibuilder:admin-router:POST] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-                res.statusMessage = chkFldr.statusMessage
-                res.status(chkFldr.status).end()
-                return
-            }
-            // Validate command - must be present and either be 'newfolder' or 'newfile'
-            if ( ! (params.cmd && (params.cmd === 'newfolder' || params.cmd === 'newfile')) ) {
-                let statusMsg = `cmd parameter not present or wrong value (must be 'newfolder' or 'newfile'). url=${params.url}, cmd=${params.cmd}`
-                log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
-                res.statusMessage = statusMsg
-                res.status(500).end()
-                return
-            }
-            // If newfile, validate file name - params.fname
-            if (params.cmd === 'newfile' ) {
-                const chkFname = chkParamFname(params)
-                if ( chkFname.status !== 0 ) {
-                    log.error(`[uibuilder:admin-router:POST] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
-                    res.statusMessage = chkFname.statusMessage
-                    res.status(chkFname.status).end()
+            if ( params.cmd === 'replaceTemplate' ) {
+                // Load a new template (params url, template, extTemplate)
+                if ( params.template === 'external' && ( (!params.extTemplate) || params.extTemplate.length === 0) ) {
+                    let statusMsg = `External template selected but no template name provided. template=external, url=${params.url}, cmd=${params.cmd}`
+                    log.error(`[uibuilder:admin-router:POST]. ${statusMsg}`)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()
                     return
-                }        
-            }
-    
-            let fullname = path.join(uib.rootFolder, params.url, params.folder)
-            if (params.cmd === 'newfile' ) {
-                fullname = path.join(fullname, params.fname)
-            }
-            
-            // Does folder or file already exist? If so, return error
-            if ( fs.pathExistsSync(fullname) ) {
-                let statusMsg = `selected ${params.cmd === 'newfolder' ? 'folder':'file'} already exists. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
-                log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
-                res.statusMessage = statusMsg
-                res.status(500).end()
-                return
-            }
-
-            // try to create folder/file - if fail, return error
-            try {
-                if ( params.cmd === 'newfolder') {
-                    fs.ensureDirSync(fullname)
-                } else {
-                    fs.ensureFileSync(fullname)
                 }
-            } catch (e) {
-                let statusMsg = `could not create ${params.cmd === 'newfolder' ? 'folder':'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
-                log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
-                res.statusMessage = statusMsg
-                res.status(500).end()
-                return
-            }
 
-            log.trace(`[uibuilder:admin-router:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
-            res.statusMessage = 'Folder/File created successfully'
-            res.status(200).json({
-                'fullname': fullname,
-                'params': params,
-            })
-        })
+                let fullname = path.join(uib.rootFolder, params.url)
+
+                if ( params.extTemplate ) params.extTemplate = params.extTemplate.trim()
+
+                // If template="external" & extTemplate not blank - use degit to load
+                if ( params.template === 'external' ) {
+                    const degit = require('degit')
+
+                    uib.degitEmitter = degit(params.extTemplate, {
+                        cache: true,
+                        force: true,
+                        verbose: false,
+                    })
+                    
+                    uib.degitEmitter.on('info', info => {
+                        log.trace(`[uibuilder:admin-router:POST:replaceTemplate] Degit: '${params.extTemplate}' to '${fullname}': ${info.message}`)
+                    })
+                    
+                    uib.degitEmitter.clone(fullname)
+                    .then(() => {
+                        let statusMsg = `Degit successfully copied template '${params.extTemplate}' to '${fullname}'.`
+                        log.info(`[uibuilder:admin-router:POST] ${statusMsg} cmd=replaceTemplate`)
+                        res.statusMessage = statusMsg
+                        res.status(200).json({
+                            'params': params,
+                        })
+                        return
+                    })
+                    .catch( err => {
+                        let statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}`
+                        log.error(`[uibuilder:admin-router:POST] ${statusMsg}`, err)
+                        res.statusMessage = statusMsg
+                        res.status(500).end()
+                        return
+                    })
+
+                } else {
+                    // Otherwise, use internal template
+                    if ( Object.prototype.hasOwnProperty.call(templateConf, params.template) ) {
+                        const fsOpts = {'overwrite': true, 'preserveTimestamps':true}
+                        const srcTemplate = path.join( uib.masterTemplateFolder, params.template )
+                        try {
+                            fs.copySync( srcTemplate, fullname, fsOpts )
+                            let statusMsg = `Successfully copied template ${params.template} to ${params.url}.`
+                            log.info(`[uibuilder:admin-router:POST] ${statusMsg} cmd=replaceTemplate`)
+                            res.statusMessage = statusMsg
+                            res.status(200).json({
+                                'params': params,
+                            })
+                            return
+                        } catch (err) {
+                            let statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${params.url}, cmd=${params.cmd}, ERR=${err.message}.`
+                            log.error(`[uibuilder:admin-router:POST] ${statusMsg}`, err)
+                            res.statusMessage = statusMsg
+                            res.status(500).end()
+                        }
+                        return
+                    } else {
+                        // Shouldn't ever be able to occur - but still :-)
+                        let statusMsg = `Template '${params.template}' does not exist. url=${params.url}, cmd=${params.cmd}.`
+                        log.error(`[uibuilder:admin-router:POST] ${statusMsg}`)
+                        res.statusMessage = statusMsg
+                        res.status(500).end()
+                    }
+                }
+
+                // End of replaceTemplate cmd
+
+            } else {
+
+                // Validate folder name - params.folder
+                const chkFldr = chkParamFldr(params)
+                if ( chkFldr.status !== 0 ) {
+                    log.error(`[uibuilder:admin-router:POST] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+                    res.statusMessage = chkFldr.statusMessage
+                    res.status(chkFldr.status).end()
+                    return
+                }
+                // Validate command - must be present and either be 'newfolder' or 'newfile'
+                if ( ! (params.cmd && (params.cmd === 'newfolder' || params.cmd === 'newfile')) ) {
+                    let statusMsg = `cmd parameter not present or wrong value (must be 'newfolder' or 'newfile'). url=${params.url}, cmd=${params.cmd}`
+                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()
+                    return
+                }
+                // If newfile, validate file name - params.fname
+                if (params.cmd === 'newfile' ) {
+                    const chkFname = chkParamFname(params)
+                    if ( chkFname.status !== 0 ) {
+                        log.error(`[uibuilder:admin-router:POST] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+                        res.statusMessage = chkFname.statusMessage
+                        res.status(chkFname.status).end()
+                        return
+                    }        
+                }
+        
+                let fullname = path.join(uib.rootFolder, params.url, params.folder)
+                if (params.cmd === 'newfile' ) {
+                    fullname = path.join(fullname, params.fname)
+                }
+                
+                // Does folder or file already exist? If so, return error
+                if ( fs.pathExistsSync(fullname) ) {
+                    let statusMsg = `selected ${params.cmd === 'newfolder' ? 'folder':'file'} already exists. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
+                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()
+                    return
+                }
+
+                // try to create folder/file - if fail, return error
+                try {
+                    if ( params.cmd === 'newfolder') {
+                        fs.ensureDirSync(fullname)
+                    } else {
+                        fs.ensureFileSync(fullname)
+                    }
+                } catch (e) {
+                    let statusMsg = `could not create ${params.cmd === 'newfolder' ? 'folder':'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
+                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()
+                    return
+                }
+
+                log.trace(`[uibuilder:admin-router:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+                res.statusMessage = 'Folder/File created successfully'
+                res.status(200).json({
+                    'fullname': fullname,
+                    'params': params,
+                })
+
+            } // end of else
+
+        }) // --- End of POST processing --- //
         /** Delete a folder or a file */
         .delete(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
             // @ts-ignore ts(2339)
@@ -843,7 +919,10 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         /** @see https://expressjs.com/en/4x/api.html#app.METHOD for other methods
          *  patch, report, search ?
          */
-    //#endregion ====== Admin API v3 ====== //
+    
+    //#endregion === Admin API v3 === //
+
+    //#region === Admin API v1/2 === //
 
     /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
@@ -1214,12 +1293,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                         <tr>
                             <th>uib.masterTemplateFolder</th>
                             <td>${uib.masterTemplateFolder}</td>
-                            <td>The source templates, copied to any new instance</td>
-                        </tr>
-                        <tr>
-                            <th>uib.masterTemplate</th>
-                            <td>${uib.masterTemplate}</td>
-                            <td>Which master template is in use</td>
+                            <td>The built-in source templates, can be copied to any instance</td>
                         </tr>
                     </table>
 
@@ -1482,7 +1556,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     // @ts-ignore
     RED.httpAdmin.use('/uibuilder/techdocs', serveStatic( path.join(__dirname, '..', 'docs'), uib.staticOpts ) )
 
-    //#region ====== DEPRECATED API's ====== //
+    //#endregion === Admin API v1/2 === //
+
+    //#region === DEPRECATED API's === //
 
     /** DEPRECATED in v3.1.0. Do not use, will be removed soon. Create a simple NR admin API to return the list of files in the `<userLib>/uibuilder/<url>/src` folder
      * @since 2019-01-27 - Adding the file edit admin ui
@@ -1490,202 +1566,202 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      * @param {Object} permissions The permissions required for access
      * @param {function} cb Function to be exectuted when this API called
      **/
-    RED.httpAdmin.get('/uibfiles', function(req,res) {
-        log.warn('[uibuilder:uibfiles] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
-        //#region --- Parameter validation ---
-        /** @type {Object} */
-        const params = req.query
+    // RED.httpAdmin.get('/uibfiles', function(req,res) {
+    //     log.warn('[uibuilder:uibfiles] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
+    //     //#region --- Parameter validation ---
+    //     /** @type {Object} */
+    //     const params = req.query
 
-        const chkUrl = chkParamUrl(params)
-        if ( chkUrl.status !== 0 ) {
-            log.error(`[uibuilder:uibfiles] Admin API. ${chkUrl.statusMessage}`)
-            res.statusMessage = chkUrl.statusMessage
-            res.status(chkUrl.status).end()
-            return
-        }
+    //     const chkUrl = chkParamUrl(params)
+    //     if ( chkUrl.status !== 0 ) {
+    //         log.error(`[uibuilder:uibfiles] Admin API. ${chkUrl.statusMessage}`)
+    //         res.statusMessage = chkUrl.statusMessage
+    //         res.status(chkUrl.status).end()
+    //         return
+    //     }
 
-        var folder = params.folder || 'src'
-        if ( folder !== 'src' && folder !== 'dist' && folder !== 'root' ) {
-            log.error('[uibfiles] Admin API. folder parameter is not one of src|dest|root')
-            res.statusMessage = 'folder parameter must be one of src|dest|root'
-            res.status(500).end()
-            return
-        }
-        if ( folder === 'root' ) folder = ''
+    //     var folder = params.folder || 'src'
+    //     if ( folder !== 'src' && folder !== 'dist' && folder !== 'root' ) {
+    //         log.error('[uibfiles] Admin API. folder parameter is not one of src|dest|root')
+    //         res.statusMessage = 'folder parameter must be one of src|dest|root'
+    //         res.status(500).end()
+    //         return
+    //     }
+    //     if ( folder === 'root' ) folder = ''
 
-        // cpyIdx - force the index.(html|css|js) files to be present in the src folder if not there
-        var cpyIdx = params.cpyIdx === 'true' ? true : false
+    //     // cpyIdx - force the index.(html|css|js) files to be present in the src folder if not there
+    //     var cpyIdx = params.cpyIdx === 'true' ? true : false
 
-        //#endregion ---- ----
+    //     //#endregion ---- ----
 
-        log.trace(`[uibuilder:uibfiles] Admin API. File get requested. url=${params.url}, folder=${folder}`)
+    //     log.trace(`[uibuilder:uibfiles] Admin API. File get requested. url=${params.url}, folder=${folder}`)
 
-        // @ts-ignore
-        const srcFolder = path.join(uib.rootFolder, req.query.url, folder)
+    //     // @ts-ignore
+    //     const srcFolder = path.join(uib.rootFolder, req.query.url, folder)
 
-        /** If requested, copy files from the master template folder
-         *  Note: We don't copy the master dist folder
-         *  Don't copy if copy turned off in admin ui 
-         */
-        if ( (folder === 'src') && (cpyIdx === true) ) {
-            const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
-            const fromTemplateFolder = path.join( uib.masterTemplateFolder, uib.masterTemplate )
-            try {
-                fs.copySync( fromTemplateFolder, srcFolder, cpyOpts)
-                log.trace(`[uibuilder:uibfiles] Copied template files from ${fromTemplateFolder} to ${srcFolder} (not overwriting)` )
-            } catch (err) {
-                log.error(`[uibuilder:uibfiles] Error copying template files from ${fromTemplateFolder} to ${srcFolder}`, err)
-            }
-        }
+    //     /** If requested, copy files from the master template folder
+    //      *  Note: We don't copy the master dist folder
+    //      *  Don't copy if copy turned off in admin ui 
+    //      */
+    //     if ( (folder === 'src') && (cpyIdx === true) ) {
+    //         const cpyOpts = {'overwrite':false, 'preserveTimestamps':true}
+    //         const fromTemplateFolder = path.join( uib.masterTemplateFolder, uib.masterTemplate )
+    //         try {
+    //             fs.copySync( fromTemplateFolder, srcFolder, cpyOpts)
+    //             log.trace(`[uibuilder:uibfiles] Copied template files from ${fromTemplateFolder} to ${srcFolder} (not overwriting)` )
+    //         } catch (err) {
+    //             log.error(`[uibuilder:uibfiles] Error copying template files from ${fromTemplateFolder} to ${srcFolder}`, err)
+    //         }
+    //     }
 
-        // Get the file list - note, ignore errors for now
-        // TODO: (v2.1) Need to filter out folders. Or better, flatten and allow sub-folders.
-        // @ts-ignore
-        fs.readdir(srcFolder, {withFileTypes: true}, (err, files) => {
-            if ( err ) {
-                log.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
-                //console.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
-                res.statusMessage = err
-                res.status(500).end()
-                return
-            }
-            // Send back a JSON response body containing the list of files that can be edited
-            if ( uib.nodeVersion[0] < 10 ) {
-                res.json(
-                    files
-                        .filter(fname => {
-                            try {
-                                let stat = fs.statSync( path.join(srcFolder, fname) )
-                                return !stat.isDirectory()
-                            } catch (e) {
-                                log.error(`[uibfiles] Admin API. stat failed for '${fname}' in '${srcFolder}'.`, e)
-                            }
-                        })
-                )
-            } else {
-                res.json(
-                    files
-                        .filter(dirent => !dirent.isDirectory())
-                        .map(dirent => dirent.name)
-                )
-            }
-        })
+    //     // Get the file list - note, ignore errors for now
+    //     // TODO: (v2.1) Need to filter out folders. Or better, flatten and allow sub-folders.
+    //     // @ts-ignore
+    //     fs.readdir(srcFolder, {withFileTypes: true}, (err, files) => {
+    //         if ( err ) {
+    //             log.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
+    //             //console.error(`[uibfiles] Admin API. readDir failed for folder '${srcFolder}'.`, err)
+    //             res.statusMessage = err
+    //             res.status(500).end()
+    //             return
+    //         }
+    //         // Send back a JSON response body containing the list of files that can be edited
+    //         if ( uib.nodeVersion[0] < 10 ) {
+    //             res.json(
+    //                 files
+    //                     .filter(fname => {
+    //                         try {
+    //                             let stat = fs.statSync( path.join(srcFolder, fname) )
+    //                             return !stat.isDirectory()
+    //                         } catch (e) {
+    //                             log.error(`[uibfiles] Admin API. stat failed for '${fname}' in '${srcFolder}'.`, e)
+    //                         }
+    //                     })
+    //             )
+    //         } else {
+    //             res.json(
+    //                 files
+    //                     .filter(dirent => !dirent.isDirectory())
+    //                     .map(dirent => dirent.name)
+    //             )
+    //         }
+    //     })
 
-    }) // ---- End of uibfiles ---- //
+    // }) // ---- End of uibfiles ---- //
 
     /** DEPRECATED in v3.1.0. Do not use, will be removed soon. Create a simple NR admin API to CREATE a new file in the `<userLib>/uibuilder/<url>/<folder>` folder
      * @param {string} url The admin api url to create
      * @param {Object} permissions The permissions required for access (Express middleware)
      * @param {function} cb
      **/
-    RED.httpAdmin.get('/uibnewfile', function(req,res) {
-        log.warn('[uibuilder:uibuilder] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
-        //#region --- Parameter validation ---
-        /** @type {Object} */
-        const params = req.query
+    // RED.httpAdmin.get('/uibnewfile', function(req,res) {
+    //     log.warn('[uibuilder:uibuilder] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
+    //     //#region --- Parameter validation ---
+    //     /** @type {Object} */
+    //     const params = req.query
 
-        const chkUrl = chkParamUrl(params)
-        if ( chkUrl.status !== 0 ) {
-            log.error(`[uibuilder:uibnewfile] Admin API. ${chkUrl.statusMessage}`)
-            res.statusMessage = chkUrl.statusMessage
-            res.status(chkUrl.status).end()
-            return
-        }
+    //     const chkUrl = chkParamUrl(params)
+    //     if ( chkUrl.status !== 0 ) {
+    //         log.error(`[uibuilder:uibnewfile] Admin API. ${chkUrl.statusMessage}`)
+    //         res.statusMessage = chkUrl.statusMessage
+    //         res.status(chkUrl.status).end()
+    //         return
+    //     }
 
-        const chkFname = chkParamFname(params)
-        if ( chkFname.status !== 0 ) {
-            log.error(`[uibuilder:uibnewfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
-            res.statusMessage = chkFname.statusMessage
-            res.status(chkFname.status).end()
-            return
-        }
+    //     const chkFname = chkParamFname(params)
+    //     if ( chkFname.status !== 0 ) {
+    //         log.error(`[uibuilder:uibnewfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+    //         res.statusMessage = chkFname.statusMessage
+    //         res.status(chkFname.status).end()
+    //         return
+    //     }
 
-        const chkFldr = chkParamFldr(params)
-        if ( chkFldr.status !== 0 ) {
-            log.error(`[uibuilder:uibnewfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-            res.statusMessage = chkFldr.statusMessage
-            res.status(chkFldr.status).end()
-            return
-        }
-        //#endregion ---- ----
+    //     const chkFldr = chkParamFldr(params)
+    //     if ( chkFldr.status !== 0 ) {
+    //         log.error(`[uibuilder:uibnewfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+    //         res.statusMessage = chkFldr.statusMessage
+    //         res.status(chkFldr.status).end()
+    //         return
+    //     }
+    //     //#endregion ---- ----
         
-        log.trace(`[uibuilder:uibnewfile] Admin API. File create requested. url=${params.url}, file=${params.folder}/${params.fname}`)
+    //     log.trace(`[uibuilder:uibnewfile] Admin API. File create requested. url=${params.url}, file=${params.folder}/${params.fname}`)
 
-        const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
+    //     const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
 
-        try {
-            fs.ensureFileSync(fullname)
-            // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-            log.trace(`[uibuilder:uibnewfile] Admin API. File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
-            res.statusMessage = 'File created successfully'
-            res.status(200).end()
-        } catch (err) {
-            // Send back a response message and code 500 (Internal Server Error)=Create failed
-            log.error(`[uibuilder:uibnewfile] Admin API. File create FAILED. url=${params.url}, file=${params.folder}/${params.fname}`, err)
-            res.statusMessage = err
-            res.status(500).end()
-        }
-    }) // ---- End of uibnewfile ---- //
+    //     try {
+    //         fs.ensureFileSync(fullname)
+    //         // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+    //         log.trace(`[uibuilder:uibnewfile] Admin API. File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+    //         res.statusMessage = 'File created successfully'
+    //         res.status(200).end()
+    //     } catch (err) {
+    //         // Send back a response message and code 500 (Internal Server Error)=Create failed
+    //         log.error(`[uibuilder:uibnewfile] Admin API. File create FAILED. url=${params.url}, file=${params.folder}/${params.fname}`, err)
+    //         res.statusMessage = err
+    //         res.status(500).end()
+    //     }
+    // }) // ---- End of uibnewfile ---- //
 
     /** DEPRECATED in v3.1.0. Do not use, will be removed soon. A simple NR admin API to DELETE a file in the `<userLib>/uibuilder/<url>/<folder>` folder
      * @param {string} url The admin api url to create
      * @param {Object} permissions The permissions required for access (Express middleware)
      * @param {function} cb
      **/
-    RED.httpAdmin.get('/uibdeletefile', function(req,res) {
-        log.warn('[uibuilder:uibdeletefile] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
-        //#region --- Parameter validation ---
-        /** @type {Object} */
-        const params = req.query
+    // RED.httpAdmin.get('/uibdeletefile', function(req,res) {
+    //     log.warn('[uibuilder:uibdeletefile] Admin API. THIS API IS DEPRECATED, DO NOT USE, IT WILL BE REMOVED SOON.')
+    //     //#region --- Parameter validation ---
+    //     /** @type {Object} */
+    //     const params = req.query
 
-        const chkUrl = chkParamUrl(params)
-        if ( chkUrl.status !== 0 ) {
-            log.error(`[uibuilder:uibdeletefile] Admin API. ${chkUrl.statusMessage}`)
-            res.statusMessage = chkUrl.statusMessage
-            res.status(chkUrl.status).end()
-            return
-        }
+    //     const chkUrl = chkParamUrl(params)
+    //     if ( chkUrl.status !== 0 ) {
+    //         log.error(`[uibuilder:uibdeletefile] Admin API. ${chkUrl.statusMessage}`)
+    //         res.statusMessage = chkUrl.statusMessage
+    //         res.status(chkUrl.status).end()
+    //         return
+    //     }
 
-        const chkFname = chkParamFname(params)
-        if ( chkFname.status !== 0 ) {
-            log.error(`[uibuilder:uibdeletefile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
-            res.statusMessage = chkFname.statusMessage
-            res.status(chkFname.status).end()
-            return
-        }
+    //     const chkFname = chkParamFname(params)
+    //     if ( chkFname.status !== 0 ) {
+    //         log.error(`[uibuilder:uibdeletefile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+    //         res.statusMessage = chkFname.statusMessage
+    //         res.status(chkFname.status).end()
+    //         return
+    //     }
 
-        const chkFldr = chkParamFldr(params)
-        if ( chkFldr.status !== 0 ) {
-            log.error(`[uibuilder:uibdeletefile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-            res.statusMessage = chkFldr.statusMessage
-            res.status(chkFldr.status).end()
-            return
-        }
+    //     const chkFldr = chkParamFldr(params)
+    //     if ( chkFldr.status !== 0 ) {
+    //         log.error(`[uibuilder:uibdeletefile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+    //         res.statusMessage = chkFldr.statusMessage
+    //         res.status(chkFldr.status).end()
+    //         return
+    //     }
 
-        // If the url query param is invalid, exit (res.status was set in function)
-        //if ( uiblib.checkUrl(params.url, res, 'uibdeletefile', log) === false ) return
+    //     // If the url query param is invalid, exit (res.status was set in function)
+    //     //if ( uiblib.checkUrl(params.url, res, 'uibdeletefile', log) === false ) return
       
-        //#endregion ---- ----
+    //     //#endregion ---- ----
         
-        log.trace(`[uibuilder:uibdeletefile] Admin API. File delete requested. url=${params.url}, file=${params.folder}/${params.fname}`)
+    //     log.trace(`[uibuilder:uibdeletefile] Admin API. File delete requested. url=${params.url}, file=${params.folder}/${params.fname}`)
 
-        const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
+    //     const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
 
-        try {
-            fs.removeSync(fullname)
-            // Send back a response message and code 200 = OK
-            log.trace(`[uibuilder:uibdeletefile] Admin API. File delete SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
-            res.statusMessage = 'File deleted successfully'
-            res.status(200).end()
-        } catch (err) {
-            // Send back a response message and code 500 (Internal Server Error)=Create failed
-            log.error(`[uibuilder:uibdeletefile] Admin API. File delete FAILED. url=${params.url}, file=${params.folder}/${params.fname}`, err)
-            res.statusMessage = err
-            res.status(500).end()
-        }
-    }) // ---- End of uibdeletefile ---- //
+    //     try {
+    //         fs.removeSync(fullname)
+    //         // Send back a response message and code 200 = OK
+    //         log.trace(`[uibuilder:uibdeletefile] Admin API. File delete SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+    //         res.statusMessage = 'File deleted successfully'
+    //         res.status(200).end()
+    //     } catch (err) {
+    //         // Send back a response message and code 500 (Internal Server Error)=Create failed
+    //         log.error(`[uibuilder:uibdeletefile] Admin API. File delete FAILED. url=${params.url}, file=${params.folder}/${params.fname}`, err)
+    //         res.statusMessage = err
+    //         res.status(500).end()
+    //     }
+    // }) // ---- End of uibdeletefile ---- //
 
-    //#endregion ====== end of deprecated admin api's ====== //
+    //#endregion === end of deprecated admin api's === //
 
     //#endregion ====== Admin API's ====== //
 
