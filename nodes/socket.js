@@ -19,6 +19,12 @@
  */
 'use strict'
 
+/** --- Type Defs ---
+ * @typedef {import('../typedefs.js').MsgAuth} MsgAuth
+ * @typedef {import('../typedefs.js').uibNode} uibNode
+ * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
+ */
+
 const socketio      = require('socket.io')
 const tilib         = require('./tilib')   // General purpose library (by Totally Information)
 const uiblib        = require('./uiblib')  // Utility library for uibuilder
