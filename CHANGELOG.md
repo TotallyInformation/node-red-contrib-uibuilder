@@ -15,11 +15,11 @@ Nothing currently.
 ## Major Changes
 
 * Node.js v12+ is the minimum supported environment for Node-RED.
-* Only "modern" browsers now supported for both the Editor and the uibuilderfe front-end library as ES6 (ECMA2015) code is used. 
+* Only "modern" browsers are now supported for both the Editor and the uibuilderfe front-end library as ES6 (ECMA2015) code is used. 
 
   Let me know if this is a problem and I can build a backwards compatible version.
   
-* **Template handling is significantly changed in this major release**.
+### Template handling is significantly changed in this major release
   
   New instances of uibuilder nodes will only be given the "blank" template which uses no front-end frameworks.
 
@@ -38,6 +38,10 @@ Nothing currently.
 
   **NOTE**: When using an external template, no check is currently done on dependencies, you must install these yourself. I will try to add this feature in the future.
 
+### Changing the `uibRoot` folder
+  
+  You can now set uibuilders root folder - that stores configuration, common, security and each node's front-end code - to a different location. The default location is in your userDir folder in a sub-folder called `uibuilder`. If you are using projects, the sub-folder will be in your projects root folder. See [docs/changing-uibroot.md](docs/changing-uibroot.md) for more detail.
+
 ## Updated
 
 * Update fs-extra to [v10](https://github.com/jprichardson/node-fs-extra/compare/9.1.0...10.0.0). No longer supports node.js v10, requires v12+.
@@ -48,6 +52,10 @@ Nothing currently.
 * Technical Docs have been improved in line with some other work I did recently on enterprise standards.
 
   The docsify configuration has been greatly improved with a new theme and some automation for dates and document front-matter.
+
+  Added a new page on changing the uibRoot folder.
+
+  Updated the front page with links and explanations of the different sections.
 
 ## New
 
