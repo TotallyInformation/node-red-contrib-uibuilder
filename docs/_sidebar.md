@@ -1,5 +1,7 @@
 * [Home](/)
-* [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
+* Using uibuilder
+  * [Changing the root folder (uibRoot)](changing-uibroot.md)
+  * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
 * Developing UI's
   * [The uibuilderfe Library](front-end-library.md)
   * [Optimise & Transpile](front-end-builds.md)
