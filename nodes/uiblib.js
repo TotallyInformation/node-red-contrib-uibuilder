@@ -20,54 +20,15 @@
  **/
 'use strict'
 
-//#region --- Type Defs --- //
-/**
- * @typedef {import('../typedefs.js')} 
+/** --- Type Defs ---
+ * @typedef {import('../typedefs.js').MsgAuth} MsgAuth
+ * @typedef {import('../typedefs.js').uibNode} uibNode
+ * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
+ * typedef {import('../typedefs.js')} 
  * @typedef {import('node-red')} Red
+ * @typedef {import('socket.io').Namespace} socketio.Namespace
+ * @typedef {import('socket.io').Socket} socketio.Socket
  */
-
-/*
- * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
- * Note that any other data may be passed from your front-end code in the _auth.info object.
- * _auth.info.error, _auth.info.validJwt
- * @property {String} id Required. A unique user identifier.
- * @property {String} [password] Required for login only.
- * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
- * @property {Number} [sessionExpiry] Required if logged in. Milliseconds since 1970. Needed for ongoing session validation and management.
- * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
- * @property {Object=} [info] Optional metadata about the user.
- */
-/*
- * @typedef {object} uibNode Local copy of the node instance config + other info
- * @property {String} id Unique identifier for this instance
- * @property {String} type What type of node is this an instance of? (uibuilder)
- * @property {String} name Descriptive name, only used by Editor
- * @property {String} topic msg.topic overrides incoming msg.topic
- * @property {String} url The url path (and folder path) to be used by this instance
- * @property {boolean} fwdInMessages Forward input msgs to output #1?
- * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
- * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
- * @property {boolean} copyIndex Copy index.(html|js|css) files from templates if they don't exist?
- * @property {boolean} showfolder Provide a folder index web page?
- * @property {boolean} useSecurity Use uibuilder's built-in security features?
- * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
- * @property {Number} sessionLength Lifespan of token (in seconds)
- * @property {String} jwtSecret Seed string for encryption of JWT
- * @property {String} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
- * @property {Number} ioClientsCount How many Socket clients connected to this instance?
- * @property {Number} rcvMsgCount How many msg's received since last reset or redeploy?
- * @property {Object} ioChannels The channel names for Socket.IO
- * @property {String} ioChannels.control SIO Control channel name 'uiBuilderControl'
- * @property {String} ioChannels.client SIO Client channel name 'uiBuilderClient'
- * @property {String} ioChannels.server SIO Server channel name 'uiBuilder'
- * @property {String} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {Function} send Send a Node-RED msg to an output port
- * @property {Function=} done Dummy done function for pre-Node-RED 1.0 servers
- * @property {Function=} on Event handler
- * @property {Function=} removeListener Event handling
- * z, wires
- */
-//#endregion --- Type Defs --- //
 
 const path = require('path')
 const fs = require('fs-extra')
@@ -262,53 +223,11 @@ module.exports = {
         node.status(status)
     }, // ---- End of setNodeStatus ---- //
 
-    /** Validate a url query parameter - DEPRECATED in v3.1.0
-     * @deprecated
-     * @param {string} url uibuilder URL to check (not a full url, the name used by uibuilder)
-     * @param {import("express").Response} res The ExpressJS response variable
-     * @param {string} caller A string indicating the calling function - used for logging only
-     * @param {Object} log The uibuilder log Object
-     * @return {boolean} True if the url is valid, false otherwise (having set the response object)
-     */
-    checkUrl: function (url, res, caller, log) {
-        log.warn(`[uibuilder:checkUrl] FUNCTION DEPRECATED - DO NOT USE. url=${url}, caller=${caller}`)
-        // We have to have a url to work with
-        if ( url === undefined ) {
-            log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter not provided`)
-            res.statusMessage = 'url parameter not provided'
-            res.status(500).end()
-            return false
-        }
-        // URL must not exceed 20 characters
-        if ( url.length > 20 ) {
-            log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter is too long (>20 characters)`)
-            res.statusMessage = 'url parameter is too long. Max 20 characters'
-            res.status(500).end()
-            return false 
-        }
-        // URL must be more than 0 characters
-        if ( url.length < 1 ) {
-            log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter is empty`)
-            res.statusMessage = 'url parameter is empty, please provide a value'
-            res.status(500).end()
-            return false
-        }
-        // URL cannot contain .. to prevent escaping sub-folder structure
-        if ( url.includes('..') ) {
-            log.error('[uibdeletefile] Admin API. url parameter contains ..')
-            res.statusMessage = 'url parameter may not contain ..'
-            res.status(500).end()
-            return false
-        }
-
-        return true
-    }, // ---- End of checkUrl ---- //
-
     /** Check authorisation validity - called for every msg received from client if security is on
      * @param {Object} msg The input message from the client
-     * @param {SocketIO.Namespace} ioNs Socket.IO instance to use
+     * @param {socketio.Namespace} ioNs Socket.IO instance to use
      * @param {uibNode} node The node object
-     * @param {SocketIO.Socket} socket 
+     * @param {socketio.Socket} socket 
      * @param {Object} log Custom logger instance
      * @param {Object} uib Reference to the core uibuilder config object
      * @returns {_auth} An updated _auth object
@@ -458,9 +377,9 @@ module.exports = {
     /** Process a logon request
      * msg._auth contains any extra data needed for the login
      * @param {Object} msg The input message from the client
-     * @param {SocketIO.Namespace} ioNs Socket.IO instance to use
+     * @param {socketio.Namespace} ioNs Socket.IO instance to use
      * @param {uibNode} node The node object
-     * @param {SocketIO.Socket} socket 
+     * @param {socketio.Socket} socket 
      * @param {Object} log Custom logger instance
      * @param {Object} uib Constants from uibuilder.js
      * @returns {boolean} True = user logged in, false = user not logged in
@@ -669,10 +588,11 @@ module.exports = {
     /** Process a logoff request
      * msg._auth contains any extra data needed for the login
      * @param {Object} msg The input message from the client
-     * @param {SocketIO.Namespace} ioNs Socket.IO instance to use
+     * @param {socketio.Namespace} ioNs Socket.IO instance to use
      * @param {uibNode} node The node object
-     * @param {SocketIO.Socket} socket 
+     * @param {socketio.Socket} socket 
      * @param {Object} log Custom logger instance
+     * @param {Object} uib uibuilder's master variables
      * @returns {_auth} Updated _auth
      */
     logoff: function(msg, ioNs, node, socket, log, uib) { // eslint-disable-line no-unused-vars
@@ -755,17 +675,20 @@ module.exports = {
         // If using own Express server, correct the URL's
         const url = new URL(req.headers.referer)
         url.pathname = ''
-        if (uib.port && uib.port !== RED.settings.uiPort) {
-            url.port = uib.port
+        if (uib.customServer && uib.customServer.port && uib.customServer.port !== RED.settings.uiPort) {
+            //http://127.0.0.1:3001/uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css
+            //customServer: { port: 3001, type: 'http', host: '::' }
+            url.port = uib.customServer.port
         }
-        const urlPrefix = url.href
+        const urlPrefix = url.href 
+        let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
 
         page += `
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
-                <link type="text/css" href="${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
-                <link rel="icon" href="${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}/common/images/node-blue.ico">
-                <style type="text/css" media="all">
+                <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
+                <link type="text/css" rel="stylesheet" href="${urlRoot}/vendor/bootstrap/dist/css/bootstrap.min.css" media="screen">
+                <style type="text/css" rel="stylesheet" media="all">
                     h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                     .col3i tbody>tr>:nth-child(3){ font-style:italic; }
                 </style>
@@ -855,7 +778,7 @@ module.exports = {
             'name', 'wires', '_wireCount', 'credentials', 'topic', 'url', 
             'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder', 
             'useSecurity', 'sessionLength', 'tokenAutoExtend', 'customFolder', 
-            'ioClientsCount', 'rcvMsgCount', 'ioChannels', 'ioNamespace'
+            'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
         ]
         // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]
         // Keep secret: ['jwtSecret', ]
@@ -897,4 +820,151 @@ module.exports = {
         return page
     }, // ---- End of showInstanceDetails() ---- //
 
+    /** Replace template in front-end instance folder
+     * @param {string} url The uib instance URL
+     * @param {string} template Name of one of the built-in templates including 'blank' and 'external'
+     * @param {string|undefined} extTemplate Optional external template name to be passed to degit. See degit options for details.
+     * @param {string} cmd 'replaceTemplate' if called from admin-router:POST, otherwise can be anything descriptive & unique by caller
+     * @param {Object} templateConf Template configuration object
+     * @param {Object} uib uibuilder's master variables
+     * @param {Object} log uibuilder's Log functions (normally points to RED.log)
+     * @returns {Promise} {statusMessage, status, (json)}
+     */
+    replaceTemplate: async function(url, template, extTemplate, cmd, templateConf, uib, log) {
+        const res = {
+            'statusMessage': 'Something went wrong!',
+            'status': 500,
+            'json': undefined,
+        }
+
+        // Load a new template (params url, template, extTemplate)
+        if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
+            let statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
+            log.error(`[uibuilder:uiblib:replaceTemplate]. ${statusMsg}`)
+            res.statusMessage = statusMsg
+            res.status = 500
+            return res
+        }
+
+        let fullname = path.join(uib.rootFolder, url)
+
+        if ( extTemplate ) extTemplate = extTemplate.trim()
+
+        // If template="external" & extTemplate not blank - use degit to load
+        if ( template === 'external' ) {
+            const degit = require('degit')
+
+            uib.degitEmitter = degit(extTemplate, {
+                cache: true,
+                force: true,
+                verbose: false,
+            })
+            
+            uib.degitEmitter.on('info', info => {
+                log.trace(`[uibuilder:uiblib:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
+            })
+            
+            let myclone = await uib.degitEmitter.clone(fullname)
+
+            console.log({myclone})
+            let statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
+            log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
+            res.statusMessage = statusMsg
+            res.status = 200
+            res.json = {
+                'url': url,
+                'template': template,
+                'extTemplate': extTemplate,
+                'cmd': cmd,
+            }
+            return res
+
+        } else {
+
+            // Otherwise, use internal template
+            if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
+                const fsOpts = {'overwrite': true, 'preserveTimestamps':true}
+                const srcTemplate = path.join( uib.masterTemplateFolder, template )
+                try {
+                    fs.copySync( srcTemplate, fullname, fsOpts )
+                    let statusMsg = `Successfully copied template ${template} to ${url}.`
+                    log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
+                    res.statusMessage = statusMsg
+                    res.status = 200
+                    res.json = {
+                        'url': url,
+                        'template': template,
+                        'extTemplate': extTemplate,
+                        'cmd': cmd,
+                    }
+                    return res
+                } catch (err) {
+                    let statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
+                    log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`, err)
+                    res.statusMessage = statusMsg
+                    res.status = 500
+                    return res
+                }
+            } else {
+                // Shouldn't ever be able to occur - but still :-)
+                let statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
+                log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`)
+                res.statusMessage = statusMsg
+                res.status = 500
+                return res
+            }
+
+        }
+
+        // Shouldn't get here
+        return res
+
+    }, // ----- End of replaceTemplate() ----- //
+
+    //#region ===== DEPRECATED ===== //
+
+    /** Validate a url query parameter - DEPRECATED in v3.1.0
+     * @deprecated
+     * @param {string} url uibuilder URL to check (not a full url, the name used by uibuilder)
+     * @param {import("express").Response} res The ExpressJS response variable
+     * @param {string} caller A string indicating the calling function - used for logging only
+     * @param {Object} log The uibuilder log Object
+     * @return {boolean} True if the url is valid, false otherwise (having set the response object)
+     */
+    // checkUrl: function (url, res, caller, log) {
+    //     log.warn(`[uibuilder:checkUrl] FUNCTION DEPRECATED - DO NOT USE. url=${url}, caller=${caller}`)
+    //     // We have to have a url to work with
+    //     if ( url === undefined ) {
+    //         log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter not provided`)
+    //         res.statusMessage = 'url parameter not provided'
+    //         res.status(500).end()
+    //         return false
+    //     }
+    //     // URL must not exceed 20 characters
+    //     if ( url.length > 20 ) {
+    //         log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter is too long (>20 characters)`)
+    //         res.statusMessage = 'url parameter is too long. Max 20 characters'
+    //         res.status(500).end()
+    //         return false 
+    //     }
+    //     // URL must be more than 0 characters
+    //     if ( url.length < 1 ) {
+    //         log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter is empty`)
+    //         res.statusMessage = 'url parameter is empty, please provide a value'
+    //         res.status(500).end()
+    //         return false
+    //     }
+    //     // URL cannot contain .. to prevent escaping sub-folder structure
+    //     if ( url.includes('..') ) {
+    //         log.error('[uibdeletefile] Admin API. url parameter contains ..')
+    //         res.statusMessage = 'url parameter may not contain ..'
+    //         res.status(500).end()
+    //         return false
+    //     }
+
+    //     return true
+    // }, // ---- End of checkUrl ---- //
+
+    //#endregion ===== DEPRECATED ===== //
+    
 } // ---- End of module.exports ---- //
