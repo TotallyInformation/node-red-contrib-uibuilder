@@ -40,7 +40,7 @@ Nothing currently.
 
 ### Changing the `uibRoot` folder
   
-  You can now set uibuilders root folder - that stores configuration, common, security and each node's front-end code - to a different location. The default location is in your userDir folder in a sub-folder called `uibuilder`. If you are using projects, the sub-folder will be in your projects root folder. See [docs/changing-uibroot.md](docs/changing-uibroot.md) for more detail.
+  You can now set uibuilder's root folder - that stores configuration, common, security and each node's front-end code - to a different location. The default location is in your userDir folder in a sub-folder called `uibuilder`. If you are using projects, the sub-folder will be in your projects root folder. See [docs/changing-uibroot.md](docs/changing-uibroot.md) for more detail.
 
 ## Updated
 
@@ -69,6 +69,8 @@ Nothing currently.
 ## Fixed
 
 * Node-RED edge-case for credentials was causing node to be marked as changed whenever "Done" button pressed even if no changes made. Turns out to be an issue if you don't give a password-type credential an actual value (e.g. leave it blank). Gave the `JWTsecret` a default value even when it isn't really needed.
+* Instance details page - CSS now loads correctly even if using a customer server port. Some Socket.IO details that were missing now returned.
+* web.js - specifying a custom server port caused uibuilder to crash. Now fixed.
 
 
 ---

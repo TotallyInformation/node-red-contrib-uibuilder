@@ -6,6 +6,8 @@ created: 2021-07-03 20:46:33
 lastUpdated: 2021-07-03 22:21:56
 ---
 
+## What is the uibRoot folder?
+
 The `uibRoot` folder on your Node-RED server is where all of the front-end files live along with security middleware, common front-end resources, security settings and the lists of packages that are served to the front end (e.g. VueJS).
 
 By default, uibuilder will create a folder for you under your userDir folder - typically `~/.node-red/uibuilder/`.
@@ -43,3 +45,18 @@ The example here shows how to be able to override it using an environment variab
 Once you have changed the location, if you want to keep any existing front-end code, you should copy that to the new location _before restarting Node-RED_. That would prevent uibuilder from copying the selected template.
 
 Similarly, if you have made any changes or additions to the `.config`  or `common` folders, you should also copy those over as well.
+
+## Finding the uibRoot folder
+
+There are several ways to find out which folder is the uibuilder root.
+
+1. When Node-RED starts, uibuilder prints some information to the log including the "root folder".
+2. The "uibuilder details" button available in any uibuilder node.
+   
+   The resulting page shows a list of all of the uibuilder instances that are deployed and includes the "Server Filing System Folder", the root of which is the uibuilder root folder.
+
+   It also shows a "Configuration" section that contains "uib.rootFolder".
+
+3. The "instance details" button available in any uibuilder node.
+
+   Shows similar detail to #2 but just for the selected node.
