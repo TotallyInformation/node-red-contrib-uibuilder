@@ -117,6 +117,8 @@ const uib = {
         type: 'http',
         /** @type {undefined|string} uibuilder Host. sub(domain) name or IP Address */
         host: undefined,
+        /** @type {undefined|string} The host name of the Node-RED server */
+        hostName: undefined,
     },
     /** Event emitter for degit, populated on 1st use. See POST admin API */
     degitEmitter: undefined,
@@ -145,9 +147,32 @@ var userDir = ''
 /** Export the function that defines the node 
  * @type {runtimeRED} */
 module.exports = function(/** @type {runtimeRED} */ RED) {
-    // RED.events.on('flows:started',function() {
-    //     console.log('[uibuilder:started] Instances registered: ', uib.instances)
-    // })
+    // When uibuilder enters runtime state, show the details in the log
+    let initialised = false
+    RED.events.on('runtime-event', function(event) {
+        if (event.id === 'runtime-state' && initialised === false ) {
+            initialised = true
+            RED.log.info('+-----------------------------------------------------')
+            RED.log.info(`| ${uib.moduleName} v${uib.version} initialised`)
+            RED.log.info(`| root folder: ${uib.rootFolder}`)
+            if ( uib.customServer.port ) {
+                RED.log.info(`| Using custom ExpressJS webserver at:`)
+            } else {
+                RED.log.info('| Using Node-RED\'s webserver at:')
+            }
+            RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}/ or ${uib.customServer.type}://localhost:${uib.customServer.port}/`)
+            RED.log.info(`| Installed packages:`)
+            const pkgs = Object.keys(uib.installedPackages)
+            for (let i = 0; i < pkgs.length; i=i+4) {
+                const k = []
+                for (let j = 0; j <= 3; j++) {
+                    if ( pkgs[i+j] ) k.push(pkgs[i+j])
+                }
+                RED.log.info(`|   ${k.join(', ')}`)
+            }
+            RED.log.info('+-----------------------------------------------------')
+        }
+    })
 
     //#region ----- Constants for standard setup ----- //
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
@@ -254,19 +279,6 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
      */
     web.checkInstalledPackages()
 
-    //#region ---- Output startup info to Node-RED log ---- //
-    RED.log.info('+-----------------------------------------------------')
-    RED.log.info(`| ${uib.moduleName} initialised:`)
-    if ( uib.customServer.port )
-        RED.log.info(`|   Using custom ${uib.customServer.type} webserver on port ${uib.customServer.port}`)
-    else
-        RED.log.info('|   Using Node-RED\'s webserver')
-    RED.log.info(`|   root folder: ${uib.rootFolder}`)
-    RED.log.info(`|   version . .: ${uib.version}`)
-    RED.log.info(`|   packages . : ${Object.keys(uib.installedPackages)}`)
-    RED.log.info('+-----------------------------------------------------')
-    //#endregion ------------------------------------------ //
-
     /** Run the node instance - called from registerType()
      * type {runtimeNode}
      * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
@@ -366,10 +378,11 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                     //resp.statusMessage
                 })
                 .catch( err => {
-                    let statusMsg, mystr 
+                    let statusMsg
                     if ( err.code === 'MISSING_REF' ){
                         statusMsg = `Degit clone error. CHECK External Template Name. Name='${node.extTemplate}', url=${node.url}, cmd=startup-CopyTemplate. ${err.message}`
                     } else {
+                        let mystr 
                         if ( node.templateFolder === 'external' ) mystr = `, ${node.extTemplate}`
                         statusMsg = `Replace template error. ${err.message}. url=${node.url}. ${node.templateFolder}${mystr}`
                     }
