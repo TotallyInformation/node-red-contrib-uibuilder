@@ -677,7 +677,7 @@ module.exports = {
         // If using own Express server, correct the URL's
         const url = new URL(req.headers.referer)
         url.pathname = ''
-        if (uib.customServer && uib.customServer.port && uib.customServer.port !== RED.settings.uiPort) {
+        if (uib.customServer && uib.customServer.port && uib.customServer.port !== RED.settings.uiPort ) {
             //http://127.0.0.1:3001/uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css
             //customServer: { port: 3001, type: 'http', host: '::' }
             url.port = uib.customServer.port
