@@ -33,6 +33,8 @@ const serveIndex    = require('serve-index')
 // Only used for type checking
 const Express = require('express') // eslint-disable-line no-unused-vars
 
+const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
+
 class UibWeb {
     /** Flag to indicate whether setup() has been run
      * @type {boolean}
@@ -120,7 +122,7 @@ class UibWeb {
         // Reference static vars
         const uib = this.uib
         const RED = this.RED
-        //const log = this.log
+        const log = this.log
 
         /** NB: uib.nodeRoot is the root URL path for http-in/out and uibuilder nodes 
          * Always set to empty string if a dedicated ExpressJS app is required
@@ -128,22 +130,37 @@ class UibWeb {
 
         /** We need an http server to serve the page and vendor packages. The app is used to serve up the Socket.IO client. */
         
+        // Note the system host name
+        uib.customServer.hostName = require('os').hostname()
+        // Try to find the external LAN IP address of the server
+        require('dns').lookup(uib.customServer.hostName, function (err, add, fam) {
+            uib.customServer.host = add
+            log.trace(`[uibuilder:web.js] Using custom ExpressJS server at ${uib.customServer.type}://${add}:${uib.customServer.port}`)
+        })
+        // Set http(s) according to Node-RED settings (will use the same certs if https)
+        // TODO Allow override in uibuilder settings
+        if ( RED.settings.https ) uib.customServer.type = 'https'
+        else uib.customServer.type = 'http'
+
         if ( uib.customServer.port ) {
             // Port has been specified & is different to NR's port so create a new instance of express & app
             const express = require('express') 
             this.app = express()
+
             /** Socket.io needs an http(s) server rather than an ExpressJS app
-             * As we want Socket.io on the same port, we have to create out own server
+             * As we want Socket.io on the same port, we have to create our own server
              * Use https if NR itself is doing so, use same certs as NR
-             * TODO: Allow for https/settings overrides using uibuilder props in settings.js
              * TODO: Switch from https to http/2?
              */
-            if ( RED.settings.https ) {
-                uib.customServer.type = 'https'
+            if ( uib.customServer.type === 'https' ) {
                 this.server = require('https').createServer(RED.settings.https, this.app)
             } else {
                 this.server = require('http').createServer(this.app)
             }
+
+            // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change.
+            uib.nodeRoot = ''
+
             // Connect the server to the requested port, domain is the same as Node-RED
             this.server.on('error', (err) => {
                 if (err.code === 'EADDRINUSE') {
@@ -154,17 +171,19 @@ class UibWeb {
                     return
                 }    
             })
+
             this.server.listen(uib.customServer.port, () => {
-                uib.customServer.host = this.server.address().address
+                //uib.customServer.host = this.server.address().address // not very useful. Typically returns `::`
             })
-            // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change.
-            uib.nodeRoot = ''
+
         } else {
+
             // Port not specified (default) so reuse Node-RED's ExpressJS server and app
             this.app = RED.httpNode // || RED.httpAdmin
             this.server = RED.server
             // Record the httpNodeRoot for later use
             uib.nodeRoot = RED.settings.httpNodeRoot
+
         }
 
     } // --- End of webSetup() --- //
