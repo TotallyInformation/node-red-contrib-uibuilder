@@ -49,6 +49,7 @@ Nothing currently.
 * web.setup and socket.setup can only be called once.
 * Socket.IO updated from v2 to v4.
 * Added Admin API check for whether a url has a matching instance root folder. (Was an outstanding to-do)
+* Reworked the info block that is printed to the log on startup. Much neater and with added info on the webserver being used.
 * Technical Docs have been improved in line with some other work I did recently on enterprise standards.
 
   The docsify configuration has been greatly improved with a new theme and some automation for dates and document front-matter.
