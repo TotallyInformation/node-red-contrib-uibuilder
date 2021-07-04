@@ -154,7 +154,7 @@ class UibWeb {
                     return
                 }    
             })
-            this.server.listen(uib.customServer.port, function() {
+            this.server.listen(uib.customServer.port, () => {
                 uib.customServer.host = this.server.address().address
             })
             // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change.
