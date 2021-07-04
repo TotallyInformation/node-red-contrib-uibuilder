@@ -52,6 +52,8 @@ const dummyAuth = {
         validJwt: undefined,
     },
 }
+//
+const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
 
 module.exports = {
     /** Complex, custom code when processing an incoming msg to uibuilder node input should go here
