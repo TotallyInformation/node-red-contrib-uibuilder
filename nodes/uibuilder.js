@@ -160,7 +160,10 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             } else {
                 RED.log.info('| Using Node-RED\'s webserver at:')
             }
-            RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}/ or ${uib.customServer.type}://localhost:${uib.customServer.port}/`)
+            let port = RED.settings.uiPort
+            if ( uib.customServer && uib.customServer.port && uib.customServer.port !== RED.settings.uiPort ) port = uib.customServer.port
+            
+            RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${port}/ or ${uib.customServer.type}://localhost:${port}/`)
             RED.log.info(`| Installed packages:`)
             const pkgs = Object.keys(uib.installedPackages)
             for (let i = 0; i < pkgs.length; i=i+4) {
