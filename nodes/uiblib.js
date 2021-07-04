@@ -32,7 +32,7 @@
 
 const path = require('path')
 const fs = require('fs-extra')
-const tilib = require('./tilib.js')
+const tilib = require('./tilib')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 // Make sure that we only work out where the security.js file exists only ONCE - see the logon() function
@@ -797,7 +797,8 @@ module.exports = {
             try {
                 if ( info !== null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
             } catch (e) {
-                RED.log.warn(`[uibuilder:uiblib:showInstanceDetails] ${node.id}, ${url}: Item '${item}' failed to stringify. ${e.message}`)
+                if ( info !== undefined )
+                    RED.log.warn(`[uibuilder:uiblib:showInstanceDetails] ${node.id}, ${url}: Item '${item}' failed to stringify. ${e.message}`)
             }
             page += `
                 <tr>
