@@ -237,6 +237,7 @@ class UibSockets {
 
         ioNs.on('connection', function(socket) {
             ioNs.ioClientsCount++
+            node.ioClientsCount = ioNs.ioClientsCount
 
             log.trace(`[uibuilder:socket.js:addNS:${url}] Socket connected for node ${node.id} clientCount: ${ioNs.ioClientsCount}, Socket ID: ${socket.id}`)
 
@@ -263,6 +264,7 @@ class UibSockets {
             
             // Listen for msgs from clients only on specific input channels:
             socket.on(uib.ioChannels.client, function(msg) {
+                node.rcvMsgCount++
                 log.trace(`[uibuilder:${url}] Data received from client, ID: ${socket.id}, Msg:`, msg)
 
                 // Make sure the incoming msg is a correctly formed Node-RED msg
@@ -288,6 +290,7 @@ class UibSockets {
                 node.send(msg)
             }) // --- End of on-connection::on-incoming-client-msg() --- //
             socket.on(uib.ioChannels.control, function(msg) {
+                node.rcvMsgCount++
                 log.trace(`[uibuilder:${url}] Control Msg from client, ID: ${socket.id}, Msg:`, msg)
 
                 // Make sure the incoming msg is a correctly formed Node-RED msg
@@ -328,6 +331,7 @@ class UibSockets {
 
             socket.on('disconnect', function(reason) {
                 ioNs.ioClientsCount--
+                node.ioClientsCount = ioNs.ioClientsCount
                 log.trace(
                     `[uibuilder:${url}] Socket disconnected, clientCount: ${ioNs.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
                 )
