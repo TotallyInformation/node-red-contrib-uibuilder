@@ -17,14 +17,12 @@
  **/
 'use strict'
 
-//#region --- Type Defs --- //
-// <reference types="Express" />
-/**
- * @typedef {import('../typedefs.js')}
- * typedef {import('Express')} Express
- * typedef {import('node-red')} Red
+/** --- Type Defs ---
+ * @typedef {import('../typedefs.js').MsgAuth} MsgAuth
+ * @typedef {import('../typedefs.js').uibNode} uibNode
+ * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
  */
-//#endregion --- Type Defs --- //
 
 //#region ------ Require packages ------ //
 // uibuilder custom 
@@ -147,17 +145,30 @@ var userDir = ''
 /** Export the function that defines the node 
  * @type {runtimeRED} */
 module.exports = function(/** @type {runtimeRED} */ RED) {
+    // RED.events.on('flows:started',function() {
+    //     console.log('[uibuilder:started] Instances registered: ', uib.instances)
+    // })
+
     //#region ----- Constants for standard setup ----- //
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
-    // @ts-ignore
     userDir = RED.settings.userDir
 
     // Set the root folder
-    uib.rootFolder = path.join(userDir, uib.moduleName)
-    // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
-    if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
-        const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
-        if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
+    if ( RED.settings.uibuilder && RED.settings.uibuilder.uibRoot && typeof RED.settings.uibuilder.uibRoot === 'string') {
+        // Does the folder exist and is it accessible?
+        if ( ! fs.existsSync(RED.settings.uibuilder.uibRoot) ) {
+            // This is not recoverable so stop the Node here.
+            throw new Error(`Folder does not exist. Check settings.js:uibuilder.uibRoot '${RED.settings.uibuilder.uibRoot}'`)
+        }
+        uib.rootFolder = RED.settings.uibuilder.uibRoot
+    } else {
+        // No override supplied
+        uib.rootFolder = path.join(userDir, uib.moduleName)
+        // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
+        if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
+            const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
+            if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
+        }
     }
 
     /** Locations for uib config can common folders */
@@ -284,7 +295,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         node.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
         node.allowStyles     = config.allowStyles === undefined ? false : config.allowStyles
         node.copyIndex       = config.copyIndex === undefined ? true : config.copyIndex // DEPRECATED
-        node.templateFolder  = config.templateFolder || templateConf.vue.folder
+        node.templateFolder  = config.templateFolder || templateConf.blank.folder
         node.extTemplate     = config.extTemplate
         node.showfolder      = config.showfolder === undefined ? false : config.showfolder
         node.useSecurity     = config.useSecurity 
@@ -333,15 +344,39 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         // Does the custom folder exist? If not, create it and copy blank template to it. Otherwise make sure it is accessible.
         var customFoldersOK = true
         if ( ! fs.existsSync(node.customFolder) ) {
-            const cpyOpts = {'preserveTimestamps':true}
-            let copyFrom = path.join( uib.masterTemplateFolder, 'blank' )
-            try {
-                fs.copySync( copyFrom, node.customFolder, cpyOpts)
-                log.trace(`[uibuilder:${uibInstance}] Created instance folder ${node.customFolder} and copied template files from ${copyFrom}` )
-            } catch (e) {
-                log.error(`[uibuilder] CREATE OF INSTANCE FOLDER '${node.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
-                customFoldersOK = false
-            }    
+            // Does not exist so check whether built-in or external template wanted
+            if ( node.templateFolder !== 'external' ) {
+
+                // Internal template wanted - so copy it now
+                const cpyOpts = {'preserveTimestamps':true}
+                let copyFrom = path.join( uib.masterTemplateFolder, 'blank' )
+                try {
+                    fs.copySync( copyFrom, node.customFolder, cpyOpts)
+                    log.trace(`[uibuilder:${uibInstance}] Created instance folder ${node.customFolder} and copied template files from ${copyFrom}` )
+                } catch (e) {
+                    log.error(`[uibuilder] CREATE OF INSTANCE FOLDER '${node.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
+                    customFoldersOK = false
+                }
+
+            } else {
+
+                // External template wanted to try to load it
+                uiblib.replaceTemplate(node.url, node.templateFolder, node.extTemplate, 'startup-CopyTemplate', templateConf, uib, log)
+                .then( resp => {
+                    //resp.statusMessage
+                })
+                .catch( err => {
+                    let statusMsg, mystr 
+                    if ( err.code === 'MISSING_REF' ){
+                        statusMsg = `Degit clone error. CHECK External Template Name. Name='${node.extTemplate}', url=${node.url}, cmd=startup-CopyTemplate. ${err.message}`
+                    } else {
+                        if ( node.templateFolder === 'external' ) mystr = `, ${node.extTemplate}`
+                        statusMsg = `Replace template error. ${err.message}. url=${node.url}. ${node.templateFolder}${mystr}`
+                    }
+                    log.error(`[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
+                } )
+
+            }
         } else {
             try {
                 fs.accessSync(node.customFolder, fs.constants.W_OK)
@@ -365,9 +400,11 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         // Set up web services for this instance (static folders, middleware, etc)
         web.instanceSetup(node)
 
+        node.rcvMsgCount = 0
         /** Socket.IO instance configuration. Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
         const ioNs = sockets.addNS(node) // NB: Namespace is set from url
-
+        node.ioNamespace = ioNs.name
+        
         log.debug(`uibuilder : ${uibInstance} : URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, node.url )}`)
         log.debug(`uibuilder : ${uibInstance} : Source files . : ${node.customFolder}`)
 
@@ -444,7 +481,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             uibuilderTemplates: { value: templateConf, exportable: true },
             uibuilderCustomServer: { value: (uib.customServer), exportable: true },
         },
-    })
+    }) 
 
     //#region ====== Admin API's ====== //
 
@@ -702,82 +739,25 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             params.type = 'post'
 
             if ( params.cmd === 'replaceTemplate' ) {
-                // Load a new template (params url, template, extTemplate)
-                if ( params.template === 'external' && ( (!params.extTemplate) || params.extTemplate.length === 0) ) {
-                    let statusMsg = `External template selected but no template name provided. template=external, url=${params.url}, cmd=${params.cmd}`
-                    log.error(`[uibuilder:admin-router:POST]. ${statusMsg}`)
-                    res.statusMessage = statusMsg
-                    res.status(500).end()
-                    return
-                }
 
-                let fullname = path.join(uib.rootFolder, params.url)
-
-                if ( params.extTemplate ) params.extTemplate = params.extTemplate.trim()
-
-                // If template="external" & extTemplate not blank - use degit to load
-                if ( params.template === 'external' ) {
-                    const degit = require('degit')
-
-                    uib.degitEmitter = degit(params.extTemplate, {
-                        cache: true,
-                        force: true,
-                        verbose: false,
-                    })
-                    
-                    uib.degitEmitter.on('info', info => {
-                        log.trace(`[uibuilder:admin-router:POST:replaceTemplate] Degit: '${params.extTemplate}' to '${fullname}': ${info.message}`)
-                    })
-                    
-                    uib.degitEmitter.clone(fullname)
-                    .then(() => {
-                        let statusMsg = `Degit successfully copied template '${params.extTemplate}' to '${fullname}'.`
-                        log.info(`[uibuilder:admin-router:POST] ${statusMsg} cmd=replaceTemplate`)
-                        res.statusMessage = statusMsg
-                        res.status(200).json({
-                            'params': params,
-                        })
-                        return
-                    })
-                    .catch( err => {
-                        let statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}`
-                        log.error(`[uibuilder:admin-router:POST] ${statusMsg}`, err)
-                        res.statusMessage = statusMsg
-                        res.status(500).end()
-                        return
-                    })
-
-                } else {
-                    // Otherwise, use internal template
-                    if ( Object.prototype.hasOwnProperty.call(templateConf, params.template) ) {
-                        const fsOpts = {'overwrite': true, 'preserveTimestamps':true}
-                        const srcTemplate = path.join( uib.masterTemplateFolder, params.template )
-                        try {
-                            fs.copySync( srcTemplate, fullname, fsOpts )
-                            let statusMsg = `Successfully copied template ${params.template} to ${params.url}.`
-                            log.info(`[uibuilder:admin-router:POST] ${statusMsg} cmd=replaceTemplate`)
-                            res.statusMessage = statusMsg
-                            res.status(200).json({
-                                'params': params,
-                            })
-                            return
-                        } catch (err) {
-                            let statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${params.url}, cmd=${params.cmd}, ERR=${err.message}.`
-                            log.error(`[uibuilder:admin-router:POST] ${statusMsg}`, err)
-                            res.statusMessage = statusMsg
-                            res.status(500).end()
-                        }
-                        return
+                uiblib.replaceTemplate(params.url, params.template, params.extTemplate, params.cmd, templateConf, uib, log)
+                .then( resp => {
+                    res.statusMessage = resp.statusMessage
+                    if ( resp.status === 200 ) res.status(200).json(resp.json)
+                    else res.status(resp.status).end()    
+                })
+                .catch( err => {
+                    let statusMsg, mystr
+                    if ( err.code === 'MISSING_REF' ){
+                        statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}. ${err.message}`
                     } else {
-                        // Shouldn't ever be able to occur - but still :-)
-                        let statusMsg = `Template '${params.template}' does not exist. url=${params.url}, cmd=${params.cmd}.`
-                        log.error(`[uibuilder:admin-router:POST] ${statusMsg}`)
-                        res.statusMessage = statusMsg
-                        res.status(500).end()
+                        if ( params.template === 'external' ) mystr = `, ${params.extTemplate}`
+                        statusMsg = `Replace template error. ${err.message}. url=${params.url}. ${params.template}${mystr}`
                     }
-                }
-
-                // End of replaceTemplate cmd
+                    log.error(`[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()    
+                } )
 
             } else {
 
