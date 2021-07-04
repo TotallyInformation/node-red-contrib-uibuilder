@@ -27,7 +27,7 @@
 const path = require('path')
 const util = require('util')
 const fs = require('fs-extra')
-const tilib = require('./tilib.js')
+const tilib = require('./tilib')
 const serveStatic = require('serve-static')
 const serveIndex    = require('serve-index')
 // Only used for type checking

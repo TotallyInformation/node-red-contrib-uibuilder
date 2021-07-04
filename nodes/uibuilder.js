@@ -29,8 +29,8 @@
 const uiblib        = require('./uiblib')  // Utility library for uibuilder
 const tilib         = require('./tilib')   // General purpose library (by Totally Information)
 const templateConf  = require('../templates/template_dependencies') // Template configuration metadata
-const sockets       = require('./socket.js') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
-const web           = require('./web.js') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
+const sockets       = require('./socket') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
+const web           = require('./web') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 
 // Core node.js
 const path          = require('path')
