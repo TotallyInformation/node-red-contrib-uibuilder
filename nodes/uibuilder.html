@@ -39,6 +39,8 @@
     var defaultJwtSecret = 'Replace This With A Real Secret'
     /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
     var packages = []
+    /** Default template name */
+    var defaultTemplate = 'blank'
 
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
      * @typedef {Object} uiace
@@ -711,7 +713,7 @@
         // Load each option - first entry will be the default
         Object.values(RED.settings.uibuilderTemplates).forEach( templ => {
             // Build the drop-down
-            $('#node-input-templSel').append($('<option>', { 
+            $('#node-input-templateFolder').append($('<option>', { 
                 value: templ.folder,
                 text : templ.name, 
             }))
@@ -719,11 +721,11 @@
 
         // Just in case name doesn't exist in template list, default to blank
         if ( ! RED.settings.uibuilderTemplates[templateFolder] ) {
-            templateFolder = 'blank'
+            templateFolder = defaultTemplate
         }
 
-        $(`#node-input-templSel option[value="${templateFolder}"]`).prop('selected', true)
-        $('#node-input-templSel').val(templateFolder)
+        $(`#node-input-templateFolder option[value="${templateFolder}"]`).prop('selected', true)
+        $('#node-input-templateFolder').val(templateFolder)
 
         // 1st entry is default - populate the description help tip
         $('#node-templSel-info').text(RED.settings.uibuilderTemplates[templateFolder].description)
@@ -735,7 +737,7 @@
      * If not, warn the user to install them.
      */
     function checkDependencies() {
-        const folder = $('#node-input-templSel').val()
+        const folder = $('#node-input-templateFolder').val()
 
         if ( ! RED.settings.uibuilderTemplates[folder] ) {
             console.error(`[uibuilder:checkDependencies] Template name not found: ${folder}`)
@@ -775,7 +777,7 @@
         var myNotification = RED.notify(
             `WARNING<br /><br />
             Are you <b>SURE</b> you want to overwrite your code
-            with the template <b><code>${ $('#node-input-templSel').val() }</code></b>?<br /><br />
+            with the template <b><code>${ $('#node-input-templateFolder').val() }</code></b>?<br /><br />
             <b>THIS CANNOT BE UNDONE.</b>`,
             {
                 type: 'warning',
@@ -804,7 +806,7 @@
     } // --- End of btnTemplate() --- //
     function loadTemplate() {
         // Get the current file, folder & url
-        var template = $('#node-input-templSel').val()
+        var template = $('#node-input-templateFolder').val()
         var extTemplate = $('#node-input-extTemplate').val()
         var url = $('#node-input-url').val()
 
@@ -843,7 +845,7 @@
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
             copyIndex: { value: true },        // DEPRECATED Should the default template files be copied to the instance src folder?
-            templateFolder: { value: 'blank' },  // Folder for selected template
+            templateFolder: { value: defaultTemplate },  // Folder for selected template
             extTemplate: { value: '' }, // Only if templateFolder=external, degit name
             showfolder: { value: false },      // Should a web index view of all source files be made available?
             useSecurity: { value: false },
@@ -881,7 +883,7 @@
             var that = this
 
             // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
-            if ( that.templateFolder === undefined || that.templateFolder === '' ) that.templateFolder = 'blank'
+            if ( that.templateFolder === undefined || that.templateFolder === '' ) that.templateFolder = defaultTemplate
 
             //#region Start with the edit section hidden & main section visible
             $('#main-props').show()
@@ -947,18 +949,16 @@
             populateTemplateDropdown(that)
             checkDependencies()
             // Unhide the external template name input if external selected
-            if ( $('#node-input-templSel').val() === 'external' ) $('#et-input').show()
+            if ( $('#node-input-templateFolder').val() === 'external' ) $('#et-input').show()
             // Handle change of template
-            $('#node-input-templSel').change(function(_e) {
-                // save the selected template folder name
-                that.templateFolder = $('#node-input-templSel').val()
+            $('#node-input-templateFolder').change(function(_e) {
                 // update the help tip
                 if ( RED.settings.uibuilderTemplates[that.templateFolder] )
                     $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
                 // Check if the dependencies are installed, warn if not
                 checkDependencies()
                 // Unhide the external template name input if external selected
-                if ( $('#node-input-templSel').val() === 'external' )
+                if ( $('#node-input-templateFolder').val() === 'external' )
                     $('#et-input').show()
                 else
                     $('#et-input').hide()
@@ -1532,13 +1532,20 @@
             </b>
             <div id="adv-templ" desc="Hideable Template Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
                 <div>
-                    By default, uibuilder creates a template folder with a minimal template.
-                    If you wish to use a different template, select and load it here.<br>
-                    <b>Note that loading will overwrite existing files.</b>
+                    <p>
+                        By default, uibuilder creates a template folder with a minimal template.
+                        If you wish to use a different template, select and load it here.
+                    </p>
+                    <p>
+                        Selecting a Template from the drop-down <b>does not</b> load the template
+                    </p>
+                    <p>
+                        Loading a Template <b>will overwrite</b> existing files.
+                    </p>
                 </div>
 
-                <label for="node-input-templSel" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
-                <select id="node-input-templSel" style="width:73%;"></select>
+                <label for="node-input-templateFolder" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
+                <select id="node-input-templateFolder" style="width:73%;"></select>
 
                 <div desc="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation/uib-template-test" style="display:none">
                     <label for="node-input-extTemplate"><i class="fa fa-globe"></i> Ext. Template</label>
