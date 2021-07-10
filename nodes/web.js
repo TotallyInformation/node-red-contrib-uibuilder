@@ -135,14 +135,17 @@ class UibWeb {
         // Try to find the external LAN IP address of the server
         require('dns').lookup(uib.customServer.hostName, function (err, add, fam) {
             uib.customServer.host = add
-            log.trace(`[uibuilder:web.js] Using custom ExpressJS server at ${uib.customServer.type}://${add}:${uib.customServer.port}`)
+            if ( uib.customServer.port && uib.customServer.port !== RED.settings.uiPort )
+                log.trace(`[uibuilder:web:webSetup] Using custom ExpressJS server at ${uib.customServer.type}://${add}:${uib.customServer.port}`)
+            else
+                log.trace(`[uibuilder:web:webSetup] Using Node-RED ExpressJS server at ${uib.customServer.type}://${add}:${RED.settings.uiPort}`)
         })
         // Set http(s) according to Node-RED settings (will use the same certs if https)
         // TODO Allow override in uibuilder settings
         if ( RED.settings.https ) uib.customServer.type = 'https'
         else uib.customServer.type = 'http'
 
-        if ( uib.customServer.port ) {
+        if ( uib.customServer.port && uib.customServer.port !== RED.settings.uiPort ) {
             // Port has been specified & is different to NR's port so create a new instance of express & app
             const express = require('express') 
             this.app = express()
@@ -206,8 +209,8 @@ class UibWeb {
         } catch (e) {
             // ... otherwise, use dev resources at ./../front-end/src/
             //TODO: Check if path.join(__dirname, 'src') actually exists & is accessible - else fail completely
-            log.trace('[uibuilder:web:setMasterStaticFolder] Using master src folder')
-            log.trace('                   Reason for not using master dist folder: ', e.message )
+            log.trace('[uibuilder:web:setMasterStaticFolder] Using master folder: src')
+            log.trace(`    Reason for not using master dist folder: ${e.message}` )
             this.masterStatic = uib.masterStaticSrcFolder
         }
     } // --- End of setMasterStaticFolder() --- //
@@ -338,7 +341,7 @@ class UibWeb {
             //       a build process so we are not loading them here
         } catch (e) {
             // dist not being used or not accessible, use src
-            log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Dist folder not in use or not accessible. Using local src folder`, e.message )
+            log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Dist folder not in use or not accessible. Using local src folder. ${e.message}` )
             //TODO: Check if folder actually exists & is accessible
             customStatic = 'src'
         }

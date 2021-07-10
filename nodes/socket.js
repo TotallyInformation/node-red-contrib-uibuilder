@@ -119,7 +119,7 @@ class UibSockets {
         const server = this.server
         const uib_socketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
-        log.trace('[uibuilder:Module] Socket.IO initialisation - Socket Path=', uib_socketPath )
+        log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uib_socketPath}` )
         let ioOptions = {
             'path': uib_socketPath,
             // Socket.Io 3+ CORS is disabled by default, also options have changed.
@@ -151,7 +151,7 @@ class UibSockets {
                 io.use(require(sioMwPath))
             }    
         } catch (e) {
-            log.trace('[uibuilder:socket:socketIoSetup] Socket.IO Middleware failed to load. Reason: ', e.message)
+            log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO Middleware failed to load. Reason: ${e.message}`)
         }
 
     } // --- End of socketIoSetup() --- //
@@ -205,11 +205,11 @@ class UibSockets {
         if (msg._socketId) {
             //! TODO If security is active ...
             //  ...If socketId not validated as having a current session, don't send
-            this.log.trace(`[uibuilder:socket.js:send:${url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}`, msg)
+            this.log.trace(`[uibuilder:socket:send:${url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
         } else {
             //? - is there any way to prevent sending to clients not logged in?
-            this.log.trace(`[uibuilder:socket.js:send:${url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}`, msg)
+            this.log.trace(`[uibuilder:socket:send:${url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.emit(uib.ioChannels.server, msg)
         }
     }
@@ -239,14 +239,14 @@ class UibSockets {
             ioNs.ioClientsCount++
             node.ioClientsCount = ioNs.ioClientsCount
 
-            log.trace(`[uibuilder:socket.js:addNS:${url}] Socket connected for node ${node.id} clientCount: ${ioNs.ioClientsCount}, Socket ID: ${socket.id}`)
+            log.trace(`[uibuilder:socket:addNS:${url}] Socket connected for node ${node.id} clientCount: ${ioNs.ioClientsCount}, Socket ID: ${socket.id}`)
 
             // Try to load the sioUse middleware function
             try {
                 const sioUseMw = require( path.join(uib.configFolder, uib.sioUseMwName) )
                 if ( typeof sioUseMw === 'function' ) socket.use(sioUseMw)
             } catch(e) {
-                log.trace(`[uibuilder:socket.js:addNS:${url}] Socket.use Failed to load Use middleware. Reason: `, e.message)
+                log.trace(`[uibuilder:socket:addNS:${url}] Socket.use Failed to load Use middleware. Reason: ${e.message}`)
             }
 
             uiblib.setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + ioNs.ioClientsCount }, node )
@@ -265,7 +265,7 @@ class UibSockets {
             // Listen for msgs from clients only on specific input channels:
             socket.on(uib.ioChannels.client, function(msg) {
                 node.rcvMsgCount++
-                log.trace(`[uibuilder:${url}] Data received from client, ID: ${socket.id}, Msg:`, msg)
+                log.trace(`[uibuilder:socket:${url}] Data received from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
 
                 // Make sure the incoming msg is a correctly formed Node-RED msg
                 switch ( typeof msg ) {
@@ -291,7 +291,7 @@ class UibSockets {
             }) // --- End of on-connection::on-incoming-client-msg() --- //
             socket.on(uib.ioChannels.control, function(msg) {
                 node.rcvMsgCount++
-                log.trace(`[uibuilder:${url}] Control Msg from client, ID: ${socket.id}, Msg:`, msg)
+                log.trace(`[uibuilder:socket:${url}] Control Msg from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
 
                 // Make sure the incoming msg is a correctly formed Node-RED msg
                 switch ( typeof msg ) {
@@ -333,7 +333,7 @@ class UibSockets {
                 ioNs.ioClientsCount--
                 node.ioClientsCount = ioNs.ioClientsCount
                 log.trace(
-                    `[uibuilder:${url}] Socket disconnected, clientCount: ${ioNs.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
+                    `[uibuilder:socket:${url}] Socket disconnected, clientCount: ${ioNs.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
                 )
                 if ( ioNs.ioClientsCount <= 0) uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + ioNs.ioClientsCount }, node )
                 else uiblib.setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + ioNs.ioClientsCount }, node )

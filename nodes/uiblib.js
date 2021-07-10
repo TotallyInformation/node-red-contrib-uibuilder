@@ -61,7 +61,7 @@ module.exports = {
      */
     inputHandler: function(msg, send, done, node, RED, io, ioNs, log, uib) {
         node.rcvMsgCount++
-        log.trace(`[uiblib:${node.url}] msg received via FLOW. ${node.rcvMsgCount} messages received`, msg)
+        log.trace( `[uibuilder:uiblib:inputHandler:${node.url}] msg received via FLOW. ${node.rcvMsgCount} messages received. ${JSON.stringify(msg)}` )
 
         // If the input msg is a uibuilder control msg, then drop it to prevent loops
         if ( Object.prototype.hasOwnProperty.call(msg, 'uibuilderCtrl') ) return null
@@ -81,11 +81,11 @@ module.exports = {
         if (msg._socketId) {
             //! TODO If security is active ...
             //  ...If socketId not validated as having a current session, don't send
-            log.trace(`[${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}`, msg)
+            log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
         } else {
             //? - is there any way to prevent sending to clients not logged in?
-            log.trace(`[${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}`, msg)
+            log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.emit(uib.ioChannels.server, msg)
         }
 
@@ -93,7 +93,7 @@ module.exports = {
             // Send on the input msg to output
             send(msg)
             done()
-            log.trace(`[${node.url}] msg passed downstream to next node`, msg)
+            log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg passed downstream to next node. ${JSON.stringify(msg)}`)
         }
 
         return msg
@@ -109,7 +109,7 @@ module.exports = {
      * @param {function|null} done Default=null, internal node-red function to indicate processing is complete
      */
     instanceClose: function(node, RED, uib, sockets, web, log, done = null) {
-        log.trace(`[${node.url}] nodeGo:on-close:processClose`)
+        log.trace(`[uibuilder:uiblib:instanceClose:${node.url}] Running instance close.`)
 
         /** @type {Object} instances[] Reference to the currently defined instances of uibuilder */
         const instances = uib.instances
@@ -126,7 +126,7 @@ module.exports = {
 
         // Remove url folder if requested
         if ( uib.deleteOnDelete[node.url] === true ) {
-            log.trace(`[uibuilder:uiblib:processClose] Deleting instance folder. URL: ${node.url}`)
+            log.trace(`[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
             
             // Remove the flag in case someone recreates the same url!
             delete uib.deleteOnDelete[node.url]

@@ -160,8 +160,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             } else {
                 RED.log.info('| Using Node-RED\'s webserver at:')
             }
-            let port = RED.settings.uiPort
-            if ( uib.customServer && uib.customServer.port && uib.customServer.port !== RED.settings.uiPort ) port = uib.customServer.port
+            let port = Number(RED.settings.uiPort)
+            if ( uib.customServer && uib.customServer.port && uib.customServer.port !== port ) port = uib.customServer.port
             
             RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${port}/ or ${uib.customServer.type}://localhost:${port}/`)
             RED.log.info(`| Installed packages:`)
@@ -220,6 +220,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     // Try to create root and root/.config - ignore error if it already exists
     try {
         fs.ensureDirSync(uib.configFolder) // creates both folders
+        log.trace(`[uibuilder] uibRoot folder exists. ${uib.rootFolder}` )
     } catch (e) {
         if ( e.code !== 'EEXIST' ) { // ignore folder exists error
             RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib.rootFolder}. ${e.message}`)
@@ -229,6 +230,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
     // Try to access the root folder (read/write) - if we can, create and serve the common resource folder
     try {
         fs.accessSync( uib.rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
+        log.trace(`[uibuilder] uibRoot folder is read/write accessible. ${uib.rootFolder}` )
     } catch (e) {
         RED.log.error(`uibuilder: Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
         uib_rootFolder_OK = false
@@ -238,6 +240,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         const fsOpts = {'overwrite': false, 'preserveTimestamps':true}
         try {
             fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
+            log.trace(`[uibuilder] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
         } catch (e) {
             RED.log.error(`uibuilder: Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
             uib_rootFolder_OK = false
@@ -292,13 +295,14 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
         /** @since 2019-02-02 - the current instance name (url) */
         var uibInstance = config.url // for logging
-        log.trace(`[uibuilder:${uibInstance}] ================ instance registered ================`)
+        log.trace(`[uibuilder:nodeInstance:${uibInstance}] ================ instance registered ================`)
         /** Copy 'this' object in case we need it in context of callbacks of other functions.
          * @type {uibNode}
          */
         // @ts-ignore
         const node = this
-        log.trace(`[uibuilder:${uibInstance}] = Keys: this, config =`, {'this': Object.keys(node), 'config': Object.keys(config)})
+        log.trace(`[uibuilder:nodeInstance:${uibInstance}] node keys: ${JSON.stringify(Object.keys(node))}`)
+        log.trace(`[uibuilder:nodeInstance:${uibInstance}] config keys: ${JSON.stringify(Object.keys(config))}`)
 
         //#region ====== Create local copies of the node configuration (as defined in the .html file) ====== //
         // NB: node.id and node.type are also available
@@ -321,17 +325,17 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         //#endregion ====== Local node config copy ====== //
 
         //#region ====== Instance logging/audit ====== //
-        log.trace(`[uibuilder:${uibInstance}] Node instance settings`, {'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })
+        log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node instance settings: ${JSON.stringify({'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })}`)
         
         // Keep a log of the active uib.instances @since 2019-02-02
         uib.instances[node.id] = node.url
-        log.trace(`[uibuilder:${uibInstance}] Node uib.Instances Registered`, uib.instances)
+        log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node uib.Instances Registered: ${JSON.stringify(uib.instances)}`)
 
         // Keep track of the number of times each instance is deployed.
         // The initial deployment = 1
         if ( Object.prototype.hasOwnProperty.call(uib.deployments, node.id) ) uib.deployments[node.id]++
         else uib.deployments[node.id] = 1
-        log.trace(`[uibuilder:${uibInstance}] Number of uib.Deployments`, uib.deployments[node.id] )
+        log.trace(`[uibuilder:nodeInstance:${uibInstance}] Number of uib.Deployments: ${uib.deployments[node.id]}` )
         //#endregion ====== Instance logging/audit ====== //
 
         //#region ====== Local folder structure ====== //
@@ -350,7 +354,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             } catch (e) {
                 // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
                 if ( e.code !== 'ENOENT' ) {
-                    log.error(`[uibuilder] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${node.url}, oldUrl=${node.oldUrl}, Fldr=${node.customFolder}. Error=${e.message}`, e)
+                    log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${node.url}, oldUrl=${node.oldUrl}, Fldr=${node.customFolder}. Error=${e.message}`, e)
                 }
             }
             // we continue to do the normal checks in case something failed or if this is an initial deploy (so no original folder exists)
@@ -359,6 +363,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         // Does the custom folder exist? If not, create it and copy blank template to it. Otherwise make sure it is accessible.
         var customFoldersOK = true
         if ( ! fs.existsSync(node.customFolder) ) {
+
             // Does not exist so check whether built-in or external template wanted
             if ( node.templateFolder !== 'external' ) {
 
@@ -367,9 +372,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 let copyFrom = path.join( uib.masterTemplateFolder, 'blank' )
                 try {
                     fs.copySync( copyFrom, node.customFolder, cpyOpts)
-                    log.trace(`[uibuilder:${uibInstance}] Created instance folder ${node.customFolder} and copied template files from ${copyFrom}` )
+                    log.info(`[uibuilder:nodeInstance:${uibInstance}] Created instance folder ${node.customFolder} and copied template files from ${copyFrom}` )
                 } catch (e) {
-                    log.error(`[uibuilder] CREATE OF INSTANCE FOLDER '${node.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
+                    log.error(`[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${node.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
                     customFoldersOK = false
                 }
 
@@ -379,6 +384,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 uiblib.replaceTemplate(node.url, node.templateFolder, node.extTemplate, 'startup-CopyTemplate', templateConf, uib, log)
                 .then( resp => {
                     //resp.statusMessage
+                    log.info(`[uibuilder:nodeInstance:${uibInstance}] Created instance folder ${node.customFolder} and copied external template files from ${node.templateFolder}` )
                 })
                 .catch( err => {
                     let statusMsg
@@ -389,26 +395,29 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                         if ( node.templateFolder === 'external' ) mystr = `, ${node.extTemplate}`
                         statusMsg = `Replace template error. ${err.message}. url=${node.url}. ${node.templateFolder}${mystr}`
                     }
-                    log.error(`[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
+                    log.error(`[uibuilder:nodeInstance:replaceTemplate] ${statusMsg}`, err)
                 } )
 
             }
+
         } else {
+
             try {
                 fs.accessSync(node.customFolder, fs.constants.W_OK)
             } catch (e) {
-                log.error(`[uibuilder:${uibInstance}] Local custom folder ERROR`, e.message)
+                log.error(`[uibuilder:nodeInstance:${uibInstance}] Local custom folder ERROR`, e.message)
                 customFoldersOK = false
             }
+
         }
 
         // We've checked that the custom folder is there and has the correct structure
         if ( uib_rootFolder_OK === true && customFoldersOK === true ) {
             // local custom folders are there ...
-            log.trace(`[uibuilder:${uibInstance}] Using local front-end folders in`, node.customFolder)
+            log.trace(`[uibuilder:nodeInstance:${uibInstance}] Using local front-end folders in: ${node.customFolder}` )
         } else {
             // Local custom folders are not right!
-            log.error(`[uibuilder:${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
+            log.error(`[uibuilder:nodeInstance:${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
         }
 
         //#endregion ====== End of Local folder structure ====== //
@@ -541,12 +550,12 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             return res
         }
 
-        // Does this url have a matching instance root folder?
-        if ( ! fs.existsSync(path.join(uib.rootFolder, params.url)) ) {
-            res.statusMessage = `url does not have a matching instance root folder. url='${params.url}', Master root folder='uib.rootFolder'`
-            res.status = 500
-            return res
-        }
+        // Actually, since uib auto-creates folder if not exists, this just gets in the way - // Does this url have a matching instance root folder?
+        // if ( ! fs.existsSync(path.join(uib.rootFolder, params.url)) ) {
+        //     res.statusMessage = `url does not have a matching instance root folder. url='${params.url}', Master root folder='${uib.rootFolder}'`
+        //     res.status = 500
+        //     return res
+        // }
 
         return res
     } // ---- End of fn chkParamUrl ---- //
