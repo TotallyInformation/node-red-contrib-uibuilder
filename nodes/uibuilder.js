@@ -1405,7 +1405,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         
         // Validate the npm command to be used.
         if ( params.cmd === undefined ) {
-            log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
+            log.error('[uibuilder:API:uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
             res.statusMessage = 'npm command parameter not provided'
             res.status(500).end()
             return
@@ -1417,7 +1417,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 break
         
             default:
-                log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. Invalid command provided for npm management.')
+                log.error('[uibuilder:API:uibnpmmanage] Admin API. Invalid command provided for npm management.')
                 res.statusMessage = 'npm command parameter is invalid'
                 res.status(500).end()
                 return
@@ -1426,13 +1426,13 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         // package name must not exceed 255 characters
         //we have to have a package name
         if ( params.package === undefined ) {
-            log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. package parameter not provided')
+            log.error('[uibuilder:API:uibnpmmanage] Admin API. package parameter not provided')
             res.statusMessage = 'package parameter not provided'
             res.status(500).end()
             return
         }
         if ( params.package.length > 255 ) {
-            log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. package name parameter is too long (>255 characters)')
+            log.error('[uibuilder:API:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
             res.statusMessage = 'package name parameter is too long. Max 255 characters'
             res.status(500).end()
             return
@@ -1442,7 +1442,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         // TODO: add optional url param that must be an active uibuilder url name
         const folder = userDir
 
-        log.info(`[uibuilder/uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package}`)
+        log.info(`[uibuilder:API:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package}`)
 
         // delete package lock file as it seems to mess up sometimes - no error if it fails
         fs.removeSync(path.join(folder, 'package-lock.json'))
@@ -1466,7 +1466,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             }
         }
         if ( command === '' ) {
-            log.error('[uibuilder/uibnpmmanage] uibuilder Admin API. No valid command available for npm management.')
+            log.error('[uibuilder:API:uibnpmmanage] Admin API. No valid command available for npm management.')
             res.statusMessage = 'No valid npm command available'
             res.status(500).end()
             return
@@ -1476,7 +1476,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         var output = [], errOut = null, success = false
         child_process.exec(command, {'cwd': folder}, (error, stdout, stderr) => {
             if ( error ) {
-                log.warn(`[uibuilder/uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, error)
+                log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, error)
             }
 
             // try to force output & error output to JSON (or split by newline)
@@ -1505,7 +1505,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 jResult = {'ERROR': e, 'RESULT': result}
             }
 
-            //log.trace(`[uibuilder/uibnpmmanage] Writing stdout to ${path.join(uib.rootFolder,uib.configFolder,'npm-out-latest.txt')}`)
+            //log.trace(`[uibuilder:API:uibnpmmanage] Writing stdout to ${path.join(uib.rootFolder,uib.configFolder,'npm-out-latest.txt')}`)
             //fs.writeFile(path.join(uib.configFolder,'npm-out-latest.txt'), stdout, 'utf8', function(){})
 
             // Update the packageList
@@ -1544,9 +1544,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
             }
 
             if (success === true) {
-                log.info(`[uibuilder/uibnpmmanage] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
+                log.info(`[uibuilder:API:uibnpmmanage] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
             } else {
-                log.error(`[uibuilder/uibnpmmanage] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`, jResult)
+                log.error(`[uibuilder:API:uibnpmmanage] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`, jResult)
             }
 
             res.json({'success':success,'result':jResult,'output':output,'errOut':errOut})
