@@ -410,7 +410,7 @@ class UibSockets {
 
     } // --- End of removeNS() --- //
 
-}, // ==== End of UibSockets Class Definition ==== //
+} // ==== End of UibSockets Class Definition ==== //
 
 /** Singleton model. Only 1 instance of UibSockets should ever exist.
  * Use as: `const sockets = require('./socket.js')`
