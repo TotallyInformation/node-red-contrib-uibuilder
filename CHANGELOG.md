@@ -8,7 +8,16 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.0.1...main)
 
-Nothing currently.
+<!--Nothing currently.-->
+### Changed
+
+* Allow front-end code to update the `msg`.
+
+  This allows your front-end code to be its own test harness by pretending that a msg has been `sent` from Node-RED. It would also let you have a single processing method even if you wanted to use a non-Node-RED data input (e.g. a direct MQTT connection or some other API).
+
+  ```js
+  uibuilder.set( 'msg', { topic:'my/topic', payload: {a:1, b:'hello'} } )
+  ```
 
 ## [4.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.0.0...v4.0.1)
 
