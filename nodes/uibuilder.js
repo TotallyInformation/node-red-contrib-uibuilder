@@ -335,6 +335,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         node.jwtSecret       = node.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
         node.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
         node.reload          = config.reload === undefined ? false : config.reload
+        node.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:addInstanceStaticRoute
         //#endregion ====== Local node config copy ====== //
 
         //#region ====== Instance logging/audit ====== //

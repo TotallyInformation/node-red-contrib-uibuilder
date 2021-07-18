@@ -853,6 +853,7 @@
             tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
             oldUrl: { value: undefined },      // If the url has been changed, this is the previous url
             reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
+            sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)
             //jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
         },
         credentials: {
@@ -904,6 +905,10 @@
             $('#node-input-tokenAutoExtend').prop('checked', this.useSecurity)
             $('#node-input-reload').prop('checked', this.reload)
             //#endregion checkbox states
+
+            // Set sourceFolder dropdown
+            $(`#node-input-sourceFolder option[value="${that.sourceFolder || 'src'}"]`).prop('selected', true)
+            $('#node-input-sourceFolder').val(that.sourceFolder || 'src')
 
             /** When the url changes (NB: Also see the validation function) change visible folder names & links
              * NB: Actual URL change processing is done in validation which also happens on change
@@ -1501,23 +1506,23 @@
 </script>
 
 <script type="text/html" data-template-name="uibuilder">
-    <div id="main-props" desc="Hideable main properties section">
-        <div desc="Node Name" class="form-row" title="Node Name (descriptive only)">
+    <div id="main-props" aria-label="Hideable main properties section">
+        <div aria-label="Node Name" class="form-row" title="Node Name (descriptive only)">
             <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
             <input type="text" id="node-input-name">
         </div>
 
-        <div desc="Topic"     class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+        <div aria-label="Topic" class="form-row" title="Adds a msg.topic to input msgs if not already provided">
             <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
             <input type="text" id="node-input-topic">
         </div>
 
-        <div desc="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
+        <div aria-label="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
             <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
             <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
         </div>
 
-        <div desc="Buttons to show 'edit files' & 'mng front-end libs', hide this section" class="form-row">
+        <div aria-label="Buttons to show 'edit files' & 'mng front-end libs', hide this section" class="form-row">
             <button class="btn" id="show-edit-props" title="Edit the front-end code">
                 Edit Files
             </button>
@@ -1526,12 +1531,12 @@
             </button>
         </div>
 
-        <div desc="Show template selection, collapsible" class="form-row">
+        <div aria-label="Show template selection, collapsible" class="form-row">
             <b id="show-templ-props" title="Show&sol;Hide the template selection settings">
                 <i class="fa fa-caret-right"></i> Template Settings
             </b>
-            <div id="adv-templ" desc="Hideable Template Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
-                <div>
+            <div id="adv-templ" aria-label="Hideable Template Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
+                <div aria-label="How to use the template selector">
                     <p>
                         By default, uibuilder creates a template folder with a minimal template.
                         If you wish to use a different template, select and load it here.
@@ -1547,7 +1552,7 @@
                 <label for="node-input-templateFolder" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
                 <select id="node-input-templateFolder" style="width:73%;"></select>
 
-                <div desc="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation/uib-template-test" style="display:none">
+                <div aria-label="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation/uib-template-test" style="display:none">
                     <label for="node-input-extTemplate"><i class="fa fa-globe"></i> Ext. Template</label>
                     <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
                 </div>
@@ -1558,17 +1563,25 @@
             </div>
         </div>
 
-        <div desc="Show advanced edit properties, collapsible" class="form-row">
+        <div aria-label="Show advanced edit properties, collapsible" class="form-row">
             <b id="show-adv-props" title="Show&sol;Hide the advanced configuration settings">
                 <i class="fa fa-caret-right"></i> Advanced Settings
             </b>
-            <div id="adv-props" desc="Hideable Advanced Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
+            <div id="adv-props" aria-label="Hideable Advanced Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
                 <!-- How long do we want resources to be cached for? *** NOT READY *** 
                 <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
                     <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
                     <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
                 </div> -->
                 
+                <div aria-label="Select source folder" class="form-row">
+                    <label for="node-input-sourceFolder" style="width:7em;"><i class="fa fa-folder"></i> Template:</label>
+                    <select id="node-input-sourceFolder" style="width:73%;">
+                        <option value="src">src</option>
+                        <option value="dist">dist</option>
+                    </select>
+                </div>
+
                 <!-- Provide a searchable file index view? -->
                 <div class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
                     <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
@@ -1587,8 +1600,8 @@
                 <div class="form-tips node-help" title="">
                     Warning: Most people will not need the following.
                 </div>
-                <!-- Forward flag -->
-                <div class="form-row" title="forward inbound msg's direct to the output">
+
+                <div aria-label="Forward flag" class="form-row" title="forward inbound msg's direct to the output">
                     <!-- Forward input msgs to output -->
                     <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
                     <label for="node-input-fwdInMessages" style="width: 40%;">
@@ -1598,7 +1611,7 @@
             </div>
         </div>
 
-        <div desc="Show security properties, collapsible" class="form-row">
+        <div aria-label="Show security properties, collapsible" class="form-row">
             <b id="show-security-props" title="Show&sol;Hide security settings">
                 <i class="fa fa-caret-right"></i> Security Settings
             </b>

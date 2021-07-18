@@ -9,15 +9,27 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.0.1...main)
 
 <!--Nothing currently.-->
-### Changed
+Planned as [v4.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/milestone/10)
 
-* Allow front-end code to update the `msg`.
+### To Do
+
+
+### New
+
+* Add drop-down to adv settings that lets the served folder be changed between src and dist. [#147)(https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/147)
+
+  If the `<uibRoot>/<servedFolder>` folder does not exist, it will be silently created.
+  If the `<uibRoot>/<servedFolder>/index.html` file does not exist, a warning will be issued to the Node-RED log & the Node-RED debug panel.
+
+* Allow front-end code to update the `msg`. [#146)(https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/146)
 
   This allows your front-end code to be its own test harness by pretending that a msg has been `sent` from Node-RED. It would also let you have a single processing method even if you wanted to use a non-Node-RED data input (e.g. a direct MQTT connection or some other API).
 
   ```js
   uibuilder.set( 'msg', { topic:'my/topic', payload: {a:1, b:'hello'} } )
   ```
+
+  When using this feature, the `uibuilder.onChange('msg', function(msg) { ... })` function is still triggered as expected.
 
 ## [4.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.0.0...v4.0.1)
 

@@ -245,7 +245,7 @@ class UibWeb {
         this.addMiddlewareFile(node)
         // (2) masterMiddleware - Generic dynamic middleware to add uibuilder specific headers & cookie
         this.addMasterMiddleware(node)
-        // (3) customStatic - Add static route for instance local custom files
+        // (3) customStatic - Add static route for instance local custom files (src or dist)
         this.addInstanceStaticRoute(node)
         // @ts-ignore (4) Master Static - Add static route for instance local custom files
         this.app.use( tilib.urlJoin(node.url), serveStatic( this.masterStatic, uib.staticOpts ) )
@@ -335,24 +335,42 @@ class UibWeb {
         //const RED = this.RED
         const log = this.log
 
-        let customStatic = 'dist'
+        let customStatic = node.sourceFolder
 
-        try {
-            // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
-            fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
-            // If the ./dist/index.html exists use the dist folder...
-            log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Using local dist folder`)
-            // NOTE: You are expected to have included vendor packages in
-            //       a build process so we are not loading them here
-        } catch (e) {
-            // dist not being used or not accessible, use src
-            log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Dist folder not in use or not accessible. Using local src folder. ${e.message}` )
-            //TODO: Check if folder actually exists & is accessible
-            customStatic = 'src'
+        // Cope with pre v4.1 node configs (sourceFolder not defined)
+        if ( node.sourceFolder === undefined ) {
+            try {
+                // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
+                fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
+                // If the ./dist/index.html exists use the dist folder...
+                customStatic = 'dist'
+                log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Using local dist folder`)
+                // NOTE: You are expected to have included vendor packages in
+                //       a build process so we are not loading them here
+            } catch (e) {
+                // dist not being used or not accessible, use src
+                log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Dist folder not in use or not accessible. Using local src folder. ${e.message}` )
+                customStatic = 'src'
+            }
         }
-        
+
+        const customFull = path.join(node.customFolder, customStatic)
+
+        // Does the customStatic folder exist? If not, then create it
+        try {
+            fs.ensureDirSync( customFull )
+            log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Using local ${customStatic} folder`)
+        } catch (e) {
+            node.warn(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Cannot create or access ${customFull} folder, no pages can be shown. Error: ${e.message}`)
+        }
+
+        // Does it contain an index.html file? If not, then issue a warn
+        if ( ! fs.existsSync( path.join(customFull, 'index.html') ) ) {
+            node.warn(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Cannot show default page, index.html does not exist in ${customFull}.`)
+        }
+
         // @ts-ignore
-        this.app.use( tilib.urlJoin(node.url), serveStatic( path.join(node.customFolder, customStatic), uib.staticOpts ) )
+        this.app.use( tilib.urlJoin(node.url), serveStatic( customFull, uib.staticOpts ) )
 
     } // --- End of addInstanceStaticRoute() --- //
 
