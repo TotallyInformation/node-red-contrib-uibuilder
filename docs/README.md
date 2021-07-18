@@ -7,10 +7,20 @@ lastUpdated: 2021-07-03 21:48:29
 ---
 
 All you need is a uibuilder node added to your flows. Select a suitable URL path and deploy.
-Now you can send messages to your front end.
+Now you can send messages to your front end and send messages back to Node-RED.
 
-uibuilder comes with a default template set of front-end files that define your user interface (UI).
-Open the uibuilder node and click on the button to open your web app in a new tab.
+uibuilder comes with some simple default templates, front-end code files that define your user interface (UI).
+Open the uibuilder node and click on the button to open your web app in a new tab. Load a different template if you like, use the editor to customise the UI and the library manager if you need any front-end libraries or frameworks.
+
+## Getting help and contributing
+
+node-red-contrib-uibuilder is contained in a GitHub repository that you can get to using the icon at the top-right of the page.
+
+Help is available in these documents, the help sidebar in Node-RED and the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). If you get stuck, you can also create a new topic in the [Node-RED Discourse Forum](https://discourse.nodered.org/) or in the [GitHub discusion section](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions).
+
+Issues occuring with uibuilder should be raised in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
+
+WIKI, Code, documentation, and examples are all welcome contributions and I always aim to give credit to contributors. Please see the [contribution guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/.github/CONTRIBUTING.md).
 
 ## Using uibuilder
 
