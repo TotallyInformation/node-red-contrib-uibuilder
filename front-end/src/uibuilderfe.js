@@ -26,6 +26,7 @@
 
 // @since 2017-10-17 CL: tell webpack that we need socket.io client if running from webpack build
 if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
+    // @ts-expect-error ts(2307)
     var io = require('socket.io-client')
 }
 
@@ -74,7 +75,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '4.0.0'
+        self.version = '4.0.1'
         self.debug = false // do not change directly - use .debug() method
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 

@@ -6,20 +6,30 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.3.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.0.1...main)
 
 Nothing currently.
 
+## [4.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.0.0...v4.0.1)
+
+### Fixed
+
+* Minor bug stopping the logoff msg processing from working.
+
+### Updated
+
+* All dependencies and dev-dependencies updated
+
 ## [4.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v3.3.1...v4.0.0)
 
-## Major Changes
+### Major Changes
 
 * Node.js v12+ is the minimum supported environment for Node-RED.
 * Only "modern" browsers are now supported for both the Editor and the uibuilderfe front-end library as ES6 (ECMA2015) code is used. 
 
   Let me know if this is a problem and I can build a backwards compatible version.
   
-### Template handling is significantly changed in this major release
+#### Template handling is significantly changed in this major release
   
   New instances of uibuilder nodes will only be given the "blank" template which uses no front-end frameworks.
 
@@ -38,11 +48,11 @@ Nothing currently.
 
   **NOTE**: When using an external template, no check is currently done on dependencies, you must install these yourself. I will try to add this feature in the future.
 
-### Changing the `uibRoot` folder
+#### Changing the `uibRoot` folder
   
   You can now set uibuilder's root folder - that stores configuration, common, security and each node's front-end code - to a different location. The default location is in your userDir folder in a sub-folder called `uibuilder`. If you are using projects, the sub-folder will be in your projects root folder. See [docs/changing-uibroot.md](docs/changing-uibroot.md) for more detail.
 
-## Updated
+### Updated
 
 * Update fs-extra to [v10](https://github.com/jprichardson/node-fs-extra/compare/9.1.0...10.0.0). No longer supports node.js v10, requires v12+.
 * Make some class methods private in web.js and socket.js. Requires node.js v12 as a minimum as it uses an ECMA2018 feature.
@@ -58,7 +68,7 @@ Nothing currently.
 
   Updated the front page with links and explanations of the different sections.
 
-## New
+### New
 
 * In the technical documentation, you can now access and search the main README as well as the current and archive changelogs (v1 & v2) in addition to everything else.
   
@@ -68,7 +78,7 @@ Nothing currently.
 * `nodes/sockets.js` - Added socket.isConfigured to allow a check to see whether socket.setup has been called.
 * Add a new icon to the main readme that allows editing of uibuilder code using VSCode either via a remote repository or via a Docker container.
 
-## Fixed
+### Fixed
 
 * Node-RED edge-case for credentials was causing node to be marked as changed whenever "Done" button pressed even if no changes made. Turns out to be an issue if you don't give a password-type credential an actual value (e.g. leave it blank). Gave the `JWTsecret` a default value even when it isn't really needed.
 * Instance details page - CSS now loads correctly even if using a customer server port. Some Socket.IO details that were missing now returned.

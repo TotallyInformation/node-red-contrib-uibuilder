@@ -319,7 +319,7 @@ class UibSockets {
                     uiblib.logon(msg, ioNs, node, socket, log, uib)
 
                 } else if ( msg.uibuilderCtrl === 'logoff') {
-                    uiblib.logoff(msg, ioNs, node, socket, log)
+                    uiblib.logoff(msg, ioNs, node, socket, log, uib)
 
                 } else {
                     // If security is active...
