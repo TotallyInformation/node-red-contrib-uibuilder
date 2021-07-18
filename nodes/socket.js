@@ -31,16 +31,17 @@ const uiblib        = require('./uiblib')  // Utility library for uibuilder
 const path          = require('path')
 
 class UibSockets {
+    // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
     /** Flag to indicate whether setup() has been run
      * @type {boolean}
      * @protected 
      */
-    #isConfigured
+    _isConfigured
 
     /** Called when class is instantiated */
     constructor() {
         // setup() has not yet been run
-        this.#isConfigured = false
+        this._isConfigured = false
 
         //#region ---- References to core Node-RED & uibuilder objects ---- //
         /** @type {runtimeRED} */
@@ -89,18 +90,24 @@ class UibSockets {
      */
     setup( RED, uib, log, server ) {
         // Prevent setup from being called more than once
-        if ( this.#isConfigured === true ) {
+        if ( this._isConfigured === true ) {
             log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
-        if ( RED ) this.RED = RED
-        if ( uib ) this.uib = uib
-        if ( uib ) this.log = log
-        if ( uib ) this.server = server
-        this.#socketIoSetup()
+        if ( ! RED || ! uib || ! log || ! server ) {
+            throw new Error('[uibuilder:socket.js] Called without required parameters')
+        }
 
-        this.#isConfigured = true
+        this.RED = RED
+        this.uib = uib
+        this.log = log
+        this.server = server
+
+        // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
+        this._socketIoSetup()
+
+        this._isConfigured = true
 
     } // --- End of setup() --- //
 
@@ -111,7 +118,7 @@ class UibSockets {
      * Must only be run once and so is made an ECMA2018 private class method
      * @private
      */
-    #socketIoSetup() {
+    _socketIoSetup() {
         // Reference static vars
         const uib = this.uib
         //const RED = this.RED
@@ -158,7 +165,7 @@ class UibSockets {
 
     /** Allow the isConfigured flag to be read (not written) externally */
     get isConfigured() {
-        return this.#isConfigured
+        return this._isConfigured
     }
 
     /** Output a control msg to the front-end
@@ -414,12 +421,13 @@ class UibSockets {
 
 /** Singleton model. Only 1 instance of UibSockets should ever exist.
  * Use as: `const sockets = require('./socket.js')`
+ * Wrap in try/catch to force out better error logging if there is a problem
  */
 try {
     module.exports = new UibSockets()
 } catch (e) {
-    console.trace('SOCKET', e)
-}
+    console.trace('[uibuilder:socket.js] new singleton instance failed', e)
+} 
 
 // EOF
  

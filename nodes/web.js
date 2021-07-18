@@ -33,14 +33,15 @@ const serveIndex    = require('serve-index')
 // Only used for type checking
 const Express = require('express') // eslint-disable-line no-unused-vars
 
-const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
+//const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
 
 class UibWeb {
+    // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
     /** Flag to indicate whether setup() has been run
      * @type {boolean}
      * @protected 
      */
-    #isConfigured
+    _isConfigured
 
     /** Called when class is instantiated */
     constructor() {
@@ -79,7 +80,7 @@ class UibWeb {
         //#endregion ---- ---- //
 
         // setup() has not yet been run
-        this.#isConfigured = false
+        this._isConfigured = false
 
     } // --- End of constructor() --- //
 
@@ -95,30 +96,34 @@ class UibWeb {
     //setup( RED, uib, log, server ) {
     setup( RED, uib, log ) {
         // Prevent setup from being called more than once
-        if ( this.#isConfigured === true ) {
+        if ( this._isConfigured === true ) {
             log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
-        if ( RED ) this.RED = RED
-        if ( uib ) this.uib = uib
-        if ( uib ) this.log = log
-        //if ( uib ) this.server = server
+        if ( ! RED || ! uib || ! log ) {
+            throw new Error('[uibuilder:web.js] Called without required parameters')
+        }
+
+        this.RED = RED
+        this.uib = uib
+        this.log = log
 
         /** Optional port. If set, uibuilder will use its own ExpressJS server */
-        // @ts-ignore
-        if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port !== RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port
+        // @ts-expect-error ts(2367)
+        if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port
 
-        this.#webSetup()
-        this.#setMasterStaticFolder()
+        // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
+        this._webSetup()
+        this._setMasterStaticFolder()
 
-        this.#isConfigured = true
+        this._isConfigured = true
     } // --- End of setup() --- //
 
     /** Set up the appropriate ExpressJS web server references
      * @protected
      */
-    #webSetup() {
+    _webSetup() {
         // Reference static vars
         const uib = this.uib
         const RED = this.RED
@@ -194,7 +199,7 @@ class UibWeb {
     /** Set which folder to use for the central, static, front-end resources
      *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
      * @protected */
-    #setMasterStaticFolder() {
+    _setMasterStaticFolder() {
         // Reference static vars
         const uib = this.uib
         //const RED = this.RED
@@ -217,7 +222,7 @@ class UibWeb {
 
     /** Allow the isConfigured flag to be read (not written) externally */
     get isConfigured() {
-        return this.#isConfigured
+        return this._isConfigured
     }
 
     //#region ====== Per-node instance processing ====== //

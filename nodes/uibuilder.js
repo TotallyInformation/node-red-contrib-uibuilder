@@ -28,20 +28,21 @@
 // uibuilder custom 
 const uiblib        = require('./uiblib')  // Utility library for uibuilder
 const tilib         = require('./tilib')   // General purpose library (by Totally Information)
+// Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {
     var templateConf  = require('../templates/template_dependencies') // Template configuration metadata
 } catch (e) {
-    console.trace('REQUIRE TEMPLATE-CONF::', e)
+    console.trace('[uibuilder] REQUIRE TEMPLATE-CONF failed::', e)
 }
 try {
     var sockets       = require('./socket') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 } catch (e) {
-    console.trace('REQUIRE SOCKET::', e)
+    console.trace('[uibuilder] REQUIRE SOCKET failed::', e)
 }
 try {
     var web           = require('./web') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 } catch (e) {
-    console.trace('REQUIRE WEB::', e)
+    console.trace('[uibuilder] REQUIRE WEB failed::', e)
 }
 
 // Core node.js
@@ -173,7 +174,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 RED.log.info('| Using Node-RED\'s webserver at:')
             }
             let port = Number(RED.settings.uiPort)
-            if ( uib.customServer && uib.customServer.port && uib.customServer.port !== port ) port = uib.customServer.port
+            if ( uib.customServer.port !== undefined && uib.customServer.port != port ) port = uib.customServer.port
             
             RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${port}/ or ${uib.customServer.type}://localhost:${port}/`)
             RED.log.info(`| Installed packages:`)

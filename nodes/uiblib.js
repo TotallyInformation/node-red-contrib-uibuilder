@@ -53,7 +53,7 @@ const dummyAuth = {
     },
 }
 //
-const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
+//const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
 
 module.exports = {
     /** Complex, custom code when processing an incoming msg to uibuilder node input should go here
@@ -301,6 +301,8 @@ module.exports = {
      */
     createToken: function(_auth, node) {
 
+        // TODO if securityjs === null we need to load the security.js? Currently only done in the logon() function
+
         // If anything fails, ensure that the token is invalidated
         try {
 
@@ -308,6 +310,7 @@ module.exports = {
 
             const sessionExpiry = Math.floor(Number(Date.now()) / 1000) + Number(node.sessionLength)
 
+            // TODO ??? Add security.js function call to enable further validation of token contents - e.g. source IP address
             const jwtData = {
                 // When does the token expire? Value is seconds since 1970
                 exp: sessionExpiry,
@@ -345,6 +348,8 @@ module.exports = {
     checkToken: function(_auth, node) {
         if (jsonwebtoken === null)  jsonwebtoken = require('jsonwebtoken')
 
+        // TODO if securityjs === null we need to load the security.js? Currently only done in the logon() function
+
         const options = {
             issuer: 'uibuilder',
             clockTimestamp: Math.floor(Date.now() / 1000), // seconds since 1970
@@ -370,6 +375,8 @@ module.exports = {
             response.info.error = err
             response.info.validJwt = false
         }
+
+        // TODO ??? Add security.js function call to enable further validation of token contents - e.g. source IP address
 
         console.log('[uibuilder:uiblib.js:checkToken] response: ', response)
         return response

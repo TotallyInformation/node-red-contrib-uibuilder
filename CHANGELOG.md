@@ -66,12 +66,16 @@ Nothing currently.
 
 * `nodes/web.js` - Added web.isConfigured to allow a check to see whether web.setup has been called.
 * `nodes/sockets.js` - Added socket.isConfigured to allow a check to see whether socket.setup has been called.
+* Add a new icon to the main readme that allows editing of uibuilder code using VSCode either via a remote repository or via a Docker container.
 
 ## Fixed
 
 * Node-RED edge-case for credentials was causing node to be marked as changed whenever "Done" button pressed even if no changes made. Turns out to be an issue if you don't give a password-type credential an actual value (e.g. leave it blank). Gave the `JWTsecret` a default value even when it isn't really needed.
 * Instance details page - CSS now loads correctly even if using a customer server port. Some Socket.IO details that were missing now returned.
 * web.js - specifying a custom server port caused uibuilder to crash. Now fixed.
+* Lots of tidying up of log messages, especially TRACE level.
+* Accidentally include a node.js v14+ issue, now removed.
+* Additional try/catch blocks to force better reporting if there is an error in the uibuilder module files.
 
 
 ---
