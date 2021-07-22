@@ -40,16 +40,16 @@
     "vue": "^2.6.12"
   },
   "devDependencies": {
-    "@babel/cli": "^7.14.5",
-    "@babel/core": "^7.14.6",
+    "@babel/cli": "^7.14.8",
+    "@babel/core": "^7.14.8",
     "@types/express": "^4.17.13",
     "@types/jquery": "^3.5.6",
     "@types/node-red": "^1.1.1",
     "babel-minify": "^0.5.1",
     "eslint": "^7.31.0",
     "eslint-plugin-html": "^6.1.2",
-    "eslint-plugin-jsdoc": "^35.4.5",
-    "uglify-js": "^3.13.10"
+    "eslint-plugin-jsdoc": "^35.5.1",
+    "uglify-js": "^3.14.0"
   },
   "optionalDependencies": {},
   "node-red": {
