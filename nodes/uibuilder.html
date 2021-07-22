@@ -1004,7 +1004,7 @@
                 // security is requested, enable other settings and add warnings if needed
                 if ( this.checked ) {
                     // If in production, cannot turn on security without https, in dev, give a warning
-                    if (window.location.protocol !== 'https' || window.location.protocol !== 'https:') {
+                    if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
                         if (RED.settings.uibuilderNodeEnv !== 'development') {
                             console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
                             $('#node-input-useSecurity').prop('checked', false); this.checked = false
@@ -1014,6 +1014,7 @@
                         // TODO: Add user warnings
                     }
                 }
+                // Yes, we do need this.checked twice :-)
                 if ( this.checked ) {
                     $('#node-input-sessionLength').prop('disabled', false)
                     $('#node-input-jwtSecret').prop('disabled', false)
