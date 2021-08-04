@@ -8,7 +8,11 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.0...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### Changed
+
+* Moved back-end libraries from `nodes` folder to `nodes/libs` to keep things tidier (especially if additional nodes added in the future)
 
 ## [4.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.0.1...v4.1.0)
 
@@ -29,7 +33,7 @@ Nothing currently.
 
   When using this feature, the `uibuilder.onChange('msg', function(msg) { ... })` function is still triggered as expected.
 
-  ### Fixed
+### Fixed
 
   * [#148](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/148) Editor node config cannot escape https check when not running in development mode
 

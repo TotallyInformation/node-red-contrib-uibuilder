@@ -26,8 +26,8 @@
 
 //#region ------ Require packages ------ //
 // uibuilder custom 
-const uiblib        = require('./uiblib')  // Utility library for uibuilder
-const tilib         = require('./tilib')   // General purpose library (by Totally Information)
+const uiblib        = require('./libs/uiblib')  // Utility library for uibuilder
+const tilib         = require('./libs/tilib')   // General purpose library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {
     var templateConf  = require('../templates/template_dependencies') // Template configuration metadata
@@ -35,12 +35,12 @@ try {
     console.trace('[uibuilder] REQUIRE TEMPLATE-CONF failed::', e)
 }
 try {
-    var sockets       = require('./socket') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
+    var sockets       = require('./libs/socket') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 } catch (e) {
     console.trace('[uibuilder] REQUIRE SOCKET failed::', e)
 }
 try {
-    var web           = require('./web') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
+    var web           = require('./libs/web') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 } catch (e) {
     console.trace('[uibuilder] REQUIRE WEB failed::', e)
 }
