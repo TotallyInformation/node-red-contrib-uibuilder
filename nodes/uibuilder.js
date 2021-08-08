@@ -444,8 +444,8 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         const ioNs = sockets.addNS(node) // NB: Namespace is set from url
         node.ioNamespace = ioNs.name
         
-        log.debug(`uibuilder : ${uibInstance} : URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, node.url )}`)
-        log.debug(`uibuilder : ${uibInstance} : Source files . : ${node.customFolder}`)
+        log.trace(`[uibuilder:${uibInstance}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, node.url )}`)
+        log.trace(`[uibuilder:${uibInstance}] Source files . : ${node.customFolder}`)
 
         // We only do the following if io is not already assigned (e.g. after a redeploy)
         uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )

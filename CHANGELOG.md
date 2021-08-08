@@ -10,9 +10,22 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- Nothing currently. -->
 
+### New
+
+* [Issue #151](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/151)If the advanced option to "Show web view of source files" is selected, also show a link to the webpage.
 ### Changed
 
+* [Issue #149](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/149) If security is turned on, you can now run without Node-RED using TLS even in production. This is because you may wish to provide TLS via a reverse proxy.
+
+   You still get a warning in the editor though.
+
 * Moved back-end libraries from `nodes` folder to `nodes/libs` to keep things tidier (especially if additional nodes added in the future)
+* Add simple debug function to web.js to allow the ExpressJS routing stack to be dumped to stdout
+
+### Fixed
+
+* [Issue #150](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/150) Switching between src and dist folders now works without having to restart Node-RED. Existing routes are removed first then re-added.
+* Common folder is only served once (previously it was been added to the ExpresJS router stack once for each node instance).
 
 ## [4.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.0.1...v4.1.0)
 

@@ -110,7 +110,6 @@ class UibWeb {
         this.log = log
 
         /** Optional port. If set, uibuilder will use its own ExpressJS server */
-        // @ts-expect-error ts(2367)
         if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port
 
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
@@ -194,6 +193,13 @@ class UibWeb {
 
         }
 
+        // Serve up the master common folder (e.g. /uibuilder/common/)
+        // Only load this once for all instances
+        //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
+        let commonStatic = serveStatic( uib.commonFolder, uib.staticOpts )
+        // @ts-ignore
+        this.app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
+
     } // --- End of webSetup() --- //
 
     /** Set which folder to use for the central, static, front-end resources
@@ -259,20 +265,16 @@ class UibWeb {
             )
         }
 
-        /** Serve up the uibuilder static common folder on `<url>/<commonFolderName>` and `uibuilder/<commonFolderName>` */
+        /** Serve up the uibuilder static common folder on `<url>/<commonFolderName>` (it is already available on `../uibuilder/<commonFolderName>/`, see _webSetup() */
         let commonStatic = serveStatic( uib.commonFolder, uib.staticOpts )
         // @ts-ignore
         this.app.use( tilib.urlJoin(node.url, uib.commonFolderName), commonStatic )
-        if ( node.commonStaticLoaded === false ) {
-            // Only load this once for all instances
-            //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
-            // @ts-ignore
-            this.app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
-            node.commonStaticLoaded = true
-        }
+
     }
 
-    /** (1) Optional middleware from a file */
+    /** (1) Optional middleware from a file
+     * @param {uibNode} node
+     */
     addMiddlewareFile(node) {
         // Reference static vars
         const uib = this.uib
@@ -298,7 +300,9 @@ class UibWeb {
         }
     } // --- End of addMiddlewareFile() --- //
 
-    /** (2) Generic dynamic middleware to add uibuilder specific headers & cookies */
+    /** (2) Generic dynamic middleware to add uibuilder specific headers & cookies
+     * @param {uibNode} node
+     */
     addMasterMiddleware(node) {
         // Reference static vars
         //const uib = this.uib
@@ -328,7 +332,9 @@ class UibWeb {
         this.app.use( tilib.urlJoin(node.url), masterMiddleware )
     } // --- End of addMasterMiddleware() --- //
 
-    /** (3) Add static ExpressJS route for instance local custom files */
+    /** (3) Add static ExpressJS route for instance local custom files
+     * @param {uibNode} node
+     */
     addInstanceStaticRoute(node) {
         // Reference static vars
         const uib = this.uib
@@ -356,6 +362,9 @@ class UibWeb {
 
         const customFull = path.join(node.customFolder, customStatic)
 
+        // Remove existing middleware so that it can be redone - allows for changing of src/dist folder
+        this.removeInstanceMiddleware(node)
+
         // Does the customStatic folder exist? If not, then create it
         try {
             fs.ensureDirSync( customFull )
@@ -374,7 +383,9 @@ class UibWeb {
 
     } // --- End of addInstanceStaticRoute() --- //
 
-    /** Remove all of the app.use middleware for this instance */
+    /** Remove all of the app.use middleware for this instance
+     * @param {uibNode} node
+     */
     removeInstanceMiddleware(node) {
         
         // We need to remove the app.use paths too as they will be recreated on redeploy
@@ -408,6 +419,30 @@ class UibWeb {
         }
 
     } // --- End of removeAllMiddleware() --- //
+    
+    /** Dump to console log all middleware for this instance
+     * 
+     * @param {uibNode} node 
+     */
+    dumpInstanceMiddleware(node) {
+        var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
+        var urlReVendor = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
+        this.app._router.stack.forEach( function(r, i, _stack) { // eslint-disable-line no-unused-vars
+            // Check whether the URL matches a vendor path...
+            let rUrlVendor = r.regexp.toString().replace(urlReVendor, '')
+            // If it DOES NOT, then...
+            if (rUrlVendor !== '') {
+                // Check whether the URL is a uibuilder one...
+                let rUrl = r.regexp.toString().replace(urlRe, '')
+                // If it IS ...
+                if ( rUrl === '' ) {
+                    console.log(`[UIBUILDER:web:dumpInstanceMiddleware] ${i}: ${r.name}: ${r.regexp.toString()}` )
+                    if (r.name !== 'serveStatic') console.log(i, r.handle.toString())
+                }
+            }
+        })
+
+    }
 
     //#endregion ====== Per-node instance processing ====== //
 

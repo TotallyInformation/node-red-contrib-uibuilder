@@ -915,6 +915,7 @@
              *     Change happens when config panel is opened as well as for a real change
              */
             $('#node-input-url').change(function () {
+
                 var thisurl = $(this).val()
                 var eUrlSplit = window.origin.split(':')
                 var nrPort = Number(eUrlSplit[2])
@@ -934,8 +935,16 @@
                 var urlPrefix = eUrlSplit.join(':') + '/'
                 // Show the root URL
                 $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl).text('Open ' + nodeRoot + thisurl)
-                $('#node-input-showfolder-url').empty().append('<a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank">' + nodeRoot + $(this).val() + '/idx</a>')
                 $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
+                // NB: The index url link is only shown if the option is turned on
+                $('#show-src-folder-idx-url').empty().append('<div>at <a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank" class="red-ui-button">' + nodeRoot + $(this).val() + '/idx</a></div>')
+
+            })
+
+            // When the show web view (index) of source files changes
+            $('#node-input-showfolder').change(function() {
+                if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
+                else $('#show-src-folder-idx-url').show()
             })
 
             //#region ---- Template settings ---- //
@@ -1002,18 +1011,19 @@
             // Security turning on/off
             $('#node-input-useSecurity').change(function() {
                 // security is requested, enable other settings and add warnings if needed
-                if ( this.checked ) {
-                    // If in production, cannot turn on security without https, in dev, give a warning
-                    if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
-                        if (RED.settings.uibuilderNodeEnv !== 'development') {
-                            console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
-                            $('#node-input-useSecurity').prop('checked', false); this.checked = false
-                        } else {
-                            console.warn('HTTPS NOT IN USE BUT SECURITY REQUESTED - Node environment is "development" so this is allowed but not recommended')
-                        }
-                        // TODO: Add user warnings
-                    }
-                }
+                // @since v4.1.1 disable lockout of security for non-http in production
+                // if ( this.checked ) {
+                //     // If in production, cannot turn on security without https, in dev, give a warning
+                //     if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
+                //         if (RED.settings.uibuilderNodeEnv !== 'development') {
+                //             console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
+                //             $('#node-input-useSecurity').prop('checked', false); this.checked = false
+                //         } else {
+                //             console.warn('HTTPS NOT IN USE BUT SECURITY REQUESTED - Node environment is "development" so this is allowed but not recommended')
+                //         }
+                //         // TODO: Add user warnings
+                //     }
+                // }
                 // Yes, we do need this.checked twice :-)
                 if ( this.checked ) {
                     $('#node-input-sessionLength').prop('disabled', false)
@@ -1368,9 +1378,11 @@
             //#endregion ---- File Editor ---- //
 
             //#region ---- npm ---- //
+
             // NB: Assuming that the edit section is closed
             // Show the npm section, hide the main, adv & security sections
             $('#show-npm-props').click(function(e) {
+
                 e.preventDefault() // don't trigger normal click event
                 $('#main-props').hide()
                 $('#adv-props').hide()
@@ -1379,8 +1391,8 @@
                 $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
                 $('#npm-props').show()
 
-                /** todo! Improve feedback */
-                //#region Setup the package list
+                //! TODO Improve feedback
+                // Setup the package list
                 $('#node-input-packageList').editableList({
                     addItem: addPackageRow, // function
                     removeItem: removePackageRow, // function(data){},
@@ -1400,13 +1412,12 @@
                         $('#node-input-packageList').editableList('addItem',packageName)
                 })
 
-
                 // spinner
                 $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
                 $('i.spinner').hide()
-                //#endregion --- package list ---- //
 
             })
+
             // Hide the npm section, show the main section
             $('#npm-close').click(function(e) {
                 e.preventDefault() // don't trigger normal click event
@@ -1414,6 +1425,7 @@
                 $('#main-props').show()
                 $('#npm-props').hide()
             })
+
             //#endregion ---- npm ---- //
 
             /** TODO: Get list of installed ACE themes, add chooser, save current choice
@@ -1461,6 +1473,7 @@
 
         }, // ---- End of oneditcancel ---- //
 
+        /** Show notification warning before allowing delete */
         oneditdelete: function() {
             const that = this
             let myNotify = RED.notify(`<b>DELETE</b>: <p>You are deleting a uibuilder instance with url <i>${this.url}</i>.<br>Would you like to also delete the folder?<br><b>WARNING</b>: This cannot be undone.</p>`, {
@@ -1499,11 +1512,12 @@
                 ]
         
             })
-        },
+        }, // ---- End of oneditdelete ---- //
 
     }) // ---- End of registerType() ---- //
 
 })()
+
 </script>
 
 <script type="text/html" data-template-name="uibuilder">
@@ -1564,7 +1578,8 @@
             </div>
         </div>
 
-        <div aria-label="Show advanced edit properties, collapsible" class="form-row">
+        <div aria-label="Show advanced properties, collapsible" class="form-row">
+
             <b id="show-adv-props" title="Show&sol;Hide the advanced configuration settings">
                 <i class="fa fa-caret-right"></i> Advanced Settings
             </b>
@@ -1586,7 +1601,8 @@
                 <!-- Provide a searchable file index view? -->
                 <div class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
                     <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-showfolder" style="width: 90%;">Show web view of source files at <span id="node-input-showfolder-url">_</span>.</label>
+                    <label for="node-input-showfolder" style="width: 90%;">Show web view of source files</label>
+                    <span id="show-src-folder-idx-url">_</span>.
                 </div>
 
                 <!-- Allow scripts/styles to be passed to front-end? -->
@@ -1610,6 +1626,7 @@
                     </label>
                 </div>
             </div>
+
         </div>
 
         <div aria-label="Show security properties, collapsible" class="form-row">
@@ -1648,8 +1665,7 @@
 
                 <div class="form-tips node-help" title="">
                     Warning: To safely deploy security, you really need to be using TLS.
-                    If you deploy without TLS, you will get warnings. If you try to deploy to production without TLS,
-                    security will not turn on.
+                    If you deploy without TLS, you will get warnings. Ignore them if providing TLS via reverse-proxy.
                 </div>
                 <div class="form-tips node-help" title="">
                     In development mode, if the "Copy Index" (see advanced settings) flag is on, a simplistic template 
@@ -1796,15 +1812,15 @@
     </div>
     <!-- #endregion -->
 
-    <!-- #region Info -->
-    <div id="info">
+    <div id="info" aria-label="Information and utility links - always showing">
+
         <a id="uibuilderurl" title="Open the uibuilder web page" href="uibindex" target="_blank" class="red-ui-button editor-button"></a> 
         <a href="uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed uibuilder information">uibuilder details</a>
         <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Shows detailed configuration for this instance of uibuilder">Instance Details</a>
         <a href="./uibuilder/techdocs" target="_blank" class="red-ui-button editor-button" title="Shows the uibuilder technical documentation as a new page">Tech Docs</a>
+
     </div>
-    <div class="form-row" id="info-webserver"></div>
-    <!-- #endregion -->
+    <div id="info-webserver" class="form-row"></div>
 
 </script>
 
