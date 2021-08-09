@@ -550,7 +550,7 @@ module.exports = {
             _auth = this.createToken(_auth, node)
 
             // Check that we have a valid token
-            if ( _auth.info.jwtValid === true ) {
+            if ( _auth.info.validJwt === true ) {
                 // Add success reason and add any optional data from the user validation
                 _auth.info.message = 'Logon successful'
             } else {
