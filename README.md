@@ -335,6 +335,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Stephen McLaughlin - Steve-Mcl](https://discourse.nodered.org/u/Steve-Mcl) - thanks for the fix for [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71) and for the enhancement idea [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102).
 - [Sergio Rius](https://github.com/SergioRius) - thanks for reporting [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) and providing [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122) as a fix.
 - [Thorsten von Eicken](https://github.com/tve) - thanks for providing [PR #131](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/131) to improve CORS handling for Socket.IO.
+- [Lackmann1994](https://github.com/Lackmann1994) - thanks for providing [PR #152](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/152) to fix JWT validation.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 

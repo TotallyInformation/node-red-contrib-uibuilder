@@ -6,15 +6,21 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.2...main)
 
 Nothing currently.
+
+## [4.1.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...v4.1.2)
+
+### Fixed
+
+* [PR #152](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/152) `nodes/libs/uiblib.js` incorrectly called `jwtValid` instead of `validJwt`. Thanks to [Lackmann1994](https://github.com/Lackmann1994) for the PR to fix.
 
 ## [4.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.0...v4.1.1)
 
 ### New
 
-* [Issue #151](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/151)If the advanced option to "Show web view of source files" is selected, also show a link to the webpage.
+* [Issue #151](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/151) If the advanced option to "Show web view of source files" is selected, also show a link to the webpage.
 ### Changed
 
 * [Issue #149](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/149) If security is turned on, you can now run without Node-RED using TLS even in production. This is because you may wish to provide TLS via a reverse proxy.
