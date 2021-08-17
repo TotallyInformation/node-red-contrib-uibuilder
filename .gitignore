@@ -116,4 +116,11 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# No point in committing these
 _node_modules
+
+# These are private
+*.code-workspace
+
+# We shouldn't commit files with names starting with _
+_*
