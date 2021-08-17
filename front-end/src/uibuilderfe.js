@@ -75,15 +75,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         //#region ======== Start of setup ======== //
 
-        self.version = '4.1.1'
-        self.debug = false // do not change directly - use .debug() method
+        self.version = '4.2.0'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
         self.isUnminified = /param/.test(function(param) {}) // eslint-disable-line no-unused-vars
+        self.debug = self.isUnminified === true ? true : false // do not change directly - use .debug() method
+        self.security = false // Does uibuilder have security turned on? (Set by early incoming control message)
         /** Empty User info template
          * @type {_auth} */
         self.dummyAuth = {
-            id: null,
+            id: 'anonymous',
             jwt: undefined,
             sessionExpiry: undefined,
             userValidated: false,
@@ -95,7 +96,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         }
         /** Retained User info
          * @type {_auth|undefined} */
-        self._auth = undefined
+        self._auth = self.dummyAuth
         /** Flag to know whether `uibuilder.start()` has been run */
         self.started = false
 
@@ -367,7 +368,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             // RECEIVE a CONTROL msg from Node-RED - see also sendCtrl()
             self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
-                self.uiDebug('debug', 'uibuilder:ioSetup:' + self.ioChannels.control + ' (control): msg received - Namespace: ' + self.ioNamespace, receivedCtrlMsg)
+                self.uiDebug('debug', '[uibuilder:ioSetup:on-ctrl-recvd] ' + self.ioChannels.control + ' (control): msg received - Namespace: ' + self.ioNamespace, receivedCtrlMsg)
 
                 // Make sure that msg is an object & not null
                 if (receivedCtrlMsg === null) {
@@ -380,6 +381,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                 // Allow incoming control msg to change debug state (usually on the connection msg)
                 if ( receivedCtrlMsg.hasOwnProperty('debug') ) self.debug = receivedCtrlMsg.debug
+
+                // Allow incoming control msg to indicate that this instance of the uibuilder node has security turned on
+                if ( receivedCtrlMsg.hasOwnProperty('security') ) {
+                    self.security = receivedCtrlMsg.security
+                    self.uiDebug('warn', `[uibuilderfe:ioSetup:on-ctrl-recvd] Security is ${self.security}`)
+                }
 
                 // @since 2018-10-07 v1.0.9: Work out local time offset from server
                 self.checkTimestamp(receivedCtrlMsg)
@@ -565,6 +572,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @param {string=} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
          */
         self.logon = function(_auth, api) {
+            // If security is off, don't bother
+            if (!self.security) return
+
             // If _auth undefined then ignore
             if (self._auth === undefined && _auth === undefined) return
 
@@ -600,6 +610,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @param {string} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
          */
         self.logoff = function(_auth, api) {
+            // If security is off, don't bother
+            if (!self.security) return
+
             // If _auth undefined then ignore
             if (self._auth === undefined && _auth === undefined) return
 
@@ -632,6 +645,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @param {_auth=} _auth Authorisation information. Defaults to self._auth if not supplied
          */
         self.updateAuth = function(_auth) {
+            // If security is off, don't bother
+            if (!self.security) return
+            
             // If _auth undefined then ignore
             if (self._auth === undefined && _auth === undefined) return
 
@@ -641,9 +657,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             // Ignore if empty object
             //if ( Object.keys(_auth).length === 0 ) return
 
+            if (_auth.info && _auth.info.error) {
+                self.showToast({_uib: {options: {title:'[uibuilder:updateAuth] Error from Server',variant:'danger',noAutoHide:true}}, payload: `${_auth.info.error}<br>No authentication.`})
+                console.warn('[uibuilder:updateAuth] Error from Server: ', _auth.info.error)
+                return
+            }
             if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
+                self.showToast({_uib: {options: {title:'[uibuilder:updateAuth] No auth id supplied by server',variant:'danger',noAutoHide:true}}, payload: 'Ignoring server response<br>No authentication.'})
                 console.error('[uibuilder:updateAuth] No auth id supplied by server, ignoring server response.')
-                if (_auth.info && _auth.info.error) console.warn('[uibuilder:updateAuth] Error from Server: ', _auth.info.error)
                 return
             }
 
@@ -657,7 +678,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                 //self.socketOptions.transportOptions.polling.extraHeaders.Authorization = 'Bearer ' + self.authToken
             } else {
-                self.markLoggedOut('Logon succeeded but no token received, logged out')
+                self.markLoggedOut('Logon succeeded but user not valid or no token received, logged out')
             }
 
         } // ---- End of updateAuth ---- //
@@ -667,12 +688,15 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @returns {_auth|undefined}
          */
         self.sendAuth = function() {
+            // If security is off, don't supply a msg._auth
+            if (!self.security) return undefined
+
             //if ( Object.prototype.toString.call(_auth) !== '[object Object]' ) _auth = self.dummyAuth
 
             // If anything goes wrong, don't send _auth to server
             try {
                 if ( self._auth === undefined ) return undefined
-                // TODO: Remove extra metadata from _auth beofre sending (info, userValidated, sessionExpiry)
+                // TODO: Remove extra metadata from _auth before sending (info, userValidated, sessionExpiry)
                 if ( self.isAuthorised ) {                
                     if ( new Date(self._auth.sessionExpiry) > (new Date()) ) {
                         return self._auth
@@ -684,6 +708,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     return self._auth
                 }
             } catch(e) {
+                console.error('[uibuilderfe:sendAuth] Failed to validate auth. Error: ', e.message)
                 return undefined
             }
         } // ---- End of addAuth ---- //
@@ -695,6 +720,15 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          */
         self.send = function (msgToSend, channel) {
             if ( channel === null || channel === undefined ) channel = self.ioChannels.client
+
+            // If security is on but client not authenticated only allow logon control msg to be sent
+            if ( self.security && !self.isAuthorised ) {
+                if ( !(channel === self.ioChannels.control && msgToSend.uibuilderCtrl === 'logon') ) {
+                    console.error('[uibuilder:send] Message not sent. Security is on but client not authorised - can only send a logon control msg', msgToSend, channel)
+                    //! Comment this out if you want to allow messages to be send when not logged in
+                    //return
+                }
+            }
 
             self.uiDebug('log', 'uibuilderfe: sending msg - Namespace: ' + self.ioNamespace + ', Channel: ' + channel, msgToSend)
 

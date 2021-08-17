@@ -32,17 +32,22 @@ const tilib         = require('./libs/tilib')   // General purpose library (by T
 try {
     var templateConf  = require('../templates/template_dependencies') // Template configuration metadata
 } catch (e) {
-    console.trace('[uibuilder] REQUIRE TEMPLATE-CONF failed::', e)
+    console.error('[uibuilder] REQUIRE TEMPLATE-CONF failed::', e)
 }
 try {
     var sockets       = require('./libs/socket') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 } catch (e) {
-    console.trace('[uibuilder] REQUIRE SOCKET failed::', e)
+    console.error('[uibuilder] REQUIRE SOCKET failed::', e)
 }
 try {
     var web           = require('./libs/web') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 } catch (e) {
-    console.trace('[uibuilder] REQUIRE WEB failed::', e)
+    console.error('[uibuilder] REQUIRE WEB failed::', e)
+}
+try {
+    var security      = require('./libs/security') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
+} catch (e) {
+    console.error('[uibuilder] REQUIRE SECURITY failed::', e)
 }
 
 // Core node.js
@@ -159,7 +164,7 @@ var userDir = ''
 
 /** Export the function that defines the node 
  * @type {runtimeRED} */
-module.exports = function(/** @type {runtimeRED} */ RED) {
+module.exports = function Uib (/** @type {runtimeRED} */ RED) {
     // When uibuilder enters runtime state, show the details in the log
     let initialised = false
     RED.events.on('runtime-event', function(event) {
@@ -281,6 +286,13 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
 
     //#endregion ----- root folder ----- //
     
+    /** Set up the basics for security in case we need them */
+    try {
+        security.setup(RED, uib, log)
+    } catch (e) {
+        console.error('[uibuilder] ::', e)
+    } 
+
     /** We need an ExpressJS web server to serve the page and vendor packages. 
      * @since 2019-02-04 removed httpAdmin - we only want to use httpNode for web pages 
      * @since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
@@ -435,6 +447,11 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         }
 
         //#endregion ====== End of Local folder structure ====== //
+
+        // If security turned on, instantiate the security class
+        if ( node.useSecurity === true ) {
+
+        }
 
         // Set up web services for this instance (static folders, middleware, etc)
         web.instanceSetup(node)

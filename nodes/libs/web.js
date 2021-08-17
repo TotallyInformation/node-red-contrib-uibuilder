@@ -20,8 +20,8 @@
 'use strict'
 
 /** --- Type Defs ---
- * @typedef {import('../typedefs.js').uibNode} uibNode
- * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../../typedefs.js').uibNode} uibNode
+ * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  */
 
 const path = require('path')

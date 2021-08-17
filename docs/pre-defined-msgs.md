@@ -71,6 +71,7 @@ when an existing client re-connects (by reloading their page).
     "uibuilderCtrl": "client connect",  // control message type
     "cacheControl": "REPLAY",           // Cache control request type: REPLAY or CLEAR
     "serverTimestamp": "2020-09-24T12:56:13.125Z",  // Can be used in client to work out their timezone or at least time offset from the server
+    "security": false,                  // Tell the client whether security is turned on or not
     "from": "server",                   // NR->Client
     "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",    // ID of client (from Socket.IO)
     "_msgid": "8d4307ce.d5e428"         // Node-RED internal msg id

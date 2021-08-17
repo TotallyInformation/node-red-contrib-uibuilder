@@ -21,9 +21,9 @@
 'use strict'
 
 /** --- Type Defs ---
- * @typedef {import('../typedefs.js').MsgAuth} MsgAuth
- * @typedef {import('../typedefs.js').uibNode} uibNode
- * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
+ * @typedef {import('../../typedefs.js').uibNode} uibNode
+ * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * typedef {import('../typedefs.js')} 
  * @typedef {import('node-red')} Red
  * @typedef {import('socket.io').Namespace} socketio.Namespace
@@ -52,8 +52,8 @@ const dummyAuth = {
         validJwt: undefined,
     },
 }
-//
-//const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
+
+const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
 
 module.exports = {
     /** Complex, custom code when processing an incoming msg to uibuilder node input should go here
@@ -76,24 +76,47 @@ module.exports = {
             if ( Object.prototype.hasOwnProperty.call(msg, 'style') ) delete msg.style
         }
 
-        // pass the complete msg object to the uibuilder client
-        // TODO: This should have some safety validation on it!
-        if (msg._socketId) {
-            //! TODO If security is active ...
-            //  ...If socketId not validated as having a current session, don't send
-            log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
-            ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
-        } else {
-            //? - is there any way to prevent sending to clients not logged in?
-            log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
-            ioNs.emit(uib.ioChannels.server, msg)
-        }
+        let socketId = msg._socketId || undefined
+        let sendme = false
 
-        if (node.fwdInMessages) {
-            // Send on the input msg to output
-            send(msg)
-            done()
-            log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg passed downstream to next node. ${JSON.stringify(msg)}`)
+        // If security is active...
+        // TODO need to add client tracking for this to work
+        sendme = true
+        // if (node.useSecurity === true) {
+
+        //     /** Check for valid auth and session 
+        //      * @type MsgAuth */
+        //     msg._auth = this.authCheck(msg, ioNs, node, socketId, log, uib)
+
+        //     console.log('[UIBUILDER:uiblib:inputHandler] _auth: ', msg._auth)
+
+        //     // Only send the msg onward if the user is validated
+        //     if (msg._auth.jwt !== undefined) sendme = true
+
+        // }
+        
+        if (sendme) {
+
+            // pass the complete msg object to the uibuilder client
+            // TODO: replace with sockets.send or sockets.sendControl
+            // TODO: This should have some safety validation on it!
+            if (socketId !== undefined) {
+                //  ...If socketId not validated as having a current session, don't send
+                log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg sent on to client ${socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+                ioNs.to(socketId).emit(uib.ioChannels.server, msg)
+            } else {
+                //? - is there any way to prevent sending to clients not logged in?
+                log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+                ioNs.emit(uib.ioChannels.server, msg)
+            }
+
+            if (node.fwdInMessages) {
+                // Send on the input msg to output
+                send(msg)
+                done()
+                log.trace(`[uibuilder:uiblib:inputHandler:${node.url}] msg passed downstream to next node. ${JSON.stringify(msg)}`)
+            }
+    
         }
 
         return msg
@@ -202,7 +225,7 @@ module.exports = {
 
         msg.from = 'server'
 
-        if (socketId) msg._socketId = socketId
+        if (socketId !== undefined) msg._socketId = socketId
 
         // Send to specific client if required
         if (msg._socketId) ioNs.to(msg._socketId).emit(uib.ioChannels.control, msg)
@@ -229,33 +252,37 @@ module.exports = {
      * @param {Object} msg The input message from the client
      * @param {socketio.Namespace} ioNs Socket.IO instance to use
      * @param {uibNode} node The node object
-     * @param {socketio.Socket} socket 
+     * @param {String} socketId The client's socket id
      * @param {Object} log Custom logger instance
      * @param {Object} uib Reference to the core uibuilder config object
      * @returns {_auth} An updated _auth object
      */
-    authCheck: function(msg, ioNs, node, socket, log, uib) { // eslint-disable-line no-unused-vars
+    authCheck: function(msg, ioNs, node, socketId, log, uib) { // eslint-disable-line no-unused-vars
         /** @type MsgAuth */
         var _auth = dummyAuth
 
+        // TODO: remove log output
+        mylog('[uibuilder:authCheck] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
+
         // Has the client included msg._auth? If not, send back an unauth msg
         // TODO: Only send if msg was on std channel NOT on control channel
-        if (!msg._auth) {
-            _auth.info.error = 'Client did not provide an _auth'
+        if (!msg._auth || msg._auth === undefined) {
+            node.warn('No msg._auth provided')
+            _auth.info.error = 'Client did not provide a msg._auth'
 
             this.sendControl({
                 'uibuilderCtrl': 'Auth Failure',
                 'topic': node.topic || undefined,
                 /** @type _auth */
                 '_auth': _auth,
-            }, ioNs, node, uib, socket.id, false)
+            }, ioNs, node, uib, socketId, false)
 
             return _auth
         }
 
         // Has the client included msg._auth.id? If not, send back an unauth msg
         // TODO: Only send if msg was on std channel NOT on control channel
-        if (!msg._auth.id) {
+        if (!msg._auth.id || msg._auth.id === null) {
             _auth.info.error = 'Client did not provide an _auth.id'
 
             this.sendControl({
@@ -263,13 +290,10 @@ module.exports = {
                 'topic': node.topic || undefined,
                 /** @type _auth */
                 '_auth': _auth,
-            }, ioNs, node, uib, socket.id, false)
+            }, ioNs, node, uib, socketId, false)
 
             return _auth
         }
-
-        // TODO: remove log output
-        console.log('[uibuilder:socket.on.control] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
 
         //      does the client have a valid session?
         //      if not, return a not logged in control msg
@@ -319,6 +343,8 @@ module.exports = {
                 // Issuer
                 iss: 'uibuilder',
             }
+
+
 
             _auth.jwt = jsonwebtoken.sign(jwtData, node.jwtSecret)
             _auth.sessionExpiry = sessionExpiry * 1000 // Javascript ms not unix sec
@@ -423,9 +449,7 @@ module.exports = {
     +---------------------------------------------------------------+
     | uibuilder security warning:                                   |
     |    A logon is being processed without TLS security turned on. |
-    |    This works, with warnings, in a development environment.   |
-    |    It will NOT work for non-development environments.         |
-    |    See the uibuilder security docs for details.               |
+    |    This works, but with warnings.   |
     +---------------------------------------------------------------+
     `
                 log.warn(`[uibuilder:uiblib:logon] **WARNING** ${_auth.info.warning}`)
@@ -435,8 +459,6 @@ module.exports = {
     +---------------------------------------------------------------+
     | uibuilder security warning:                                   |
     |    A logon is being processed without TLS security turned on. |
-    |    This IS NOT PERMITTED for non-development environments.    |
-    |    See the uibuilder security docs for details.               |
     +---------------------------------------------------------------+
     `
                 log.error(`[uibuilder:uiblib:logon] **ERROR** ${_auth.info.error}`)
@@ -481,7 +503,7 @@ module.exports = {
             securitySrc = path.join(node.customFolder,'security.js')
             if ( ! fs.existsSync(securitySrc) ) {
                 // Otherwise try to use the central version in uibRoot/.config
-                securitySrc = path.join(uib.rootFolder, uib.configFolderName,'security.js')
+                securitySrc = path.join(uib.rootFolder, '..', '..', uib.configFolderName,'security.js')
                 if ( ! fs.existsSync(securitySrc) ) {
                     // Otherwise use the template version from ./templates/.config
                     securitySrc = path.join(__dirname, 'templates', '.config', 'security.js')
@@ -550,7 +572,7 @@ module.exports = {
             _auth = this.createToken(_auth, node)
 
             // Check that we have a valid token
-            if ( _auth.info.jwtValid === true ) {
+            if ( _auth.info.validJwt === true ) {
                 // Add success reason and add any optional data from the user validation
                 _auth.info.message = 'Logon successful'
             } else {

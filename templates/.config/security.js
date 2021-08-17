@@ -37,7 +37,7 @@
  */
 'use strict'
 
-/** Define the _auth object
+/** Typedef: Define the _auth object
  * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
  * Note that any other data may be passed from your front-end code in the uibAuth object.
  * @property {String} id Required. A unique user identifier.
@@ -48,45 +48,91 @@
  * @property {Object=} [info] Optional metadata about the user.
  */
 
-module.exports = {
-    /** Validate user against your own user data.
-     * The minimum input data is _auth.id which must represent a unique ID.
-     * Called from the logon function (uiblib.js::logon) which is triggered by a uibuilder control msg from the client of type 'logon'.
-     * May also be called to revalidate users at any time.
-     * @param {_auth} _auth Required. 
-     * @return {_auth} Object of type _auth
+/** Validate user against your own user data.
+ * The minimum input data is _auth.id which must represent a unique ID.
+ * Called from the logon function (uiblib.js::logon) which is triggered by a uibuilder control msg from the client of type 'logon'.
+ * May also be called to revalidate users at any time.
+ * @param {_auth} _auth Required. 
+ * @return {_auth} Object of type _auth
+ */
+function userValidate(_auth) {
+    console.log(`[uibuilder:.common/security.js] userValidate Security from '${__filename}' used. Replace this template with your own code. _auth:`, _auth)
+
+    /** Always start by invalidating the user credentials
+     * Note that this flag is only for connected clients.
+     * Because a client could change it, it must not be trusted here.
+     * Use the JWT processing to do ongoing checks that a client is valid.
      */
-    userValidate: function(_auth) {
-        console.log(`[uibuilder:.common/security.js] userValidate Security from '${__filename}' used. Replace this template with your own code. _auth:`, _auth)
+    _auth.userValidated = false
+    
+    // TODO add user record 
 
-        // Always start by invalidating the user credentials
-        _auth.userValidated = false
-        
-        /** Manual "test" ID validates - this will be replaced with a suitable lookup in your code - maybe from a database or a file.
-         * You will also want to pass through some kind of password to validate the user.
-         */
-        if ( _auth.id === 'test' ) {
+    /** This is optional, even when you have live authentication,
+     *  you may wish to retain an anonymous user which would allow messages to flow
+     *  and let you control WHAT data can be exchanged IN YOUR FLOWS rather than here.
+     * TODO Add flag to editor to allow this to be turned on/off
+     */
+    if ( _auth.id === 'anonymous' ) {
+        console.log(`[uibuilder:.common/security.js:userValidate] ANONYMOUS User '${_auth.id}' has been validated`)
 
-            console.log(`[uibuilder:.common/security.js] User id '${_auth.id}' has been validated`)
+        _auth.userValidated = true
 
-            _auth.userValidated = true
-            _auth.info = {
-                name: 'Jimbob',
-                message: 'Hi Jimbob, don\'t forget to change your password :)'
-            }
-
-        } else {
-
-            // In all other cases, fail the validation - optionally, you can include more info here as well.
-            _auth.userValidated = false
-            _auth.info = {
-                message: 'Ouch! Sorry, that login is not valid'
-            }
+        // Add any extra metadata you want
+        _auth.info = {
+            name: 'Anonymous',
+            message: 'Lets you control data access in your flows'
         }
-        
-        return _auth
+    }
+            
+    /** Manual "test" ID validates - this will be replaced with a suitable lookup in your code - maybe from a database or a file.
+     * You will also want to pass through some kind of password to validate the user.
+     */
+    if ( _auth.id === 'test' ) {
 
-    } // ---- End of userValidate ---- //
+        console.log(`[uibuilder:.common/security.js] User id '${_auth.id}' has been validated`)
+
+        _auth.userValidated = true
+        _auth.info = {
+            name: 'Jimbob',
+            message: 'Hi Jimbob, don\'t forget to change your password :)'
+        }
+
+    } else {
+
+        // In all other cases, fail the validation - optionally, you can include more info here as well.
+        _auth.userValidated = false
+        _auth.info = {
+            message: 'Ouch! Sorry, that login is not valid'
+        }
+    }
+    
+    return _auth
+
+} // ---- End of userValidate ---- //
+
+
+module.exports = {
+
+    /** Allow users to sign up for themselves.
+     * Build in any workflow you like.
+     * If external authorisation is required, you will need to create a separate app to write to your user store.
+     * The simple template example will allow anyone to self-signup
+     */
+    userSignup: function() {},
+
+    userValidate: userValidate,
+
+    /** Capture user logins. Needed to control msgs from Node-RED to the Front-End
+     * Unless some details are captured, it would not be possible to limit outgoing messages
+     * to only authorised users.
+     */
+    captureUserAuth: function() {},
+    removeUserAuth: function() {},
+    checkUserAuth: function() {},
+
+    jwtValidateCustom: function() {},
+
+    jwtCreateCustom: function() {},
 
 }
 

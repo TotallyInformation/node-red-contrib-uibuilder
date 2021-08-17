@@ -8,7 +8,47 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+**WARNING**: Though I've done some work on the security features, they are still not ready. Do please try them but **NOT IN PRODUCTION**.
+
+### Changed
+
+* security improvements:
+
+  * When security is active, pass flag to front-end. Use `uibuilder.get('security')` to get the current status. The flag is passed on the initial connection message from the server.
+  * Move core security functions from `/nodes/libs/uiblib.js` to `/nodes/libs/security.js` which is a singleton class instance to match the style of socket.js and web.js
+  
+  * `/front-end/src/uibuilderfe.js`
+
+    * New security flag
+    * Only run security related functions when security flag is active
+    * Add some bootstrap_vue toast warnings to match the console output warnings (only does anything if you are using bootstrap-vue, otherwise does nothing)
+
+  * `/nodes/libs/security.js`
+
+    * Add security flag to initial control message to client
+    * Prevent client from sending msgs if security is on but client not authorised (is dependent on keeping track of clients on the server)
+  
+  * `/nodes/libs/uiblib.js`
+
+    * Start to work on blocking msgs from node-red to client when security is on but client not authorised. **WARNING: NOT WORKING YET** _messages will always get through_.
+    * `sendControl()` - make Socket.ID optional.
+    * `authCheck()` - change from `socket` parameter to `socketId` to make it easier to call from more places. Also add more extensive `_auth` and `_auth.id` checks.
+    * `logon()` - change warnings to remove note about not permitted in production as this is no longer the case (see change notes for v4.1.1)
+
+  * `/templates/.config/security.js`
+
+    * Add new functions `jwtCreateCustom` and `jwtValidateCustom`. In readiness for more flexible and secure JWT handling.
+    * Add new functions `captureUserAuth`, `removeUserAuth`, and `checkUserAuth`. These will support being able to restrict sending of msgs from Node-RED to clients.
+      Without them, any msg input to a uibuilder node will be passed to clients regardless of whether they are logged in or not.
+    * Add new function `userSignup`. This will (optionally) allow you to offer a self-service sign-up process.
+
+  * Tech docs - some minor improvements to the security process docs and bring into line with current process.
+
+### Fixed
+
+* `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 
 ## [4.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.0...v4.1.1)
 

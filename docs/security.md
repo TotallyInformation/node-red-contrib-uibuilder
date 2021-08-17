@@ -21,11 +21,9 @@ This enables anyone to implement simple but effective multi-user security on the
 
 ## How do I secure my uibuilder app?
 
-1. Configure Node-RED to use TLS. The security documentation for Node-RED contains the details. There are also various threads on the Node-RED Discourse forum that explain what people have done to make use of Let's Encrypt or self-signed certificates.
+1. Configure Node-RED to use TLS or use a "Reverse Proxy" to provide TLS. The security documentation for Node-RED contains the details. There are also various threads on the Node-RED Discourse forum that explain what people have done to make use of Let's Encrypt or self-signed certificates.
    
    !> **WARNING**: Do not - EVER - use any kind of web login process without first setting up TLS. It is unsafe and sends your sensitive user data unencrypted over the network (potentially over the Internet).
-
-   If you have configured Node-RED to work in a non-development mode (e.g. the NODE_ENV environment variable was set to somethnig other than "development"), uibuilder will _refuse_ to turn on security unless TLS is properly configured. In development mode, it will allow it but will output a security warning every time a user connects.
 
 2. Open the configuration of your uibuilder Node in the Node-RED admin Editor. Turn on the security flag.
    
@@ -33,15 +31,17 @@ This enables anyone to implement simple but effective multi-user security on the
    
 4. Add suitable logon/logoff processing to your user interface (front-end code).
 
-   Remember that everything is controlled via messages between your front-end and the Node-RED server. When security is turned on, only control messages will flow between the front-end and the server.
-
+   Remember that everything is controlled via messages between your front-end and the Node-RED server. When security is turned on, only a logon control message is allowed from the front-end. Everything else will be rejected until the client is authenticated and authorised. 
+   
+   > Use a dummy `anonymous` user if you want to allow some non-authenticated data to flow before a proper login happens. The template `security.js` file has an example. With an anonymous user, you can control what data is allowed using your flows. Each message contains the `msg._auth.id` string that identifies the user. `msg._auth` can also have additional properties set by your `security.js` `validateUser` function, these can then be used to make further decisions about access to data. When security is turned on, any client trying to connect will automatically do so using the anonymous user if you have allowed this feature.
+   
    Security is **not** applied to your web resources (html, css, javascript, images, etc). It is always assumed that these are "public" in the sense that anyone with access to your web server is able to load them. So make sure that nothing sensitive is made available via a web resource.
 
-   The front-end `uibuilder.logon()` function allows you to include a single object as a parameter. This object can contain any extra data that you want to make available to the `validateUser()` function in `security.js`. That data is added to `msg._auth`. It is passed as the only parameter to `validateUser()`. As a minimum, you _must_ include an `id` property which is used to identify the user. See below for more information about `msg._auth`.
+   The front-end `uibuilder.logon()` function allows you to include a single object as a parameter. This object can contain any extra data that you want to make available to the `validateUser()` function in `security.js`. That data is added to `msg._auth`. It is passed as the only parameter to `validateUser()`. As a minimum, you _must_ include an `id` property which is used to identify the user. See below for more information about `msg._auth`. _Always check data passed from the front-end to make sure it is valid_.
 
    The front-end `uibuilder.logoff()` function allows you to allow a user to log off. It takes no parameters. An equivalent automatic process happens if the authentication token expires. uibuilderfe will clear its own authentication data in this case but you are responsible for clearing any other sensitive or protected information.
 
-   When writing a UI to allow a user to provide login information, you should think carefully about whether you need to keep any of the data. The best and most secure process is to clear the data from the DOM and from memory as soon as you have received acknowledgement from the server that the logon was successful.
+   When writing a UI to allow a user to provide login information, you should think carefully about whether you need to retain in the front-end any of the data the user types in. The best and most secure process is to clear the data from the DOM and from memory as soon as you have received acknowledgement from the server that the logon was successful.
    
 5. Test that everything is working as expected.
 
@@ -54,6 +54,8 @@ This enables anyone to implement simple but effective multi-user security on the
    Note also that if your UI has received information that should be secured, you will need to add processes to ensure that it is deleted from the DOM and from memory when the logout event occurs. Logout may occur manually or may happen automatically if a timeout such as the token expiry is exceeded.
 
 ## Configuring Node-RED for TLS
+
+> Note that using a Reverse Proxy such as NGINX, Caddy, or HAproxy can often give better performance and security when using TLS.
 
 After you have done this, you will need to access your Node-RED web pages using `https` instead of `http`. All websocket and Socket.IO interfaces will automatically use their TLS encrypted equivalents as well.
 

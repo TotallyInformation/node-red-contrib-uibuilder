@@ -336,6 +336,8 @@
  * 
  * @property {boolean} uibNode.commonStaticLoaded Whether the common static folder has been added
  * @property {boolean} uibNode.initCopyDone Has the initial template copy been done?
+ * 
+ * @property {function} uibNode.warn Output warn level info to node-red console and to editor debug
  */
 
 /** MsgAuth

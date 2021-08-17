@@ -20,9 +20,9 @@
 'use strict'
 
 /** --- Type Defs ---
- * @typedef {import('../typedefs.js').MsgAuth} MsgAuth
- * @typedef {import('../typedefs.js').uibNode} uibNode
- * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
+ * @typedef {import('../../typedefs.js').uibNode} uibNode
+ * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  */
 
 const socketio      = require('socket.io')
@@ -89,6 +89,7 @@ class UibSockets {
      * @param {Object} server reference to ExpressJS server being used by uibuilder
      */
     setup( RED, uib, log, server ) {
+
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
             log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
@@ -168,8 +169,9 @@ class UibSockets {
         return this._isConfigured
     }
 
-    /** Output a control msg to the front-end
-     * Sends to all connected clients & outputs a msg to port 2 if required
+    /** Output a control msg to the front-end. WARNING: Cannot use uibuilder security on this! Not currently being used.
+     * Sends to all connected clients & outputs a msg to port 2 if required.
+     * To add security, would need reference to node. When called from a uib api, the node isn't available.
      * @param {Object} msg The message to output
      * @param {Object} node The node object
      * @param {string=} socketId Optional. If included, only send to specific client id
@@ -197,7 +199,8 @@ class UibSockets {
         if ( output === true ) node.send([null, msg])
     } // ---- End of getProps ---- //
 
-    /** Output a normal msg to the front-end 
+    /** Output a normal msg to the front-end. WARNING: Cannot use uibuilder security on this! Currently only used to send a reload msg to FE.
+     * To add security, would need reference to node. When called from a uib api, the node isn't available. 
      * @param {Object} msg The message to output
      * @param {Object} url The uibuilder instance url - will be unique. Used to lookup the correct Socket.IO namespace for sending.
      * @param {string=} socketId Optional. If included, only send to specific client id (mostly expecting this to be on msg._socketID so not often required)
@@ -210,17 +213,20 @@ class UibSockets {
 
         // TODO: This should have some safety validation on it!
         if (msg._socketId) {
-            //! TODO If security is active ...
-            //  ...If socketId not validated as having a current session, don't send
+            //  TODO If socketId not validated as having a current session, don't send
             this.log.trace(`[uibuilder:socket:send:${url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
         } else {
-            //? - is there any way to prevent sending to clients not logged in?
             this.log.trace(`[uibuilder:socket:send:${url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.emit(uib.ioChannels.server, msg)
         }
     }
     
+    /** Get a uib node instance namespace */
+    getNs(node) {
+        return this.ioNamespaces[node.url]
+    }
+
     /** Add a new Socket.IO NAMESPACE
      * Each namespace correstponds to a uibuilder node instance and must have a unique namespace name that matches the unique URL parameter for the node.
      * The namespace is stored in the this.ioNamespaces object against a property name matching the URL so that it can be referenced later.
@@ -265,6 +271,7 @@ class UibSockets {
                 // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
                 // time difference (UTC->Local) without needing clever libraries.
                 'serverTimestamp': (new Date()),
+                'security': node.useSecurity, // let the client know whether to use security or not
                 topic: node.topic || undefined,
             }, node, socket.id, true)
             //ioNs.emit( uib.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
@@ -287,14 +294,24 @@ class UibSockets {
 
                 // If security is active...
                 if (node.useSecurity === true) {
+
                     /** Check for valid auth and session 
                      * @type MsgAuth */
-                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log, uib)
+                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
+
+                    //console.log('[UIBUILDER] _auth: ', msg._auth)
+
+                    // Only send the msg onward if the user is validated
+                    if (msg._auth.jwt !== undefined) node.send(msg)
+
+                } else {
+
+                    // Send out the message for downstream flows
+                    // TODO: This should probably have safety validations!
+                    node.send(msg)
+
                 }
 
-                // Send out the message for downstream flows
-                // TODO: This should probably have safety validations!
-                node.send(msg)
             }) // --- End of on-connection::on-incoming-client-msg() --- //
             socket.on(uib.ioChannels.control, function(msg) {
                 node.rcvMsgCount++
@@ -314,24 +331,35 @@ class UibSockets {
                 // @since 2017-11-05 v0.4.9 If the sender hasn't added msg.from, add it now
                 if ( ! Object.prototype.hasOwnProperty.call(msg, 'from') ) msg.from = 'client'
 
+                if ( ! msg.topic ) msg.topic = node.topic
+
                 /** If a logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
                 if ( msg.uibuilderCtrl === 'logon') {
+
                     uiblib.logon(msg, ioNs, node, socket, log, uib)
 
                 } else if ( msg.uibuilderCtrl === 'logoff') {
+
                     uiblib.logoff(msg, ioNs, node, socket, log, uib)
 
                 } else {
                     // If security is active...
                     if (node.useSecurity === true) {
+
                         /** Check for valid auth and session 
                          * @type MsgAuth */
-                        msg._auth = uiblib.authCheck(msg, ioNs, node, socket, log, uib)
+                        msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
+
+                        // Only send the msg onward if the user is validated
+                        if (msg._auth.jwt !== undefined) node.send([null,msg])
+
+                    } else {
+
+                        // Send out the message on port #2 for downstream flows
+                        node.send([null,msg])
+
                     }
 
-                    // Send out the message on port #2 for downstream flows
-                    if ( ! msg.topic ) msg.topic = node.topic
-                    node.send([null,msg])
                 }
 
             }) // --- End of on-connection::on-incoming-control-msg() --- //
@@ -420,8 +448,9 @@ class UibSockets {
 } // ==== End of UibSockets Class Definition ==== //
 
 /** Singleton model. Only 1 instance of UibSockets should ever exist.
- * Use as: `const sockets = require('./socket.js')`
+ * Use as: `const sockets = require('./libs/socket.js')`
  * Wrap in try/catch to force out better error logging if there is a problem
+ * Downside of this approach is that you cannot directly pass in parameters. Use the startup(...) method instead.
  */
 try {
     module.exports = new UibSockets()
@@ -430,4 +459,3 @@ try {
 } 
 
 // EOF
- 
