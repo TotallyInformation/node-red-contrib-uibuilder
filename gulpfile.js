@@ -55,6 +55,7 @@ function packfe(cb) {
 
     cb()
 }
+exports.packfe = packfe
 
 /** Combine the parts of uibuilder.html */
 function combineHtml(cb) {
@@ -66,5 +67,6 @@ function combineHtml(cb) {
 
     cb()
 }
+exports.combineHtml = combineHtml
 
 exports.default = series( packfe, combineHtml ) // series(runLinter,parallel(generateCSS,generateHTML),runTests)
