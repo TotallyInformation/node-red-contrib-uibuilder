@@ -1,0 +1,300 @@
+    <div id="main-props" aria-label="Hideable main properties section">
+        <div aria-label="Node Name" class="form-row" title="Node Name (descriptive only)">
+            <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+            <input type="text" id="node-input-name">
+        </div>
+
+        <div aria-label="Topic" class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+            <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+            <input type="text" id="node-input-topic">
+        </div>
+
+        <div aria-label="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
+            <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+            <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
+        </div>
+
+        <div aria-label="Buttons to show 'edit files' & 'mng front-end libs', hide this section" class="form-row">
+            <button class="btn" id="show-edit-props" title="Edit the front-end code">
+                Edit Files
+            </button>
+            <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">
+                Manage front-end libraries
+            </button>
+        </div>
+
+        <div aria-label="Show template selection, collapsible" class="form-row">
+            <b id="show-templ-props" title="Show&sol;Hide the template selection settings">
+                <i class="fa fa-caret-right"></i> Template Settings
+            </b>
+            <div id="adv-templ" aria-label="Hideable Template Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
+                <div aria-label="How to use the template selector">
+                    <p>
+                        By default, uibuilder creates a template folder with a minimal template.
+                        If you wish to use a different template, select and load it here.
+                    </p>
+                    <p>
+                        Selecting a Template from the drop-down <b>does not</b> load the template
+                    </p>
+                    <p>
+                        Loading a Template <b>will overwrite</b> existing files.
+                    </p>
+                </div>
+
+                <label for="node-input-templateFolder" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
+                <select id="node-input-templateFolder" style="width:73%;"></select>
+
+                <div aria-label="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation/uib-template-test" style="display:none">
+                    <label for="node-input-extTemplate"><i class="fa fa-globe"></i> Ext. Template</label>
+                    <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
+                </div>
+
+                <button class="btn" id="btn-load-template" style="margin-top: 0.3em;" title="Load selected template, overwriting existing files">
+                    Load & Overwrite
+                </button>
+            </div>
+        </div>
+
+        <div aria-label="Show advanced properties, collapsible" class="form-row">
+
+            <b id="show-adv-props" title="Show&sol;Hide the advanced configuration settings">
+                <i class="fa fa-caret-right"></i> Advanced Settings
+            </b>
+            <div id="adv-props" aria-label="Hideable Advanced Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
+                <!-- How long do we want resources to be cached for? *** NOT READY *** 
+                <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
+                    <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
+                    <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
+                </div> -->
+                
+                <div aria-label="Select source folder" class="form-row">
+                    <label for="node-input-sourceFolder" style="width:7em;"><i class="fa fa-folder"></i> Template:</label>
+                    <select id="node-input-sourceFolder" style="width:73%;">
+                        <option value="src">src</option>
+                        <option value="dist">dist</option>
+                    </select>
+                </div>
+
+                <!-- Provide a searchable file index view? -->
+                <div class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
+                    <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-showfolder" style="width: 90%;">Show web view of source files</label>
+                    <span id="show-src-folder-idx-url">_</span>.
+                </div>
+
+                <!-- Allow scripts/styles to be passed to front-end? -->
+                <div class="form-row" title="Add msg.script&sol;msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
+                    Allow passing to the front-end: <br>
+                    <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-allowScripts">Scripts? (JS)</label>
+                    <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-allowStyles">Styles? (CSS)</label>
+                </div>
+
+                <div class="form-tips node-help" title="">
+                    Warning: Most people will not need the following.
+                </div>
+
+                <div aria-label="Forward flag" class="form-row" title="forward inbound msg's direct to the output">
+                    <!-- Forward input msgs to output -->
+                    <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-fwdInMessages" style="width: 40%;">
+                        Forward input to output?
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <div aria-label="Show security properties, collapsible" class="form-row">
+            <b id="show-security-props" title="Show&sol;Hide security settings">
+                <i class="fa fa-caret-right"></i> Security Settings
+            </b>
+            <!-- ---- Hideable Security Settings Section ---- -->
+            <div id="sec-props" style="display:hidden;border:1px solid silver;padding:.5em;">
+                <!-- Do we want security turned on? -->
+                <div class="form-row">
+                    <input type="checkbox" id="node-input-useSecurity" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-useSecurity" style="width: 90%;">Use uibuilder's security?</label>
+                </div>
+
+                <!-- How long do we want our sessions to be? -->
+                <div class="form-row" title="Required. Session length. If client doesn't send a msg in this time, it is logged out.">
+                    <label for="node-input-sessionLength"><i class="fa fa-clock-o"></i> Sess Length</label>
+                    <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-sessionLength" style="width: 10em;"> Seconds
+                </div>
+
+                <!-- JWT Secret (credential) -->
+                <div class="form-row" title="Required. A string to be used to sign&sol;validate JWT's. Stored as a credential so not copied when exporting a flow.">
+                    <label for="node-input-jwtSecret"><i class="fa fa-user-secret"></i> JWT Secret</label>
+                    <input type="text" id="node-input-jwtSecret">
+                </div>
+                
+                <!-- Do we want to auto-extend the token life? -->
+                <div class="form-row" title="While the client continues to send ping queries (~30sec), the expiry will be moved fwd 30 sec">
+                    <input type="checkbox" id="node-input-tokenAutoExtend" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-tokenAutoExtend" style="width: 90%;">Auto-extend the token expiry?</label>
+                </div>
+
+                <div class="form-row">
+                    Node-RED is running in <i><b><span id="nrMode"></span></b></i> mode.
+                </div>
+
+                <div class="form-tips node-help" title="">
+                    Warning: To safely deploy security, you really need to be using TLS.
+                    If you deploy without TLS, you will get warnings. Ignore them if providing TLS via reverse-proxy.
+                </div>
+                <div class="form-tips node-help" title="">
+                    In development mode, if the "Copy Index" (see advanced settings) flag is on, a simplistic template 
+                    <code>security.js</code> file will be copied to <code>&lt;uibRoot>/.config/security.js</code>.
+                    This should be adapted for your own needs and contains the code to validate users and handle sessions.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- #region ---- Hideable File Editor Section ---- -->
+    <div id="edit-props">
+        <!-- Drop-down for selecting folder & new/del buttons -->
+        <div class="form-row" title="Choose between the src, dist (built src) or root folders">
+            <label for="node-input-folder" style="width:5em;">
+                <i class="fa fa-folder-open-o"></i> Folder:
+            </label>
+            <select id="node-input-folder" style="width:63%;"></select>
+            <span id="fldr-buttons">
+                <button class="btn" id="btn-fldr-new" title="Add a new folder">New</button>
+                <div id="fldr-new-dialog" title="Create a new folder" dialog>
+                    <label for="fldr-input-newname">New Folder Name</label>
+                    <input type="text" id="fldr-input-newname">
+                    <div title="" style="margin-top:.5em;">
+                        New folder will be created inside 
+                        <code>&lt;uibRoot>/<span id="fldr_url">&lt;url></span></code>.<br>
+                        Do not forget to include sub-folder name if needed.<br>
+                        e.g. <code>src/mynewfldr</code>
+                    </div>
+                </div>                  
+                <button class="btn" id="btn-fldr-del" title="Delete the selected folder">Del</button>
+                <div id="fldr-del-dialog" title="Delete the currently selected folder" dialog>
+                    <b>Folder to be deleted</b>
+                    <p><code id="fldr-del-name"></code></p>
+                    <p id="fldr-del-recopy"></p>
+                    <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">
+                        Warning: This action cannot be undone.<br />
+                        If you delete the <code>src</code> or <code>dist</code> folders
+                        some things might not work correctly.
+                    </p>
+                </div>                  
+            </span>
+        </div>
+
+        <!-- Drop-down for selecting file to edit -->
+        <div class="form-row">
+            <label for="node-input-filename"  style="width:5em;"><i class="fa fa-file-code-o"></i> File:</label>
+            <select id="node-input-filename" style="width: 83%;"></select>
+        </div>
+
+        <!-- Save/Reset/close/(message)/Delete -->
+        <div class="form-row">
+            <button class="btn" id="edit-save" title="Save any changes to the file">Save</button>
+            <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)">Reset</button>
+            <button class="btn" id="edit-close" title="Close the edit window (lose any unsaved changes)">Close</button>
+
+            <span id="file-action-message"></span>
+
+            <div style="position: absolute;right:1.6em;display:inline-block;">
+                <button class="btn" id="edit-new" title="Add a new file.">
+                    New
+                </button>
+                <div dialog id="edit_new_dialog" title="Create a new file">
+                    <label for="edit-input-newname">New File Name</label>
+                    <input type="text" id="edit-input-newname">
+                    <div style="margin-top:.5em;">
+                        New file will be created inside the 
+                        <code>
+                            &lt;uibRoot>/<span id="file_url">&lt;url></span>/<span id="file_fldr">&lt;folder></span>
+                        </code> folder.<br>
+                        You can include a sub-folder name if needed. Intermediate folders will be automatically created.<br>
+                        e.g. <code>src/mynewfldr/myfile.js</code>
+                    </div>
+                </div>                  
+                <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set.">
+                    Delete
+                </button>
+                <div id="edit_delete_dialog" title="Delete the currently selected file" dialog>
+                    <b>File to be deleted</b>
+                    <p><code id="edit-delete-name"></code></p>
+                    <p id="edit-delete-recopy"></p>
+                    <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">Warning: This action cannot be undone.</p>
+                </div>                  
+            </div>
+        </div>
+
+        <!-- Edit box  editor-tray-content -->
+        <div id="edit-outer" class="form-row node-text-editor-row" style="position:relative">
+            <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
+            <div style="height: 350px; min-height:150px;" style="display:hidden" id="node-input-template-editor-no-file" >
+                No file available, please select a different file or folder.
+            </div>
+        </div>
+
+        <!-- file data (hidden), language selector -->
+        <div class="form-row">
+            <button id="node-function-expand-js" class="editor-button"><i class="fa fa-expand"></i></button>
+
+            <!-- Option to reload any connected client pages after edit-save -->
+            <input type="checkbox" id="node-input-reload" style="width:auto;"
+                   title="If set, all connected clients will reload the page they are on when any change is saved."
+                >
+            <label for="node-input-reload" style="width:80%;">Reload connected clients on save?.</label>
+
+            <input type="hidden" id="node-input-template" data-isClean="true">
+            <div style="position: absolute; right:1.6em;display:inline-block; text-align: right;">
+                <select id="node-input-format" style="width:110px; padding:0;">
+                    <option value="text">Text</option>
+                    <option value="html">HTML</option>
+                    <option value="javascript">Javascript</option>
+                    <option value="json">JSON</option>
+                    <option value="css">CSS</option>
+                    <option value="scss">SCSS</option>
+                    <option value="handlebars">mustache</option>
+                    <option value="markdown">Markdown</option>
+                    <option value="yaml">YAML</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <!-- #endregion -->
+
+    <!-- #region ---- Hideable NPM Section ---- -->
+    <div id="npm-props">
+        <b>Front-End Library Manager</b>
+        <p>
+            Install, remove or update npm packages that provide front-end libraries such as
+            VueJS, jQuery, MoonJS, etc.
+        </p>
+        <p>
+            You can search for packages on the 
+            <a href="https://www.npmjs.com/" target="_blank" class="red-ui-button editor-button">official npm site</a> 
+            or on <a href="https://npms.io/" target="_blank" class="red-ui-button editor-button">npms.io</a>.<br>
+            Copy the name, click on "+ add" below and paste in the input.
+        </p>
+        <!-- Package List -->
+        <div class="form-row">
+            <ol id="node-input-packageList"></ol>
+        </div>
+        <!-- Close Button -->
+        <div class="form-row">
+            <button class="btn" id="npm-close" title="Close the library"">Close Library Manager</button>
+        </div>
+    </div>
+    <!-- #endregion -->
+
+    <div id="info" aria-label="Information and utility links - always showing">
+
+        <a id="uibuilderurl" title="Open the uibuilder web page" href="uibindex" target="_blank" class="red-ui-button editor-button"></a> 
+        <a href="uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed uibuilder information">uibuilder details</a>
+        <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Shows detailed configuration for this instance of uibuilder">Instance Details</a>
+        <a href="./uibuilder/techdocs" target="_blank" class="red-ui-button editor-button" title="Shows the uibuilder technical documentation as a new page">Tech Docs</a>
+
+    </div>
+    <div id="info-webserver" class="form-row"></div>
