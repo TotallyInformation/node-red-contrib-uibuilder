@@ -29,9 +29,9 @@ module.exports = {
         'jsdoc/newline-after-description': 0,
         'jsdoc/no-multi-asterisks': 0,
 
-        //'sonarjs/no-duplicate-string': 0,
-        //'sonarjs/cognitive-complexity': 0,
+        'sonarjs/no-duplicate-string': 0,
+        'sonarjs/cognitive-complexity': 0,
 
-        //'es/no-object-entries': 0,
+        'es/no-object-entries': 0,
     }
 }

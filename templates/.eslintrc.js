@@ -1,4 +1,5 @@
-/* eslint-disable strict */
+/* eslint-env node commonjs */
+/* global module */
 /** JavaScript Versions
  *  5 is minimum -> Last IE11
  *  6 = 2015 -> Node >8.10, iOS12+
@@ -11,17 +12,21 @@
  */
 module.exports = {
     env: {
-        browser: false,
-        commonjs: true,
-        jquery: false,
-        node: true,
+        browser: true,
+        //commonjs: true,
+        //es2018: true,
+        jquery: true,
+        node: false,
         'shared-node-browser': false
     },
     parserOptions: {
-        ecmaVersion: 2018,
+        ecmaVersion: 2015,
         sourceType: 'script'
     },
     root: true,
+    globals: {
+        RED: true,
+    },
     plugins: [
         'html',     // Check scripts in HTML. https://www.npmjs.com/package/eslint-plugin-html
         'es',       // Help avoid js that is too new. https://eslint-plugin-es.mysticatea.dev/
@@ -32,7 +37,7 @@ module.exports = {
     ],
     extends: [
         'eslint:recommended',
-        'plugin:es/restrict-to-es2018',
+        'plugin:es/restrict-to-es2015',
         'plugin:jsdoc/recommended',
         'plugin:promise/recommended',
         'plugin:sonarjs/recommended',
@@ -42,7 +47,8 @@ module.exports = {
         'jsdoc/multiline-blocks': 0,
         'jsdoc/newline-after-description': 0,
         'jsdoc/no-multi-asterisks': 0,
-        'jsdoc/tag-lines': 0,
+
+        'sonarjs/no-duplicate-string': 0,
 
         quotes: [
             'warn',
@@ -320,7 +326,7 @@ module.exports = {
         'space-infix-ops': 'off',
         'space-unary-ops': 'off',
         'spaced-comment': 'off',
-        strict: 'error',
+        strict: 'off',
         'switch-colon-spacing': [
             'error',
             {
