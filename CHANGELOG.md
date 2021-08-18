@@ -14,7 +14,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-* security improvements:
+* Security improvements:
 
   * When security is active, pass flag to front-end. Use `uibuilder.get('security')` to get the current status. The flag is passed on the initial connection message from the server.
   * Move core security functions from `/nodes/libs/uiblib.js` to `/nodes/libs/security.js` which is a singleton class instance to match the style of socket.js and web.js
@@ -46,9 +46,21 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
   * Tech docs - some minor improvements to the security process docs and bring into line with current process.
 
+* Internal and development improvements:
+
+  * Gulp implemented
+    
+    *  initially for composing the `uibuilder.html` from the contents of `src/editor`
+    *  and to replace the previously manual minify step for `uibuilderfe.js`
+    *  _other tasks likely to be added in the future to make more efficient code and ease the release/publish process_.
+    
+  * New eslint rulesets implemented & config restructured. Along with the .html file decomposition, this makes for a much more accurate linting process.
+  * Massive number of minor code improvements to `uibuilder.html` thanks to the impoved linting.
+
 ### Fixed
 
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
+* A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
 
 ## [4.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.0...v4.1.1)
 
