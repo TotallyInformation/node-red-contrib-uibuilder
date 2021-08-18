@@ -4,8 +4,13 @@
 
 /// <reference types="node" />
 /// <reference types="node-red" />
+/// <reference types="node-red__editor-client" />
 
 import { Node } from 'node-red';
+
+declare global {
+    var RED:any;
+}
 
 /**
  * @typedef {object} uibNode Local copy of the node instance config + other info
