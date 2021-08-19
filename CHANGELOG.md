@@ -12,6 +12,17 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 **WARNING**: Though I've done some work on the security features, they are still not ready. Do please try them but **NOT IN PRODUCTION**.
 
+### TODO
+
+* Apply eslint fixes to:
+  * libs/*
+* Templates - replace eslintrc.json with .js updated version
+* Restructure uibuilder.js
+  * Remove need for `that`
+  * Decompose functions(?)
+* FIXES NEEDED:
+  * url rename fails if user updates template before committing url change
+
 ### Changed
 
 * Security improvements:
@@ -55,7 +66,13 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     *  _other tasks likely to be added in the future to make more efficient code and ease the release/publish process_.
     
   * New eslint rulesets implemented & config restructured. Along with the .html file decomposition, this makes for a much more accurate linting process.
-  * Massive number of minor code improvements to `uibuilder.html` thanks to the impoved linting.
+  * Massive number of minor code improvements to `uibuilder.html` and `uibuilder.js` thanks to the impoved linting.
+  
+  * Even more massive restructuring of `uibuilder.js`. 
+  
+    * Removing the need for the `node` object. This meant the use of some arrow functions to be able to retain the correct context in event handlers and callbacks.
+    * Destructuring the big exported function into a series of smaller functions. Makes the code a lot clearer and easier to follow. Also helped identify a few bits of logic that were not quite sane or not needed at all (the result of evolutionary growth of the code).
+    * Using named functions throughout should make future debugging a little easier.
 
 ### Fixed
 
