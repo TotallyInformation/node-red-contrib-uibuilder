@@ -162,9 +162,13 @@ var userDir = ''
 
 //#endregion ----- uibuilder module-level globals ----- //
 
-/** Export the function that defines the node 
- * @type {runtimeRED} */
-module.exports = function Uib (/** @type {runtimeRED} */ RED) {
+//#region ------ module-level functions ------ //
+
+/** All of the initialisation of the Node
+ * This is only run once no matter how many uib node instances are added to a flow
+ * @param {runtimeRED} RED Runtime Red
+ */
+function runtimeSetup(RED) {
     // When uibuilder enters runtime state, show the details in the log
     let initialised = false
     RED.events.on('runtime-event', function(event) {
@@ -225,7 +229,6 @@ module.exports = function Uib (/** @type {runtimeRED} */ RED) {
     //#endregion -------- Constants -------- //
 
     //#region ----- back-end debugging ----- //
-    // @ts-ignore
     log = RED.log
     log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
@@ -308,654 +311,410 @@ module.exports = function Uib (/** @type {runtimeRED} */ RED) {
      */
     web.checkInstalledPackages()
 
-    /** Run the node instance - called from registerType()
-     * type {runtimeNode}
-     * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
-     */
-    function nodeInstance(config) {
-        // Create the node
-        RED.nodes.createNode(this, config)
+} // --- end of runtimeSetup --- //
 
-        var uibInstance = config.url // for logging
-        log.trace(`[uibuilder:nodeInstance:${uibInstance}] ================ instance registered ================`)
-        /** Copy 'this' object in case we need it in context of callbacks of other functions.
-         * @type {uibNode}
-         */
-        // @ts-ignore
-        const node = this
-        log.trace(`[uibuilder:nodeInstance:${uibInstance}] node keys: ${JSON.stringify(Object.keys(node))}`)
-        log.trace(`[uibuilder:nodeInstance:${uibInstance}] config keys: ${JSON.stringify(Object.keys(config))}`)
+/** Handler function for node flow input events (when a node instance receives a msg from the flow)
+ * NOTE: `this` context is still the parent within the function.
+ * @see https://nodered.org/blog/2019/09/20/node-done 
+ * @param {object} msg The msg object received.
+ * @param {Function} send Per msg send function, node-red v1+
+ * @param {Function} done Per msg finish function, node-red v1+
+ * @returns {undefined|null} Not a lot
+ **/
+function inputMsgHandler (msg, send, done) {
 
-        //#region ====== Create local copies of the node configuration (as defined in the .html file) ====== //
-        // NB: node.id and node.type are also available
-        node.name            = config.name  || ''
-        node.topic           = config.topic || ''
-        node.url             = config.url   || 'uibuilder'
-        node.oldUrl          = config.oldUrl
-        node.fwdInMessages   = config.fwdInMessages === undefined ? false : config.fwdInMessages
-        node.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
-        node.allowStyles     = config.allowStyles === undefined ? false : config.allowStyles
-        node.copyIndex       = config.copyIndex === undefined ? true : config.copyIndex // DEPRECATED
-        node.templateFolder  = config.templateFolder || templateConf.blank.folder
-        node.extTemplate     = config.extTemplate
-        node.showfolder      = config.showfolder === undefined ? false : config.showfolder
-        node.useSecurity     = config.useSecurity 
-        node.sessionLength   = Number(config.sessionLength) || 120  // in seconds
-        node.jwtSecret       = node.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
-        node.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
-        node.reload          = config.reload === undefined ? false : config.reload
-        node.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:addInstanceStaticRoute
-        //#endregion ====== Local node config copy ====== //
+    const uibInstance = this.url
 
-        //#region ====== Instance logging/audit ====== //
-        log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node instance settings: ${JSON.stringify({'name': node.name, 'topic': node.topic, 'url': node.url, 'copyIndex': node.copyIndex, 'fwdIn': node.fwdInMessages, 'allowScripts': node.allowScripts, 'allowStyles': node.allowStyles, 'showfolder': node.showfolder })}`)
-        
-        // Keep a log of the active uib.instances @since 2019-02-02
-        uib.instances[node.id] = node.url
-        log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node uib.Instances Registered: ${JSON.stringify(uib.instances)}`)
+    log.trace(`[uibuilder:${uibInstance}] nodeInstance:nodeInputHandler - emit received msg - Namespace: ${this.url}`) //debug
 
-        // Keep track of the number of times each instance is deployed.
-        // The initial deployment = 1
-        if ( Object.prototype.hasOwnProperty.call(uib.deployments, node.id) ) uib.deployments[node.id]++
-        else uib.deployments[node.id] = 1
-        log.trace(`[uibuilder:nodeInstance:${uibInstance}] Number of uib.Deployments: ${uib.deployments[node.id]}` )
-        //#endregion ====== Instance logging/audit ====== //
+    // If this is pre-1.0, 'send' will be undefined, so fallback to this.send
+    send = send || function() { this.send.apply(this,arguments) }
+    // If this is pre-1.0, 'done' will be undefined, so fallback to dummy function
+    done = done || function() { if (arguments.length>0) this.done.apply(this,arguments) }
 
-        //#region ====== Local folder structure ====== //
+    // If msg is null, nothing will be sent
+    if ( msg !== null ) {
+        // if msg isn't null and isn't an object
+        // NOTE: This is paranoid and shouldn't be possible!
+        if ( typeof msg !== 'object' ) {
+            // Force msg to be an object with payload of original msg
+            msg = { 'payload': msg }
+        }
+        // Add topic from node config if present and not present in msg
+        if ( !(Object.prototype.hasOwnProperty.call(msg, 'topic')) || msg.topic === '' ) {
+            if ( this.topic !== '' ) msg.topic = this.topic
+            else msg.topic = uib.moduleName
+        }
+    }
 
-        /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
-         *   Files in this folder are also served to URL but take preference
-         *   over those in the nodes folders (which act as defaults) @type {string}
-         */
-        node.customFolder = path.join(uib.rootFolder, node.url)
+    // Keep this fn small for readability so offload any further, more customised code to another fn
+    //msg = uiblib.inputHandler(msg, send, done, this, RED, sockets.io, ioNs, log, uib)
+    this.rcvMsgCount++
+    log.trace( `[uibuilder:uiblib:inputHandler:${this.url}] msg received via FLOW. ${this.rcvMsgCount} messages received. ${JSON.stringify(msg)}` )
 
-        // Check whether the url has been changed. If so, rename the folder
-        if ( node.oldUrl !== undefined && node.url !== node.oldUrl ) {
-            // rename (move) folder if possible - but don't overwrite
-            try {
-                fs.moveSync(path.join(uib.rootFolder, node.oldUrl), node.customFolder, {overwrite: false})
-            } catch (e) {
-                // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
-                if ( e.code !== 'ENOENT' ) {
-                    log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${node.url}, oldUrl=${node.oldUrl}, Fldr=${node.customFolder}. Error=${e.message}`, e)
-                }
-            }
-            // we continue to do the normal checks in case something failed or if this is an initial deploy (so no original folder exists)
+    // If the input msg is a uibuilder control msg, then drop it to prevent loops
+    if ( Object.prototype.hasOwnProperty.call(msg, 'uibuilderCtrl') ) return null
+
+    //setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + this.rcvMsgCount}, node)
+
+    // Remove script/style content if admin settings don't allow
+    if ( this.allowScripts !== true && Object.prototype.hasOwnProperty.call(msg, 'script') ) delete msg.script
+    if ( this.allowStyles !== true && Object.prototype.hasOwnProperty.call(msg, 'style') ) delete msg.style
+
+    let socketId = msg._socketId || undefined
+    let sendme = false
+
+    // If security is active...
+    // TODO need to add client tracking for this to work
+    sendme = true
+    /*     if (this.useSecurity === true) {
+        // Check for valid auth and session 
+        //  @type MsgAuth
+        msg._auth = this.authCheck(msg, ioNs, node, socketId, log, uib)
+        console.log('[UIBUILDER:uiblib:inputHandler] _auth: ', msg._auth)
+        // Only send the msg onward if the user is validated
+        if (msg._auth.jwt !== undefined) sendme = true
+    } */
+    
+    if (sendme) {
+
+        // pass the complete msg object to the uibuilder client
+        // TODO: replace with sockets.send or sockets.sendControl
+        // TODO: This should have some safety validation on it!
+        let ioNs = sockets.getNs(this)
+        if (socketId !== undefined) {
+            //  ...If socketId not validated as having a current session, don't send
+            log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg sent on to client ${socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            ioNs.to(socketId).emit(uib.ioChannels.server, msg)
+        } else {
+            //? - is there any way to prevent sending to clients not logged in?
+            log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            ioNs.emit(uib.ioChannels.server, msg)
         }
 
-        // Does the custom folder exist? If not, create it and copy blank template to it. Otherwise make sure it is accessible.
-        var customFoldersOK = true
-        if ( ! fs.existsSync(node.customFolder) ) {
+        if (this.fwdInMessages) {
+            // Send on the input msg to output
+            send(msg)
+            done()
+            log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg passed downstream to next node. ${JSON.stringify(msg)}`)
+        }
 
-            // Does not exist so check whether built-in or external template wanted
-            if ( node.templateFolder !== 'external' ) {
+    }
 
-                // Internal template wanted - so copy it now
-                const cpyOpts = {'preserveTimestamps':true}
-                let copyFrom = path.join( uib.masterTemplateFolder, 'blank' )
-                try {
-                    fs.copySync( copyFrom, node.customFolder, cpyOpts)
-                    log.info(`[uibuilder:nodeInstance:${uibInstance}] Created instance folder ${node.customFolder} and copied template files from ${copyFrom}` )
-                } catch (e) {
-                    log.error(`[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${node.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
-                    customFoldersOK = false
-                }
+}
 
-            } else {
+/** All of the initialisation of the Node
+ * This is only run once no matter how many uib node instances are added to a flow
+ * NOTE: This function MUST be run using .call to pass in the correct `this` context
+ * @param {runtimeRED} RED Runtime Red
+ * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
+ */
+function instanceSetup(RED, config) {
+        
+    // Create the node
+    RED.nodes.createNode(this, config)
 
-                // External template wanted to try to load it
-                uiblib.replaceTemplate(node.url, node.templateFolder, node.extTemplate, 'startup-CopyTemplate', templateConf, uib, log)
-                    .then( () => { //resp => {
-                        //resp.statusMessage
-                        log.info(`[uibuilder:nodeInstance:${uibInstance}] Created instance folder ${node.customFolder} and copied external template files from ${node.templateFolder}` )
-                        return true
-                    })
-                    .catch( err => {
-                        let statusMsg
-                        if ( err.code === 'MISSING_REF' ){
-                            statusMsg = `Degit clone error. CHECK External Template Name. Name='${node.extTemplate}', url=${node.url}, cmd=startup-CopyTemplate. ${err.message}`
-                        } else {
-                            let mystr 
-                            if ( node.templateFolder === 'external' ) mystr = `, ${node.extTemplate}`
-                            statusMsg = `Replace template error. ${err.message}. url=${node.url}. ${node.templateFolder}${mystr}`
-                        }
-                        log.error(`[uibuilder:nodeInstance:replaceTemplate] ${statusMsg}`, err)
-                    } )
+    const uibInstance = config.url // for logging
+    log.trace(`[uibuilder:nodeInstance:${uibInstance}] ================ instance registered ================`)
+    /** Copy 'this' object in case we need it in context of callbacks of other functions.
+     * @type {uibNode}
+     */
+    log.trace(`[uibuilder:nodeInstance:${uibInstance}] node keys: ${JSON.stringify(Object.keys(this))}`)
+    log.trace(`[uibuilder:nodeInstance:${uibInstance}] config keys: ${JSON.stringify(Object.keys(config))}`)
 
+    //#region ====== Create local copies of the node configuration (as defined in the .html file) ====== //
+    // NB: this.id and this.type are also available
+    this.name            = config.name  || ''
+    this.topic           = config.topic || ''
+    this.url             = config.url   || 'uibuilder'
+    this.oldUrl          = config.oldUrl
+    this.fwdInMessages   = config.fwdInMessages === undefined ? false : config.fwdInMessages
+    this.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
+    this.allowStyles     = config.allowStyles === undefined ? false : config.allowStyles
+    this.copyIndex       = config.copyIndex === undefined ? true : config.copyIndex // DEPRECATED
+    this.templateFolder  = config.templateFolder || templateConf.blank.folder
+    this.extTemplate     = config.extTemplate
+    this.showfolder      = config.showfolder === undefined ? false : config.showfolder
+    this.useSecurity     = config.useSecurity 
+    this.sessionLength   = Number(config.sessionLength) || 120  // in seconds
+    this.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
+    this.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
+    this.reload          = config.reload === undefined ? false : config.reload
+    this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:addInstanceStaticRoute
+    //#endregion ====== Local node config copy ====== //
+
+    //#region ====== Instance logging/audit ====== //
+    log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node instance settings: ${JSON.stringify({'name': this.name, 'topic': this.topic, 'url': this.url, 'copyIndex': this.copyIndex, 'fwdIn': this.fwdInMessages, 'allowScripts': this.allowScripts, 'allowStyles': this.allowStyles, 'showfolder': this.showfolder })}`)
+    
+    // Keep a log of the active uib.instances @since 2019-02-02
+    uib.instances[this.id] = this.url
+    log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node uib.Instances Registered: ${JSON.stringify(uib.instances)}`)
+
+    // Keep track of the number of times each instance is deployed.
+    // The initial deployment = 1
+    if ( Object.prototype.hasOwnProperty.call(uib.deployments, this.id) ) uib.deployments[this.id]++
+    else uib.deployments[this.id] = 1
+    log.trace(`[uibuilder:nodeInstance:${uibInstance}] Number of uib.Deployments: ${uib.deployments[this.id]}` )
+    //#endregion ====== Instance logging/audit ====== //
+
+    //#region ====== Local folder structure ====== //
+
+    /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
+     *   Files in this folder are also served to URL but take preference
+     *   over those in the nodes folders (which act as defaults) @type {string}
+     */
+    this.customFolder = path.join(uib.rootFolder, this.url)
+
+    // Check whether the url has been changed. If so, rename the folder
+    if ( this.oldUrl !== undefined && this.url !== this.oldUrl ) {
+        // rename (move) folder if possible - but don't overwrite
+        try {
+            fs.moveSync(path.join(uib.rootFolder, this.oldUrl), this.customFolder, {overwrite: false})
+        } catch (e) {
+            // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
+            if ( e.code !== 'ENOENT' ) {
+                log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${this.url}, oldUrl=${this.oldUrl}, Fldr=${this.customFolder}. Error=${e.message}`, e)
             }
+        }
+        // we continue to do the normal checks in case something failed or if this is an initial deploy (so no original folder exists)
+    }
 
-        } else {
+    // Does the custom folder exist? If not, create it and copy blank template to it. Otherwise make sure it is accessible.
+    var customFoldersOK = true
+    if ( ! fs.existsSync(this.customFolder) ) {
 
+        // Does not exist so check whether built-in or external template wanted
+        if ( this.templateFolder !== 'external' ) {
+
+            // Internal template wanted - so copy it now
+            const cpyOpts = {'preserveTimestamps':true}
+            let copyFrom = path.join( uib.masterTemplateFolder, 'blank' )
             try {
-                fs.accessSync(node.customFolder, fs.constants.W_OK)
+                fs.copySync( copyFrom, this.customFolder, cpyOpts)
+                log.info(`[uibuilder:nodeInstance:${uibInstance}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
             } catch (e) {
-                log.error(`[uibuilder:nodeInstance:${uibInstance}] Local custom folder ERROR`, e.message)
+                log.error(`[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
                 customFoldersOK = false
             }
 
-        }
-
-        // We've checked that the custom folder is there and has the correct structure
-        if ( uib_rootFolder_OK === true && customFoldersOK === true ) {
-            // local custom folders are there ...
-            log.trace(`[uibuilder:nodeInstance:${uibInstance}] Using local front-end folders in: ${node.customFolder}` )
         } else {
-            // Local custom folders are not right!
-            log.error(`[uibuilder:nodeInstance:${uibInstance}] Wanted to use local front-end folders in ${node.customFolder} but could not`)
-        }
 
-        //#endregion ====== End of Local folder structure ====== //
-
-        // If security turned on, instantiate the security class
-        if ( node.useSecurity === true ) {
-            // TODO
-        }
-
-        // Set up web services for this instance (static folders, middleware, etc)
-        web.instanceSetup(node)
-
-        node.rcvMsgCount = 0
-        /** Socket.IO instance configuration. Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
-        const ioNs = sockets.addNS(node) // NB: Namespace is set from url
-        node.ioNamespace = ioNs.name
-        
-        log.trace(`[uibuilder:${uibInstance}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, node.url )}`)
-        log.trace(`[uibuilder:${uibInstance}] Source files . : ${node.customFolder}`)
-
-        // We only do the following if io is not already assigned (e.g. after a redeploy)
-        uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, node )
-
-        /** Handler function for node flow input events (when a node instance receives a msg from the flow)
-         * @see https://nodered.org/blog/2019/09/20/node-done 
-         * @param {object} msg The msg object received.
-         * @param {Function} send Per msg send function, node-red v1+
-         * @param {Function} done Per msg finish function, node-red v1+
-         **/
-        function nodeInputHandler(msg, send, done) {
-            log.trace(`[uibuilder:${uibInstance}] nodeInstance:nodeInputHandler - emit received msg - Namespace: ${node.url}`) //debug
-
-            // If this is pre-1.0, 'send' will be undefined, so fallback to node.send
-            send = send || function() { node.send.apply(node,arguments) }
-            // If this is pre-1.0, 'done' will be undefined, so fallback to dummy function
-            done = done || function() { if (arguments.length>0) node.done.apply(node,arguments) }
-
-            // If msg is null, nothing will be sent
-            if ( msg !== null ) {
-                // if msg isn't null and isn't an object
-                // NOTE: This is paranoid and shouldn't be possible!
-                if ( typeof msg !== 'object' ) {
-                    // Force msg to be an object with payload of original msg
-                    msg = { 'payload': msg }
-                }
-                // Add topic from node config if present and not present in msg
-                if ( !(Object.prototype.hasOwnProperty.call(msg, 'topic')) || msg.topic === '' ) {
-                    if ( node.topic !== '' ) msg.topic = node.topic
-                    else msg.topic = uib.moduleName
-                }
-            }
-
-            // Keep this fn small for readability so offload any further, more customised code to another fn
-            msg = uiblib.inputHandler(msg, send, done, node, RED, sockets.io, ioNs, log, uib)
-
-        } // -- end of flow msg received processing -- //
-
-        // Process inbound messages
-        node.on('input', nodeInputHandler)
-
-        // Do something when Node-RED is closing down which includes when this node instance is redeployed
-        node.on('close', function(removed,done) {
-            log.trace(`[uibuilder:${uibInstance}] nodeInstance:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
-
-            node.removeListener('input', nodeInputHandler)
-
-            // Do any complex close processing here if needed - MUST BE LAST
-            //processClose(null, node, RED, ioNs, app) // swap with below if needing async
-            //uiblib.processClose(node, RED, uib, ioNs, sockets.io, web.app, log, done)
-            uiblib.instanceClose(node, RED, uib, sockets, web, log, done)
-
-            done()
-        })
-
-        // Shows an instance details debug page
-        RED.httpAdmin.get(`/uibuilder/instance/${node.url}`, function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
-            let page = uiblib.showInstanceDetails(req, node, uib, userDir, RED)
-            res.status(200).send( page )
-        })
-
-    } // ---- End of nodeInstance (initialised node instance) ---- //
-
-    /** Register the node by name. This must be called before overriding any of the
-     *  Node functions. */
-    RED.nodes.registerType(uib.moduleName, nodeInstance, {
-        credentials: {
-            jwtSecret: {type:'password'},
-        },
-        settings: {
-            uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
-            uibuilderTemplates: { value: templateConf, exportable: true },
-            uibuilderCustomServer: { value: (uib.customServer), exportable: true },
-        },
-    }) 
-
-    //#region ====== Admin API's ====== //
-
-    //#region === Validation functions === //
-    /** Validate url query parameter
-     * @param {object} params The GET (res.query) or POST (res.body) parameters
-     * @param {string} params.url The uibuilder url to check
-     * @returns {{statusMessage: string, status: number}} Status message
-     */
-    function chkParamUrl(params) {
-        const res = {'statusMessage': '', 'status': 0}
-
-        // We have to have a url to work with - the url defines the start folder
-        if ( params.url === undefined ) {
-            res.statusMessage = 'url parameter not provided'
-            res.status = 500
-            return res
-        }
-
-        // Trim the url
-        params.url = params.url.trim()
-
-        // URL must not exceed 20 characters
-        if ( params.url.length > 20 ) {
-            res.statusMessage = `url parameter is too long. Max 20 characters: ${params.url}`
-            res.status = 500
-            return res
-        }
-
-        // URL must be more than 0 characters
-        if ( params.url.length < 1 ) {
-            res.statusMessage = 'url parameter is empty, please provide a value'
-            res.status = 500
-            return res
-        }
-
-        // URL cannot contain .. to prevent escaping sub-folder structure
-        if ( params.url.includes('..') ) {
-            res.statusMessage = `url parameter may not contain "..": ${params.url}`
-            res.status = 500
-            return res
-        }
-
-        // Actually, since uib auto-creates folder if not exists, this just gets in the way - // Does this url have a matching instance root folder?
-        // if ( ! fs.existsSync(path.join(uib.rootFolder, params.url)) ) {
-        //     res.statusMessage = `url does not have a matching instance root folder. url='${params.url}', Master root folder='${uib.rootFolder}'`
-        //     res.status = 500
-        //     return res
-        // }
-
-        return res
-    } // ---- End of fn chkParamUrl ---- //
-
-    /** Validate fname (filename) query parameter
-     * @param {object} params The GET (res.query) or POST (res.body) parameters
-     * @param {string} params.fname The uibuilder url to check
-     * @returns {{statusMessage: string, status: number}} Status message
-     */
-    function chkParamFname(params) {
-        const res = {'statusMessage': '', 'status': 0}
-        const fname = params.fname
-
-        // We have to have an fname (file name) to work with
-        if ( fname === undefined ) {
-            res.statusMessage = 'file name not provided'
-            res.status = 500
-            return res
-        }
-        // Blank file name probably means no files available so we will ignore
-        if ( fname === '' ) {
-            res.statusMessage = 'file name cannot be blank'
-            res.status = 500
-            return res
-        }
-        // fname must not exceed 255 characters
-        if ( fname.length > 255 ) {
-            res.statusMessage = `file name is too long. Max 255 characters: ${params.fname}`
-            res.status = 500
-            return res
-        }
-        // fname cannot contain .. to prevent escaping sub-folder structure
-        if ( fname.includes('..') ) {
-            res.statusMessage = `file name may not contain "..": ${params.fname}`
-            res.status = 500
-            return res
-        }
-        
-        return res
-    } // ---- End of fn chkParamFname ---- //
-
-    /** Validate folder query parameter
-     * @param {object} params The GET (res.query) or POST (res.body) parameters
-     * @param {string} params.folder The uibuilder url to check
-     * @returns {{statusMessage: string, status: number}} Status message
-     */
-    function chkParamFldr(params) {
-        const res = {'statusMessage': '', 'status': 0}
-        let folder = params.folder
-
-        //we have to have a folder name
-        if ( folder === undefined ) {
-            res.statusMessage = 'folder name not provided'
-            res.status = 500
-            return res
-        }
-        // folder name must be >0 in length
-        if ( folder === '' ) {
-            res.statusMessage = 'folder name cannot be blank'
-            res.status = 500
-            return res
-        }
-        // folder name must not exceed 255 characters
-        if ( folder.length > 255 ) {
-            res.statusMessage = `folder name is too long. Max 255 characters: ${folder}`
-            res.status = 500
-            return res
-        }
-        // folder name cannot contain .. to prevent escaping sub-folder structure
-        if ( folder.includes('..') ) {
-            res.statusMessage = `folder name may not contain "..": ${folder}`
-            res.status = 500
-            return res
-        }
-        
-        return res
-    } // ---- End of fn chkParamFldr ---- //
-    //#endregion === Validation functions === //
-
-    //#region === Admin API v3 === //
-
-    /** uibuilder v3 unified Admin API router - new API commands should be added here */
-    RED.httpAdmin.route('/uibuilder/admin/:url')
-        // For all routes (this function is called before more specific ones)
-        .all(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) {
-            // @ts-ignore
-            const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
-            params.type = 'all'
-            //params.headers = req.headers
-
-            // Validate URL - params.url
-            const chkUrl = chkParamUrl(params)
-            if ( chkUrl.status !== 0 ) {
-                log.error(`[uibuilder:admin-router:ALL] Admin API. ${chkUrl.statusMessage}`)
-                res.statusMessage = chkUrl.statusMessage
-                res.status(chkUrl.status).end()
-                return
-            }    
-
-            next()
-        })
-        /** Get something and return it */
-        .get(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
-            // @ts-ignore
-            const params = res.allparams
-            params.type = 'get'
-
-            // List all folders and files for this uibuilder instance
-            if ( params.cmd === 'listall' ) {
-                log.trace(`[uibuilder:admin-router:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
-
-                // get list of all (sub)folders (follow symlinks as well)
-                const out = {'root':[]}
-                const root2 = uib.rootFolder.replace(/\\/g, '/')
-                fg.stream([`${root2}/${params.url}/**`], { dot: true, onlyFiles: false, deep: 10, followSymbolicLinks: true, markDirectories: true })
-                    .on('data', entry => {
-                        entry = entry.replace(`${root2}/${params.url}/`, '')
-                        let fldr
-                        if ( entry.endsWith('/') ) {
-                            // remove trailing /
-                            fldr = entry.slice(0, -1)
-                            // For the root folder of the instance, use "root" as the name (matches editor processing)
-                            if ( fldr === '' ) fldr = 'root'
-                            out[fldr] = []
-                        } else {
-                            let splitEntry = entry.split('/')
-                            let last = splitEntry.pop()
-                            fldr = splitEntry.join('/')
-                            if ( fldr === '' ) fldr = 'root'
-                            out[fldr].push(last)
-                        }
-                    })
-                    .on('end', () => {
-                        res.statusMessage = 'Folders and Files listed successfully'
-                        res.status(200).json(out)
-                    })
-                // -- end of listall -- //
-            } else if ( params.cmd === 'checkurls' ) {
-                log.trace(`[uibuilder:admin-router:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
-        
-                /** @returns {boolean} True if the given url exists, else false */
-                let chkInstances = Object.values(uib.instances).includes(params.url)
-                let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
-
-                res.statusMessage = 'Instances and Folders checked'
-                res.status(200).json( chkInstances || chkFolders )
-                // -- end of checkurls -- //
-            } else if ( params.cmd === 'listurls' ) {
-                // Return a list of all user urls in use by ExpressJS
-                // TODO Not currently working
-                var route, routes = []
-                web.app._router.stack.forEach( (middleware) => {
-                    if(middleware.route){ // routes registered directly on the app
-                        let path = middleware.route.path
-                        let methods = middleware.route.methods
-                        routes.push({path: path, methods: methods})
-                    } else if(middleware.name === 'router'){ // router middleware 
-                        middleware.handle.stack.forEach(function(handler){
-                            route = handler.route
-                            route && routes.push(route)
-                        })
-                    }
+            // External template wanted to try to load it
+            uiblib.replaceTemplate(this.url, this.templateFolder, this.extTemplate, 'startup-CopyTemplate', templateConf, uib, log)
+                .then( () => { //resp => {
+                    //resp.statusMessage
+                    log.info(`[uibuilder:nodeInstance:${uibInstance}] Created instance folder ${this.customFolder} and copied external template files from ${this.templateFolder}` )
+                    return true
                 })
-                console.log(web.app._router.stack[0])
-
-                log.trace('[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.')
-                res.statusMessage = 'URLs listed successfully'
-                //res.status(200).json(routes)
-                res.status(200).json(web.app._router.stack)
-                // -- end of listurls -- //
-            }
-
-        })
-        /** TODO Write file contents */
-        .put(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
-            // @ts-ignore
-            const params = res.allparams
-            params.type = 'put'
-            
-            let fullname = path.join(uib.rootFolder, params.url)
-
-            // Tell uibuilder to delete the instance local folder when this instance is deleted - see html file oneditdelete & uiblib.processClose
-            if ( params.cmd && params.cmd === 'deleteondelete' ) {
-                log.trace(`[uibuilder:admin-router:PUT:deleteondelete] Admin API. url=${params.url}`)
-                uib.deleteOnDelete[params.url] = true
-                res.statusMessage = 'PUT successfully'
-                res.status(200).json({})
-                return
-            }
-
-            log.trace(`[uibuilder:admin-router:PUT] Admin API. url=${params.url}`)
-            res.statusMessage = 'PUT successfully'
-            res.status(200).json({
-                'fullname': fullname,
-                'params': params,
-            })
-
-        })
-        /** Load new template or Create a new folder or file */
-        .post(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
-            // @ts-ignore
-            const params = res.allparams
-            params.type = 'post'
-
-            if ( params.cmd === 'replaceTemplate' ) {
-
-                uiblib.replaceTemplate(params.url, params.template, params.extTemplate, params.cmd, templateConf, uib, log)
-                    .then( resp => {
-                        res.statusMessage = resp.statusMessage
-                        if ( resp.status === 200 ) res.status(200).json(resp.json)
-                        else res.status(resp.status).end()
-                        return true
-                    })
-                    .catch( err => {
-                        let statusMsg, mystr
-                        if ( err.code === 'MISSING_REF' ){
-                            statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}. ${err.message}`
-                        } else {
-                            if ( params.template === 'external' ) mystr = `, ${params.extTemplate}`
-                            statusMsg = `Replace template error. ${err.message}. url=${params.url}. ${params.template}${mystr}`
-                        }
-                        log.error(`[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
-                        res.statusMessage = statusMsg
-                        res.status(500).end()    
-                    } )
-
-            } else {
-
-                // Validate folder name - params.folder
-                const chkFldr = chkParamFldr(params)
-                if ( chkFldr.status !== 0 ) {
-                    log.error(`[uibuilder:admin-router:POST] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-                    res.statusMessage = chkFldr.statusMessage
-                    res.status(chkFldr.status).end()
-                    return
-                }
-                // Validate command - must be present and either be 'newfolder' or 'newfile'
-                if ( ! (params.cmd && (params.cmd === 'newfolder' || params.cmd === 'newfile')) ) {
-                    let statusMsg = `cmd parameter not present or wrong value (must be 'newfolder' or 'newfile'). url=${params.url}, cmd=${params.cmd}`
-                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
-                    res.statusMessage = statusMsg
-                    res.status(500).end()
-                    return
-                }
-                // If newfile, validate file name - params.fname
-                if (params.cmd === 'newfile' ) {
-                    const chkFname = chkParamFname(params)
-                    if ( chkFname.status !== 0 ) {
-                        log.error(`[uibuilder:admin-router:POST] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
-                        res.statusMessage = chkFname.statusMessage
-                        res.status(chkFname.status).end()
-                        return
-                    }        
-                }
-        
-                let fullname = path.join(uib.rootFolder, params.url, params.folder)
-                if (params.cmd === 'newfile' ) {
-                    fullname = path.join(fullname, params.fname)
-                }
-                
-                // Does folder or file already exist? If so, return error
-                if ( fs.pathExistsSync(fullname) ) {
-                    let statusMsg = `selected ${params.cmd === 'newfolder' ? 'folder':'file'} already exists. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
-                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
-                    res.statusMessage = statusMsg
-                    res.status(500).end()
-                    return
-                }
-
-                // try to create folder/file - if fail, return error
-                try {
-                    if ( params.cmd === 'newfolder') {
-                        fs.ensureDirSync(fullname)
+                .catch( err => {
+                    let statusMsg
+                    if ( err.code === 'MISSING_REF' ){
+                        statusMsg = `Degit clone error. CHECK External Template Name. Name='${this.extTemplate}', url=${this.url}, cmd=startup-CopyTemplate. ${err.message}`
                     } else {
-                        fs.ensureFileSync(fullname)
+                        let mystr 
+                        if ( this.templateFolder === 'external' ) mystr = `, ${this.extTemplate}`
+                        statusMsg = `Replace template error. ${err.message}. url=${this.url}. ${this.templateFolder}${mystr}`
                     }
-                } catch (e) {
-                    let statusMsg = `could not create ${params.cmd === 'newfolder' ? 'folder':'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
-                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
-                    res.statusMessage = statusMsg
-                    res.status(500).end()
-                    return
-                }
+                    log.error(`[uibuilder:nodeInstance:replaceTemplate] ${statusMsg}`, err)
+                } )
 
-                log.trace(`[uibuilder:admin-router:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
-                res.statusMessage = 'Folder/File created successfully'
-                res.status(200).json({
-                    'fullname': fullname,
-                    'params': params,
-                })
+        }
 
-            } // end of else
+    } else {
 
-        }) // --- End of POST processing --- //
-        /** Delete a folder or a file */
-        .delete(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
-            // @ts-ignore ts(2339)
-            const params = res.allparams
-            params.type = 'delete'
+        try {
+            fs.accessSync(this.customFolder, fs.constants.W_OK)
+        } catch (e) {
+            log.error(`[uibuilder:nodeInstance:${uibInstance}] Local custom folder ERROR`, e.message)
+            customFoldersOK = false
+        }
 
-            // Several command options available: deletefolder, deletefile
+    }
 
-            // deletefolder or deletefile:
+    // We've checked that the custom folder is there and has the correct structure
+    if ( customFoldersOK === true ) {
+        // local custom folders are there ...
+        log.trace(`[uibuilder:nodeInstance:${uibInstance}] Using local front-end folders in: ${this.customFolder}` )
+    } else {
+        // Local custom folders are not right!
+        log.error(`[uibuilder:nodeInstance:${uibInstance}] Wanted to use local front-end folders in ${this.customFolder} but could not`)
+    }
 
-            // Validate folder name - params.folder
-            const chkFldr = chkParamFldr(params)
-            if ( chkFldr.status !== 0 ) {
-                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-                res.statusMessage = chkFldr.statusMessage
-                res.status(chkFldr.status).end()
-                return
-            }
-            // Validate command - must be present and either be 'deletefolder' or 'deletefile'
-            if ( ! (params.cmd && (params.cmd === 'deletefolder' || params.cmd === 'deletefile')) ) {
-                let statusMsg = `cmd parameter not present or wrong value (must be 'deletefolder' or 'deletefile'). url=${params.url}, cmd=${params.cmd}`
-                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${statusMsg}`)
-                res.statusMessage = statusMsg
-                res.status(500).end()
-                return
-            }
-            // If newfile, validate file name - params.fname
-            if (params.cmd === 'deletefile' ) {
-                const chkFname = chkParamFname(params)
-                if ( chkFname.status !== 0 ) {
-                    log.error(`[uibuilder:admin-router:DELETE] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
-                    res.statusMessage = chkFname.statusMessage
-                    res.status(chkFname.status).end()
-                    return
-                }        
-            }
+    //#endregion ====== End of Local folder structure ====== //
+
+    // If security turned on, instantiate the security class
+    if ( this.useSecurity === true ) {
+        // TODO
+    }
+
+    // Set up web services for this instance (static folders, middleware, etc)
+    web.instanceSetup(this)
+
+    this.rcvMsgCount = 0
+    /** Socket.IO instance configuration. Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
+    const ioNs = sockets.addNS(this) // NB: Namespace is set from url
+    this.ioNamespace = ioNs.name
     
-            let fullname = path.join(uib.rootFolder, params.url, params.folder)
-            if (params.cmd === 'deletefile' ) {
-                fullname = path.join(fullname, params.fname)
-            }
-            
-            // Does folder or file does not exist? Return error
-            if ( ! fs.pathExistsSync(fullname) ) {
-                let statusMsg = `selected ${params.cmd === 'deletefolder' ? 'folder':'file'} does not exist. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
-                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${statusMsg}`)
-                res.statusMessage = statusMsg
-                res.status(500).end()
-                return
-            }
+    log.trace(`[uibuilder:${uibInstance}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
+    log.trace(`[uibuilder:${uibInstance}] Source files . : ${this.customFolder}`)
 
-            // try to create folder/file - if fail, return error
-            try {
-                fs.removeSync(fullname)  // deletes both files and folders
-            } catch (e) {
-                let statusMsg = `could not delete ${params.cmd === 'deletefolder' ? 'folder':'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
-                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${statusMsg}`)
-                res.statusMessage = statusMsg
-                res.status(500).end()
-                return
-            }
+    // We only do the following if io is not already assigned (e.g. after a redeploy)
+    uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, this )
 
-            log.trace(`[uibuilder:admin-router:DELETE] Admin API. Folder/File delete SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
-            res.statusMessage = 'Folder/File deleted successfully'
-            res.status(200).json({
-                'fullname': fullname,
-                'params': params,
-            })
-        })
-        /** @see https://expressjs.com/en/4x/api.html#app.METHOD for other methods
-         *  patch, report, search ?
-         */
+    // Process inbound messages
+    this.on('input', inputMsgHandler)
+
+    // Do something when Node-RED is closing down which includes when this node instance is redeployed
+    this.on('close', (removed,done) => {
+        log.trace(`[uibuilder:${uibInstance}] nodeInstance:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
+
+        this.removeListener('input', inputMsgHandler)
+
+        // Do any complex close processing here if needed - MUST BE LAST
+        //processClose(null, node, RED, ioNs, app) // swap with below if needing async
+        uiblib.instanceClose(this, RED, uib, sockets, web, log, done)
+
+        done()
+    })
+
+    // Shows an instance details debug page
+    RED.httpAdmin.get(`/uibuilder/instance/${this.url}`, (/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) => {
+        let page = uiblib.showInstanceDetails(req, this, uib, userDir, RED)
+        res.status(200).send( page )
+    })
+
+} // ----- end of instanceSetup ----- //
+
+//#region === REST API Validation functions === //
+/** Validate url query parameter
+ * @param {object} params The GET (res.query) or POST (res.body) parameters
+ * @param {string} params.url The uibuilder url to check
+ * @returns {{statusMessage: string, status: number}} Status message
+ */
+function chkParamUrl(params) {
+    const res = {'statusMessage': '', 'status': 0}
+
+    // We have to have a url to work with - the url defines the start folder
+    if ( params.url === undefined ) {
+        res.statusMessage = 'url parameter not provided'
+        res.status = 500
+        return res
+    }
+
+    // Trim the url
+    params.url = params.url.trim()
+
+    // URL must not exceed 20 characters
+    if ( params.url.length > 20 ) {
+        res.statusMessage = `url parameter is too long. Max 20 characters: ${params.url}`
+        res.status = 500
+        return res
+    }
+
+    // URL must be more than 0 characters
+    if ( params.url.length < 1 ) {
+        res.statusMessage = 'url parameter is empty, please provide a value'
+        res.status = 500
+        return res
+    }
+
+    // URL cannot contain .. to prevent escaping sub-folder structure
+    if ( params.url.includes('..') ) {
+        res.statusMessage = `url parameter may not contain "..": ${params.url}`
+        res.status = 500
+        return res
+    }
+
+    // Actually, since uib auto-creates folder if not exists, this just gets in the way - // Does this url have a matching instance root folder?
+    // if ( ! fs.existsSync(path.join(uib.rootFolder, params.url)) ) {
+    //     res.statusMessage = `url does not have a matching instance root folder. url='${params.url}', Master root folder='${uib.rootFolder}'`
+    //     res.status = 500
+    //     return res
+    // }
+
+    return res
+} // ---- End of fn chkParamUrl ---- //
+
+/** Validate fname (filename) query parameter
+ * @param {object} params The GET (res.query) or POST (res.body) parameters
+ * @param {string} params.fname The uibuilder url to check
+ * @returns {{statusMessage: string, status: number}} Status message
+ */
+function chkParamFname(params) {
+    const res = {'statusMessage': '', 'status': 0}
+    const fname = params.fname
+
+    // We have to have an fname (file name) to work with
+    if ( fname === undefined ) {
+        res.statusMessage = 'file name not provided'
+        res.status = 500
+        return res
+    }
+    // Blank file name probably means no files available so we will ignore
+    if ( fname === '' ) {
+        res.statusMessage = 'file name cannot be blank'
+        res.status = 500
+        return res
+    }
+    // fname must not exceed 255 characters
+    if ( fname.length > 255 ) {
+        res.statusMessage = `file name is too long. Max 255 characters: ${params.fname}`
+        res.status = 500
+        return res
+    }
+    // fname cannot contain .. to prevent escaping sub-folder structure
+    if ( fname.includes('..') ) {
+        res.statusMessage = `file name may not contain "..": ${params.fname}`
+        res.status = 500
+        return res
+    }
     
-    //#endregion === Admin API v3 === //
+    return res
+} // ---- End of fn chkParamFname ---- //
 
-    //#region === Admin API v1/2 === //
+/** Validate folder query parameter
+ * @param {object} params The GET (res.query) or POST (res.body) parameters
+ * @param {string} params.folder The uibuilder url to check
+ * @returns {{statusMessage: string, status: number}} Status message
+ */
+function chkParamFldr(params) {
+    const res = {'statusMessage': '', 'status': 0}
+    let folder = params.folder
 
+    //we have to have a folder name
+    if ( folder === undefined ) {
+        res.statusMessage = 'folder name not provided'
+        res.status = 500
+        return res
+    }
+    // folder name must be >0 in length
+    if ( folder === '' ) {
+        res.statusMessage = 'folder name cannot be blank'
+        res.status = 500
+        return res
+    }
+    // folder name must not exceed 255 characters
+    if ( folder.length > 255 ) {
+        res.statusMessage = `folder name is too long. Max 255 characters: ${folder}`
+        res.status = 500
+        return res
+    }
+    // folder name cannot contain .. to prevent escaping sub-folder structure
+    if ( folder.includes('..') ) {
+        res.statusMessage = `folder name may not contain "..": ${folder}`
+        res.status = 500
+        return res
+    }
+    
+    return res
+} // ---- End of fn chkParamFldr ---- //
+//#endregion === Validation functions === //
+
+/**
+ * This is only run once no matter how many uib node instances are added to a flow
+ * @param {runtimeRED} RED Runtime Red
+ */
+function v2AdminAPIs(RED) {
     /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
      * @param {string} url The admin api url to create
      * @param {object} permissions The permissions required for access
@@ -1351,7 +1110,7 @@ module.exports = function Uib (/** @type {runtimeRED} */ RED) {
                         <tr><th>Min. Version Required by uibuilder</th><td>${uib.me['node-red'].version}</td></tr>
                     </table>
 
-                    <h3>Node.js</h3>
+                    <h3>this.js</h3>
                     <table class="table">
                         <tr><th>Version</th><td>${uib.nodeVersion.join('.')}</td></tr>
                         <tr><th>Min. version required by uibuilder</th><td>${uib.me.engines.node}</td></tr>
@@ -1585,11 +1344,307 @@ module.exports = function Uib (/** @type {runtimeRED} */ RED) {
     // @ts-ignore
     RED.httpAdmin.use('/uibuilder/techdocs', serveStatic( path.join(__dirname, '..', 'docs'), uib.staticOpts ) )
 
-    //#endregion === Admin API v1/2 === //
+} // ----- end of v2AdminAPIs ----- //
 
-    //#endregion ====== Admin API's ====== //
+/**
+ * This is only run once no matter how many uib node instances are added to a flow
+ * @param {runtimeRED} RED Runtime Red
+ */
+function v3AdminAPIs(RED) {
 
-    //#region ====== End User API's ======
+    /** uibuilder v3 unified Admin API router - new API commands should be added here */
+    RED.httpAdmin.route('/uibuilder/admin/:url')
+        // For all routes (this function is called before more specific ones)
+        .all(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) {
+            // @ts-ignore
+            const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
+            params.type = 'all'
+            //params.headers = req.headers
+
+            // Validate URL - params.url
+            const chkUrl = chkParamUrl(params)
+            if ( chkUrl.status !== 0 ) {
+                log.error(`[uibuilder:admin-router:ALL] Admin API. ${chkUrl.statusMessage}`)
+                res.statusMessage = chkUrl.statusMessage
+                res.status(chkUrl.status).end()
+                return
+            }    
+
+            next()
+        })
+        /** Get something and return it */
+        .get(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
+            // @ts-ignore
+            const params = res.allparams
+            params.type = 'get'
+
+            // List all folders and files for this uibuilder instance
+            if ( params.cmd === 'listall' ) {
+                log.trace(`[uibuilder:admin-router:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
+
+                // get list of all (sub)folders (follow symlinks as well)
+                const out = {'root':[]}
+                const root2 = uib.rootFolder.replace(/\\/g, '/')
+                fg.stream([`${root2}/${params.url}/**`], { dot: true, onlyFiles: false, deep: 10, followSymbolicLinks: true, markDirectories: true })
+                    .on('data', entry => {
+                        entry = entry.replace(`${root2}/${params.url}/`, '')
+                        let fldr
+                        if ( entry.endsWith('/') ) {
+                            // remove trailing /
+                            fldr = entry.slice(0, -1)
+                            // For the root folder of the instance, use "root" as the name (matches editor processing)
+                            if ( fldr === '' ) fldr = 'root'
+                            out[fldr] = []
+                        } else {
+                            let splitEntry = entry.split('/')
+                            let last = splitEntry.pop()
+                            fldr = splitEntry.join('/')
+                            if ( fldr === '' ) fldr = 'root'
+                            out[fldr].push(last)
+                        }
+                    })
+                    .on('end', () => {
+                        res.statusMessage = 'Folders and Files listed successfully'
+                        res.status(200).json(out)
+                    })
+                // -- end of listall -- //
+            } else if ( params.cmd === 'checkurls' ) {
+                log.trace(`[uibuilder:admin-router:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
+        
+                /** @returns {boolean} True if the given url exists, else false */
+                let chkInstances = Object.values(uib.instances).includes(params.url)
+                let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+
+                res.statusMessage = 'Instances and Folders checked'
+                res.status(200).json( chkInstances || chkFolders )
+                // -- end of checkurls -- //
+            } else if ( params.cmd === 'listurls' ) {
+                // Return a list of all user urls in use by ExpressJS
+                // TODO Not currently working
+                var route, routes = []
+                web.app._router.stack.forEach( (middleware) => {
+                    if(middleware.route){ // routes registered directly on the app
+                        let path = middleware.route.path
+                        let methods = middleware.route.methods
+                        routes.push({path: path, methods: methods})
+                    } else if(middleware.name === 'router'){ // router middleware 
+                        middleware.handle.stack.forEach(function(handler){
+                            route = handler.route
+                            route && routes.push(route)
+                        })
+                    }
+                })
+                console.log(web.app._router.stack[0])
+
+                log.trace('[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.')
+                res.statusMessage = 'URLs listed successfully'
+                //res.status(200).json(routes)
+                res.status(200).json(web.app._router.stack)
+                // -- end of listurls -- //
+            }
+
+        })
+        /** TODO Write file contents */
+        .put(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
+            // @ts-ignore
+            const params = res.allparams
+            params.type = 'put'
+            
+            let fullname = path.join(uib.rootFolder, params.url)
+
+            // Tell uibuilder to delete the instance local folder when this instance is deleted - see html file oneditdelete & uiblib.processClose
+            if ( params.cmd && params.cmd === 'deleteondelete' ) {
+                log.trace(`[uibuilder:admin-router:PUT:deleteondelete] Admin API. url=${params.url}`)
+                uib.deleteOnDelete[params.url] = true
+                res.statusMessage = 'PUT successfully'
+                res.status(200).json({})
+                return
+            }
+
+            log.trace(`[uibuilder:admin-router:PUT] Admin API. url=${params.url}`)
+            res.statusMessage = 'PUT successfully'
+            res.status(200).json({
+                'fullname': fullname,
+                'params': params,
+            })
+
+        })
+        /** Load new template or Create a new folder or file */
+        .post(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
+            // @ts-ignore
+            const params = res.allparams
+            params.type = 'post'
+
+            if ( params.cmd === 'replaceTemplate' ) {
+
+                uiblib.replaceTemplate(params.url, params.template, params.extTemplate, params.cmd, templateConf, uib, log)
+                    .then( resp => {
+                        res.statusMessage = resp.statusMessage
+                        if ( resp.status === 200 ) res.status(200).json(resp.json)
+                        else res.status(resp.status).end()
+                        return true
+                    })
+                    .catch( err => {
+                        let statusMsg, mystr
+                        if ( err.code === 'MISSING_REF' ){
+                            statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}. ${err.message}`
+                        } else {
+                            if ( params.template === 'external' ) mystr = `, ${params.extTemplate}`
+                            statusMsg = `Replace template error. ${err.message}. url=${params.url}. ${params.template}${mystr}`
+                        }
+                        log.error(`[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
+                        res.statusMessage = statusMsg
+                        res.status(500).end()    
+                    } )
+
+            } else {
+
+                // Validate folder name - params.folder
+                const chkFldr = chkParamFldr(params)
+                if ( chkFldr.status !== 0 ) {
+                    log.error(`[uibuilder:admin-router:POST] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+                    res.statusMessage = chkFldr.statusMessage
+                    res.status(chkFldr.status).end()
+                    return
+                }
+                // Validate command - must be present and either be 'newfolder' or 'newfile'
+                if ( ! (params.cmd && (params.cmd === 'newfolder' || params.cmd === 'newfile')) ) {
+                    let statusMsg = `cmd parameter not present or wrong value (must be 'newfolder' or 'newfile'). url=${params.url}, cmd=${params.cmd}`
+                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()
+                    return
+                }
+                // If newfile, validate file name - params.fname
+                if (params.cmd === 'newfile' ) {
+                    const chkFname = chkParamFname(params)
+                    if ( chkFname.status !== 0 ) {
+                        log.error(`[uibuilder:admin-router:POST] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+                        res.statusMessage = chkFname.statusMessage
+                        res.status(chkFname.status).end()
+                        return
+                    }        
+                }
+        
+                let fullname = path.join(uib.rootFolder, params.url, params.folder)
+                if (params.cmd === 'newfile' ) {
+                    fullname = path.join(fullname, params.fname)
+                }
+                
+                // Does folder or file already exist? If so, return error
+                if ( fs.pathExistsSync(fullname) ) {
+                    let statusMsg = `selected ${params.cmd === 'newfolder' ? 'folder':'file'} already exists. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
+                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()
+                    return
+                }
+
+                // try to create folder/file - if fail, return error
+                try {
+                    if ( params.cmd === 'newfolder') {
+                        fs.ensureDirSync(fullname)
+                    } else {
+                        fs.ensureFileSync(fullname)
+                    }
+                } catch (e) {
+                    let statusMsg = `could not create ${params.cmd === 'newfolder' ? 'folder':'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
+                    log.error(`[uibuilder:admin-router:POST] Admin API. ${statusMsg}`)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()
+                    return
+                }
+
+                log.trace(`[uibuilder:admin-router:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+                res.statusMessage = 'Folder/File created successfully'
+                res.status(200).json({
+                    'fullname': fullname,
+                    'params': params,
+                })
+
+            } // end of else
+
+        }) // --- End of POST processing --- //
+        /** Delete a folder or a file */
+        .delete(function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
+            // @ts-ignore ts(2339)
+            const params = res.allparams
+            params.type = 'delete'
+
+            // Several command options available: deletefolder, deletefile
+
+            // deletefolder or deletefile:
+
+            // Validate folder name - params.folder
+            const chkFldr = chkParamFldr(params)
+            if ( chkFldr.status !== 0 ) {
+                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+                res.statusMessage = chkFldr.statusMessage
+                res.status(chkFldr.status).end()
+                return
+            }
+            // Validate command - must be present and either be 'deletefolder' or 'deletefile'
+            if ( ! (params.cmd && (params.cmd === 'deletefolder' || params.cmd === 'deletefile')) ) {
+                let statusMsg = `cmd parameter not present or wrong value (must be 'deletefolder' or 'deletefile'). url=${params.url}, cmd=${params.cmd}`
+                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${statusMsg}`)
+                res.statusMessage = statusMsg
+                res.status(500).end()
+                return
+            }
+            // If newfile, validate file name - params.fname
+            if (params.cmd === 'deletefile' ) {
+                const chkFname = chkParamFname(params)
+                if ( chkFname.status !== 0 ) {
+                    log.error(`[uibuilder:admin-router:DELETE] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+                    res.statusMessage = chkFname.statusMessage
+                    res.status(chkFname.status).end()
+                    return
+                }        
+            }
+    
+            let fullname = path.join(uib.rootFolder, params.url, params.folder)
+            if (params.cmd === 'deletefile' ) {
+                fullname = path.join(fullname, params.fname)
+            }
+            
+            // Does folder or file does not exist? Return error
+            if ( ! fs.pathExistsSync(fullname) ) {
+                let statusMsg = `selected ${params.cmd === 'deletefolder' ? 'folder':'file'} does not exist. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
+                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${statusMsg}`)
+                res.statusMessage = statusMsg
+                res.status(500).end()
+                return
+            }
+
+            // try to create folder/file - if fail, return error
+            try {
+                fs.removeSync(fullname)  // deletes both files and folders
+            } catch (e) {
+                let statusMsg = `could not delete ${params.cmd === 'deletefolder' ? 'folder':'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
+                log.error(`[uibuilder:admin-router:DELETE] Admin API. ${statusMsg}`)
+                res.statusMessage = statusMsg
+                res.status(500).end()
+                return
+            }
+
+            log.trace(`[uibuilder:admin-router:DELETE] Admin API. Folder/File delete SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+            res.statusMessage = 'Folder/File deleted successfully'
+            res.status(200).json({
+                'fullname': fullname,
+                'params': params,
+            })
+        })
+        /** @see https://expressjs.com/en/4x/api.html#app.METHOD for other methods
+         *  patch, report, search ?
+         */    
+
+} // ----- end of v3AdminAPIs ----- //
+
+/**
+ * This is only run once no matter how many uib node instances are added to a flow
+ * @param {runtimeRED} RED Runtime Red
+ */
+function userAPIs(RED) {
     //app = RED.httpNode
     /** Login 
      * TODO: Change to an external module
@@ -1649,9 +1704,45 @@ module.exports = function Uib (/** @type {runtimeRED} */ RED) {
         // Return status 200 - OK with json data
         return res.status(200).json(req.body)
     }) // --- End of uiblogin api --- //
+ 
+}
 
-    //#endregion ====== End User API's ====== //
+//#endregion -----       ----- //
 
-} // ==== End of module.exports ==== // 
+/** The function that defines the node 
+ * @type {runtimeRED} */
+function Uib (/** @type {runtimeRED} */ RED) {
+    runtimeSetup(RED)
+
+    /** Run the node instance - called from registerType()
+     * type {runtimeNode}
+     * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
+     */
+    function nodeInstance(config) {
+        // Pass the `this` context onto the called function
+        instanceSetup.call(this, RED, config)
+    }
+
+    /** Register the node by name. This must be called before overriding any of the
+     *  Node functions. */
+    RED.nodes.registerType(uib.moduleName, nodeInstance, {
+        credentials: {
+            jwtSecret: {type:'password'},
+        },
+        settings: {
+            uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
+            uibuilderTemplates: { value: templateConf, exportable: true },
+            uibuilderCustomServer: { value: (uib.customServer), exportable: true },
+        },
+    }) 
+
+    v3AdminAPIs(RED)
+    v2AdminAPIs(RED)
+    userAPIs(RED)
+
+} // ==== End of Uib ==== // 
+
+/** Export the function that defines the node */
+module.exports = Uib
 
 // EOF
