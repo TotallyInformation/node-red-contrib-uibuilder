@@ -140,6 +140,9 @@ const uib = {
     },
     /** Event emitter for degit, populated on 1st use. See POST admin API */
     degitEmitter: undefined,
+    /** Keep a reference to RED for convenience. Set at the start of Uib
+     * @type {runtimeRED} */
+    RED: undefined,
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -168,7 +171,9 @@ var userDir = ''
  * This is only run once no matter how many uib node instances are added to a flow
  * @param {runtimeRED} RED Runtime Red
  */
-function runtimeSetup(RED) {
+function runtimeSetup() {
+    const RED = uib.RED
+
     // When uibuilder enters runtime state, show the details in the log
     let initialised = false
     RED.events.on('runtime-event', function(event) {
@@ -323,6 +328,7 @@ function runtimeSetup(RED) {
  * @returns {undefined|null} Not a lot
  **/
 function inputMsgHandler (msg, send, done) {
+    //const RED = uib.RED
 
     const uibInstance = this.url
 
@@ -402,6 +408,9 @@ function inputMsgHandler (msg, send, done) {
 
     }
 
+    tilib.dumpMem('On Msg')
+
+
 }
 
 /** All of the initialisation of the Node
@@ -410,9 +419,10 @@ function inputMsgHandler (msg, send, done) {
  * @param {runtimeRED} RED Runtime Red
  * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
  */
-function instanceSetup(RED, config) {
-        
-    // Create the node
+function nodeInstance(config) {
+    const RED = uib.RED
+
+    // Create the node instance - `this` can only be referenced AFTER here
     RED.nodes.createNode(this, config)
 
     const uibInstance = config.url // for logging
@@ -584,6 +594,8 @@ function instanceSetup(RED, config) {
         res.status(200).send( page )
     })
 
+    tilib.dumpMem('Instance')
+
 } // ----- end of instanceSetup ----- //
 
 //#region === REST API Validation functions === //
@@ -715,7 +727,9 @@ function chkParamFldr(params) {
  * This is only run once no matter how many uib node instances are added to a flow
  * @param {runtimeRED} RED Runtime Red
  */
-function v2AdminAPIs(RED) {
+function v2AdminAPIs() {
+    const RED = uib.RED
+
     /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
      * @param {string} url The admin api url to create
      * @param {object} permissions The permissions required for access
@@ -1351,7 +1365,8 @@ function v2AdminAPIs(RED) {
  * This is only run once no matter how many uib node instances are added to a flow
  * @param {runtimeRED} RED Runtime Red
  */
-function v3AdminAPIs(RED) {
+function v3AdminAPIs() {
+    const RED = uib.RED
 
     /** uibuilder v3 unified Admin API router - new API commands should be added here */
     RED.httpAdmin.route('/uibuilder/admin/:url')
@@ -1645,7 +1660,9 @@ function v3AdminAPIs(RED) {
  * This is only run once no matter how many uib node instances are added to a flow
  * @param {runtimeRED} RED Runtime Red
  */
-function userAPIs(RED) {
+function userAPIs() {
+    //const RED = uib.RED
+
     //app = RED.httpNode
     /** Login 
      * TODO: Change to an external module
@@ -1681,7 +1698,6 @@ function userAPIs(RED) {
     }
 
     //TODO
-    // @ts-ignore
     web.app.post('/uiblogin', jsonBodyParser, checkSchema(loginSchema), (req, res) => {
 
         console.log('[uiblogin] BODY: ', req.body)
@@ -1712,17 +1728,10 @@ function userAPIs(RED) {
 
 /** The function that defines the node 
  * @type {runtimeRED} */
-function Uib (/** @type {runtimeRED} */ RED) {
-    runtimeSetup(RED)
+function Uib(RED) {
+    uib.RED = RED
 
-    /** Run the node instance - called from registerType()
-     * type {runtimeNode}
-     * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
-     */
-    function nodeInstance(config) {
-        // Pass the `this` context onto the called function
-        instanceSetup.call(this, RED, config)
-    }
+    runtimeSetup()
 
     /** Register the node by name. This must be called before overriding any of the
      *  Node functions. */
@@ -1737,9 +1746,11 @@ function Uib (/** @type {runtimeRED} */ RED) {
         },
     }) 
 
-    v3AdminAPIs(RED)
-    v2AdminAPIs(RED)
-    userAPIs(RED)
+    v3AdminAPIs()
+    v2AdminAPIs()
+    userAPIs()
+
+    tilib.dumpMem('Module')
 
 } // ==== End of Uib ==== // 
 
