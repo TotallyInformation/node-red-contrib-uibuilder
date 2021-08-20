@@ -44,6 +44,8 @@ module.exports = {
         'jsdoc/no-multi-asterisks': 0,
         'jsdoc/tag-lines': 0,
 
+        'sonarjs/cognitive-complexity': ['error', 50],  // default is 15! Need to try and improve this :-)
+
         quotes: [
             'warn',
             'single'
