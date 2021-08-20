@@ -22,6 +22,9 @@ module.exports = {
         sourceType: 'script'
     },
     root: true,
+    globals: {
+        Set: true, // Not sure why eslint doesn't recognise this as it is part of node.js since v0.12
+    },
     plugins: [
         'html',     // Check scripts in HTML. https://www.npmjs.com/package/eslint-plugin-html
         'es',       // Help avoid js that is too new. https://eslint-plugin-es.mysticatea.dev/
@@ -38,11 +41,17 @@ module.exports = {
         'plugin:sonarjs/recommended',
         //'plugin:prettier/recommended',
     ],
+    // settings: {
+    //     jsdoc: {
+    //         mode: 'permissive'
+    //     }
+    // },
     rules: {
         'jsdoc/multiline-blocks': 0,
         'jsdoc/newline-after-description': 0,
         'jsdoc/no-multi-asterisks': 0,
         'jsdoc/tag-lines': 0,
+        'jsdoc/no-undefined-types': ['error'|'warn', {'definedTypes':['Promise']}],
 
         'sonarjs/cognitive-complexity': ['error', 50],  // default is 15! Need to try and improve this :-)
 
@@ -53,10 +62,7 @@ module.exports = {
 
         'accessor-pairs': 'error',
         'array-bracket-newline': 'error',
-        'array-bracket-spacing': [
-            'error',
-            'never'
-        ],
+        'array-bracket-spacing': 0,
         'array-callback-return': 'off',
         'array-element-newline': 'off',
         'arrow-body-style': 'error',
@@ -156,7 +162,7 @@ module.exports = {
         'max-lines': 'off',
         'max-lines-per-function': 'off',
         'max-nested-callbacks': 'error',
-        'max-params': 'error',
+        'max-params': ['error', 6],
         'max-statements': 'off',
         'max-statements-per-line': 'off',
         'multiline-comment-style': 'off',

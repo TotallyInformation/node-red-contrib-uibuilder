@@ -26,13 +26,17 @@
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * typedef {import('../typedefs.js')} 
  * @typedef {import('node-red')} Red
- * @typedef {import('socket.io').Namespace} socketio.Namespace
- * @typedef {import('socket.io').Socket} socketio.Socket
+ * typedef {import('socket.io').Namespace} socketio.Namespace
+ * typedef {import('socket.io').Socket} socketio.Socket
  */
 
 const path = require('path')
 const fs = require('fs-extra')
 const tilib = require('./tilib')
+// Only used for type checking
+const socketio      = require('socket.io') // eslint-disable-line no-unused-vars
+// Only used for type checking
+const Express = require('express') // eslint-disable-line no-unused-vars
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 // Make sure that we only work out where the security.js file exists only ONCE - see the logon() function
@@ -40,7 +44,7 @@ let securitySrc = ''
 let securityjs = null
 let jsonwebtoken = null
 /**  Gives us a standard _auth object to work with
- * @type MsgAuth */
+ * @type {MsgAuth} */
 const dummyAuth = {
     id: null,
     jwt: undefined,
@@ -53,23 +57,21 @@ const dummyAuth = {
     },
 }
 
-const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
-
 module.exports = {
 
     /** Do any complex, custom node closure code here
      * @param {uibNode} node Reference to the node instance object
      * @param {runtimeRED} RED Reference to the Node-RED API
-     * @param {Object} uib Reference to the uibuilder master config object
-     * @param {Object} sockets - Instance of Socket.IO handler singleton
-     * @param {Object} web - Instance of ExpressJS handler singleton
-     * @param {Object} log - Winston logging instance
-     * @param {function|null} done Default=null, internal node-red function to indicate processing is complete
+     * @param {object} uib Reference to the uibuilder master config object
+     * @param {object} sockets - Instance of Socket.IO handler singleton
+     * @param {object} web - Instance of ExpressJS handler singleton
+     * @param {object} log - Winston logging instance
+     * @param {Function|null} done Default=null, internal node-red function to indicate processing is complete
      */
     instanceClose: function(node, RED, uib, sockets, web, log, done = null) {
         log.trace(`[uibuilder:uiblib:instanceClose:${node.url}] Running instance close.`)
 
-        /** @type {Object} instances[] Reference to the currently defined instances of uibuilder */
+        /** @type {object} instances[] Reference to the currently defined instances of uibuilder */
         const instances = uib.instances
 
         this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
@@ -116,13 +118,13 @@ module.exports = {
     /**  Get property values from an Object.
      * Can list multiple properties, the first found (or the default return) will be returned
      * Makes use of RED.util.getMessageProperty
-     * @param {Object} RED - RED
-     * @param {Object} myObj - the parent object to search for the props
+     * @param {object} RED - RED
+     * @param {object} myObj - the parent object to search for the props
      * @param {string|string[]} props - one or a list of property names to retrieve.
      *                               Can be nested, e.g. 'prop1.prop1a'
      *                               Stops searching when the first property is found
      * @param {any} defaultAnswer - if the prop can't be found, this is returned
-     * @return {any} The first found property value or the default answer
+     * @returns {any} The first found property value or the default answer
      */
     getProps: function(RED,myObj,props,defaultAnswer = []) {
         if ( (typeof props) === 'string' ) {
@@ -148,10 +150,10 @@ module.exports = {
 
     /** Output a control msg
      * Sends to all connected clients & outputs a msg to port 2 if required
-     * @param {Object} msg The message to output
-     * @param {Object} ioNs Socket.IO instance to use
-     * @param {Object} node The node object
-     * @param {Object} uib Reference to the uibuilder configuration object
+     * @param {object} msg The message to output
+     * @param {object} ioNs Socket.IO instance to use
+     * @param {object} node The node object
+     * @param {object} uib Reference to the uibuilder configuration object
      * @param {string=} socketId Optional. If included, only send to specific client id
      * @param {boolean=} output Optional. If included, also output to port #2 of the node @since 2020-01-03
      */
@@ -174,8 +176,8 @@ module.exports = {
 
     /** Simple fn to set a node status in the admin interface
      * fill: red, green, yellow, blue or grey
-     * @param {Object|string} status
-     * @param {Object} node
+     * @param {object|string} status _
+     * @param {object} node _
      */
     setNodeStatus: function( status, node ) {
         if ( typeof status !== 'object' ) status = {fill: 'grey', shape: 'ring', text: status}
@@ -184,20 +186,20 @@ module.exports = {
     }, // ---- End of setNodeStatus ---- //
 
     /** Check authorisation validity - called for every msg received from client if security is on
-     * @param {Object} msg The input message from the client
+     * @param {object} msg The input message from the client
      * @param {socketio.Namespace} ioNs Socket.IO instance to use
      * @param {uibNode} node The node object
-     * @param {String} socketId The client's socket id
-     * @param {Object} log Custom logger instance
-     * @param {Object} uib Reference to the core uibuilder config object
+     * @param {string} socketId The client's socket id
+     * @param {object} log Custom logger instance
+     * @param {object} uib Reference to the core uibuilder config object
      * @returns {_auth} An updated _auth object
      */
     authCheck: function(msg, ioNs, node, socketId, log, uib) { // eslint-disable-line no-unused-vars
-        /** @type MsgAuth */
+        /** @type {MsgAuth} */
         var _auth = dummyAuth
 
         // TODO: remove log output
-        mylog('[uibuilder:authCheck] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
+        tilib.mylog('[uibuilder:authCheck] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
 
         // Has the client included msg._auth? If not, send back an unauth msg
         // TODO: Only send if msg was on std channel NOT on control channel
@@ -208,7 +210,7 @@ module.exports = {
             this.sendControl({
                 'uibuilderCtrl': 'Auth Failure',
                 'topic': node.topic || undefined,
-                /** @type _auth */
+                /** @type {_auth} */
                 '_auth': _auth,
             }, ioNs, node, uib, socketId, false)
 
@@ -223,7 +225,7 @@ module.exports = {
             this.sendControl({
                 'uibuilderCtrl': 'Auth Failure',
                 'topic': node.topic || undefined,
-                /** @type _auth */
+                /** @type {_auth} */
                 '_auth': _auth,
             }, ioNs, node, uib, socketId, false)
 
@@ -279,8 +281,6 @@ module.exports = {
                 iss: 'uibuilder',
             }
 
-
-
             _auth.jwt = jsonwebtoken.sign(jwtData, node.jwtSecret)
             _auth.sessionExpiry = sessionExpiry * 1000 // Javascript ms not unix sec
             if (!_auth.info) _auth.info = {}
@@ -302,9 +302,9 @@ module.exports = {
     }, // ---- End of createToken ---- //
 
     /** Check whether a received JWT token is valid. If it is, then try to update it. 
-     * @param {_auth} token A base64 encoded, signed JWT token string.
+     * @param {MsgAuth} _auth _
      * @param {uibNode} node  Reference to the calling uibuilder node instance.
-     * @returns {_auth}  { valid: [boolean], data: [object], newToken: [string], err: [object] }
+     * @returns {MsgAuth}  { valid: [boolean], data: [object], newToken: [string], err: [object] }
      */
     checkToken: function(_auth, node) {
         if (jsonwebtoken === null)  jsonwebtoken = require('jsonwebtoken')
@@ -318,7 +318,7 @@ module.exports = {
             //maxAge: "7d",
         }
 
-        /** @type _auth */
+        /** @type {_auth} */
         var response = {
             id: _auth.id,
             jwt: undefined, 
@@ -346,17 +346,17 @@ module.exports = {
 
     /** Process a logon request
      * msg._auth contains any extra data needed for the login
-     * @param {Object} msg The input message from the client
+     * @param {object} msg The input message from the client
      * @param {socketio.Namespace} ioNs Socket.IO instance to use
      * @param {uibNode} node The node object
-     * @param {socketio.Socket} socket 
-     * @param {Object} log Custom logger instance
-     * @param {Object} uib Constants from uibuilder.js
+     * @param {socketio.Socket} socket _
+     * @param {object} log Custom logger instance
+     * @param {object} uib Constants from uibuilder.js
      * @returns {boolean} True = user logged in, false = user not logged in
      */
     logon: function(msg, ioNs, node, socket, log, uib) {
 
-        /** @type MsgAuth */
+        /** @type {MsgAuth} */
         var _auth = msg._auth || dummyAuth
         if (!_auth.info) _auth.info = {}
         _auth.userValidated = false
@@ -553,16 +553,16 @@ module.exports = {
 
     /** Process a logoff request
      * msg._auth contains any extra data needed for the login
-     * @param {Object} msg The input message from the client
+     * @param {object} msg The input message from the client
      * @param {socketio.Namespace} ioNs Socket.IO instance to use
      * @param {uibNode} node The node object
-     * @param {socketio.Socket} socket 
-     * @param {Object} log Custom logger instance
-     * @param {Object} uib uibuilder's master variables
+     * @param {socketio.Socket} socket _
+     * @param {object} log Custom logger instance
+     * @param {object} uib uibuilder's master variables
      * @returns {_auth} Updated _auth
      */
     logoff: function(msg, ioNs, node, socket, log, uib) { // eslint-disable-line no-unused-vars
-        /** @type MsgAuth */
+        /** @type {MsgAuth} */
         var _auth = msg._auth || dummyAuth
         
         // Check that request is valid (has valid token)
@@ -588,9 +588,9 @@ module.exports = {
 
     /** Check an _auth object for the correct schema 
      * @param {MsgAuth} _auth The _auth object to check
-     * @param {String=} type Optional. 'short' or 'full'. How much checking to do
-     * @returns {Boolean}
-    */
+     * @param {string=} type Optional. 'short' or 'full'. How much checking to do
+     * @returns {boolean} _
+     */
     chkAuth: function(_auth, type='short') {
         // Has to be an object
         if ( ! (_auth!== null && _auth.constructor.name === 'Object') ) {
@@ -628,12 +628,12 @@ module.exports = {
     }, // ---- End of chkAuth() ---- //
 
     /** Create instance details web page
-     * @param {import("express").Request} req ExpressJS Request object
-     * @param {Object} node configuration data for this instance
-     * @param {Object} uib uibuilder "globals" common to all instances
+     * @param {Express.Request} req ExpressJS Request object
+     * @param {object} node configuration data for this instance
+     * @param {object} uib uibuilder "globals" common to all instances
      * @param {string} userDir The Node-RED userDir folder
      * @param {runtimeRED} RED The Node-RED runtime object
-     * @return {string} page html
+     * @returns {string} page html
      */
     showInstanceDetails: function(req, node, uib, userDir, RED) {
         let page = ''
@@ -792,9 +792,9 @@ module.exports = {
      * @param {string} template Name of one of the built-in templates including 'blank' and 'external'
      * @param {string|undefined} extTemplate Optional external template name to be passed to degit. See degit options for details.
      * @param {string} cmd 'replaceTemplate' if called from admin-router:POST, otherwise can be anything descriptive & unique by caller
-     * @param {Object} templateConf Template configuration object
-     * @param {Object} uib uibuilder's master variables
-     * @param {Object} log uibuilder's Log functions (normally points to RED.log)
+     * @param {object} templateConf Template configuration object
+     * @param {object} uib uibuilder's master variables
+     * @param {object} log uibuilder's Log functions (normally points to RED.log)
      * @returns {Promise} {statusMessage, status, (json)}
      */
     replaceTemplate: async function(url, template, extTemplate, cmd, templateConf, uib, log) {
@@ -846,92 +846,44 @@ module.exports = {
             }
             return res
 
-        } else {
+        } else if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
 
             // Otherwise, use internal template
-            if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
-                const fsOpts = {'overwrite': true, 'preserveTimestamps':true}
-                const srcTemplate = path.join( uib.masterTemplateFolder, template )
-                try {
-                    fs.copySync( srcTemplate, fullname, fsOpts )
-                    let statusMsg = `Successfully copied template ${template} to ${url}.`
-                    log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
-                    res.statusMessage = statusMsg
-                    res.status = 200
-                    res.json = {
-                        'url': url,
-                        'template': template,
-                        'extTemplate': extTemplate,
-                        'cmd': cmd,
-                    }
-                    return res
-                } catch (err) {
-                    let statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
-                    log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`, err)
-                    res.statusMessage = statusMsg
-                    res.status = 500
-                    return res
+            const fsOpts = {'overwrite': true, 'preserveTimestamps':true}
+            const srcTemplate = path.join( uib.masterTemplateFolder, template )
+            try {
+                fs.copySync( srcTemplate, fullname, fsOpts )
+                let statusMsg = `Successfully copied template ${template} to ${url}.`
+                log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
+                res.statusMessage = statusMsg
+                res.status = 200
+                res.json = {
+                    'url': url,
+                    'template': template,
+                    'extTemplate': extTemplate,
+                    'cmd': cmd,
                 }
-            } else {
-                // Shouldn't ever be able to occur - but still :-)
-                let statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
-                log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`)
+                return res
+            } catch (err) {
+                let statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
+                log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`, err)
                 res.statusMessage = statusMsg
                 res.status = 500
                 return res
             }
 
+        } else {
+
+            // Shouldn't ever be able to occur - but still :-)
+            let statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
+            log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`)
+            res.statusMessage = statusMsg
+            res.status = 500
+            return res
         }
 
-        // Shouldn't get here
-        return res
-
     }, // ----- End of replaceTemplate() ----- //
-
-    //#region ===== DEPRECATED ===== //
-
-    /** Validate a url query parameter - DEPRECATED in v3.1.0
-     * @deprecated
-     * @param {string} url uibuilder URL to check (not a full url, the name used by uibuilder)
-     * @param {import("express").Response} res The ExpressJS response variable
-     * @param {string} caller A string indicating the calling function - used for logging only
-     * @param {Object} log The uibuilder log Object
-     * @return {boolean} True if the url is valid, false otherwise (having set the response object)
-     */
-    // checkUrl: function (url, res, caller, log) {
-    //     log.warn(`[uibuilder:checkUrl] FUNCTION DEPRECATED - DO NOT USE. url=${url}, caller=${caller}`)
-    //     // We have to have a url to work with
-    //     if ( url === undefined ) {
-    //         log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter not provided`)
-    //         res.statusMessage = 'url parameter not provided'
-    //         res.status(500).end()
-    //         return false
-    //     }
-    //     // URL must not exceed 20 characters
-    //     if ( url.length > 20 ) {
-    //         log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter is too long (>20 characters)`)
-    //         res.statusMessage = 'url parameter is too long. Max 20 characters'
-    //         res.status(500).end()
-    //         return false 
-    //     }
-    //     // URL must be more than 0 characters
-    //     if ( url.length < 1 ) {
-    //         log.error(`[uiblib.checkUrl:${caller}] Admin API. url parameter is empty`)
-    //         res.statusMessage = 'url parameter is empty, please provide a value'
-    //         res.status(500).end()
-    //         return false
-    //     }
-    //     // URL cannot contain .. to prevent escaping sub-folder structure
-    //     if ( url.includes('..') ) {
-    //         log.error('[uibdeletefile] Admin API. url parameter contains ..')
-    //         res.statusMessage = 'url parameter may not contain ..'
-    //         res.status(500).end()
-    //         return false
-    //     }
-
-    //     return true
-    // }, // ---- End of checkUrl ---- //
-
-    //#endregion ===== DEPRECATED ===== //
-    
+  
 } // ---- End of module.exports ---- //
+
+//EOF

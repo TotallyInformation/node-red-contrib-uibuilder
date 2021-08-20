@@ -16,26 +16,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 'use strict'
+'use strict'
 
- /** --- Type Defs ---
-  * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
-  * @typedef {import('../../typedefs.js').uibNode} uibNode
-  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
-  * @typedef {import('socket.io').Namespace} socketioNs
-  */
+/** --- Type Defs ---
+ * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
+ * @typedef {import('../../typedefs.js').uibNode} uibNode
+ * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
+ * typedef {import('socket.io').Namespace} socketioNs
+ */
  
 const tilib         = require('./tilib')   // General purpose library (by Totally Information)
-const uiblib        = require('./uiblib')  // Utility library for uibuilder
-const sockets       = require('./socket')
+//const uiblib        = require('./uiblib')  // Utility library for uibuilder
+const sockets       = require('./socket')  // Access to Socket.IO server
 const path          = require('path')
 const fs = require('fs-extra')
 
-const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
+// Only used for type checking
+const socketio      = require('socket.io') // eslint-disable-line no-unused-vars
+
+// This is replaced by the jsonwebtoken if security is activated
+var jsonwebtoken = null
+// This is replaced by the security.js module if security is enabled and a logon happens
+//! Warning: only allows for a single module for all instances at the moment
+var securityjs
+// File name for the security module
+const securityjsFileName = 'security.js'
+// Auth failure message string
+const authFailureMsg = 'authorisation failure'
 
 // Make sure that we only work out where the security.js file exists only ONCE - see the logon() function
 /**  Gives us a standard _auth object to work with
- * @type MsgAuth */
+ * @type {MsgAuth} */
 const dummyAuth = {
     id: null,
     jwt: undefined,
@@ -49,9 +60,11 @@ const dummyAuth = {
 }
 
 //#region ----- Minimal security functions that should be overridden by uibRoot>/.config/security.js or a node instance override -----
+/** Dummy user signup function */
 function userSignup() {
     throw new Error('[uibuilder:libs/security.js:userSignup] No actual userSignup function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
+/** Dummy user validate function */
 function userValidate() {
     throw new Error('[uibuilder:libs/security.js:userValidate] No actual userValidate function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
@@ -63,16 +76,20 @@ function userValidate() {
 function captureUserAuth() {
     throw new Error('[uibuilder:libs/security.js:captureUserAuth] No actual captureUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
+/** Dummy remove user auth function */
 function removeUserAuth() {
     throw new Error('[uibuilder:libs/security.js:removeUserAuth] No actual removeUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
+/** Dummy check user auth function */
 function checkUserAuth() {
     throw new Error('[uibuilder:libs/security.js:checkUserAuth] No actual checkUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
 
+/** Dummy JWT custom validation function */
 function jwtValidateCustom() {
     throw new Error('[uibuilder:libs/security.js:jwtValidateCustom] No actual jwtValidateCustom function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
+/** Dummy JWT create custom function */
 function jwtCreateCustom() {
     throw new Error('[uibuilder:libs/security.js:jwtCreateCustom] No actual jwtCreateCustom function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
@@ -84,9 +101,11 @@ class UibSec {
      * @type {boolean}
      * @protected 
      */
-    _isConfigured = false
+    //_isConfigured = false
 
     constructor() {
+        // Replace when node.js v14 used
+        this._isConfigured = false
 
         /** Create dummy methods - will be overwritten later
          *  by master template in setup (because we need the uib variable)
@@ -100,8 +119,18 @@ class UibSec {
         this.jwtValidateCustom = jwtValidateCustom
         this.jwtCreateCustom = jwtCreateCustom
 
+        // Name of the security.js file that should be loaded. Set in logon()
+        this.securitySrc = ''
+
     }
 
+    /** Configure this class instance.
+     * Gets round the inability to pass constructor params to a singleton
+     * Also allows the class instance to be configured at a different time to the `require`
+     * @param {runtimeRED} RED reference to Core Node-RED runtime object
+     * @param {object} uib reference to uibuilder 'global' configuration object
+     * @param {object} log reference to uibuilder log object
+     */
     setup( RED, uib, log ) {
 
         // Prevent setup from being called more than once
@@ -113,8 +142,16 @@ class UibSec {
             return
         }
 
+        if ( ! RED || ! uib || ! log ) {
+            throw new Error('[uibuilder:security.js] Called without required parameters')
+        }
+
+        this.RED = RED
+        this.uib = uib
+        this.log = log
+
         /** Replace dummy methods with those from <uibRoot>/.config/security.js - need to reassign again at node instance level in case local override is used */
-        const securityjs = require( path.join(uib.rootFolder, uib.configFolderName,'security.js') )
+        const securityjs = require( path.join(uib.rootFolder, uib.configFolderName,securityjsFileName) )
         this.reallocateMethod('userSignup', securityjs)
         this.reallocateMethod('userValidate', securityjs)
         this.reallocateMethod('captureUserAuth', securityjs)
@@ -124,8 +161,20 @@ class UibSec {
         this.reallocateMethod('jwtCreateCustom', securityjs)
         // TODO validate that all functions are available (needs its own method so it can be reused for instance level)
 
+        this._isConfigured = true
     }
 
+    /** Allow the isConfigured flag to be read (not written) externally 
+     * @returns {boolean} True if this class as been configured
+     */
+    get isConfigured() {
+        return this._isConfigured
+    }
+    
+    /** Re-allocate an existing method definition
+     * @param {string} methodName Name of the method to reallocate
+     * @param {object} source Where to take the new method from
+     */
     reallocateMethod(methodName, source) {
         if ( source[methodName] && (typeof source[methodName] === 'function') ) this[methodName] = source[methodName]
     }
@@ -133,22 +182,22 @@ class UibSec {
     //? Consider adding isConfigered checks on each method?
 
     /** Check authorisation validity - called for every msg received from client if security is on
-     * @param {Object} msg The input message from the client
+     * @param {object} msg The input message from the client
      * @param {uibNode} node The node object
-     * @param {String} socketId The client's socket id
-     * @param {Object} log Custom logger instance
-     * @param {Object} uib Reference to the core uibuilder config object
+     * @param {string} socketId The client's socket id
+     * param {Object} log Custom logger instance
+     * param {Object} uib Reference to the core uibuilder config object
      * @returns {_auth} An updated _auth object
      */
-    authCheck(msg, node, socketId, log, uib) { // eslint-disable-line no-unused-vars
-        /** @type MsgAuth */
+    authCheck(msg, node, socketId) { // eslint-disable-line no-unused-vars
+        /** @type {MsgAuth} */
         var _auth = dummyAuth
 
-        /** @type {socketioNs} Socket.IO namespace to use */
+        /** @type {socketio.Namespace} Socket.IO namespace to use */
         //const ioNs = sockets.getNs(node)
 
         // TODO: remove log output
-        mylog('[uibuilder:authCheck] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
+        tilib.mylog('[uibuilder:authCheck] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
 
         // Has the client included msg._auth? If not, send back an unauth msg
         // TODO: Only send if msg was on std channel NOT on control channel
@@ -159,7 +208,7 @@ class UibSec {
             sockets.sendControl({
                 'uibuilderCtrl': 'Auth Failure',
                 'topic': node.topic || undefined,
-                /** @type _auth */
+                /** @type {_auth} */
                 '_auth': _auth,
             }, node, socketId, false)
 
@@ -174,7 +223,7 @@ class UibSec {
             sockets.sendControl({
                 'uibuilderCtrl': 'Auth Failure',
                 'topic': node.topic || undefined,
-                /** @type _auth */
+                /** @type {_auth} */
                 '_auth': _auth,
             }, node, socketId, false)
 
@@ -205,11 +254,11 @@ class UibSec {
     } // ---- End of authCheck ---- //
 
     /** Create a new JWT token based on a user id, session length and security string 
-     * @param {MsgAuth} _auth The unique id that identifies the user.
+     * @param {MsgAuth} _auth The _auth object
      * @param {uibNode} node  Reference to the calling uibuilder node instance.
      * @returns {MsgAuth} Updated _auth including a signed JWT token string, expiry date/time & info flag.
      */
-    createToken(_auth, node) {
+    createToken(_auth, node) { // eslint-disable-line class-methods-use-this
 
         // TODO if securityjs === null we need to load the security.js? Currently only done in the logon() function
 
@@ -229,8 +278,6 @@ class UibSec {
                 // Issuer
                 iss: 'uibuilder',
             }
-
-
 
             _auth.jwt = jsonwebtoken.sign(jwtData, node.jwtSecret)
             _auth.sessionExpiry = sessionExpiry * 1000 // Javascript ms not unix sec
@@ -253,7 +300,7 @@ class UibSec {
     } // ---- End of createToken ---- //
 
     /** Check whether a received JWT token is valid. If it is, then try to update it. 
-     * @param {_auth} token A base64 encoded, signed JWT token string.
+     * @param {MsgAuth} _auth The _auth object
      * @param {uibNode} node  Reference to the calling uibuilder node instance.
      * @returns {_auth}  { valid: [boolean], data: [object], newToken: [string], err: [object] }
      */
@@ -269,7 +316,7 @@ class UibSec {
             //maxAge: "7d",
         }
 
-        /** @type _auth */
+        /** @type {MsgAuth} */
         var response = {
             id: _auth.id,
             jwt: undefined, 
@@ -297,17 +344,20 @@ class UibSec {
 
     /** Process a logon request
      * msg._auth contains any extra data needed for the login
-     * @param {Object} msg The input message from the client
-     * @param {socketio.Namespace} ioNs Socket.IO instance to use
+     * @param {object} msg The input message from the client
+     * @param {socketio.Namespace} ioNs Socket.IO namespace for this uib instance
      * @param {uibNode} node The node object
-     * @param {socketio.Socket} socket 
-     * @param {Object} log Custom logger instance
-     * @param {Object} uib Constants from uibuilder.js
+     * @param {socketio.Socket} socket Socket.IO instance to use
+     * param {object} log Custom logger instance
+     * param {object} uib Constants from uibuilder.js
      * @returns {boolean} True = user logged in, false = user not logged in
      */
-    logon(msg, ioNs, node, socket, log, uib) {
+    logon(msg, ioNs, node, socket) {
 
-        /** @type MsgAuth */
+        const log = this.log
+        const uib = this.uib
+
+        /** @type {MsgAuth} */
         var _auth = msg._auth || dummyAuth
         if (!_auth.info) _auth.info = {}
         _auth.userValidated = false
@@ -319,7 +369,7 @@ class UibSec {
             _auth.info.error = 'Security is not turned on for this uibuilder instance'
 
             this.sendControl({
-                uibuilderCtrl: 'authorisation failure',
+                uibuilderCtrl: authFailureMsg,
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
             }, ioNs, node, uib, socket.id, false)
@@ -354,7 +404,7 @@ class UibSec {
                 _auth.info.error = 'Logons cannot be processed without TLS in non-development environments'
 
                 this.sendControl({
-                    uibuilderCtrl: 'authorisation failure',
+                    uibuilderCtrl: authFailureMsg,
                     topic: msg.topic || node.topic,
                     '_auth': _auth,
                 }, ioNs, node, uib, socket.id, false)
@@ -373,7 +423,7 @@ class UibSec {
 
             // Report fail to client & Send output to port #2
             this.sendControl({
-                uibuilderCtrl: 'authorisation failure',
+                uibuilderCtrl: authFailureMsg,
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
             }, ioNs, node, uib, socket.id, true)
@@ -385,14 +435,14 @@ class UibSec {
 
         // If an instance specific version of the security module exists, use it or use master copy or fail
         // On fail, output to NR log & exit the logon - don't tell the client as that would be leaking security info
-        if ( securitySrc === '' ) { // make sure this only runs once
-            securitySrc = path.join(node.customFolder,'security.js')
-            if ( ! fs.existsSync(securitySrc) ) {
+        if ( this.securitySrc === '' ) { // make sure this only runs once
+            this.securitySrc = path.join(node.customFolder,securityjsFileName)
+            if ( ! fs.existsSync(this.securitySrc) ) {
                 // Otherwise try to use the central version in uibRoot/.config
-                securitySrc = path.join(uib.rootFolder, uib.configFolderName,'security.js')
-                if ( ! fs.existsSync(securitySrc) ) {
+                this.securitySrc = path.join(uib.rootFolder, uib.configFolderName,securityjsFileName)
+                if ( ! fs.existsSync(this.securitySrc) ) {
                     // Otherwise use the template version from ./templates/.config
-                    securitySrc = path.join(__dirname, 'templates', '.config', 'security.js')
+                    this.securitySrc = path.join(__dirname, 'templates', '.config', securityjsFileName)
 
                     // And output a warning if in dev mode, fail in production mode
                     if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
@@ -400,7 +450,7 @@ class UibSec {
 
                         if (node.copyIndex === true) { // eslint-disable-line max-depth
                             log.warn('[uibuilder:uiblib:logon] copyIndex flag is ON so copying master template `security.js` to the <usbRoot>/.config` folder.')
-                            fs.copy(securitySrc, path.join(uib.configFolderName,'security.js'), {overwrite:false, preserveTimestamps:true}, err => {
+                            fs.copy(this.securitySrc, path.join(uib.configFolderName,securityjsFileName), {overwrite:false, preserveTimestamps:true}, err => {
                                 if (err) log.error('[uibuilder:uiblib:logon] Copy of master template `security.js` FAILED.', err)
                                 else {
                                     log.warn('[uibuilder:uiblib:logon] Copy of master template `security.js` SUCCEEDED. Please restart Node-RED to use it.')
@@ -416,8 +466,9 @@ class UibSec {
                 }
             }
 
+            //! WARNING: This only allows for 1 security.js file across all instances - it doesn't allow per-instance overrides
             try {
-                securityjs = require( securitySrc )
+                securityjs = require( this.securitySrc )
             } catch (e) {
                 log.error('[uibuilder:uiblib:logon] Security is ON but `security.js` could not be `required`. Cannot process logons. Is security.js a valid Node.js module?', e)
 
@@ -493,7 +544,7 @@ class UibSec {
 
             // Report fail to client & Send output to port #2
             this.sendControl({
-                uibuilderCtrl: 'authorisation failure',
+                uibuilderCtrl: authFailureMsg,
                 topic: msg.topic || node.topic,
                 '_auth': _auth,
             }, ioNs, node, uib, socket.id, true)
@@ -504,16 +555,16 @@ class UibSec {
 
     /** Process a logoff request
      * msg._auth contains any extra data needed for the login
-     * @param {Object} msg The input message from the client
-     * @param {socketio.Namespace} ioNs Socket.IO instance to use
+     * @param {object} msg The input message from the client
+     * @param {socketio.Namespace} ioNs Socket.IO namespace for this uib instance
      * @param {uibNode} node The node object
-     * @param {socketio.Socket} socket 
-     * @param {Object} log Custom logger instance
-     * @param {Object} uib uibuilder's master variables
+     * @param {socketio.Socket} socket Socket.IO instance to use
+     * @param {object} log Custom logger instance
+     * @param {object} uib uibuilder's master variables
      * @returns {_auth} Updated _auth
      */
     logoff(msg, ioNs, node, socket, log, uib) { // eslint-disable-line no-unused-vars
-        /** @type MsgAuth */
+        /** @type {MsgAuth} */
         var _auth = msg._auth || dummyAuth
         
         // Check that request is valid (has valid token)
@@ -539,10 +590,10 @@ class UibSec {
 
     /** Check an _auth object for the correct schema 
      * @param {MsgAuth} _auth The _auth object to check
-     * @param {String=} type Optional. 'short' or 'full'. How much checking to do
-     * @returns {Boolean}
-    */
-    chkAuth(_auth, type='short') {
+     * @param {string=} type Optional. 'short' or 'full'. How much checking to do
+     * @returns {boolean} True if the auth check succeeded
+     */
+    chkAuth(_auth, type='short') { // eslint-disable-line class-methods-use-this
         // Has to be an object
         if ( ! (_auth!== null && _auth.constructor.name === 'Object') ) {
             return false

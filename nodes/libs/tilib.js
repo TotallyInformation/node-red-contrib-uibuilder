@@ -1,7 +1,8 @@
+/* eslint-disable prefer-named-capture-group */
 /**
  * General utility library for Node.JS
  * 
- * Copyright (c) 2019 Julian Knight (Totally Information)
+ * Copyright (c) 2019-2021 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -16,16 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-// @ts-check
 'use strict'
 
 const path = require('path')
 const fs = require('fs-extra')
 
+const mylog = (process.env.TI_ENV === 'debug') ? console.log : function() {}
+
 module.exports = {
+    /** The name of the package.json file 'package.json' */
+    packageJson: 'package.json',
+
     /** Remove leading/trailing slashes from a string
-     * @param {string} str
-     * @returns {string}
+     * @param {string} str String to trim
+     * @returns {string} Trimmed string
      */
     trimSlashes: function(str) {
         return str.replace(/(^\/*)|(\/*$)/g, '')
@@ -33,24 +38,24 @@ module.exports = {
 
     /** Joins all arguments as a URL string
      * @see http://stackoverflow.com/a/28592528/3016654
-     * @since v1.0.10, fixed potential double // issue
-     * @arguments {string} URL fragments
-     * @returns {string}
+     * @param {...string} [path] URL fragments (picked up via the arguments var)
+     * @returns {string} Joined path
      */
     urlJoin: function() {
         const paths = Array.prototype.slice.call(arguments)
-        const url =
-            '/'+paths.map(function(e){
-                return e !== undefined ? e.replace(/^\/|\/$/g,'') : ''
-            }).filter(function(e){
+        const url = '/'+paths.map(function(e){
+            return e !== undefined ? e.replace(/^\/|\/$/g,'') : ''
+        })
+            .filter(function(e){
                 return e
-            }).join('/')
+            })
+            .join('/')
         return  url.replace('//','/')
     }, // ---- End of urlJoin ---- //
 
     /** Escape a user input string to use in a regular expression
      * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-     * @param {string} string
+     * @param {string} string String to escape
      * @returns {string} Input string escaped to use in a re
      */
     escapeRegExp: function(string) {
@@ -62,12 +67,12 @@ module.exports = {
      * Used to check that restart and build scripts are available.
      * @param {string} chkPath - The path that should contain a package.json
      * @param {string} chkScript - OPTIONAL. If present return the script text if present
-     * @returns {Object|string|undefined|null} undefined if file not found or list of script names/commands. If chkScript, null if not found or script text.
+     * @returns {object|string|undefined|null} undefined if file not found or list of script names/commands. If chkScript, null if not found or script text.
      */
     getNpmRunScripts: function(chkPath, chkScript='') {
-        let pj = undefined
+        let pj
         try {
-            pj = require( path.join( chkPath, 'package.json' ) ).scripts
+            pj = require( path.join( chkPath, this.packageJson ) ).scripts
         } catch (e) {
             pj = undefined
         }
@@ -87,7 +92,10 @@ module.exports = {
         return [...new Set([].concat(...arr))]
     }, // ----  ---- //
 
-    /** Utility function to html pretty-print JSON */
+    /** Utility function to html pretty-print JSON
+     * @param {json} json JSON to pretty-print
+     * @returns {string} HTML
+     */
     syntaxHighlight: function(json) {
         /*
             pre .string { color: orange; }
@@ -97,26 +105,31 @@ module.exports = {
             .key { color: #069fb3;}
         */
         json = JSON.stringify(json, undefined, 4)
-        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        json = '<pre class="syntax-highlight" style="color:white;background-color:black;overflow:auto;">' + json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-            var cls = 'number', style = 'style="color:white"'
-            if (/^"/.test(match)) {
-                if (/:$/.test(match)) {
-                    cls = 'key'
-                    style = 'style="color:#069fb3"'
-                } else {
-                    cls = 'string'
-                    style = 'style="color:orange"'
+        json = json
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+        json = '<pre class="syntax-highlight" style="color:white;background-color:black;overflow:auto;">' + 
+            json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+                var cls = 'number', style = 'style="color:white"'
+                if ((/^"/).test(match)) {
+                    if ((/:$/).test(match)) {
+                        cls = 'key'
+                        style = 'style="color:#069fb3"'
+                    } else {
+                        cls = 'string'
+                        style = 'style="color:orange"'
+                    }
+                } else if ((/true|false/).test(match)) {
+                    cls = 'boolean'
+                    style = 'style="color:rgb(20,99,163)"'
+                } else if ((/null/).test(match)) {
+                    cls = 'null'
+                    style = 'style="color:magenta"'
                 }
-            } else if (/true|false/.test(match)) {
-                cls = 'boolean'
-                style = 'style="color:rgb(20,99,163)"'
-            } else if (/null/.test(match)) {
-                cls = 'null'
-                style = 'style="color:magenta"'
-            }
-            return `<span class="${cls}" ${style}>${match}</span>`
-        }) + '</pre>'
+                return `<span class="${cls}" ${style}>${match}</span>`
+            }) + 
+            '</pre>'
         return json
     }, // ----  ---- //
     
@@ -129,7 +142,7 @@ module.exports = {
      *       Also, it won't find ANYTHING if a `main` entry doesn't exist :(
      * @param {string} packageName - Name of the package who's root folder we are looking for.
      * @param {string} userDir - Home folder for Node-RED modules - needed to allow search for installation
-     * @return {null|string} Actual filing system path to the installed package
+     * @returns {null|string} Actual filing system path to the installed package
      */
     findPackage: function(packageName, userDir) {
 
@@ -146,7 +159,7 @@ module.exports = {
             if (debug) console.log(`[UIBUILDER] ${packageName} found from userDir`, packagePath)
             found = true
         } catch (e) {
-            if (debug) console.log (`[UIBUILDER] ${packageName} not found from userDir. Path: ${userDir}`)
+            if (debug) console.log(`[UIBUILDER] ${packageName} not found from userDir. Path: ${userDir}`)
         }
         // Then try without a path
         if (found === false) try {
@@ -154,7 +167,7 @@ module.exports = {
             if (debug) console.log(`[UIBUILDER] ${packageName} found (no path)`, packagePath)
             found = true
         } catch (e) {
-            if (debug) console.log (`[UIBUILDER] ${packageName} not found (no path)`)
+            if (debug) console.log(`[UIBUILDER] ${packageName} not found (no path)`)
         }
         // Finally try in the uibuilder source folder
         if (found === false) try {
@@ -162,7 +175,7 @@ module.exports = {
             if (debug) console.log(`[UIBUILDER] ${packageName} found from uibuilder path`, packagePath)
             found = true
         } catch (e) {
-            if (debug) console.log (`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
+            if (debug) console.log(`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
         }
         /** No, REALLY finally this time - because require.resolve only works if a package has a `main` entry point defined
          * We will make one final effort to find something using a manual trawl through <userDir>/node_modules
@@ -173,14 +186,14 @@ module.exports = {
             if ( fs.existsSync( loc ) ) {
                 found = true
                 packagePath = loc
-                if (debug) console.log (`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
-            } else {
-                if (debug) console.log (`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
-            }
+                if (debug)
+                    console.log(`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
+            } else if (debug)
+                console.log(`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
         }
 
         if ( found === false ) {
-            if (debug) console.log (`[UIBUILDER] ${packageName} not found anywhere\n`)
+            if (debug) console.log(`[UIBUILDER] ${packageName} not found anywhere\n`)
             return null
         }
 
@@ -204,25 +217,25 @@ module.exports = {
 
     /** Read the contents of a package.json file 
      * @param {string} folder The folder containing a package.json file
-     * @returns {Object|null} Object representation of JSON if found otherwise null
+     * @returns {object|null} Object representation of JSON if found otherwise null
      */
     readPackageJson: function(folder) {
         let debug = false
         let file = null
         try {
             // @ts-expect-error ts(2559)
-            file = fs.readJsonSync( path.join(folder, 'package.json'), 'utf8' )
+            file = fs.readJsonSync( path.join(folder, this.packageJson), 'utf8' )
             if (debug) console.log('[uibuilder] tilib.readPackageJson - read successfully ', folder)
         } catch (err) {
-            if (debug) console.error('[uibuilder] tilib.readPackageJson - failed to read ', folder, 'package.json', err)
+            if (debug) console.error('[uibuilder] tilib.readPackageJson - failed to read ', folder, this.packageJson, err)
             file = {'ERROR': err}
         }
         return file
     }, // ----  ---- //
 
     /** Compare 2 simple arrays, return array of arrays - additions and deletions
-     * @param {array} a1 First array
-     * @param {array} a2 Second array
+     * @param {Array} a1 First array
+     * @param {Array} a2 Second array
      * @returns {[string[],string[]]} Array of 2 arrays. Inner array 1: Additions, 2: Deletions
      */
     compareArrays: function(a1, a2) {
@@ -243,8 +256,8 @@ module.exports = {
     }, // ----  ---- //
 
     /** Compare 2 simple arrays, return false as soon as a difference is found
-     * @param {array} a1 First array
-     * @param {array} a2 Second array
+     * @param {Array} a1 First array
+     * @param {Array} a2 Second array
      * @returns {boolean} False if arrays are differnt, else True
      */
     quickCompareArrays: function(a1, a2) {
@@ -262,8 +275,8 @@ module.exports = {
     }, // ----  ---- //
     
     /** Return only the most important parts of an ExpressJS `req` object
-     * @param {Object} req express.Request
-     * @returns {Object} importantReq
+     * @param {object} req express.Request
+     * @returns {object} importantReq
      */
     dumpReq: function(req) {
         return {
@@ -283,4 +296,18 @@ module.exports = {
         }
     }, // ----  ---- //
 
+    /** Debugging output that only executes if an env variable is set before Node-RED is run */
+    mylog: mylog,
+
+    /** Dump process memory use to console
+     * @param {string} prefix Text to output before the memory info
+     */
+    dumpMem: (prefix) => {
+        let mem = process.memoryUsage()
+        const formatMem = (m) => ( m/1048576 ).toFixed(2)
+        mylog(`${prefix} Memory Use (MB): RSS=${formatMem(mem.rss)}. Heap: Used=${formatMem(mem.heapUsed)}, Tot=${formatMem(mem.heapTotal)}. Ext C++=${formatMem(mem.external)}`)
+    },
+
 } // ---- End of module.exports ---- //
+
+//EOF

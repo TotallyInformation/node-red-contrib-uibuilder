@@ -1,4 +1,3 @@
-/* eslint-disable max-params */
 /** Manage ExpressJS on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  * 
@@ -33,7 +32,8 @@ const serveIndex    = require('serve-index')
 // Only used for type checking
 const Express = require('express') // eslint-disable-line no-unused-vars
 
-//const mylog = process.env.TI_ENV === 'debug' ? console.log : function() {}
+// Filename for default web page
+const defaultPageName = 'index.html'
 
 class UibWeb {
     // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
@@ -41,7 +41,7 @@ class UibWeb {
      * @type {boolean}
      * @protected 
      */
-    _isConfigured
+    //_isConfigured
 
     /** Called when class is instantiated */
     constructor() {
@@ -49,7 +49,7 @@ class UibWeb {
 
         /** @type {runtimeRED} */
         this.RED = undefined
-        /** @type {Object} Reference link to uibuilder.js global configuration object */
+        /** @type {object} Reference link to uibuilder.js global configuration object */
         this.uib = undefined
         /** Reference to uibuilder's global log functions */
         this.log = undefined
@@ -74,10 +74,14 @@ class UibWeb {
          */
         this.masterStatic = undefined
 
-        /** Set up a dummy ExpressJS Middleware Function */
-        this.dummyMiddleware = function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res, /** @type {Express.NextFunction} */ next) { next() }
-
         //#endregion ---- ---- //
+
+        /** Set up a dummy ExpressJS Middleware Function
+         * @param {Express.Request} req x
+         * @param {Express.Response} res x
+         * @param {Express.NextFunction} next x
+         */
+        this.dummyMiddleware = function(req, res, next) { next() }
 
         // setup() has not yet been run
         this._isConfigured = false
@@ -89,8 +93,8 @@ class UibWeb {
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
      * @param {runtimeRED} RED reference to Core Node-RED runtime object
-     * @param {Object} uib reference to uibuilder 'global' configuration object
-     * @param {Object} log reference to uibuilder log object
+     * @param {object} uib reference to uibuilder 'global' configuration object
+     * @param {object} log reference to uibuilder log object
      * param {Object} server reference to ExpressJS server being used by uibuilder
      */
     //setup( RED, uib, log, server ) {
@@ -110,6 +114,7 @@ class UibWeb {
         this.log = log
 
         /** Optional port. If set, uibuilder will use its own ExpressJS server */
+        // eslint-disable-next-line eqeqeq
         if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port
 
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
@@ -137,7 +142,10 @@ class UibWeb {
         // Note the system host name
         uib.customServer.hostName = require('os').hostname()
         // Try to find the external LAN IP address of the server
-        require('dns').lookup(uib.customServer.hostName, function (err, add, fam) {
+        require('dns').lookup(uib.customServer.hostName, function (err, add) {
+            if ( err ) {
+                log.error('[uibuilder:web.js:_websetup] DNS lookup failed.', err)
+            }
             uib.customServer.host = add
             if ( uib.customServer.port && uib.customServer.port !== RED.settings.uiPort )
                 log.trace(`[uibuilder:web:webSetup] Using custom ExpressJS server at ${uib.customServer.type}://${add}:${uib.customServer.port}`)
@@ -175,7 +183,6 @@ class UibWeb {
                     RED.log.error(
                         `[uibuilder:web:webSetup:CreateServer] ERROR: Port ${uib.customServer.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`
                     )
-                    return
                 }    
             })
 
@@ -213,7 +220,7 @@ class UibWeb {
         
         try {
             /** Will we use "compiled" version of module front-end code? */
-            fs.accessSync( path.join(uib.masterStaticDistFolder, 'index.html'), fs.constants.R_OK )
+            fs.accessSync( path.join(uib.masterStaticDistFolder, defaultPageName), fs.constants.R_OK )
             log.trace('[uibuilder:web:setMasterStaticFolder] Using master production build folder')
             // If the ./../front-end/dist/index.html exists use the dist folder...
             this.masterStatic = uib.masterStaticDistFolder
@@ -226,7 +233,9 @@ class UibWeb {
         }
     } // --- End of setMasterStaticFolder() --- //
 
-    /** Allow the isConfigured flag to be read (not written) externally */
+    /** Allow the isConfigured flag to be read (not written) externally 
+     * @returns {boolean} True if this class as been configured
+     */
     get isConfigured() {
         return this._isConfigured
     }
@@ -234,7 +243,7 @@ class UibWeb {
     //#region ====== Per-node instance processing ====== //
 
     /** Setup the web resources for a specific uibuilder instance
-     * @param {uibNode} node
+     * @param {uibNode} node Reference to the uibuilder node instance
      */
     instanceSetup(node) {
         // Reference static vars
@@ -273,7 +282,7 @@ class UibWeb {
     }
 
     /** (1) Optional middleware from a file
-     * @param {uibNode} node
+     * @param {uibNode} node Reference to the uibuilder node instance
      */
     addMiddlewareFile(node) {
         // Reference static vars
@@ -301,7 +310,7 @@ class UibWeb {
     } // --- End of addMiddlewareFile() --- //
 
     /** (2) Generic dynamic middleware to add uibuilder specific headers & cookies
-     * @param {uibNode} node
+     * @param {uibNode} node Reference to the uibuilder node instance
      */
     addMasterMiddleware(node) {
         // Reference static vars
@@ -333,7 +342,7 @@ class UibWeb {
     } // --- End of addMasterMiddleware() --- //
 
     /** (3) Add static ExpressJS route for instance local custom files
-     * @param {uibNode} node
+     * @param {uibNode} node Reference to the uibuilder node instance
      */
     addInstanceStaticRoute(node) {
         // Reference static vars
@@ -347,7 +356,7 @@ class UibWeb {
         if ( node.sourceFolder === undefined ) {
             try {
                 // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
-                fs.accessSync( path.join(node.customFolder, 'dist', 'index.html'), fs.constants.R_OK )
+                fs.accessSync( path.join(node.customFolder, 'dist', defaultPageName), fs.constants.R_OK )
                 // If the ./dist/index.html exists use the dist folder...
                 customStatic = 'dist'
                 log.trace(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Using local dist folder`)
@@ -374,7 +383,7 @@ class UibWeb {
         }
 
         // Does it contain an index.html file? If not, then issue a warn
-        if ( ! fs.existsSync( path.join(customFull, 'index.html') ) ) {
+        if ( ! fs.existsSync( path.join(customFull, defaultPageName) ) ) {
             node.warn(`[uibuilder:web:addInstanceStaticRoute:${node.url}] Cannot show default page, index.html does not exist in ${customFull}.`)
         }
 
@@ -384,7 +393,7 @@ class UibWeb {
     } // --- End of addInstanceStaticRoute() --- //
 
     /** Remove all of the app.use middleware for this instance
-     * @param {uibNode} node
+     * @param {uibNode} node Reference to the uibuilder node instance
      */
     removeInstanceMiddleware(node) {
         
@@ -422,7 +431,7 @@ class UibWeb {
     
     /** Dump to console log all middleware for this instance
      * 
-     * @param {uibNode} node 
+     * @param {uibNode} node Reference to the uibuilder node instance
      */
     dumpInstanceMiddleware(node) {
         var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
@@ -453,7 +462,7 @@ class UibWeb {
      * Updates the package list file and uib.installedPackages
      * param {Object} vendorPaths Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
      * @param {string} newPkg Default=''. Name of a new package to be checked for in addition to existing. 
-     * @return {Object} uib.installedPackages
+     * @returns {object} uib.installedPackages
      */
     checkInstalledPackages(newPkg='') {
         // Reference static vars
@@ -547,11 +556,11 @@ class UibWeb {
                 installedPackages[pkgName].main = pj.main || ''
 
                 /** Try to guess the browser entry point (or '')
-                 * @since v3.2.1 Fix for packages misusing the browser property - might be an object see #123
+                 * since v3.2.1 Fix for packages misusing the browser property - might be an object see #123
                  */
                 let browserEntry = ''
-                if ( pj.browser ) {
-                    if ( typeof pj.browser === 'string' ) browserEntry = pj.browser
+                if ( pj.browser && typeof pj.browser === 'string' ) {
+                    browserEntry = pj.browser
                 }
                 if ( browserEntry === '' ) {
                     browserEntry = pj.jsdelivr || pj.unpkg || ''

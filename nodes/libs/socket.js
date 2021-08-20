@@ -36,7 +36,7 @@ class UibSockets {
      * @type {boolean}
      * @protected 
      */
-    _isConfigured
+    //_isConfigured = false
 
     /** Called when class is instantiated */
     constructor() {
@@ -46,7 +46,7 @@ class UibSockets {
         //#region ---- References to core Node-RED & uibuilder objects ---- //
         /** @type {runtimeRED} */
         this.RED = undefined
-        /** @type {Object} Reference link to uibuilder.js global configuration object */
+        /** @type {object} Reference link to uibuilder.js global configuration object */
         this.uib = undefined
         /** Reference to uibuilder's global log functions */
         this.log = undefined
@@ -71,7 +71,7 @@ class UibSockets {
          * Because this is a Singleton object, any reference to this module can access all of the namespaces (by url).
          * The namespace has some uib extensions that track the originating node id (searchable in Node-RED), the number of connected clients
          *   and the number of messages recieved.
-         * @type {Object.<string, socketio.Namespace>}}
+         * @type {object.<string, socketio.Namespace>}}
          */
         this.ioNamespaces = {}
 
@@ -84,9 +84,9 @@ class UibSockets {
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
      * @param {runtimeRED} RED reference to Core Node-RED runtime object
-     * @param {Object} uib reference to uibuilder 'global' configuration object
-     * @param {Object} log reference to uibuilder log object
-     * @param {Object} server reference to ExpressJS server being used by uibuilder
+     * @param {object} uib reference to uibuilder 'global' configuration object
+     * @param {object} log reference to uibuilder log object
+     * @param {object} server reference to ExpressJS server being used by uibuilder
      */
     setup( RED, uib, log, server ) {
 
@@ -164,7 +164,9 @@ class UibSockets {
 
     } // --- End of socketIoSetup() --- //
 
-    /** Allow the isConfigured flag to be read (not written) externally */
+    /** Allow the isConfigured flag to be read (not written) externally 
+     * @returns {boolean} True if this class as been configured
+     */
     get isConfigured() {
         return this._isConfigured
     }
@@ -172,13 +174,13 @@ class UibSockets {
     /** Output a control msg to the front-end. WARNING: Cannot use uibuilder security on this! Not currently being used.
      * Sends to all connected clients & outputs a msg to port 2 if required.
      * To add security, would need reference to node. When called from a uib api, the node isn't available.
-     * @param {Object} msg The message to output
-     * @param {Object} node The node object
+     * @param {object} msg The message to output
+     * @param {object} node The node object
      * @param {string=} socketId Optional. If included, only send to specific client id
      * @param {boolean=} output Optional. If included, also output to port #2 of the node @since 2020-01-03
      */
     sendControl( msg, node, socketId, output) {
-        /** @type {Object} Reference to the core uibuilder config object */
+        /** @type {object} Reference to the core uibuilder config object */
         const uib = this.uib
 
         const ioNs = this.ioNamespaces[node.url]
@@ -201,8 +203,8 @@ class UibSockets {
 
     /** Output a normal msg to the front-end. WARNING: Cannot use uibuilder security on this! Currently only used to send a reload msg to FE.
      * To add security, would need reference to node. When called from a uib api, the node isn't available. 
-     * @param {Object} msg The message to output
-     * @param {Object} url The uibuilder instance url - will be unique. Used to lookup the correct Socket.IO namespace for sending.
+     * @param {object} msg The message to output
+     * @param {object} url The uibuilder instance url - will be unique. Used to lookup the correct Socket.IO namespace for sending.
      * @param {string=} socketId Optional. If included, only send to specific client id (mostly expecting this to be on msg._socketID so not often required)
      */
     send(msg, url, socketId) { // eslint-disable-line class-methods-use-this
@@ -222,7 +224,10 @@ class UibSockets {
         }
     }
     
-    /** Get a uib node instance namespace */
+    /** Get a uib node instance namespace
+     * @param {uibNode} node Reference to the uibuilder node instance
+     * @returns {socketio.Namespace} Return a reference to the namespace of the specified uib instance for convenience in core code
+     */
     getNs(node) {
         return this.ioNamespaces[node.url]
     }
@@ -232,9 +237,9 @@ class UibSockets {
      * The namespace is stored in the this.ioNamespaces object against a property name matching the URL so that it can be referenced later.
      * Because this is a Singleton object, any reference to this module can access all of the namespaces (by url).
      * The namespace has some uib extensions that track the originating node id (searchable in Node-RED), the number of connected clients
-     *   and the number of messages recieved.
+     *   and the number of messages received.
      * @param {uibNode} node Reference to the uibuilder node instance
-     * @return {socketio.Namespace} Return a reference to the namespace for convenience in core code
+     * @returns {socketio.Namespace} Return a reference to the namespace for convenience in core code
      */
     addNS(node) {
         const log = this.log
@@ -296,7 +301,7 @@ class UibSockets {
                 if (node.useSecurity === true) {
 
                     /** Check for valid auth and session 
-                     * @type MsgAuth */
+                     * @type {MsgAuth} */
                     msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
 
                     //console.log('[UIBUILDER] _auth: ', msg._auth)
@@ -342,23 +347,20 @@ class UibSockets {
 
                     uiblib.logoff(msg, ioNs, node, socket, log, uib)
 
+                } else if (node.useSecurity === true) {
+                // If security is active...
+
+                    /** Check for valid auth and session 
+                     * @type {MsgAuth} */
+                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
+
+                    // Only send the msg onward if the user is validated
+                    if (msg._auth.jwt !== undefined) node.send([null,msg])
+
                 } else {
-                    // If security is active...
-                    if (node.useSecurity === true) {
 
-                        /** Check for valid auth and session 
-                         * @type MsgAuth */
-                        msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
-
-                        // Only send the msg onward if the user is validated
-                        if (msg._auth.jwt !== undefined) node.send([null,msg])
-
-                    } else {
-
-                        // Send out the message on port #2 for downstream flows
-                        node.send([null,msg])
-
-                    }
+                    // Send out the message on port #2 for downstream flows
+                    node.send([null,msg])
 
                 }
 
@@ -432,6 +434,7 @@ class UibSockets {
 
     /** Remove the current clients and namespace for this node.
      *  Called from uiblib.processClose.
+     * @param {uibNode} node Reference to the uibuilder node instance
      */
     removeNS(node) {
 
