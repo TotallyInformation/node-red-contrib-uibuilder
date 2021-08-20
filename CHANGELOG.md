@@ -74,6 +74,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     * Destructuring the big exported function into a series of smaller functions. Makes the code a lot clearer and easier to follow. Also helped identify a few bits of logic that were not quite sane or not needed at all (the result of evolutionary growth of the code).
     * Using named functions throughout should make future debugging a little easier.
 
+  * Removed `inputHandler` function from `uiblib.js`. Code folded into the `inputMsgHandler` function in `uibuilder.js` which has been destructured so is small enough to have it as a single function.
+
 ### Fixed
 
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.

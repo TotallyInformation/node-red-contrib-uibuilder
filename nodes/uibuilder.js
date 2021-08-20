@@ -315,6 +315,7 @@ function runtimeSetup(RED) {
 
 /** Handler function for node flow input events (when a node instance receives a msg from the flow)
  * NOTE: `this` context is still the parent within the function.
+ *       Also, this function does NOT have access to RED
  * @see https://nodered.org/blog/2019/09/20/node-done 
  * @param {object} msg The msg object received.
  * @param {Function} send Per msg send function, node-red v1+
@@ -404,7 +405,7 @@ function inputMsgHandler (msg, send, done) {
 }
 
 /** All of the initialisation of the Node
- * This is only run once no matter how many uib node instances are added to a flow
+ * This is callled once for each uibuilder node instance added to a flow
  * NOTE: This function MUST be run using .call to pass in the correct `this` context
  * @param {runtimeRED} RED Runtime Red
  * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
