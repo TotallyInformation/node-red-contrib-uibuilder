@@ -779,6 +779,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.send = function send(msgToSend, channel) {
             if ( channel === null || channel === undefined ) channel = self.ioChannels.client
 
+            //! Disabled for now. Because we now have a server-side flag that allows msg flows
+            //! even when not logged in. Might put this back in the future. But would then need to handle the allowUnauth flag
+            /*
             // If security is on but client not authenticated only allow logon control msg to be sent
             // Just a local convenience, the server will block anyway
             if ( self.security && !self.isAuthorised ) { 
@@ -794,6 +797,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     //return  // TODO COMMENTED OUT FOR TESTING ONLY
                 }
             }
+            */
 
             self.uiDebug('log', 'uibuilderfe: sending msg - Namespace: ' + self.ioNamespace + ', Channel: ' + channel, msgToSend)
 
@@ -1047,7 +1051,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             return msg
         }
 
-        /** If Vue is in use and we have a reference to the main app, this fn can send data and config direct to a Vue componant instance
+        /** @ runtime: If Vue is in use and we have a reference to the main app, this fn can send data and config direct to a Vue componant instance
          *  if that component has been written in the right way.
          * @param {object} msg Message object from Node-RED
          */
@@ -1148,8 +1152,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#endregion --- end of internal functions --- //
 
-        // uiReturn contains a set of functions that are returned when this function
-        // self-executes (on-load)
+        // uiReturn contains a set of functions that are returned when this function self-executes (on-load)
         self.uiReturn = {
 
             /** Function to set uibuilder properties to a new value. Also triggers any event listeners.
@@ -1437,9 +1440,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#endregion ========== End of setup ========== //
 
-        //#region ======== start of execution ======== //
+        //#region ======== @ runtime: start of execution ======== //
 
-        /** Are all browser resources loaded?
+        /** @ runtime: Are all browser resources loaded?
          * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
          * load: All resources are loaded
          */
@@ -1453,7 +1456,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#endregion ======== end of execution ======== //
 
-        // Make externally available the external methods
+        // @ runtime Make externally available the external methods
         return self.uiReturn
 
     }).call(root) // --- End of uibuilder function --- //
