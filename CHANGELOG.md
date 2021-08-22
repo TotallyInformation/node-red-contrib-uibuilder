@@ -66,7 +66,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     *  _other tasks likely to be added in the future to make more efficient code and ease the release/publish process_.
     
   * New eslint rulesets implemented & config restructured. Along with the .html file decomposition, this makes for a much more accurate linting process.
-  * Massive number of minor code improvements to `uibuilder.html` and `uibuilder.js` thanks to the impoved linting.
+  * Massive number of minor code improvements to `uibuilder.html` and `uibuilder.js` & to the supporting libs and `uibuilderfe.js` thanks to the impoved linting.
   
   * Even more massive restructuring of `uibuilder.js`. 
   
