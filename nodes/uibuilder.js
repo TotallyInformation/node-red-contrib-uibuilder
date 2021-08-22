@@ -169,7 +169,6 @@ var userDir = ''
 
 /** All of the initialisation of the Node
  * This is only run once no matter how many uib node instances are added to a flow
- * @param {runtimeRED} RED Runtime Red
  */
 function runtimeSetup() {
     const RED = uib.RED
@@ -235,29 +234,29 @@ function runtimeSetup() {
 
     //#region ----- back-end debugging ----- //
     log = RED.log
-    log.trace('[uibuilder:Module] ----------------- uibuilder - module started -----------------')
+    log.trace('[uibuilder:runtimeSetup] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
 
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable? */
-    var uib_rootFolder_OK = true
+    let uib_rootFolder_OK = true
     // Try to create root and root/.config - ignore error if it already exists
     try {
         fs.ensureDirSync(uib.configFolder) // creates both folders
-        log.trace(`[uibuilder] uibRoot folder exists. ${uib.rootFolder}` )
+        log.trace(`[uibuilder:runtimeSetup] uibRoot folder exists. ${uib.rootFolder}` )
     } catch (e) {
         if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-            RED.log.error(`uibuilder: Custom folder ERROR, path: ${uib.rootFolder}. ${e.message}`)
+            RED.log.error(`[uibuilder:runtimeSetup] Custom folder ERROR, path: ${uib.rootFolder}. ${e.message}`)
             uib_rootFolder_OK = false
         }
     }
     // Try to access the root folder (read/write) - if we can, create and serve the common resource folder
     try {
         fs.accessSync( uib.rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
-        log.trace(`[uibuilder] uibRoot folder is read/write accessible. ${uib.rootFolder}` )
+        log.trace(`[uibuilder:runtimeSetup] uibRoot folder is read/write accessible. ${uib.rootFolder}` )
     } catch (e) {
-        RED.log.error(`uibuilder: Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
+        RED.log.error(`[uibuilder:runtimeSetup] Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
         uib_rootFolder_OK = false
     }
     // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
@@ -265,9 +264,9 @@ function runtimeSetup() {
         const fsOpts = {'overwrite': false, 'preserveTimestamps':true}
         try {
             fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
-            log.trace(`[uibuilder] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
+            log.trace(`[uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
         } catch (e) {
-            RED.log.error(`uibuilder: Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
+            RED.log.error(`[uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
             uib_rootFolder_OK = false
         }
 
@@ -275,39 +274,39 @@ function runtimeSetup() {
         try {
             fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err){
                 if(err){
-                    log.error(`[uibuilder] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
+                    log.error(`[uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
                 } else {
-                    log.trace(`[uibuilder] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
+                    log.trace(`[uibuilder:runtimeSetup] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
                 }
             })
         } catch (e) {
             // should never happen
-            log.error('[uibuilder] COPY OF COMMON FOLDER FAILED')
+            log.error('[uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED')
         }
         // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeInstance() so available for each instance as `./common/`)
     }
     // If the root folder setup failed, throw an error and give up completely
     if (uib_rootFolder_OK !== true) {
-        throw new Error(`uibuilder: Failed to set up uibuilder root folder structure correctly. Check log for additional error messages. Root folder: ${uib.rootFolder}.`)
+        throw new Error(`[uibuilder:runtimeSetup] Failed to set up uibuilder root folder structure correctly. Check log for additional error messages. Root folder: ${uib.rootFolder}.`)
     }
 
     //#endregion ----- root folder ----- //
     
-    /** Set up the basics for security in case we need them */
+    /** Set up the basics for security in case we need them for any uib instance */
     try {
-        security.setup(RED, uib, log)
+        security.setup(uib)
     } catch (e) {
-        console.error('[uibuilder] ::', e)
+        console.error('[uibuilder:runtimeSetup] Security setup error ', e)
     } 
 
     /** We need an ExpressJS web server to serve the page and vendor packages. 
      * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
      * since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
      */
-    web.setup(RED, uib, log) // Singleton wrapper for ExpressJS
+    web.setup(uib) // Singleton wrapper for ExpressJS
     
     /** Pass core objects to the Socket.IO handler module */
-    sockets.setup(RED, uib, log, web.server) // Singleton wrapper for Socket.IO
+    sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
 
     /** Serve up vendor packages. Updates uib.installedPackages
      * This is the first check, the installed packages are rechecked at various times.
@@ -416,7 +415,6 @@ function inputMsgHandler (msg, send, done) {
 /** All of the initialisation of the Node
  * This is callled once for each uibuilder node instance added to a flow
  * NOTE: This function MUST be run using .call to pass in the correct `this` context
- * @param {runtimeRED} RED Runtime Red
  * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
  */
 function nodeInstance(config) {
@@ -446,7 +444,9 @@ function nodeInstance(config) {
     this.templateFolder  = config.templateFolder || templateConf.blank.folder
     this.extTemplate     = config.extTemplate
     this.showfolder      = config.showfolder === undefined ? false : config.showfolder
-    this.useSecurity     = config.useSecurity 
+    this.useSecurity     = config.useSecurity
+    this.allowUnauth     = config.allowUnauth === undefined ? false : config.allowUnauth
+    this.allowAuthAnon   = config.allowAuthAnon === undefined ? false : config.allowAuthAnon
     this.sessionLength   = Number(config.sessionLength) || 120  // in seconds
     this.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
     this.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
@@ -455,6 +455,7 @@ function nodeInstance(config) {
     //#endregion ====== Local node config copy ====== //
 
     //#region ====== Instance logging/audit ====== //
+
     log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node instance settings: ${JSON.stringify({'name': this.name, 'topic': this.topic, 'url': this.url, 'copyIndex': this.copyIndex, 'fwdIn': this.fwdInMessages, 'allowScripts': this.allowScripts, 'allowStyles': this.allowStyles, 'showfolder': this.showfolder })}`)
     
     // Keep a log of the active uib.instances @since 2019-02-02
@@ -466,6 +467,10 @@ function nodeInstance(config) {
     if ( Object.prototype.hasOwnProperty.call(uib.deployments, this.id) ) uib.deployments[this.id]++
     else uib.deployments[this.id] = 1
     log.trace(`[uibuilder:nodeInstance:${uibInstance}] Number of uib.Deployments: ${uib.deployments[this.id]}` )
+
+    // Track the number of messages received by this instance
+    this.rcvMsgCount = 0
+
     //#endregion ====== Instance logging/audit ====== //
 
     //#region ====== Local folder structure ====== //
@@ -553,37 +558,38 @@ function nodeInstance(config) {
 
     //#endregion ====== End of Local folder structure ====== //
 
-    // If security turned on, instantiate the security class
+    // If security turned on, set up security for this instance
     if ( this.useSecurity === true ) {
-        // TODO
+        security.setupInstance(this)
     }
 
     // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this)
 
-    this.rcvMsgCount = 0
     /** Socket.IO instance configuration. Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
     const ioNs = sockets.addNS(this) // NB: Namespace is set from url
     this.ioNamespace = ioNs.name
     
-    log.trace(`[uibuilder:${uibInstance}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
-    log.trace(`[uibuilder:${uibInstance}] Source files . : ${this.customFolder}`)
+    log.trace(`[uibuilder:nodeInstance:${uibInstance}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
+    log.trace(`[uibuilder:nodeInstance:${uibInstance}] Source files . : ${this.customFolder}`)
 
     // We only do the following if io is not already assigned (e.g. after a redeploy)
     uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, this )
 
-    // Process inbound messages
+    // Add event handler to process inbound messages
     this.on('input', inputMsgHandler)
 
-    // Do something when Node-RED is closing down which includes when this node instance is redeployed
+    /** Do something when Node-RED is closing down which includes when this node instance is redeployed
+     * Note use of arrow function so as to retain the correct `this` context
+     */
     this.on('close', (removed,done) => {
-        log.trace(`[uibuilder:${uibInstance}] nodeInstance:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
+        log.trace(`[uibuilder:nodeInstance:close:${uibInstance}] nodeInstance:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
 
         this.removeListener('input', inputMsgHandler)
 
         // Do any complex close processing here if needed - MUST BE LAST
         //processClose(null, node, RED, ioNs, app) // swap with below if needing async
-        uiblib.instanceClose(this, RED, uib, sockets, web, log, done)
+        uiblib.instanceClose(this, uib, sockets, web, done)
 
         done()
     })
@@ -723,9 +729,9 @@ function chkParamFldr(params) {
 } // ---- End of fn chkParamFldr ---- //
 //#endregion === Validation functions === //
 
-/**
+/** Set up v2 (old) admin REST API's 
+ * TODO - Needs converting to v3
  * This is only run once no matter how many uib node instances are added to a flow
- * @param {runtimeRED} RED Runtime Red
  */
 function v2AdminAPIs() {
     const RED = uib.RED
@@ -1361,9 +1367,8 @@ function v2AdminAPIs() {
 
 } // ----- end of v2AdminAPIs ----- //
 
-/**
+/** Set up v3 admin REST API's
  * This is only run once no matter how many uib node instances are added to a flow
- * @param {runtimeRED} RED Runtime Red
  */
 function v3AdminAPIs() {
     const RED = uib.RED
@@ -1656,9 +1661,8 @@ function v3AdminAPIs() {
 
 } // ----- end of v3AdminAPIs ----- //
 
-/**
+/** Set up user-facing REST API's
  * This is only run once no matter how many uib node instances are added to a flow
- * @param {runtimeRED} RED Runtime Red
  */
 function userAPIs() {
     //const RED = uib.RED
