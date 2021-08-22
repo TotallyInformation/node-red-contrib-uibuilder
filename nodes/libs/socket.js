@@ -25,10 +25,11 @@
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  */
 
-const socketio      = require('socket.io')
-const tilib         = require('./tilib')   // General purpose library (by Totally Information)
-const uiblib        = require('./uiblib')  // Utility library for uibuilder
-const path          = require('path')
+const path     = require('path')
+const socketio = require('socket.io')
+const tilib    = require('./tilib')    // General purpose library (by Totally Information)
+const uiblib   = require('./uiblib')   // Utility library for uibuilder
+const security = require('./security') // uibuilder security module
 
 class UibSockets {
     // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
@@ -83,26 +84,26 @@ class UibSockets {
      *  This makes them available wherever this MODULE is require'd.
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
-     * @param {runtimeRED} RED reference to Core Node-RED runtime object
      * @param {object} uib reference to uibuilder 'global' configuration object
-     * @param {object} log reference to uibuilder log object
      * @param {object} server reference to ExpressJS server being used by uibuilder
      */
-    setup( RED, uib, log, server ) {
+    setup( uib, server ) {
 
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
-            log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
+            uib.RED.log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
-        if ( ! RED || ! uib || ! log || ! server ) {
+        if ( ! uib || ! server ) {
             throw new Error('[uibuilder:socket.js] Called without required parameters')
         }
 
-        this.RED = RED
+        /** @type {runtimeRED} reference to Core Node-RED runtime object */
+        this.RED = uib.RED
+
         this.uib = uib
-        this.log = log
+        this.log = uib.RED.log
         this.server = server
 
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
@@ -248,6 +249,7 @@ class UibSockets {
         const ioNs = this.ioNamespaces[node.url] = this.io.of(node.url)
         const url = ioNs.url = node.url
         ioNs.nodeId = node.id // allows us to track back to the actual node in Node-RED
+        ioNs.useSecurity = node.useSecurity // Is security on for this node instance?
         ioNs.ioClientsCount = 0
         ioNs.rcvMsgCount = 0
 
@@ -276,8 +278,9 @@ class UibSockets {
                 // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
                 // time difference (UTC->Local) without needing clever libraries.
                 'serverTimestamp': (new Date()),
-                'security': node.useSecurity, // let the client know whether to use security or not
                 topic: node.topic || undefined,
+                'security': node.useSecurity, // let the client know whether to use security or not
+                '_auth': node.useSecurity ? security.dummyAuth : undefined
             }, node, socket.id, true)
             //ioNs.emit( uib.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
             
@@ -300,14 +303,18 @@ class UibSockets {
                 // If security is active...
                 if (node.useSecurity === true) {
 
-                    /** Check for valid auth and session 
+                    /** Check for valid auth and session - JWT is removed if not authorised 
                      * @type {MsgAuth} */
                     msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
 
                     //console.log('[UIBUILDER] _auth: ', msg._auth)
 
-                    // Only send the msg onward if the user is validated
-                    if (msg._auth.jwt !== undefined) node.send(msg)
+                    // Only send the msg onward if the user is validated or if unauth traffic permitted
+                    if ( node.allowUnauth === true || msg._auth.jwt !== undefined ) {
+                        node.send(msg)
+                        tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
+                    } else 
+                        log.info(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. Ignoring.`)
 
                 } else {
 
@@ -354,8 +361,12 @@ class UibSockets {
                      * @type {MsgAuth} */
                     msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
 
-                    // Only send the msg onward if the user is validated
-                    if (msg._auth.jwt !== undefined) node.send([null,msg])
+                    // Only send the msg onward if the user is validated or if unauth traffic permitted or if the msg is the initial ready for content handshake.
+                    if ( node.allowUnauth === true || msg._auth.jwt !== undefined || msg.uibuilderCtrl === 'ready for content' ) {
+                        node.send([null,msg])
+                        tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
+                    } else 
+                        log.info(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. Ignoring.`)
 
                 } else {
 
