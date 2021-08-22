@@ -75,7 +75,8 @@ module.exports = {
         /** @type {object} instances[] Reference to the currently defined instances of uibuilder */
         const instances = uib.instances
 
-        this.setNodeStatus({fill: 'red', shape: 'ring', text: 'CLOSED'}, node)
+        node.statusDisplay.text = 'CLOSED'
+        this.setNodeStatus(node)
 
         // Let all the clients know we are closing down
         sockets.sendControl({ 'uibuilderCtrl': 'shutdown' }, node, undefined, false)
@@ -177,13 +178,11 @@ module.exports = {
 
     /** Simple fn to set a node status in the admin interface
      * fill: red, green, yellow, blue or grey
-     * @param {object|string} status _
+     * shape: ring, dot
      * @param {object} node _
      */
-    setNodeStatus: function( status, node ) {
-        if ( typeof status !== 'object' ) status = {fill: 'grey', shape: 'ring', text: status}
-
-        node.status(status)
+    setNodeStatus: function( node ) {
+        node.status(node.statusDisplay)
     }, // ---- End of setNodeStatus ---- //
 
     /** Check authorisation validity - called for every msg received from client if security is on

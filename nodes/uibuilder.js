@@ -454,6 +454,11 @@ function nodeInstance(config) {
     this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:addInstanceStaticRoute
     //#endregion ====== Local node config copy ====== //
 
+    this.statusDisplay = { fill: 'blue', shape: 'dot', text: 'Configuring node' }
+    if ( this.useSecurity === true ) this.statusDisplay.fill = 'red'
+    if ( this.allowUnauth === true ) this.statusDisplay.shape = 'ring'
+    uiblib.setNodeStatus( this )
+
     //#region ====== Instance logging/audit ====== //
 
     log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node instance settings: ${JSON.stringify({'name': this.name, 'topic': this.topic, 'url': this.url, 'copyIndex': this.copyIndex, 'fwdIn': this.fwdInMessages, 'allowScripts': this.allowScripts, 'allowStyles': this.allowStyles, 'showfolder': this.showfolder })}`)
@@ -559,9 +564,7 @@ function nodeInstance(config) {
     //#endregion ====== End of Local folder structure ====== //
 
     // If security turned on, set up security for this instance
-    if ( this.useSecurity === true ) {
-        security.setupInstance(this)
-    }
+    if ( this.useSecurity === true ) security.setupInstance(this)
 
     // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this)
@@ -574,7 +577,8 @@ function nodeInstance(config) {
     log.trace(`[uibuilder:nodeInstance:${uibInstance}] Source files . : ${this.customFolder}`)
 
     // We only do the following if io is not already assigned (e.g. after a redeploy)
-    uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'Node Initialised' }, this )
+    this.statusDisplay.text = 'Node Initialised'
+    uiblib.setNodeStatus( this )
 
     // Add event handler to process inbound messages
     this.on('input', inputMsgHandler)

@@ -269,7 +269,8 @@ class UibSockets {
                 log.trace(`[uibuilder:socket:addNS:${url}] Socket.use Failed to load Use middleware. Reason: ${e.message}`)
             }
 
-            uiblib.setNodeStatus( { fill: 'green', shape: 'dot', text: 'connected ' + ioNs.ioClientsCount }, node )
+            node.statusDisplay.text = 'connected ' + ioNs.ioClientsCount
+            uiblib.setNodeStatus( node )
 
             // Let the clients (and output #2) know we are connecting
             that.sendControl({
@@ -383,8 +384,8 @@ class UibSockets {
                 log.trace(
                     `[uibuilder:socket:${url}] Socket disconnected, clientCount: ${ioNs.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
                 )
-                if ( ioNs.ioClientsCount <= 0) uiblib.setNodeStatus( { fill: 'blue', shape: 'dot', text: 'connected ' + ioNs.ioClientsCount }, node )
-                else uiblib.setNodeStatus( { fill: 'green', shape: 'ring', text: 'connected ' + ioNs.ioClientsCount }, node )
+                node.statusDisplay.text = 'connected ' + ioNs.ioClientsCount
+                uiblib.setNodeStatus( node )
                 // Let the control output port know a client has disconnected
                 that.sendControl({
                     'uibuilderCtrl': 'client disconnect',
