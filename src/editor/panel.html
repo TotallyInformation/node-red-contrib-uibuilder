@@ -112,42 +112,57 @@
             </b>
             <!-- ---- Hideable Security Settings Section ---- -->
             <div id="sec-props" style="display:hidden;border:1px solid silver;padding:.5em;">
-                <!-- Do we want security turned on? -->
-                <div class="form-row">
+                <div aria-label="Security Checkbox" class="form-row">
                     <input type="checkbox" id="node-input-useSecurity" style="display: inline-block; width: auto; vertical-align: top;">
                     <label for="node-input-useSecurity" style="width: 90%;">Use uibuilder's security?</label>
                 </div>
 
-                <!-- How long do we want our sessions to be? -->
-                <div class="form-row" title="Required. Session length. If client doesn't send a msg in this time, it is logged out.">
+                <div aria-label="Allow unauthorised msg traffic?" class="form-row">
+                    <input type="checkbox" id="node-input-allowUnauth" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-allowUnauth" style="width: 90%;">Allow unauthorised msg traffic?</label>
+                </div>
+
+                <div aria-label="Allow an anonymous authentication?" class="form-row">
+                    <input type="checkbox" id="node-input-allowAuthAnon" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-allowAuthAnon" style="width: 90%;">Allow "Anonymous" authenticated user id?</label>
+                </div>
+
+                <div aria-label="Session Length" class="form-row" title="Required. Session length. If client doesn't send a msg in this time, it is logged out.">
                     <label for="node-input-sessionLength"><i class="fa fa-clock-o"></i> Sess Length</label>
                     <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-sessionLength" style="width: 10em;"> Seconds
                 </div>
 
-                <!-- JWT Secret (credential) -->
-                <div class="form-row" title="Required. A string to be used to sign&sol;validate JWT's. Stored as a credential so not copied when exporting a flow.">
+                <div aria-label="JWT Secret (credential" class="form-row" title="Required. A string to be used to sign&sol;validate JWT's. Stored as a credential so not copied when exporting a flow.">
                     <label for="node-input-jwtSecret"><i class="fa fa-user-secret"></i> JWT Secret</label>
                     <input type="text" id="node-input-jwtSecret">
                 </div>
                 
-                <!-- Do we want to auto-extend the token life? -->
-                <div class="form-row" title="While the client continues to send ping queries (~30sec), the expiry will be moved fwd 30 sec">
+                <div aria-label="Auto-extend token?" class="form-row" title="While the client continues to send ping queries (~30sec), the expiry will be moved fwd 30 sec">
                     <input type="checkbox" id="node-input-tokenAutoExtend" style="display: inline-block; width: auto; vertical-align: top;">
                     <label for="node-input-tokenAutoExtend" style="width: 90%;">Auto-extend the token expiry?</label>
                 </div>
 
-                <div class="form-row">
+                <div aria-label="Are we running in dev or prod mode?" class="form-row">
                     Node-RED is running in <i><b><span id="nrMode"></span></b></i> mode.
                 </div>
 
-                <div class="form-tips node-help" title="">
-                    Warning: To safely deploy security, you really need to be using TLS.
-                    If you deploy without TLS, you will get warnings. Ignore them if providing TLS via reverse-proxy.
-                </div>
-                <div class="form-tips node-help" title="">
-                    In development mode, if the "Copy Index" (see advanced settings) flag is on, a simplistic template 
-                    <code>security.js</code> file will be copied to <code>&lt;uibRoot>/.config/security.js</code>.
-                    This should be adapted for your own needs and contains the code to validate users and handle sessions.
+                <div aria-label="Security guidance" class="form-tips node-help" title="">
+                    <p>
+                        Warning: To safely deploy security, you really need to be using TLS.
+                        If you deploy without TLS, you will get warnings. Ignore them if providing TLS via reverse-proxy.
+                    </p>
+                    <p>
+                        A simplistic template <code>security.js</code> file is copied to <code>&lt;uibRoot>/.config/security.js</code>.
+                        This must be adapted for your own needs and contains the code to validate users and handle sessions.
+                    </p>
+                    <p>
+                        <i>Allow unauthorised msg traffic</i> will let through messages in both directions even if the client is not
+                        authenticated. This lets you handle security in your flows. See the tech docs for details of the <code>msg._auth</code> data.
+                    </p>
+                    <p>
+                        <i>Allow an anonymous authentication</i> lets you use a special "anonymous" user-id that doesn't need a password.
+                        This is defined in your <code>security.js</code> file.
+                    </p>
                 </div>
             </div>
         </div>

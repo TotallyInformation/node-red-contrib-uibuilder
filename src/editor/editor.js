@@ -21,7 +21,6 @@
         }
     //#endregion ----------------- Pollyfills -------------------- //
 
-
     //#region --------- "global" variables for the panel --------- //
 
     /** Module name must match this nodes html file @constant {string} moduleName */
@@ -691,7 +690,7 @@
      * If security is on, must contain text
      * @returns {boolean} true = valid, false = not valid
      **/
-    function validateSecret() {
+    function validateSecret() { // eslint-disable-line no-unused-vars
         // NB: `this` is the node instance configuration as at last press of Done
         // TODO: Add display comment to help user
 
@@ -836,6 +835,181 @@
 
     } // --- End of btnTemplate() --- //
 
+    /** Set initial hidden & checkbox states (called from onEditPrepare)
+     * @param {object} that A reference to the panel's `this` object
+     */
+    function setInitialStates(that) {
+        // Hide/show
+        $('#main-props').show()
+        $('#edit-props').hide()
+        $('#npm-props').hide()
+        $('#adv-props').hide()
+        $('#sec-props').hide()
+        $('#info-props').hide()
+
+        // initial checkbox states
+        $('#node-input-fwdInMessages').prop('checked', that.fwdInMessages)
+        $('#node-input-allowScripts').prop('checked', that.allowScripts)
+        $('#node-input-allowStyles').prop('checked', that.allowStyles)
+        $('#node-input-copyIndex').prop('checked', that.copyIndex)
+        $('#node-input-showfolder').prop('checked', that.showfolder)
+        $('#node-input-useSecurity').prop('checked', that.useSecurity)
+        $('#node-input-allowUnauth').prop('checked', that.allowUnauth)
+        $('#node-input-allowAuthAnon').prop('checked', that.allowAuthAnon)
+        $('#node-input-tokenAutoExtend').prop('checked', that.tokenAutoExtend)
+        $('#node-input-reload').prop('checked', that.reload)
+    }
+
+    /** Handle URL changes (called from onEditPrepare)
+     * `this` is the selected jQuery object $('#node-input-url')
+     */
+    function urlChange() {
+
+        var thisurl = $(this).val()
+        var eUrlSplit = window.origin.split(':')
+        //var nrPort = Number(eUrlSplit[2])
+        var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
+        $('#info-webserver').empty()
+
+        // Is uibuilder using a custom server?
+        if (RED.settings.uibuilderCustomServer.port) {
+            // Use the correct protocol (http or https)
+            eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2','https')
+            // Use the correct port
+            eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
+            // When using custom server, no base path is used
+            nodeRoot = ''
+            $('#info-webserver')
+                .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
+        }
+
+        var urlPrefix = eUrlSplit.join(':') + '/'
+        // Show the root URL
+        $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl)
+            .text('Open ' + nodeRoot + thisurl)
+        $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
+        // NB: The index url link is only shown if the option is turned on
+        $('#show-src-folder-idx-url').empty()
+            .append('<div>at <a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank" class="red-ui-button">' + nodeRoot + $(this).val() + '/idx</a></div>')
+    }
+
+    /** Configure the template dropdown & setup button handlers (called from onEditPrepare)
+     * @param {object} that A reference to the panel's `this` object
+     */
+    function templateSettings(that) {
+
+        $('#adv-templ').hide()
+        $('#show-templ-props').css( 'cursor', 'pointer' )
+        $('#show-templ-props').on('click', function() { // (e) {
+            $('#adv-templ').toggle()
+            if ( $('#adv-templ').is(':visible') ) {
+                $('#show-templ-props').html('<i class="fa fa-caret-down"></i> Template Settings')
+            } else {
+                $('#show-templ-props').html('<i class="fa fa-caret-right"></i> Template Settings')
+            }
+        })
+        // Populate the template selection drop-down and select default (in advanced)
+        populateTemplateDropdown(that)
+        checkDependencies()
+        // Unhide the external template name input if external selected
+        if ( $('#node-input-templateFolder').val() === 'external' ) $('#et-input').show()
+        // Handle change of template
+        $('#node-input-templateFolder').on('change', function() { // (e) {
+            // update the help tip
+            if ( RED.settings.uibuilderTemplates[that.templateFolder] )
+                $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
+            // Check if the dependencies are installed, warn if not
+            checkDependencies()
+            // Unhide the external template name input if external selected
+            if ( $('#node-input-templateFolder').val() === 'external' )
+                $('#et-input').show()
+            else
+                $('#et-input').hide()
+        })
+        // Button press for loading new template
+        $('#btn-load-template').on('click', function(e){
+            e.preventDefault() // don't trigger normal click event
+            btnTemplate()
+        })
+
+    }
+
+    /** Setup for security settings (called from onEditPrepare) */
+    function securitySettings() {
+        // Show/Hide the security settings
+        $('#show-security-props').css( 'cursor', 'pointer' )
+        $('#show-security-props').on('click', function() { // (e) {
+            $('#sec-props').toggle()
+            if ( $('#sec-props').is(':visible') ) {
+                $('#show-security-props').html('<i class="fa fa-caret-down"></i> Security Settings')
+            } else {
+                $('#show-security-props').html('<i class="fa fa-caret-right"></i> Security Settings')
+            }
+        })
+
+        // One-off check for default settings
+        if ( $('#node-input-jwtSecret').val().length === 0 ) {
+            $('#node-input-jwtSecret').val(defaultJwtSecret)
+        }
+        if ( $('#node-input-useSecurity').is(':checked') && $('#node-input-sessionLength').val().length === 0 ) {
+            $('#node-input-sessionLength').val(defaultSessionLength)
+        }
+
+        // Security turning on/off
+        $('#node-input-useSecurity').on('change', function() {
+
+            // security is requested, enable other settings and add warnings if needed
+            // @since v4.1.1 disable lockout of security for non-http in production
+            /* 
+                if ( this.checked ) {
+                    // If in production, cannot turn on security without https, in dev, give a warning
+                    if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
+                        if (RED.settings.uibuilderNodeEnv !== 'development') {
+                            console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
+                            $('#node-input-useSecurity').prop('checked', false); this.checked = false
+                        } else {
+                            console.warn('HTTPS NOT IN USE BUT SECURITY REQUESTED - Node environment is "development" so this is allowed but not recommended')
+                        }
+                        // TODO: Add user warnings
+                    }
+                }
+            */
+            // Yes, we do need this.checked twice :-)
+            if ( this.checked ) {
+
+                $('#node-input-allowUnauth').prop('disabled', false)        
+                $('#node-input-allowAuthAnon').prop('disabled', false)
+                $('#node-input-sessionLength').prop('disabled', false)
+                $('#node-input-jwtSecret').prop('disabled', false)
+                $('#node-input-tokenAutoExtend').prop('disabled', false)
+                // Add defaults if fields are empty
+                if ( $('#node-input-jwtSecret').val().length === 0 ) {
+                    $('#node-input-jwtSecret').addClass('input-error')
+                }
+                if ( $('#node-input-sessionLength').val().length === 0 ) {
+                    $('#node-input-sessionLength').val(defaultSessionLength)
+                }
+                if ( $('#node-input-jwtSecret').val().length === 0 ) {
+                    $('#node-input-jwtSecret').val(defaultJwtSecret)
+                }
+
+            } else { // security not requested, disable other settings
+
+                $('#node-input-allowUnauth').prop('disabled', true)        
+                $('#node-input-allowAuthAnon').prop('disabled', true)
+                $('#node-input-sessionLength').prop('disabled', true)
+                $('#node-input-jwtSecret').prop('disabled', true)
+                $('#node-input-tokenAutoExtend').prop('disabled', true)
+
+            }
+
+        }) // -- end of security change -- //
+
+        // What mode is Node-RED running in? development or something else?
+        $('#nrMode').text(RED.settings.uibuilderNodeEnv)
+        
+    } // ---- end of securitySettings ---- //
+
     //#endregion ------------------------------------------------- //
 
     /** Initialise default values for package list - must be done before everything to give the ajax call time to finish
@@ -849,6 +1023,7 @@
 
     // Register the node type, defaults and set up the edit fns 
     RED.nodes.registerType(moduleName, {
+        //#region --- options --- //
         category: paletteCategory,
         color: paletteColor,
         defaults: {
@@ -863,6 +1038,8 @@
             extTemplate: { value: '' }, // Only if templateFolder=external, degit name
             showfolder: { value: false },      // Should a web index view of all source files be made available?
             useSecurity: { value: false },
+            allowUnauth: { value: false },
+            allowAuthAnon: { value: false },
             sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
             tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
             oldUrl: { value: undefined },      // If the url has been changed, this is the previous url
@@ -880,6 +1057,7 @@
         icon: 'ui_template.png',
         paletteLabel: nodeLabel,
         label: function () { return this.url || this.name || nodeLabel },
+        //#endregion --- options --- //
 
         /** Available methods: 
          * oneditprepare: (function) called when the edit dialog is being built.
@@ -892,33 +1070,17 @@
          */
 
         /** Prepares the Editor panel */
-        oneditprepare: function () {
+        oneditprepare: function oneditprepare() {
             //console.log('[uibuilder:oneditprepare] THIS: ', this)
 
-            var that = this
+            // Keep a local reference to `this` for use as context changes
+            const that = this
 
             // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
             if ( that.templateFolder === undefined || that.templateFolder === '' ) that.templateFolder = defaultTemplate
 
-            //#region Start with the edit section hidden & main section visible
-            $('#main-props').show()
-            $('#edit-props').hide()
-            $('#npm-props').hide()
-            $('#adv-props').hide()
-            $('#sec-props').hide()
-            $('#info-props').hide()
-            //#endregion
-
-            //#region Set the checkbox states
-            $('#node-input-fwdInMessages').prop('checked', this.fwdInMessages)
-            $('#node-input-allowScripts').prop('checked', this.allowScripts)
-            $('#node-input-allowStyles').prop('checked', this.allowStyles)
-            $('#node-input-copyIndex').prop('checked', this.copyIndex)
-            $('#node-input-showfolder').prop('checked', this.showfolder)
-            $('#node-input-useSecurity').prop('checked', this.useSecurity)
-            $('#node-input-tokenAutoExtend').prop('checked', this.useSecurity)
-            $('#node-input-reload').prop('checked', this.reload)
-            //#endregion checkbox states
+            // Start with the edit section hidden & main section visible, set the checkbox initial states
+            setInitialStates(that)
 
             // Set sourceFolder dropdown
             $(`#node-input-sourceFolder option[value="${that.sourceFolder || 'src'}"]`).prop('selected', true)
@@ -928,143 +1090,19 @@
              * NB: Actual URL change processing is done in validation which also happens on change
              *     Change happens when config panel is opened as well as for a real change
              */
-            $('#node-input-url').change(function () {
-
-                var thisurl = $(this).val()
-                var eUrlSplit = window.origin.split(':')
-                //var nrPort = Number(eUrlSplit[2])
-                var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
-                $('#info-webserver').empty()
-                // Is uibuilder using a custom server?
-                if (RED.settings.uibuilderCustomServer.port) {
-                    // Use the correct protocol (http or https)
-                    eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2','https')
-                    // Use the correct port
-                    eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
-                    // When using custom server, no base path is used
-                    nodeRoot = ''
-                    $('#info-webserver')
-                        .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
-                }
-                var urlPrefix = eUrlSplit.join(':') + '/'
-                // Show the root URL
-                $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl)
-                    .text('Open ' + nodeRoot + thisurl)
-                $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
-                // NB: The index url link is only shown if the option is turned on
-                $('#show-src-folder-idx-url').empty()
-                    .append('<div>at <a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank" class="red-ui-button">' + nodeRoot + $(this).val() + '/idx</a></div>')
-
-            })
+            $('#node-input-url').on('change', urlChange)
 
             // When the show web view (index) of source files changes
-            $('#node-input-showfolder').change(function() {
+            $('#node-input-showfolder').on('change', function() {
                 if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
                 else $('#show-src-folder-idx-url').show()
             })
 
-            //#region ---- Template settings ---- //
+            // Configure the template dropdown & setup button handlers
+            templateSettings(that)
 
-            $('#adv-templ').hide()
-            $('#show-templ-props').css( 'cursor', 'pointer' )
-            $('#show-templ-props').on('click', function() { // (e) {
-                $('#adv-templ').toggle()
-                if ( $('#adv-templ').is(':visible') ) {
-                    $('#show-templ-props').html('<i class="fa fa-caret-down"></i> Template Settings')
-                } else {
-                    $('#show-templ-props').html('<i class="fa fa-caret-right"></i> Template Settings')
-                }
-            })
-            // Populate the template selection drop-down and select default (in advanced)
-            populateTemplateDropdown(that)
-            checkDependencies()
-            // Unhide the external template name input if external selected
-            if ( $('#node-input-templateFolder').val() === 'external' ) $('#et-input').show()
-            // Handle change of template
-            $('#node-input-templateFolder').change(function() { // (e) {
-                // update the help tip
-                if ( RED.settings.uibuilderTemplates[that.templateFolder] )
-                    $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
-                // Check if the dependencies are installed, warn if not
-                checkDependencies()
-                // Unhide the external template name input if external selected
-                if ( $('#node-input-templateFolder').val() === 'external' )
-                    $('#et-input').show()
-                else
-                    $('#et-input').hide()
-            })
-            // Button press for loading new template
-            $('#btn-load-template').on('click', function(e){
-                e.preventDefault() // don't trigger normal click event
-                btnTemplate()
-            })
-            
-            //#endregion ---- ---- //
-
-            //#region ---- security settings ---- //
-            
-            // Show/Hide the security settings
-            $('#show-security-props').css( 'cursor', 'pointer' )
-            $('#show-security-props').on('click', function() { // (e) {
-                $('#sec-props').toggle()
-                if ( $('#sec-props').is(':visible') ) {
-                    $('#show-security-props').html('<i class="fa fa-caret-down"></i> Security Settings')
-                } else {
-                    $('#show-security-props').html('<i class="fa fa-caret-right"></i> Security Settings')
-                }
-            })
-
-            // One-off check for default settings
-            if ( $('#node-input-jwtSecret').val().length === 0 ) {
-                $('#node-input-jwtSecret').val(defaultJwtSecret)
-            }
-            if ( $('#node-input-useSecurity').is(':checked') && $('#node-input-sessionLength').val().length === 0 ) {
-                $('#node-input-sessionLength').val(defaultSessionLength)
-            }
-
-            // Security turning on/off
-            $('#node-input-useSecurity').change(function() {
-                // security is requested, enable other settings and add warnings if needed
-                // @since v4.1.1 disable lockout of security for non-http in production
-                // if ( this.checked ) {
-                //     // If in production, cannot turn on security without https, in dev, give a warning
-                //     if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
-                //         if (RED.settings.uibuilderNodeEnv !== 'development') {
-                //             console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
-                //             $('#node-input-useSecurity').prop('checked', false); this.checked = false
-                //         } else {
-                //             console.warn('HTTPS NOT IN USE BUT SECURITY REQUESTED - Node environment is "development" so this is allowed but not recommended')
-                //         }
-                //         // TODO: Add user warnings
-                //     }
-                // }
-                // Yes, we do need this.checked twice :-)
-                if ( this.checked ) {
-                    $('#node-input-sessionLength').prop('disabled', false)
-                    $('#node-input-jwtSecret').prop('disabled', false)
-                    $('#node-input-tokenAutoExtend').prop('disabled', false)
-                    // Add defaults if fields are empty
-                    if ( $('#node-input-jwtSecret').val().length === 0 ) {
-                        $('#node-input-jwtSecret').addClass('input-error')
-                    }
-                    if ( $('#node-input-sessionLength').val().length === 0 ) {
-                        $('#node-input-sessionLength').val(defaultSessionLength)
-                    }
-                    if ( $('#node-input-jwtSecret').val().length === 0 ) {
-                        $('#node-input-jwtSecret').val(defaultJwtSecret)
-                    }
-
-                } else { // security not requested, disable other settings
-                    $('#node-input-sessionLength').prop('disabled', true)
-                    $('#node-input-jwtSecret').prop('disabled', true)
-                    $('#node-input-tokenAutoExtend').prop('disabled', true)
-                }
-            }) // -- end of security change -- //
-
-            // What mode is Node-RED running in? development or something else?
-            $('#nrMode').text(RED.settings.uibuilderNodeEnv)
-
-            //#endregion ---- security settings ---- //
+            // security settings
+            securitySettings()
 
             // Show/Hide the advanced settings
             $('#show-adv-props').css( 'cursor', 'pointer' )
