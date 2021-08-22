@@ -1,4 +1,4 @@
-/* global Vue */
+/* eslint-disable sonarjs/cognitive-complexity, sonarjs/no-duplicate-string */
 /*
   Copyright (c) 2017-2021 Julian Knight (Totally Information)
 
@@ -25,7 +25,7 @@
 'use strict'
 
 // @since 2017-10-17 CL: tell webpack that we need socket.io client if running from webpack build
-if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
+if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-disable-line block-scoped-var, no-use-before-define
     // @ts-expect-error ts(2307)
     var io = require('socket.io-client')
 }
@@ -37,15 +37,15 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 (function () {
     //#region --- Type Defs --- //
     /**
-     * @typedef {Object} _auth The standard auth object used by uibuilder security. See docs for details.
+     * @typedef {object} _auth The standard auth object used by uibuilder security. See docs for details.
      * Note that any other data may be passed from your front-end code in the _auth.info object.
      * _auth.info.error, _auth.info.validJwt, _auth.info.message, _auth.info.warning
-     * @property {String} id Required. A unique user identifier.
-     * @property {String} [password] Required for login only.
-     * @property {String} [jwt] Required if logged in. Needed for ongoing session validation and management.
-     * @property {Number} [sessionExpiry] Required if logged in. Milliseconds since 1970. Needed for ongoing session validation and management.
+     * @property {string} id Required. A unique user identifier.
+     * @property {string} [password] Required for login only.
+     * @property {string} [jwt] Required if logged in. Needed for ongoing session validation and management.
+     * @property {number} [sessionExpiry] Required if logged in. Milliseconds since 1970. Needed for ongoing session validation and management.
      * @property {boolean} [userValidated] Required after user validation. Whether the input ID (and optional additional data from the _auth object) validated correctly or not.
-     * @property {Object=} [info] Optional metadata about the user.
+     * @property {object=} [info] Optional metadata about the user.
      */
     /**
      * A string containing HTML markup
@@ -58,19 +58,64 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
     // Keep a copy of anything with a clashing name in the starting context
     var previous_uibuilder = root.uibuilder
 
+    //#region ----- Utility Functions ----- //
+
+    /** Makes a null or non-object into an object
+     * If not null, moves "thing" to {payload:thing}
+     *
+     * @param {*} thing Thing to check
+     * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
+     * @returns {!object} _
+     */
+    function makeMeAnObject(thing, property) {
+        if (property === null || property === undefined) property = 'payload'
+        if ( typeof property !== 'string' ) {
+            console.warn('[uibuilderfe:makeMeAnObject] WARNING: property parameter must be a string and not: ' + typeof property)
+            property = 'payload'
+        }
+        var out = {}
+        if (typeof thing === 'object') { 
+            out = thing
+        } else if (thing !== null) { 
+            out[property] = thing
+        }
+        return out
+    } // --- End of make me an object --- //
+
+    /** Joins all arguments as a URL string
+     * see http://stackoverflow.com/a/28592528/3016654
+     * since v1.0.10, fixed potential double // issue
+     * arguments {string} URL fragments
+     * @returns {string} _
+     */
+    function urlJoin() {
+        var paths = Array.prototype.slice.call(arguments)
+        var url = '/'+paths.map(function(e){
+            return e.replace(/^\/|\/$/g,'')
+        })
+            .filter(function(e){
+                return e
+            })
+            .join('/')
+        return  url.replace('//','/')
+    } // ---- End of urlJoin ---- //
+
+    //#endregion ----- Utility Functions ----- //
+    
     // Create a function with specific "this" context - this is the main code
     // @since 2017-10-14 Replaced "new (function(){})" with "(function(){}).call(root)"
-    var uibuilder = (function () {
+    var uibuilder = (function uibuilder() {
         // Remember that things have to be defined *before* they are referenced
 
         // Define polyfill for endsWith for IE
         if (!String.prototype.endsWith) {
+            // eslint-disable-next-line no-extend-native
             String.prototype.endsWith = function(suffix) {
                 return this.indexOf(suffix, this.length - suffix.length) !== -1
             }
         }
 
-        /** @type {Object} */
+        /** @type {object} */
         var self = this
 
         //#region ======== Start of setup ======== //
@@ -78,7 +123,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.version = '4.2.0'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
-        self.isUnminified = /param/.test(function(param) {}) // eslint-disable-line no-unused-vars
+        self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
         self.debug = self.isUnminified === true ? true : false // do not change directly - use .debug() method
         self.security = false // Does uibuilder have security turned on? (Set by early incoming control message)
         /** Empty User info template
@@ -101,10 +146,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         self.started = false
 
         /** Debugging function
-         * @param {string} type One of log|error|warn|info|dir, etc
-         * @param {...*} msg Msg(s) to send to console
+         * param {string} type One of log|error|warn|info|dir, etc
+         * param {...*} msg Msg(s) to send to console
          * WARNING: ...args is ES6, it doesn't work on IE11
-         * @since 2019-02-01 Apply any number of args
+         * since 2019-02-01 Apply any number of args
          */
         //self.uiDebug = function (type, ...args) {
         self.uiDebug = function () {
@@ -112,15 +157,15 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             var type = arguments[0]
 
-            /** @since v2.0.0-dev3 2019-05-27 changed from ...apply(undefined,...) to ...apply(console,...) Fixes Issue #49 */
+            /** since v2.0.0-dev3 2019-05-27 changed from ...apply(undefined,...) to ...apply(console,...) Fixes Issue #49 */
             //console[type](...args)
             console[type].apply(console, [].slice.call(arguments, 1))
 
         } // --- End of debug function --- //
 
         /** Returns the self object if debugging otherwise just the current version
-         * @return {object|string} Returns self or version
-        */
+         * @returns {object|string} Returns self or version
+         */
         self.me = function() {
             return self.debug === true ? self : 'uibuilderfe.js Version: ' + self.version
         }
@@ -129,17 +174,17 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
 
         /** Try to get the Socket.IO namespace from the current URL - won't work if page is in a sub-folder
-         * @since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
-         * @since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
-         * @since 2020-01-25 Removed httpRoot from namespace to prevent proxy induced errors
-         * @return {string} Socket.IO namespace
+         * since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
+         * since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
+         * since 2020-01-25 Removed httpRoot from namespace to prevent proxy induced errors
+         * @returns {string} Socket.IO namespace
          */
-        self.setIOnamespace = function () {
+        self.setIOnamespace = function setIOnamespace() {
 
             var ioNamespace = ''
 
             /** Try getting the namespace cookie. 
-             * @since 2020-01-25 Changed to allow for duplicate cookies */
+             * since 2020-01-25 Changed to allow for duplicate cookies */
             try {
                 ioNamespace = document.cookie.match(/uibuilder-namespace\s*=.*?\s*;/g)[0].replace('uibuilder-namespace=','').replace(';','')
             // eslint-disable-next-line no-empty
@@ -150,8 +195,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 // split url path & eliminate any blank elements, and trailing or double slashes
                 var u = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
 
-                /** @since v2.0.5 Extra check for 0 length, Issue #73. @since 2017-11-06 If the last element of the path is an .html file name, remove it */
-                if (u.length > 0) if (u[u.length - 1].endsWith('.html')) u.pop()
+                /** since v2.0.5 Extra check for 0 length, Issue #73. since 2017-11-06 If the last element of the path is an .html file name, remove it */
+                if (u.length > 0 && (u[u.length - 1].endsWith('.html')) ) u.pop()
 
                 // Get the last part of the url path, this MUST match the namespace in uibuilder
                 ioNamespace = u.pop()
@@ -215,7 +260,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         // split current url path, eliminate any blank elements and trailing or double slashes
         var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
         /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
-        if (fullPath.length > 0) if (fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
+        if ( fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith('.html') ) fullPath.pop()
         self.url = fullPath.pop() // not actually used and only gives the last path section of the url anyway
         self.httpNodeRoot = '/' + fullPath.join('/')
         self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')
@@ -229,10 +274,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
          * Also triggers any event listeners.
          * Example: self.set('msg', {topic:'uibuilder', payload:42});
-         * @param {string} prop
-         * @param {*} val
+         * @param {string} prop _
+         * @param {*} val _
          */
-        self.set = function (prop, val) {
+        self.set = function set(prop, val) {
             self[prop] = val
             //self.uiDebug('debug', `uibuilderfe: prop set - prop: ${prop}, val: ${(typeof val === 'object') ? JSON.stringify(val) : val}` )
             self.uiDebug('debug', 'uibuilderfe: prop set - prop: ' + prop + ', val: ' + ((typeof val === 'object') ? JSON.stringify(val) : val) )
@@ -247,8 +292,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @param {number} delay Initial delay before checking (ms)
          * @param {number} factor Multiplication factor for subsequent checks (delay*factor)
          */
-        self.checkConnect = function (delay, factor) {
-            var depth = depth++ || 1
+        self.checkConnect = function checkConnect(delay, factor) {
+            var depth = depth++ || 1 // eslint-disable-line no-use-before-define
 
             //self.uiDebug('debug', `uibuilderfe:checkConnect. Reconnect - Depth: ${depth}, Delay: ${delay}, Factor: ${factor}`)
             self.uiDebug('debug', 'uibuilderfe:checkConnect. Reconnect - Depth: ' + depth + ', Delay: ' + delay + ', Factor: ' + factor, self.ioNamespace, self.ioPath)
@@ -277,11 +322,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         } // --- End of checkConnect Fn--- //
 
         /** Check supplied msg from server for a timestamp - if received, work out & store difference to browser time
-         * @param {Object} receivedMsg A message object recieved from Node-RED
+         * @param {object} receivedMsg A message object recieved from Node-RED
          * @returns {void} Updates self.serverTimeOffset if different to previous value
          */
-        self.checkTimestamp = function (receivedMsg) {
-            if ( receivedMsg.hasOwnProperty('serverTimestamp') ) {
+        self.checkTimestamp = function checkTimestamp(receivedMsg) {
+            if ( Object.prototype.hasOwnProperty.call(receivedMsg, 'serverTimestamp') ) {
                 var serverTimestamp = new Date(receivedMsg.serverTimestamp)
                 // @ts-ignore
                 var offset = Math.round( ( (new Date()) - serverTimestamp ) / 3600000 ) // in ms / 3.6m to get hours
@@ -293,10 +338,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         }
 
         /** Setup Socket.io
-         * @since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
+         * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
          * @returns {void} Attaches socket.io manager to self.socket and updates self.ioNamespace & self.ioPath as needed
          */
-        self.ioSetup = function () {
+        self.ioSetup = function ioSetup() {
 
             // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
             self.uiDebug('debug', 'uibuilderfe:ioSetup: About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
@@ -313,10 +358,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     },
                 },
             }
-            self.socket = io(self.ioNamespace, self.socketOptions)
+            self.socket = io(self.ioNamespace, self.socketOptions)  // eslint-disable-line block-scoped-var
 
             /** When the socket is connected - set ioConnected flag and reset connect timer  */
-            self.socket.on('connect', function () {
+            self.socket.on('connect', function ioconnect() {
                 self.uiDebug('info', 'uibuilderfe:ioSetup: SOCKET CONNECTED - Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
 
                 self.set('ioConnected', true)
@@ -330,8 +375,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }) // --- End of socket connection processing ---
 
             // RECEIVE When Node-RED uibuilder node sends a msg over Socket.IO to us ...
-            self.socket.on(self.ioChannels.server, function (receivedMsg) {
-                self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.server + ' (server): msg received - Namespace: ' + self.ioNamespace, receivedMsg)
+            self.socket.on(self.ioChannels.server, function msgFromServer(receivedMsg) {
+                self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.server + ' (server): msg received - Namespace: ' + self.ioNamespace, receivedMsg)
 
                 // Make sure that msg is an object & not null
                 receivedMsg = makeMeAnObject(receivedMsg, 'payload')
@@ -343,12 +388,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 if ( receivedMsg._auth ) self.updateAuth(receivedMsg._auth)
 
                 // If the msg contains a code property (js), insert to DOM, remove from msg if required
-                if ( self.allowScript && receivedMsg.hasOwnProperty('script') ) {
+                if ( self.allowScript && Object.prototype.hasOwnProperty.call(receivedMsg, 'script') ) {
                     self.newScript(receivedMsg.script)
                     if ( self.removeScript ) delete receivedMsg.script
                 }
                 // If the msg contains a style property (css), insert to DOM, remove from msg if required
-                if ( self.allowStyle && receivedMsg.hasOwnProperty('style') ) {
+                if ( self.allowStyle && Object.prototype.hasOwnProperty.call(receivedMsg, 'style') ) {
                     self.newStyle(receivedMsg.style)
                     if ( self.removeStyle ) delete receivedMsg.style
                 }
@@ -367,7 +412,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }) // -- End of websocket receive DATA msg from Node-RED -- //
 
             // RECEIVE a CONTROL msg from Node-RED - see also sendCtrl()
-            self.socket.on(self.ioChannels.control, function (receivedCtrlMsg) {
+            self.socket.on(self.ioChannels.control, function ctrlMsgRecvd(receivedCtrlMsg) {
                 self.uiDebug('debug', '[uibuilder:ioSetup:on-ctrl-recvd] ' + self.ioChannels.control + ' (control): msg received - Namespace: ' + self.ioNamespace, receivedCtrlMsg)
 
                 // Make sure that msg is an object & not null
@@ -380,10 +425,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 }
 
                 // Allow incoming control msg to change debug state (usually on the connection msg)
-                if ( receivedCtrlMsg.hasOwnProperty('debug') ) self.debug = receivedCtrlMsg.debug
+                if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'debug') ) self.debug = receivedCtrlMsg.debug
 
                 // Allow incoming control msg to indicate that this instance of the uibuilder node has security turned on
-                if ( receivedCtrlMsg.hasOwnProperty('security') ) {
+                if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') ) {
                     self.security = receivedCtrlMsg.security
                     self.uiDebug('warn', `[uibuilderfe:ioSetup:on-ctrl-recvd] Security is ${self.security}`)
                 }
@@ -396,26 +441,26 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                 /** Process control msg types */
                 switch(receivedCtrlMsg.uibuilderCtrl) {
-                    // Initial startup msg from Node-RED server
+                    // DEPRECATED? Initial startup msg from Node-RED server
                     case 'ready for content':
                         if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
 
-                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "ready for content" from server')
+                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "ready for content" from server')
 
                         break
 
                     // Node-RED is shutting down
                     case 'shutdown':
-                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "shutdown" from server')
+                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "shutdown" from server')
                         self.set('serverShutdown', undefined)
                         break
 
-                    // We are connected to the server
-                    case 'client connect':
-                        if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
+                    // We are connected to the server - 1st msg from server
+                    case 'client connect': {
+                        if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth, 'init')
 
                         if ( self.autoSendReady === true ) {
-                            self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "client connect" from server, auto-sending REPLAY control msg')
+                            self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "client connect" from server, auto-sending REPLAY control msg')
 
                             // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
                             self.send({
@@ -425,10 +470,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                         }
 
                         break
+                    }
 
                     // Login was accepted by the Node-RED server - note that payload may contain more info
                     case 'authorised':
-                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server')
+                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server')
                         if ( receivedCtrlMsg._auth ) {
                             self.updateAuth(receivedCtrlMsg._auth)
                         } else {
@@ -440,20 +486,21 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                     // Login was rejected by the Node-RED server - note that payload may contain more info
                     case 'authorisation failure':
-                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorisation failure" from server')
+                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorisation failure" from server')
                         self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._auth.authData)
                         break
 
                     // Logoff confirmation from server - note that payload may contain more info
                     case 'logged off':
-                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "logged off" from server')
+                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "logged off" from server')
                         self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._auth)
                         break
 
-                    default:
-                        self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
+                    default: {
+                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
                         if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
                         // Anything else
+                    }
 
                 } // ---- End of process control msg types ---- //
 
@@ -466,7 +513,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }) // -- End of websocket receive CONTROL msg from Node-RED -- //
 
             // When the socket is disconnected ..............
-            self.socket.on('disconnect', function (reason) {
+            self.socket.on('disconnect', function onDisconnect(reason) {
                 // reason === 'io server disconnect' - redeploy of Node instance
                 // reason === 'transport close' - Node-RED terminating
                 // reason === 'ping timeout' - didn't receive a pong response?
@@ -481,13 +528,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             }) // --- End of socket disconnect processing ---
 
             // Socket.io connection error - probably the wrong ioPath
-            self.socket.on('connect_error', function(err) {
+            self.socket.on('connect_error', function onConnectErr(err) {
                 self.uiDebug('error', 'uibuilderfe:ioSetup: SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
                 //console.dir(err)
             }) // --- End of socket connect error processing ---
             
             // Socket.io error - from the server (socket.use middleware triggered an error response)
-            self.socket.on('error', function(err) {
+            self.socket.on('error', function onSocErr(err) {
                 self.uiDebug('warn', 'uibuilderfe:ioSetup: SOCKET ERROR from server - MESSAGE: ', err)
                 self.set('socketError', err)
                 //console.dir(err)
@@ -497,7 +544,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             self.checkConnect(self.retryMs, self.retryFactor)
 
             // TODO: Just for testing - remove or do something useful
-            // self.socket.io.on('packet', function(data){
+            // self.socket.io.on('packet', function onPacket(data){
             //     // we get one of these for each REAL msg (not ping/pong)
             //     console.log('PACKET', data)
             // })
@@ -540,10 +587,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         } // ---- End of ioSetup ---- //
         
         /** Mark client as logged off & delete local auth data
-         * @param {String=} localReason Optional, give a reason for logoff, will be placed in self.authData
+         * @param {string=} localReason Optional, give a reason for logoff, will be placed in self.authData
          * @param {_auth=} _auth Data from server, uses self._auth if not provided
          */
-        self.markLoggedOut = function(localReason, _auth) {
+        self.markLoggedOut = function markLoggedOut(localReason, _auth) {
             // If _auth undefined then ignore
             if (self._auth === undefined && _auth === undefined) return
 
@@ -571,7 +618,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @param {_auth=} _auth Logon specific data to be passed to Node-RED, uses self._auth if not provided.
          * @param {string=} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
          */
-        self.logon = function(_auth, api) {
+        self.logon = function logon(_auth, api) {
             // If security is off, don't bother
             if (!self.security) return
 
@@ -609,7 +656,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * @param {_auth=} _auth Required. Logon specific data to be passed to Node-RED
          * @param {string} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
          */
-        self.logoff = function(_auth, api) {
+        self.logoff = function logoff(_auth, api) {
             // If security is off, don't bother
             if (!self.security) return
 
@@ -643,8 +690,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * Note that this may happen after a successful logon request or at any time
          * a msg is received (on any channel) that contains a msg._auth object
          * @param {_auth=} _auth Authorisation information. Defaults to self._auth if not supplied
+         * @param {string=} control Additional optional control string
          */
-        self.updateAuth = function(_auth) {
+        self.updateAuth = function updateAuth(_auth, control) {
             // If security is off, don't bother
             if (!self.security) return
             
@@ -656,6 +704,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             // Ignore if empty object
             //if ( Object.keys(_auth).length === 0 ) return
+
+            // We wont give out spurious warnings if this is the initial contact from the server
+            if (control === 'init') {
+                return
+            }
 
             if (_auth.info && _auth.info.error) {
                 self.showToast({_uib: {options: {title:'[uibuilder:updateAuth] Error from Server',variant:'danger',noAutoHide:true}}, payload: `${_auth.info.error}<br>No authentication.`})
@@ -685,9 +738,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         /** Returns a standard msg._auth Object either with valid authToken or none
          * If token has expired, run the logout to invalidate the retained data.
-         * @returns {_auth|undefined}
+         * @returns {_auth|undefined} _
          */
-        self.sendAuth = function() {
+        self.sendAuth = function sendAuth() {
             // If security is off, don't supply a msg._auth
             if (!self.security) return undefined
 
@@ -695,18 +748,23 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             // If anything goes wrong, don't send _auth to server
             try {
+                
                 if ( self._auth === undefined ) return undefined
+
                 // TODO: Remove extra metadata from _auth before sending (info, userValidated, sessionExpiry)
                 if ( self.isAuthorised ) {                
+
                     if ( new Date(self._auth.sessionExpiry) > (new Date()) ) {
                         return self._auth
-                    } else { // Token has expired so mark as logged off
-                        self.markLoggedOut('Automatically logged off. Token expired')
-                        return self._auth
                     }
-                } else {
+
+                    // Token has expired so mark as logged off
+                    self.markLoggedOut('Automatically logged off. Token expired')
                     return self._auth
                 }
+
+                return self._auth
+
             } catch(e) {
                 console.error('[uibuilderfe:sendAuth] Failed to validate auth. Error: ', e.message)
                 return undefined
@@ -715,18 +773,25 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         /** Send a standard msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
-         * @param {Object} msgToSend The msg object to send.
+         * @param {object} msgToSend The msg object to send.
          * @param {string} [channel=uiBuilderClient] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored
          */
-        self.send = function (msgToSend, channel) {
+        self.send = function send(msgToSend, channel) {
             if ( channel === null || channel === undefined ) channel = self.ioChannels.client
 
             // If security is on but client not authenticated only allow logon control msg to be sent
-            if ( self.security && !self.isAuthorised ) {
-                if ( !(channel === self.ioChannels.control && msgToSend.uibuilderCtrl === 'logon') ) {
+            // Just a local convenience, the server will block anyway
+            if ( self.security && !self.isAuthorised ) { 
+                let block = true
+                if ( channel === self.ioChannels.control) { // eslint-disable-line sonarjs/no-collapsible-if
+                    if ( msgToSend.uibuilderCtrl === 'logon' || msgToSend.uibuilderCtrl === 'ready for content') {
+                        block = false
+                    }
+                }
+                if ( block === true ) {
                     console.error('[uibuilder:send] Message not sent. Security is on but client not authorised - can only send a logon control msg', msgToSend, channel)
                     //! Comment this out if you want to allow messages to be send when not logged in
-                    //return
+                    //return  // TODO COMMENTED OUT FOR TESTING ONLY
                 }
             }
 
@@ -737,14 +802,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                 msgToSend = makeMeAnObject(msgToSend, 'payload')
             } else if (channel === self.ioChannels.control) {
                 msgToSend = makeMeAnObject(msgToSend, 'uibuilderCtrl')
-                if ( ! msgToSend.hasOwnProperty('uibuilderCtrl') ) {
+                if ( ! Object.prototype.hasOwnProperty.call(msgToSend, 'uibuilderCtrl') ) {
                     msgToSend.uibuilderCtrl = 'manual send'
                 }
                 // help remember where this came from as ctrl msgs can come from server or client
                 msgToSend.from = 'client'
             }
 
-            /** @since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
+            /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
             msgToSend._socketId = self.socket.id
 
             /** If we have an authToken and not expired, add `_auth` to output msg */
@@ -768,9 +833,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * Example: uibuilder.onChange('msg', function(newValue){ console.log('uibuilder.msg changed! It is now: ', newValue) })
          *
          * @param {string} prop The property of uibuilder that we want to monitor
-         * @param {function} callback The function that will run when the property changes, parameter is the new value of the property after change
+         * @param {Function} callback The function that will run when the property changes, parameter is the new value of the property after change
          */
-        self.onChange = function(prop, callback) {
+        self.onChange = function onChange(prop, callback) {
             // Note: Property does not have to exist yet
 
             //self.uiDebug('log', `uibuilderfe:uibuilder:onchange: pushing new callback (event listener) for property: ${prop}`)
@@ -786,7 +851,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         /** Forcably removes all event listeners from the events array
          * Use if you need to re-initialise the environment
          */
-        self.clearEventListeners = function() {
+        self.clearEventListeners = function clearEventListeners() {
             self.events = []
         } // ---- End of clearEventListeners() ---- //
 
@@ -798,9 +863,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * Called when uibuilder.set is used
          *
          * @param {*} prop The property for which to run the callback functions
-         * @param arguments Additional arguments contain the value to pass to the event callback (e.g. newValue)
+         * arguments: Additional arguments contain the value to pass to the event callback (e.g. newValue)
          */
-        self.emit = function (prop) {
+        self.emit = function emit(prop) {
             var evt = self.events[prop]
             if (!evt) {
                 return
@@ -816,9 +881,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         //#region ========== Handle incoming code via received msg ========== //
 
         /** Add a new script block to the end of <body> from text or an array of text
-         * @param {(string[]|string)} script
+         * @param {(string[]|string)} script _
          */
-        self.newScript = function(script) {
+        self.newScript = function newScript(script) {
             if ( self.allowScript !== true ) return
             if ( script === '' || (typeof script === 'undefined') ) return
             //if ( script.constructor === Array ) script.join("\n")
@@ -833,9 +898,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         }
 
         /** Add a new style block to end of <head> from text or an array of text
-         * @param {(string[]|string)} style
+         * @param {(string[]|string)} style _
          */
-        self.newStyle = function(style) {
+        self.newStyle = function newStyle(style) {
             if ( self.allowStyle !== true ) return
             if ( style === '' || (typeof style === 'undefined') ) return
 
@@ -854,9 +919,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
          * Place inside the uibuilder.on('msg', ...) function inside your Vue app's
          * mounted section.
          * @see https://bootstrap-vue.org/docs/components/toast
-         * @param {Object} msg A msg from Node-RED with appropriate formatting
+         * @param {object} msg A msg from Node-RED with appropriate formatting
          */
-        self.showToast = function(msg) {                
+        self.showToast = function showToast(msg) {                
 
             // We need self.vueApp to be set
             if ( ! self.vueApp ) {
@@ -881,16 +946,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             const h = self.vueApp.$createElement
 
             /** Toast options
-             * @type {Object} toastOptions Optional metadata for the toast.
-             * @param {String|VNode|VNode[]} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
-             * @param {Boolean} [toastOptions.appendToast] Optional. Whether to show new toasts below previous ones still on-screen (true). Or to replace previous (false - default)
-             * @param {Number} [toastOptions.autoHideDelay] Optional. Ms until toast is auto-hidden.
+             * @type {object} toastOptions Optional metadata for the toast.
+             * @param {string|VNode|VNode[]} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
+             * @param {boolean} [toastOptions.appendToast] Optional. Whether to show new toasts below previous ones still on-screen (true). Or to replace previous (false - default)
+             * @param {number} [toastOptions.autoHideDelay] Optional. Ms until toast is auto-hidden.
              */
             let toastOptions = {}
             if ( msg._uib.options ) toastOptions = Object.assign({}, msg._uib.options) // Need a copy here otherwise debug output breaks
 
             /** Main content of the toast
-             * @type {String|VNode|VNode[]}
+             * @type {string|VNode|VNode[]}
              */
             let content = ''
             
@@ -938,13 +1003,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         } // --- End of makeToast() --- //
 
         /** Simple function to show a bootstrap-vue alert (globalAlerts) */
-        self.showAlert = function() {}
+        self.showAlert = function showAlert() {}
 
         /** Return a control msg containing the props/attribs/etc of a given Vue Component instance
-         * @param {String} componentRef The ref value of the component instance to be queried
-         * @returns {Object} msg - a uibuilder control msg object
+         * @param {string} componentRef The ref value of the component instance to be queried
+         * @returns {object} msg - a uibuilder control msg object
          */
-        self.showComponentDetails = function(componentRef) {
+        self.showComponentDetails = function showComponentDetails(componentRef) {
             // Only if Vue is in use and a reference to the Vue master app is available ...
             if ( !self.vueApp ) return
 
@@ -984,9 +1049,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
         /** If Vue is in use and we have a reference to the main app, this fn can send data and config direct to a Vue componant instance
          *  if that component has been written in the right way.
-         * @param {Object} msg Message object from Node-RED
+         * @param {object} msg Message object from Node-RED
          */
-        self.onChange('msg', function(msg) {
+        self.onChange('msg', function onMsgRcvd(msg) {
 
             // Only if Vue is in use and a reference to the Vue master app is available ...
             if ( !self.vueApp ) return
@@ -1057,8 +1122,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                     // TODO: Not sure this is quite right ...
                     try {
-                        vueApp.$refs[componentRef].$props['config']['value'] = msg.payload
-                    } catch (e) {}
+                        vueApp.$refs[componentRef].$props.config.value = msg.payload
+                    } catch (e) { /** */ }
                     
                 }
             
@@ -1090,10 +1155,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             /** Function to set uibuilder properties to a new value. Also triggers any event listeners.
              * This version is for external use and disallows certain properties to be set
              * Example: uibuilder.set('foo', {name:'uibuilder', data:42}); uibuilder.set('oldMsg', uibuilder.get('msg'));
-             * @param {string} prop
-             * @param {*} val
+             * @param {string} prop _
+             * @param {*} val _
              */
-            set: function (prop, val) {
+            set: function set(prop, val) {
                 /** Add exclusions for protected properties.
                  * Can't use hasOwnProperty or use an allow list as that would exclude new properties
                  * @type {Array}
@@ -1148,9 +1213,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             /** Function to get the value of a uibuilder property
              * Example: uibuilder.get('msg')
              * @param {string} prop The name of the property to get
-             * @return {*} The current value of the property
+             * @returns {*} The current value of the property
              */
-            get: function (prop) {
+            get: function get(prop) {
                 /** Add exclusions for protected properties.
                  * Can't use hasOwnProperty or use an allow list as that would exclude new properties
                  * @type {Array}
@@ -1195,7 +1260,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              * Use instead of having to do: uibuilder.get('msg')
              * Example: console.log( uibuilder.msg )
              *
-             * @return {Object} msg
+             * @returns {object} msg
              */
             msg: self.msg,
 
@@ -1203,14 +1268,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              * Example: uibuilder.sendMsg({payload:'Hello'})
              */
             send: self.send,
-            sendCtrl: function(msg) {
+            sendCtrl: function sendCtrl(msg) {
                 self.send(msg, self.ioChannels.control)
             },
 
             /** Control auto sending of '' control message
              * @param {boolean} sw True= Send ctrl msg on window.load, false=have to send manually
              */
-            autoSendReady: function(sw) {
+            autoSendReady: function autoSendReady(sw) {
                 if ( sw !== true ) sw = false
                 self.autoSendReady = sw
             },
@@ -1218,7 +1283,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             /** Turn on/off debugging
              * Example: uibuilder.debug(true)
              * @param {boolean} [onOff] Debug flag
-             * @return {boolean|void} If no parameter given, returns current debug state
+             * @returns {boolean|void} If no parameter given, returns current debug state
              */
             debug: function (onOff) {
                 if ( typeof onOff === 'undefined' ) return self.debug
@@ -1234,16 +1299,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
             /** Return self object (if debug true) or module version
              * Use only for debugging as: console.dir(uibuilder.me())
-             * @return {object|string} Returns self object or version string
+             * @returns {object|string} Returns self object or version string
              **/
             me: self.me,
 
             /** Startup socket.io comms - must be done manually by user to allow for changes to namespace/path 
-             * @param {Object|string} [namespace] Optional. Object containing ref to vueApp, Object containing settings, or IO Namespace override. changes self.ioNamespace from the default.
+             * @param {object|string} [namespace] Optional. Object containing ref to vueApp, Object containing settings, or IO Namespace override. changes self.ioNamespace from the default.
              * @param {string=} ioPath Optional. changes self.ioPath from the default
-             * @param {Object=} vueApp Optional. reference to the VueJS instance
+             * @param {object=} vueApp Optional. reference to the VueJS instance
              */
-            start: function(namespace,ioPath,vueApp) {
+            start: function start(namespace,ioPath,vueApp) {
                 if ( self.started === true ) {
                     self.uiDebug('log', '❌ [uibuilderfe:start] Start function already called. Do not call more than once.')
                     return
@@ -1269,8 +1334,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
                     }
                 } else {
                     // If the 1st param wasn't an object, was the vueApp param provided?
-                    if ( ! vueApp ) {
-                        self.uiDebug('log', '❌ [uibuilderfe:start] app1 not available!')
+                    if ( ! vueApp ) { // eslint-disable-line no-lonely-if
+                        self.uiDebug('log', '❌ [uibuilderfe:start] Vue app not available!')
                     } else if ( toString.call(vueApp) === '[object Object]' && vueApp._isVue === true ) {
                         self.uiDebug('log', '✅ [uibuilderfe:start] Vue instance object IS available!')
                     } else {
@@ -1296,7 +1361,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             /** Send a logon request control message
              * Node-RED will respond with another control msg indicating success or failure,
              * the `isAuthorised` variable is set accordingly to true or false.
-             * @param {Object} [data] Optional. Logon specific data to be passed to Node-RED
+             * @param {object} [data] Optional. Logon specific data to be passed to Node-RED
              */
             logon: self.logon,
 
@@ -1307,8 +1372,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
             logoff: self.logoff,
 
             /** Return a control msg containing the props/attribs/etc of a given Vue Component instance
-             * @param {String} componentRef The ref value of the component instance to be queried
-             * @returns {Object} msg - a uibuilder control msg object
+             * @param {string} componentRef The ref value of the component instance to be queried
+             * @returns {object} msg - a uibuilder control msg object
              */
             showComponentDetails: self.showComponentDetails,
 
@@ -1316,8 +1381,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              * @see docs/vue-component-handling.md
              * @param {string|html} text Text to show in the notification body. May be HTML. Use options params for more control.
              * @param {string} [ref] Optional. If provided, positions the notification next to the referenced component instance
-             * @param {Object} [options] Optional. Additional toast options
+             * @param {object} [options] Optional. Additional toast options
              */
+            // @ts-ignore ts(1005), ts(8010) 
             showToast: function(text, ref='globalNotification', options={}) {
                 const msg = {
                     '_uib': {
@@ -1336,7 +1402,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
              *    use them instead of arguments in the click function
              * @param {MouseEvent|any} domevent DOM Event object
              */
-            eventSend: function(domevent) {
+            eventSend: function eventSend(domevent) {
                 // The argument must be a DOM event
                 if ( (! domevent.constructor.name.endsWith('Event')) || (! domevent.currentTarget) ) {
                     self.uiDebug('log', '[uibuilderfe:eventSend] ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data')
@@ -1346,9 +1412,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
 
                 // Try to get a meaningful ID. id attrib is highest priority, text content is lowest
                 let id = ''
-                try { if (target.textContent !== '') id = target.textContent.substring(0,25) } catch (e) {}
-                try { if (target.name !== '') id = target.name } catch (e) {}
-                try { if (target.id !== '') id = target.id } catch (e) {}
+                try { if (target.textContent !== '') id = target.textContent.substring(0,25) } catch (e) { /** */ }
+                try { if (target.name !== '') id = target.name } catch (e) { /** */ }
+                try { if (target.id !== '') id = target.id } catch (e) { /** */ }
 
                 self.send({
                     topic: self.msg.topic,  // repeats the topic from the last inbound msg if it exists
@@ -1396,7 +1462,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
      * In parent code, use as:
      *    var othername = uibuilder.noConflict()
      *    // the variable uibuilder is back to its old value from here
-     * @return {object}
+     * @returns {object} _
      */
     uibuilder.noConflict = function () {
         root.uibuilder = previous_uibuilder
@@ -1414,42 +1480,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') {
         // If running in browser, this creates window.uibuilder
         root.uibuilder = uibuilder
     }
-
-    /** Makes a null or non-object into an object
-     * If not null, moves "thing" to {payload:thing}
-     *
-     * @param {*} thing Thing to check
-     * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
-     * @return {!Object}
-     */
-    function makeMeAnObject(thing, property) {
-        if (property === null || property === undefined) property = 'payload'
-        if ( typeof property !== 'string' ) {
-            console.warn('[uibuilderfe:makeMeAnObject] WARNING: property parameter must be a string and not: ' + typeof property)
-            property = 'payload'
-        }
-        var out = {}
-        if (typeof thing === 'object') { out = thing }
-        else if (thing !== null) { out[property] = thing }
-        return out
-    } // --- End of make me an object --- //
-
-    /** Joins all arguments as a URL string
-     * @see http://stackoverflow.com/a/28592528/3016654
-     * @since v1.0.10, fixed potential double // issue
-     * @arguments {string} URL fragments
-     * @returns {string}
-     */
-    function urlJoin() {
-        var paths = Array.prototype.slice.call(arguments)
-        var url =
-            '/'+paths.map(function(e){
-                return e.replace(/^\/|\/$/g,'')
-            }).filter(function(e){
-                return e
-            }).join('/')
-        return  url.replace('//','/')
-    } // ---- End of urlJoin ---- //
 
 // eslint-disable-next-line semi
 }).call(this); // Pass current context into the IIFE
