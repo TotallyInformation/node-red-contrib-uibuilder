@@ -25,14 +25,14 @@
  * typedef {import('socket.io').Namespace} socketioNs
  */
  
-const tilib         = require('./tilib')   // General purpose library (by Totally Information)
-//const uiblib        = require('./uiblib')  // Utility library for uibuilder
-const sockets       = require('./socket')  // Access to Socket.IO server
-const path          = require('path')
-const fs = require('fs-extra')
+const tilib    = require('./tilib')   // General purpose library (by Totally Information)
+//const uiblib  = require('./uiblib')  // Utility library for uibuilder
+const sockets  = require('./socket')  // Access to Socket.IO server
+const path     = require('path')
+const fs       = require('fs-extra')
 
 // Only used for type checking
-const socketio      = require('socket.io') // eslint-disable-line no-unused-vars
+const socketio = require('socket.io') // eslint-disable-line no-unused-vars
 
 // This is replaced by the jsonwebtoken if security is activated
 var jsonwebtoken = null
@@ -122,33 +122,40 @@ class UibSec {
         // Name of the security.js file that should be loaded. Set in logon()
         this.securitySrc = ''
 
+        // Track node instances that have security turned on
+        this.trackNodes = {}
+
+        /** Make dummyAuth available
+         * @type {MsgAuth}
+         */
+        this.dummyAuth = dummyAuth
     }
 
     /** Configure this class instance.
      * Gets round the inability to pass constructor params to a singleton
      * Also allows the class instance to be configured at a different time to the `require`
-     * @param {runtimeRED} RED reference to Core Node-RED runtime object
      * @param {object} uib reference to uibuilder 'global' configuration object
-     * @param {object} log reference to uibuilder log object
      */
-    setup( RED, uib, log ) {
+    setup( uib ) {    
 
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
             // Can't set up this instance until we know that security is required
             // on at least 1 instance of uib. So this will be called at instance
             // level and therefore is bound to be called >1 - so don't warn.
-            log.trace('[uibuilder:security:setup] Setup has already been called, calling again is ignored.')
+            uib.RED.log.trace('[uibuilder:security:setup] Setup has already been called, calling again is ignored.')
             return
         }
 
-        if ( ! RED || ! uib || ! log ) {
-            throw new Error('[uibuilder:security.js] Called without required parameters')
+        if ( ! uib ) {
+            throw new Error('[uibuilder:security.js] Called without required uib parameter')
         }
 
-        this.RED = RED
+        /** @type {runtimeRED} */
+        this.RED = uib.RED
+
         this.uib = uib
-        this.log = log
+        this.log = uib.RED.log
 
         /** Replace dummy methods with those from <uibRoot>/.config/security.js - need to reassign again at node instance level in case local override is used */
         const securityjs = require( path.join(uib.rootFolder, uib.configFolderName,securityjsFileName) )
@@ -159,7 +166,6 @@ class UibSec {
         this.reallocateMethod('checkUserAuth', securityjs)
         this.reallocateMethod('jwtValidateCustom', securityjs)
         this.reallocateMethod('jwtCreateCustom', securityjs)
-        // TODO validate that all functions are available (needs its own method so it can be reused for instance level)
 
         this._isConfigured = true
     }
@@ -180,6 +186,26 @@ class UibSec {
     }
 
     //? Consider adding isConfigered checks on each method?
+
+    /** Set up security for a specified node instance
+     * @param {uibNode} node The node object
+     */
+    setupInstance( node ) {
+
+        const log = this.RED.log
+        // Track
+        if (this.trackNodes[node.url]) {
+            log.info(`[uibuilder:security:setupInstance] ${node.url} is already set up, calling again is ignored.`)
+            return
+        }
+        this.trackNodes[node.url] = {
+            id: node.url,
+            nodeId: node.id // allows us to track back to the actual node in Node-RED
+        }
+
+        tilib.mylog(`[uibuilder:security:setupInstance] ${node.url} security is set up.`)
+
+    } // --- end of setupInstance --- //
 
     /** Check authorisation validity - called for every msg received from client if security is on
      * @param {object} msg The input message from the client
