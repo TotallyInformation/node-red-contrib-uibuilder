@@ -92,26 +92,25 @@ class UibWeb {
      *  This makes them available wherever this MODULE is require'd.
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
-     * @param {runtimeRED} RED reference to Core Node-RED runtime object
      * @param {object} uib reference to uibuilder 'global' configuration object
-     * @param {object} log reference to uibuilder log object
      * param {Object} server reference to ExpressJS server being used by uibuilder
      */
-    //setup( RED, uib, log, server ) {
-    setup( RED, uib, log ) {
+    setup( uib ) {
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
-            log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
+            uib.RED.log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
-        if ( ! RED || ! uib || ! log ) {
-            throw new Error('[uibuilder:web.js] Called without required parameters')
+        if ( ! uib ) {
+            throw new Error('[uibuilder:web.js] Called without required uib parameter')
         }
 
-        this.RED = RED
+        /** @type {runtimeRED} */
+        const RED = this.RED = uib.RED
+
         this.uib = uib
-        this.log = log
+        this.log = uib.RED.log
 
         /** Optional port. If set, uibuilder will use its own ExpressJS server */
         // eslint-disable-next-line eqeqeq
