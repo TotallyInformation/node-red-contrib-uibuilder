@@ -61,14 +61,15 @@ module.exports = {
 
     /** Do any complex, custom node closure code here
      * @param {uibNode} node Reference to the node instance object
-     * @param {runtimeRED} RED Reference to the Node-RED API
      * @param {object} uib Reference to the uibuilder master config object
      * @param {object} sockets - Instance of Socket.IO handler singleton
      * @param {object} web - Instance of ExpressJS handler singleton
-     * @param {object} log - Winston logging instance
      * @param {Function|null} done Default=null, internal node-red function to indicate processing is complete
      */
-    instanceClose: function(node, RED, uib, sockets, web, log, done = null) {
+    instanceClose: function(node, uib, sockets, web, done = null) {
+        //const RED = /** @type {runtimeRED} */ uib.RED
+        const log = uib.RED.log
+
         log.trace(`[uibuilder:uiblib:instanceClose:${node.url}] Running instance close.`)
 
         /** @type {object} instances[] Reference to the currently defined instances of uibuilder */
