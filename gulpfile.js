@@ -62,8 +62,8 @@ exports.packfe = packfe
 /** Combine the parts of uibuilder.html */
 function combineHtml(cb) {
     src('src/editor/main.html')
-        .pipe(once())
         .pipe(include())
+        .pipe(once())
         .pipe(rename('uibuilder.html'))
         .pipe(dest(nodeDest))
 
