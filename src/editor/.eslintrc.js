@@ -21,9 +21,22 @@ module.exports = {
         ecmaVersion: 2015,
         sourceType: 'script'
     },
-    globals: {
-        RED: true,
-    },
+    plugins: [
+        'html',     // Check scripts in HTML. https://www.npmjs.com/package/eslint-plugin-html
+        'es',       // Help avoid js that is too new. https://eslint-plugin-es.mysticatea.dev/
+        'jsdoc',    // JSDoc. https://www.npmjs.com/package/eslint-plugin-jsdoc
+        'promise',  // Better promises. https://www.npmjs.com/package/eslint-plugin-promise
+        'sonarjs'   // Detect bugs and suspicious patterns. https://github.com/SonarSource/eslint-plugin-sonarjs
+        //'prettier', // https://www.npmjs.com/package/eslint-plugin-prettier
+    ],
+    extends: [
+        'eslint:recommended',
+        'plugin:es/restrict-to-es2015',
+        'plugin:jsdoc/recommended',
+        'plugin:promise/recommended',
+        'plugin:sonarjs/recommended',
+        //'plugin:prettier/recommended',
+    ],
     rules: {
         'jsdoc/multiline-blocks': 0,
         'jsdoc/newline-after-description': 0,
@@ -33,5 +46,11 @@ module.exports = {
         'sonarjs/cognitive-complexity': 0,
 
         'es/no-object-entries': 0,
+
+        quotes: [
+            'warn',
+            'single'
+        ],
+
     }
 }

@@ -1,0 +1,40 @@
+sequenceDiagram
+    %% https://mermaid-js.github.io/mermaid-live-editor/edit
+    %% https://mermaid-js.github.io/mermaid/#/sequenceDiagram?id=syntax
+
+    title: uibuilder client connection sequence
+
+    participant client as Client <br> Browser
+    participant NR as Node-RED <br> uibuilder node
+    participant u as uib <br> Internals
+
+    autonumber
+
+    client->>+NR: HTTPS GET endpoint 
+    NR-)-client: 200: index.html
+    client->>+NR: HTTPS GET other resources
+    NR-)-client: 200: other resources
+
+    client->>+NR: HTTPS Websocket connection request
+    NR-)-client: 200: OK
+
+    client->>+NR: WSS Websocket UPGRADE request
+    Note right of client: Headers/cookies no longer available
+    NR-)-client: 101: Switching Protocols
+
+    Note over client,NR: Begin websocket comms
+    Note over NR,u: Socket.IO 'connection'<br>event
+
+    NR-->>client: uibuilderCtrl: "client connect", incl. security flag
+    
+    alt Security Turned Off
+        rect rgba(0, 255, 0, 0.1)
+            client--)NR: uibuilderCtrl: "ready for content"<br> cacheControl: "REPLAY"
+            Note over NR,u: Send Cached content <br> if available
+        end
+
+    else Security Turned On
+        rect rgba(255, 0, 255, 0.1)
+            Note over client,u: Continues in uib-security-sequence diagrame
+        end
+    end

@@ -20,14 +20,18 @@
 /** --- Type Defs ---
  * @typedef {import('../typedefs.js').MsgAuth} MsgAuth
  * @typedef {import('../typedefs.js').uibNode} uibNode
+ * @typedef {import('../typedefs.js').uibConfig} uibConfig
  * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
+ * @typedef {import('../typedefs.js').uibuilderEditorVars} uibuilderEditorVars
  */
 
 //#region ------ Require packages ------ //
 // uibuilder custom 
-const uiblib        = require('./libs/uiblib')  // Utility library for uibuilder
-const tilib         = require('./libs/tilib')   // General purpose library (by Totally Information)
+const uiblib = require('./libs/uiblib')  // Utility library for uibuilder
+const tilib  = require('./libs/tilib')   // General purpose library (by Totally Information)
+const packageMgt                    = require('./libs/package-mgt')
+const tiEvents                      = require('@totallyinformation/ti-common-event-handler')
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {
     var templateConf  = require('../templates/template_dependencies') // Template configuration metadata
@@ -52,8 +56,6 @@ try {
 
 // Core node.js
 const path          = require('path')
-//const events        = require('events')
-const child_process = require('child_process')
 
 // 3rd-party
 const serveStatic   = require('serve-static')
@@ -66,82 +68,38 @@ const fg            = require('fast-glob') // https://github.com/mrmlnc/fast-glo
 //#endregion ----- Require packages ----- //
 
 //#region ------ uibuilder module-level globals ------ //
+/** @type {uibConfig} */
 const uib = {
-    /** Contents of uibuilder's package.json file */
     me: fs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
-    /** Module name must match this nodes html file @constant {string} uib.moduleName */
     moduleName: 'uibuilder',
-    /** URL path prefix set in settings.js - prefixes all URL's - equiv of httpNodeRoot from settings.js */
     nodeRoot: '',
-    /** Track across redeployments @constant {object} uib.deployments */
     deployments: {},
-    /** When nodeInstance is run, add the node.id as a key with the value being the url
-     *  then add processing to ensure that the URL's are unique. 
-     * Schema: {'<node.id>': '<url>'}
-     * @constant {object} uib.uib.instances
-     */
     instances: {},
-    /** File name of the master package list used to check for commonly installed FE libraries */
     masterPackageListFilename: 'masterPackageList.json',
-    /** File name of the installed package list */
     packageListFilename: 'packageList.json',
-    /** Track the vendor packages installed and their paths - updated by uiblib.checkInstalledPackages()
-     * Populated initially from packageList file once the configFolder is known & master list has been copied.
-     * Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
-     * @type {object.<string, object>} uib.packageList */
     installedPackages: {},
-    /** Location of master template folders (containing default front-end code) @constant {string} uib.masterTemplateFolder */
     masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
-    /** Location of master dist folder (containing built core front-end code) @constant {string} uib.masterStaticDistFolder */
     masterStaticDistFolder: path.join( __dirname, '..', 'front-end', 'dist' ),
-    /** Location of master src folder (containing src core front-end code) @constant {string} uib.masterStaticSrcFolder */
     masterStaticSrcFolder: path.join( __dirname, '..', 'front-end', 'src' ),
-    /** root folder (on the server FS) for all uibuilder front-end data
-     *  Cannot be set until we have the RED object and know if projects are being used
-     *  Name of the fs path used to hold custom files & folders for all uib.instances of uibuilder
-     * @constant {string} uib.rootFolder
-     * @default <userDir>/<uib.moduleName> or <userDir>/projects/<currProject>/<uib.moduleName>
-     **/
     rootFolder: null,
-    /** Location for uib config folder - set once rootFolder is finalised */
     configFolder: null,
-    /** name of the config folder */
     configFolderName: '.config',
-    /** Location for uib common folder - set once rootFolder is finalised */
     commonFolder: null,
-    /** Name of the `common` folder for shared resources */
     commonFolderName: 'common',
-    /** Name of the Socket.IO Use Middleware */
     sioUseMwName: 'sioUse.js',
-    /** The channel names for Socket.IO @type {object} */
     ioChannels: {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'},
-    /** What version of Node.JS are we running under? Impacts some file processing. 
-     * @type {Array.<number|string>} */
     nodeVersion: process.version.replace('v','').split('.'),
-    /** Options for serveStatic
-     * @see https://expressjs.com/en/resources/middleware/serve-static.html
-     */
     staticOpts: {}, //{ maxAge: 31536000, immutable: true, },
-    /** Array of instances that have requested their local instance folders be deleted on deploy - see html file oneditdelete, updated by admin api */
     deleteOnDelete: {},
-    /** Parameters for custom webserver if required. Port is undefined if using Node-RED's webserver. */
     customServer: {
-        /** Optional TCP/IP port number. If defined, uibuilder will use its own ExpressJS server/app
-         * If undefined, uibuilder will use the Node-RED user-facing ExpressJS server
-         * @type {undefined|number} If undefined, means that uibuilder is using Node-RED's webserver
-         */
         port: undefined,
-        /** @type {string} Node.js server type. ['http', 'https', 'http2']  */
         type: 'http',
         /** @type {undefined|string} uibuilder Host. sub(domain) name or IP Address */
         host: undefined,
         /** @type {undefined|string} The host name of the Node-RED server */
         hostName: undefined,
     },
-    /** Event emitter for degit, populated on 1st use. See POST admin API */
     degitEmitter: undefined,
-    /** Keep a reference to RED for convenience. Set at the start of Uib
-     * @type {runtimeRED} */
     RED: undefined,
 }
 
@@ -149,7 +107,7 @@ const uib = {
 uib.version = uib.me.version
 
 /** Dummy logging 
- * @type {object.<string, Function>} */
+ * @type {Object<string, Function>} */
 var dummyLog = {
     fatal: function(){}, // fatal - only those errors which make the application unusable should be recorded
     error: function(){}, // error - record errors which are deemed fatal for a particular request + fatal errors
@@ -167,7 +125,7 @@ var userDir = ''
 
 //#region ------ module-level functions ------ //
 
-/** All of the initialisation of the Node
+/** 1a) All of the initialisation of the Node
  * This is only run once no matter how many uib node instances are added to a flow
  */
 function runtimeSetup() {
@@ -187,8 +145,7 @@ function runtimeSetup() {
                 RED.log.info('| Using Node-RED\'s webserver at:')
             }
             let port = Number(RED.settings.uiPort)
-            // eslint-disable-next-line eqeqeq
-            if ( uib.customServer.port !== undefined && uib.customServer.port != port ) port = uib.customServer.port
+            if ( uib.customServer.port !== undefined && uib.customServer.port != port ) port = Number(uib.customServer.port) // eslint-disable-line eqeqeq
             
             RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${port}/ or ${uib.customServer.type}://localhost:${port}/`)
             RED.log.info('| Installed packages:')
@@ -299,6 +256,9 @@ function runtimeSetup() {
         console.error('[uibuilder:runtimeSetup] Security setup error ', e)
     } 
 
+    /** Do this before doing the web setup so that the packages can be served */
+    packageMgt.setup(uib)
+
     /** We need an ExpressJS web server to serve the page and vendor packages. 
      * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
      * since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
@@ -317,7 +277,31 @@ function runtimeSetup() {
 
 } // --- end of runtimeSetup --- //
 
-/** Handler function for node flow input events (when a node instance receives a msg from the flow)
+/** Create external event listeners
+ * Called for every uibuilder node instance
+ * @param {uibNode} node Reference to node instance
+ */
+function externalEvents(node) {
+
+    // The event name to listen out for
+    const eventName = `node-red-contrib-uibuilder/${node.url}`
+    //console.log('[uibuilder:externalEvents] ', eventName )
+
+
+    // The function to execute when an event is received
+    const sender = (msg) => {
+        //this.send(msg)
+        //console.log('>> EVENT tofe: ', msg )
+        sockets.sendToFe(msg, node.url, uib.ioChannels.server)
+    }
+
+    // Create new listener for the given topic, they are removed on close
+    tiEvents.on(eventName, sender)
+    
+    //console.log('>>>> THIS >>>>> ', node)
+}
+
+/** 3) Handler function for node flow input events (when a node instance receives a msg from the flow)
  * NOTE: `this` context is still the parent within the function.
  *       Also, this function does NOT have access to RED
  * @see https://nodered.org/blog/2019/09/20/node-done 
@@ -329,9 +313,7 @@ function runtimeSetup() {
 function inputMsgHandler (msg, send, done) {
     //const RED = uib.RED
 
-    const uibInstance = this.url
-
-    log.trace(`[uibuilder:${uibInstance}] nodeInstance:nodeInputHandler - emit received msg - Namespace: ${this.url}`) //debug
+    log.trace(`[uibuilder:${this.url}] nodeInstance:nodeInputHandler - emit received msg - Namespace: ${this.url}`) //debug
 
     // If this is pre-1.0, 'send' will be undefined, so fallback to this.send
     send = send || function() { this.send.apply(this,arguments) }
@@ -354,7 +336,6 @@ function inputMsgHandler (msg, send, done) {
     }
 
     // Keep this fn small for readability so offload any further, more customised code to another fn
-    //msg = uiblib.inputHandler(msg, send, done, this, RED, sockets.io, ioNs, log, uib)
     this.rcvMsgCount++
     log.trace( `[uibuilder:uiblib:inputHandler:${this.url}] msg received via FLOW. ${this.rcvMsgCount} messages received. ${JSON.stringify(msg)}` )
 
@@ -367,37 +348,30 @@ function inputMsgHandler (msg, send, done) {
     if ( this.allowScripts !== true && Object.prototype.hasOwnProperty.call(msg, 'script') ) delete msg.script
     if ( this.allowStyles !== true && Object.prototype.hasOwnProperty.call(msg, 'style') ) delete msg.style
 
-    let socketId = msg._socketId || undefined
     let sendme = false
 
     // If security is active...
     // TODO need to add client tracking for this to work
     sendme = true
-    /*     if (this.useSecurity === true) {
+    /*
+    if (this.useSecurity === true) {
         // Check for valid auth and session 
         //  @type MsgAuth
-        msg._auth = this.authCheck(msg, ioNs, node, socketId, log, uib)
-        console.log('[UIBUILDER:uiblib:inputHandler] _auth: ', msg._auth)
-        // Only send the msg onward if the user is validated
-        if (msg._auth.jwt !== undefined) sendme = true
-    } */
+        msg._auth = security.authCheck2(msg, this)
+        tilib.mylog('[UIBUILDER:inputMsgHandler] _auth: ', msg._auth)
+        // Only send the msg onward if the user is validated OR if unauth is allowed
+        if (msg._auth.jwt !== undefined || this.allowUnauth === true ) sendme = true
+        sendme = true
+    } else sendme = true
+    */
     
     if (sendme) {
 
         // pass the complete msg object to the uibuilder client
-        // TODO: replace with sockets.send or sockets.sendControl
-        // TODO: This should have some safety validation on it!
-        let ioNs = sockets.getNs(this)
-        if (socketId !== undefined) {
-            //  ...If socketId not validated as having a current session, don't send
-            log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg sent on to client ${socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
-            ioNs.to(socketId).emit(uib.ioChannels.server, msg)
-        } else {
-            //? - is there any way to prevent sending to clients not logged in?
-            log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
-            ioNs.emit(uib.ioChannels.server, msg)
-        }
+        if ( (! Object.prototype.hasOwnProperty.call(msg, 'topic')) && (this.topic !== '') ) msg.topic = this.topic
+        sockets.sendToFe( msg, this.url, uib.ioChannels.server )
 
+        // Pass on to output port 1 if wanted
         if (this.fwdInMessages) {
             // Send on the input msg to output
             send(msg)
@@ -409,27 +383,21 @@ function inputMsgHandler (msg, send, done) {
 
     tilib.dumpMem('On Msg')
 
+} // ----- End of inputMsgHandler ----- //
 
-}
-
-/** All of the initialisation of the Node
+/** 2) All of the initialisation of the Node
  * This is callled once for each uibuilder node instance added to a flow
- * NOTE: This function MUST be run using .call to pass in the correct `this` context
- * @param {runtimeNodeConfig & uib} config The configuration object passed from the Admin interface (see the matching HTML file)
+ * type {function(this:runtimeNode&uib, runtimeNodeConfig & uib):void}
+ * @param {runtimeNodeConfig & uibuilderEditorVars} config The configuration object passed from the Admin interface (see the matching HTML file)
+ * @this {uibNode}
  */
 function nodeInstance(config) {
     const RED = uib.RED
 
-    // Create the node instance - `this` can only be referenced AFTER here
-    RED.nodes.createNode(this, config)
-
-    const uibInstance = config.url // for logging
-    log.trace(`[uibuilder:nodeInstance:${uibInstance}] ================ instance registered ================`)
-    /** Copy 'this' object in case we need it in context of callbacks of other functions.
-     * @type {uibNode}
+    /** Create the node instance - `this` can only be referenced AFTER here 
+     * @param {uibNode} this _
      */
-    log.trace(`[uibuilder:nodeInstance:${uibInstance}] node keys: ${JSON.stringify(Object.keys(this))}`)
-    log.trace(`[uibuilder:nodeInstance:${uibInstance}] config keys: ${JSON.stringify(Object.keys(config))}`)
+    RED.nodes.createNode(this, config)
 
     //#region ====== Create local copies of the node configuration (as defined in the .html file) ====== //
     // NB: this.id and this.type are also available
@@ -446,7 +414,6 @@ function nodeInstance(config) {
     this.showfolder      = config.showfolder === undefined ? false : config.showfolder
     this.useSecurity     = config.useSecurity
     this.allowUnauth     = config.allowUnauth === undefined ? false : config.allowUnauth
-    this.allowAuthAnon   = config.allowAuthAnon === undefined ? false : config.allowAuthAnon
     this.sessionLength   = Number(config.sessionLength) || 120  // in seconds
     this.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
     this.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
@@ -454,24 +421,28 @@ function nodeInstance(config) {
     this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:addInstanceStaticRoute
     //#endregion ====== Local node config copy ====== //
 
+    log.trace(`[uibuilder:nodeInstance:${this.url}] ================ instance registered ================`)
+    log.trace(`[uibuilder:nodeInstance:${this.url}] node keys: ${JSON.stringify(Object.keys(this))}`)
+    log.trace(`[uibuilder:nodeInstance:${this.url}] config keys: ${JSON.stringify(Object.keys(config))}`)
+
     this.statusDisplay = { fill: 'blue', shape: 'dot', text: 'Configuring node' }
-    if ( this.useSecurity === true ) this.statusDisplay.fill = 'red'
+    if ( this.useSecurity === true ) this.statusDisplay.fill = 'yellow'
     if ( this.allowUnauth === true ) this.statusDisplay.shape = 'ring'
     uiblib.setNodeStatus( this )
 
     //#region ====== Instance logging/audit ====== //
 
-    log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node instance settings: ${JSON.stringify({'name': this.name, 'topic': this.topic, 'url': this.url, 'copyIndex': this.copyIndex, 'fwdIn': this.fwdInMessages, 'allowScripts': this.allowScripts, 'allowStyles': this.allowStyles, 'showfolder': this.showfolder })}`)
+    log.trace(`[uibuilder:nodeInstance:${this.url}] Node instance settings: ${JSON.stringify({'name': this.name, 'topic': this.topic, 'url': this.url, 'copyIndex': this.copyIndex, 'fwdIn': this.fwdInMessages, 'allowScripts': this.allowScripts, 'allowStyles': this.allowStyles, 'showfolder': this.showfolder })}`)
     
     // Keep a log of the active uib.instances @since 2019-02-02
     uib.instances[this.id] = this.url
-    log.trace(`[uibuilder:nodeInstance:${uibInstance}] Node uib.Instances Registered: ${JSON.stringify(uib.instances)}`)
+    log.trace(`[uibuilder:nodeInstance:${this.url}] Node uib.Instances Registered: ${JSON.stringify(uib.instances)}`)
 
     // Keep track of the number of times each instance is deployed.
     // The initial deployment = 1
     if ( Object.prototype.hasOwnProperty.call(uib.deployments, this.id) ) uib.deployments[this.id]++
     else uib.deployments[this.id] = 1
-    log.trace(`[uibuilder:nodeInstance:${uibInstance}] Number of uib.Deployments: ${uib.deployments[this.id]}` )
+    log.trace(`[uibuilder:nodeInstance:${this.url}] Number of uib.Deployments: ${uib.deployments[this.id]}` )
 
     // Track the number of messages received by this instance
     this.rcvMsgCount = 0
@@ -512,7 +483,7 @@ function nodeInstance(config) {
             let copyFrom = path.join( uib.masterTemplateFolder, 'blank' )
             try {
                 fs.copySync( copyFrom, this.customFolder, cpyOpts)
-                log.info(`[uibuilder:nodeInstance:${uibInstance}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
+                log.info(`[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
             } catch (e) {
                 log.error(`[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
                 customFoldersOK = false
@@ -524,7 +495,7 @@ function nodeInstance(config) {
             uiblib.replaceTemplate(this.url, this.templateFolder, this.extTemplate, 'startup-CopyTemplate', templateConf, uib, log)
                 .then( () => { //resp => {
                     //resp.statusMessage
-                    log.info(`[uibuilder:nodeInstance:${uibInstance}] Created instance folder ${this.customFolder} and copied external template files from ${this.templateFolder}` )
+                    log.info(`[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied external template files from ${this.templateFolder}` )
                     return true
                 })
                 .catch( err => {
@@ -546,7 +517,7 @@ function nodeInstance(config) {
         try {
             fs.accessSync(this.customFolder, fs.constants.W_OK)
         } catch (e) {
-            log.error(`[uibuilder:nodeInstance:${uibInstance}] Local custom folder ERROR`, e.message)
+            log.error(`[uibuilder:nodeInstance:${this.url}] Local custom folder ERROR`, e.message)
             customFoldersOK = false
         }
 
@@ -555,44 +526,48 @@ function nodeInstance(config) {
     // We've checked that the custom folder is there and has the correct structure
     if ( customFoldersOK === true ) {
         // local custom folders are there ...
-        log.trace(`[uibuilder:nodeInstance:${uibInstance}] Using local front-end folders in: ${this.customFolder}` )
+        log.trace(`[uibuilder:nodeInstance:${this.url}] Using local front-end folders in: ${this.customFolder}` )
     } else {
         // Local custom folders are not right!
-        log.error(`[uibuilder:nodeInstance:${uibInstance}] Wanted to use local front-end folders in ${this.customFolder} but could not`)
+        log.error(`[uibuilder:nodeInstance:${this.url}] Wanted to use local front-end folders in ${this.customFolder} but could not`)
     }
 
     //#endregion ====== End of Local folder structure ====== //
 
-    // If security turned on, set up security for this instance
+    // If security turned on, set up security for this instance - NB: most sec processing done from socket.js
     if ( this.useSecurity === true ) security.setupInstance(this)
 
     // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this)
 
-    /** Socket.IO instance configuration. Each deployed instance has it's own namespace @type {Object.ioNameSpace} */
-    const ioNs = sockets.addNS(this) // NB: Namespace is set from url
-    this.ioNamespace = ioNs.name
+    /** Socket.IO instance configuration. Each deployed instance has it's own namespace */
+    sockets.addNS(this) // NB: Namespace is set from url
     
-    log.trace(`[uibuilder:nodeInstance:${uibInstance}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
-    log.trace(`[uibuilder:nodeInstance:${uibInstance}] Source files . : ${this.customFolder}`)
+    log.trace(`[uibuilder:nodeInstance:${this.url}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
+    log.trace(`[uibuilder:nodeInstance:${this.url}] Source files . : ${this.customFolder}`)
 
     // We only do the following if io is not already assigned (e.g. after a redeploy)
     this.statusDisplay.text = 'Node Initialised'
     uiblib.setNodeStatus( this )
 
-    // Add event handler to process inbound messages
+    // 3) Add event handler to process inbound messages
     this.on('input', inputMsgHandler)
+
+    // 3rd-party node (non-flow) Event handlers
+    externalEvents(this)
 
     /** Do something when Node-RED is closing down which includes when this node instance is redeployed
      * Note use of arrow function so as to retain the correct `this` context
      */
     this.on('close', (removed,done) => {
-        log.trace(`[uibuilder:nodeInstance:close:${uibInstance}] nodeInstance:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
+        log.trace(`[uibuilder:nodeInstance:close:${this.url}] nodeInstance:on-close: ${removed?'Node Removed':'Node (re)deployed'}`)
 
         this.removeListener('input', inputMsgHandler)
 
+        // Cancel any event listeners for this node
+        tiEvents.removeAllListeners(`node-red-contrib-uibuilder/${this.url}`)
+
         // Do any complex close processing here if needed - MUST BE LAST
-        //processClose(null, node, RED, ioNs, app) // swap with below if needing async
         uiblib.instanceClose(this, uib, sockets, web, done)
 
         done()
@@ -600,15 +575,18 @@ function nodeInstance(config) {
 
     // Shows an instance details debug page
     RED.httpAdmin.get(`/uibuilder/instance/${this.url}`, (/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) => {
-        let page = uiblib.showInstanceDetails(req, this, uib, userDir, RED)
+        let page = web.showInstanceDetails(req, this)
         res.status(200).send( page )
     })
 
     tilib.dumpMem('Instance')
 
-} // ----- end of instanceSetup ----- //
+} // ----- end of nodeInstance ----- //
+
+//#region ===== REST API's - none of these can have access to a node instance ===== //
 
 //#region === REST API Validation functions === //
+
 /** Validate url query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.url The uibuilder url to check
@@ -731,7 +709,8 @@ function chkParamFldr(params) {
     
     return res
 } // ---- End of fn chkParamFldr ---- //
-//#endregion === Validation functions === //
+
+//#endregion === End of API validation functions === //
 
 /** Set up v2 (old) admin REST API's 
  * TODO - Needs converting to v3
@@ -911,8 +890,8 @@ function v2AdminAPIs() {
                 web.checkInstalledPackages()
 
                 // Include socket.io as a client library (but don't add to vendorPaths)
-                // let sioFolder = tilib.findPackage('socket.io', userDir)
-                // let sioVersion = tilib.readPackageJson( sioFolder ).version
+                // let sioFolder = packageMgt.findPackage('socket.io', userDir)
+                // let sioVersion = packageMgt.readPackageJson( sioFolder ).version
 
                 // Collate current ExpressJS urls and details
                 var otherPaths = [], uibPaths = []
@@ -1191,7 +1170,7 @@ function v2AdminAPIs() {
         }
     }) // ---- End of uibindex ---- //
 
-    /** Check & update installed front-end library packages, return list as JSON */
+    /** Check & update installed front-end library packages, return list as JSON - this runs when NR Editor is loaded if a uib instance deployed */
     RED.httpAdmin.get('/uibvendorpackages', function(/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) {
         // Update the installed packages list
         web.checkInstalledPackages()
@@ -1247,8 +1226,7 @@ function v2AdminAPIs() {
         }
         //#endregion ---- ----
         
-        // TODO: add optional url param that must be an active uibuilder url name
-        const folder = userDir
+        const folder = RED.settings.userDir
 
         log.info(`[uibuilder:API:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package}`)
 
@@ -1256,110 +1234,166 @@ function v2AdminAPIs() {
         fs.removeSync(path.join(folder, 'package-lock.json'))
 
         // Formulate the command to be run
-        var command = ''
+        //var command = ''
         switch (params.cmd) {
+            case 'update':
             case 'install': {
                 // npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json <packageName>@latest // --save-prefix="~" 
-                command = `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
+                //command = `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
+                packageMgt.npmInstallPackage(RED.settings.userDir, params.package)
+                    .then((val) => {
+                        let success = false
+                        
+                        // Update the packageList
+                        uib.installedPackages = web.checkInstalledPackages(/** @type {string} */(params.package))
+
+                        // package name should exist in uib.installedPackages
+                        if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) {
+                            // Add an ExpressJS URL (only for install since update should already be served)
+                            if (params.cmd==='install') web.servePackage( /** @type {string} */ (params.package) )
+                            success = true
+                            log.info(`[uibuilder:API:uibnpmmanage:install] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
+                        } else {
+                            log.error(`[uibuilder:API:uibnpmmanage:install] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`)
+                        }
+            
+                        res.json({'success':success, 'result': val})
+                        return success
+                    })
+                    .catch((err) => {
+                        //log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
+                        log.warn(`[uibuilder:API:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        res.json({'success':false, 'result':err.all})
+                        return false
+                    })
                 break
             }
             case 'remove': {
                 // npm remove --no-audit --no-update-notifier --color=false --json <packageName> // --save-prefix="~" 
-                command = `npm remove --no-audit --no-update-notifier --color=false --json ${params.package}`
+                //command = `npm remove --no-audit --no-update-notifier --color=false --json ${params.package}`
+                packageMgt.npmRemovePackage(RED.settings.userDir, params.package)
+                    .then((val) => {
+                        // Update the packageList
+                        uib.installedPackages = web.checkInstalledPackages(/** @type {string} */ (params.package))
+
+                        // package name should NOT exist in uib.installedPackages
+                        if ( ! Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) {
+                            log.info(`[uibuilder:API:uibnpmmanage:remove] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
+                            // Remove ExpressJS URL
+                            web.unservePackage(/** @type {string} */(params.package))
+                            res.json({'success':true, 'result': val})
+                        } else {
+                            log.error(`[uibuilder:API:uibnpmmanage:remove] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`)
+                            res.json({'success':false, 'result': val})
+                        }
+                        
+                        return true
+                    })
+                    .catch((err) => {
+                        //log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
+                        log.warn(`[uibuilder:API:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        res.json({'success':false, 'result':err.all})
+                        return false
+                    })
                 break
             }
-            case 'update': {
-
+            default: {
+                log.error(`[uibuilder:API:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
+                res.statusMessage = 'No valid npm command available'
+                res.status(500).end()
                 break
             }
         }
-        if ( command === '' ) {
-            log.error('[uibuilder:API:uibnpmmanage] Admin API. No valid command available for npm management.')
-            res.statusMessage = 'No valid npm command available'
-            res.status(500).end()
-            return
-        }
 
-        // Run the command - against the correct instance or userDir (cwd)
-        var output = [], errOut = null, success = false
-        child_process.exec(command, {'cwd': folder}, (error, stdout, stderr) => {
-            if ( error ) {
-                log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, error)
-            }
+        // if ( command === '' ) {
+        //     log.error('[uibuilder:API:uibnpmmanage] Admin API. No valid command available for npm management.')
+        //     res.statusMessage = 'No valid npm command available'
+        //     res.status(500).end()
+        //     return
+        // }
 
-            // try to force output & error output to JSON (or split by newline)
-            try {
-                output.push(JSON.parse(stdout))
-            } catch (err) {
-                output.push(stdout.split('\n'))
-            }
-            try {
-                errOut = JSON.parse(stderr)
-            } catch (err) {
-                errOut = stderr.split('\n')
-            }
+        // if ( command !== '' ) {
+        //     // Run the command - against the correct instance or userDir (cwd)
+        //     var output = [], errOut = null, success = false
+        //     child_process.exec(command, {'cwd': folder}, (error, stdout, stderr) => {
+        //         if ( error ) {
+        //             log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, error)
+        //         }
 
-            // Find the actual JSON output in amongst all the other crap that npm can produce
-            var result = null
-            try {
-                result = stdout.slice(stdout.search(/^\{/m), stdout.search(/^\}/m)+1) //stdout.match(/\n\{.*\}\n/)
-            } catch (e) {
-                result = e
-            }
-            var jResult = null
-            try {
-                jResult = JSON.parse(result)
-            } catch (e) {
-                jResult = {'ERROR': e, 'RESULT': result}
-            }
+        //         // try to force output & error output to JSON (or split by newline)
+        //         try {
+        //             output.push(JSON.parse(stdout))
+        //         } catch (err) {
+        //             output.push(stdout.split('\n'))
+        //         }
+        //         try {
+        //             errOut = JSON.parse(stderr)
+        //         } catch (err) {
+        //             errOut = stderr.split('\n')
+        //         }
 
-            //log.trace(`[uibuilder:API:uibnpmmanage] Writing stdout to ${path.join(uib.rootFolder,uib.configFolder,'npm-out-latest.txt')}`)
-            //fs.writeFile(path.join(uib.configFolder,'npm-out-latest.txt'), stdout, 'utf8', function(){})
+        //         // Find the actual JSON output in amongst all the other crap that npm can produce
+        //         var result = null
+        //         try {
+        //             result = stdout.slice(stdout.search(/^\{/m), stdout.search(/^\}/m)+1) //stdout.match(/\n\{.*\}\n/)
+        //         } catch (e) {
+        //             result = e
+        //         }
+        //         var jResult = null
+        //         try {
+        //             jResult = JSON.parse(result)
+        //         } catch (e) {
+        //             jResult = {'ERROR': e, 'RESULT': result}
+        //         }
 
-            // Update the packageList
-            // @ts-ignore
-            uib.installedPackages = web.checkInstalledPackages(params.package)
+        //         //log.trace(`[uibuilder:API:uibnpmmanage] Writing stdout to ${path.join(uib.rootFolder,uib.configFolder,'npm-out-latest.txt')}`)
+        //         //fs.writeFile(path.join(uib.configFolder,'npm-out-latest.txt'), stdout, 'utf8', function(){})
 
-            // Check the results of the command
-            switch (params.cmd) {
-                // check pkg exiss in uib.installedPackages, if so, serve it up
-                case 'install': {
-                    // package name should exist in uib.installedPackages
-                    if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
-                    if (success === true) {
-                        // Add an ExpressJS URL
-                        web.servePackage( /** @type {string} */ (params.package) )
-                    }
-                    break
-                }
-                // Check pkg does not exist in uib.installedPackages, if so, remove served url
-                case 'remove': {
-                    // package name should NOT exist in uib.installedPackages
-                    if ( ! Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
-                    if (success === true) {
-                        // Remove ExpressJS URL
-                        // @ts-ignore
-                        web.unservePackage(params.package)
-                    }
-                    break
-                }
-                // Check pkg still exists in uib.installedPackages
-                case 'update': {
-                    // package name should exist in uib.installedPackages
-                    if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
-                    break
-                }
-            }
+        //         // Update the packageList
+        //         // @ts-ignore
+        //         uib.installedPackages = web.checkInstalledPackages(params.package)
 
-            if (success === true) {
-                log.info(`[uibuilder:API:uibnpmmanage] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
-            } else {
-                log.error(`[uibuilder:API:uibnpmmanage] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`, jResult)
-            }
+        //         // Check the results of the command
+        //         switch (params.cmd) {
+        //             // check pkg exiss in uib.installedPackages, if so, serve it up
+        //             case 'install': {
+        //                 // package name should exist in uib.installedPackages
+        //                 if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
+        //                 if (success === true) {
+        //                     // Add an ExpressJS URL
+        //                     web.servePackage( /** @type {string} */ (params.package) )
+        //                 }
+        //                 break
+        //             }
+        //             // Check pkg does not exist in uib.installedPackages, if so, remove served url
+        //             case 'remove': {
+        //                 // package name should NOT exist in uib.installedPackages
+        //                 if ( ! Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
+        //                 if (success === true) {
+        //                     // Remove ExpressJS URL
+        //                     // @ts-ignore
+        //                     web.unservePackage(params.package)
+        //                 }
+        //                 break
+        //             }
+        //             // Check pkg still exists in uib.installedPackages
+        //             case 'update': {
+        //                 // package name should exist in uib.installedPackages
+        //                 if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
+        //                 break
+        //             }
+        //         }
 
-            res.json({'success':success,'result':jResult,'output':output,'errOut':errOut})
+        //         if (success === true) {
+        //             log.info(`[uibuilder:API:uibnpmmanage] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
+        //         } else {
+        //             log.error(`[uibuilder:API:uibnpmmanage] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`, jResult)
+        //         }
 
-        })
+        //         res.json({'success':success,'result':jResult,'output':output,'errOut':errOut})
+
+        //     })
+        // }
 
     }) // ---- End of npmmanage ---- //
 
@@ -1403,8 +1437,8 @@ function v3AdminAPIs() {
             const params = res.allparams
             params.type = 'get'
 
-            // List all folders and files for this uibuilder instance
-            if ( params.cmd === 'listall' ) {
+            // Commands ...
+            if ( params.cmd === 'listall' ) { // List all folders and files for this uibuilder instance
                 log.trace(`[uibuilder:admin-router:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
 
                 // get list of all (sub)folders (follow symlinks as well)
@@ -1433,7 +1467,7 @@ function v3AdminAPIs() {
                         res.status(200).json(out)
                     })
                 // -- end of listall -- //
-            } else if ( params.cmd === 'checkurls' ) {
+            } else if ( params.cmd === 'checkurls' ) { // Check if URL is already in use
                 log.trace(`[uibuilder:admin-router:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
         
                 /** @returns {boolean} True if the given url exists, else false */
@@ -1443,8 +1477,18 @@ function v3AdminAPIs() {
                 res.statusMessage = 'Instances and Folders checked'
                 res.status(200).json( chkInstances || chkFolders )
                 // -- end of checkurls -- //
-            } else if ( params.cmd === 'listurls' ) {
-                // Return a list of all user urls in use by ExpressJS
+            } else if ( params.cmd === 'listinstances' ) { // List all of the deployed instance urls
+
+                log.trace('[uibuilder:admin-router:GET:listinstances] Returning a list of deployed URLs (instances of uib).')
+        
+                /** @returns {boolean} True if the given url exists, else false */
+                // let chkInstances = Object.values(uib.instances).includes(params.url)
+                // let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+
+                res.statusMessage = 'Instances listed'
+                res.status(200).json( uib.instances )
+
+            } else if ( params.cmd === 'listurls' ) {  // Return a list of all user urls in use by ExpressJS
                 // TODO Not currently working
                 var route, routes = []
                 web.app._router.stack.forEach( (middleware) => {
@@ -1732,16 +1776,18 @@ function userAPIs() {
  
 }
 
-//#endregion -----       ----- //
+//#endregion ===== End of REST API's ===== //
 
-/** The function that defines the node 
- * @type {runtimeRED} */
+//#endregion ----- End of mod-level fns ----- //
+
+/** 1) The function that defines the node 
+ * @param {runtimeRED} RED Node-RED's runtime object */
 function Uib(RED) {
     uib.RED = RED
 
-    runtimeSetup()
+    runtimeSetup() // (1a)
 
-    /** Register the node by name. This must be called before overriding any of the
+    /** 2) Register the node by name. This must be called before overriding any of the
      *  Node functions. */
     RED.nodes.registerType(uib.moduleName, nodeInstance, {
         credentials: {
@@ -1759,6 +1805,21 @@ function Uib(RED) {
     userAPIs()
 
     tilib.dumpMem('Module')
+
+    //packageMgt.npmInstallPackage(RED.settings.userDir, 'jquery')
+    // packageMgt.npmRemovePackage(RED.settings.userDir, 'jquery')
+    //     .then((val) => {
+    //         console.log(`>> Install worked >> \n${val}`)
+
+    //         return val
+    //     })
+    //     .catch((reason) => {
+    //         log.error(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running: \n'${reason.command}' \n${reason.all}`)
+    //         // res.json({'success':false})
+    //         return reason
+    //     })
+
+    //console.log('>>>> TI GLOBAL <<<<', global.totallyInformationShared)
 
 } // ==== End of Uib ==== // 
 

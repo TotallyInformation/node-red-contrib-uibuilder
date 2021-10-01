@@ -1,0 +1,21 @@
+' Comment
+
+@startuml two
+|#a0c0ff|client|Client\nBrowser
+|nr|Node-RED\nuibuilder node
+|#AntiqueWhite|int|uib\nInternal
+|#f0f0f0|js|Custom
+
+|client|
+start
+:foo1;
+|nr|
+:foo2;
+:foo3;
+|client|
+:foo4;
+|nr|
+:foo5;
+stop
+
+@enduml

@@ -24,6 +24,7 @@ module.exports = {
     root: true,
     globals: {
         Set: true, // Not sure why eslint doesn't recognise this as it is part of node.js since v0.12
+        RED: true,
     },
     plugins: [
         'html',     // Check scripts in HTML. https://www.npmjs.com/package/eslint-plugin-html

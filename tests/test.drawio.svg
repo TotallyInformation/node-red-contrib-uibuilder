@@ -1,0 +1,68 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="456px" height="509px" viewBox="-0.5 -0.5 456 509" content="&lt;mxfile&gt;&lt;diagram id=&quot;w1QhCvLZfaDixrJmaKZV&quot; name=&quot;Page-1&quot;&gt;7VhLb+M2EP41BrqHAJJoSfbRTpzdwxYtmkPPtDyWuKFElaJiu7++Q5F60PIru0mwaBsDMTUkZzTfNw/SE3Kf7z9LWma/ig3wSeBt9hPyMAmCWejhfy04GEHsTY0glWxjRH4veGJ/gxXafWnNNlA5C5UQXLHSFSaiKCBRjoxKKXbusq3grtWSpjASPCWUj6V/so3KrNSP5v3EF2Bp1pqOQuvgmibPqRR1YQ1OArJq/sx0Tltl1tMqoxuxG4jIakLupRDKjMT6m3Yw8DhdI8ZWp975uxSlbwRTK2qx7RXl+3vgSM2jecSBVejMeuwYHgmFGr7n45kNodnwQnkNw5er1KHFEjYIrX0UUmUiFQXlq166TGr5AlohurNssOueqmdQiUbMw4d+91chSrviGyh1sBFEayVQlKmc29mtKNS94EI270L8hf5ovUqKZxjOzIKVdnFp3l+/9FlIrKgStUzsKuu2ojIFu2o6IOEziByUPOASCZwq9uJqpzZe025dMOTMwn4hICKutFclLRzwo79qHUjLxDi60PbT9S8B0UYnAer2on7oT71P+kGD4Gnk7rY0Z/xgNpo1qJPmZbOEkCl+51BwMZJeWI/8Ja/ZgDleCY4I3b6FszVIRFloNNDg68zVkoHEqQJ25/dprQg38u8AVjWBuGjALPfdnIK9uqOcpYWZ5LBV3WRfMu6OeQrDzuDR+FNPLo5S/X3XzIe6LiCnerWVbBmHgubQCU20YGCZgDHbbZxz9CnDegnSraFGrZEExK03ZFRvhgWgz2jt8C5jCp4a5MjDDruHm7BOwt+cvXNPf/QOxvlA/hgulqHXOfcCEpm4nNfjjLUbwtiWbNvT/PZ5N+gQbVnPBs0h8l6d5NfqdPTfrLLTcZUlpzn70So7Qnx6Q6PjHM8ncD3G3YR4uyB3aHyDiCfhUcTP3y/ix0eR4Dri1Y7lnBbQoEWlsgHqjTDuTll+U+FzlrQT71NupFCm/aDF8G3ICOLQIYN4YzKIf4IMMr3AhjX3B5YaWqQcBvaIS35wgvzwhLlja5QrkAVVsNSMVKMQ6Dy9KSpuCIqfod18H//B5f4zc/mIPy4X4+uoK8lMAP0c1e89CAhI7DAQjxmIThAwewMCZjd0n3/fAaB18vI9K75Imt/+8tCWzeDH2Zjf0JkyWuphcuAMcZbX02JtCPm67gTdteC3WqEW+Mj8Odsw3yOxfD9yS1ur4wMyq+2Y/6dWPE6t+Yenlk9GdHzBFWLcb/BG7QJlr9cPCXrZJJwOSpZQvrATOdtsGrYk4DWdrnl7ViwFK1Tz0uFyEj5oXUiDucobDh2sC9GcOM8Rc1tGXESWzN2z16mz3vREQgTfddPsf2w0B7L+F12y+gc=&lt;/diagram&gt;&lt;/mxfile&gt;" style="background-color: rgb(238, 238, 238);">
+    <defs/>
+    <g>
+        <path d="M 157 155.94 Q 157 111.2 165.5 111.2 Q 174 111.2 174 86.37" fill="none" stroke="#182e3e" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 174 81.12 L 177.5 88.12 L 174 86.37 L 170.5 88.12 Z" fill="#182e3e" stroke="#182e3e" stroke-miterlimit="10" pointer-events="all"/>
+        <rect x="334" y="0" width="120" height="60" fill="#f5ab50" stroke="#909090" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 30px; margin-left: 335px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #1A1A1A; line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
+                                <span style="color: rgb(232 , 62 , 140) ; font-family: , &quot;menlo&quot; , &quot;monaco&quot; , &quot;consolas&quot; , &quot;liberation mono&quot; , &quot;courier new&quot; , monospace ; font-size: 14px ; text-align: left ; background-color: rgb(255 , 255 , 255)">
+                                    - 123 -  -
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="394" y="34" fill="#1A1A1A" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    - 123 -  -
+                </text>
+            </switch>
+        </g>
+        <path d="M 234 50 Q 284 50 284 40 Q 284 30 327.63 30" fill="none" stroke="#182e3e" stroke-miterlimit="10" pointer-events="stroke"/>
+        <path d="M 332.88 30 L 325.88 33.5 L 327.63 30 L 325.88 26.5 Z" fill="#182e3e" stroke="#182e3e" stroke-miterlimit="10" pointer-events="all"/>
+        <ellipse cx="174" cy="50" rx="60" ry="30" fill="#f5ab50" stroke="#909090" pointer-events="all"/>
+        <path d="M 39 130 L 39 130 L 349 130 L 349 130" fill="#000000" stroke="#000000" stroke-miterlimit="10" transform="translate(2,3)rotate(15,194,300)" pointer-events="all" opacity="0.25"/>
+        <path d="M 39 130 L 39 130 L 349 130 L 349 130" fill="#f5ab50" stroke="#909090" stroke-miterlimit="10" transform="rotate(15,194,300)" pointer-events="all"/>
+        <path d="M 39 130 L 39 470 L 349 470 L 349 130" fill="none" stroke="#000000" stroke-miterlimit="10" transform="translate(2,3)rotate(15,194,300)" pointer-events="none" opacity="0.25"/>
+        <path d="M 39 130 L 39 470 L 349 470 L 349 130" fill="none" stroke="#909090" stroke-miterlimit="10" transform="rotate(15,194,300)" pointer-events="none"/>
+        <path d="M 39 130 L 349 130" fill="none" stroke="#000000" stroke-miterlimit="10" transform="translate(2,3)rotate(15,194,300)" pointer-events="none" opacity="0.25"/>
+        <path d="M 39 130 L 349 130" fill="none" stroke="#909090" stroke-miterlimit="10" transform="rotate(15,194,300)" pointer-events="none"/>
+        <rect x="97" y="157" width="120" height="60" fill="#f5ab50" stroke="#909090" transform="rotate(15,157,187)" pointer-events="none"/>
+        <path d="M 276 207 L 336 247 L 276 287 Z" fill="#f5ab50" stroke="#909090" stroke-miterlimit="10" transform="rotate(15,306,247)" pointer-events="none"/>
+        <path d="M 219.12 187 Q 244.7 187 244.7 217 Q 244.7 247 268.57 247" fill="none" stroke="#182e3e" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 273.82 247 L 266.82 250.5 L 268.57 247 L 266.82 243.5 Z" fill="#182e3e" stroke="#182e3e" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 155 367 C 155 345.67 215 345.67 215 367 L 215 415 C 215 436.33 155 436.33 155 415 Z" fill="#000000" stroke="#000000" stroke-miterlimit="10" transform="translate(2,3)rotate(15,185,391)" pointer-events="none" opacity="0.25"/>
+        <path d="M 155 367 C 155 345.67 215 345.67 215 367 L 215 415 C 215 436.33 155 436.33 155 415 Z" fill="#f5ab50" stroke="#909090" stroke-miterlimit="10" transform="rotate(15,185,391)" pointer-events="none"/>
+        <path d="M 155 367 C 155 383 215 383 215 367" fill="none" stroke="#909090" stroke-miterlimit="10" transform="rotate(15,185,391)" pointer-events="none"/>
+        <path d="M 274.94 247 Q 185 247 185 343.22" fill="none" stroke="#182e3e" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 185 348.47 L 181.5 341.47 L 185 343.22 L 188.5 341.47 Z" fill="#182e3e" stroke="#182e3e" stroke-miterlimit="10" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 1px; height: 1px; padding-top: 140px; margin-left: 174px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #1A1A1A; line-height: 1.2; pointer-events: none; white-space: nowrap; ">
+                                Hello
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="174" y="144" fill="#1A1A1A" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    Hello
+                </text>
+            </switch>
+        </g>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://www.diagrams.net/doc/faq/svg-export-text-problems" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Viewer does not support full SVG 1.1
+            </text>
+        </a>
+    </switch>
+</svg>

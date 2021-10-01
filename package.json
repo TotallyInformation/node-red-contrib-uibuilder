@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. VueJS and bootstrap-vue included but change as desired.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -12,10 +12,10 @@
     "build": "gulp",
     "buildfe": "gulp packfe",
     "watch": "gulp watch",
-    "buildx": "esbuild ./nodes/uibuilder.js --platform=node --outfile=./nodes/uibuilder.min.js",
-    "buildfex": "esbuild ./front-end/src/uibuilderfe.js --bundle --minify --sourcemap --outfile=./front-end/src/uibuilderfe.dev.js ",
-    "packfex": "minify ./front-end/src/uibuilderfe.js --out-file ./front-end/src/uibuilderfe.min.js",
-    "prepublishOnly": "npm run packfe",
+    "_build": "esbuild ./nodes/uibuilder.js --platform=node --outfile=./nodes/uibuilder.min.js",
+    "_buildfe": "esbuild ./front-end/src/uibuilderfe.js --bundle --minify --sourcemap --outfile=./front-end/src/uibuilderfe.dev.js ",
+    "_packfe": "minify ./front-end/src/uibuilderfe.js --out-file ./front-end/src/uibuilderfe.min.js",
+    "_prepublishOnly": "gulp packfe",
     "listbin": "ls ./node_modules/bin",
     "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
     "npmtagnext": "npm dist-tag add node-red-contrib-uibuilder@$npm_package_version next",
@@ -27,16 +27,20 @@
     "docs": "docsify serve ./docs"
   },
   "dependencies": {
+    "@totallyinformation/ti-common-event-handler": "^1.0.0",
     "body-parser": "^1.19.0",
     "degit": "^2.8.4",
     "express": "^4.17.1",
-    "express-validator": "^6.12.1",
+    "express-session": "^1.17.2",
+    "express-validator": "^6.12.2",
     "fast-glob": "^3.2.7",
     "fs-extra": "^10.0.0",
     "jsonwebtoken": "^8.5.1",
+    "passport": "^0.5.0",
+    "passport-local": "^1.0.0",
     "serve-index": "^1.9.1",
     "serve-static": "^1.14.1",
-    "socket.io": "^4.1.3"
+    "socket.io": "^4.2.0"
   },
   "parentPeerDependencies": {
     "bootstrap-vue": "^2.17.3",
@@ -45,26 +49,34 @@
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/jquery": "^3.5.6",
+    "@types/node": "^14.17.15",
     "@types/node-red": "^1.1.1",
     "eslint": "^7.32.0",
     "eslint-plugin-es": "^4.1.0",
-    "eslint-plugin-html": "^6.1.2",
-    "eslint-plugin-jsdoc": "^36.0.6",
+    "eslint-plugin-html": "^6.2.0",
+    "eslint-plugin-jsdoc": "^36.1.0",
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-sonarjs": "^0.10.0",
+    "execa": "^5.1.1",
     "gulp": "^4.0.2",
+    "gulp-debug": "^4.0.0",
     "gulp-include": "^2.4.1",
     "gulp-once": "^2.1.1",
+    "gulp-prompt": "^1.2.0",
     "gulp-rename": "^2.0.0",
+    "gulp-replace": "^1.1.3",
     "gulp-uglify": "^3.0.2"
   },
   "optionalDependencies": {},
   "node-red": {
     "version": ">=1.3.0",
     "nodes": {
-      "uibuilder": "nodes/uibuilder.js"
+      "uibuilder": "nodes/uibuilder.js",
+      "uib-sender": "nodes/uib-sender.js"
     },
-    "notyetnodes": {}
+    "notyetnodes": {
+      "uib-receiver": "nodes/uib-receiver.js"
+    }
   },
   "engines": {
     "node": ">=12.0"

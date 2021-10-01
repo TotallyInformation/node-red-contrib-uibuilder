@@ -1,0 +1,193 @@
+<!--
+    Copyright (c) 2021 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<script type="text/javascript">
+/* eslint-disable strict */
+
+// Isolate this code
+(function () {
+    'use strict'
+
+    /** Module name must match this nodes html file @constant {string} moduleName */
+    const moduleName  = 'uib-sender'
+    /** Node's label @constant {string} paletteCategory */
+    const nodeLabel  = 'uib-sender'
+    /** Node's palette category @constant {string} paletteCategory */
+    const paletteCategory  = 'uibuilder'
+    /** Node's background color @constant {string} paletteColor */
+    const paletteColor  = '#E6E0F8'
+
+    /** Get all of the current uibuilder URL's */
+    function getUrls() {
+        $.ajax({
+            type: 'GET',
+            async: false,
+            dataType: 'json',
+            url: './uibuilder/admin/dummy',
+            data: {
+                'cmd': 'listinstances',
+            },
+            success: function(instances) {
+                //console.log('>>>>', instances)
+
+                Object.keys(instances).forEach( (val, i, arr) =>{
+                    $('#node-input-url').append($('<option>', { 
+                        value: instances[val],
+                        text : instances[val],
+                    }))    
+                })
+        
+            }
+        })
+
+    } // ---- end of getUrls ---- //
+
+    /** Prep for edit
+     * @param {*} node A node instance as seen from the Node-RED Editor
+     */
+    function onEditPrepare(node) {
+        // initial checkbox states
+        if (!node.passthrough) node.passthrough = false
+        $('#node-input-passthrough')
+            // Initial setting
+            .prop('checked', node.passthrough)
+            // If the setting changes, change the number of output ports
+            .on('change', function passthroughChange() {
+                if ( $(this).prop('checked') === true ) {
+                    node.outputs = 1
+                    $('#node-input-return').prop('checked', false)
+                } else {
+                    node.outputs = 0
+                }
+            })
+        if (!node.return) node.return = false
+        $('#node-input-return')
+            // Initial setting
+            .prop('checked', node.return)
+            // If the setting changes, change the number of output ports
+            .on('change', function returnChange() {
+                if ( $(this).prop('checked') === true ) {
+                    node.outputs = 1
+                    $('#node-input-passthrough').prop('checked', false)
+                } else node.outputs = 0
+            })
+            
+        // Deal with the url
+        getUrls()
+        $('#node-input-url')
+            .on('change', function() {
+                console.log('>>>>', this.value)
+            })
+        if ( node.url && node.url.length > 0 ) {
+            $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
+            $('#node-input-url').val(node.url)
+        }
+
+    } // ----- end of onEditPrepare() ----- //
+
+    RED.nodes.registerType(moduleName, {
+        category: paletteCategory,
+        color: paletteColor,
+        defaults: {
+            url: { value: '', required: true },
+            name: { value: '' },
+            topic: { value: '' },
+            passthrough: { value: false },
+            return: { value: false },
+            outputs: { value: 0 },
+        },
+        align:'right',
+        inputs: 1,
+        inputLabels: 'Msg with topic property',
+        outputs: 0,
+        outputLabels: ['Input msg with node ID added'],
+        icon: 'link-out.svg',
+        paletteLabel: nodeLabel,
+        label: function () { return this.url || this.name || nodeLabel },
+
+        oneditprepare: function() { onEditPrepare(this) },
+        
+    }) // ---- End of registerType() ---- //
+
+}())
+
+</script>
+
+<script type="text/html" data-template-name="uib-sender">
+<div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
+    <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+    <select id="node-input-url">
+        <option value="">--choose a uibuilder instance--</option>
+    </select>
+</div>
+
+<div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+</div>
+<div class="form-row">
+    <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+    <input type="text" id="node-input-topic">
+</div>
+
+<div class="form-row">
+    <input type="checkbox" id="node-input-passthrough" style="display:inline-block; width:15px; vertical-align:baseline;">
+    <label for="node-input-passthrough" style="width: 90%;">Pass input msg to output?</label>
+</div>
+
+<div class="form-row">
+    <input type="checkbox" id="node-input-return" style="display:inline-block; width:15px; vertical-align:baseline;">
+    <label for="node-input-return" style="width: 90%;">Allow return messages?</label>
+</div>
+
+</script>
+
+<script type="text/html" data-help-name="uib-sender">
+<p>
+    Event-driven notifications. Create an event from an input msg.topic.
+    Any <code>event-in</code> node with a matching topic specified will receive the input msg.
+</p>
+
+<h3>Inputs</h3>
+<dl class="message-properties">
+    <dt class="optional">payload <span class="property-type">string | buffer</span></dt>
+    <dd> Optionally, the payload of the message to send to all connected client browser tabs. </dd>
+
+    <dt class="optional">topic <span class="property-type">string</span></dt>
+    <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+</dl>
+
+<h3>Outputs</h3>
+<p>
+    If <code>passthrough</code> is set, the input message is sent to the output.
+</p>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt>Name <span class="property-type">string</span></dt>
+    <dd>A short description shown in the admin interface</dd>
+
+    <dt>Topic <span class="property-type">string</span></dt>
+    <dd>A topic name to use if the incoming msg does not contain one.</dd>
+
+    <dt>passthrough <span class="property-type">boolean</span></dt>
+    <dd>
+        If selected, an output port will appear and any input msg will be also delivered to the output.
+        This allows you to use the node in-line with a flow but still benefit from listeners elsewhere in your flows and tabs.
+    </dd>
+</dl>
+
+</script>

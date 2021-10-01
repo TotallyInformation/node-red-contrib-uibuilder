@@ -1,12 +1,92 @@
 # Security sequences
 
-## On initial client connection (includes if NR restarts with existing client open)
+If this is not a login msg
+   If no JWT
+      Check for session db for _auth.id
+      If session exists
+         remove session
+      Request Logon
 
-1. => Server sends 'client connect' control msg to client - tells client if security is on. If so, includes a dummy msg._auth
-2. <= Client sends 'ready for content' control msg to server - updated msg._auth is used if available. NB: doesn't have a JWT here unless client had previous valid session.
-4. == Server validates msg._auth (*1). Only succeeds if client was already auth and send a valid _auth with JWT (due to node redeploy since nr restart invalidates all JWT's).
-5. => Server returns either an 'auth succeded' or 'auth failed' message to client.
-6. ++ If auth failed, client must prompt user for logon, user must send logon to server
+   Else check JWT
+      JWT signature valid, JWT sub = _auth.id, JWT IP = request IP
+      If JWT sub != _auth.id OR JWT sig invalid OR JWT invalid
+         Check & delete session if possible
+         Delete JWT and fail hard (Dont request logon)
+
+      Else If JWT expired (OR If JWT IP != request IP)
+         Check session db for current session for ID
+         If current session
+            Refresh JWT
+            return
+         Else
+            If no _auth.password provided
+               delete jwt
+               Request Logon
+            Else
+               Check if ID exists in user DB & hashed pw matches
+               If valid
+
+      Else (everything is valid and jwt not expired)
+         refresh JWT if required
+         update session info if required
+         (continue with server processes)
+
+Else (it is a login msg)
+
+
+## On page load
+
+Nothing
+
+## (A) On initial client connection (includes if NR restarts with existing client open)
+
+1. => Server sends 'client connect' control msg to client - tells client if security is on. ~~If so, includes a dummy msg._auth~~
+
+2. If security is NOT on
+
+3. If security is ON
+   1. ++ Client checks localstore for auth
+      1. If store present
+         1. <= Send 'auth' control message to server with auth details
+      2. Otherwise
+         1. <= Send 'auth' control message to server with dummy auth details (maybe not do this? could not do anything more until logon sent?)
+      3. GOTO (B)
+
+   .. From here, every message must have a `msg._auth` included
+
+   2. ++ Client waits for 'authorised' or 'not authorised' msg from server
+      1. If 'authorised'
+      2. If 'not authorised'
+         1. If server allows unAuth msgs
+            1. <= Client sends cache request message
+            2. +++
+         2. If server blocks unAuth msgs
+            1. ++ Client signals not auth
+            2. +++
+
+## (B) On server receives 'auth' control message
+
+1. == Server receives 'auth' control message. Checks auth
+   1. == Server validates msg._auth (*1). Only succeeds if client was already auth and send a valid _auth with JWT (due to node redeploy since nr restart invalidates all JWT's).
+      1. => Server returns either an 'authorised' or 'request for logon' message to client.
+      2. If auth failed
+         1. => Send 'request for logon' to client
+         2. ++ client must prompt user for logon
+         3. <= Client must send 'auth' control message to server
+         4. GOTO 1.0
+
+## On client receives auth confirmation
+
+4. <= Client sends 'ready for content' control msg to server.
+5. == Server validates msg._auth (*1). Only succeeds if client was already auth and send a valid _auth with JWT (due to node redeploy since nr restart invalidates all JWT's).
+6. => Server returns either an 'authorised' or 'not authorised' message to client.
+7. ++ If auth failed, client must prompt user for logon, user must send logon to server
+
+## On client receives request for logon
+
+1. ++ Client triggers 'logon-request' event
+2. If Vue
+   1. 
 
 ### (*1) Server _auth (re)validation - excluding logon
 

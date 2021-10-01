@@ -15,12 +15,13 @@
 -->
 
 <script type="text/javascript">
+/* globals JQuery */
 /* eslint-disable strict */
 // Isolate this code
 (function () {
     'use strict'
 
-    /** 
+    /** Typedefs
      * @typedef {import("node-red").EditorRED} Red
      * @typedef {import("node-red__editor-client").RED} RED
      */
@@ -76,7 +77,7 @@
     //#region --------- "global" functions for the panel --------- //
 
     /** AddItem function for package list
-     * @param {jQuery} element the jQuery DOM element to which any row content should be added
+     * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
      * @param {number} index the index of the row
      * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
      */
@@ -148,7 +149,7 @@
 
         // If package name is an empty object - user removed an add row so ignore
         if ( (packageName === '') || (typeof packageName !== 'string') ) {
-            return false
+            return 'No package'
         }
 
         RED.notify('Starting removal of npm package ' + packageName)
@@ -169,6 +170,7 @@
                 console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
                 RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 // Put the entry back again
+                // @ts-ignore
                 $('#node-input-packageList').editableList('addItem',packageName)
             }
 
@@ -180,6 +182,7 @@
                 RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 
                 // Put the entry back again
+                // @ts-ignore
                 $('#node-input-packageList').editableList('addItem',packageName)
 
                 $('i.spinner').hide()
@@ -333,16 +336,16 @@
      */
     function getFileList(selectedFile) {
         //#region --- Collect variables from Config UI ---
-        var url = $('#node-input-url').val()
-        var folder = $('#node-input-folder').val()
-        var f = $('#node-input-filename').val()
+        var url = /** @type {string} */ ($('#node-input-url').val())
+        var folder = /** @type {string} */ ($('#node-input-folder').val())
+        var f = /** @type {string} */ ($('#node-input-filename').val())
         
         // Whether or not to force the index.(html|js|css) files to be copied over if missing
         //var nodeInputCopyIndex = $('#node-input-copyIndex').is(':checked')
         //#endregion -------------------------------------
 
         // Collect the current filename from various places
-        if ( selectedFile === undefined ) selectedFile = f
+        if ( selectedFile === undefined ) selectedFile = /** @type {string} */ (f)
         if ( selectedFile === null ) 
             selectedFile = localStorage.getItem('uibuilder.'+url+'.selectedFile') || undefined
 
@@ -406,7 +409,9 @@
                     if ( filename === selectedFile ) selected = true
                 })
                 // Set default file name/type. In order: selectedFile param, index.html, 1st returned
+                // @ts-ignore
                 if ( selected === true ) uiace.fname = selectedFile
+                // @ts-ignore
                 else if ( indexHtml === true ) uiace.fname = 'index.html'
                 else uiace.fname = firstFile
                 $('#node-input-filename').val(uiace.fname)
@@ -529,9 +534,9 @@
      */
     function deleteFile() {
         // Get the current file, folder & url
-        var folder = $('#node-input-folder').val() || uiace.folder
-        var url = $('#node-input-url').val()
-        var fname = $('#node-input-filename').val()
+        var folder = /** @type {string} */ ($('#node-input-folder').val()) || uiace.folder
+        var url = /** @type {string} */ ($('#node-input-url').val())
+        var fname = /** @type {string} */ ($('#node-input-filename').val())
 
         $.ajax({
             type: 'DELETE',
@@ -609,6 +614,7 @@
         })
 
         /** If the url already exists - prevent the "Done" button from being pressed. */
+        // @ts-ignore
         if ( exists === true ) {
             $('#node-dialog-ok').prop('disabled', true)
             $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
@@ -632,7 +638,7 @@
 
     /** Set the height of the ACE text editor box */
     function setACEheight() {
-        var height
+        let height
 
         if ( uiace.editorLoaded === true ) {
             // If the editor is in full-screen ...
@@ -652,13 +658,13 @@
                 uiace.fullscreen = true
 
             } else {
+                // Don't bother if the top of the editor is still auto
+                if ( $('#edit-outer').css('top') === 'auto' ) return
+
                 $('#edit-props').css('background-color','')
                     .css('padding','')
 
-                // Full height
-                height = parseInt($('#dialog-form').height(), 10)
-                // Subtract info lines
-                height -= parseInt($('#info').height(), 10)
+                height = ($('.red-ui-tray-footer').position()).top - ($('#edit-outer').offset()).top - 35
                 
                 // Replace the compress icon with a expand icon
                 $('#node-function-expand-js').css('background-color','')
@@ -697,7 +703,7 @@
         var newVal = $('#node-input-sessionLength').val()
         var newSec = $('#node-input-useSecurity').is(':checked')
 
-        if (newSec === true && newVal.length < 1 ) return false
+        if (newSec === true && (newVal.toString()).length < 1 ) return false
 
         return true
 
@@ -714,7 +720,7 @@
         var newVal = $('#node-input-jwtSecret').val()
         var newSec = $('#node-input-useSecurity').is(':checked')
 
-        if (newSec === true && newVal.length < 1 ) return false
+        if (newSec === true && (newVal.toString()).length < 1 ) return false
 
         return true
 
@@ -730,7 +736,7 @@
         let templateFolder = that.templateFolder
 
         // Load each option - first entry will be the default
-        Object.values(RED.settings.uibuilderTemplates).forEach( templ => {
+        Object.values(RED.settings.uibuilderTemplates).forEach( templ => { // eslint-disable-line es/no-object-values
             // Build the drop-down
             $('#node-input-templateFolder').append($('<option>', { 
                 value: templ.folder,
@@ -856,14 +862,6 @@
      * @param {object} that A reference to the panel's `this` object
      */
     function setInitialStates(that) {
-        // Hide/show
-        $('#main-props').show()
-        $('#edit-props').hide()
-        $('#npm-props').hide()
-        $('#adv-props').hide()
-        $('#sec-props').hide()
-        $('#info-props').hide()
-
         // initial checkbox states
         $('#node-input-fwdInMessages').prop('checked', that.fwdInMessages)
         $('#node-input-allowScripts').prop('checked', that.allowScripts)
@@ -872,7 +870,6 @@
         $('#node-input-showfolder').prop('checked', that.showfolder)
         $('#node-input-useSecurity').prop('checked', that.useSecurity)
         $('#node-input-allowUnauth').prop('checked', that.allowUnauth)
-        $('#node-input-allowAuthAnon').prop('checked', that.allowAuthAnon)
         $('#node-input-tokenAutoExtend').prop('checked', that.tokenAutoExtend)
         $('#node-input-reload').prop('checked', that.reload)
     }
@@ -965,10 +962,10 @@
         })
 
         // One-off check for default settings
-        if ( $('#node-input-jwtSecret').val().length === 0 ) {
+        if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
             $('#node-input-jwtSecret').val(defaultJwtSecret)
         }
-        if ( $('#node-input-useSecurity').is(':checked') && $('#node-input-sessionLength').val().length === 0 ) {
+        if ( $('#node-input-useSecurity').is(':checked') && /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
             $('#node-input-sessionLength').val(defaultSessionLength)
         }
 
@@ -992,28 +989,26 @@
                 }
             */
             // Yes, we do need this.checked twice :-)
-            if ( this.checked ) {
+            if ( $(this).is(':checked') ) {
 
                 $('#node-input-allowUnauth').prop('disabled', false)        
-                $('#node-input-allowAuthAnon').prop('disabled', false)
                 $('#node-input-sessionLength').prop('disabled', false)
                 $('#node-input-jwtSecret').prop('disabled', false)
                 $('#node-input-tokenAutoExtend').prop('disabled', false)
                 // Add defaults if fields are empty
-                if ( $('#node-input-jwtSecret').val().length === 0 ) {
+                if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
                     $('#node-input-jwtSecret').addClass('input-error')
                 }
-                if ( $('#node-input-sessionLength').val().length === 0 ) {
+                if ( /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
                     $('#node-input-sessionLength').val(defaultSessionLength)
                 }
-                if ( $('#node-input-jwtSecret').val().length === 0 ) {
+                if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
                     $('#node-input-jwtSecret').val(defaultJwtSecret)
                 }
 
             } else { // security not requested, disable other settings
 
                 $('#node-input-allowUnauth').prop('disabled', true)        
-                $('#node-input-allowAuthAnon').prop('disabled', true)
                 $('#node-input-sessionLength').prop('disabled', true)
                 $('#node-input-jwtSecret').prop('disabled', true)
                 $('#node-input-tokenAutoExtend').prop('disabled', true)
@@ -1026,6 +1021,434 @@
         $('#nrMode').text(RED.settings.uibuilderNodeEnv)
         
     } // ---- end of securitySettings ---- //
+
+    /** Prep tabs
+     * @param {object} node A reference to the panel's `this` object
+     */
+    function prepTabs(node) {
+        const tabs = RED.tabs.create({
+            id: 'tabs',
+            onchange: function(tab) {
+                // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
+                $('#tabs-content').children().hide()
+                $('#' + tab.id).show()
+
+                //? Could move these to their own show event. Might even unload some stuff on hide?
+
+                if ( tab.id === 'tab-files' ) {
+                    // Build the file list
+                    getFileList()
+
+                    if ( uiace.editorLoaded !== true ) {
+                        // Clear out the editor
+                        if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
+
+                        // Create the ACE editor component
+                        uiace.editor = RED.editor.createEditor({
+                            id: 'node-input-template-editor',
+                            mode: 'ace/mode/' + uiace.format,
+                            value: node.template
+                        })
+                        // Keep a reference to the current editor session
+                        uiace.editorSession = uiace.editor.getSession()
+                        /** If the editor has changes, enable the save & reset buttons
+                         * using input event instead of change since it's called with some timeout 
+                         * which is needed by the undo (which takes some time to update)
+                         **/
+                        uiace.editor.on('input', function() {
+                            // Is the editor clean?
+                            fileIsClean(uiace.editorSession.getUndoManager().isClean())
+                        })
+                        /*uiace.editorSession.on('change', function(delta) {
+                            // delta.start, delta.end, delta.lines, delta.action
+                            console.log('ACE Editor CHANGE Event', delta)
+                        }) */
+                        uiace.editorLoaded = true
+
+                        // Resize to max available height
+                        setACEheight()
+                        
+                        // Be friendly and auto-load the initial file via the admin API
+                        getFileContents()
+                        fileIsClean(true)
+                    }
+                } else if ( tab.id === 'tab-libraries' ) {
+
+                    //! TODO Improve feedback
+
+                    // Setup the package list
+                    $('#node-input-packageList').editableList({
+                        addItem: addPackageRow, // function
+                        removeItem: removePackageRow, // function(data){},
+                        resizeItem: function() {}, // function(_row,_index) {},
+                        header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
+                        height: 'auto',
+                        addButton: true,
+                        removable: true,
+                        scrollOnAdd: true,
+                        sortable: false,
+                    })
+
+                    // reset and populate the list
+                    $('#node-input-packageList').editableList('empty')
+                    packages.forEach( packageName => {
+                        if ( packageName !== 'socket.io' ) // ignore socket.io
+                            $('#node-input-packageList').editableList('addItem',packageName)
+                    })
+
+                    // spinner
+                    $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
+                    $('i.spinner').hide()
+
+                }
+            }
+        })
+        tabs.addTab({ id: 'tab-core',      label: 'Core'      })
+        tabs.addTab({ id: 'tab-files',     label: 'Files'     })
+        tabs.addTab({ id: 'tab-libraries', label: 'Libraries' })
+        tabs.addTab({ id: 'tab-security',  label: 'Security'  })
+        tabs.addTab({ id: 'tab-advanced',  label: 'Advanced'  })
+        
+    } // ---- End of preTabs ---- //
+
+    /** Prep for edit
+     * @param {*} node -
+     */
+    function onEditPrepare(node) {
+        // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
+        if ( node.templateFolder === undefined || node.templateFolder === '' ) node.templateFolder = defaultTemplate
+
+        // Start with the edit section hidden & main section visible, set the checkbox initial states
+        setInitialStates(node)
+
+        prepTabs(node)
+
+        // Set sourceFolder dropdown
+        $(`#node-input-sourceFolder option[value="${node.sourceFolder || 'src'}"]`).prop('selected', true)
+        $('#node-input-sourceFolder').val(node.sourceFolder || 'src')
+
+        /** When the url changes (NB: Also see the validation function) change visible folder names & links
+         * NB: Actual URL change processing is done in validation which also happens on change
+         *     Change happens when config panel is opened as well as for a real change
+         */
+        $('#node-input-url').on('change', urlChange)
+
+        // When the show web view (index) of source files changes
+        $('#node-input-showfolder').on('change', function() {
+            if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
+            else $('#show-src-folder-idx-url').show()
+        })
+
+        // Configure the template dropdown & setup button handlers
+        templateSettings(node)
+
+        // security settings
+        securitySettings()
+
+        //#region ---- File Editor ---- //
+
+        // Mark edit save/reset buttons as disabled by default
+        fileIsClean(true)
+
+        // Handle the file editor change of folder/file (1st built on click of show edit button)
+        $('#node-input-folder').change(function() { // (e) {
+            // Rebuild the file list
+            getFileList()
+        })
+        $('#node-input-filename').change(function() { // (e) {
+            // Get the content of the file via the admin API
+            getFileContents()
+        })
+
+        // Handle the folder new button
+        $('#fldr-new-dialog_new').addClass('input-error')
+            .prop('disabled',true)
+        $('#fldr-input-newname').addClass('input-error')
+            .on('input', function(){
+                if ( /** @type {string} */ ($('#fldr-input-newname').val()).length === 0) {
+                    $('#fldr-input-newname').addClass('input-error')
+                    $('#fldr').addClass('input-error')
+                        .prop('disabled',true)
+                } else {
+                    $('#fldr-input-newname').removeClass('input-error')
+                    $('#fldr-new-dialog_new').removeClass('input-error')
+                        .prop('disabled',false)
+                }
+            })
+        // @ts-ignore
+        $('#fldr-new-dialog').dialog({ // define the dialog box
+            autoOpen:false, modal:true, closeOnEscape:true,
+            buttons: [
+                {
+                    text: 'Create',
+                    id: 'fldr-new-dialog_new',
+                    click: function() {
+                        // NB: Button is disabled unless name.length > 0 so don't need to check here
+                        // Call the new file API
+                        createNewFolder( /** @type {string} */ ($('#fldr-input-newname').val()) )
+                        $('#fldr-input-newname').val(null)
+                            .addClass('input-error')
+                        $('#fldr-new-dialog_new').addClass('input-error')
+                            .prop('disabled',true)
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        $('#fldr-input-newname').val(null)
+                            .addClass('input-error')
+                        $('#fldr-new-dialog_new').addClass('input-error')
+                            .prop('disabled',true)
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },
+            ]
+        })
+            .keyup(function(e) { // make enter key fire the create
+                // @ts-ignore
+                if (e.keyCode == $.ui.keyCode.ENTER) // eslint-disable-line eqeqeq
+                    $('#fldr_new_dialog_new').trigger('click')
+            })
+        $('#btn-fldr-new').on('click', function() { // (e) {
+            $('#fldr_url').html( /** @type {string} */ ($('#node-input-url').val()) )
+            // @ts-ignore
+            $('#fldr-new-dialog').dialog('open')  
+        })
+        // Handle the folder delete button
+        // @ts-ignore
+        $('#fldr-del-dialog').dialog({
+            autoOpen:false, modal:true, closeOnEscape:true,
+            buttons: [
+                {
+                    text: 'Delete',
+                    id: 'fldr-del-dialog_del',
+                    click: function() {
+                        // Call the delete folder API (uses the current folder)
+                        deleteFolder()
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },
+            ]
+        })
+        $('#btn-fldr-del').on('click', function() { // (e) {
+            $('#fldr-del-dialog_del').addClass('input-error')
+                .css('color','brown')
+            $('#fldr-del-name').text( /** @type {string} */ ($('#node-input-folder').val()) )
+            if ( $('#node-input-folder').val() === 'src' ) {
+                if ( $('#node-input-copyIndex').is(':checked') ) {
+                    $('#fldr-del-recopy').css('color','')
+                        .text('Copy flag is set so the src folder will be recreated and the index.(html|js|css) files will be recopied from the master template.')
+                } else {
+                    $('#fldr-del-recopy').css('color','brown')
+                        .text('Copy flag is NOT set so the src folder will NOT be recopied from the master template.')
+                }    
+            } else {
+                $('#fldr-del-recopy').css('color','')
+                    .text('')
+            }
+            // @ts-ignore
+            $('#fldr-del-dialog').dialog('open')                  
+        })
+
+        // Handle the file editor reset button (reload the file)
+        $('#edit-reset').on('click', function(e) {
+            e.preventDefault() // don't trigger normal click event
+
+            // Get the content of the file via the admin API
+            getFileContents()
+            $('#file-action-message').text('')
+        })
+        // Handle the file editor save button
+        $('#edit-save').on('click', function(e) {
+            e.preventDefault() // don't trigger normal click event
+
+            var authTokens = RED.settings.get('auth-tokens')
+            
+            // Post the updated content of the file via the admin API
+            // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
+            // Clients will be reloaded if the reload checkbox is set.
+            var request = new XMLHttpRequest()
+            var params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
+                '&url=' + $('#node-input-url').val() + 
+                '&reload=' + $('#node-input-reload').val() + 
+                '&data=' + encodeURIComponent(uiace.editorSession.getValue())
+            request.open('POST', 'uibputfile', true)
+            request.onreadystatechange = function() {
+                if (this.readyState === XMLHttpRequest.DONE) {
+                    if (this.status === 200) {
+                        // Request successful
+                        // display msg - blank msg when new edits present
+                        $('#file-action-message').text('File Saved')
+                        fileIsClean(true)
+                    } else {
+                        // Request failed
+                        // display msg - blank msg when new edits present
+                        $('#file-action-message').text('File Save FAILED')
+                    }
+                }
+            }
+            request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+            // If admin ui is protected with a login, we need to send the access token
+            if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+            request.send(params)
+
+        })
+
+        //#region Handle the Delete file button
+        // @ts-ignore
+        $('#edit_delete_dialog').dialog({
+            autoOpen:false, modal:true, closeOnEscape:true,
+            buttons: [
+                {
+                    text: 'Delete',
+                    id: 'edit_del_dialog_del',
+                    click: function() {
+                        // Call the delete file API (uses the current file)
+                        deleteFile()
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },
+            ]
+        })
+        $('#edit-delete').on('click', function() { // (e) {
+            $('#edit_del_dialog_del').addClass('input-error')
+                .css('color','brown')
+            $('#edit-delete-name').text($('#node-input-folder').val() + '/' + $('#node-input-filename').val())
+            if ( $('#node-input-folder').val() === 'src' ) {
+                if ( $('#node-input-copyIndex').is(':checked') ) {
+                    $('#edit-delete-recopy').css('color','')
+                        .text('Copy flag is set so index.(html|js|css) files will be recopied from master template.')
+                } else {
+                    $('#edit-delete-recopy').css('color','brown')
+                        .text('Copy flag is NOT set so index.(html|js|css) files will NOT be recopied from master template.')
+                }    
+            } else {
+                $('#edit-delete-recopy').css('color','')
+                    .text('')
+            }
+            // @ts-ignore
+            $('#edit_delete_dialog').dialog('open')  
+        })
+        //#endregion
+
+        //#region Handle the New file button
+        $('#edit_new_dialog_new').addClass('input-error')
+            .prop('disabled',true)
+        $('#edit-input-newname').addClass('input-error')
+            .on('input', function(){
+                if ( /** @type {string} */ ($('#edit-input-newname').val()).length === 0) {
+                    $('#edit-input-newname').addClass('input-error')
+                    $('#edit_new_dialog_new').addClass('input-error')
+                        .prop('disabled',true)
+                } else {
+                    $('#edit-input-newname').removeClass('input-error')
+                    $('#edit_new_dialog_new').removeClass('input-error')
+                        .prop('disabled',false)
+                }
+            })
+        // @ts-ignore
+        $('#edit_new_dialog').dialog({
+            autoOpen:false, modal:true, closeOnEscape:true,
+            buttons: [
+                {
+                    text: 'Create',
+                    id: 'edit_new_dialog_new',
+                    click: function() {
+                        // NB: Button is disabled unless name.length > 0 so don't need to check here
+                        // Call the new file API
+                        createNewFile(/** @type {string} */ ($('#edit-input-newname').val()) )
+                        $('#edit-input-newname').val(null)
+                            .addClass('input-error')
+                        $('#edit_new_dialog_new').addClass('input-error')
+                            .prop('disabled',true)
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        $('#edit-input-newname').val(null)
+                            .addClass('input-error')
+                        $('#edit_new_dialog_new').addClass('input-error')
+                            .prop('disabled',true)
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },
+            ]
+        })
+            .keyup(function(e) { // make enter key fire the create
+                // @ts-ignore
+                if (e.keyCode == $.ui.keyCode.ENTER) // eslint-disable-line eqeqeq
+                    $('#edit_new_dialog_new').click()
+            })
+        $('#edit-new').on('click', function() { // (e) {
+            $('#file_url').html( /** @type {string} */ ($('#node-input-url').val()) )
+            $('#file_fldr').html( /** @type {string} */ ($('#node-input-folder').val()) )
+            // @ts-ignore
+            $('#edit_new_dialog').dialog('open')  
+        })
+        //#endregion
+
+        // Handle the expander button (show full screen editor) - from core function node
+        $('#node-function-expand-js').on('click', function(e) {
+            e.preventDefault()
+
+            // Creates another edit session with max width
+            var value = uiace.editor.getValue()
+            RED.editor.editText({
+                mode: $('#node-input-format').val(), //mode: $("#node-input-format").val(),
+                value: value,
+                width: 'Infinity',
+                cursor: uiace.editor.getCursorPosition(),
+                complete: function(v,cursor) {
+                    // v contains the returned text
+                    uiace.editor.setValue(v, -1)
+                    uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
+                    setTimeout(function() {
+                        uiace.editor.focus()
+                        // Check if anything changed
+                        if ( v !== value ) {
+                            fileIsClean(false)
+                        }
+                    },300)
+                }
+            })
+
+            // Are we in fullscreen? Variable is updated when oneditresize calls setACEheight()
+            // if (uiace.fullscreen === false) {
+            //     // Select the editor components and make full-screen, triggers oneditresize()
+            //     var viewer = $('#edit-props')[0]
+            //     var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
+            //     if (rFS) rFS.call(viewer)
+                
+            //     // TODO: Add popup if no method is available
+            // } else {
+            //     // Already in fullscreen so lets exit, triggers oneditresize()
+            //     document.exitFullscreen()
+            // }
+
+        })
+
+        //#endregion ---- File Editor ---- //
+
+    } // ---- End of oneditprepare ---- //
 
     //#endregion ------------------------------------------------- //
 
@@ -1087,449 +1510,7 @@
          */
 
         /** Prepares the Editor panel */
-        oneditprepare: function oneditprepare() {
-            //console.log('[uibuilder:oneditprepare] THIS: ', this)
-
-            // Keep a local reference to `this` for use as context changes
-            const that = this
-
-            // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
-            if ( that.templateFolder === undefined || that.templateFolder === '' ) that.templateFolder = defaultTemplate
-
-            // Start with the edit section hidden & main section visible, set the checkbox initial states
-            setInitialStates(that)
-
-            // Set sourceFolder dropdown
-            $(`#node-input-sourceFolder option[value="${that.sourceFolder || 'src'}"]`).prop('selected', true)
-            $('#node-input-sourceFolder').val(that.sourceFolder || 'src')
-
-            /** When the url changes (NB: Also see the validation function) change visible folder names & links
-             * NB: Actual URL change processing is done in validation which also happens on change
-             *     Change happens when config panel is opened as well as for a real change
-             */
-            $('#node-input-url').on('change', urlChange)
-
-            // When the show web view (index) of source files changes
-            $('#node-input-showfolder').on('change', function() {
-                if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
-                else $('#show-src-folder-idx-url').show()
-            })
-
-            // Configure the template dropdown & setup button handlers
-            templateSettings(that)
-
-            // security settings
-            securitySettings()
-
-            // Show/Hide the advanced settings
-            $('#show-adv-props').css( 'cursor', 'pointer' )
-            $('#show-adv-props').on('click', function() { // (e) {
-                $('#adv-props').toggle()
-                if ( $('#adv-props').is(':visible') ) {
-                    $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Advanced Settings')
-                } else {
-                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                }
-            })
-
-            //#region ---- File Editor ---- //
-            // Mark edit save/reset buttons as disabled by default
-            fileIsClean(true)
-
-            // Show the edit section, hide the main, adv & sec sections
-            $('#show-edit-props').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-                $('#main-props').hide()
-                $('#sec-props').hide()
-                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#edit-props').show()
-
-                // Build the file list
-                getFileList()
-
-                if ( uiace.editorLoaded !== true ) {
-                    // Clear out the editor
-                    if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
-
-                    // Create the ACE editor component
-                    uiace.editor = RED.editor.createEditor({
-                        id: 'node-input-template-editor',
-                        mode: 'ace/mode/' + uiace.format,
-                        value: that.template
-                    })
-                    // Keep a reference to the current editor session
-                    uiace.editorSession = uiace.editor.getSession()
-                    /** If the editor has changes, enable the save & reset buttons
-                     * using input event instead of change since it's called with some timeout 
-                     * which is needed by the undo (which takes some time to update)
-                     **/
-                    uiace.editor.on('input', function() {
-                        // Is the editor clean?
-                        fileIsClean(uiace.editorSession.getUndoManager().isClean())
-                    })
-                    /*uiace.editorSession.on('change', function(delta) {
-                        // delta.start, delta.end, delta.lines, delta.action
-                        console.log('ACE Editor CHANGE Event', delta)
-                    }) */
-                    uiace.editorLoaded = true
-
-                    // Resize to max available height
-                    setACEheight()
-                    
-                    // Be friendly and auto-load the initial file via the admin API
-                    getFileContents()
-                    fileIsClean(true)
-                }
-            })
-
-            // Hide the edit section, show the main section
-            $('#edit-close').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-                $('#main-props').show()
-                $('#edit-props').hide()
-            })
-
-            // Handle the file editor change of folder/file (1st built on click of show edit button)
-            $('#node-input-folder').change(function() { // (e) {
-                // Rebuild the file list
-                getFileList()
-            })
-            $('#node-input-filename').change(function() { // (e) {
-                // Get the content of the file via the admin API
-                getFileContents()
-            })
-
-            // Handle the folder new button
-            $('#fldr-new-dialog_new').addClass('input-error')
-                .prop('disabled',true)
-            $('#fldr-input-newname').addClass('input-error')
-                .on('input', function(){
-                    if ( $('#fldr-input-newname').val().length === 0) {
-                        $('#fldr-input-newname').addClass('input-error')
-                        $('#fldr').addClass('input-error')
-                            .prop('disabled',true)
-                    } else {
-                        $('#fldr-input-newname').removeClass('input-error')
-                        $('#fldr-new-dialog_new').removeClass('input-error')
-                            .prop('disabled',false)
-                    }
-                })
-            $('#fldr-new-dialog').dialog({ // define the dialog box
-                autoOpen:false, modal:true, closeOnEscape:true,
-                buttons: [
-                    {
-                        text: 'Create',
-                        id: 'fldr-new-dialog_new',
-                        click: function() {
-                            // NB: Button is disabled unless name.length > 0 so don't need to check here
-                            // Call the new file API
-                            createNewFolder($('#fldr-input-newname').val())
-                            $('#fldr-input-newname').val(null)
-                                .addClass('input-error')
-                            $('#fldr-new-dialog_new').addClass('input-error')
-                                .prop('disabled',true)
-                            $( this ).dialog( 'close' )
-                        }
-                    },{
-                        text: 'Cancel',
-                        click: function() {
-                            $('#fldr-input-newname').val(null)
-                                .addClass('input-error')
-                            $('#fldr-new-dialog_new').addClass('input-error')
-                                .prop('disabled',true)
-                            $( this ).dialog( 'close' )
-                        }
-                    },
-                ]
-            })
-                .keyup(function(e) { // make enter key fire the create
-                    // eslint-disable-next-line eqeqeq
-                    if (e.keyCode == $.ui.keyCode.ENTER)
-                        $('#fldr_new_dialog_new').trigger('click')
-                })
-            $('#btn-fldr-new').on('click', function() { // (e) {
-                $('#fldr_url').html( $('#node-input-url').val() )
-                $('#fldr-new-dialog').dialog('open')  
-            })
-            // Handle the folder delete button
-            $('#fldr-del-dialog').dialog({
-                autoOpen:false, modal:true, closeOnEscape:true,
-                buttons: [
-                    {
-                        text: 'Delete',
-                        id: 'fldr-del-dialog_del',
-                        click: function() {
-                            // Call the delete folder API (uses the current folder)
-                            deleteFolder()
-                            $( this ).dialog( 'close' )
-                        }
-                    },{
-                        text: 'Cancel',
-                        click: function() {
-                            $( this ).dialog( 'close' )
-                        }
-                    },
-                ]
-            })
-            $('#btn-fldr-del').on('click', function() { // (e) {
-                $('#fldr-del-dialog_del').addClass('input-error')
-                    .css('color','brown')
-                $('#fldr-del-name').text($('#node-input-folder').val())
-                if ( $('#node-input-folder').val() === 'src' ) {
-                    if ( $('#node-input-copyIndex').is(':checked') ) {
-                        $('#fldr-del-recopy').css('color','')
-                            .text('Copy flag is set so the src folder will be recreated and the index.(html|js|css) files will be recopied from the master template.')
-                    } else {
-                        $('#fldr-del-recopy').css('color','brown')
-                            .text('Copy flag is NOT set so the src folder will NOT be recopied from the master template.')
-                    }    
-                } else {
-                    $('#fldr-del-recopy').css('color','')
-                        .text('')
-                }
-                $('#fldr-del-dialog').dialog('open')                  
-            })
-
-            // Handle the file editor reset button (reload the file)
-            $('#edit-reset').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-
-                // Get the content of the file via the admin API
-                getFileContents()
-                $('#file-action-message').text('')
-            })
-            // Handle the file editor save button
-            $('#edit-save').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-
-                var authTokens = RED.settings.get('auth-tokens')
-                
-                // Post the updated content of the file via the admin API
-                // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
-                // Clients will be reloaded if the reload checkbox is set.
-                var request = new XMLHttpRequest()
-                var params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
-                    '&url=' + $('#node-input-url').val() + 
-                    '&reload=' + $('#node-input-reload').val() + 
-                    '&data=' + encodeURIComponent(uiace.editorSession.getValue())
-                request.open('POST', 'uibputfile', true)
-                request.onreadystatechange = function() {
-                    if (this.readyState === XMLHttpRequest.DONE) {
-                        if (this.status === 200) {
-                            // Request successful
-                            // display msg - blank msg when new edits present
-                            $('#file-action-message').text('File Saved')
-                            fileIsClean(true)
-                        } else {
-                            // Request failed
-                            // display msg - blank msg when new edits present
-                            $('#file-action-message').text('File Save FAILED')
-                        }
-                    }
-                }
-                request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
-                // If admin ui is protected with a login, we need to send the access token
-                if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                request.send(params)
-
-            })
-
-            //#region Handle the Delete file button
-            $('#edit_delete_dialog').dialog({
-                autoOpen:false, modal:true, closeOnEscape:true,
-                buttons: [
-                    {
-                        text: 'Delete',
-                        id: 'edit_del_dialog_del',
-                        click: function() {
-                            // Call the delete file API (uses the current file)
-                            deleteFile()
-                            $( this ).dialog( 'close' )
-                        }
-                    },{
-                        text: 'Cancel',
-                        click: function() {
-                            $( this ).dialog( 'close' )
-                        }
-                    },
-                ]
-            })
-            $('#edit-delete').on('click', function() { // (e) {
-                $('#edit_del_dialog_del').addClass('input-error')
-                    .css('color','brown')
-                $('#edit-delete-name').text($('#node-input-folder').val() + '/' + $('#node-input-filename').val())
-                if ( $('#node-input-folder').val() === 'src' ) {
-                    if ( $('#node-input-copyIndex').is(':checked') ) {
-                        $('#edit-delete-recopy').css('color','')
-                            .text('Copy flag is set so index.(html|js|css) files will be recopied from master template.')
-                    } else {
-                        $('#edit-delete-recopy').css('color','brown')
-                            .text('Copy flag is NOT set so index.(html|js|css) files will NOT be recopied from master template.')
-                    }    
-                } else {
-                    $('#edit-delete-recopy').css('color','')
-                        .text('')
-                }
-                $('#edit_delete_dialog').dialog('open')  
-            })
-            //#endregion
-
-            //#region Handle the New file button
-            $('#edit_new_dialog_new').addClass('input-error')
-                .prop('disabled',true)
-            $('#edit-input-newname').addClass('input-error')
-                .on('input', function(){
-                    if ( $('#edit-input-newname').val().length === 0) {
-                        $('#edit-input-newname').addClass('input-error')
-                        $('#edit_new_dialog_new').addClass('input-error')
-                            .prop('disabled',true)
-                    } else {
-                        $('#edit-input-newname').removeClass('input-error')
-                        $('#edit_new_dialog_new').removeClass('input-error')
-                            .prop('disabled',false)
-                    }
-                })
-            $('#edit_new_dialog').dialog({
-                autoOpen:false, modal:true, closeOnEscape:true,
-                buttons: [
-                    {
-                        text: 'Create',
-                        id: 'edit_new_dialog_new',
-                        click: function() {
-                            // NB: Button is disabled unless name.length > 0 so don't need to check here
-                            // Call the new file API
-                            createNewFile($('#edit-input-newname').val())
-                            $('#edit-input-newname').val(null)
-                                .addClass('input-error')
-                            $('#edit_new_dialog_new').addClass('input-error')
-                                .prop('disabled',true)
-                            $( this ).dialog( 'close' )
-                        }
-                    },{
-                        text: 'Cancel',
-                        click: function() {
-                            $('#edit-input-newname').val(null)
-                                .addClass('input-error')
-                            $('#edit_new_dialog_new').addClass('input-error')
-                                .prop('disabled',true)
-                            $( this ).dialog( 'close' )
-                        }
-                    },
-                ]
-            })
-                .keyup(function(e) { // make enter key fire the create
-                    // eslint-disable-next-line eqeqeq
-                    if (e.keyCode == $.ui.keyCode.ENTER)
-                        $('#edit_new_dialog_new').click()
-                })
-            $('#edit-new').on('click', function() { // (e) {
-                $('#file_url').html( $('#node-input-url').val() )
-                $('#file_fldr').html( $('#node-input-folder').val() )
-                $('#edit_new_dialog').dialog('open')  
-            })
-            //#endregion
-
-            // Handle the expander button (show full screen editor) - from core function node
-            $('#node-function-expand-js').on('click', function(e) {
-                e.preventDefault()
-
-                // Creates another edit session with max width
-                var value = uiace.editor.getValue()
-                RED.editor.editText({
-                    mode: $('#node-input-format').val(), //mode: $("#node-input-format").val(),
-                    value: value,
-                    width: 'Infinity',
-                    cursor: uiace.editor.getCursorPosition(),
-                    complete: function(v,cursor) {
-                        // v contains the returned text
-                        uiace.editor.setValue(v, -1)
-                        uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
-                        setTimeout(function() {
-                            uiace.editor.focus()
-                            // Check if anything changed
-                            if ( v !== value ) {
-                                fileIsClean(false)
-                            }
-                        },300)
-                    }
-                })
-
-                // Are we in fullscreen? Variable is updated when oneditresize calls setACEheight()
-                // if (uiace.fullscreen === false) {
-                //     // Select the editor components and make full-screen, triggers oneditresize()
-                //     var viewer = $('#edit-props')[0]
-                //     var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
-                //     if (rFS) rFS.call(viewer)
-                    
-                //     // TODO: Add popup if no method is available
-                // } else {
-                //     // Already in fullscreen so lets exit, triggers oneditresize()
-                //     document.exitFullscreen()
-                // }
-
-            })
-            //#endregion ---- File Editor ---- //
-
-            //#region ---- npm ---- //
-
-            // NB: Assuming that the edit section is closed
-            // Show the npm section, hide the main, adv & security sections
-            $('#show-npm-props').on('click', function(e) {
-
-                e.preventDefault() // don't trigger normal click event
-                $('#main-props').hide()
-                $('#adv-props').hide()
-                $('#sec-props').hide()
-                $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#npm-props').show()
-
-                //! TODO Improve feedback
-                // Setup the package list
-                $('#node-input-packageList').editableList({
-                    addItem: addPackageRow, // function
-                    removeItem: removePackageRow, // function(data){},
-                    resizeItem: function() {}, // function(_row,_index) {},
-                    header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
-                    height: 'auto',
-                    addButton: true,
-                    removable: true,
-                    scrollOnAdd: true,
-                    sortable: false,
-                })
-
-                // reset and populate the list
-                $('#node-input-packageList').editableList('empty')
-                packages.forEach( packageName => {
-                    if ( packageName !== 'socket.io' ) // ignore socket.io
-                        $('#node-input-packageList').editableList('addItem',packageName)
-                })
-
-                // spinner
-                $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
-                $('i.spinner').hide()
-
-            })
-
-            // Hide the npm section, show the main section
-            $('#npm-close').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-
-                $('#main-props').show()
-                $('#npm-props').hide()
-            })
-
-            //#endregion ---- npm ---- //
-
-            /** TODO: Get list of installed ACE themes, add chooser, save current choice
-             * that.editor.setTheme("ace/theme/monokai")
-             * uiace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
-             * uiace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
-             **/
-
-        }, // ---- End of oneditprepare ---- //
+        oneditprepare: function() { onEditPrepare(this) },
 
         /** Runs before save */
         oneditsave: function() {
@@ -1616,7 +1597,25 @@
 </script>
 
 <script type="text/html" data-template-name="uibuilder">
-    <div id="main-props" aria-label="Hideable main properties section">
+<div class="form-row tabs-row"><ul id="tabs"></ul></div>
+<div id="tabs-content" style="border-bottom: 1px solid silver; padding-bottom: 1em; margin-bottom: 1em;">
+    <div id="tab-core">
+        <div aria-label="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
+            <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+            <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
+        </div>
+
+        <div id="info" aria-label="Information and utility links" class="form-row" style="display: flex; justify-content: space-between; width:450px">
+
+            <a id="uibuilderurl" title="Open the uibuilder web page" href="uibindex" target="_blank" class="red-ui-button editor-button">Open Webpage</a> 
+            <a href="uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed uibuilder information">uibuilder details</a>
+            <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Shows detailed configuration for this instance of uibuilder">Instance Details</a>
+            <a href="./uibuilder/techdocs" target="_blank" class="red-ui-button editor-button" title="Shows the uibuilder technical documentation as a new page">Tech Docs</a>
+    
+        </div>
+
+        <div id="info-webserver" class="form-row" style="width:450px"></div>
+
         <div aria-label="Node Name" class="form-row" title="Node Name (descriptive only)">
             <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
             <input type="text" id="node-input-name">
@@ -1627,169 +1626,42 @@
             <input type="text" id="node-input-topic">
         </div>
 
-        <div aria-label="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
-            <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-            <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
+        <h4>Template Settings</h4>
+
+        <div aria-label="Template selector" class="form-row">
+            <label for="node-input-templateFolder" style="width:100px;"><i class="fa fa-window-restore"></i> Template</label>
+            <select id="node-input-templateFolder" style="width:70%;"></select>
         </div>
 
-        <div aria-label="Buttons to show 'edit files' & 'mng front-end libs', hide this section" class="form-row">
-            <button class="btn" id="show-edit-props" title="Edit the front-end code">
-                Edit Files
+        <div aria-label="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation&sol;uib-template-test" style="display:none">
+            <label for="node-input-extTemplate"><i class="fa fa-globe"></i> External</label>
+            <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
+        </div>
+
+        <div aria-label="Button to load new template" class="form-row">
+            <label for="btn-load-template" style="width:100px;"></label>
+            <button class="btn" id="btn-load-template" style="margin-top: 0.3em;" title="Load selected template, overwriting existing files">
+                Load & Overwrite Files
             </button>
-            <button class="btn" id="show-npm-props" title="Install/remove/update npm packages to use with your UI">
-                Manage front-end libraries
-            </button>
+        </div>
+        
+        <div aria-label="How to use the template selector" class="form-row" style="max-width: 450px">
+            <p>
+                By default, uibuilder creates a template folder with a minimal template.
+                If you wish to use a different template, select and load it here.
+            </p>
+            <p>
+                Selecting a Template from the drop-down <b>does not</b> load the template
+            </p>
+            <p>
+                Loading a Template <b>will overwrite</b> existing files.
+            </p>
         </div>
 
-        <div aria-label="Show template selection, collapsible" class="form-row">
-            <b id="show-templ-props" title="Show&sol;Hide the template selection settings">
-                <i class="fa fa-caret-right"></i> Template Settings
-            </b>
-            <div id="adv-templ" aria-label="Hideable Template Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
-                <div aria-label="How to use the template selector">
-                    <p>
-                        By default, uibuilder creates a template folder with a minimal template.
-                        If you wish to use a different template, select and load it here.
-                    </p>
-                    <p>
-                        Selecting a Template from the drop-down <b>does not</b> load the template
-                    </p>
-                    <p>
-                        Loading a Template <b>will overwrite</b> existing files.
-                    </p>
-                </div>
-
-                <label for="node-input-templateFolder" style="width:7em;"><i class="fa fa-window-restore"></i> Template:</label>
-                <select id="node-input-templateFolder" style="width:73%;"></select>
-
-                <div aria-label="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation/uib-template-test" style="display:none">
-                    <label for="node-input-extTemplate"><i class="fa fa-globe"></i> Ext. Template</label>
-                    <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
-                </div>
-
-                <button class="btn" id="btn-load-template" style="margin-top: 0.3em;" title="Load selected template, overwriting existing files">
-                    Load & Overwrite
-                </button>
-            </div>
-        </div>
-
-        <div aria-label="Show advanced properties, collapsible" class="form-row">
-
-            <b id="show-adv-props" title="Show&sol;Hide the advanced configuration settings">
-                <i class="fa fa-caret-right"></i> Advanced Settings
-            </b>
-            <div id="adv-props" aria-label="Hideable Advanced Settings Section" style="display:hidden;border:1px solid silver;padding:.5em;">
-                <!-- How long do we want resources to be cached for? *** NOT READY *** 
-                <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
-                    <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
-                    <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
-                </div> -->
-                
-                <div aria-label="Select source folder" class="form-row">
-                    <label for="node-input-sourceFolder" style="width:7em;"><i class="fa fa-folder"></i> Template:</label>
-                    <select id="node-input-sourceFolder" style="width:73%;">
-                        <option value="src">src</option>
-                        <option value="dist">dist</option>
-                    </select>
-                </div>
-
-                <!-- Provide a searchable file index view? -->
-                <div class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
-                    <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-showfolder" style="width: 90%;">Show web view of source files</label>
-                    <span id="show-src-folder-idx-url">_</span>.
-                </div>
-
-                <!-- Allow scripts/styles to be passed to front-end? -->
-                <div class="form-row" title="Add msg.script&sol;msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
-                    Allow passing to the front-end: <br>
-                    <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-allowScripts">Scripts? (JS)</label>
-                    <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-allowStyles">Styles? (CSS)</label>
-                </div>
-
-                <div class="form-tips node-help" title="">
-                    Warning: Most people will not need the following.
-                </div>
-
-                <div aria-label="Forward flag" class="form-row" title="forward inbound msg's direct to the output">
-                    <!-- Forward input msgs to output -->
-                    <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-fwdInMessages" style="width: 40%;">
-                        Forward input to output?
-                    </label>
-                </div>
-            </div>
-
-        </div>
-
-        <div aria-label="Show security properties, collapsible" class="form-row">
-            <b id="show-security-props" title="Show&sol;Hide security settings">
-                <i class="fa fa-caret-right"></i> Security Settings
-            </b>
-            <!-- ---- Hideable Security Settings Section ---- -->
-            <div id="sec-props" style="display:hidden;border:1px solid silver;padding:.5em;">
-                <div aria-label="Security Checkbox" class="form-row">
-                    <input type="checkbox" id="node-input-useSecurity" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-useSecurity" style="width: 90%;">Use uibuilder's security?</label>
-                </div>
-
-                <div aria-label="Allow unauthorised msg traffic?" class="form-row">
-                    <input type="checkbox" id="node-input-allowUnauth" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-allowUnauth" style="width: 90%;">Allow unauthorised msg traffic?</label>
-                </div>
-
-                <div aria-label="Allow an anonymous authentication?" class="form-row">
-                    <input type="checkbox" id="node-input-allowAuthAnon" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-allowAuthAnon" style="width: 90%;">Allow "Anonymous" authenticated user id?</label>
-                </div>
-
-                <div aria-label="Session Length" class="form-row" title="Required. Session length. If client doesn't send a msg in this time, it is logged out.">
-                    <label for="node-input-sessionLength"><i class="fa fa-clock-o"></i> Sess Length</label>
-                    <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-sessionLength" style="width: 10em;"> Seconds
-                </div>
-
-                <div aria-label="JWT Secret (credential" class="form-row" title="Required. A string to be used to sign&sol;validate JWT's. Stored as a credential so not copied when exporting a flow.">
-                    <label for="node-input-jwtSecret"><i class="fa fa-user-secret"></i> JWT Secret</label>
-                    <input type="text" id="node-input-jwtSecret">
-                </div>
-                
-                <div aria-label="Auto-extend token?" class="form-row" title="While the client continues to send ping queries (~30sec), the expiry will be moved fwd 30 sec">
-                    <input type="checkbox" id="node-input-tokenAutoExtend" style="display: inline-block; width: auto; vertical-align: top;">
-                    <label for="node-input-tokenAutoExtend" style="width: 90%;">Auto-extend the token expiry?</label>
-                </div>
-
-                <div aria-label="Are we running in dev or prod mode?" class="form-row">
-                    Node-RED is running in <i><b><span id="nrMode"></span></b></i> mode.
-                </div>
-
-                <div aria-label="Security guidance" class="form-tips node-help" title="">
-                    <p>
-                        Warning: To safely deploy security, you really need to be using TLS.
-                        If you deploy without TLS, you will get warnings. Ignore them if providing TLS via reverse-proxy.
-                    </p>
-                    <p>
-                        A simplistic template <code>security.js</code> file is copied to <code>&lt;uibRoot>/.config/security.js</code>.
-                        This must be adapted for your own needs and contains the code to validate users and handle sessions.
-                    </p>
-                    <p>
-                        <i>Allow unauthorised msg traffic</i> will let through messages in both directions even if the client is not
-                        authenticated. This lets you handle security in your flows. See the tech docs for details of the <code>msg._auth</code> data.
-                    </p>
-                    <p>
-                        <i>Allow an anonymous authentication</i> lets you use a special "anonymous" user-id that doesn't need a password.
-                        This is defined in your <code>security.js</code> file.
-                    </p>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- #region ---- Hideable File Editor Section ---- -->
-    <div id="edit-props">
-        <!-- Drop-down for selecting folder & new/del buttons -->
-        <div class="form-row" title="Choose between the src, dist (built src) or root folders">
+    <div id="tab-files">
+        <div aria-label="Drop-down for selecting folder & new, del buttons" class="form-row" title="Choose between the src, dist (built src) or root folders">
             <label for="node-input-folder" style="width:5em;">
                 <i class="fa fa-folder-open-o"></i> Folder:
             </label>
@@ -1820,17 +1692,14 @@
             </span>
         </div>
 
-        <!-- Drop-down for selecting file to edit -->
-        <div class="form-row">
+        <div aria-label="Drop-down for selecting file to edit" class="form-row">
             <label for="node-input-filename"  style="width:5em;"><i class="fa fa-file-code-o"></i> File:</label>
             <select id="node-input-filename" style="width: 83%;"></select>
         </div>
 
-        <!-- Save/Reset/close/(message)/Delete -->
-        <div class="form-row">
+        <div aria-label="Save, Reset, close, (message), Delete" class="form-row">
             <button class="btn" id="edit-save" title="Save any changes to the file">Save</button>
             <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)">Reset</button>
-            <button class="btn" id="edit-close" title="Close the edit window (lose any unsaved changes)">Close</button>
 
             <span id="file-action-message"></span>
 
@@ -1862,21 +1731,19 @@
             </div>
         </div>
 
-        <!-- Edit box  editor-tray-content -->
-        <div id="edit-outer" class="form-row node-text-editor-row" style="position:relative">
+        <div aria-label="Edit box editor-tray-content" id="edit-outer" class="form-row node-text-editor-row" style="position:relative">
             <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
             <div style="height: 350px; min-height:150px;" style="display:hidden" id="node-input-template-editor-no-file" >
                 No file available, please select a different file or folder.
             </div>
         </div>
 
-        <!-- file data (hidden), language selector -->
-        <div class="form-row">
+        <div aria-label="File data (hidden), language selector" class="form-row">
             <button id="node-function-expand-js" class="editor-button"><i class="fa fa-expand"></i></button>
 
             <!-- Option to reload any connected client pages after edit-save -->
             <input type="checkbox" id="node-input-reload" style="width:auto;"
-                   title="If set, all connected clients will reload the page they are on when any change is saved."
+                title="If set, all connected clients will reload the page they are on when any change is saved."
                 >
             <label for="node-input-reload" style="width:80%;">Reload connected clients on save?.</label>
 
@@ -1896,10 +1763,8 @@
             </div>
         </div>
     </div>
-    <!-- #endregion -->
 
-    <!-- #region ---- Hideable NPM Section ---- -->
-    <div id="npm-props">
+    <div id="tab-libraries">
         <b>Front-End Library Manager</b>
         <p>
             Install, remove or update npm packages that provide front-end libraries such as
@@ -1920,27 +1785,106 @@
             <button class="btn" id="npm-close" title="Close the library"">Close Library Manager</button>
         </div>
     </div>
-    <!-- #endregion -->
 
-    <div id="info" aria-label="Information and utility links - always showing">
+    <div id="tab-security">
+        <div aria-label="Security Checkbox" class="form-row">
+            <input type="checkbox" id="node-input-useSecurity" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-useSecurity" style="width: 90%;">Use uibuilder's security?</label>
+        </div>
 
-        <a id="uibuilderurl" title="Open the uibuilder web page" href="uibindex" target="_blank" class="red-ui-button editor-button"></a> 
-        <a href="uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed uibuilder information">uibuilder details</a>
-        <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Shows detailed configuration for this instance of uibuilder">Instance Details</a>
-        <a href="./uibuilder/techdocs" target="_blank" class="red-ui-button editor-button" title="Shows the uibuilder technical documentation as a new page">Tech Docs</a>
+        <div aria-label="Allow unauthorised msg traffic?" class="form-row">
+            <input type="checkbox" id="node-input-allowUnauth" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowUnauth" style="width: 90%;">Allow unauthorised msg traffic?</label>
+        </div>
 
+        <div aria-label="Session Length" class="form-row" title="Required. Session length. If client doesn't send a msg in this time, it is logged out.">
+            <label for="node-input-sessionLength"><i class="fa fa-clock-o"></i> Sess Length</label>
+            <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-sessionLength" style="width: 10em;"> Seconds
+        </div>
+
+        <div aria-label="JWT Secret (credential" class="form-row" title="Required. A string to be used to sign&sol;validate JWT's. Stored as a credential so not copied when exporting a flow.">
+            <label for="node-input-jwtSecret"><i class="fa fa-user-secret"></i> JWT Secret</label>
+            <input type="text" id="node-input-jwtSecret">
+        </div>
+        
+        <div aria-label="Auto-extend token?" class="form-row" title="While the client continues to send ping queries (~30sec), the expiry will be moved fwd 30 sec">
+            <input type="checkbox" id="node-input-tokenAutoExtend" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-tokenAutoExtend" style="width: 90%;">Auto-extend the token expiry?</label>
+        </div>
+
+        <div aria-label="Are we running in dev or prod mode?" class="form-row">
+            Node-RED is running in <i><b><span id="nrMode"></span></b></i> mode.
+        </div>
+
+        <div aria-label="Security guidance" class="form-tips node-help" title="">
+            <p>
+                Warning: To safely deploy security, you really need to be using TLS.
+                If you deploy without TLS, you will get warnings. Ignore them if providing TLS via reverse-proxy.
+            </p>
+            <p>
+                A simplistic template <code>security.js</code> file is copied to <code>&lt;uibRoot>/.config/security.js</code>.
+                This must be adapted for your own needs and contains the code to validate users and handle sessions.
+            </p>
+            <p>
+                <i>Allow unauthorised msg traffic</i> will let through messages in both directions even if the client is not
+                authenticated. This lets you handle security in your flows. See the tech docs for details of the <code>msg._auth</code> data.
+            </p>
+        </div>
     </div>
-    <div id="info-webserver" class="form-row"></div>
+
+    <div id="tab-advanced">
+        <!-- How long do we want resources to be cached for? *** NOT READY *** 
+        <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
+            <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
+            <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
+        </div> -->
+        
+        <div aria-label="Select source folder" class="form-row" title="Select the folder to serve files from">
+            <label for="node-input-sourceFolder" style="width:7em;"><i class="fa fa-folder"></i> Serve:</label>
+            <select id="node-input-sourceFolder" style="width:73%;">
+                <option value="src">src</option>
+                <option value="dist">dist</option>
+            </select>
+        </div>
+
+        <!-- Provide a searchable file index view? -->
+        <div class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
+            <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-showfolder" style="width: 90%;">Show web view of source files</label>
+            <span id="show-src-folder-idx-url">_</span>.
+        </div>
+
+        <!-- Allow scripts/styles to be passed to front-end? -->
+        <div class="form-row" title="Add msg.script&sol;msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
+            Allow passing to the front-end: <br>
+            <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowScripts">Scripts? (JS)</label>
+            <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-allowStyles">Styles? (CSS)</label>
+        </div>
+
+        <div class="form-tips node-help" title="">
+            Warning: Most people will not need the following.
+        </div>
+
+        <div aria-label="Forward flag" class="form-row" title="forward inbound msg's direct to the output">
+            <!-- Forward input msgs to output -->
+            <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-fwdInMessages" style="width: 40%;">
+                Forward input to output?
+            </label>
+        </div>
+    </div>
+</div>
 
 </script>
 
 <script type="text/html" data-help-name="uibuilder">
-    <p>Easily create a data-driven web user interface (UI)</p>
     <p>
+        Easily create a data-driven web user interface (UI)<br><br>
         Create dynamic, data-driven user interfaces that send and receive messages to/from Node-RED.
         Creates a file/folder structure that is used to deliver static resources (html, css, js, images, etc) and
         manages the delivery of vendor library resources (VueJS, jQuery, etc).
-        You can also pass script and style information to the front-end in a message.
     </p>
 
     <p id="uib_help_docs">
@@ -1955,20 +1899,41 @@
         Still more information is available in the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/" target="_blank">uibuilder WIKI</a>.
     </p>
 
-    <h3>Input msg</h3>
+    <h3>Status display</h3>
+    <p>
+        Each instance (node) of uibuilder has a status display. Normally, the icon is blue but it will be yellow if security is turned on. 
+        If the icon is a filled yellow dot, then messages are blocked unless the client is authenticated. If it is a yellow circle, messages can still flow
+        even if the client is not authenticated (see the security settings for details).<br>
+        When 1 or more clients are connected, the text will show how many clients are connected.
+    </p>
+
+    <h3>Inputs</h3>
     <dl class="message-properties">
-        <dt class="optional">payload <span class="property-type">(string | buffer)</span></dt>
+        <dt class="optional">payload <span class="property-type">string | buffer</span></dt>
         <dd> Optionally, the payload of the message to send to all connected client browser tabs. </dd>
-        <dt class="optional">topic <span class="property-type">(string)</span></dt>
+
+        <dt class="optional">_auth <span class="property-type">object</span></dt>
+        <dd> Optionally, the authentication and authorisation object. See the <a href="./uibuilder/techdocs/#/security?id=standard-schema-for-msg_auth">security page in the technical docs</a> for specifics.</dd>
+
+        <dt class="optional">_uib <span class="property-type">object</span></dt>
+        <dd>
+            Optionally, trigger low-code front-end events such as showing a "toast". 
+            See the <a href="./uibuilder/techdocs/#/security?id=msg_uib-object-uibuilder-v3" target="_blank">Using uibuilder page in the technical docs</a> for specifics.<br>
+            Also used to <a href="uibuilder/techdocs/#/pre-defined-msgs?id=browser-client-reload-page" target="_blank">
+            signal to the front-end that the page should reload automatically</a>. Useful when developing front-end code via the node's editor.
+        </dd>
+
+        <dt class="optional">topic <span class="property-type">string</span></dt>
         <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
 
-        <dt class="optional">script <span class="property-type">(string | string[])</span></dt>
+        <dt class="optional">script <span class="property-type">string | string[]</span></dt>
         <dd>
             Optionally, a string or array of strings containing valid JavaScript.
             This will be added to the web page dynamically. Currently contains minimal validation so care is required.
             This feature is <b>off</b> by default, turn on in the Advanced Settings.
         </dd>
-        <dt class="optional">style <span class="property-type">(string | string[])</span></dt>
+
+        <dt class="optional">style <span class="property-type">string | string[]</span></dt>
         <dd>
             Optionally, a string or array of strings containing valid CSS for styling the front-end page.
             This will be added to the web page dynamically. Currently contains minimal validation so care is required.
@@ -1976,69 +1941,105 @@
         </dd>
     </dl>
 
-    <h3>Output msgs</h3>
+    <h3>Outputs</h3>
     <ol class="node-ports">
-        <li>Standard output msg
+
+        <li>Standard output (data from front-end)
             <dl class="message-properties">
-                <dt>payload <span class="property-type">(string | buffer)</span></dt>
+                <dt>payload <span class="property-type">string | buffer</span></dt>
                 <dd>
-                    A copy of any inbound payload unless altered by the front-end page.
+                    Data sent by the front-end page.
                 </dd>
-                <dt>topic <span class="property-type">(string)</span></dt>
+
+                <dt class="optional">_auth <span class="property-type">object</span></dt>
                 <dd>
-                    A copy of any inbound topic if present. Otherwise, the topic from the node's settings. Could be changed by the front-end
-                    page but it really isn't recommended.
+                    The authentication and authorisation object. 
+                    This <b>MUST</b> always be included when security is turned on.
+                    See the <a href="./uibuilder/techdocs/#/security?id=standard-schema-for-msg_auth" target="_blank">security page in the technical docs</a> for specifics.
                 </dd>
-                <dt>_socketId <span class="property-type">(string)</span></dt>
+        
+                <dt class="optional">uibDomEvent <span class="property-type">object</span></dt>
+                <dd>
+                    Used by the <code>uibuilder.eventSend()</code> front-end function. 
+                    See the <a href="./uibuilder/techdocs/#/security?id=msguibdomevent-object-uibuilder-v32" target="_blank">Using uibuilder page in the technical docs</a> for specifics.
+                </dd>
+        
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>
+                    A copy of the last inbound topic if present. Otherwise, the topic from the node's settings. 
+                    Could also be changed by the front-end.
+                </dd>
+
+                <dt>_socketId <span class="property-type">string</span></dt>
                 <dd>
                     Identifies the sending browser/tab. Retain this if needing to send a reply back to the originator.
                     Remove if needing to send a reply to all connected broweser/tabs.
-                    Note that the initial part of the ID contains the source URI.
+                    <br>Notes:
+                    <table>
+                        <tr><td>The initial part of the ID contains the source URI.</td></tr>
+                        <tr><td>The socket id may change if the client temporarily looses the connection or if the user reloads the page.</td></tr>
+                    </table>
                 </dd>
+
                 <dt>other</dt>
                 <dd>
                     Note that any inbound msg.script or msg.style is stripped and not sent to the output.
                 </dd>
             </dl>
+            <p>
+                Note that input messages are not forwarded to the output unless the flag is set in the advanced settings.
+            </p>
         </li>
-        <li>Control output msg
+
+        <li>Control output (controls from front-end or server)
             <dl class="message-properties">
-                <dt>uibuilderCtrl <span class="property-type">(string)</span></dt>
+                <dt>uibuilderCtrl <span class="property-type">string</span></dt>
                 <dd>
-                    The name of the control message. See the
-                    <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure" target="_blank">WIKI page</a>
-                    for details.
+                    The name/id of the control message. 
+                    See the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure" target="_blank">WIKI page</a> for details.
                 </dd>
-                <dt>cache-control <span class="property-type">(string)</span></dt>
+
+                <dt>cacheControl <span class="property-type">string</span></dt>
                 <dd>
-                    "REPLAY". A command for the companion app
-                    <a href="https://github.com/TotallyInformation/node-red-contrib-infocache" target="_blank">node-red-contrib-infocache</a>.
-                    See the
-                    <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching" target="_blank">WIKI</a>
-                    for details.
+                    Use in your flow to control the sending or clearing of a cache of messages to be sent to new/refreshed clients.<br>
+                    This requires a separate function node to capture and replay inbound messages.
+                    <table>
+                        <tr><th>REPLAY</th> <td>Indicate to the back-end flow that a copy of the cached messages should be dumped to the front-end. Retaining the <code>_socket.id</code> will send the cache contents back to the requesting client.<hr></td></tr>
+                        <tr><th>CLEAR</th> <td>Indicate to the back-end flow that any cache should be completely cleared for everyone.</td></tr>
+                    </table>
+                    See the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching" target="_blank">WIKI</a> for details.
                 </dd>
-                <dt>from <span class="property-type">(string)</span></dt>
+
+                <dt>from <span class="property-type">string</span></dt>
                 <dd>
                     Identifies the source of the msg since both <i>server</i> (back-end) and <i>client</i> (front-end) control messages
                     will appear out of port #2.
                 </dd>
-                <dt>_socketId <span class="property-type">(string)</span></dt>
+
+                <dt>_socketId <span class="property-type">string</span></dt>
                 <dd>
                     Identifies the sending browser/tab. Retain this if needing to send a reply back to the originator.
                     Remove if needing to send a reply to all connected broweser/tabs.
-                    Note that the initial part of the ID contains the source URI.
+                    <br>Notes:
+                    <table>
+                        <tr><td>The initial part of the ID contains the source URI.</td></tr>
+                        <tr><td>The socket id may change if the client temporarily looses the connection or if the user reloads the page.</td></tr>
+                    </table>
                 </dd>
             </dl>
         </li>
+
     </ol>
 
     <h3>Node Settings</h3>
         <dl class="message-properties">
-            <dt>Name <span class="property-type">(string) node-input-name</span></dt>
+            <dt>Name <span class="property-type">string</span></dt>
             <dd>A short description shown in the admin interface</dd>
-            <dt>Topic <span class="property-type">(string) node-input-topic</span></dt>
+
+            <dt>Topic <span class="property-type">string</span></dt>
             <dd>A topic name to use if the incoming msg does not contain one.</dd>
-            <dt>URL <span class="property-type">(string) node-input-url</span></dt>
+
+            <dt>URL <span class="property-type">string</span></dt>
             <dd>
                 The URL path that the resulting page and other resources will be served from.
                 Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
@@ -2048,11 +2049,11 @@
                 The url must be valid as a filename as well as a url path. It may not exceed 20 characters.
             </dd>
 
-            <dt>Edit Source Files <span class="property-type">(button)</span></dt>
+            <dt>Edit Source Files <span class="property-type">button</span></dt>
             <dd>
                 Clicking this button will hide the above settings and display a file editor allowing you
                 to edit the front-end files that define your user interface.<br />
-                All text-based files in the `&lt;userDir>/uibuilder/&lt;url>/src` folder on the server's filing system will
+                All text-based files in the <code>&lt;uibRoot>/&lt;url>/</code> folder on the server's filing system will
                 be available to edit.<br />
                 To return back, click the red <kbd class="help-key">Done</kbd> or grey <kbd class="help-key">Cancel</kbd> buttons.
                 <p>
@@ -2060,44 +2061,70 @@
                     To exit fullscreen, press the same button (now highlighted) or the <kbd class="help-key">Esc</kbd> key.
                 </p>
             </dd>
-            <dt>Manage Front-End Libraries <span class="property-type">(button)</span></dt>
+
+            <dt>Manage Front-End Libraries <span class="property-type">button</span></dt>
             <dd>
                 Clicking this button will hide the above settings and display a list of currently available
                 front-end library packages. This interface allows you to add, remove and update any library
-                that can be installed via <a href="https://www.npmjs.com/" target="_blank">npm</a>.
+                that can be installed via <a href="https://www.npmjs.com/" target="_blank">npm</a>.<br>
+                Libraries will be loaded into your <code>&lt;userDir>/</code> folder in the same place as custom nodes.
+                uibuilder retains an internal list of front-end libraries loaded this way.
+                Each library will be served so that you can use it in your front-end html.
             </dd>
         </dl>
+
+        <h4>Template Settings</h4>
+        <dl class="message-properties">
+            <dt>Template <span class="property-type">drop-down</span></dt>
+            <dd>
+                Select one of the built-in templates or load an external template.
+            </dd>
+
+            <dt>Ext. Template <span class="property-type">text</span></dt>
+            <dd>
+                Only if "Load an external template using Degit" is selected.
+                <a href="https://github.com/Rich-Harris/degit" target="_blank">Degit</a> is used to load a template from an external <code>git</code> repository.<br>
+                Try "totallyinformation/uib-template-test" as an example.
+            </dd>
+
+            <dt>Load & Overwrite <span class="property-type">button</span></dt>
+            <dd>
+                Clicking the button will display a warning dialog. If you accept the warning, 
+                all of your current front-end code will be replaced with the template.
+            </dd>
+        </dl>
+
         <h4>Advanced Settings</h4>
         <dl class="message-properties">
-            <dt>Allow scripts to be passed to front-end? <span class="property-type">(boolean) allowScripts</span></dt>
+            <dt>Serve <span class="property-type">drop-down</span></dt>
+            <dd>
+                Choose which folder to serve files from. Only <code>src</code> and <code>dist</code> are available at the moment.
+                This can now be changed simply by redeploying your flow, you don't need to restart Node-RED.
+            </dd>
+
+            <dt>Show web view of source files <span class="property-type">check box</span></dt>
+            <dd>
+                If on, an extra web page is dynamically created at the indicated URL. That page shows an index listing
+                of all files and folders on the server for this node. As this could be a security issue, it is turned off by default.<br>
+                <code>USE WITH EXTREME CAUTION</code><br>
+                A button is exposed if this flag is on. Clicking the button will take you to the index view in a separate tab.
+            </dd>
+
+            <dt>Allow scripts to be passed to front-end? <span class="property-type">check box</span></dt>
             <dd>
                 If on, any string(s) in <code>msg.script</code> will be dynamically added to the scripts of the web page.
                 Turn off to prevent scripts from being dynamically added and executed.
             </dd>
-            <dt>Allow styles to be passed to front-end? <span class="property-type">(boolean) allowStyles</span></dt>
+
+            <dt>Allow styles to be passed to front-end? <span class="property-type">check box</span></dt>
             <dd>
                 If on, any string(s) in <code>msg.style</code> will be dynamically added to the styles of the web page.
                 Turn off to prevent styles from being dynamically added.
             </dd>
 
-            <dt>Copy index.(css|js) from templates to this instance if they don't exist?
-                <span class="property-type">(boolean) node-input-copyIndex</span>
-            </dt>
+            <dt>Forward input to output? <span class="property-type">check box</span></dt>
             <dd>
-                If on (default), index.(css|html|js) files are copied from the master template folder
-                if they don't exist in the local assets folder <code>~/.node-red/uibuilder/{url}/src/</code>.
-                Turn off if you don't want this to happen (e.g. if you prefer them in a sub-folder).
-            </dd>
-
-            <dt>Show web view of source files at ... <span class="property-type">(boolean) showfolder</span></dt>
-            <dd>
-                If on, an extra web page is dynamically created at the indicated URL. That page shows an index listing
-                of all files in the instances <i>src</i> folder. As this could be a security issue, it is turned off by default.
-            </dd>
-
-            <dt>Forward received messages direct to output? <span class="property-type">(boolean) node-input-fwdInMessages</span></dt>
-            <dd>
-                Forward's a copy of every received message direct to the output.
+                Forwards a copy of every received message direct to the output.
                 Adds the topic from the above setting if one isn't present in the msg.
                 <p>
                     <i>Note</i> that this may result in multiple output messages if your front-end
@@ -2106,19 +2133,76 @@
             </dd>
         </dl>
 
-        <h4>Path & Module Info</h4>
+        <h4>Security Settings</h4>
         <dl class="message-properties">
-            <dt>Web page URL <span class="property-type">(link)</span></dt>
+            <dt>Use uibuilder's security? <span class="property-type">link</span></dt>
             <dd>
-                The web app url for this instance. Click to see the app page.
+                If on, uibuilder will add security processing.
+                All messages in both directions <b>MUST</b> have a <code>msg._auth</code> object attached in this case.
+                See the <a href="./uibuilder/techdocs/#/security" target="_blank">security documentation</a> for details.
+                The user of uibuilder's security requires a custom <code>&lt;uibRoot>/.config/security.js</code> file.
+                A template file is provided when you install uibuilder but you will need to amend this.<br>
+                If off, all other security settings are disabled.
             </dd>
-            <dt>Detailed Information <span class="property-type">(link)</span></dt>
+
+            <dt>Allow unauthorised msg traffic? <span class="property-type">link</span></dt>
+            <dd>
+                If on, uibuilder will allow messages to flow freely even if the client is not authenticated/authorised.<br>
+                If off, uibuilder will block all but basic control messages until the client is authenticated and authorised.
+            </dd>
+
+            <dt>Sess Length <span class="property-type">link</span></dt>
+            <dd>
+                Controls how long a session is valid for without the client having to reauthenticate.
+            </dd>
+
+            <dt>JWT Secret <span class="property-type">link</span></dt>
+            <dd>
+                A (long) string that is used to help keep JWT's secure.
+            </dd>
+
+            <dt>Auto-extend the token expiry? <span class="property-type">link</span></dt>
+            <dd>
+                If on, every message sent by a client will extend the session.
+            </dd>
+
+        </dl>
+
+        <h4>Button Row</h4>
+        <dl class="message-properties">
+            <dt>Open xxxx <span class="property-type">link</span></dt>
+            <dd>
+                The web app url for this instance. Click to see the app page in a new tab.
+            </dd>
+
+            <dt>uibuilder details <span class="property-type">link</span></dt>
             <dd>
                 Shows a web page with detailed information about the overall uibuilder
                 configuration. Including details of all of the vendor modules that are
-                available and all of the uibuilder endpoints.
+                available and all of the uibuilder endpoints along with both server
+                and URL paths.
             </dd>
+
+            <dt>Instance Details <span class="property-type">link</span></dt>
+            <dd>
+                Shows a web page with detailed information relavent just for this
+                instance (node) of uibuilder. May be easier to read than the full details.
+            </dd>
+
+            <dt>Tech Docs <span class="property-type">link</span></dt>
+            <dd>
+                Opens the technical documentation for uibuilder in a separate tab.
+                This does not require an Internet connection, the local docs are used.
+            </dd>
+
         </dl>
+
+        <h4>Information Box</h4>
+        <p>
+            The final display on the settings panel shows information about whether
+            uibuilder is using Node-RED's internal ExpressJS server or is using its
+            own custom server. It also shows the url.
+        </p>
 
     <h3>File/Folder Structure</h3>
     <p>

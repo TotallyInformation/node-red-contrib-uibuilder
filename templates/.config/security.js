@@ -82,12 +82,10 @@ function userValidate(_auth) {
             name: 'Anonymous',
             message: 'Lets you control data access in your flows'
         }
-    }
-            
-    /** Manual "test" ID validates - this will be replaced with a suitable lookup in your code - maybe from a database or a file.
-     * You will also want to pass through some kind of password to validate the user.
-     */
-    if ( _auth.id === 'test' ) {
+    } else if ( _auth.id === 'test' ) {
+        /** Manual "test" ID validates - this will be replaced with a suitable lookup in your code - maybe from a database or a file.
+         * You will also want to pass through some kind of password to validate the user.
+         */
 
         console.log(`[uibuilder:.common/security.js] User id '${_auth.id}' has been validated`)
 

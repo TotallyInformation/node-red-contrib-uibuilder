@@ -118,32 +118,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         /** @type {object} */
         var self = this
 
-        //#region ======== Start of setup ======== //
+        //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '4.2.0'
+        self.version = '4.2.1'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
         self.debug = self.isUnminified === true ? true : false // do not change directly - use .debug() method
-        self.security = false // Does uibuilder have security turned on? (Set by early incoming control message)
-        /** Empty User info template
-         * @type {_auth} */
-        self.dummyAuth = {
-            id: 'anonymous',
-            jwt: undefined,
-            sessionExpiry: undefined,
-            userValidated: false,
-            info: {
-                error: undefined,
-                message: undefined,
-                validJwt: undefined,
-            },
-        }
-        /** Retained User info
-         * @type {_auth|undefined} */
-        self._auth = self.dummyAuth
-        /** Flag to know whether `uibuilder.start()` has been run */
-        self.started = false
 
         /** Debugging function
          * param {string} type One of log|error|warn|info|dir, etc
@@ -214,8 +195,40 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             return ioNamespace
         } // --- End of set IO namespace --- //
 
-        //#region --- variables ---
+        //#region ===== variables ===== //
 
+        // ---- These cannot be access externally via get/set: ----
+        self.authToken    = ''    // populated when receive 'authorised' msg from server, must be returned with each msg sent
+
+        //#region ---- These are unlikely to be needed externally: ----
+        self.ioChannels   = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
+        self.retryMs      = 2000                            // starting retry ms period for manual socket reconnections workaround
+        self.retryFactor  = 1.5                             // starting delay factor for subsequent reconnect attempts
+        self.timerid      = null
+        self.ioNamespace  = self.setIOnamespace()           // Get the namespace from the current URL
+        self.ioTransport  = ['polling', 'websocket']
+        self.loaded       = false                           // Are all browser resources loaded?
+        self.storePrefix  = 'uib_'                          // Prefix for all uib-related localStorage
+        /** Empty User info template
+         * @type {_auth} */
+        self.dummyAuth = {
+            id: 'anonymous',
+            jwt: undefined,
+            sessionExpiry: undefined,
+            userValidated: false,
+            info: {
+                error: undefined,
+                message: undefined,
+                validJwt: undefined,
+            },
+        }
+        /** Retained User info
+         * @type {_auth|undefined} */
+        self._auth = self.dummyAuth
+        /** Flag to know whether `uibuilder.start()` has been run */
+        self.started = false
+        //#endregion ---- ---- ---- ----
+        
         /** Writable (via custom method. read via .get method) */
         /** Automatically send a "ready for content" control message on window.load
          * Set to false if you want to send this yourself (e.g. when Riot/Moon/etc mounted event triggered)
@@ -223,13 +236,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          */
         self.autoSendReady= true
 
-        /** Externally Writable (via .set method, read via .get method) */
+        //#region ---- Externally Writable (via .set method, read via .get method) ---- //
         self.allowScript  = true   // Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
         self.allowStyle   = true   // Allow incoming msg to contain msg.style with CSS that will be automatically executed
         self.removeScript = true   // Delete msg.code after inserting to DOM if it exists on incoming msg
         self.removeStyle  = true   // Delete msg.style after inserting to DOM if it exists on incoming msg
+        //#endregion ---- ---- ---- ---- //
 
-        /** Externally read-only (via .get method) */
+        //#region ---- Externally read-only (via .get method) ---- //
         self.msg          = {}
         self.ctrlMsg      = {}  // copy of last control msg object received from sever
         self.sentMsg      = {}  // copy of last msg object sent via uibuilder.send()
@@ -243,18 +257,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.isAuthorised = false    // Set to true if receive 'authorised' msg from server
         self.authTokenExpiry  = null // Set on successful logon. Timestamp.
         self.authData     = {}       // Additional data returned from logon/logoff requests
-
-        // ---- These are unlikely to be needed externally: ----
-        self.ioChannels   = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
-        self.retryMs      = 2000                            // starting retry ms period for manual socket reconnections workaround
-        self.retryFactor  = 1.5                             // starting delay factor for subsequent reconnect attempts
-        self.timerid      = null
-        self.ioNamespace  = self.setIOnamespace()           // Get the namespace from the current URL
-        self.ioTransport  = ['polling', 'websocket']
-        self.loaded       = false                           // Are all browser resources loaded?
-
-        // ---- These cannot be access externally via get/set: ----
-        self.authToken    = ''    // populated when receive 'authorised' msg from server, must be returned with each msg sent
+        self.security     = false    // Does uibuilder have security turned on? (Set by early incoming control message)
+        //#endregion ---- ---- ---- ---- //
 
         //#region - Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
         // split current url path, eliminate any blank elements and trailing or double slashes
@@ -267,9 +271,33 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url (not used): ' + self.url)
         //#endregion
 
-        //#endregion --- variables ---
+        //#endregion ===== variables ===== //
 
-        //#region --- internal functions --- //
+        //#region ===== internal functions ===== //
+
+        /** Write to localStorage if possible. console error output if can't write
+         * Also uses self.storePrefix
+         * @param {string} id localStorage var name to be used (prefixed with 'uib_')
+         * @param {*} value value to write to localstore
+         * @returns {boolean} True if succeeded else false
+         */
+        self.setStore = function setStore(id, value) {
+            if ( typeof value === 'object') {
+                try {
+                    value = JSON.stringify(value)
+                } catch (e) {
+                    console.error('[uibuilder:setStore] Cannot stringify object, not storing. ', e)
+                    return false
+                }
+            }
+            try{
+                localStorage.setItem(self.storePrefix + id, value)
+                return true
+            } catch (e) {
+                console.error('[uibuilder:setStore] Cannot write to localStorage. ', e)
+                return false
+            }
+        } 
 
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
          * Also triggers any event listeners.
@@ -374,7 +402,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             }) // --- End of socket connection processing ---
 
-            // RECEIVE When Node-RED uibuilder node sends a msg over Socket.IO to us ...
+            // RECEIVE a STANDARD, non-control msg from Node-RED server
             self.socket.on(self.ioChannels.server, function msgFromServer(receivedMsg) {
                 self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.server + ' (server): msg received - Namespace: ' + self.ioNamespace, receivedMsg)
 
@@ -411,7 +439,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             }) // -- End of websocket receive DATA msg from Node-RED -- //
 
-            // RECEIVE a CONTROL msg from Node-RED - see also sendCtrl()
+            // RECEIVE a CONTROL msg from Node-RED server - see also sendCtrl()
             self.socket.on(self.ioChannels.control, function ctrlMsgRecvd(receivedCtrlMsg) {
                 self.uiDebug('debug', '[uibuilder:ioSetup:on-ctrl-recvd] ' + self.ioChannels.control + ' (control): msg received - Namespace: ' + self.ioNamespace, receivedCtrlMsg)
 
@@ -455,18 +483,23 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                         self.set('serverShutdown', undefined)
                         break
 
-                    // We are connected to the server - 1st msg from server
+                    /** We are connected to the server - 1st msg from server */
                     case 'client connect': {
-                        if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth, 'init')
+                        // If security is on
+                        if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') ) {
+                            // Initialise client security
+                            self.initSecurity()
+                            // DO NOT RETURN ANYTHING ELSE UNTIL SERVER CONFIRMS VALID AUTHORISATION
+                        } else {
+                            if ( self.autoSendReady === true ) { // eslint-disable-line no-lonely-if
+                                self.uiDebug('info', '[uibuilderfe:ioSetup] ' + self.ioChannels.control + ' Received "client connect" from server, auto-sending REPLAY control msg')
 
-                        if ( self.autoSendReady === true ) {
-                            self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "client connect" from server, auto-sending REPLAY control msg')
-
-                            // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
-                            self.send({
-                                'uibuilderCtrl':'ready for content',
-                                'cacheControl':'REPLAY',
-                            },self.ioChannels.control)
+                                // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
+                                self.send({
+                                    'uibuilderCtrl':'ready for content',
+                                    'cacheControl':'REPLAY',
+                                },self.ioChannels.control)
+                            }
                         }
 
                         break
@@ -474,30 +507,26 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
                     // Login was accepted by the Node-RED server - note that payload may contain more info
                     case 'authorised':
-                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server')
-                        if ( receivedCtrlMsg._auth ) {
-                            self.updateAuth(receivedCtrlMsg._auth)
-                        } else {
-                            // This should never happen
-                            self.uiDebug('debug', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorised" from server but without a _auth property - logon failed')
-                            self.markLoggedOut('Logon succeeded but no _auth received, logged out')
-                        }
+                        self.uiDebug('info', '[uibuilderfe:ioSetup:' + self.ioChannels.control + '] Received "authorised" from server', receivedCtrlMsg._auth)
+                        self.updateAuth(receivedCtrlMsg._auth)
                         break
 
                     // Login was rejected by the Node-RED server - note that payload may contain more info
-                    case 'authorisation failure':
-                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "authorisation failure" from server')
-                        self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._auth.authData)
+                    case 'not authorised':
+                        self.uiDebug('info', '[uibuilderfe:ioSetup:' + self.ioChannels.control + '] Received "not authorised" from server')
+                        //self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._auth.authData)
+                        self.updateAuth(receivedCtrlMsg._auth)
                         break
 
                     // Logoff confirmation from server - note that payload may contain more info
                     case 'logged off':
-                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "logged off" from server')
-                        self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._auth)
+                        self.uiDebug('info', '[uibuilderfe:ioSetup:' + self.ioChannels.control + '] Received "logged off" from server')
+                        //self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._auth)
+                        self.updateAuth(receivedCtrlMsg._auth)
                         break
 
                     default: {
-                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
+                        self.uiDebug('info', '[uibuilderfe:ioSetup:' + self.ioChannels.control + '] Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
                         if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
                         // Anything else
                     }
@@ -544,14 +573,16 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             self.checkConnect(self.retryMs, self.retryFactor)
 
             // TODO: Just for testing - remove or do something useful
-            // self.socket.io.on('packet', function onPacket(data){
-            //     // we get one of these for each REAL msg (not ping/pong)
-            //     console.log('PACKET', data)
-            // })
-            // self.socket.on('pong', function(latency) {
-            //     console.log('SOCKET PONG - Latency: ', latency)
-            //     //console.dir(self.socket)
-            // }) // --- End of socket pong processing ---
+            /*
+            self.socket.io.on('packet', function onPacket(data){
+                // we get one of these for each REAL msg (not ping/pong)
+                console.log('PACKET', data)
+            })
+            self.socket.on('pong', function(latency) {
+                console.log('SOCKET PONG - Latency: ', latency)
+                //console.dir(self.socket)
+            }) // --- End of socket pong processing ---
+            */
 
             /* We really don't need these, just for interest
                 self.socket.io.on('packet', function(data){
@@ -595,20 +626,25 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if (self._auth === undefined && _auth === undefined) return
 
             // If _auth not provided, use self._auth
-            //if ( _auth === undefined ) _auth = self._auth
+            if ( _auth === undefined ) _auth = self._auth
 
             // Reset auth info
-            _auth = self.dummyAuth
+            //_auth = self.dummyAuth
 
             // Record reason if given
-            if ( localReason !== undefined ) self._auth.info.message = localReason
+            if ( ! _auth.info ) _auth.info = {}
+            if ( localReason !== undefined ) _auth.info.message = localReason
 
             // Trigger change in isAuthorised
             self.set('isAuthorised', false) // also triggers event
 
+            self.uiDebug('info', '[uibuilderfe:markLoggedOut] ', _auth)
+
             // Trigger change in _auth
             self.set('_auth', _auth)
-
+            // Save updated _auth to localStorage
+            self.setStore('auth', _auth)
+            
             //delete self.socketOptions.transportOptions.polling.extraHeaders.Authorization
         } // ---- End of markLoggedOut ---- //
 
@@ -636,6 +672,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if ( ! _auth.info ) _auth.info = self.dummyAuth.info
 
             self.set('_auth', _auth)
+            // Save updated _auth to localStorage
+            self.setStore('auth', _auth)
 
             if (api) {
                 //TODO (see login method on vue2 test)
@@ -673,7 +711,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             if ( ! _auth.info ) _auth.info = self.dummyAuth.info
 
-            self._auth = _auth
+            // Trigger change in _auth
+            self.set('_auth', _auth)
+            // Save updated _auth to localStorage
+            self.setStore('auth', _auth)
 
             if (api) {
                 //TODO (see login method on vue2 test)
@@ -685,6 +726,35 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 },self.ioChannels.control)
             }
         }  // ---- End of logoff ---- //
+
+        /** Initialise client security
+         * Called on recv 'client connect' control message
+         */
+        self.initSecurity = function initSecurity() {
+            self.uiDebug('info', '[uibuilderfe:initSecurity] Initialising security')
+
+            self.security = true
+
+            // Check for the localstore
+            if (localStorage.getItem('uib_auth') === null) {
+                // Not present so write the auth
+                self.setStore('auth', self._auth)
+            } else {
+                // Is present so recover the data and update _auth
+                try {
+                    // Trigger change in _auth
+                    self.set('_auth', JSON.parse(localStorage.getItem(self.storePrefix + 'auth')))
+                    self.uiDebug('info', '[uibuilderfe:initSecurity] Set self._auth from localStorage')
+                } catch (e) {
+                    console.error('[uibuilderfe:initSecurity] Could not parse localStorage', e)
+                    return
+                }
+            }
+
+            // Send 'auth' control msg to server - NB: msg._auth is added automatically
+            self.send({'uibuilderCtrl':'auth',},self.ioChannels.control)
+
+        } // --- end of initSecurity --- //
 
         /** Update client authorisation info from server info
          * Note that this may happen after a successful logon request or at any time
@@ -706,9 +776,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             //if ( Object.keys(_auth).length === 0 ) return
 
             // We wont give out spurious warnings if this is the initial contact from the server
-            if (control === 'init') {
-                return
-            }
+            // if (control === 'init') {
+            //     return
+            // }
 
             if (_auth.info && _auth.info.error) {
                 self.showToast({_uib: {options: {title:'[uibuilder:updateAuth] Error from Server',variant:'danger',noAutoHide:true}}, payload: `${_auth.info.error}<br>No authentication.`})
@@ -724,14 +794,17 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if ( ! _auth.info ) _auth.info = self.dummyAuth.info
 
             // Make sure user is valid & jwt is valid and current
-            if ( _auth.userValidated && _auth.jwt && _auth.info.validJwt === true && (new Date(_auth.sessionExpiry) > (new Date())) ) {
+            if ( _auth.userValidated && _auth.jwt && (new Date(_auth.sessionExpiry) > (new Date())) ) {
                 self.set('isAuthorised', true) // also triggers event
 
                 self.set('_auth', _auth)
+                // Save updated _auth to localStorage
+                self.setStore('auth', _auth)
 
                 //self.socketOptions.transportOptions.polling.extraHeaders.Authorization = 'Bearer ' + self.authToken
             } else {
-                self.markLoggedOut('Logon succeeded but user not valid or no token received, logged out')
+                self.uiDebug('info', '[uibuilderfe:updateAuth] Client not authorised or no JWT', _auth)
+                self.markLoggedOut('Client: Not authorised or no token received')
             }
 
         } // ---- End of updateAuth ---- //
@@ -743,8 +816,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.sendAuth = function sendAuth() {
             // If security is off, don't supply a msg._auth
             if (!self.security) return undefined
-
-            //if ( Object.prototype.toString.call(_auth) !== '[object Object]' ) _auth = self.dummyAuth
 
             // If anything goes wrong, don't send _auth to server
             try {
@@ -760,9 +831,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
                     // Token has expired so mark as logged off
                     self.markLoggedOut('Automatically logged off. Token expired')
-                    return self._auth
                 }
 
+                //self.uiDebug('info', '[uibuilderfe:sendAuth] Returning. ', self._auth)
                 return self._auth
 
             } catch(e) {
@@ -771,7 +842,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             }
         } // ---- End of addAuth ---- //
 
-        /** Send a standard msg back to Node-RED via Socket.IO
+        /** Send a standard or control msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
          * @param {object} msgToSend The msg object to send.
          * @param {string} [channel=uiBuilderClient] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored
@@ -816,7 +887,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
             msgToSend._socketId = self.socket.id
 
-            /** If we have an authToken and not expired, add `_auth` to output msg */
+            /** If security is on, add `_auth` to output msg */
             msgToSend._auth = self.sendAuth()
 
             // Track how many messages have been sent & last msg sent
@@ -859,7 +930,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             self.events = []
         } // ---- End of clearEventListeners() ---- //
 
-        //#region ========== Our own event handling system ========== //
+        //#region ---------- Our own event handling system ---------- //
 
         self.events = {}  // placeholder for event listener callbacks by property name
 
@@ -880,9 +951,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             }
         }
 
-        //#endregion ========== End of event handling system ========== //
+        //#endregion ---------- End of event handling system ---------- //
 
-        //#region ========== Handle incoming code via received msg ========== //
+        //#region ---------- Handle incoming code via received msg ---------- //
 
         /** Add a new script block to the end of <body> from text or an array of text
          * @param {(string[]|string)} script _
@@ -915,9 +986,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             document.getElementsByTagName('head')[0].appendChild(newStyle)
         }
 
-        //#endregion ====== End of Handle incoming code via received msg ====== //
+        //#endregion ---------- End of Handle incoming code via received msg ---------- //
 
-        //#region ========== VueJS Specific functions ========== //
+        //#region ---------- VueJS Specific functions ---------- //
         /** Simple function to create a bootstrap-vue toast notification from an incoming msg
          * Requires a reference to a VueJS instance and a msg object from Node-RED.
          * Place inside the uibuilder.on('msg', ...) function inside your Vue app's
@@ -1148,9 +1219,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             }
 
         }) // ---- End of internal onChange(msg) handler ---- //
-        //#endregion ========== VueJS Specific functions ========== //
+        //#endregion ---------- VueJS Specific functions ---------- //
 
-        //#endregion --- end of internal functions --- //
+        //#endregion ===== end of internal functions ===== //
 
         // uiReturn contains a set of functions that are returned when this function self-executes (on-load)
         self.uiReturn = {
@@ -1438,9 +1509,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         } // --- End of return callback functions --- //
 
-        //#endregion ========== End of setup ========== //
+        //#endregion ++++++++++ End of setup ++++++++++ //
 
-        //#region ======== @ runtime: start of execution ======== //
+        //#region ++++++++++ @ runtime: start of execution ++++++++++ //
 
         /** @ runtime: Are all browser resources loaded?
          * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
@@ -1454,7 +1525,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             self.loaded = true
         })
 
-        //#endregion ======== end of execution ======== //
+        //#endregion ++++++++++ end of execution ++++++++++ //
 
         // @ runtime Make externally available the external methods
         return self.uiReturn

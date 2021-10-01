@@ -179,48 +179,177 @@
  * @property {object=} wires Internal. The wires attached to this node instance (uid's)
  */
 
+/** uibuilderEditorVars
+ * @typedef {object} uibuilderEditorVars The node instance variables accessible from the Editor config panel
+ * @property {string} name Descriptive name, only used by Editor
+ * @property {string} topic msg.topic overrides incoming msg.topic
+ * @property {string} url The url path (and folder path) to be used by this instance
+ * @property {string} oldUrl The PREVIOUS url path (and folder path) after a url rename
+ * @property {boolean} fwdInMessages Forward input msgs to output #1?
+ * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist? 
+ * @property {string}  templateFolder Folder name for the source of the chosen template
+ * @property {string}  extTemplate Degit url reference for an external template (e.g. from GitHub)
+ * @property {boolean} showfolder Provide a folder index web page?
+ * @property {boolean} useSecurity Use uibuilder's built-in security features?
+ * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
+ * @property {number} sessionLength Lifespan of token (in seconds)
+ * @property {boolean} reload If true, notify all clients to reload on a change to any source file
+ * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
+ * @property {string} jwtSecret Seed string for encryption of JWT
+ * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {number} ioClientsCount How many Socket clients connected to this instance?
+ * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
+ * @property {object} ioChannels The channel names for Socket.IO
+ * @property {string} ioChannels.control SIO Control channel name 'uiBuilderControl'
+ * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
+ * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
+ * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ * @property {boolean} allowUnauth Allow unauthorised messaging
+ */
+
 /** uibNode
  * @typedef {object} uibNode Local copy of the node instance config + other info
- * @property {object} uibNode .
- * @property {string} uibNode.id Unique identifier for this instance
- * @property {string} uibNode.type What type of node is this an instance of? (uibuilder)
- * @property {string} uibNode.name Descriptive name, only used by Editor
- * @property {string} uibNode.topic msg.topic overrides incoming msg.topic
- * @property {string} uibNode.url The url path (and folder path) to be used by this instance
- * @property {string} uibNode.oldUrl The PREVIOUS url path (and folder path) after a url rename
- * @property {boolean} uibNode.fwdInMessages Forward input msgs to output #1?
- * @property {boolean} uibNode.allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
- * @property {boolean} uibNode.allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
- * @property {boolean} uibNode.copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist? 
- * @property {string}  uibNode.templateFolder Folder name for the source of the chosen template
- * @property {string}  uibNode.extTemplate Degit url reference for an external template (e.g. from GitHub)
- * @property {boolean} uibNode.showfolder Provide a folder index web page?
- * @property {boolean} uibNode.useSecurity Use uibuilder's built-in security features?
- * @property {boolean} uibNode.tokenAutoExtend Extend token life when msg's received from client?
- * @property {number} uibNode.sessionLength Lifespan of token (in seconds)
- * @property {boolean} uibNode.reload If true, notify all clients to reload on a change to any source file
- * @property {string} uibNode.sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
- * @property {string} uibNode.jwtSecret Seed string for encryption of JWT
- * @property {string} uibNode.customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
- * @property {number} uibNode.ioClientsCount How many Socket clients connected to this instance?
- * @property {number} uibNode.rcvMsgCount How many msg's received since last reset or redeploy?
- * @property {object} uibNode.ioChannels The channel names for Socket.IO
- * @property {string} uibNode.ioChannels.control SIO Control channel name 'uiBuilderControl'
- * @property {string} uibNode.ioChannels.client SIO Client channel name 'uiBuilderClient'
- * @property {string} uibNode.ioChannels.server SIO Server channel name 'uiBuilder'
- * @property {string} uibNode.ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {Function} uibNode.send Send a Node-RED msg to an output port
- * @property {Function=} uibNode.done Dummy done Function for pre-Node-RED 1.0 servers
- * @property {Function=} uibNode.on Event handler
- * @property {Function=} uibNode.removeListener Event handling
- * @property {object=} uibNode.credentials Optional secured credentials
- * @property {object=} uibNode.z Internal
- * @property {object=} uibNode.wires Internal. The wires attached to this node instance (uid's)
+ * @property {string} id Unique identifier for this instance
+ * @property {string} type What type of node is this an instance of? (uibuilder)
  * 
- * @property {boolean} uibNode.commonStaticLoaded Whether the common static folder has been added
- * @property {boolean} uibNode.initCopyDone Has the initial template copy been done?
+ * @property {string} name Descriptive name, only used by Editor
+ * @property {string} topic msg.topic overrides incoming msg.topic
+ * @property {string} url The url path (and folder path) to be used by this instance
+ * @property {string} oldUrl The PREVIOUS url path (and folder path) after a url rename
+ * @property {boolean} fwdInMessages Forward input msgs to output #1?
+ * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist? 
+ * @property {string}  templateFolder Folder name for the source of the chosen template
+ * @property {string}  extTemplate Degit url reference for an external template (e.g. from GitHub)
+ * @property {boolean} showfolder Provide a folder index web page?
+ * @property {boolean} useSecurity Use uibuilder's built-in security features?
+ * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
+ * @property {number} sessionLength Lifespan of token (in seconds)
+ * @property {boolean} reload If true, notify all clients to reload on a change to any source file
+ * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
+ * @property {string} jwtSecret Seed string for encryption of JWT
+ * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {number} ioClientsCount How many Socket clients connected to this instance?
+ * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
+ * @property {object} ioChannels The channel names for Socket.IO
+ * @property {string} ioChannels.control SIO Control channel name 'uiBuilderControl'
+ * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
+ * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
+ * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
  * 
- * @property {Function} uibNode.warn Output warn level info to node-red console and to editor debug
+ * @property {Function} send Send a Node-RED msg to an output port
+ * @property {Function=} done Dummy done Function for pre-Node-RED 1.0 servers
+ * @property {Function=} on Event handler
+ * @property {Function=} removeListener Event handling
+ * @property {object=} credentials Optional secured credentials
+ * @property {object=} z Internal
+ * @property {object=} wires Internal. The wires attached to this node instance (uid's)
+ * 
+ * @property {boolean} commonStaticLoaded Whether the common static folder has been added
+ * @property {boolean} initCopyDone Has the initial template copy been done?
+ * 
+ * @property {Function} warn Output warn level info to node-red console and to editor debug
+ * 
+ * @property {object} statusDisplay Settings for the uibuilder node status
+ * @property {string} statusDisplay.text Text to display
+ * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
+ * @property {string} statusDisplay.shape dot or ring
+ * 
+ * @property {boolean} allowUnauth Allow msgs to flow even if client is unauthorised
+ */
+
+/** uibConfig - THe module-level uib configuration variable
+ * @typedef {object} uibConfig Local copy of the node master config + other module-level info
+ * @property {object} me Contents of uibuilder's `package.json` file
+ * @property {string} moduleName Module name must match this nodes html file. 
+ * 
+ *  Default 'uibuilder'
+ * @property {string} nodeRoot URL path prefix set in `settings.js` - prefixes all URL's - 
+ *  equiv of httpNodeRoot from settings.js. 
+ * 
+ *  Default `empty string`.
+ * @property {object} deployments Track across redeployments
+ * @property {object} instances When nodeInstance is run, add the node.id as a key with the value being the 
+ *  url then add processing to ensure that the URL's are unique. 
+ * 
+ *  Schema: `{<node.id>: <url>}`
+ * @property {string} masterPackageListFilename File name of the master package list used to check for commonly 
+ *  installed FE libraries. 
+ * 
+ *  Default 'masterPackageList.json'
+ * @property {string} packageListFilename File name of the installed package list. 
+ * 
+ *  Default 'packageList.json'
+ * @property {Object<string, object>} installedPackages Track the vendor packages installed and their paths - 
+ *  updated by `uiblib.checkInstalledPackages()` Populated initially from packageList file once the configFolder 
+ *  is known & master list has been copied. 
+ * 
+ *  Schema:
+ *  ```json
+ *  {"<npm package name>": {
+ *      "<url>": "<vendorPath>", 
+ *      "<path>": "<installFolder>", 
+ *      "<version>": "<packageVersion>", 
+ *      "<main>": "<mainEntryScript>"
+ *  } }
+ *  ```
+ * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
+ * 
+ *  Default `../templates`
+ * @property {string} masterStaticDistFolder Location of master dist folder (containing built core front-end code).
+ * 
+ *  Default `../front-end/dist`
+ * @property {string} masterStaticSrcFolder Location of master src folder (containing src core front-end code).
+ * 
+ *  Default `../front-end/src`
+ * @property {string|null} rootFolder Folder on the server FS to hold common & custom files & folders for all instances of uibuilder.
+ * 
+ *  Cannot be set until we have the RED object and know if projects are being used. 
+ * 
+ *  **Can be changed by `settings.js`**
+ * 
+ *  Default `<userDir>/<uib.moduleName>` or `<userDir>/projects/<currProject>/<uib.moduleName>`
+ * @property {string|null} configFolder Location for uib config folder - set once rootFolder is finalised
+ * @property {string} configFolderName Name of the config folder. Default `.config`
+ * @property {string|null} commonFolder Location for uib common folder - set once rootFolder is finalised
+ * @property {string} commonFolderName URI name of the common folder for shared resources. Default `common`
+ * @property {string} sioUseMwName Name of the Socket.IO Use Middleware. Default 'sioUse.js'
+ * @property {object} ioChannels The channel names for Socket.IO.
+ * @property {string} ioChannels.control Channel for control messages. Default `uiBuilderControl`
+ * @property {string} ioChannels.client Channel for messages to front-end clients. Default `uiBuilderClient`
+ * @property {string} ioChannels.server Channel for messages from clients to server. Default `uiBuilder`
+ * @property {Array<number|string>} nodeVersion What version of Node.JS are we running under? Impacts some file processing. 
+ * @property {object} staticOpts Options for serveStatic. See https://expressjs.com/en/resources/middleware/serve-static.html
+ * @property {Object.<string,boolean>} deleteOnDelete Set of instances that have requested their local instance folders be 
+ *  deleted on deploy - see html file oneditdelete, updated by admin api
+ * 
+ *  Schema: `{ <url>: <boolean> }`
+ * @property {object}           customServer 
+ *  Parameters for custom webserver if required. Port is undefined if using Node-RED's webserver.
+ * @property {undefined|number|string=} customServer.port Optional TCP/IP port number. 
+ * 
+ *  If defined, uibuilder will use its own ExpressJS server/app. 
+ * 
+ *  If undefined, uibuilder will use the Node-RED user-facing ExpressJS server
+ * @property {string}           customServer.type Node.js server type. One of ['http', 'https', 'http2']
+ * @property {undefined|string} customServer.host uibuilder Host. sub(domain) name or IP Address
+ * @property {undefined|string} customServer.hostName The host name of the Node-RED server
+ * @property {undefined|object} degitEmitter Event emitter for degit, populated on 1st use. See POST admin API
+ * @property {undefined|runtimeRED} RED Keep a reference to RED for convenience. Set at the start of Uib
+ * @property {string=} version The deployed version of uibuilder (from `package.json`)
+ */
+
+/** senderNode1
+ * @typedef {{
+ *   name: string;
+ *   topic: string;
+ *   passthrough: boolean;
+ *   return: boolean;
+ *   url: string;
+ * }} senderNode1
  */
 
 /** MsgAuth
@@ -256,8 +385,8 @@
  */
 
 /** Props define attributes on a virtual node.
- * @typedef {object.<string, any> | {}} Props
- * @property {object} Props .
+ * @typedef {Object.<string, any> | {}} Props
+ * @property {Object} Props .
  * @property {Children} Props.children .
  */
 /** The vnode children of a virtual node.
@@ -265,7 +394,9 @@
  */
 /** Define a custom type for virtual nodes:
  * @typedef {string | number | Function} Type
- * @typedef {object.<string, any>} VNode
+ */
+/** Define a custom type for virtual nodes:
+ * @typedef {Object.<string, any>} VNode
  * @property {object.<string, any>} VNode .
  * @property {Type} VNode.type .
  * @property {Props} VNode.props .
@@ -275,8 +406,7 @@
 
 // ==== vvv These need some work vvv ==== //
 
-// ExpressJS App
-/**
+/** ExpressJS App
  * @typedef {object} expressApp ExpessJS `app` object
  * @property {object} _events : [object: null prototype] { mount: [Function: onmount] },
  * @property {number} _eventsCount : 1,
@@ -351,20 +481,33 @@
  * @property {Function} listen : [Function: listen],
  * @property {Function} request : IncomingMessage { app: [Circular *1] },
  * @property {Function} response : ServerResponse { app: [Circular *1] },
+ * 
  * @property {object} cache : {},
  * @property {object} engines : {},
  * 
- * @property {object} settings : {
- * @property {boolean}  settings.'x-powered-by' : true,
- * @property {string}   settings.etag : 'weak',
- * @property {Function} settings."etag fn" : [Function: generateETag],
- * @property {string}   settings.env : 'development',
- * @property {string}   settings.'query parser' : 'extended',
- * @property {Function} settings.'query parser fn' : [Function: parseExtendedQuerystring],
- * @property {number}   settings.'subdomain offset' : 2,
- * @property {Function} settings.view : [Function: View],
- * @property {string}   settings.views : 'C:\\src\\nr2\\views',
- * @property {string}   settings.'jsonp callback name' : 'callback'
+ * @property {{
+ *   'x-powered-by': boolean,
+ *   etag: string,
+ *   "etag fn": Function,
+ *   env: string,
+ *   'query parser' : string,
+ *   'query parser fn' : Function,
+ *   'subdomain offset': number,
+ *   view: Function,
+ *   views: string,
+ *   'jsonp callback name' : string
+ * }} settings ExpressJS App Settings
+ * 
+ * property {boolean}  settings.'x-powered-by' : true,
+ * property {string}   settings.etag : 'weak',
+ * property {Function} settings."etag fn" : [Function: generateETag],
+ * property {string}   settings.env : 'development',
+ * property {string}   settings.'query parser' : 'extended',
+ * property {Function} settings.'query parser fn' : [Function: parseExtendedQuerystring],
+ * property {number}   settings.'subdomain offset' : 2,
+ * property {Function} settings.view : [Function: View],
+ * property {string}   settings.views : 'C:\\src\\nr2\\views',
+ * property {string}   settings.'jsonp callback name' : 'callback'
  * 
  * @property {object} locals : [object: null prototype] { settings: [object] },
  * @property {string} mountpath : '/nr/',
@@ -415,6 +558,7 @@
  * @property {Function}   parent.'m-search' : [Function (anonymous)],
  * @property {Function}   parent.merge : [Function (anonymous)],
  * @property {Function}   parent.mkactivity : [Function (anonymous)],
+ * 
  * @property {Function}   locals : [object: null prototype],
  * @property {Function}   mountpath : '/',
  * @property {Function}   _router :  [Function]

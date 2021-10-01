@@ -1,3 +1,5 @@
+/* eslint-disable class-methods-use-this */
+/* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable max-params */
 /** Manage Socket.IO on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
@@ -20,9 +22,11 @@
 'use strict'
 
 /** --- Type Defs ---
+ * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
  * @typedef {import('../../typedefs.js').uibNode} uibNode
- * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../../typedefs.js').uibConfig} uibConfig
+ * @typedef {import('Express')} Express
  */
 
 const path     = require('path')
@@ -30,6 +34,7 @@ const socketio = require('socket.io')
 const tilib    = require('./tilib')    // General purpose library (by Totally Information)
 const uiblib   = require('./uiblib')   // Utility library for uibuilder
 const security = require('./security') // uibuilder security module
+const tiEventManager = require('@totallyinformation/ti-common-event-handler')
 
 class UibSockets {
     // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
@@ -72,7 +77,7 @@ class UibSockets {
          * Because this is a Singleton object, any reference to this module can access all of the namespaces (by url).
          * The namespace has some uib extensions that track the originating node id (searchable in Node-RED), the number of connected clients
          *   and the number of messages recieved.
-         * @type {object.<string, socketio.Namespace>}}
+         * @type {!Object.<string, socketio.Namespace>}
          */
         this.ioNamespaces = {}
 
@@ -84,8 +89,8 @@ class UibSockets {
      *  This makes them available wherever this MODULE is require'd.
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
-     * @param {object} uib reference to uibuilder 'global' configuration object
-     * @param {object} server reference to ExpressJS server being used by uibuilder
+     * @param {uibConfig} uib reference to uibuilder 'global' configuration object
+     * @param {Express} server reference to ExpressJS server being used by uibuilder
      */
     setup( uib, server ) {
 
@@ -96,7 +101,7 @@ class UibSockets {
         }
 
         if ( ! uib || ! server ) {
-            throw new Error('[uibuilder:socket.js] Called without required parameters')
+            throw new Error('[uibuilder:socket.js:setup] Called without required parameters')
         }
 
         /** @type {runtimeRED} reference to Core Node-RED runtime object */
@@ -172,37 +177,42 @@ class UibSockets {
         return this._isConfigured
     }
 
-    /** Output a control msg to the front-end. WARNING: Cannot use uibuilder security on this! Not currently being used.
-     * Sends to all connected clients & outputs a msg to port 2 if required.
-     * To add security, would need reference to node. When called from a uib api, the node isn't available.
-     * @param {object} msg The message to output
-     * @param {object} node The node object
-     * @param {string=} socketId Optional. If included, only send to specific client id
-     * @param {boolean=} output Optional. If included, also output to port #2 of the node @since 2020-01-03
+    //? Consider adding isConfigered checks on each method?
+    
+    /** Output a msg to the front-end.
+     * @param {object} msg The message to output, include msg._socketId to send to a single client
+     * @param {string} url THe uibuilder id 
+     * @param {string} channel Which channel to send to (see uib.ioChannels)
      */
-    sendControl( msg, node, socketId, output) {
-        /** @type {object} Reference to the core uibuilder config object */
+    sendToFe( msg, url, channel ) {
         const uib = this.uib
+        const log = this.log
 
-        const ioNs = this.ioNamespaces[node.url]
+        const ioNs = this.ioNamespaces[url]
 
-        if (output === undefined || output === null) output = true
+        let socketId = msg._socketId || undefined
 
-        msg.from = 'server'
+        if ( channel === uib.ioChannels.control ) msg.from = 'server'
 
-        if (socketId) msg._socketId = socketId
+        //console.log('> > > > ', msg)
 
-        // Send to specific client if required
-        if (msg._socketId) ioNs.to(msg._socketId).emit(uib.ioChannels.control, msg)
-        else ioNs.emit(uib.ioChannels.control, msg)
+        // pass the complete msg object to the uibuilder client
+        // TODO: This should have some safety validation on it! Also need to add security processing
+        if (socketId !== undefined) { // Send to specific client
+            // TODO ...If socketId not validated as having a current session, don't send
+            log.trace(`[uibuilder:socket.js:sendToFe:${url}] msg sent on to client ${socketId}. Channel: ${channel}. ${JSON.stringify(msg)}`)
+            ioNs.to(socketId).emit(channel, msg)
+        } else { // Broadcast
+            //? - is there any way to prevent sending to clients not logged in?
+            log.trace(`[uibuilder:socket.js:sendToFe:${url}] msg sent on to ALL clients. Channel: ${channel}. ${JSON.stringify(msg)}`)
+            //console.log('> > > > ', channel, ioNs.name, msg)
 
-        if ( (! Object.prototype.hasOwnProperty.call(msg, 'topic')) && (node.topic !== '') ) msg.topic = node.topic
+            ioNs.emit(channel, msg)
+        }
 
-        // copy msg to output port #2 if required
-        if ( output === true ) node.send([null, msg])
-    } // ---- End of getProps ---- //
+    } // ---- End of sendToFe ---- //
 
-    /** Output a normal msg to the front-end. WARNING: Cannot use uibuilder security on this! Currently only used to send a reload msg to FE.
+    /** Output a normal msg to the front-end. WARNING: Cannot use uibuilder security on this because! Currently only used to send a reload msg to FE.
      * To add security, would need reference to node. When called from a uib api, the node isn't available. 
      * @param {object} msg The message to output
      * @param {object} url The uibuilder instance url - will be unique. Used to lookup the correct Socket.IO namespace for sending.
@@ -225,13 +235,106 @@ class UibSockets {
         }
     }
     
+    /** Get client details for JWT security check
+     * @param {socketio.Socket} socket Reference to client socket connection
+     * @returns {object} Extracted key information
+     */
+    getClientDetails(socket) {
+        
+        // tilib.mylog('>>>>> ========================= <<<<<')
+        // tilib.mylog('>>>>>   remote address:', socket.request.connection.remoteAddress) // client ip address. May be IPv4 or v6
+        // tilib.mylog('>>>>> handshake secure:', socket.handshake.secure) // true if https/wss
+        // // tilib.mylog('>>>>>', socket.handshake.time)
+        // tilib.mylog('>>>>> handshake issued:', (new Date(socket.handshake.issued)).toISOString()) // when the client connected to the server
+        // // tilib.mylog('>>>>>', socket.handshake.url)
+        // tilib.mylog('>>>>>       x-clientid:', socket.request.headers['x-clientid']) // = 'uibuilderfe'
+        // tilib.mylog('>>>>>          referer:', socket.request.headers.referer) // = uibuilder url
+        // tilib.mylog('>>>>> ========================= <<<<<')
+
+        return {
+            /** Client remote IP address (v4 or v6) */
+            remoteAddress: socket.request.connection.remoteAddress,
+            /** True if https/wss */
+            secure: socket.handshake.secure,
+            /** When the client connected to the server */
+            connectedTimestamp: (new Date(socket.handshake.issued)).toISOString(),
+            /** 'x-clientid' from headers. uibuilderfe sets this to 'uibuilderfe' */
+            clientId: socket.request.headers['x-clientid'], 
+            /** THe referring webpage, should be the full URL of the uibuilder page */
+            referer: socket.request.headers.referer,
+            //url: socket.handshake.url
+        }
+    }
+
     /** Get a uib node instance namespace
-     * @param {uibNode} node Reference to the uibuilder node instance
+     * @param {string} url The uibuilder node instance's url (identifier)
      * @returns {socketio.Namespace} Return a reference to the namespace of the specified uib instance for convenience in core code
      */
-    getNs(node) {
-        return this.ioNamespaces[node.url]
+    getNs(url) {
+        return this.ioNamespaces[url]
     }
+
+    /** Send a msg either directly out of the node instance OR via return event name
+     * @param {object} msg Message object received from a client
+     * @param {uibNode} node Reference to the uibuilder node instance
+     */
+    sendIt(msg, node) {
+        if ( msg._uib && msg._uib.originator ) {
+            //const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
+            tiEventManager.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
+        } else {
+            node.send(msg)
+        }
+    }
+
+    /** Socket listener fn for msgs from clients
+     * @param {object} msg Message object received from a client
+     * @param {socketio.Socket} socket Reference to the socket for this node
+     * @param {uibNode} node Reference to the uibuilder node instance
+     */
+    listenFromClient(msg, socket, node) {
+        const log = this.log
+
+        node.rcvMsgCount++
+        log.trace(`[uibuilder:socket:${node.url}] Data received from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
+
+        // Make sure the incoming msg is a correctly formed Node-RED msg
+        switch ( typeof msg ) {
+            case 'string':
+            case 'number':
+            case 'boolean':
+                msg = { 'topic': node.topic, 'payload': msg}
+        }
+
+        // If the sender hasn't added msg._socketId, add the Socket.id now
+        if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
+
+        // If security is active...
+        if (node.useSecurity === true) {
+
+            /** Check for valid auth and session - JWT is removed if not authorised 
+             * @type {MsgAuth} */
+            msg._auth = security.authCheck2( msg, node, this.getClientDetails(socket) )
+            //msg._auth = security.authCheck(msg, node, socket.id)
+            //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
+
+            //console.log('[UIBUILDER:addNs:on-client-msg] _auth: ', msg._auth)
+
+            // Only send the msg onward if the user is validated or if unauth traffic permitted
+            if ( node.allowUnauth === true || msg._auth.jwt !== undefined ) {
+                this.sendIt(msg, node)
+                tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
+            } else 
+                log.info(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. Ignoring.`)
+
+        } else {
+
+            // Send out the message for downstream flows
+            // TODO: This should probably have safety validations!
+            this.sendIt(msg, node)
+
+        }
+    } // ---- End of listenFromClient ---- //
 
     /** Add a new Socket.IO NAMESPACE
      * Each namespace correstponds to a uibuilder node instance and must have a unique namespace name that matches the unique URL parameter for the node.
@@ -240,7 +343,6 @@ class UibSockets {
      * The namespace has some uib extensions that track the originating node id (searchable in Node-RED), the number of connected clients
      *   and the number of messages received.
      * @param {uibNode} node Reference to the uibuilder node instance
-     * @returns {socketio.Namespace} Return a reference to the namespace for convenience in core code
      */
     addNS(node) {
         const log = this.log
@@ -272,60 +374,30 @@ class UibSockets {
             node.statusDisplay.text = 'connected ' + ioNs.ioClientsCount
             uiblib.setNodeStatus( node )
 
-            // Let the clients (and output #2) know we are connecting
-            that.sendControl({
+            const msg = {
                 'uibuilderCtrl': 'client connect',
-                'cacheControl': 'REPLAY',          // @since 2017-11-05 v0.4.9 @see WIKI for details
+                //'cacheControl': 'REPLAY',          // @since v4.2.0 REMOVED
                 // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
                 // time difference (UTC->Local) without needing clever libraries.
                 'serverTimestamp': (new Date()),
-                topic: node.topic || undefined,
+                'topic': node.topic || undefined,
                 'security': node.useSecurity, // let the client know whether to use security or not
-                '_auth': node.useSecurity ? security.dummyAuth : undefined
-            }, node, socket.id, true)
+                '_socketId': socket.id,
+            }
+
+            // Let the clients (and output #2) know we are connecting
+            that.sendToFe(msg, node.url, uib.ioChannels.control)
             //ioNs.emit( uib.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
+
+            // Copy to port#2 for reference
+            node.send(null,msg)
             
             // Listen for msgs from clients only on specific input channels:
+            
             socket.on(uib.ioChannels.client, function(msg) {
-                node.rcvMsgCount++
-                log.trace(`[uibuilder:socket:${url}] Data received from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
-
-                // Make sure the incoming msg is a correctly formed Node-RED msg
-                switch ( typeof msg ) {
-                    case 'string':
-                    case 'number':
-                    case 'boolean':
-                        msg = { 'topic': node.topic, 'payload': msg}
-                }
-
-                // If the sender hasn't added msg._socketId, add the Socket.id now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
-
-                // If security is active...
-                if (node.useSecurity === true) {
-
-                    /** Check for valid auth and session - JWT is removed if not authorised 
-                     * @type {MsgAuth} */
-                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
-
-                    //console.log('[UIBUILDER] _auth: ', msg._auth)
-
-                    // Only send the msg onward if the user is validated or if unauth traffic permitted
-                    if ( node.allowUnauth === true || msg._auth.jwt !== undefined ) {
-                        node.send(msg)
-                        tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
-                    } else 
-                        log.info(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. Ignoring.`)
-
-                } else {
-
-                    // Send out the message for downstream flows
-                    // TODO: This should probably have safety validations!
-                    node.send(msg)
-
-                }
-
+                that.listenFromClient(msg, socket, node )
             }) // --- End of on-connection::on-incoming-client-msg() --- //
+
             socket.on(uib.ioChannels.control, function(msg) {
                 node.rcvMsgCount++
                 log.trace(`[uibuilder:socket:${url}] Control Msg from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
@@ -346,21 +418,63 @@ class UibSockets {
 
                 if ( ! msg.topic ) msg.topic = node.topic
 
-                /** If a logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
+                /** If an auth/logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
                 if ( msg.uibuilderCtrl === 'logon') {
 
-                    uiblib.logon(msg, ioNs, node, socket, log, uib)
+                    //uiblib.logon(msg, ioNs, node, socket, log, uib)
+                    security.logon(msg, ioNs, node, socket)
 
                 } else if ( msg.uibuilderCtrl === 'logoff') {
 
-                    uiblib.logoff(msg, ioNs, node, socket, log, uib)
+                    //uiblib.logoff(msg, ioNs, node, socket, log, uib)
+                    security.logoff(msg, ioNs, node, socket.id)
+
+                } else if ( msg.uibuilderCtrl === 'auth') {
+                    // 'auth' is sent by client after server sends 'client connect' or 'request for logon' if security is on
+                    /**
+                     * == Server receives 'auth' control message. Checks auth
+                     *    1. If auth is dummy
+                     *       1. => Send 'request for logon' to client
+                     *          1. ++ client must prompt user for logon
+                     *          2. <= Client must send 'auth' control message to server
+                     *          3. GOTO 1.0
+                     *    
+                     *    2. Otherwise
+                     *       1. == Server validates msg._auth (*1). Only succeeds if client was already auth and send a valid _auth with JWT (due to node redeploy since nr restart invalidates all JWT's).
+                     *          1. => Server returns either an 'auth succeded' or 'auth failed' message to client.
+                     *          2. If auth failed
+                     *             1. => Send 'request for logon' to client
+                     *             2. ++ client must prompt user for logon
+                     *             3. <= Client must send 'auth' control message to server
+                     *             4. GOTO 1.0
+                     */
+
+                    msg._auth = security.authCheck2(msg, node, that.getClientDetails(socket))
+
+                    //! temp 
+                    node.send([null,msg])
+
+                    // Report success & send token to client & to port #2
+                    //if ( msg._auth.userValidated === true ) {
+                    const ctrlMsg = {
+                        'uibuilderCtrl': msg._auth.userValidated ? 'authorised' : 'not authorised',
+                        'topic': msg.topic || node.topic || undefined,
+                        '_auth': msg._auth,
+                        '_socketId': socket.id,
+                    }
+                    that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
+                    // Copy to port#2 for reference
+                    node.send(null,msg)
+                    //}
 
                 } else if (node.useSecurity === true) {
-                // If security is active...
+                    // If security is active...
 
                     /** Check for valid auth and session 
                      * @type {MsgAuth} */
-                    msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
+                    msg._auth = security.authCheck2( msg, node, that.getClientDetails(socket) )
+                    //msg._auth = security.authCheck(msg, node, socket.id)
+                    //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
 
                     // Only send the msg onward if the user is validated or if unauth traffic permitted or if the msg is the initial ready for content handshake.
                     if ( node.allowUnauth === true || msg._auth.jwt !== undefined || msg.uibuilderCtrl === 'ready for content' ) {
@@ -379,6 +493,7 @@ class UibSockets {
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
             socket.on('disconnect', function(reason) {
+
                 ioNs.ioClientsCount--
                 node.ioClientsCount = ioNs.ioClientsCount
                 log.trace(
@@ -386,23 +501,35 @@ class UibSockets {
                 )
                 node.statusDisplay.text = 'connected ' + ioNs.ioClientsCount
                 uiblib.setNodeStatus( node )
+
                 // Let the control output port know a client has disconnected
-                that.sendControl({
+                const ctrlMsg = {
                     'uibuilderCtrl': 'client disconnect',
                     'reason': reason,
-                    topic: node.topic || undefined,
-                }, node, socket.id, true)
-                //node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'topic': node.topic}])
+                    'topic': node.topic || undefined,
+                    '_socketId': socket.id,
+                }
+                that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
+                // Copy to port#2 for reference
+                node.send(null,msg)
+                
             }) // --- End of on-connection::on-disconnect() --- //
 
             socket.on('error', function(err) {
+
                 log.error(`[uibuilder:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
+                
                 // Let the control output port know there has been an error
-                that.sendControl({
+                const ctrlMsg = {
                     'uibuilderCtrl': 'socket error',
                     'error': err.message,
-                    topic: node.topic || undefined,
-                }, node, socket.id, true)
+                    'topic': node.topic || undefined,
+                    '_socketId': socket.id,
+                }
+                that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
+                // Copy to port#2 for reference
+                node.send(null,msg)
+                    
             }) // --- End of on-connection::on-error() --- //
 
             /* More Socket.IO events but we really don't need to monitor them
@@ -441,7 +568,6 @@ class UibSockets {
             
         }) // --- End of addNS() --- //
 
-        return ioNs
     } // --- End of addNS() --- //
 
     /** Remove the current clients and namespace for this node.
@@ -467,10 +593,12 @@ class UibSockets {
  * Wrap in try/catch to force out better error logging if there is a problem
  * Downside of this approach is that you cannot directly pass in parameters. Use the startup(...) method instead.
  */
-try {
-    module.exports = new UibSockets()
-} catch (e) {
-    console.trace('[uibuilder:socket.js] new singleton instance failed', e)
-} 
+
+let uibsockets = new UibSockets()
+module.exports = uibsockets
+
+// Make this globally available so that it can be shared with other common nodes from TotallyInformation
+if ( ! global.totallyInformationShared ) global.totallyInformationShared = {}
+global.totallyInformationShared.uibsockets = uibsockets
 
 // EOF

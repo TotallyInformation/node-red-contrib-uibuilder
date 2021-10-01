@@ -1,0 +1,84 @@
+sequenceDiagram
+    %% https://mermaid-js.github.io/mermaid-live-editor/edit
+    %% https://mermaid-js.github.io/mermaid/#/sequenceDiagram?id=syntax
+
+    title: uibuilder Security Sequence
+
+    participant client as Client <br> Browser
+    participant NR as Node-RED <br> uibuilder node
+    participant u as uib <br> Internals
+    participant js as Custom Code <br>(<uibRoot>/<br>.config/<br>security.js)
+
+    autonumber
+
+    Note over client,js: This sequence picks up from the uib-connect-sequence diagram<br>Assumes that security is ON. Dotted lines are websocket msg's<br>**Every msg in both directions MUST now contain msg._auth**
+
+    NR-->>+client: uibuilderCtrl: "client connect", incl. security flag
+
+    Note over client: Client checks<br>localstore for auth
+
+    client-->>-NR: uibuilderCtrl: "auth"<br> incl _auth (dummy or real)
+
+    loop Continue until authorised
+
+        Note over NR,u: Validate JWT
+        Note over u: Checks signature, expiry and IP address (optional)
+
+        Note over NR,js: Validate Auth
+        Note over u,js: Uses fns in the custom security.js file
+        Note over js: Updates session and user DBs
+
+        opt Client is not auth
+            Note over client,NR: Client must have sent no JWT<br> or session expired or something else invalid
+            rect rgba(255, 0, 255, 0.1)
+                js->>u: client marked as unauth
+                u->>NR: JWT invalidated (removed)
+                NR--)client: uibuilderCtrl: "request for logon"
+                Note over client: front-end must<br> ask user for logon
+                Note over client,NR: NOTE: Non-logon msgs can flow ONLY if<br> uibuilder instance is set to allow unauth
+                client-->>NR: uibuilderCtrl: "logon"
+                Note over client,js: (Loop)
+            end
+        end
+
+    end
+    opt Client has valid JWT & is auth
+        Note over client,NR: Client must have sent valid auth<br> and JWT from a pre-existing session
+        activate NR
+        u->>NR: _auth JWT is updated
+        rect rgba(0, 255, 0, 0.1)
+            NR-->>+client: uibuilderCtrl: "authorised"
+            deactivate NR
+            client--)-NR: uibuilderCtrl: "ready for content"<br> cacheControl: "REPLAY"
+        end
+    end
+
+    Note over client,js: For all standard messages from client once client is auth
+
+    client-->>NR: Some data sent to Node-RED
+    
+    Note over NR,u: Validate JWT
+
+    alt If JWT invalid
+        rect rgba(100, 100, 100, 0.1)
+            NR->>u: Validate Auth
+            u->>js: Validate Auth
+            js->>NR: Updated _auth
+            u->>NR: Updated JWT
+            rect rgba(255, 255, 255, 1)
+                alt If Auth is valid
+                    Note over NR,u: Update JWT
+                    NR-->>client: uibuilderCtrl: "authorised" with updated _auth
+                else If Auth not valid
+                    Note over NR,u: Invalidate JWT
+                    NR-->>client: uibuilderCtrl: "request for logon"
+                    Note over client: Return to auth loop
+                end
+            end
+        end
+    else If JWT Valid
+        rect rgba(100, 100, 100, 0.1)
+            NR-->>client: uibuilderCtrl: "authorised" with updated _auth<br>If JWT expiry is auto-updating
+        end
+        Note over NR: pass msg to port 1<br> and on to rest of flow
+    end

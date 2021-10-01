@@ -1,9 +1,10 @@
+/* globals JQuery */
 /* eslint-disable strict */
 // Isolate this code
 (function () {
     'use strict'
 
-    /** 
+    /** Typedefs
      * @typedef {import("node-red").EditorRED} Red
      * @typedef {import("node-red__editor-client").RED} RED
      */
@@ -59,7 +60,7 @@
     //#region --------- "global" functions for the panel --------- //
 
     /** AddItem function for package list
-     * @param {jQuery} element the jQuery DOM element to which any row content should be added
+     * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
      * @param {number} index the index of the row
      * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
      */
@@ -131,7 +132,7 @@
 
         // If package name is an empty object - user removed an add row so ignore
         if ( (packageName === '') || (typeof packageName !== 'string') ) {
-            return false
+            return 'No package'
         }
 
         RED.notify('Starting removal of npm package ' + packageName)
@@ -152,6 +153,7 @@
                 console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
                 RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 // Put the entry back again
+                // @ts-ignore
                 $('#node-input-packageList').editableList('addItem',packageName)
             }
 
@@ -163,6 +165,7 @@
                 RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 
                 // Put the entry back again
+                // @ts-ignore
                 $('#node-input-packageList').editableList('addItem',packageName)
 
                 $('i.spinner').hide()
@@ -316,16 +319,16 @@
      */
     function getFileList(selectedFile) {
         //#region --- Collect variables from Config UI ---
-        var url = $('#node-input-url').val()
-        var folder = $('#node-input-folder').val()
-        var f = $('#node-input-filename').val()
+        var url = /** @type {string} */ ($('#node-input-url').val())
+        var folder = /** @type {string} */ ($('#node-input-folder').val())
+        var f = /** @type {string} */ ($('#node-input-filename').val())
         
         // Whether or not to force the index.(html|js|css) files to be copied over if missing
         //var nodeInputCopyIndex = $('#node-input-copyIndex').is(':checked')
         //#endregion -------------------------------------
 
         // Collect the current filename from various places
-        if ( selectedFile === undefined ) selectedFile = f
+        if ( selectedFile === undefined ) selectedFile = /** @type {string} */ (f)
         if ( selectedFile === null ) 
             selectedFile = localStorage.getItem('uibuilder.'+url+'.selectedFile') || undefined
 
@@ -389,7 +392,9 @@
                     if ( filename === selectedFile ) selected = true
                 })
                 // Set default file name/type. In order: selectedFile param, index.html, 1st returned
+                // @ts-ignore
                 if ( selected === true ) uiace.fname = selectedFile
+                // @ts-ignore
                 else if ( indexHtml === true ) uiace.fname = 'index.html'
                 else uiace.fname = firstFile
                 $('#node-input-filename').val(uiace.fname)
@@ -512,9 +517,9 @@
      */
     function deleteFile() {
         // Get the current file, folder & url
-        var folder = $('#node-input-folder').val() || uiace.folder
-        var url = $('#node-input-url').val()
-        var fname = $('#node-input-filename').val()
+        var folder = /** @type {string} */ ($('#node-input-folder').val()) || uiace.folder
+        var url = /** @type {string} */ ($('#node-input-url').val())
+        var fname = /** @type {string} */ ($('#node-input-filename').val())
 
         $.ajax({
             type: 'DELETE',
@@ -592,6 +597,7 @@
         })
 
         /** If the url already exists - prevent the "Done" button from being pressed. */
+        // @ts-ignore
         if ( exists === true ) {
             $('#node-dialog-ok').prop('disabled', true)
             $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
@@ -615,7 +621,7 @@
 
     /** Set the height of the ACE text editor box */
     function setACEheight() {
-        var height
+        let height
 
         if ( uiace.editorLoaded === true ) {
             // If the editor is in full-screen ...
@@ -635,13 +641,13 @@
                 uiace.fullscreen = true
 
             } else {
+                // Don't bother if the top of the editor is still auto
+                if ( $('#edit-outer').css('top') === 'auto' ) return
+
                 $('#edit-props').css('background-color','')
                     .css('padding','')
 
-                // Full height
-                height = parseInt($('#dialog-form').height(), 10)
-                // Subtract info lines
-                height -= parseInt($('#info').height(), 10)
+                height = ($('.red-ui-tray-footer').position()).top - ($('#edit-outer').offset()).top - 35
                 
                 // Replace the compress icon with a expand icon
                 $('#node-function-expand-js').css('background-color','')
@@ -680,7 +686,7 @@
         var newVal = $('#node-input-sessionLength').val()
         var newSec = $('#node-input-useSecurity').is(':checked')
 
-        if (newSec === true && newVal.length < 1 ) return false
+        if (newSec === true && (newVal.toString()).length < 1 ) return false
 
         return true
 
@@ -697,7 +703,7 @@
         var newVal = $('#node-input-jwtSecret').val()
         var newSec = $('#node-input-useSecurity').is(':checked')
 
-        if (newSec === true && newVal.length < 1 ) return false
+        if (newSec === true && (newVal.toString()).length < 1 ) return false
 
         return true
 
@@ -713,7 +719,7 @@
         let templateFolder = that.templateFolder
 
         // Load each option - first entry will be the default
-        Object.values(RED.settings.uibuilderTemplates).forEach( templ => {
+        Object.values(RED.settings.uibuilderTemplates).forEach( templ => { // eslint-disable-line es/no-object-values
             // Build the drop-down
             $('#node-input-templateFolder').append($('<option>', { 
                 value: templ.folder,
@@ -839,14 +845,6 @@
      * @param {object} that A reference to the panel's `this` object
      */
     function setInitialStates(that) {
-        // Hide/show
-        $('#main-props').show()
-        $('#edit-props').hide()
-        $('#npm-props').hide()
-        $('#adv-props').hide()
-        $('#sec-props').hide()
-        $('#info-props').hide()
-
         // initial checkbox states
         $('#node-input-fwdInMessages').prop('checked', that.fwdInMessages)
         $('#node-input-allowScripts').prop('checked', that.allowScripts)
@@ -855,7 +853,6 @@
         $('#node-input-showfolder').prop('checked', that.showfolder)
         $('#node-input-useSecurity').prop('checked', that.useSecurity)
         $('#node-input-allowUnauth').prop('checked', that.allowUnauth)
-        $('#node-input-allowAuthAnon').prop('checked', that.allowAuthAnon)
         $('#node-input-tokenAutoExtend').prop('checked', that.tokenAutoExtend)
         $('#node-input-reload').prop('checked', that.reload)
     }
@@ -948,10 +945,10 @@
         })
 
         // One-off check for default settings
-        if ( $('#node-input-jwtSecret').val().length === 0 ) {
+        if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
             $('#node-input-jwtSecret').val(defaultJwtSecret)
         }
-        if ( $('#node-input-useSecurity').is(':checked') && $('#node-input-sessionLength').val().length === 0 ) {
+        if ( $('#node-input-useSecurity').is(':checked') && /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
             $('#node-input-sessionLength').val(defaultSessionLength)
         }
 
@@ -975,28 +972,26 @@
                 }
             */
             // Yes, we do need this.checked twice :-)
-            if ( this.checked ) {
+            if ( $(this).is(':checked') ) {
 
                 $('#node-input-allowUnauth').prop('disabled', false)        
-                $('#node-input-allowAuthAnon').prop('disabled', false)
                 $('#node-input-sessionLength').prop('disabled', false)
                 $('#node-input-jwtSecret').prop('disabled', false)
                 $('#node-input-tokenAutoExtend').prop('disabled', false)
                 // Add defaults if fields are empty
-                if ( $('#node-input-jwtSecret').val().length === 0 ) {
+                if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
                     $('#node-input-jwtSecret').addClass('input-error')
                 }
-                if ( $('#node-input-sessionLength').val().length === 0 ) {
+                if ( /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
                     $('#node-input-sessionLength').val(defaultSessionLength)
                 }
-                if ( $('#node-input-jwtSecret').val().length === 0 ) {
+                if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
                     $('#node-input-jwtSecret').val(defaultJwtSecret)
                 }
 
             } else { // security not requested, disable other settings
 
                 $('#node-input-allowUnauth').prop('disabled', true)        
-                $('#node-input-allowAuthAnon').prop('disabled', true)
                 $('#node-input-sessionLength').prop('disabled', true)
                 $('#node-input-jwtSecret').prop('disabled', true)
                 $('#node-input-tokenAutoExtend').prop('disabled', true)
@@ -1009,6 +1004,434 @@
         $('#nrMode').text(RED.settings.uibuilderNodeEnv)
         
     } // ---- end of securitySettings ---- //
+
+    /** Prep tabs
+     * @param {object} node A reference to the panel's `this` object
+     */
+    function prepTabs(node) {
+        const tabs = RED.tabs.create({
+            id: 'tabs',
+            onchange: function(tab) {
+                // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
+                $('#tabs-content').children().hide()
+                $('#' + tab.id).show()
+
+                //? Could move these to their own show event. Might even unload some stuff on hide?
+
+                if ( tab.id === 'tab-files' ) {
+                    // Build the file list
+                    getFileList()
+
+                    if ( uiace.editorLoaded !== true ) {
+                        // Clear out the editor
+                        if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
+
+                        // Create the ACE editor component
+                        uiace.editor = RED.editor.createEditor({
+                            id: 'node-input-template-editor',
+                            mode: 'ace/mode/' + uiace.format,
+                            value: node.template
+                        })
+                        // Keep a reference to the current editor session
+                        uiace.editorSession = uiace.editor.getSession()
+                        /** If the editor has changes, enable the save & reset buttons
+                         * using input event instead of change since it's called with some timeout 
+                         * which is needed by the undo (which takes some time to update)
+                         **/
+                        uiace.editor.on('input', function() {
+                            // Is the editor clean?
+                            fileIsClean(uiace.editorSession.getUndoManager().isClean())
+                        })
+                        /*uiace.editorSession.on('change', function(delta) {
+                            // delta.start, delta.end, delta.lines, delta.action
+                            console.log('ACE Editor CHANGE Event', delta)
+                        }) */
+                        uiace.editorLoaded = true
+
+                        // Resize to max available height
+                        setACEheight()
+                        
+                        // Be friendly and auto-load the initial file via the admin API
+                        getFileContents()
+                        fileIsClean(true)
+                    }
+                } else if ( tab.id === 'tab-libraries' ) {
+
+                    //! TODO Improve feedback
+
+                    // Setup the package list
+                    $('#node-input-packageList').editableList({
+                        addItem: addPackageRow, // function
+                        removeItem: removePackageRow, // function(data){},
+                        resizeItem: function() {}, // function(_row,_index) {},
+                        header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
+                        height: 'auto',
+                        addButton: true,
+                        removable: true,
+                        scrollOnAdd: true,
+                        sortable: false,
+                    })
+
+                    // reset and populate the list
+                    $('#node-input-packageList').editableList('empty')
+                    packages.forEach( packageName => {
+                        if ( packageName !== 'socket.io' ) // ignore socket.io
+                            $('#node-input-packageList').editableList('addItem',packageName)
+                    })
+
+                    // spinner
+                    $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
+                    $('i.spinner').hide()
+
+                }
+            }
+        })
+        tabs.addTab({ id: 'tab-core',      label: 'Core'      })
+        tabs.addTab({ id: 'tab-files',     label: 'Files'     })
+        tabs.addTab({ id: 'tab-libraries', label: 'Libraries' })
+        tabs.addTab({ id: 'tab-security',  label: 'Security'  })
+        tabs.addTab({ id: 'tab-advanced',  label: 'Advanced'  })
+        
+    } // ---- End of preTabs ---- //
+
+    /** Prep for edit
+     * @param {*} node -
+     */
+    function onEditPrepare(node) {
+        // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
+        if ( node.templateFolder === undefined || node.templateFolder === '' ) node.templateFolder = defaultTemplate
+
+        // Start with the edit section hidden & main section visible, set the checkbox initial states
+        setInitialStates(node)
+
+        prepTabs(node)
+
+        // Set sourceFolder dropdown
+        $(`#node-input-sourceFolder option[value="${node.sourceFolder || 'src'}"]`).prop('selected', true)
+        $('#node-input-sourceFolder').val(node.sourceFolder || 'src')
+
+        /** When the url changes (NB: Also see the validation function) change visible folder names & links
+         * NB: Actual URL change processing is done in validation which also happens on change
+         *     Change happens when config panel is opened as well as for a real change
+         */
+        $('#node-input-url').on('change', urlChange)
+
+        // When the show web view (index) of source files changes
+        $('#node-input-showfolder').on('change', function() {
+            if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
+            else $('#show-src-folder-idx-url').show()
+        })
+
+        // Configure the template dropdown & setup button handlers
+        templateSettings(node)
+
+        // security settings
+        securitySettings()
+
+        //#region ---- File Editor ---- //
+
+        // Mark edit save/reset buttons as disabled by default
+        fileIsClean(true)
+
+        // Handle the file editor change of folder/file (1st built on click of show edit button)
+        $('#node-input-folder').change(function() { // (e) {
+            // Rebuild the file list
+            getFileList()
+        })
+        $('#node-input-filename').change(function() { // (e) {
+            // Get the content of the file via the admin API
+            getFileContents()
+        })
+
+        // Handle the folder new button
+        $('#fldr-new-dialog_new').addClass('input-error')
+            .prop('disabled',true)
+        $('#fldr-input-newname').addClass('input-error')
+            .on('input', function(){
+                if ( /** @type {string} */ ($('#fldr-input-newname').val()).length === 0) {
+                    $('#fldr-input-newname').addClass('input-error')
+                    $('#fldr').addClass('input-error')
+                        .prop('disabled',true)
+                } else {
+                    $('#fldr-input-newname').removeClass('input-error')
+                    $('#fldr-new-dialog_new').removeClass('input-error')
+                        .prop('disabled',false)
+                }
+            })
+        // @ts-ignore
+        $('#fldr-new-dialog').dialog({ // define the dialog box
+            autoOpen:false, modal:true, closeOnEscape:true,
+            buttons: [
+                {
+                    text: 'Create',
+                    id: 'fldr-new-dialog_new',
+                    click: function() {
+                        // NB: Button is disabled unless name.length > 0 so don't need to check here
+                        // Call the new file API
+                        createNewFolder( /** @type {string} */ ($('#fldr-input-newname').val()) )
+                        $('#fldr-input-newname').val(null)
+                            .addClass('input-error')
+                        $('#fldr-new-dialog_new').addClass('input-error')
+                            .prop('disabled',true)
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        $('#fldr-input-newname').val(null)
+                            .addClass('input-error')
+                        $('#fldr-new-dialog_new').addClass('input-error')
+                            .prop('disabled',true)
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },
+            ]
+        })
+            .keyup(function(e) { // make enter key fire the create
+                // @ts-ignore
+                if (e.keyCode == $.ui.keyCode.ENTER) // eslint-disable-line eqeqeq
+                    $('#fldr_new_dialog_new').trigger('click')
+            })
+        $('#btn-fldr-new').on('click', function() { // (e) {
+            $('#fldr_url').html( /** @type {string} */ ($('#node-input-url').val()) )
+            // @ts-ignore
+            $('#fldr-new-dialog').dialog('open')  
+        })
+        // Handle the folder delete button
+        // @ts-ignore
+        $('#fldr-del-dialog').dialog({
+            autoOpen:false, modal:true, closeOnEscape:true,
+            buttons: [
+                {
+                    text: 'Delete',
+                    id: 'fldr-del-dialog_del',
+                    click: function() {
+                        // Call the delete folder API (uses the current folder)
+                        deleteFolder()
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },
+            ]
+        })
+        $('#btn-fldr-del').on('click', function() { // (e) {
+            $('#fldr-del-dialog_del').addClass('input-error')
+                .css('color','brown')
+            $('#fldr-del-name').text( /** @type {string} */ ($('#node-input-folder').val()) )
+            if ( $('#node-input-folder').val() === 'src' ) {
+                if ( $('#node-input-copyIndex').is(':checked') ) {
+                    $('#fldr-del-recopy').css('color','')
+                        .text('Copy flag is set so the src folder will be recreated and the index.(html|js|css) files will be recopied from the master template.')
+                } else {
+                    $('#fldr-del-recopy').css('color','brown')
+                        .text('Copy flag is NOT set so the src folder will NOT be recopied from the master template.')
+                }    
+            } else {
+                $('#fldr-del-recopy').css('color','')
+                    .text('')
+            }
+            // @ts-ignore
+            $('#fldr-del-dialog').dialog('open')                  
+        })
+
+        // Handle the file editor reset button (reload the file)
+        $('#edit-reset').on('click', function(e) {
+            e.preventDefault() // don't trigger normal click event
+
+            // Get the content of the file via the admin API
+            getFileContents()
+            $('#file-action-message').text('')
+        })
+        // Handle the file editor save button
+        $('#edit-save').on('click', function(e) {
+            e.preventDefault() // don't trigger normal click event
+
+            var authTokens = RED.settings.get('auth-tokens')
+            
+            // Post the updated content of the file via the admin API
+            // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
+            // Clients will be reloaded if the reload checkbox is set.
+            var request = new XMLHttpRequest()
+            var params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
+                '&url=' + $('#node-input-url').val() + 
+                '&reload=' + $('#node-input-reload').val() + 
+                '&data=' + encodeURIComponent(uiace.editorSession.getValue())
+            request.open('POST', 'uibputfile', true)
+            request.onreadystatechange = function() {
+                if (this.readyState === XMLHttpRequest.DONE) {
+                    if (this.status === 200) {
+                        // Request successful
+                        // display msg - blank msg when new edits present
+                        $('#file-action-message').text('File Saved')
+                        fileIsClean(true)
+                    } else {
+                        // Request failed
+                        // display msg - blank msg when new edits present
+                        $('#file-action-message').text('File Save FAILED')
+                    }
+                }
+            }
+            request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+            // If admin ui is protected with a login, we need to send the access token
+            if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+            request.send(params)
+
+        })
+
+        //#region Handle the Delete file button
+        // @ts-ignore
+        $('#edit_delete_dialog').dialog({
+            autoOpen:false, modal:true, closeOnEscape:true,
+            buttons: [
+                {
+                    text: 'Delete',
+                    id: 'edit_del_dialog_del',
+                    click: function() {
+                        // Call the delete file API (uses the current file)
+                        deleteFile()
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },
+            ]
+        })
+        $('#edit-delete').on('click', function() { // (e) {
+            $('#edit_del_dialog_del').addClass('input-error')
+                .css('color','brown')
+            $('#edit-delete-name').text($('#node-input-folder').val() + '/' + $('#node-input-filename').val())
+            if ( $('#node-input-folder').val() === 'src' ) {
+                if ( $('#node-input-copyIndex').is(':checked') ) {
+                    $('#edit-delete-recopy').css('color','')
+                        .text('Copy flag is set so index.(html|js|css) files will be recopied from master template.')
+                } else {
+                    $('#edit-delete-recopy').css('color','brown')
+                        .text('Copy flag is NOT set so index.(html|js|css) files will NOT be recopied from master template.')
+                }    
+            } else {
+                $('#edit-delete-recopy').css('color','')
+                    .text('')
+            }
+            // @ts-ignore
+            $('#edit_delete_dialog').dialog('open')  
+        })
+        //#endregion
+
+        //#region Handle the New file button
+        $('#edit_new_dialog_new').addClass('input-error')
+            .prop('disabled',true)
+        $('#edit-input-newname').addClass('input-error')
+            .on('input', function(){
+                if ( /** @type {string} */ ($('#edit-input-newname').val()).length === 0) {
+                    $('#edit-input-newname').addClass('input-error')
+                    $('#edit_new_dialog_new').addClass('input-error')
+                        .prop('disabled',true)
+                } else {
+                    $('#edit-input-newname').removeClass('input-error')
+                    $('#edit_new_dialog_new').removeClass('input-error')
+                        .prop('disabled',false)
+                }
+            })
+        // @ts-ignore
+        $('#edit_new_dialog').dialog({
+            autoOpen:false, modal:true, closeOnEscape:true,
+            buttons: [
+                {
+                    text: 'Create',
+                    id: 'edit_new_dialog_new',
+                    click: function() {
+                        // NB: Button is disabled unless name.length > 0 so don't need to check here
+                        // Call the new file API
+                        createNewFile(/** @type {string} */ ($('#edit-input-newname').val()) )
+                        $('#edit-input-newname').val(null)
+                            .addClass('input-error')
+                        $('#edit_new_dialog_new').addClass('input-error')
+                            .prop('disabled',true)
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        $('#edit-input-newname').val(null)
+                            .addClass('input-error')
+                        $('#edit_new_dialog_new').addClass('input-error')
+                            .prop('disabled',true)
+                        // @ts-ignore
+                        $( this ).dialog( 'close' )
+                    }
+                },
+            ]
+        })
+            .keyup(function(e) { // make enter key fire the create
+                // @ts-ignore
+                if (e.keyCode == $.ui.keyCode.ENTER) // eslint-disable-line eqeqeq
+                    $('#edit_new_dialog_new').click()
+            })
+        $('#edit-new').on('click', function() { // (e) {
+            $('#file_url').html( /** @type {string} */ ($('#node-input-url').val()) )
+            $('#file_fldr').html( /** @type {string} */ ($('#node-input-folder').val()) )
+            // @ts-ignore
+            $('#edit_new_dialog').dialog('open')  
+        })
+        //#endregion
+
+        // Handle the expander button (show full screen editor) - from core function node
+        $('#node-function-expand-js').on('click', function(e) {
+            e.preventDefault()
+
+            // Creates another edit session with max width
+            var value = uiace.editor.getValue()
+            RED.editor.editText({
+                mode: $('#node-input-format').val(), //mode: $("#node-input-format").val(),
+                value: value,
+                width: 'Infinity',
+                cursor: uiace.editor.getCursorPosition(),
+                complete: function(v,cursor) {
+                    // v contains the returned text
+                    uiace.editor.setValue(v, -1)
+                    uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
+                    setTimeout(function() {
+                        uiace.editor.focus()
+                        // Check if anything changed
+                        if ( v !== value ) {
+                            fileIsClean(false)
+                        }
+                    },300)
+                }
+            })
+
+            // Are we in fullscreen? Variable is updated when oneditresize calls setACEheight()
+            // if (uiace.fullscreen === false) {
+            //     // Select the editor components and make full-screen, triggers oneditresize()
+            //     var viewer = $('#edit-props')[0]
+            //     var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
+            //     if (rFS) rFS.call(viewer)
+                
+            //     // TODO: Add popup if no method is available
+            // } else {
+            //     // Already in fullscreen so lets exit, triggers oneditresize()
+            //     document.exitFullscreen()
+            // }
+
+        })
+
+        //#endregion ---- File Editor ---- //
+
+    } // ---- End of oneditprepare ---- //
 
     //#endregion ------------------------------------------------- //
 
@@ -1070,449 +1493,7 @@
          */
 
         /** Prepares the Editor panel */
-        oneditprepare: function oneditprepare() {
-            //console.log('[uibuilder:oneditprepare] THIS: ', this)
-
-            // Keep a local reference to `this` for use as context changes
-            const that = this
-
-            // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
-            if ( that.templateFolder === undefined || that.templateFolder === '' ) that.templateFolder = defaultTemplate
-
-            // Start with the edit section hidden & main section visible, set the checkbox initial states
-            setInitialStates(that)
-
-            // Set sourceFolder dropdown
-            $(`#node-input-sourceFolder option[value="${that.sourceFolder || 'src'}"]`).prop('selected', true)
-            $('#node-input-sourceFolder').val(that.sourceFolder || 'src')
-
-            /** When the url changes (NB: Also see the validation function) change visible folder names & links
-             * NB: Actual URL change processing is done in validation which also happens on change
-             *     Change happens when config panel is opened as well as for a real change
-             */
-            $('#node-input-url').on('change', urlChange)
-
-            // When the show web view (index) of source files changes
-            $('#node-input-showfolder').on('change', function() {
-                if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
-                else $('#show-src-folder-idx-url').show()
-            })
-
-            // Configure the template dropdown & setup button handlers
-            templateSettings(that)
-
-            // security settings
-            securitySettings()
-
-            // Show/Hide the advanced settings
-            $('#show-adv-props').css( 'cursor', 'pointer' )
-            $('#show-adv-props').on('click', function() { // (e) {
-                $('#adv-props').toggle()
-                if ( $('#adv-props').is(':visible') ) {
-                    $('#show-adv-props').html('<i class="fa fa-caret-down"></i> Advanced Settings')
-                } else {
-                    $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                }
-            })
-
-            //#region ---- File Editor ---- //
-            // Mark edit save/reset buttons as disabled by default
-            fileIsClean(true)
-
-            // Show the edit section, hide the main, adv & sec sections
-            $('#show-edit-props').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-                $('#main-props').hide()
-                $('#sec-props').hide()
-                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#edit-props').show()
-
-                // Build the file list
-                getFileList()
-
-                if ( uiace.editorLoaded !== true ) {
-                    // Clear out the editor
-                    if ($('#node-input-template').val('') !== '') $('#node-input-template').val('')
-
-                    // Create the ACE editor component
-                    uiace.editor = RED.editor.createEditor({
-                        id: 'node-input-template-editor',
-                        mode: 'ace/mode/' + uiace.format,
-                        value: that.template
-                    })
-                    // Keep a reference to the current editor session
-                    uiace.editorSession = uiace.editor.getSession()
-                    /** If the editor has changes, enable the save & reset buttons
-                     * using input event instead of change since it's called with some timeout 
-                     * which is needed by the undo (which takes some time to update)
-                     **/
-                    uiace.editor.on('input', function() {
-                        // Is the editor clean?
-                        fileIsClean(uiace.editorSession.getUndoManager().isClean())
-                    })
-                    /*uiace.editorSession.on('change', function(delta) {
-                        // delta.start, delta.end, delta.lines, delta.action
-                        console.log('ACE Editor CHANGE Event', delta)
-                    }) */
-                    uiace.editorLoaded = true
-
-                    // Resize to max available height
-                    setACEheight()
-                    
-                    // Be friendly and auto-load the initial file via the admin API
-                    getFileContents()
-                    fileIsClean(true)
-                }
-            })
-
-            // Hide the edit section, show the main section
-            $('#edit-close').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-                $('#main-props').show()
-                $('#edit-props').hide()
-            })
-
-            // Handle the file editor change of folder/file (1st built on click of show edit button)
-            $('#node-input-folder').change(function() { // (e) {
-                // Rebuild the file list
-                getFileList()
-            })
-            $('#node-input-filename').change(function() { // (e) {
-                // Get the content of the file via the admin API
-                getFileContents()
-            })
-
-            // Handle the folder new button
-            $('#fldr-new-dialog_new').addClass('input-error')
-                .prop('disabled',true)
-            $('#fldr-input-newname').addClass('input-error')
-                .on('input', function(){
-                    if ( $('#fldr-input-newname').val().length === 0) {
-                        $('#fldr-input-newname').addClass('input-error')
-                        $('#fldr').addClass('input-error')
-                            .prop('disabled',true)
-                    } else {
-                        $('#fldr-input-newname').removeClass('input-error')
-                        $('#fldr-new-dialog_new').removeClass('input-error')
-                            .prop('disabled',false)
-                    }
-                })
-            $('#fldr-new-dialog').dialog({ // define the dialog box
-                autoOpen:false, modal:true, closeOnEscape:true,
-                buttons: [
-                    {
-                        text: 'Create',
-                        id: 'fldr-new-dialog_new',
-                        click: function() {
-                            // NB: Button is disabled unless name.length > 0 so don't need to check here
-                            // Call the new file API
-                            createNewFolder($('#fldr-input-newname').val())
-                            $('#fldr-input-newname').val(null)
-                                .addClass('input-error')
-                            $('#fldr-new-dialog_new').addClass('input-error')
-                                .prop('disabled',true)
-                            $( this ).dialog( 'close' )
-                        }
-                    },{
-                        text: 'Cancel',
-                        click: function() {
-                            $('#fldr-input-newname').val(null)
-                                .addClass('input-error')
-                            $('#fldr-new-dialog_new').addClass('input-error')
-                                .prop('disabled',true)
-                            $( this ).dialog( 'close' )
-                        }
-                    },
-                ]
-            })
-                .keyup(function(e) { // make enter key fire the create
-                    // eslint-disable-next-line eqeqeq
-                    if (e.keyCode == $.ui.keyCode.ENTER)
-                        $('#fldr_new_dialog_new').trigger('click')
-                })
-            $('#btn-fldr-new').on('click', function() { // (e) {
-                $('#fldr_url').html( $('#node-input-url').val() )
-                $('#fldr-new-dialog').dialog('open')  
-            })
-            // Handle the folder delete button
-            $('#fldr-del-dialog').dialog({
-                autoOpen:false, modal:true, closeOnEscape:true,
-                buttons: [
-                    {
-                        text: 'Delete',
-                        id: 'fldr-del-dialog_del',
-                        click: function() {
-                            // Call the delete folder API (uses the current folder)
-                            deleteFolder()
-                            $( this ).dialog( 'close' )
-                        }
-                    },{
-                        text: 'Cancel',
-                        click: function() {
-                            $( this ).dialog( 'close' )
-                        }
-                    },
-                ]
-            })
-            $('#btn-fldr-del').on('click', function() { // (e) {
-                $('#fldr-del-dialog_del').addClass('input-error')
-                    .css('color','brown')
-                $('#fldr-del-name').text($('#node-input-folder').val())
-                if ( $('#node-input-folder').val() === 'src' ) {
-                    if ( $('#node-input-copyIndex').is(':checked') ) {
-                        $('#fldr-del-recopy').css('color','')
-                            .text('Copy flag is set so the src folder will be recreated and the index.(html|js|css) files will be recopied from the master template.')
-                    } else {
-                        $('#fldr-del-recopy').css('color','brown')
-                            .text('Copy flag is NOT set so the src folder will NOT be recopied from the master template.')
-                    }    
-                } else {
-                    $('#fldr-del-recopy').css('color','')
-                        .text('')
-                }
-                $('#fldr-del-dialog').dialog('open')                  
-            })
-
-            // Handle the file editor reset button (reload the file)
-            $('#edit-reset').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-
-                // Get the content of the file via the admin API
-                getFileContents()
-                $('#file-action-message').text('')
-            })
-            // Handle the file editor save button
-            $('#edit-save').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-
-                var authTokens = RED.settings.get('auth-tokens')
-                
-                // Post the updated content of the file via the admin API
-                // NOTE: Cannot use jQuery POST function as it sets headers that trigger a CORS error. Do it using native requests only.
-                // Clients will be reloaded if the reload checkbox is set.
-                var request = new XMLHttpRequest()
-                var params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
-                    '&url=' + $('#node-input-url').val() + 
-                    '&reload=' + $('#node-input-reload').val() + 
-                    '&data=' + encodeURIComponent(uiace.editorSession.getValue())
-                request.open('POST', 'uibputfile', true)
-                request.onreadystatechange = function() {
-                    if (this.readyState === XMLHttpRequest.DONE) {
-                        if (this.status === 200) {
-                            // Request successful
-                            // display msg - blank msg when new edits present
-                            $('#file-action-message').text('File Saved')
-                            fileIsClean(true)
-                        } else {
-                            // Request failed
-                            // display msg - blank msg when new edits present
-                            $('#file-action-message').text('File Save FAILED')
-                        }
-                    }
-                }
-                request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
-                // If admin ui is protected with a login, we need to send the access token
-                if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                request.send(params)
-
-            })
-
-            //#region Handle the Delete file button
-            $('#edit_delete_dialog').dialog({
-                autoOpen:false, modal:true, closeOnEscape:true,
-                buttons: [
-                    {
-                        text: 'Delete',
-                        id: 'edit_del_dialog_del',
-                        click: function() {
-                            // Call the delete file API (uses the current file)
-                            deleteFile()
-                            $( this ).dialog( 'close' )
-                        }
-                    },{
-                        text: 'Cancel',
-                        click: function() {
-                            $( this ).dialog( 'close' )
-                        }
-                    },
-                ]
-            })
-            $('#edit-delete').on('click', function() { // (e) {
-                $('#edit_del_dialog_del').addClass('input-error')
-                    .css('color','brown')
-                $('#edit-delete-name').text($('#node-input-folder').val() + '/' + $('#node-input-filename').val())
-                if ( $('#node-input-folder').val() === 'src' ) {
-                    if ( $('#node-input-copyIndex').is(':checked') ) {
-                        $('#edit-delete-recopy').css('color','')
-                            .text('Copy flag is set so index.(html|js|css) files will be recopied from master template.')
-                    } else {
-                        $('#edit-delete-recopy').css('color','brown')
-                            .text('Copy flag is NOT set so index.(html|js|css) files will NOT be recopied from master template.')
-                    }    
-                } else {
-                    $('#edit-delete-recopy').css('color','')
-                        .text('')
-                }
-                $('#edit_delete_dialog').dialog('open')  
-            })
-            //#endregion
-
-            //#region Handle the New file button
-            $('#edit_new_dialog_new').addClass('input-error')
-                .prop('disabled',true)
-            $('#edit-input-newname').addClass('input-error')
-                .on('input', function(){
-                    if ( $('#edit-input-newname').val().length === 0) {
-                        $('#edit-input-newname').addClass('input-error')
-                        $('#edit_new_dialog_new').addClass('input-error')
-                            .prop('disabled',true)
-                    } else {
-                        $('#edit-input-newname').removeClass('input-error')
-                        $('#edit_new_dialog_new').removeClass('input-error')
-                            .prop('disabled',false)
-                    }
-                })
-            $('#edit_new_dialog').dialog({
-                autoOpen:false, modal:true, closeOnEscape:true,
-                buttons: [
-                    {
-                        text: 'Create',
-                        id: 'edit_new_dialog_new',
-                        click: function() {
-                            // NB: Button is disabled unless name.length > 0 so don't need to check here
-                            // Call the new file API
-                            createNewFile($('#edit-input-newname').val())
-                            $('#edit-input-newname').val(null)
-                                .addClass('input-error')
-                            $('#edit_new_dialog_new').addClass('input-error')
-                                .prop('disabled',true)
-                            $( this ).dialog( 'close' )
-                        }
-                    },{
-                        text: 'Cancel',
-                        click: function() {
-                            $('#edit-input-newname').val(null)
-                                .addClass('input-error')
-                            $('#edit_new_dialog_new').addClass('input-error')
-                                .prop('disabled',true)
-                            $( this ).dialog( 'close' )
-                        }
-                    },
-                ]
-            })
-                .keyup(function(e) { // make enter key fire the create
-                    // eslint-disable-next-line eqeqeq
-                    if (e.keyCode == $.ui.keyCode.ENTER)
-                        $('#edit_new_dialog_new').click()
-                })
-            $('#edit-new').on('click', function() { // (e) {
-                $('#file_url').html( $('#node-input-url').val() )
-                $('#file_fldr').html( $('#node-input-folder').val() )
-                $('#edit_new_dialog').dialog('open')  
-            })
-            //#endregion
-
-            // Handle the expander button (show full screen editor) - from core function node
-            $('#node-function-expand-js').on('click', function(e) {
-                e.preventDefault()
-
-                // Creates another edit session with max width
-                var value = uiace.editor.getValue()
-                RED.editor.editText({
-                    mode: $('#node-input-format').val(), //mode: $("#node-input-format").val(),
-                    value: value,
-                    width: 'Infinity',
-                    cursor: uiace.editor.getCursorPosition(),
-                    complete: function(v,cursor) {
-                        // v contains the returned text
-                        uiace.editor.setValue(v, -1)
-                        uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
-                        setTimeout(function() {
-                            uiace.editor.focus()
-                            // Check if anything changed
-                            if ( v !== value ) {
-                                fileIsClean(false)
-                            }
-                        },300)
-                    }
-                })
-
-                // Are we in fullscreen? Variable is updated when oneditresize calls setACEheight()
-                // if (uiace.fullscreen === false) {
-                //     // Select the editor components and make full-screen, triggers oneditresize()
-                //     var viewer = $('#edit-props')[0]
-                //     var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
-                //     if (rFS) rFS.call(viewer)
-                    
-                //     // TODO: Add popup if no method is available
-                // } else {
-                //     // Already in fullscreen so lets exit, triggers oneditresize()
-                //     document.exitFullscreen()
-                // }
-
-            })
-            //#endregion ---- File Editor ---- //
-
-            //#region ---- npm ---- //
-
-            // NB: Assuming that the edit section is closed
-            // Show the npm section, hide the main, adv & security sections
-            $('#show-npm-props').on('click', function(e) {
-
-                e.preventDefault() // don't trigger normal click event
-                $('#main-props').hide()
-                $('#adv-props').hide()
-                $('#sec-props').hide()
-                $('#show-adv-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#show-sec-props').html('<i class="fa fa-caret-right"></i> Advanced Settings')
-                $('#npm-props').show()
-
-                //! TODO Improve feedback
-                // Setup the package list
-                $('#node-input-packageList').editableList({
-                    addItem: addPackageRow, // function
-                    removeItem: removePackageRow, // function(data){},
-                    resizeItem: function() {}, // function(_row,_index) {},
-                    header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
-                    height: 'auto',
-                    addButton: true,
-                    removable: true,
-                    scrollOnAdd: true,
-                    sortable: false,
-                })
-
-                // reset and populate the list
-                $('#node-input-packageList').editableList('empty')
-                packages.forEach( packageName => {
-                    if ( packageName !== 'socket.io' ) // ignore socket.io
-                        $('#node-input-packageList').editableList('addItem',packageName)
-                })
-
-                // spinner
-                $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
-                $('i.spinner').hide()
-
-            })
-
-            // Hide the npm section, show the main section
-            $('#npm-close').on('click', function(e) {
-                e.preventDefault() // don't trigger normal click event
-
-                $('#main-props').show()
-                $('#npm-props').hide()
-            })
-
-            //#endregion ---- npm ---- //
-
-            /** TODO: Get list of installed ACE themes, add chooser, save current choice
-             * that.editor.setTheme("ace/theme/monokai")
-             * uiace.config.set("basePath", "https://url.to.a/folder/that/contains-ace-modes");
-             * uiace.config.setModuleUrl("ace/theme/textmate", "url for textmate.js");
-             **/
-
-        }, // ---- End of oneditprepare ---- //
+        oneditprepare: function() { onEditPrepare(this) },
 
         /** Runs before save */
         oneditsave: function() {

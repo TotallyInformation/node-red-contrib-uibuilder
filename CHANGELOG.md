@@ -14,20 +14,146 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### TODO
 
-* Apply eslint fixes to:
-  * libs/*
-* Templates - replace eslintrc.json with .js updated version
-* Restructure uibuilder.js
-  * Remove need for `that`
-  * Decompose functions(?)
 * FIXES NEEDED:
   * url rename fails if user updates template before committing url change
+  * Don't allow access to file editor if the node hasn't been deployed yet. - what is different if a node instance hasn't been deployed yet?
+  * ERRORCHECK: Imported node with not default template had default template on first deploy
+  * ERROR: Removing a module after install but without closing and reopening editor panel did nothing
+  * FE: Supress auth errors if not using security
+
+* Move package management to a new singleton class
+  * [x] Use execa promise-based calls to npm
+  * [x] Allow any valid npm name spec in editor
+  * [ ] Add display of version and global on installed packages list
+  * [ ] Allow version spec on install
+  * [ ] Allow installation of GitHub and local packages - gh install partially works
+  * [ ] Check for new versions of installed packages when entering the library manager
+  * [ ] For globally installed packages - disable remove
+
+* Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
+  * [ ] Update docs
+  * [ ] Add processing to nodes to be able to mark them as experimental.
+
+* [x] Add uib-sender node
+  * [x] Dropdown to choose uib URL
+  * [x] Allow passthrough of msg
+  * Future enhancements:
+    * Allow multi-instance sending
+    * _Maybe_ Include schema checks - filter on available schema's from uib compatible components
+    
+* [ ] _Maybe_ Add uib-receiver node
+  * [ ] Status msg to show node-id
+  * [ ] Have to manually send to by adding originator property
+
+* FE Changes
+  * [ ] Add optional `originator` param to send fn
+  * [ ] Add `setOriginator` method to set default originator
+
+* uibuilder Panel
+  * [x] Switch from hide/show interface to tabbed interface
+  * Files tab
+    * [x] Remove the close button
+    * [ ] _Maybe_ Move folder management to a popup dialog (to save vertical space)
+  * Libraries
+    * [ ] Remove the close button
+  * [ ] Show template (instance root) folder
+
+* Maybe Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained
+* Maybe add in/out msg counts to status?
+* Maybe add prev/curr version and checks?
+* Maybe add alternate `uibDashboard` node that uses web components and data-driven composition.
+  
+* Templates
+  * Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
+  * **Make sure that templates have a way of signalling to uibuilder what libraries they need.**
+
+* Security
+  * Add roles/tags options to JWT? Or at least to the user session record
+  * Editor
+    * Make JWT IP address check optional `jwtCheckIp`
+    * Add "copy local security.js template" button to security section to reset the local overrides.
+    * Add ability to edit security.js code to the editor.
+  * BE
+    * **MAKE SURE THAT THE CLIENT ID IS IN THE JWT & CHECK _auth.id against JWT ID (`sub` - subject id)**
+    * Add 2nd expiry length to the security settings: JWT ping (minutes), session expiry (days)
+    * ~~Consider adding a client ID - to be built into the JWT~~
+    * Add JWT even if user unauth - it is just a token and allows for unauth traffic
+    * Add sec processing to incoming disconnect signal from socket.io
+    * JWT extension processing - needs processing on client as well as server
+    * security.js
+      * move instance-specific load of .config/security.js up to instanceSetup()
+    * ?? Add security to user API's ??
+    * NB: May get a new connect without a disconnect
+  * FE
+    * Send cache request on server auth response - only if unauth msg flow enabled(?)
+    * Make sure self.security is externally read-only
+    * Make sure localStorage _auth is always updated after control msg from server
+    * Make bootstrap-vue toasts optional, add auth change notices
+* DOC UPDATES NEEDED:
+  * FE
+    * Variables:
+      * self.security - flag: indicates if server has security turned on
+      * self.storePrefix
+    * Functions:
+      * self.initSecurity
+      * self.setStore
+
+### New
+
+* **New node `uib-sender`** - this node allows you to send a msg to any uibuilder instance's connected front-end clients.
+  
+  That means that it is pretty much the same as sending a message directly into a uibuilder node.
+
+  You select the instance of uibuilder you want to use by selecting an existing uibuilder URL from the dropdown.
+
+  You can also select whether you want input messages to go straight to the output port as well. 
+  
+  Or, more usefully, you can allow "return messages". This allows a front-end client to send a message to node-red with some pre-defined metadata added that will route the message back to the `uib-sender` node. In this way, the sender node can be used as a semi-independent component.
+
+  Note that this same method can be used by ANY custom node, check out the code to see how it works. It requires the use of an external, shared event module [`@TotallyInformation/ti-common-event-handler`](https://github.com/TotallyInformation/ti-common-event-handler). The msg metadata looks like: `{ _uib: {originator: <sender_node_id>}, payload: ... }`. The sender node id is just that, the Node-RED node id for the sender node instance.
+
+  The `uibuilderfe.js` library has been updated to allow easy use of the `originator` property for `uibuilder.send()`. See below for details.
+
+* Updated node status display. Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
+
+* The master module list (of front-end modules uibuilder will serve to the front-end) now also searches global installs.
 
 ### Changed
 
+* `uibuilderfe.js` client library updated to allow for the use of an `originator` metadata property. This facilitates routing of messages back to an alternative node instead of the main uibuilder node.
+
+  There are three ways to make use of this:
+
+  * Use the new `uibuilder.setOrigin('<sender_node_id>')` function. This will then route ALL messages from the client back to the specified node. This is of marginal use because the main use-case for the property is to automate routing of data to/from web components of which there are likely to be several on a web page.
+  * Use the new override parameter for the send function. `uibuilder.send(msg, '<sender_node_id>')`. This will send this one message back to the specified node. It will override the `setOrigin`.
+  * Manually add the metadata to the node `{ _uib: {originator: <sender_node_id>}, payload: ... }`. This is not generally recommended as it is error prone. However, if writing custom front-end components, you may want to include the origin property as an option to allow end-to-end automatic routing of messages to/from your component instances.
+
+  See the new `uib-sender` node details above for an example of using the `originator` property. That node adds the property to its received msgs before sending to your connected clients. You can then use the property to 
+
 * Security improvements:
 
+  * When security is active, a client that re-connects to Node-RED will attempt to reuse its existing authorisation (see the localStorage bullet below).
+    
+    This means that opening a new tab or window in the same browser profile will automatically connect without having to log in again.
+
+    This process assumes that your local security tracks connected clients and is able to reconnect to them without needing the password to re-authenticate.
+
+    To achieve this, the server sends the 'client connect' control msg to the client which responds with an 'auth' control msg containing the existing msg._auth recovered from localStorage. The server validates the JWT and then runs the customisable `userValidate` process.
+  
+  * JWT processing now includes more checks. In addition to expiry, subject, issuer and audience are validated. Optionally the client IP address can also be validated (see new flag in the security section of the config panel in the Editor).
+
+    Also, returned errors and messages should be clearer to indicate what went wrong. Additional error information is shown in the Node-RED log.
+  
+  * When security is active, any uibuilder node in a flow will have a status with a yellow (instead of the normal blue) icon. If the icon is filled, no messages
+    can flow unless a client is authenticated. If it is a ring, messages will flow regardless and it is up to the flow author to control things.
+
   * When security is active, pass flag to front-end. Use `uibuilder.get('security')` to get the current status. The flag is passed on the initial connection message from the server.
+  
+  * `uibuilderfe.js`
+    
+    * Added auth details to localStorage so that they are available on page reload and available from any browser window or tab on the same machine/browser profile.
+    * Made sure that all updates to auth details use `self.set` to trigger update events.
+  
   * Move core security functions from `/nodes/libs/uiblib.js` to `/nodes/libs/security.js` which is a singleton class instance to match the style of socket.js and web.js
   
   * `/front-end/src/uibuilderfe.js`
@@ -57,8 +183,12 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
   * Tech docs - some minor improvements to the security process docs and bring into line with current process.
 
+* Improvements to the Editor help panel. Should hopefully be clearer and includes all of the settings and custom msg properties. Now uses a tabbed interface.
+
 * Internal and development improvements:
 
+  * Shared event handler implemented. This enables external nodes to send and receive data to/from uibuilder front-end clients.
+  
   * Gulp implemented
     
     *  initially for composing the `uibuilder.html` from the contents of `src/editor`
@@ -66,6 +196,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     *  _other tasks likely to be added in the future to make more efficient code and ease the release/publish process_.
     
   * New eslint rulesets implemented & config restructured. Along with the .html file decomposition, this makes for a much more accurate linting process.
+  
   * Massive number of minor code improvements to `uibuilder.html` and `uibuilder.js` & to the supporting libs and `uibuilderfe.js` thanks to the impoved linting.
   
   * Even more massive restructuring of `uibuilder.js`. 
@@ -73,8 +204,13 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     * Removing the need for the `node` object. This meant the use of some arrow functions to be able to retain the correct context in event handlers and callbacks.
     * Destructuring the big exported function into a series of smaller functions. Makes the code a lot clearer and easier to follow. Also helped identify a few bits of logic that were not quite sane or not needed at all (the result of evolutionary growth of the code).
     * Using named functions throughout should make future debugging a little easier.
+    * npm package handling moved to a separate singleton class in `package-mgt.js`
 
   * Removed `inputHandler` function from `uiblib.js`. Code folded into the `inputMsgHandler` function in `uibuilder.js` which has been destructured so is small enough to have it as a single function.
+  
+  * New v3 API added to list all of the deployed instances of uibuilder. Issue a GET with `cmd=listinstances`. This allows other nodes to get a list of all of the uibuilder instance URL's and the ID's of the nodes that create them. See the `uib-sender` node's html file for details.
+  
+  * Package management rewritten. Should be faster and uses async/Promise functions.
 
 ### Fixed
 

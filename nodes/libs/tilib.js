@@ -144,7 +144,7 @@ module.exports = {
      * @param {string} userDir - Home folder for Node-RED modules - needed to allow search for installation
      * @returns {null|string} Actual filing system path to the installed package
      */
-    findPackage: function(packageName, userDir) {
+    DEPRECATEDfindPackage: function(packageName, userDir) {
 
         let debug = false
         // if ( packageName === 'startbootstrap-sb-admin-2' ) {
@@ -219,7 +219,7 @@ module.exports = {
      * @param {string} folder The folder containing a package.json file
      * @returns {object|null} Object representation of JSON if found otherwise null
      */
-    readPackageJson: function(folder) {
+    DEPRECATEDreadPackageJson: function(folder) {
         let debug = false
         let file = null
         try {

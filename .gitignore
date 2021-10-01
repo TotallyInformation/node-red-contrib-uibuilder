@@ -1,7 +1,7 @@
 # VScode
 .vscode
-.vscode/cSpell.json
-.vscode/settings.json
+.vscode/
+*.code-workspace
 
 # Logs
 logs
@@ -121,6 +121,7 @@ _node_modules
 
 # These are private
 *.code-workspace
+.checksums
 
 # We shouldn't commit files with names starting with _
 _*

@@ -20,7 +20,9 @@
 
 /** --- Type Defs ---
  * @typedef {import('../../typedefs.js').uibNode} uibNode
+ * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('Express')} Express
  */
 
 const path = require('path')
@@ -29,8 +31,9 @@ const fs = require('fs-extra')
 const tilib = require('./tilib')
 const serveStatic = require('serve-static')
 const serveIndex    = require('serve-index')
+const packageMgt = require('./package-mgt.js')
 // Only used for type checking
-const Express = require('express') // eslint-disable-line no-unused-vars
+//const Express = require('express') // eslint-disable-line no-unused-vars
 
 // Filename for default web page
 const defaultPageName = 'index.html'
@@ -49,7 +52,7 @@ class UibWeb {
 
         /** @type {runtimeRED} */
         this.RED = undefined
-        /** @type {object} Reference link to uibuilder.js global configuration object */
+        /** @type {uibConfig} Reference link to uibuilder.js global configuration object */
         this.uib = undefined
         /** Reference to uibuilder's global log functions */
         this.log = undefined
@@ -92,7 +95,7 @@ class UibWeb {
      *  This makes them available wherever this MODULE is require'd.
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
-     * @param {object} uib reference to uibuilder 'global' configuration object
+     * @param {uibConfig} uib reference to uibuilder 'global' configuration object
      * param {Object} server reference to ExpressJS server being used by uibuilder
      */
     setup( uib ) {
@@ -103,18 +106,16 @@ class UibWeb {
         }
 
         if ( ! uib ) {
-            throw new Error('[uibuilder:web.js] Called without required uib parameter')
+            throw new Error('[uibuilder:web.js:setup] Called without required uib parameter')
         }
 
-        /** @type {runtimeRED} */
         const RED = this.RED = uib.RED
-
         this.uib = uib
         this.log = uib.RED.log
 
         /** Optional port. If set, uibuilder will use its own ExpressJS server */
-        // eslint-disable-next-line eqeqeq
-        if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port
+        // @ts-ignore
+        if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port // eslint-disable-line eqeqeq
 
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
         this._webSetup()
@@ -206,6 +207,85 @@ class UibWeb {
         // @ts-ignore
         this.app.use( tilib.urlJoin(uib.moduleName, uib.commonFolderName), commonStatic )
 
+        //! ==== Passport tests ====
+
+        // const session = require('express-session')
+        // // const bodyParser = require('body-parser')
+        // const passport = require('passport')
+        // const LocalStrategy = require('passport-local').Strategy
+
+        // const DUMMY_USER = {
+        //     id: 1,
+        //     username: 'john',
+        // }
+        
+        // passport.serializeUser((user, cb) => {
+        //     console.log('5>>>>> serializeUser ', user)
+        //     cb(null, user)
+        // })
+          
+        // passport.deserializeUser((id, cb) => {
+        //     console.log(`6>>>>> deserializeUser ${id}`)
+        //     cb(null, DUMMY_USER)
+        // })
+
+
+        // // this.app.use(bodyParser.json())
+        // // this.app.use(bodyParser.urlencoded({ extended: true }))
+        // const sessionMiddleware = session({ secret: 'changeit', resave: false, saveUninitialized: false })
+        // this.app.use(sessionMiddleware)
+        // this.app.use(passport.initialize())
+        // //this.app.use(passport.session())
+
+        // passport.use(
+        //     new LocalStrategy((username, password, done) => {
+        //         console.log('3>>>>> ', {username, password})
+        //         if (username === 'john') {
+        //             console.log('4>>>>> authentication OK')
+        //             return done(null, DUMMY_USER, { message: 'authentication OK.' })
+        //         }
+
+        //         console.log('>>>>> wrong credentials')
+        //         return done(null, false, { message: 'wrong credentials.' })
+            
+        //     })
+        // )
+
+        // this.app.post('/uibtest/mock/login', function(req, res, next) {
+        //     req.body = { username:'john', password: 'doe' }
+        //     passport.authenticate('local', function(err, user, info) {
+        //         console.log('1>>>>> ', {err, user, info})
+
+        //         if (err) { return next(err) }
+        //         //if (!user) { return res.redirect('/login') }
+        //         req.logIn(user, function(err) {
+        //             console.log('2>>>>> ', {err, user})
+        //             if (err) { return next(err) }
+        //             return res.status(200).json(user) //res.redirect('/users/' + user.username)
+        //         })
+        //     })(req, res, next)
+        // })
+
+        const http = require('http')
+        const data = JSON.stringify({
+            username: 'john',
+            password: 'doe'
+        })
+        const options = {
+            hostname: '127.0.0.1',
+            port: 3001,
+            path: '/uibtest/mock/login',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
+        }
+        http.get(options, resp => {
+            console.log('====> ', resp.statusCode)
+        })
+
+
     } // --- End of webSetup() --- //
 
     /** Set which folder to use for the central, static, front-end resources
@@ -238,6 +318,8 @@ class UibWeb {
     get isConfigured() {
         return this._isConfigured
     }
+
+    //? Consider adding isConfigered checks on each method?
 
     //#region ====== Per-node instance processing ====== //
 
@@ -452,9 +534,173 @@ class UibWeb {
 
     }
 
+    /** Create instance details web page
+     * @param {Express.Request} req ExpressJS Request object
+     * @param {uibNode} node configuration data for this instance
+     * @returns {string} page html
+     */
+    showInstanceDetails(req, node) {
+        // Reference static vars
+        const uib = this.uib
+        const RED = this.RED
+        const userDir = RED.settings.userDir
+        //const log = this.log
+
+        let page = ''
+
+        // If using own Express server, correct the URL's
+        const url = new URL(req.headers.referer)
+        url.pathname = ''
+        if (uib.customServer && uib.customServer.port && uib.customServer.port != RED.settings.uiPort ) { // eslint-disable-line eqeqeq
+            //http://127.0.0.1:3001/uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css
+            //customServer: { port: 3001, type: 'http', host: '::' }
+            url.port = uib.customServer.port.toString()
+        }
+        const urlPrefix = url.href 
+        let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
+
+        page += `
+            <!doctype html><html lang="en"><head>
+                <title>uibuilder Instance Debug Page</title>
+                <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
+                <link type="text/css" rel="stylesheet" href="${urlRoot}/vendor/bootstrap/dist/css/bootstrap.min.css" media="screen">
+                <style type="text/css" rel="stylesheet" media="all">
+                    h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
+                    .col3i tbody>tr>:nth-child(3){ font-style:italic; }
+                </style>
+            </head><body><div class="container">
+                <h1>uibuilder Instance Debug Page</h1>
+                <p>
+                    Note that this page is only accessible to users with Node-RED admin authority.
+                </p>
+            `
+    
+        page += `
+            <h2>Instance Information for '${node.url}'</h2>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>The node id for this instance</th>
+                        <td>${node.id}<br>
+                            This can be used to search for the node in the Editor.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filing system path to front-end resources</th>
+                        <td>${node.customFolder}<br>
+                            Contains all of your UI code and other resources.
+                            Folders and files can be viewed, edited, created and deleted using the "Edit Files" button.
+                            You <b>MUST</b> keep at least the <code>src</code> and <code>dist</code> folders otherwise things may not work.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>URL for the front-end resources</th>
+                        <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, node.url).replace('/','')}" target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
+                    </tr>
+                    <tr>
+                        <th>Node-RED userDir folder</th>
+                        <td>${userDir}<br>
+                            Also the location for any installed vendor resources (installed library packages)
+                            and your other nodes.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>URL for vendor resources</th>
+                        <td>../uibuilder/vendor/<br>
+                            See the <a href="../../uibindex" target="_blank">Detailed Information Page</a> for more details.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filing system path to common (shared) front-end resources</th>
+                        <td>${uib.commonFolder}<br>
+                            Resource files in this folder are accessible from the main URL.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filing system path to common uibuilder configuration resource files</th>
+                        <td>${uib.configFolder}<br>
+                            Contains the package list, master package list, authentication and authorisation middleware.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Filing system path to uibuilder master template files</th>
+                        <td>${uib.masterTemplateFolder}<br>
+                            These are copied to any new instance of the uibuilder node.
+                            If you keep the copy flag turned on they are re-copied if deleted.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>uibuilder version</th>
+                        <td>${uib.version}</td>
+                    </tr>
+                    <tr>
+                        <th>Node-RED version</th>
+                        <td>${RED.settings.version}<br>
+                            Minimum version required by uibuilder is ${uib.me['node-red'].version}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Node.js version</th>
+                        <td>${uib.nodeVersion.join('.')}<br>
+                            Minimum version required by uibuilder is ${uib.me.engines.node}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            `
+
+        const nodeKeys = [
+            'id', 'type',  
+            'name', 'wires', '_wireCount', 'credentials', 'topic', 'url', 
+            'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder', 
+            'useSecurity', 'sessionLength', 'tokenAutoExtend', 'customFolder', 
+            'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
+        ]
+        // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]
+        // Keep secret: ['jwtSecret', ]
+    
+        page += `
+            <h2>Node Instance Configuration Items</h2>
+            <p>
+                Shows the internal configuration.
+            </p>
+            <table class="table">
+                <tbody>
+            `
+
+        nodeKeys.sort().forEach( item => {
+            let info = node[item]
+            try {
+                if ( info !== null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
+            } catch (e) {
+                if ( info !== undefined )
+                    RED.log.warn(`[uibuilder:uiblib:showInstanceDetails] ${node.id}, ${url}: Item '${item}' failed to stringify. ${e.message}`)
+            }
+            page += `
+                <tr>
+                    <th>${item}</th>
+                    <td>${info}</td>
+                </tr>
+                `
+        })
+
+        page += `
+                </tbody>
+            </table>
+            `
+
+        page += '' // eslint-disable-line no-implicit-coercion
+        page += '<div></div>'
+
+        page += '</body></html>'
+
+        return page
+    } // ---- End of showInstanceDetails() ---- //
+
     //#endregion ====== Per-node instance processing ====== //
 
     //#region ====== Package Management ====== //
+    // NB: Packages are actually installed via a v2 API `uibnpmmanage`
 
     /** Compare the in-memory package list against packages actually installed.
      * Also check common packages installed against the master package list in case any new ones have been added.
@@ -466,62 +712,28 @@ class UibWeb {
     checkInstalledPackages(newPkg='') {
         // Reference static vars
         const uib = this.uib
-        const RED = this.RED
         const log = this.log
         const app = this.app
 
-        const debug = false
-        const userDir = RED.settings.userDir
-
         let installedPackages = uib.installedPackages
-        let pkgList = []
-        let masterPkgList = []
-        let merged = []
 
-        //region --- get package lists from files --- //
-        // Read packageList and masterPackageList from their files
-        try {
-            pkgList = fs.readJsonSync(path.join(uib.configFolder, uib.packageListFilename))
-        } catch (err) {
-            // not an issue
-        }
-        try {
-            masterPkgList = fs.readJsonSync(path.join(uib.configFolder, uib.masterPackageListFilename))
-        } catch (err) {
-            // no op
-        }
-        // If neither can be found, that's an error
-        if ( (pkgList.length === 0) && (masterPkgList.length === 0) ) {
-            log.error(`[uibuilder:web:checkInstalledPackages] Neither packageList nor masterPackageList could be read from: ${uib.configFolder}`)
-            return null
-        }
-        // Make sure we have socket.io in the list
-        masterPkgList.push('socket.io')
-        //endregion --- get package lists from files --- //
-
-        // Add in the new package as well if requested
-        if (newPkg !== '') {
-            pkgList.push(newPkg)
-        }
-
-        // Merge and de-dup to get a complete list
-        merged = tilib.mergeDedupe(Object.keys(installedPackages), pkgList, masterPkgList)
+        packageMgt.updateMergedPackageList(newPkg)
 
         // For each entry in the complete list ...
-        merged.forEach( (pkgName, _i) => { // eslint-disable-line no-unused-vars
+        packageMgt.mergedPkgMasterList.forEach( (pkgName, _i) => { // eslint-disable-line no-unused-vars
             // flags
             let pkgExists = false
 
             let pj = null // package details if found
 
             // Check to see if folder names present in <userDir>/node_modules
-            const pkgFolder = tilib.findPackage(pkgName, userDir)
+            const pkgFolder = packageMgt.getPackagePath(pkgName)
 
             // Check whether package is really installed (exists)
             if ( pkgFolder !== null ) {
                 
                 // Get the package.json
-                pj = tilib.readPackageJson( pkgFolder )
+                pj = packageMgt.readPackageJson( pkgFolder )
 
                 /** The folder delete for npm remove happens async so it may
                  *  still exist when we check. But the package.json will have been removed
@@ -537,9 +749,9 @@ class UibWeb {
             const isInCurrent = Object.prototype.hasOwnProperty.call(installedPackages, pkgName)
 
             if ( pkgExists ) {
-                // If package does NOT exist in current - add it now
+                // If package is installed but does NOT exist in current list - add it now
                 if ( ! isInCurrent ) {
-                    // Add to current & mark for loading
+                    // Add to current & mark for loading (serving)
                     installedPackages[pkgName] = {}
                     installedPackages[pkgName].loaded = false
                 }
@@ -566,7 +778,7 @@ class UibWeb {
                 }
                 installedPackages[pkgName].browser = browserEntry
 
-                // Replace generic with specific entries if we know them
+                // Replace generic entry points with specific if we know them
                 if ( pkgName === 'socket.io' ) {
                     //installedPackages[pkgName].url  = '../uibuilder/socket.io/socket.io.js'
                     installedPackages[pkgName].main = 'socket.io.js'
@@ -583,10 +795,10 @@ class UibWeb {
                 if ( isInCurrent ) { // eslint-disable-line no-lonely-if
                     if ( app !== undefined) {
                         installedPackages[pkgName].loaded = this.unservePackage(pkgName)
-                        if (debug) console.log('[uibuilder:web:checkInstalledPackages] package unserved ', pkgName)
+                        log.trace('[uibuilder:web:checkInstalledPackages] package unserved ', pkgName)
                     }
                     delete installedPackages[pkgName]
-                    if (debug) console.log('[uibuilder:web:checkInstalledPackages] package deleted from installedPackages ', pkgName)
+                    log.trace('[uibuilder:web:checkInstalledPackages] package deleted from installedPackages ', pkgName)
                 }
             }
         })
@@ -693,6 +905,13 @@ class UibWeb {
 /** Singleton model. Only 1 instance of UibWeb should ever exist.
  * Use as: `const web = require('./web.js')`
  */
-module.exports = new UibWeb()
+const uiweb = new UibWeb()
+module.exports = uiweb
+
+// Make this globally available so that it can be shared with other common nodes from TotallyInformation
+if ( ! global.totallyInformationShared ) global.totallyInformationShared = {}
+global.totallyInformationShared.uiweb = uiweb
+
+//console.log('>>>> TI GLOBAL <<<<', global.totallyInformationShared)
 
 // EOF
