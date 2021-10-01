@@ -120,11 +120,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '4.2.1'
+        self.version = '5.0.0-dev'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
         self.debug = self.isUnminified === true ? true : false // do not change directly - use .debug() method
+        /** Default originator node id */
+        self.originator = ''
 
         /** Debugging function
          * param {string} type One of log|error|warn|info|dir, etc
@@ -486,7 +488,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     /** We are connected to the server - 1st msg from server */
                     case 'client connect': {
                         // If security is on
-                        if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') ) {
+                        if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security' && receivedCtrlMsg === true ) ) {
                             // Initialise client security
                             self.initSecurity()
                             // DO NOT RETURN ANYTHING ELSE UNTIL SERVER CONFIRMS VALID AUTHORISATION
@@ -842,12 +844,21 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             }
         } // ---- End of addAuth ---- //
 
+        /** Set the default originator. Set to '' to ignore.
+         * @param {string} [originator] A Node-RED node ID to return the message to
+         */
+        self.setOriginator = function setOriginator(originator='') {
+            self.originator = originator
+        } // ---- End of setOriginator ---- //
+
+
         /** Send a standard or control msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
          * @param {object} msgToSend The msg object to send.
          * @param {string} [channel=uiBuilderClient] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored
+         * @param {string} [originator] A Node-RED node ID to return the message to
          */
-        self.send = function send(msgToSend, channel) {
+        self.send = function send(msgToSend, channel, originator='') {
             if ( channel === null || channel === undefined ) channel = self.ioChannels.client
 
             //! Disabled for now. Because we now have a server-side flag that allows msg flows
@@ -898,6 +909,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 self.set('sentCtrlMsg', msgToSend)
                 self.set('msgsSentCtrl', self.msgsSentCtrl + 1)
             }
+
+            // Add the originator metadata if required
+            if ( originator === '' && self.originator !== '' ) originator = self.originator 
+            if ( originator !== '' ) Object.assign(msgToSend, {'_uib': {'originator': originator}})
 
             self.socket.emit(channel, msgToSend)
         } // --- End of Send Msg Fn --- //
@@ -1339,9 +1354,19 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             msg: self.msg,
 
             /** Helper fn, Send a message to NR
-             * Example: uibuilder.sendMsg({payload:'Hello'})
+             * @example: uibuilder.send({payload:'Hello'})
+             * @param {object} msg Message to send
+             * @param {string} [originator] A Node-RED node ID to return the message to
              */
-            send: self.send,
+            send: function send(msg, originator=''){
+                self.send(msg, self.ioChannels.client, originator)
+            },
+
+            setOriginator: self.setOriginator,
+
+            /** Send a control msg to NR
+             * @param {object} msg Message to send
+             */
             sendCtrl: function sendCtrl(msg) {
                 self.send(msg, self.ioChannels.control)
             },
@@ -1475,8 +1500,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
              * All `data-` attributes will be passed back to Node-RED, 
              *    use them instead of arguments in the click function
              * @param {MouseEvent|any} domevent DOM Event object
+             * @param {string} [originator] A Node-RED node ID to return the message to
              */
-            eventSend: function eventSend(domevent) {
+            eventSend: function eventSend(domevent, originator='') {
                 // The argument must be a DOM event
                 if ( (! domevent.constructor.name.endsWith('Event')) || (! domevent.currentTarget) ) {
                     self.uiDebug('log', '[uibuilderfe:eventSend] ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data')
@@ -1501,7 +1527,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     // Each `data-xxxx` attribute is added as a property
                     // - this may be an empty Object if no data attributes defined
                     payload: target.dataset,
-                })
+                }, self.ioChannels.client, originator)
             },
 
             /** auto map msg.topic's to variables */
