@@ -50,13 +50,14 @@ const stdio = 'inherit'
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 
 //npm version 4.2.1 --no-git-tag-version --allow-same-version
-const release = '4.2.1'
+const release = '5.0.0-dev'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}`)
 
 /** 
  * TODO
  *  - Add text replace to ensure 2021 in (c) blocks is current year
+ *  - In packfe, set the source version string to the current package.json version
  */
 
 /** Pack (Uglify) front-end task

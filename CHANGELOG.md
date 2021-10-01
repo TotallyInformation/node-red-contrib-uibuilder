@@ -19,7 +19,6 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   * Don't allow access to file editor if the node hasn't been deployed yet. - what is different if a node instance hasn't been deployed yet?
   * ERRORCHECK: Imported node with not default template had default template on first deploy
   * ERROR: Removing a module after install but without closing and reopening editor panel did nothing
-  * FE: Supress auth errors if not using security
 
 * Move package management to a new singleton class
   * [x] Use execa promise-based calls to npm
@@ -46,8 +45,10 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   * [ ] Have to manually send to by adding originator property
 
 * FE Changes
-  * [ ] Add optional `originator` param to send fn
-  * [ ] Add `setOriginator` method to set default originator
+  * [x] Add optional `originator` param to send fn
+  * [x] Add `setOriginator` method to set default originator
+  * [ ] How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
+  * [ ] Add mapper to map component id to originator & extend `eventSend` accordingly
 
 * uibuilder Panel
   * [x] Switch from hide/show interface to tabbed interface
@@ -58,6 +59,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     * [ ] Remove the close button
   * [ ] Show template (instance root) folder
 
+* [ ] Add a new template and example to demonstrate the sender node.
+  
 * Maybe Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained
 * Maybe add in/out msg counts to status?
 * Maybe add prev/curr version and checks?
@@ -125,10 +128,12 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   There are three ways to make use of this:
 
   * Use the new `uibuilder.setOrigin('<sender_node_id>')` function. This will then route ALL messages from the client back to the specified node. This is of marginal use because the main use-case for the property is to automate routing of data to/from web components of which there are likely to be several on a web page.
-  * Use the new override parameter for the send function. `uibuilder.send(msg, '<sender_node_id>')`. This will send this one message back to the specified node. It will override the `setOrigin`.
+  * Use the new override parameter for the send function. `uibuilder.send(msg, '<sender_node_id>')`. This will send this one message back to the specified node. It will override the `setOrigin`. The utility `uibuilder.eventSend()` method has also been updated to allow the originator parameter.
   * Manually add the metadata to the node `{ _uib: {originator: <sender_node_id>}, payload: ... }`. This is not generally recommended as it is error prone. However, if writing custom front-end components, you may want to include the origin property as an option to allow end-to-end automatic routing of messages to/from your component instances.
 
-  See the new `uib-sender` node details above for an example of using the `originator` property. That node adds the property to its received msgs before sending to your connected clients. You can then use the property to 
+  See the new `uib-sender` node details above for an example of using the `originator` property. That node adds the property to its received msgs before sending to your connected clients.
+
+  Note that at present, control messages from the front-end cannot be routed to a different originator node, they all go to the main uibuilder node. This will be reviewed in a future release. Let me know if you think that it is needed.
 
 * Security improvements:
 
@@ -216,6 +221,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 * A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
+* In `uibuilderfe.js`, security was being turned on even if the server set it to false.
 
 ## [4.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.0...v4.1.1)
 
