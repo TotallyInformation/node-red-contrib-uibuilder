@@ -87,10 +87,10 @@
             
         // Deal with the url
         getUrls()
-        $('#node-input-url')
-            .on('change', function() {
-                console.log('>>>>', this.value)
-            })
+        // $('#node-input-url')
+        //     .on('change', function() {
+        //         console.log('>>>>', this.value)
+        //     })
         if ( node.url && node.url.length > 0 ) {
             $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
             $('#node-input-url').val(node.url)
