@@ -907,11 +907,3 @@ class UibWeb {
  */
 const uiweb = new UibWeb()
 module.exports = uiweb
-
-// Make this globally available so that it can be shared with other common nodes from TotallyInformation
-if ( ! global.totallyInformationShared ) global.totallyInformationShared = {}
-global.totallyInformationShared.uiweb = uiweb
-
-//console.log('>>>> TI GLOBAL <<<<', global.totallyInformationShared)
-
-// EOF
