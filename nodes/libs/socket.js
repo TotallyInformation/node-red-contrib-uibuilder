@@ -579,10 +579,11 @@ class UibSockets {
         const ioNs = this.ioNamespaces[node.url]
 
         // Disconnect all connected sockets for this Namespace (Socket.io v4+)
-        ioNs.disconnectSockets()
+        ioNs.disconnectSockets(true)
 
         ioNs.removeAllListeners() // Remove all Listeners for the event emitter
-        delete this.io.nsps[node.url] // Remove from the server namespaces
+
+        // No longer works from socket.io v3+ //delete this.io.nsps[`/${node.url}`] // Remove from the server namespaces
 
     } // --- End of removeNS() --- //
 
@@ -594,11 +595,18 @@ class UibSockets {
  * Downside of this approach is that you cannot directly pass in parameters. Use the startup(...) method instead.
  */
 
-let uibsockets = new UibSockets()
-module.exports = uibsockets
+try { // Wrap in a try in case any errors creep into the class
 
-// Make this globally available so that it can be shared with other common nodes from TotallyInformation
-if ( ! global.totallyInformationShared ) global.totallyInformationShared = {}
-global.totallyInformationShared.uibsockets = uibsockets
+    let uibsockets = new UibSockets()
+    module.exports = uibsockets
+
+    // Make this globally available so that it can be shared with other common nodes from TotallyInformation
+    if ( ! global.totallyInformationShared ) global.totallyInformationShared = {}
+    global.totallyInformationShared.uibsockets = uibsockets
+
+} catch (e) {
+    console.error(`[uibuilder:socket.js] Unable to create class instance. Error: ${e.message}`)
+}
+
 
 // EOF
