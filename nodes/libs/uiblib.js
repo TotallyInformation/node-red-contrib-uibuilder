@@ -46,6 +46,7 @@ module.exports = {
      * @param {Function|null} done Default=null, internal node-red function to indicate processing is complete
      */
     instanceClose: function(node, uib, sockets, web, done = null) {
+
         //const RED = /** @type {runtimeRED} */ uib.RED
         const log = uib.RED.log
 
@@ -54,32 +55,38 @@ module.exports = {
         /** @type {object} instances[] Reference to the currently defined instances of uibuilder */
         const instances = uib.instances
 
-        node.statusDisplay.text = 'CLOSED'
-        this.setNodeStatus(node)
+        try { // Wrap this in a try to make sure that everything is working
 
-        // Let all the clients know we are closing down
-        sockets.sendControl({ 'uibuilderCtrl': 'shutdown' }, node, undefined, false)
+            // Remove url folder if requested
+            if ( uib.deleteOnDelete[node.url] === true ) {
+                log.trace(`[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
+                
+                // Remove the flag in case someone recreates the same url!
+                delete uib.deleteOnDelete[node.url]
+                
+                fs.remove(path.join(uib.rootFolder, node.url))
+                    .catch(err => {
+                        log.error(`[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
+                    })
+            }
 
-        // Disconnect all Socket.IO clients for this node instance
-        sockets.removeNS(node)
-
-        web.removeInstanceMiddleware(node)
-
-        // Remove url folder if requested
-        if ( uib.deleteOnDelete[node.url] === true ) {
-            log.trace(`[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
+            // Keep a log of the active instances @since 2019-02-02
+            delete instances[node.id] // = undefined
             
-            // Remove the flag in case someone recreates the same url!
-            delete uib.deleteOnDelete[node.url]
-            
-            fs.remove(path.join(uib.rootFolder, node.url))
-                .catch(err => {
-                    log.error(`[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
-                })
+            node.statusDisplay.text = 'CLOSED'
+            this.setNodeStatus(node)
+
+            web.removeInstanceMiddleware(node)
+
+            // Let all the clients know we are closing down
+            sockets.sendToFe({ 'uibuilderCtrl': 'shutdown' }, node.url, uib.ioChannels.control)
+
+            // Disconnect all Socket.IO clients for this node instance
+            sockets.removeNS(node)
+
+        } catch (err) {
+            log.error(`[uibuilder:uiblib:instanceClose] Error in closure. Error: ${err.message}`, err)
         }
-
-        // Keep a log of the active instances @since 2019-02-02
-        delete instances[node.id] // = undefined
 
         /*
             // This code borrowed from the http nodes
