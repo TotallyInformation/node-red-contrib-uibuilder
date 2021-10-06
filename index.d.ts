@@ -8,9 +8,11 @@
 
 import { Node } from 'node-red';
 
-declare global {
-    var RED:any;
-}
+// See globals.d.ts for the global definitions
+// The globals file can't contain anything else
+// declare global {
+//     var RED:any;
+// }
 
 /**
  * @typedef {object} uibNode Local copy of the node instance config + other info
