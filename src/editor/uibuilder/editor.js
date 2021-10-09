@@ -5,8 +5,8 @@
     'use strict'
 
     /** Typedefs
-     * @typedef {import("node-red").EditorRED} Red
-     * @typedef {import("node-red__editor-client").RED} RED
+     * typedef {import("node-red").EditorRED} Red
+     * typedef {import("node-red__editor-client").RED} RED
      */
 
     //#region ------------------- Pollyfills --------------------- //
@@ -60,16 +60,22 @@
     //#region --------- "global" functions for the panel --------- //
 
     /** AddItem function for package list
+     * @param {object} node A reference to the panel's `this` object
      * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
      * @param {number} index the index of the row
      * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
      */
-    function addPackageRow(element,index,data) {
+    function addPackageRow(node, element, index, data) {
         var hRow = ''
 
         if (Object.entries(data).length === 0) {
             // Add button was pressed so we have no packageName, create an input form instead
-            hRow='<input type="text" id="packageList-input-' + index + '"> <button id="packageList-button-' + index + '">Install</button>'
+            hRow  = `<input type="text" id="packageList-input-${index}" title="">`
+            hRow += `<select id="pkg-sel-${index}" title="">`
+            hRow += '<option value="common" selected>Common Install</option>'
+            hRow += '<option value="local">Local Install</option>'
+            hRow += `</select> <button id="packageList-button-${index}">Install</button>`
+            hRow += '<div class="form-tips">Enter one of: (a) an npm package name (optionally with leading scope and/or trailing version), (b) a GitHub user/repo (with optional branch spec), (c) A filing system path to a local package. Select where to install.</div>'
         } else {
             // addItem method was called with a packageName passed
             hRow = data
@@ -77,23 +83,37 @@
         // Build the output row
         var myRow = $('<div id="packageList-row-' + index + '" class="packageList-row-data">'+hRow+'</div>').appendTo(element)
 
+        if (Object.entries(data).length === 0) {
+            // Add a tooltip
+            // @ts-expect-error ts(2339)
+            $(`#packageList-input-${index}`).tooltip({
+                content: 'Enter one of:<ul><li>An npm package name (optionally with leading scope and/or trailing version)</li><li>A GitHub user/repo (with optional branch spec)</li><li>A filing system path to a local package</li></ul>'
+            })
+            // @ts-expect-error ts(2339)
+            $(`#pkg-sel-${index}`).tooltip({
+                content: 'Install for:<ul><li>All uibuilder instances (common)</li><lI>Just for this one (local)</li></ul>'
+            })
+        }
+
         // Create a button click listener for the install button for this row
         $('#packageList-button-' + index).on('click', function(){
             // show activity spinner
             $('i.spinner').show()
             
             var packageName = String($('#packageList-input-' + index).val())
+            var packageLoc = String($('#pkg-sel-' + index).val())
 
             if ( packageName.length !== 0 ) {
-                /** @type {Red} */
+                console.log( '>>', packageName, packageLoc )
+                
                 RED.notify('Installing npm package ' + packageName)
 
                 // Call the npm installPackage API (it updates the package list)
-                $.get( 'uibnpmmanage?cmd=install&package=' + packageName, function(data){
+                $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&loc=${packageLoc}`, function(data){
 
                     if ( data.success === true) {
-                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName)
-                        RED.notify('Successful installation of npm package ' + packageName, 'success')
+                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, packageLoc, node.url)
+                        RED.notify(`Successful installation of npm package ${packageName} in ${packageLoc} for ${node.url}`, 'success')
 
                         // Replace the input field with the normal package name display
                         myRow.html(packageName)
@@ -101,9 +121,9 @@
                         // Update the master package list
                         packages.push(packageName)
                     } else {
-                        console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName )
+                        console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, packageLoc, node.url )
                         console.dir( data.result )
-                        RED.notify('FAILED installation of npm package ' + packageName, 'error')
+                        RED.notify(`FAILED installation of npm package ${packageName} in ${packageLoc} for ${node.url}`, 'error')
                     }
 
                     // Hide the progress spinner
@@ -112,7 +132,7 @@
                 })
                     .fail(function(_jqXHR, textStatus, errorThrown) {
                         console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
-                        RED.notify('FAILED installation of npm package ' + packageName, 'error')
+                        RED.notify(`FAILED installation of npm package ${packageName} in ${packageLoc} for ${node.url}`, 'error')
 
                         $('i.spinner').hide()
                         return 'addPackageRow failed'
@@ -140,7 +160,7 @@
         $('i.spinner').show()
 
         // Call the npm installPackage API (it updates the package list)
-        $.get( 'uibnpmmanage?cmd=remove&package=' + packageName, function(data){
+        $.get( 'uibuilder/uibnpmmanage?cmd=remove&package=' + packageName, function(data){
 
             if ( data.success === true) {
                 console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
@@ -175,17 +195,38 @@
         
     } // ---- End of removePackageRow ---- //
 
-    /** Get list of installed packages via API - save to master list */
-    function packageList() {
-        $.getJSON('uibvendorpackages', function(vendorPaths) {
-            packages = []
-            var pkgList = Object.keys(vendorPaths)
-            // eslint-disable-next-line no-unused-vars
-            pkgList.forEach(function(packageName,_index){
-                // Populate the master package list (used to check dependencies)
-                packages.push(packageName)
-            })
+    /** Get list of installed packages via API - save to master list
+     * @param {string} url Used to find locally install packages for this node from uibRoot/url/
+     */
+    function packageList(url) {
+        $.ajax({
+            dataType: 'json',
+            method: 'get',
+            url: `uibuilder/uibvendorpackages?url=${url}`,
+            async: false,
+            //data: { url: node.url},
+            success: function(vendorPaths) {
+                packages = []
+                var pkgList = Object.keys(vendorPaths)
+                console.log('>> Packages >> ', vendorPaths)
+                // eslint-disable-next-line no-unused-vars
+                pkgList.forEach(function(packageName,_index){
+                    // Populate the master package list (used to check dependencies)
+                    packages.push(packageName)
+                })
+            }
         })
+
+        // $.getJSON('uibvendorpackages', function(vendorPaths) {
+        //     packages = []
+        //     var pkgList = Object.keys(vendorPaths)
+        //     console.log('>> Packages >> ', vendorPaths)
+        //     // eslint-disable-next-line no-unused-vars
+        //     pkgList.forEach(function(packageName,_index){
+        //         // Populate the master package list (used to check dependencies)
+        //         packages.push(packageName)
+        //     })
+        // })
     } // --- End of packageList --- //
 
     /** Return a file type from a file name (or default to txt)
@@ -285,7 +326,7 @@
         $('#node-input-format').val(filetype)
 
         // Get the file contents via API defined in uibuilder.js
-        $.get( 'uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data){
+        $.get( 'uibuilder/uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data){
             $('#node-input-template-editor').show()
             $('#node-input-template-editor-no-file').hide()
             // Add the fetched data to the editor
@@ -711,15 +752,21 @@
 
     /** Populate the template selection dropdown
      * Uses a file that is `require`d in uibuilder.js
-     * @param {object} that Pass in this
+     * @param {object} node Pass in this
      * @returns {string} Template folder name
      */
-    function populateTemplateDropdown(that) {
+    function populateTemplateDropdown(node) {
+        let templateFolder = node.templateFolder
+        let uibuilderTemplates = []
 
-        let templateFolder = that.templateFolder
+        if ( RED.settings && RED.settings.uibuilderTemplates ) {
+            uibuilderTemplates = RED.settings.uibuilderTemplates
+        } else {
+            console.error(`[uibuilder:populateTemplateDropdown] Cannot access RED.settings for node ${node.id}`)
+        }
 
         // Load each option - first entry will be the default
-        Object.values(RED.settings.uibuilderTemplates).forEach( templ => { // eslint-disable-line es/no-object-values
+        Object.values(uibuilderTemplates).forEach( templ => { // eslint-disable-line es/no-object-values
             // Build the drop-down
             $('#node-input-templateFolder').append($('<option>', { 
                 value: templ.folder,
@@ -728,7 +775,7 @@
         })
 
         // Just in case name doesn't exist in template list, default to blank
-        if ( ! RED.settings.uibuilderTemplates[templateFolder] ) {
+        if ( ! uibuilderTemplates[templateFolder] ) {
             templateFolder = defaultTemplate
         }
 
@@ -736,7 +783,7 @@
         $('#node-input-templateFolder').val(templateFolder)
 
         // 1st entry is default - populate the description help tip
-        $('#node-templSel-info').text(RED.settings.uibuilderTemplates[templateFolder].description)
+        $('#node-templSel-info').text(uibuilderTemplates[templateFolder].description)
 
         return templateFolder
     } // --- end of function populateTemplateDropdown --- //
@@ -745,7 +792,7 @@
      * If not, warn the user to install them.
      */
     function checkDependencies() {
-        const folder = $('#node-input-templateFolder').val()
+        const folder = /** @type {string} */ ($('#node-input-templateFolder').val())
 
         if ( ! RED.settings.uibuilderTemplates[folder] ) {
             console.error(`[uibuilder:checkDependencies] Template name not found: ${folder}`)
@@ -842,19 +889,19 @@
     } // --- End of btnTemplate() --- //
 
     /** Set initial hidden & checkbox states (called from onEditPrepare)
-     * @param {object} that A reference to the panel's `this` object
+     * @param {object} node A reference to the panel's `this` object
      */
-    function setInitialStates(that) {
+    function setInitialStates(node) {
         // initial checkbox states
-        $('#node-input-fwdInMessages').prop('checked', that.fwdInMessages)
-        $('#node-input-allowScripts').prop('checked', that.allowScripts)
-        $('#node-input-allowStyles').prop('checked', that.allowStyles)
-        $('#node-input-copyIndex').prop('checked', that.copyIndex)
-        $('#node-input-showfolder').prop('checked', that.showfolder)
-        $('#node-input-useSecurity').prop('checked', that.useSecurity)
-        $('#node-input-allowUnauth').prop('checked', that.allowUnauth)
-        $('#node-input-tokenAutoExtend').prop('checked', that.tokenAutoExtend)
-        $('#node-input-reload').prop('checked', that.reload)
+        $('#node-input-fwdInMessages').prop('checked', node.fwdInMessages)
+        $('#node-input-allowScripts').prop('checked', node.allowScripts)
+        $('#node-input-allowStyles').prop('checked', node.allowStyles)
+        $('#node-input-copyIndex').prop('checked', node.copyIndex)
+        $('#node-input-showfolder').prop('checked', node.showfolder)
+        $('#node-input-useSecurity').prop('checked', node.useSecurity)
+        $('#node-input-allowUnauth').prop('checked', node.allowUnauth)
+        $('#node-input-tokenAutoExtend').prop('checked', node.tokenAutoExtend)
+        $('#node-input-reload').prop('checked', node.reload)
     }
 
     /** Handle URL changes (called from onEditPrepare)
@@ -891,9 +938,9 @@
     }
 
     /** Configure the template dropdown & setup button handlers (called from onEditPrepare)
-     * @param {object} that A reference to the panel's `this` object
+     * @param {object} node A reference to the panel's `this` object
      */
-    function templateSettings(that) {
+    function templateSettings(node) {
 
         $('#adv-templ').hide()
         $('#show-templ-props').css( 'cursor', 'pointer' )
@@ -906,15 +953,15 @@
             }
         })
         // Populate the template selection drop-down and select default (in advanced)
-        populateTemplateDropdown(that)
+        populateTemplateDropdown(node)
         checkDependencies()
         // Unhide the external template name input if external selected
         if ( $('#node-input-templateFolder').val() === 'external' ) $('#et-input').show()
         // Handle change of template
         $('#node-input-templateFolder').on('change', function() { // (e) {
             // update the help tip
-            if ( RED.settings.uibuilderTemplates[that.templateFolder] )
-                $('#node-templSel-info').text(RED.settings.uibuilderTemplates[that.templateFolder].description)
+            if ( RED.settings.uibuilderTemplates[node.templateFolder] )
+                $('#node-templSel-info').text(RED.settings.uibuilderTemplates[node.templateFolder].description)
             // Check if the dependencies are installed, warn if not
             checkDependencies()
             // Unhide the external template name input if external selected
@@ -1013,7 +1060,7 @@
             id: 'tabs',
             onchange: function(tab) {
                 // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
-                $('#tabs-content').children().hide()
+                $('#tabs-content').children().hide() // eslint-disable-line newline-per-chained-call
                 $('#' + tab.id).show()
 
                 //? Could move these to their own show event. Might even unload some stuff on hide?
@@ -1023,7 +1070,7 @@
                     getFileList()
 
                     if ( uiace.editorLoaded !== true ) {
-                        // Clear out the editor
+                        // @ts-expect-error ts(2352) Clear out the editor
                         if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
 
                         // Create the ACE editor component
@@ -1061,10 +1108,12 @@
 
                     // Setup the package list
                     $('#node-input-packageList').editableList({
-                        addItem: addPackageRow, // function
+                        addItem: function addItem(element,index,data) {
+                            addPackageRow(node, element,index, data)
+                        },
                         removeItem: removePackageRow, // function(data){},
                         resizeItem: function() {}, // function(_row,_index) {},
-                        header: $('<div>').append('<h4 style="display: inline-grid">Installed Packages</h4>'),
+                        header: $('<div>').append('<b>Installed Packages</b>'),
                         height: 'auto',
                         addButton: true,
                         removable: true,
@@ -1098,10 +1147,13 @@
      * @param {*} node -
      */
     function onEditPrepare(node) {
+
+        packageList(node.url)
+
         // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
         if ( node.templateFolder === undefined || node.templateFolder === '' ) node.templateFolder = defaultTemplate
 
-        // Start with the edit section hidden & main section visible, set the checkbox initial states
+        // Set the checkbox initial states
         setInitialStates(node)
 
         prepTabs(node)
@@ -1264,7 +1316,7 @@
                 '&url=' + $('#node-input-url').val() + 
                 '&reload=' + $('#node-input-reload').val() + 
                 '&data=' + encodeURIComponent(uiace.editorSession.getValue())
-            request.open('POST', 'uibputfile', true)
+            request.open('POST', 'uibuilder/uibputfile', true)
             request.onreadystatechange = function() {
                 if (this.readyState === XMLHttpRequest.DONE) {
                     if (this.status === 200) {
@@ -1442,7 +1494,7 @@
      *       users having being prompted to deploy even when they've made
      *       no changes themselves to a node instance.
      */
-    packageList()
+    //packageList()
 
     // Register the node type, defaults and set up the edit fns 
     RED.nodes.registerType(moduleName, {
@@ -1495,7 +1547,9 @@
         /** Prepares the Editor panel */
         oneditprepare: function() { onEditPrepare(this) },
 
-        /** Runs before save */
+        /** Runs before save
+         * @this {RED}
+         */
         oneditsave: function() {
             // xfer the editor text back to the template var
             //$('#node-input-template').val(this.editor.getValue())

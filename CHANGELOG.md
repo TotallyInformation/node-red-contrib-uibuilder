@@ -15,23 +15,21 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### TODO
 
 * FIXES NEEDED:
-  * url rename fails if user updates template before committing url change
-  * Don't allow access to file editor if the node hasn't been deployed yet. - what is different if a node instance hasn't been deployed yet?
-  * ERRORCHECK: Imported node with not default template had default template on first deploy
-  * ERROR: Removing a module after install but without closing and reopening editor panel did nothing
+  * [ ] url rename fails if user updates template before committing url change
+  * [ ] Don't allow access to file editor if the node hasn't been deployed yet. - what is different if a node instance hasn't been deployed yet?
+  * [ ] ERRORCHECK: Imported node with not default template had default template on first deploy
+  * [ ] ERROR: Removing a module after install but without closing and reopening editor panel did nothing
+  * [ ] When turning on idx, link won't work until node re-deployed - reflect in panel UI
 
 * Move package management to a new singleton class
   * [x] Use execa promise-based calls to npm
   * [x] Allow any valid npm name spec in editor
-  * [ ] Add display of version and global on installed packages list
+  * [ ] Add display of version on installed packages list
   * [ ] Allow version spec on install
   * [ ] Allow installation of GitHub and local packages - gh install partially works
   * [ ] Check for new versions of installed packages when entering the library manager
-  * [ ] For globally installed packages - disable remove
-
-* Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
-  * [ ] Update docs
-  * [ ] Add processing to nodes to be able to mark them as experimental.
+  * [ ] Use `uibRoot`s package.json file for package management and add custom `uibuilder` property to it for managing package metadata and other config.
+  * [ ] Move package management out of web.js
 
 * [x] Add uib-sender node
   * [x] Dropdown to choose uib URL
@@ -40,10 +38,6 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     * Allow multi-instance sending
     * _Maybe_ Include schema checks - filter on available schema's from uib compatible components
     
-* [ ] _Maybe_ Add uib-receiver node
-  * [ ] Status msg to show node-id
-  * [ ] Have to manually send to by adding originator property
-
 * FE Changes
   * [x] Add optional `originator` param to send fn
   * [x] Add `setOriginator` method to set default originator
@@ -57,18 +51,27 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     * [ ] _Maybe_ Move folder management to a popup dialog (to save vertical space)
   * Libraries
     * [ ] Remove the close button
+    * [ ] Show additional info for each package: installed version, (location), served folder
   * [ ] Show template (instance root) folder
 
 * [ ] Add a new template and example to demonstrate the sender node.
   
-* Maybe Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained
-* Maybe add in/out msg counts to status?
-* Maybe add prev/curr version and checks?
-* Maybe add alternate `uibDashboard` node that uses web components and data-driven composition.
+* *Maybe* Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained
+* *Maybe* add in/out msg counts to status?
+* *Maybe* add prev/curr version and checks?
+* *Maybe* add alternate `uibDashboard` node that uses web components and data-driven composition.
+* _Maybe_ On change of URL - signal other nodes? As no map currently being maintained - probably not possible
+* [ ] _Maybe_ Add uib-receiver node
+  * [ ] Status msg to show node-id
+  * [ ] Have to manually send to by adding originator property
+* _Maybe_ Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
+  * [ ] Update docs
+  * [ ] Add processing to nodes to be able to mark them as experimental.
   
 * Templates
   * Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
   * **Make sure that templates have a way of signalling to uibuilder what libraries they need.**
+  * Add example flows - using the pluggable libraries feature of Node-RED v2.1
 
 * Security
   * Add roles/tags options to JWT? Or at least to the user session record
@@ -118,8 +121,6 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   The `uibuilderfe.js` library has been updated to allow easy use of the `originator` property for `uibuilder.send()`. See below for details.
 
 * Updated node status display. Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
-
-* The master module list (of front-end modules uibuilder will serve to the front-end) now also searches global installs.
 
 ### Changed
 
@@ -212,16 +213,39 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     * npm package handling moved to a separate singleton class in `package-mgt.js`
 
   * Removed `inputHandler` function from `uiblib.js`. Code folded into the `inputMsgHandler` function in `uibuilder.js` which has been destructured so is small enough to have it as a single function.
-  
-  * New v3 API added to list all of the deployed instances of uibuilder. Issue a GET with `cmd=listinstances`. This allows other nodes to get a list of all of the uibuilder instance URL's and the ID's of the nodes that create them. See the `uib-sender` node's html file for details.
-  
+
   * Package management rewritten. Should be faster and uses async/Promise functions.
+
+  * v3 admin API changes
+    
+    * Moved v3 admin API to its own module (`libs/admin-api-v3.js`) and changed to be an ExpressJS router instance.
+    * Moved the setup from uibuilder.js to web.js
+    * New v3 admin API command added to list all of the deployed instances of uibuilder. Issue a GET with `cmd=listinstances`. This allows other nodes to get a list of all of the uibuilder instance URL's and the ID's of the nodes that create them. See the `uib-sender` node's html file for details.
+
+  * v2 admin API changes
+  
+    * Moved v2 admin API to its own module (`libs/admin-api-v2.js`) and changed to be an ExpressJS router instance.
+    * Moved the setup from uibuilder.js to web.js
+  
+  * `web.js` changes
+  
+     * Both admin and user routes restructured, making use of Express.Router's to improve layout and control.
+     * Setup of v3 admin API moved to `web.js` class module (out of uibuilder.js).
+     * Setup of v2 admin API moved to `web.js` class module (out of uibuilder.js).
+     * New `web.dumpRoutes(print=true)` method added to `web.js` - dumpRoutes outputs a summary of all the relevant ExpressJS routes both for uib user facing web and Node-RED admin web servers. Also added individual methods: `web.dumpUserRoutes(print=true)`, `web.dumpAdminRoutes(print=true)`, and `web.dumpInstanceRoutes(print=true, url=null)` (where passing a uib url will just dump that one set of routes).
+     * Removed the separate `serve-static` npm package. This is now built into ExpressJS and not required separately.
+     * Removed the separate `body-parser` npm package. This is now built into ExpressJS and not required separately.
+     * Moved the user-facing API's to web.js from uibuilder.js and moved to their own Express.Router on `../uibuilder/...`.
+     * Added a new `this.routers` object - this helps with uibuilder live configuration documentation as it records all of the ExpressJS Routes that uibuilder adds.
 
 ### Fixed
 
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 * A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
 * In `uibuilderfe.js`, security was being turned on even if the server set it to false.
+* Fixed an issue when removing uibuilder nodes caused by the move to socket.io v4. Should fix the failure to remove unused uib instance root folders and fix renaming problems as well.
+
+
 
 ## [4.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.0...v4.1.1)
 

@@ -99,7 +99,6 @@ class UibPackages {
         let debug = false
         let file = null
         try {
-            // @ts-expect-error ts(2559)
             file = fs.readJsonSync( path.join(folder, this.packageJson), 'utf8' )
             if (debug) console.log(`[uibuilder:package-mgt:readPackageJson] package.json file read successfully from ${folder}`)
         } catch (err) {
@@ -131,9 +130,44 @@ class UibPackages {
         // Make sure we have the list as soon as possible
         this.updateMergedPackageList('')
 
-        // See which front-end packages are already installed (compare uib.me.dependencies with master package list? Better to scan the node_modules folder?)
+        this.updateInstalledPackages()
 
     } // ---- End of setup ---- //
+
+    /** Update all of the installed packages
+     * NB: Not including Global installs because they are not managed the same way by npm and there is no matching master package.json
+     * @param {string=} url A uibuilder node instance url
+     * @returns {object} List of installed packages from userDir, uibRoot and the node instance
+     */
+    updateInstalledPackages(url) {
+
+        // See which front-end packages are already installed (compare uib.me.dependencies with master package list? Better to scan the node_modules folder?)
+        this.userDirPackageList = ( this.readPackageJson( path.join(this.RED.settings.userDir) ) ).dependencies || {}
+        this.uibRootPackageList = ( this.readPackageJson( path.join(this.uib.rootFolder) ) ).dependencies || {}
+
+        // console.log('>> userDir >> ', this.userDirPackageList, this.RED.settings.userDir)
+        // console.log('>> uibRoot >> ',  this.uibRootPackageList, this.uib.rootFolder)
+
+        if ( url && url !== undefined && url !== 'undefined' ) {
+            this.uibNodePackageList[url] = ( this.readPackageJson( path.join(this.uib.rootFolder, url) ) ).dependencies || {}
+            console.log('>> Node    >>', this.uibNodePackageList, url, path.join(this.uib.rootFolder, url))
+        } else {
+            this.uibNodePackageList = {}
+        }
+
+        //console.log('>> uib.installedPackages >> ', this.uib.installedPackages)
+        // return {
+        //     userDir: this.userDirPackageList,
+        //     uibRoot: this.uibRootPackageList,
+        //     node: this.uibNodePackageList[url],
+        // }
+        return {
+            ...this.userDirPackageList,
+            ...this.uibRootPackageList,
+            ...this.uibNodePackageList[url],
+        }
+
+    } // ---- End of updateInstalledPackages ---- //
 
     /** Find install folder for a package
      * NOTE: require.resolve can be a little ODD! 
@@ -173,7 +207,7 @@ class UibPackages {
                 mylog(`>> NOT FOUND ${packageName} at ${loc}`)
             }
         }
-        // 2) Check the userDir modules next
+        // 2) Check the Common modules next
         if (!found) {
             loc = path.join(userDir, 'node_modules', packageName)
             if (fs.existsSync( loc )) {
@@ -184,7 +218,18 @@ class UibPackages {
                 mylog(`>> NOT FOUND ${packageName} at ${loc}`)
             }
         }
-        // 3) Then check uibuilder's modules
+        // 3) Check the userDir modules next
+        if (!found) {
+            loc = path.join(userDir, 'node_modules', packageName)
+            if (fs.existsSync( loc )) {
+                found = true
+                packagePath = loc
+                mylog(`>> FOUND ${packageName} at ${loc}`)
+            } else {
+                mylog(`>> NOT FOUND ${packageName} at ${loc}`)
+            }
+        }
+        // 4) Then check uibuilder's modules
         if (!found) {
             loc = path.join(__dirname, '..', '..', 'node_modules', packageName)
             if (fs.existsSync( loc )) {
@@ -195,17 +240,17 @@ class UibPackages {
                 mylog(`>> NOT FOUND ${packageName} at ${loc}`)
             }
         }
-        // 4) Finally try the global modules
-        if (!found) {
-            loc = path.join(this.globalPrefix, 'node_modules', packageName)
-            if (fs.existsSync( loc )) {
-                found = true
-                packagePath = loc
-                mylog(`>> FOUND ${packageName} at ${loc}`)
-            } else {
-                mylog(`>> NOT FOUND ${packageName} at ${loc}`)
-            }
-        }
+        // 4) Finally try the global modules - no, don't because there is no package.json for the globals parent
+        // if (!found) {
+        //     loc = path.join(this.globalPrefix, 'node_modules', packageName)
+        //     if (fs.existsSync( loc )) {
+        //         found = true
+        //         packagePath = loc
+        //         mylog(`>> FOUND ${packageName} at ${loc}`)
+        //     } else {
+        //         mylog(`>> NOT FOUND ${packageName} at ${loc}`)
+        //     }
+        // }
 
         /* DEPRECATED: Using unreliable require.resolve
         // Try in userDir first
@@ -249,7 +294,7 @@ class UibPackages {
         /** require.resolve returns the "main" script, this may not be in the root folder for the package
          *  so we change that here. We check whether the last element of the path matches the package
          *  name. If not, we walk back up the tree until it is or we run out of tree.
-         *  If we don't do this, when it is used with serveStatic, we may not get everything we need served.
+         *  If we don't do this, when it is used with express.static, we may not get everything we need served.
          * NB: Only assuming 3 levels here.
          * NB2: Added packageName split to allow for more complex npm package names.
          */
@@ -264,7 +309,7 @@ class UibPackages {
         return packagePath
 
     } // ----  End of getPackagePath ---- //
-
+    
     /** Update the master name list of possible packages that could be served to the front-end
      * Called initially from this.setup (early in uibuilder setup)
      * and then repeatedly from other places that trigger an update.
@@ -312,14 +357,36 @@ class UibPackages {
     } // ---- End of updateMergedPackageList ---- //
 
     /** Install an npm package
-     * @param {string} folder Path of the folder in which to install the package
+     * @param {string} url Node instance url
+     * @param {string} location One of 'userdir', 'common' or 'local'
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
      * @returns {Promise<string>} Combined stdout/stderr
      */
-    async npmInstallPackage(folder, pkgName) {
+    async npmInstallPackage(url, location, pkgName) {
         if ( this._isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:npmInstallPackage] Cannot run. Setup has not been called.')
             return
+        }
+
+        let folder
+        switch (location) {
+            case 'userdir': {
+                folder = this.RED.settings.userDir
+                break
+            }
+            case 'common': {
+                folder = this.uib.rootFolder
+                break
+            }
+            case 'local': {
+                folder = path.join( this.uib.rootFolder, url )
+                break
+            }
+        
+            default: {
+                folder = this.RED.settings.userDir
+                break
+            }
         }
 
         // https://github.com/sindresorhus/execa#options
@@ -341,6 +408,8 @@ class UibPackages {
         
         // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
         const {all} = await execa('npm', args, opts)
+
+        this.updateInstalledPackages(url, location, pkgName)
 
         return all
 
@@ -373,6 +442,8 @@ class UibPackages {
         
         // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
         const {all} = await execa('npm', args, opts)
+
+        this.updateInstalledPackages()
 
         return all
 
@@ -408,6 +479,7 @@ class UibPackages {
             console.error('>>>>>', e.all)    
             res = e.all  // Do we need to wrap this in a promise?
         }
+
         return res
     } // ---- End of npmListInstalled ---- //
 
