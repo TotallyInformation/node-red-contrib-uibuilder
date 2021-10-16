@@ -40,6 +40,12 @@
     var packages = []
     /** Default template name */
     var defaultTemplate = 'blank'
+    /** Set to true if we want to force a (re)deploy */
+    var mustChange = false
+    /** Is the URL valid? */
+    var urlValid = false
+    /** Does the server folder for this instance exist? */
+    var folderExists = false
 
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
      * @typedef {object} uiace Options for the ACE/Monaco code editor
@@ -59,6 +65,8 @@
 
     //#region --------- "global" functions for the panel --------- //
 
+    //#region ==== Package Management Functions ==== //
+
     /** AddItem function for package list
      * @param {object} node A reference to the panel's `this` object
      * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
@@ -66,32 +74,69 @@
      * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
      */
     function addPackageRow(node, element, index, data) {
-        var hRow = ''
+        let hRow = '', pkgSpec = null
 
         if (Object.entries(data).length === 0) {
             // Add button was pressed so we have no packageName, create an input form instead
-            hRow  = `<input type="text" id="packageList-input-${index}" title="">`
-            hRow += `<select id="pkg-sel-${index}" title="">`
-            hRow += '<option value="common" selected>Common Install</option>'
-            hRow += '<option value="local">Local Install</option>'
-            hRow += `</select> <button id="packageList-button-${index}">Install</button>`
-            hRow += '<div class="form-tips">Enter one of: (a) an npm package name (optionally with leading scope and/or trailing version), (b) a GitHub user/repo (with optional branch spec), (c) A filing system path to a local package. Select where to install.</div>'
+            hRow  = `
+                <div>
+                    <label for="packageList-input-${index}" style="width:3em;">Name:</label>
+                    <input type="text" id="packageList-input-${index}" title="" style="width:80%">
+                </div>
+                <div>
+                    <label for="packageList-src-${index}" style="width:3em;">From:</label>
+                    <select id="packageList-src-${index}" title="Choose where to install from" style="width:80%">
+                        <option value="npmjs" selected>npmjs.com</option>
+                        <option value="github">GitHub</option>
+                        <option value="fs" title="The server's filing system">Server</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="packageList-tag-${index}" style="width:3em;">Tag:</label>
+                    <input type="text" id="packageList-tag-${index}" title="" style="width:80%" placeholder="npm: @tag/version, GH: #branch/tag">
+                </div>
+                <div>
+                    <label for="packageList-button-${index}" style="width:3em;"></label>
+                    <button id="packageList-button-${index}" style="width:5em;">Install</button>
+                </div>
+            `
         } else {
+            /*
+                npm install [<@scope>/]<name>
+                npm install [<@scope>/]<name>@<tag>
+                npm install [<@scope>/]<name>@<version>
+                npm install [<@scope>/]<name>@<version range>
+                npm install <alias>@npm:<name>
+                npm install <git-host>:<git-user>/<repo-name>[#branch-tag-name]
+                npm install <git repo url>
+                npm install <tarball file>
+                npm install <tarball url>
+                npm install <folder>
+                */
+            pkgSpec = packages[data]
             // addItem method was called with a packageName passed
-            hRow = data
+            hRow = `
+                <div id="packageList-row-${index}" class="packageList-row-data">
+                    <a href="${pkgSpec.homepage}" target="_blank"><b>${data}</b></a>, ${pkgSpec.installedVersion}
+                    <br>
+                    URL to use: <i title="NB: The actual resource is an estimate, check the package docs for the actual entry point">
+                        ${pkgSpec.url}
+                    </i>
+                </div>
+            `
         }
         // Build the output row
-        var myRow = $('<div id="packageList-row-' + index + '" class="packageList-row-data">'+hRow+'</div>').appendTo(element)
+        $(hRow).appendTo(element)
 
+        // Add tooltips for the input fields
         if (Object.entries(data).length === 0) {
-            // Add a tooltip
             // @ts-expect-error ts(2339)
             $(`#packageList-input-${index}`).tooltip({
-                content: 'Enter one of:<ul><li>An npm package name (optionally with leading scope and/or trailing version)</li><li>A GitHub user/repo (with optional branch spec)</li><li>A filing system path to a local package</li></ul>'
+                content: 'Enter one of:<ul><li>An npm package name (optionally with leading)</li><li>A GitHub user/repo</li><li>A filing system path to a local package</li></ul>Ensure that you select the correct "From" dropdown.'
             })
             // @ts-expect-error ts(2339)
-            $(`#pkg-sel-${index}`).tooltip({
-                content: 'Install for:<ul><li>All uibuilder instances (common)</li><lI>Just for this one (local)</li></ul>'
+            $(`#packageList-ver-${index}`).tooltip({
+                content: 'Optional. Branch, Tag or Version to install (defaults to @latest)'
             })
         }
 
@@ -100,29 +145,30 @@
             // show activity spinner
             $('i.spinner').show()
             
-            var packageName = String($('#packageList-input-' + index).val())
-            var packageLoc = String($('#pkg-sel-' + index).val())
+            var packageName = String($(`#packageList-input-${index}`).val())
+            var packageLoc = String($(`#packageList-src-${index}`).val())
+            var packageTag = String($(`#packageList-tag-${index}`).val())
 
             if ( packageName.length !== 0 ) {
-                console.log( '>>', packageName, packageLoc )
-                
                 RED.notify('Installing npm package ' + packageName)
 
                 // Call the npm installPackage API (it updates the package list)
-                $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&loc=${packageLoc}`, function(data){
+                $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&loc=${packageLoc}&tag=${packageTag}`, function(data){
+                    const npmOutput = data.result[0]
 
                     if ( data.success === true) {
-                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, packageLoc, node.url)
+                        packages = data.result[1]
+
+                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, packageLoc, node.url, '\n\n', npmOutput, '\n ')
                         RED.notify(`Successful installation of npm package ${packageName} in ${packageLoc} for ${node.url}`, 'success')
 
-                        // Replace the input field with the normal package name display
-                        myRow.html(packageName)
+                        // reset and populate the list
+                        $('#node-input-packageList').editableList('empty')
+                        // @ts-ignore
+                        $('#node-input-packageList').editableList('addItems', Object.keys(packages))
 
-                        // Update the master package list
-                        packages.push(packageName)
                     } else {
-                        console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, packageLoc, node.url )
-                        console.dir( data.result )
+                        console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, packageLoc, node.url, '\n\n', npmOutput, '\n ' )
                         RED.notify(`FAILED installation of npm package ${packageName} in ${packageLoc} for ${node.url}`, 'error')
                     }
 
@@ -165,10 +211,7 @@
             if ( data.success === true) {
                 console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
                 RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
-                
-                // Remove the entry from the master package list
-                const i = packages.indexOf(packageName)
-                if ( i > 0 ) packages.splice(i,1)
+                if ( packages[packageName] ) delete packages[packageName]
             } else {
                 console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
                 RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
@@ -199,35 +242,26 @@
      * @param {string} url Used to find locally install packages for this node from uibRoot/url/
      */
     function packageList(url) {
+
         $.ajax({
+
             dataType: 'json',
             method: 'get',
             url: `uibuilder/uibvendorpackages?url=${url}`,
             async: false,
             //data: { url: node.url},
+            
             success: function(vendorPaths) {
-                packages = []
-                var pkgList = Object.keys(vendorPaths)
-                console.log('>> Packages >> ', vendorPaths)
-                // eslint-disable-next-line no-unused-vars
-                pkgList.forEach(function(packageName,_index){
-                    // Populate the master package list (used to check dependencies)
-                    packages.push(packageName)
-                })
+                packages = vendorPaths
             }
+
         })
 
-        // $.getJSON('uibvendorpackages', function(vendorPaths) {
-        //     packages = []
-        //     var pkgList = Object.keys(vendorPaths)
-        //     console.log('>> Packages >> ', vendorPaths)
-        //     // eslint-disable-next-line no-unused-vars
-        //     pkgList.forEach(function(packageName,_index){
-        //         // Populate the master package list (used to check dependencies)
-        //         packages.push(packageName)
-        //     })
-        // })
     } // --- End of packageList --- //
+
+    //#endregion ==== Package Management Functions ==== //
+
+    //#region ==== File Management Functions ==== //
 
     /** Return a file type from a file name (or default to txt)
      *  ftype can be used in ACE editor modes
@@ -587,79 +621,6 @@
 
     } // --- End of deleteFile --- //
 
-    /** Validation Function: Validate the url property
-     * Max 20 chars, can't contain any of ['..', ]
-     * @param {*} value The url value to validate
-     * @returns {boolean} true = valid
-     **/
-    function validateUrl(value) {
-        // NB: `this` is the node instance configuration as at last press of Done
-        //     Validation fns are run on every node instance when the Editor is loaded (value is populated but jQuery val is undefined).
-        //     and again when the config panel is opened (because jquery change is fired. value, jquery val and this.url are all the same).
-
-        /** If the url hasn't really changed - no need to validate but might need to allow Done (for other settings)
-         * e.g. user changes is back after trying something different but didn't commit between
-         * Initial flow run and Initial load of admin config ui - don't check for dups as it always will be a dup
-         */
-        if ( value === this.url ) {
-            $('#node-dialog-ok').prop('disabled', false)
-            $('#node-dialog-ok').css( 'cursor', 'pointer' )
-            $('#node-dialog-ok').addClass('primary')
-            return true
-        }
-
-        // Max 20 chars
-        if ( value.length > 20 ) return false
-        // Cannot contain ..
-        if ( value.indexOf('..') !== -1 ) return false
-        // cannot contain / or \
-        if ( value.indexOf('/') !== -1 ) return false
-        if ( value.indexOf('\\') !== -1 ) return false
-        // Cannot start with _ or .
-        if ( value.substring(0,1) === '_' ) return false
-        if ( value.substring(0,1) === '.' ) return false
-        // Cannot be 'templates' as this is a reserved value (for v2)
-        if ( value.toLowerCase().substring(0,9) === 'templates' ) return false
-
-        
-        // Check whether the url is already in use via a call to the admin API
-        var exists = false
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: './uibuilder/admin/' + value,
-            data: {
-                'cmd': 'checkurls',
-            },
-            success: function(check) {
-                exists = check
-            }
-        })
-
-        /** If the url already exists - prevent the "Done" button from being pressed. */
-        // @ts-ignore
-        if ( exists === true ) {
-            $('#node-dialog-ok').prop('disabled', true)
-            $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
-            $('#node-dialog-ok').removeClass('primary')
-            RED.notify(`<b>ERROR</b>: <p>The chosen URL (${value}) is already in use (or the folder exists).<br>It must be changed before you can save/commit</p>`, {type: 'error'})
-            return false
-        }
-        
-        $('#node-dialog-ok').prop('disabled', false)
-        $('#node-dialog-ok').css( 'cursor', 'pointer' )
-        $('#node-dialog-ok').addClass('primary')
-
-        // Warn user when changing URL. NOTE: Set/reset old url in the onsave function not here
-        if ( value !== this.url )
-            RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, {type: 'warning'})
-
-        return true
-        
-
-    } // --- End of validateUrl --- //
-
     /** Set the height of the ACE text editor box */
     function setACEheight() {
         let height
@@ -716,6 +677,81 @@
 
     } // --- End of setACEheight --- //
 
+    //#endregion ==== File Management Functions ==== //
+
+    //#region ==== Validation Functions ==== //
+
+    /** Validation Function: Validate the url property
+     * Max 20 chars, can't contain any of ['..', ]
+     * @param {*} value The url value to validate
+     * @returns {boolean} true = valid
+     **/
+    function validateUrl(value) {
+        // NB: `this` is the node instance configuration as at last press of Done
+        //     Validation fns are run on every node instance when the Editor is loaded (value is populated but jQuery val is undefined).
+        //     and again when the config panel is opened (because jquery change is fired. value, jquery val and this.url are all the same).
+
+        urlValid = false
+
+        // If value is undefined, node hasn't been configured yet
+        if ( this.url === undefined && value === undefined ) return false
+
+        /** If the url hasn't really changed - no need to validate but might need to allow Done (for other settings)
+         * e.g. user changes is back after trying something different but didn't commit between
+         * Initial flow run and Initial load of admin config ui - don't check for dups as it always will be a dup
+         */
+        if ( value === this.url ) {
+            urlValid = true
+            return true
+        }
+
+        // Max 20 chars
+        if ( value.length > 20 ) return false
+        // Cannot contain ..
+        if ( value.indexOf('..') !== -1 ) return false
+        // Cannot contain / or \
+        if ( value.indexOf('/') !== -1 ) return false
+        if ( value.indexOf('\\') !== -1 ) return false
+        // Cannot contain spaces
+        if ( value.indexOf(' ') !== -1 ) return false
+        // Cannot start with _ or .
+        if ( value.substring(0,1) === '_' ) return false
+        if ( value.substring(0,1) === '.' ) return false
+        // Cannot be 'templates' as this is a reserved value (for v2)
+        if ( value.toLowerCase().substring(0,9) === 'templates' ) return false
+
+        // Check whether the url is already in use via a call to the admin API
+        var exists = false
+        $.ajax({
+            type: 'GET',
+            async: false,
+            dataType: 'json',
+            url: `./uibuilder/admin/${value}`,
+            data: {
+                'cmd': 'checkurls',
+            },
+            success: function(check) {
+                exists = check
+            }
+        })
+
+        /** If the url already exists - prevent the "Done" button from being pressed. */
+        // @ts-ignore
+        if ( exists === true ) {
+            RED.notify(`<b>ERROR</b>: <p>The chosen URL (${value}) is already in use (or the folder exists).<br>It must be changed before you can save/commit</p>`, {type: 'error'})
+            return false
+        }
+
+        urlValid = true
+
+        // Warn user when changing URL. NOTE: Set/reset old url in the onsave function not here
+        if ( this.url !== undefined && value !== this.url )
+            RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, {type: 'warning'})
+
+        return true
+
+    } // --- End of validateUrl --- //
+
     /** Validation Function: Validate the session length property
      * If security is on, must contain a number
      * @returns {boolean} true = valid, false = not valid
@@ -749,6 +785,31 @@
         return true
 
     } // --- End of validateSecret --- //
+
+    /** Validation function: Was this node last deployed with a safe version?
+     * In uibuilder.js, can change uib.reDeployNeeded to be the last version before the v that made a breaking change.
+     * @example If the node was last deployed with v4.1.2 and the current version is now v5.0.0, set uib.reDeployNeeded to '4.1.2'
+     * @returns {boolean} True if valid
+     */
+    function validateVersion() {
+        if ( this.url !== undefined ) { // Undefined means that the node hasn't been configured at all yet
+            let deployedVersion = this.deployedVersion === undefined ? '0' : this.deployedVersion
+            if (deployedVersion < RED.settings.uibuilderRedeployNeeded && RED.settings.uibuilderCurrentVersion > RED.settings.uibuilderRedeployNeeded) {
+                RED.notify(`<i>uibuilder ${this.url}</i><br>uibuilder has been updated since you last deployed this instance. Please deploy now.`,{
+                    modal: false,
+                    fixed: false,
+                    type: 'warning', // 'compact', 'success', 'warning', 'error'
+                })
+                mustChange = true
+                return false
+            }
+        }
+        return true
+    }
+
+    //#endregion ==== Validation Functions ==== //
+
+    //#region ==== Template Management Functions ==== //
 
     /** Populate the template selection dropdown
      * Uses a file that is `require`d in uibuilder.js
@@ -803,7 +864,7 @@
         const missing = []
 
         deps.forEach( depName => {
-            if ( ! packages.includes(depName) ) missing.push(depName)
+            if ( ! packages[depName] ) missing.push(depName)
         })
 
         if ( missing.length > 0 ) {
@@ -888,55 +949,6 @@
 
     } // --- End of btnTemplate() --- //
 
-    /** Set initial hidden & checkbox states (called from onEditPrepare)
-     * @param {object} node A reference to the panel's `this` object
-     */
-    function setInitialStates(node) {
-        // initial checkbox states
-        $('#node-input-fwdInMessages').prop('checked', node.fwdInMessages)
-        $('#node-input-allowScripts').prop('checked', node.allowScripts)
-        $('#node-input-allowStyles').prop('checked', node.allowStyles)
-        $('#node-input-copyIndex').prop('checked', node.copyIndex)
-        $('#node-input-showfolder').prop('checked', node.showfolder)
-        $('#node-input-useSecurity').prop('checked', node.useSecurity)
-        $('#node-input-allowUnauth').prop('checked', node.allowUnauth)
-        $('#node-input-tokenAutoExtend').prop('checked', node.tokenAutoExtend)
-        $('#node-input-reload').prop('checked', node.reload)
-    }
-
-    /** Handle URL changes (called from onEditPrepare)
-     * `this` is the selected jQuery object $('#node-input-url')
-     */
-    function urlChange() {
-
-        var thisurl = $(this).val()
-        var eUrlSplit = window.origin.split(':')
-        //var nrPort = Number(eUrlSplit[2])
-        var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
-        $('#info-webserver').empty()
-
-        // Is uibuilder using a custom server?
-        if (RED.settings.uibuilderCustomServer.port) {
-            // Use the correct protocol (http or https)
-            eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2','https')
-            // Use the correct port
-            eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
-            // When using custom server, no base path is used
-            nodeRoot = ''
-            $('#info-webserver')
-                .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
-        }
-
-        var urlPrefix = eUrlSplit.join(':') + '/'
-        // Show the root URL
-        $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl)
-            .text('Open ' + nodeRoot + thisurl)
-        $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
-        // NB: The index url link is only shown if the option is turned on
-        $('#show-src-folder-idx-url').empty()
-            .append('<div>at <a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank" class="red-ui-button">' + nodeRoot + $(this).val() + '/idx</a></div>')
-    }
-
     /** Configure the template dropdown & setup button handlers (called from onEditPrepare)
      * @param {object} node A reference to the panel's `this` object
      */
@@ -977,6 +989,176 @@
         })
 
     }
+
+    //#endregion ==== Template Management Functions ==== //
+
+    /** Set initial hidden & checkbox states (called from onEditPrepare)
+     * @param {object} node A reference to the panel's `this` object
+     */
+    function setInitialStates(node) {
+        // initial checkbox states
+        $('#node-input-fwdInMessages').prop('checked', node.fwdInMessages)
+        $('#node-input-allowScripts').prop('checked', node.allowScripts)
+        $('#node-input-allowStyles').prop('checked', node.allowStyles)
+        $('#node-input-copyIndex').prop('checked', node.copyIndex)
+        $('#node-input-showfolder').prop('checked', node.showfolder)
+        $('#node-input-useSecurity').prop('checked', node.useSecurity)
+        $('#node-input-allowUnauth').prop('checked', node.allowUnauth)
+        $('#node-input-tokenAutoExtend').prop('checked', node.tokenAutoExtend)
+        $('#node-input-reload').prop('checked', node.reload)
+    }
+
+    /** (Dis)Allow uibuilder configuration other than URL changes
+     * @param {boolean} enable True=Enable config editing, false=disable
+     */
+    function enableEdit(enable=true) {
+        if (enable) {
+            // $('#node-dialog-ok')
+            //     .prop('disabled', false)
+            //     .css( 'cursor', 'pointer' )
+            //     .addClass('primary')
+
+            $('#node-input-templateFolder, #btn-load-template')
+                .prop('disabled', false)
+
+            $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
+                .css('pointer-events', 'auto')
+            $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
+                .css('color', 'var(--nr-db-dark-text)')
+
+            $('#uibuilderurl, #uibinstanceconf')
+                .css({
+                    'pointer-events': 'auto',
+                    'background-color': '',
+                })
+
+        } else {
+            // Don't disable the Done button if the folder doesn't exist
+            // if (!folderExists)
+            //     $('#node-dialog-ok')
+            //         .prop('disabled', true)
+            //         .css( 'cursor', 'not-allowed' )
+            //         .removeClass('primary')
+
+            $('#node-input-templateFolder, #btn-load-template')
+                .prop('disabled', true)
+
+            $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
+                .css('pointer-events', 'none')
+            $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
+                .css('color', 'var(--nr-db-disabled-text)')
+
+            $('#uibuilderurl, #uibinstanceconf')
+                .css({
+                    'pointer-events': 'none',
+                    'background-color': 'var(--red-ui-secondary-background-selected)',
+                })
+        }
+
+    } // ---- End of enableEdit ---- //
+
+    /** Find out if a server folder exists for this url
+     * @param {*} url URL to check
+     * @returns {boolean} Whether the folder exists
+     */
+    function queryFolderExists(url) {
+        if (url === undefined) return false
+        let check = false 
+        $.ajax({
+            type: 'GET',
+            async: false,
+            dataType: 'json',
+            url: `./uibuilder/admin/${url}`,
+            data: {
+                'cmd': 'checkfolder',
+            },
+            success: function(data) {
+                check = data
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                if (errorThrown !== 'Not Found')
+                    console.error( '[uibuilder:queryFolderExists] Error ' + textStatus, errorThrown )
+                check = false
+            },
+        })
+        return check
+    } // ---- end of queryFolderExists ---- //
+
+    /** Handle URL changes (called from onEditPrepare)
+     * `this` is the selected jQuery object $('#node-input-url')
+     * @param {object} node A reference to the panel's `this` object
+     * @param {object} jqThis A jQuery object
+     */
+    function urlChange(node, jqThis) {
+        var thisurl = $(jqThis).val()
+
+        // Find out if the server folder for this instance exists yet
+        folderExists = queryFolderExists(thisurl)
+
+        if ( urlValid && folderExists ) {
+            enableEdit(true)
+        } else {
+            enableEdit(false)
+        }
+
+        if (!urlValid && (thisurl !== undefined && thisurl !== '')) {
+            $('#folder-not-exist').remove()
+            $('#url-input').after(`
+                <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
+                    Invalid URL.<br>
+                    Cannot contain <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">space</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">..</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">/</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">\\</code>.<br>
+                    Must be <=20 characters, not start with <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">_</code> or <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">.</code>.<br>
+                    Must not be <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">templates</code> or an existing URL.
+                </div>
+            `)
+        } else if (!folderExists) {
+            $('#folder-not-exist').remove()
+            if (node.url === undefined) {
+                $('#url-input').after(`
+                    <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
+                        Server folder has not yet been created.<br>
+                        You must Deploy before you can make other changes.
+                    </div>
+                `)
+            } else {
+                $('#url-input').after(`
+                    <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
+                        Server folder does not exist.<br>
+                        You must Deploy before you can make other changes.
+                    </div>
+                `)
+            }
+        } else {
+            $('#folder-not-exist').remove()
+        }
+
+        var eUrlSplit = window.origin.split(':')
+        //var nrPort = Number(eUrlSplit[2])
+        var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
+        $('#info-webserver').empty()
+
+        // Is uibuilder using a custom server?
+        if (RED.settings.uibuilderCustomServer.port) {
+            // Use the correct protocol (http or https)
+            eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2','https')
+            // Use the correct port
+            eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
+            // When using custom server, no base path is used
+            nodeRoot = ''
+            $('#info-webserver')
+                .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
+        }
+
+        var urlPrefix = eUrlSplit.join(':') + '/'
+        // Show the root URL
+        $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl)
+            .text('Open ' + nodeRoot + thisurl)
+        $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
+        // NB: The index url link is only shown if the option is turned on
+        $('#show-src-folder-idx-url').empty()
+            .append('<div>at <a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank" style="color:var(--red-ui-text-color-link);text-decoration:underline;">' + nodeRoot + $(this).val() + '/idx</a></div>')        
+
+    } // ---- end of urlChange ---- //
 
     /** Setup for security settings (called from onEditPrepare) */
     function securitySettings() {
@@ -1052,12 +1234,97 @@
         
     } // ---- end of securitySettings ---- //
 
+    /** Run when switching to the Files tab
+     * @param {object} node A reference to the panel's `this` object
+     */
+    function tabFiles(node) {
+        // Build the file list
+        getFileList()
+
+        // We only need to do all of this once
+        if ( uiace.editorLoaded !== true ) {
+            // @ts-expect-error ts(2352) Clear out the editor
+            if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
+
+            // Create the ACE editor component
+            uiace.editor = RED.editor.createEditor({
+                id: 'node-input-template-editor',
+                mode: 'ace/mode/' + uiace.format,
+                value: node.template
+            })
+            // Keep a reference to the current editor session
+            uiace.editorSession = uiace.editor.getSession()
+            /** If the editor has changes, enable the save & reset buttons
+             * using input event instead of change since it's called with some timeout 
+             * which is needed by the undo (which takes some time to update)
+             **/
+            uiace.editor.on('input', function() {
+                // Is the editor clean?
+                fileIsClean(uiace.editorSession.getUndoManager().isClean())
+            })
+            /*uiace.editorSession.on('change', function(delta) {
+                // delta.start, delta.end, delta.lines, delta.action
+                console.log('ACE Editor CHANGE Event', delta)
+            }) */
+            uiace.editorLoaded = true
+
+            // Resize to max available height
+            setACEheight()
+            
+            // Be friendly and auto-load the initial file via the admin API
+            getFileContents()
+            fileIsClean(true)
+        }
+    } // ---- End of tabFiles() ---- //
+
+    /** Return the correct height of the libraries list
+     * @returns {number} Calculated height of the libraries list
+     */
+    function getLibrariesListHeight() {
+        return ($('.red-ui-tray-footer').position()).top - ($('#package-list-container').offset()).top + 25
+    } // ---- End of getLibrariesListHeight() ---- //
+
+    /** Run when switching to the Libraries tab
+     * @param {object} node A reference to the panel's `this` object
+     */
+    function tabLibraries(node) {
+
+        //! TODO Improve feedback
+
+        // Setup the package list https://nodered.org/docs/api/ui/editableList/
+        $('#node-input-packageList').editableList({
+            addItem: function addItem(element,index,data) {
+                addPackageRow(node, element,index, data)
+            },
+            removeItem: removePackageRow, // function(data){},
+            //resizeItem: function() {}, // function(_row,_index) {},
+            header: $('<div>').append('<b>Installed Packages</b>'),
+            height: getLibrariesListHeight(),
+            addButton: true,
+            removable: true,
+            scrollOnAdd: true,
+            sortable: false,
+        })
+
+        // reset and populate the list
+        $('#node-input-packageList').editableList('empty')
+        // @ts-ignore
+        $('#node-input-packageList').editableList('addItems', Object.keys(packages))
+
+        // spinner
+        $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
+        $('i.spinner').hide()
+        
+    } // ---- End of tabLibraries() ---- //
+
     /** Prep tabs
      * @param {object} node A reference to the panel's `this` object
      */
     function prepTabs(node) {
         const tabs = RED.tabs.create({
             id: 'tabs',
+            scrollable: false,
+            collapsible: false,
             onchange: function(tab) {
                 // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
                 $('#tabs-content').children().hide() // eslint-disable-line newline-per-chained-call
@@ -1065,76 +1332,24 @@
 
                 //? Could move these to their own show event. Might even unload some stuff on hide?
 
-                if ( tab.id === 'tab-files' ) {
-                    // Build the file list
-                    getFileList()
-
-                    if ( uiace.editorLoaded !== true ) {
-                        // @ts-expect-error ts(2352) Clear out the editor
-                        if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
-
-                        // Create the ACE editor component
-                        uiace.editor = RED.editor.createEditor({
-                            id: 'node-input-template-editor',
-                            mode: 'ace/mode/' + uiace.format,
-                            value: node.template
-                        })
-                        // Keep a reference to the current editor session
-                        uiace.editorSession = uiace.editor.getSession()
-                        /** If the editor has changes, enable the save & reset buttons
-                         * using input event instead of change since it's called with some timeout 
-                         * which is needed by the undo (which takes some time to update)
-                         **/
-                        uiace.editor.on('input', function() {
-                            // Is the editor clean?
-                            fileIsClean(uiace.editorSession.getUndoManager().isClean())
-                        })
-                        /*uiace.editorSession.on('change', function(delta) {
-                            // delta.start, delta.end, delta.lines, delta.action
-                            console.log('ACE Editor CHANGE Event', delta)
-                        }) */
-                        uiace.editorLoaded = true
-
-                        // Resize to max available height
-                        setACEheight()
-                        
-                        // Be friendly and auto-load the initial file via the admin API
-                        getFileContents()
-                        fileIsClean(true)
+                switch (tab.id) {
+                    case 'tab-files': {
+                        tabFiles(node)
+                        break
                     }
-                } else if ( tab.id === 'tab-libraries' ) {
-
-                    //! TODO Improve feedback
-
-                    // Setup the package list
-                    $('#node-input-packageList').editableList({
-                        addItem: function addItem(element,index,data) {
-                            addPackageRow(node, element,index, data)
-                        },
-                        removeItem: removePackageRow, // function(data){},
-                        resizeItem: function() {}, // function(_row,_index) {},
-                        header: $('<div>').append('<b>Installed Packages</b>'),
-                        height: 'auto',
-                        addButton: true,
-                        removable: true,
-                        scrollOnAdd: true,
-                        sortable: false,
-                    })
-
-                    // reset and populate the list
-                    $('#node-input-packageList').editableList('empty')
-                    packages.forEach( packageName => {
-                        if ( packageName !== 'socket.io' ) // ignore socket.io
-                            $('#node-input-packageList').editableList('addItem',packageName)
-                    })
-
-                    // spinner
-                    $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
-                    $('i.spinner').hide()
-
+                
+                    case 'tab-libraries': {
+                        tabLibraries(node)
+                        break
+                    }
+                
+                    default: {
+                        break
+                    }
                 }
-            }
+            },
         })
+
         tabs.addTab({ id: 'tab-core',      label: 'Core'      })
         tabs.addTab({ id: 'tab-files',     label: 'Files'     })
         tabs.addTab({ id: 'tab-libraries', label: 'Libraries' })
@@ -1148,6 +1363,16 @@
      */
     function onEditPrepare(node) {
 
+        // RED.events.on('deploy', function() {
+        //     console.log('Deployed')
+        // })
+        // RED.events.on('workspace:dirty', function(data) {
+        //     console.log('Workspace dirty:', data)
+        // })
+        // RED.events.on('nodes:change', function(data) {
+        //     console.log('nodes:change:', data)
+        // })
+        
         packageList(node.url)
 
         // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
@@ -1166,7 +1391,9 @@
          * NB: Actual URL change processing is done in validation which also happens on change
          *     Change happens when config panel is opened as well as for a real change
          */
-        $('#node-input-url').on('change', urlChange)
+        $('#node-input-url').on('change', function() {
+            urlChange(node, this)
+        })
 
         // When the show web view (index) of source files changes
         $('#node-input-showfolder').on('change', function() {
@@ -1180,6 +1407,7 @@
         // security settings
         securitySettings()
 
+        // TODO Move to separate function
         //#region ---- File Editor ---- //
 
         // Mark edit save/reset buttons as disabled by default
@@ -1487,15 +1715,6 @@
 
     //#endregion ------------------------------------------------- //
 
-    /** Initialise default values for package list - must be done before everything to give the ajax call time to finish
-     *  since the list is used to check if the template dependencies are installed.
-     * NOTE: This is build dynamically each time the edit panel is opened
-     *       we are not saving this since external changes would result in
-     *       users having being prompted to deploy even when they've made
-     *       no changes themselves to a node instance.
-     */
-    //packageList()
-
     // Register the node type, defaults and set up the edit fns 
     RED.nodes.registerType(moduleName, {
         //#region --- options --- //
@@ -1504,7 +1723,7 @@
         defaults: {
             name: { value: '' },
             topic: { value: '' },
-            url: { value: moduleName, required: true, validate: validateUrl },
+            url: { required: true, validate: validateUrl },
             fwdInMessages: { value: false },   // Should we send input msg's direct to output as well as the front-end?
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
@@ -1520,6 +1739,7 @@
             oldUrl: { value: undefined },      // If the url has been changed, this is the previous url
             reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
             sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)
+            deployedVersion: { validate: validateVersion }, 
             //jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
         },
         credentials: {
@@ -1547,7 +1767,7 @@
         /** Prepares the Editor panel */
         oneditprepare: function() { onEditPrepare(this) },
 
-        /** Runs before save
+        /** Runs before save (Actually before Done button pressed)
          * @this {RED}
          */
         oneditsave: function() {
@@ -1567,6 +1787,10 @@
                 this.oldUrl = undefined
             }
 
+            // If something has changed or if something must change, update the deployed version
+            if ( this.changed || mustChange )
+                this.deployedVersion = RED.settings.uibuilderCurrentVersion
+
         }, // ---- End of oneditsave ---- //
 
         /** Runs before cancel */
@@ -1583,6 +1807,12 @@
         oneditresize: function() { // (size) {
 
             setACEheight()
+
+            // Set correct height of the libraries list
+            try {
+                $('#node-input-packageList').editableList('height', getLibrariesListHeight())
+            } catch (e) {}
+
 
         }, // ---- End of oneditcancel ---- //
 

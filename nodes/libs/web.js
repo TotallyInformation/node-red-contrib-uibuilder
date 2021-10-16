@@ -133,17 +133,26 @@ class UibWeb {
         // @ts-ignore
         if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port // eslint-disable-line eqeqeq
 
+        // At this point we have the refs to uib and RED
+        this._isConfigured = true
+
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
         this._adminApiSetup()
         this._webSetup()
         this._userApiSetup()
         this._setMasterStaticFolder()
 
-        this._isConfigured = true
     } // --- End of setup() --- //
+
+    //#region ==== Setup - these are called AFTER _isConfigured=true ==== //
 
     /** Add routes for uibuilder's admin REST API's */
     _adminApiSetup() {
+        if ( this._isConfigured !== true ) {
+            this.log.warn('[uibuilder:web.js:_adminApiSetup] Cannot run. Setup has not been called.')
+            return
+        }
+
         this.adminRouter = express.Router({mergeParams:true}) // eslint-disable-line new-cap
 
         /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
@@ -170,6 +179,11 @@ class UibWeb {
      * @protected
      */
     _webSetup() {
+        if ( this._isConfigured !== true ) {
+            this.log.warn('[uibuilder:web.js:_webSetup] Cannot run. Setup has not been called.')
+            return
+        }
+
         // Reference static vars
         const uib = this.uib
         const RED = this.RED
@@ -248,14 +262,11 @@ class UibWeb {
 
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router({mergeParams:true}) // eslint-disable-line new-cap
-        // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
-        this.vendorRouter = express.Router({mergeParams:true}) // eslint-disable-line new-cap
 
-        // Assign the vendorRouter to the ../uibuilder/vendor url path (via uibRouter)
-        this.uibRouter.use( '/vendor', this.vendorRouter )
-        this.routers.user.push( {name: 'Vendor Routes', path:`${this.uib.httpRoot}/uibuilder/vendor/*`, desc: 'Front-end libraries are mounted under here', type:'Router'} )
-
-        // TODO: Add vendor paths - from `<uibRoot>/package.json`
+        // Add vendor paths for installed front-end libraries - from `<uibRoot>/package.json`
+        this.serveVendorPackages()
+        // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
+        this.serveVendorSocketIo()
 
         //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
         // Serve up the master common folder (e.g. <httpNodeRoute>/uibuilder/common/)
@@ -350,7 +361,12 @@ class UibWeb {
 
     // TODO - lots of work to do here
     /** Set up user-facing REST API's */
-    _userApiSetup() { // eslint-disable-line class-methods-use-this
+    _userApiSetup() {
+        if ( this._isConfigured !== true ) {
+            this.log.warn('[uibuilder:web.js:_userApiSetup] Cannot run. Setup has not been called.')
+            return
+        }
+
         //const RED = uib.RED
     
         //app = RED.httpNode
@@ -420,6 +436,11 @@ class UibWeb {
      *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
      * @protected */
     _setMasterStaticFolder() {
+        if ( this._isConfigured !== true ) {
+            this.log.warn('[uibuilder:web.js:_setMasterStaticFolder] Cannot run. Setup has not been called.')
+            return
+        }
+
         // Reference static vars
         const uib = this.uib
         //const RED = this.RED
@@ -440,14 +461,87 @@ class UibWeb {
         }
     } // --- End of setMasterStaticFolder() --- //
 
+    /** Add ExpressJS Route for Socket.IO client */
+    serveVendorSocketIo() {
+        if ( this._isConfigured !== true ) {
+            this.log.warn('[uibuilder:web.js:serveVendorSocketIo] Cannot run. Setup has not been called.')
+            return
+        }
+
+        // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
+        const sioPath = packageMgt.getPackagePath2('socket.io', this.RED.settings.userDir)
+        if ( sioPath !== null ) {
+            this.vendorRouter.use( '/socket.io', express.static( sioPath, this.uib.staticOpts ) )
+        } else {
+            // Error: Can't find Socket.IO
+            this.log.error(`[uibuilder:web.js:serveVendorSocketIo] Cannot find installation of Socket.IO. It should be in userDir (${this.RED.settings.userDir}) but is not. Check that uibuilder is installed correctly. Run 'npm ls socket.io'.`)
+        }
+    } // --- End of serveVendorSocketIo() --- //
+
+    /** Add ExpressJS Routes for all installed packages & ensure <uibRoot>/package.json is up-to-date. */
+    serveVendorPackages() {
+        if ( this._isConfigured !== true ) {
+            this.log.warn('[uibuilder:web.js:serveVendorPackages] Cannot run. Setup has not been called.')
+            return
+        }
+
+        // TODO Add some trace messages
+
+        // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
+        this.vendorRouter = express.Router({mergeParams:true}) // eslint-disable-line new-cap
+        this.vendorRouter.myname = 'uibVendorRouter'
+
+        // Remove the vendor router if it already exists - we will recreate it. `some` stops once it has found a result
+        this.uibRouter.stack.some((layer, i, aStack) => {
+            if ( layer.regexp.toString() === '/^\\/vendor\\/?(?=\\/|$)/i' ) {
+                aStack.splice(i,1)
+                return true
+            }
+            return false
+        } )
+        this.routers.user.some((entry, i, uRoutes) => {
+            if ( entry.name === 'Vendor Routes' ) {
+                uRoutes.splice(i,1)
+                return true
+            }
+            return false
+        } )
+
+        // Assign the vendorRouter to the ../uibuilder/vendor url path (via uibRouter)
+        this.uibRouter.use( '/vendor', this.vendorRouter )
+        this.routers.user.push( {name: 'Vendor Routes', path:`${this.uib.httpRoot}/uibuilder/vendor/*`, desc: 'Front-end libraries are mounted under here', type:'Router'} )        
+
+        // Get the installed packages from the `<uibRoot>/package.json` file
+        // If it doesn't exist, this will create it.
+        const pj = packageMgt.getUibRootPackageJson()
+
+        Object.keys(pj.dependencies).forEach( packageName => {
+            const pkgDetails = pj.uibuilder.packages[packageName]
+
+            // Add a route for each package to this.vendorRouter
+            this.vendorRouter.use( 
+                pkgDetails.packageUrl,
+                express.static(
+                    pkgDetails.installFolder, 
+                    this.uib.staticOpts
+                ) 
+            )
+
+        })
+
+        // Update the <uibRoot>/package.json file with updated details
+        packageMgt.setUibRootPackageJson(pj)
+
+    } // ---- End of serveVendorPackages ---- //
+
+    //#endregion ==== End of Setup ==== //
+
     /** Allow the isConfigured flag to be read (not written) externally 
      * @returns {boolean} True if this class as been configured
      */
     get isConfigured() {
         return this._isConfigured
     }
-
-    //? Consider adding isConfigered checks on each method?
 
     //#region ====== Per-node instance processing ====== //
 
@@ -459,7 +553,12 @@ class UibWeb {
         const uib = this.uib
         //const RED = this.RED
         //const log = this.log
-        this.routers.instances[node.url] = [] // Track routes
+
+        // NOTE: When an instance is renamed or deleted, the routes are removed
+        //       See the relevant parts of uibuilder.js for details.
+
+        // Reset the routes for this instance
+        this.routers.instances[node.url] = []
 
         /** Make sure that the common static folder is only loaded once */
         node.commonStaticLoaded = false
@@ -470,10 +569,6 @@ class UibWeb {
 
         // We want to add services in the right order - first load takes preference
         // Middleware first (1), then front-end user code(2)(4), master (3) and common (5) folders last
-
-        // TODO: Is this actually needed any more?
-        // Remove existing middleware so that it can be redone - allows for changing of src/dist folder
-        this.removeInstanceMiddleware(node)
 
         // (1a) httpMiddleware - Optional middleware from a custom file
         this.addMiddlewareFile(node)
@@ -501,8 +596,6 @@ class UibWeb {
 
         // Apply this instances router to the url path on `<httpNodeRoot>/<url>/`
         this.app.use( tilib.urlJoin(node.url), this.instanceRouters[node.url])
-
-        console.log('>> ROUTES >>'); console.dir(this.routers, {depth:3})
 
     }
 
@@ -821,202 +914,6 @@ class UibWeb {
 
     //#endregion ====== Per-node instance processing ====== //
 
-    //#region ====== Package Management ====== //
-    // NB: Packages are actually installed via a v2 API `uibnpmmanage`
-
-    /** Compare the in-memory package list against packages actually installed.
-     * Also check common packages installed against the master package list in case any new ones have been added.
-     * Updates the package list file and uib.installedPackages
-     * param {Object} vendorPaths Schema: {'<npm package name>': {'url': vendorPath, 'path': installFolder, 'version': packageVersion, 'main': mainEntryScript} }
-     * @param {string} newPkg Default=''. Name of a new package to be checked for in addition to existing. 
-     * @param {string} url The node instance url if wanting to check for locally installed packages.
-     * @returns {object} uib.installedPackages
-     */
-    checkInstalledPackages(newPkg='', url='') {
-        // Reference static vars
-        const uib = this.uib
-        const log = this.log
-        const app = this.app
-
-        let installedPackages = uib.installedPackages
-
-        packageMgt.updateMergedPackageList(newPkg)
-
-        // For each entry in the complete list ...
-        packageMgt.mergedPkgMasterList.forEach( (pkgName, _i) => { // eslint-disable-line no-unused-vars
-            // flags
-            let pkgExists = false
-
-            let pj = null // package details if found
-
-            // Check to see if folder names present in <userDir>/node_modules
-            const pkgFolder = packageMgt.getPackagePath(pkgName)
-
-            // Check whether package is really installed (exists)
-            if ( pkgFolder !== null ) {
-                
-                // Get the package.json
-                pj = packageMgt.readPackageJson( pkgFolder )
-
-                /** The folder delete for npm remove happens async so it may
-                 *  still exist when we check. But the package.json will have been removed
-                 *  so we don't process the entry unless package.json actually exists
-                 */
-                if ( ! Object.prototype.hasOwnProperty.call(pj, 'ERROR') ) {
-                    // We only know for sure package exists now
-                    pkgExists = true
-                }
-            }
-
-            // Check to see if the package is in the current list
-            const isInCurrent = Object.prototype.hasOwnProperty.call(installedPackages, pkgName)
-
-            if ( pkgExists ) {
-                // If package is installed but does NOT exist in current list - add it now
-                if ( ! isInCurrent ) {
-                    // Add to current & mark for loading (serving)
-                    installedPackages[pkgName] = {}
-                    installedPackages[pkgName].loaded = false
-                }
-
-                // Update package info
-                installedPackages[pkgName].folder = pkgFolder
-                installedPackages[pkgName].url = ['..', uib.moduleName, 'vendor', pkgName].join('/')
-                // Find installed version
-                installedPackages[pkgName].version = pj.version
-                // Find homepage
-                installedPackages[pkgName].homepage = pj.homepage
-                // Find main entry point (or '')
-                installedPackages[pkgName].main = pj.main || ''
-
-                /** Try to guess the browser entry point (or '')
-                 * since v3.2.1 Fix for packages misusing the browser property - might be an object see #123
-                 */
-                let browserEntry = ''
-                if ( pj.browser && typeof pj.browser === 'string' ) {
-                    browserEntry = pj.browser
-                }
-                if ( browserEntry === '' ) {
-                    browserEntry = pj.jsdelivr || pj.unpkg || ''
-                }
-                installedPackages[pkgName].browser = browserEntry
-
-                // Replace generic entry points with specific if we know them
-                if ( pkgName === 'socket.io' ) {
-                    //installedPackages[pkgName].url  = '../uibuilder/socket.io/socket.io.js'
-                    installedPackages[pkgName].main = 'socket.io.js'
-                }
-
-                // If we need to load it & we have app available
-                if ( (installedPackages[pkgName].loaded === false) && (app !== undefined) ) {
-                    /** Add a static path to serve up the files */
-                    installedPackages[pkgName].loaded = this.servePackage(pkgName)
-                }
-
-            } else { // (package not actually installed)
-                // If in current, flag for unloading then delete from current
-                if ( isInCurrent ) { // eslint-disable-line no-lonely-if
-                    if ( app !== undefined) {
-                        installedPackages[pkgName].loaded = this.unservePackage(pkgName)
-                        log.trace('[uibuilder:web:checkInstalledPackages] package unserved ', pkgName)
-                    }
-                    delete installedPackages[pkgName]
-                    log.trace('[uibuilder:web:checkInstalledPackages] package deleted from installedPackages ', pkgName)
-                }
-            }
-        })
-
-        //uib.installedPackages = installedPackages
-        
-        // Write packageList back to file
-        try {
-            fs.writeJsonSync(path.join(uib.configFolder,uib.packageListFilename), Object.keys(installedPackages), {spaces:2})
-        } catch(e) {
-            log.error(`[uibuilder:web:checkInstalledPackages] Could not write ${uib.packageListFilename} in ${uib.configFolder}`, e)
-        }
-
-        return uib.installedPackages
-
-    } // ---- End of checkInstalledPackages ---- //
-
-    /** Add an installed package to the ExpressJS app to allow access from URLs
-     * @param {string} packageName Name of the front-end npm package we are trying to add
-     * @returns {boolean} True if loaded, false otherwise
-     */
-    servePackage(packageName) {
-        // Reference static vars
-        const uib = this.uib
-        const RED = this.RED
-        const log = this.log
-
-        let userDir = RED.settings.userDir        
-        let pkgDetails = null
-        let installedPackages = uib.installedPackages
-
-        // uib.installedPackages[packageName] MUST exist and be populated (done by uiblib.checkInstalledPackages())
-        if ( Object.prototype.hasOwnProperty.call(installedPackages, packageName) ) {
-            pkgDetails = installedPackages[packageName]
-        } else {
-            log.error('[uibuilder:web:servePackage] Failed to find package in uib.installedPackages')
-            return false
-        }
-
-        // Where is the node_modules folder for this package?
-        const installFolder = pkgDetails.folder
-
-        if (installFolder === '' ) {
-            log.error(`[uibuilder:web:servePackage] Failed to add user vendor path - no install folder found for ${packageName}.  Try doing "npm install ${packageName} --save" from ${userDir}`)
-            return false
-        }
-
-        // What is the URL for this package? Remove the leading "../"
-        var vendorPath
-        try {
-            vendorPath = pkgDetails.url.replace('../','/') // "../uibuilder/vendor/socket.io" tilib.urlJoin(uib.moduleName, 'vendor', packageName)
-        } catch (e) {
-            log.error(`[uibuilder:web:servePackage] ${packageName} `, e)
-            return false
-        }
-        log.trace(`[uibuilder:web:servePackage] Adding user vendor path:  ${util.inspect({'url': vendorPath, 'path': installFolder})}`)
-
-        try {
-            this.vendorRouter.use( vendorPath.replace('/uibuilder/vendor', ''), express.static(installFolder, uib.staticOpts) )
-            return true
-        } catch (e) {
-            log.error(`[uibuilder:web:servePackage] app.use failed. vendorPath: ${vendorPath}, installFolder: ${installFolder}`, e)
-            return false
-        }
-    } // ---- End of servePackage ---- //
-
-    /** Remove an installed package from the ExpressJS app
-     * @param {string} packageName Name of the front-end npm package we are trying to add
-     * @returns {boolean} True if unserved, false otherwise
-     */
-    unservePackage(packageName) {
-        // Reference static vars
-        //const uib = this.uib
-        //const RED = this.RED
-        //const log = this.log
-        const app = this.app
-        
-        let pkgReStr = `/^\\/uibuilder\\/vendor\\/${packageName}\\/?(?=\\/|$)/i`
-        let done = false
-        // For each entry on ExpressJS's server stack...
-        app._router.stack.some( function(r, i) {
-            if ( r.regexp.toString() === pkgReStr ) {
-                // We can splice inside the array only because we will only do a single one.
-                app._router.stack.splice(i,1)
-                done = true
-                return true
-            }
-            return false
-        })
-
-        return done
-    } // ---- End of unservePackage ---- //
-
-    //#endregion ====== Package Management ====== //
-
     //#region ==== ExpressJS Route Reporting ==== //
 
     /** Summarise Express route properties
@@ -1186,23 +1083,40 @@ class UibWeb {
 
     /** Build a raw HTML table from an input
      * @param {*} input Input object
-     * @param {array} [cols] List of columns
+     * @param {Array} [cols] List of columns
      * @returns {string} HTML Table
      */
     htmlBuildTable(input, cols) { // eslint-disable-line class-methods-use-this
         if (!cols) {
             cols = Object.keys(input[0])
         }
-        let html = '<table  class="table"><tr>'
+        let html = '<div class="table-responsive"><table  class="table table-sm"><tr>'
 
+        const escapeHTML = str => 
+            str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag])
+            )
+
+        /** The HTML for a single cell
+         * @param {*} col _
+         * @param {*} entry _ 
+         * @returns {string} HTML for a single cell
+         */
         function cell(col, entry) { // eslint-disable-line require-jsdoc
             let html = '<td>'
-            html += entry[col] ? entry[col] : ' '
+            html += entry[col] ? escapeHTML(entry[col]) : ' '
             html += '</td>'
 
             return html
         }
 
+        // Show the headings
         cols.forEach( (col) => {
             html += '<th>'
             html += col
@@ -1220,7 +1134,7 @@ class UibWeb {
             html += '</tr>'
         }
 
-        html += '</table>'
+        html += '</table></div>'
         return html
     }
 

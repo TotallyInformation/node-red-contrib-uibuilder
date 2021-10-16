@@ -194,81 +194,122 @@ function adminRouterV3(uib, log) {
             params.type = 'get'
 
             // Commands ...
-            if ( params.cmd === 'listall' ) { // List all folders and files for this uibuilder instance
-                log.trace(`[uibuilder:admin-router:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
+            switch (params.cmd) {
+                // List all folders and files for this uibuilder instance
+                case 'listall': {
+                    log.trace(`[uibuilder:admin-router:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
 
-                // get list of all (sub)folders (follow symlinks as well)
-                const out = {'root':[]}
-                const root2 = uib.rootFolder.replace(/\\/g, '/')
-                fg.stream([`${root2}/${params.url}/**`], { dot: true, onlyFiles: false, deep: 10, followSymbolicLinks: true, markDirectories: true })
-                    .on('data', entry => {
-                        entry = entry.replace(`${root2}/${params.url}/`, '')
-                        let fldr
-                        if ( entry.endsWith('/') ) {
-                            // remove trailing /
-                            fldr = entry.slice(0, -1)
-                            // For the root folder of the instance, use "root" as the name (matches editor processing)
-                            if ( fldr === '' ) fldr = 'root'
-                            out[fldr] = []
-                        } else {
-                            let splitEntry = entry.split('/')
-                            let last = splitEntry.pop()
-                            fldr = splitEntry.join('/')
-                            if ( fldr === '' ) fldr = 'root'
-                            out[fldr].push(last)
+                    // get list of all (sub)folders (follow symlinks as well)
+                    const out = {'root':[]}
+                    const root2 = uib.rootFolder.replace(/\\/g, '/')
+                    fg.stream([`${root2}/${params.url}/**`], { dot: true, onlyFiles: false, deep: 10, followSymbolicLinks: true, markDirectories: true })
+                        .on('data', entry => {
+                            entry = entry.replace(`${root2}/${params.url}/`, '')
+                            let fldr
+                            if ( entry.endsWith('/') ) {
+                                // remove trailing /
+                                fldr = entry.slice(0, -1)
+                                // For the root folder of the instance, use "root" as the name (matches editor processing)
+                                if ( fldr === '' ) fldr = 'root'
+                                out[fldr] = []
+                            } else {
+                                let splitEntry = entry.split('/')
+                                let last = splitEntry.pop()
+                                fldr = splitEntry.join('/')
+                                if ( fldr === '' ) fldr = 'root'
+                                out[fldr].push(last)
+                            }
+                        })
+                        .on('end', () => {
+                            res.statusMessage = 'Folders and Files listed successfully'
+                            res.status(200).json(out)
+                        })
+                    
+                    break
+                } // -- end of listall -- //
+            
+                // Check if URL is already in use
+                case 'checkurls': {
+                    log.trace(`[uibuilder:admin-router:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
+        
+                    /** @returns {boolean} True if the given url exists, else false */
+                    let chkInstances = Object.values(uib.instances).includes(params.url)
+                    let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+    
+                    res.statusMessage = 'Instances and Folders checked'
+                    res.status(200).json( chkInstances || chkFolders )
+                    
+                    break
+                } // -- end of checkurls -- //
+            
+                // List all of the deployed instance urls
+                case 'listinstances': {
+
+                    log.trace('[uibuilder:admin-router:GET:listinstances] Returning a list of deployed URLs (instances of uib).')
+        
+                    /** @returns {boolean} True if the given url exists, else false */
+                    // let chkInstances = Object.values(uib.instances).includes(params.url)
+                    // let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+    
+                    res.statusMessage = 'Instances listed'
+                    res.status(200).json( uib.instances )
+    
+                    break
+                } // -- end of listinstances -- //
+            
+                // Return a list of all user urls in use by ExpressJS
+                case 'listurls': {
+                    // TODO Not currently working
+                    var route, routes = []
+                    web.app._router.stack.forEach( (middleware) => {
+                        if(middleware.route){ // routes registered directly on the app
+                            let path = middleware.route.path
+                            let methods = middleware.route.methods
+                            routes.push({path: path, methods: methods})
+                        } else if(middleware.name === 'router'){ // router middleware 
+                            middleware.handle.stack.forEach(function(handler){
+                                route = handler.route
+                                route && routes.push(route)
+                            })
                         }
                     })
-                    .on('end', () => {
-                        res.statusMessage = 'Folders and Files listed successfully'
-                        res.status(200).json(out)
-                    })
-                // -- end of listall -- //
-            } else if ( params.cmd === 'checkurls' ) { // Check if URL is already in use
-                log.trace(`[uibuilder:admin-router:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
-        
-                /** @returns {boolean} True if the given url exists, else false */
-                let chkInstances = Object.values(uib.instances).includes(params.url)
-                let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+                    console.log(web.app._router.stack[0])
 
-                res.statusMessage = 'Instances and Folders checked'
-                res.status(200).json( chkInstances || chkFolders )
-                // -- end of checkurls -- //
-            } else if ( params.cmd === 'listinstances' ) { // List all of the deployed instance urls
+                    log.trace('[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.')
+                    res.statusMessage = 'URLs listed successfully'
+                    //res.status(200).json(routes)
+                    res.status(200).json(web.app._router.stack)
+                    
+                    break
+                } // -- end of listurls -- //
+            
+                // See if a node's custom folder exists. Return true if it does, else false
+                case 'checkfolder': {
+                    log.trace(`[uibuilder:admin-router:GET:checkfolder] See if a node's custom folder exists. URL: ${params.url}`)
 
-                log.trace('[uibuilder:admin-router:GET:listinstances] Returning a list of deployed URLs (instances of uib).')
-        
-                /** @returns {boolean} True if the given url exists, else false */
-                // let chkInstances = Object.values(uib.instances).includes(params.url)
-                // let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+                    const folder = path.join( uib.rootFolder, params.url)
 
-                res.statusMessage = 'Instances listed'
-                res.status(200).json( uib.instances )
-
-            } else if ( params.cmd === 'listurls' ) {  // Return a list of all user urls in use by ExpressJS
-                // TODO Not currently working
-                var route, routes = []
-                web.app._router.stack.forEach( (middleware) => {
-                    if(middleware.route){ // routes registered directly on the app
-                        let path = middleware.route.path
-                        let methods = middleware.route.methods
-                        routes.push({path: path, methods: methods})
-                    } else if(middleware.name === 'router'){ // router middleware 
-                        middleware.handle.stack.forEach(function(handler){
-                            route = handler.route
-                            route && routes.push(route)
+                    fs.access(folder, fs.constants.F_OK)
+                        .then( () => {
+                            res.statusMessage = 'Folder checked'
+                            res.status(200).json( true )
+                            return true
                         })
-                    }
-                })
-                console.log(web.app._router.stack[0])
-
-                log.trace('[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.')
-                res.statusMessage = 'URLs listed successfully'
-                //res.status(200).json(routes)
-                res.status(200).json(web.app._router.stack)
-                // -- end of listurls -- //
+                        .catch( () => { //err) => {
+                            res.statusMessage = 'Folder checked'
+                            res.status(200).json( false )
+                            return false
+                        })
+                    
+                    break
+                } // -- end of checkfolder -- //
+            
+                default: {
+                    break
+                }
             }
-
         })
+
         // TODO Write file contents
         .put(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             // @ts-ignore
@@ -294,6 +335,7 @@ function adminRouterV3(uib, log) {
             })
 
         })
+
         // Load new template or Create a new folder or file
         .post(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             // @ts-ignore
@@ -390,6 +432,7 @@ function adminRouterV3(uib, log) {
             } // end of else
 
         }) // --- End of POST processing --- //
+
         // Delete a folder or a file
         .delete(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             // @ts-ignore ts(2339)
@@ -459,9 +502,10 @@ function adminRouterV3(uib, log) {
                 'params': params,
             })
         })
-        /** @see https://expressjs.com/en/4x/api.html#app.METHOD for other methods
-         *  patch, report, search ?
-         */
+
+    /** @see https://expressjs.com/en/4x/api.html#app.METHOD for other methods
+     *  patch, report, search ?
+     */
 
     return admin_Router_V3
 }

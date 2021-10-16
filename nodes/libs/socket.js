@@ -101,7 +101,7 @@ class UibSockets {
         }
 
         if ( ! uib || ! server ) {
-            throw new Error('[uibuilder:socket.js:setup] Called without required parameters')
+            throw new Error(`[uibuilder:socket.js:setup] Called without required parameters. uib=${uib}, server=${server}`)
         }
 
         /** @type {runtimeRED} reference to Core Node-RED runtime object */

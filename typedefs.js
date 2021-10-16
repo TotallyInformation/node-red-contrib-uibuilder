@@ -207,6 +207,7 @@
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
  * @property {boolean} allowUnauth Allow unauthorised messaging
+ * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  */
 
 /** uibNode
@@ -239,6 +240,7 @@
  * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * 
  * @property {Function} send Send a Node-RED msg to an output port
  * @property {Function=} done Dummy done Function for pre-Node-RED 1.0 servers
@@ -283,19 +285,6 @@
  * @property {string} packageListFilename File name of the installed package list. 
  * 
  *  Default 'packageList.json'
- * @property {Object<string, object>} installedPackages Track the vendor packages installed and their paths - 
- *  updated by `uiblib.checkInstalledPackages()` Populated initially from packageList file once the configFolder 
- *  is known & master list has been copied. 
- * 
- *  Schema:
- *  ```json
- *  {"<npm package name>": {
- *      "<url>": "<vendorPath>", 
- *      "<path>": "<installFolder>", 
- *      "<version>": "<packageVersion>", 
- *      "<main>": "<mainEntryScript>"
- *  } }
- *  ```
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  * 
  *  Default `../templates`
@@ -340,6 +329,8 @@
  * @property {undefined|object} degitEmitter Event emitter for degit, populated on 1st use. See POST admin API
  * @property {undefined|runtimeRED} RED Keep a reference to RED for convenience. Set at the start of Uib
  * @property {string=} version The deployed version of uibuilder (from `package.json`)
+ * @property {string=} httpRoot Copy of RED.settings.httpRoot for ease of use
+ * @property {string=} reDeployNeeded If the last deployed version is this version or earlier and the current version is greater than this, tell the Editor that a redeploy is needed
  */
 
 /** senderNode1

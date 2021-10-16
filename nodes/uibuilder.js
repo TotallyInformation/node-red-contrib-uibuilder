@@ -74,7 +74,6 @@ const uib = {
     instances: {},
     masterPackageListFilename: 'masterPackageList.json',
     packageListFilename: 'packageList.json',
-    installedPackages: {},
     masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
     masterStaticDistFolder: path.join( __dirname, '..', 'front-end', 'dist' ),
     masterStaticSrcFolder: path.join( __dirname, '..', 'front-end', 'src' ),
@@ -96,6 +95,7 @@ const uib = {
         /** @type {undefined|string} The host name of the Node-RED server */
         hostName: undefined,
     },
+    reDeployNeeded: '4.1.2',
     degitEmitter: undefined,
     RED: undefined,
 }
@@ -146,7 +146,7 @@ function runtimeSetup() {
             
             RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${port}/ or ${uib.customServer.type}://localhost:${port}/`)
             RED.log.info('| Installed packages:')
-            const pkgs = Object.keys(uib.installedPackages)
+            const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
             for (let i = 0; i < pkgs.length; i+=4) {
                 const k = []
                 for (let j = 0; j <= 3; j++) {
@@ -264,13 +264,6 @@ function runtimeSetup() {
     
     /** Pass core objects to the Socket.IO handler module */
     sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
-
-    /** Serve up vendor packages. Updates uib.installedPackages
-     * This is the first check, the installed packages are rechecked at various times.
-     * Reads the packageList and masterPackageList files
-     * Adds ExpressJS static paths for each found FE package & saves the details to the vendorPaths variable.
-     */
-    web.checkInstalledPackages()
 
 } // --- end of runtimeSetup --- //
 
@@ -401,7 +394,7 @@ function nodeInstance(config) {
     // NB: this.id and this.type are also available
     this.name            = config.name  || ''
     this.topic           = config.topic || ''
-    this.url             = config.url   || 'uibuilder'
+    this.url             = config.url // Undefined or '' is not valid
     this.oldUrl          = config.oldUrl
     this.fwdInMessages   = config.fwdInMessages === undefined ? false : config.fwdInMessages
     this.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
@@ -417,11 +410,20 @@ function nodeInstance(config) {
     this.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
     this.reload          = config.reload === undefined ? false : config.reload
     this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:setupInstanceStatic
+    this.deployedVersion = config.deployedVersion
     //#endregion ====== Local node config copy ====== //
 
     log.trace(`[uibuilder:nodeInstance:${this.url}] ================ instance registered ================`)
     log.trace(`[uibuilder:nodeInstance:${this.url}] node keys: ${JSON.stringify(Object.keys(this))}`)
     log.trace(`[uibuilder:nodeInstance:${this.url}] config keys: ${JSON.stringify(Object.keys(config))}`)
+    log.trace(`[uibuilder:nodeInstance:${this.url}] Deployed Version: ${this.deployedVersion}`)
+
+    if ( !this.url || typeof this.url !== 'string' || this.url.length < 1 ) {
+        log.error('[uibuilder:nodeInstance] No valid URL provided. Cannot set up this uibuilder instance')
+        this.statusDisplay = { fill: 'red', shape: 'dot', text: 'ERROR:NOT CONFIGURED - No URL' }
+        uiblib.setNodeStatus( this )
+        return
+    }
 
     this.statusDisplay = { fill: 'blue', shape: 'dot', text: 'Configuring node' }
     if ( this.useSecurity === true ) this.statusDisplay.fill = 'yellow'
@@ -466,6 +468,9 @@ function nodeInstance(config) {
                 log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${this.url}, oldUrl=${this.oldUrl}, Fldr=${this.customFolder}. Error=${e.message}`, e)
             }
         }
+        // Remove the old router and remove from the routes list
+        delete web.routers.instances[this.oldUrl]
+        delete web.instanceRouters[this.oldUrl]
         // we continue to do the normal checks in case something failed or if this is an initial deploy (so no original folder exists)
     }
 
@@ -551,7 +556,7 @@ function nodeInstance(config) {
     // 3) Add event handler to process inbound messages
     this.on('input', inputMsgHandler)
 
-    // 3rd-party node (non-flow) Event handlers
+    // 3rd-party node (non-flow) Event handlers (e.g. uib-sender)
     externalEvents(this)
 
     /** Do something when Node-RED is closing down which includes when this node instance is redeployed
@@ -565,22 +570,29 @@ function nodeInstance(config) {
         // Cancel any event listeners for this node
         tiEvents.removeAllListeners(`node-red-contrib-uibuilder/${this.url}`)
 
+        // Tody up the ExpressJS routes if a node is removed
+        if (removed) {
+            delete web.routers.instances[this.url]
+            delete web.instanceRouters[this.url]
+        }
+
         // Do any complex close processing here if needed - MUST BE LAST
         uiblib.instanceClose(this, uib, sockets, web, done)
         //done()
     })
 
+    // TODO Move to web
     // Shows an instance details debug page
     RED.httpAdmin.get(`/uibuilder/instance/${this.url}`, (/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) => {
         let page = web.showInstanceDetails(req, this)
         res.status(200).send( page )
     })
 
-    // TODO: Remove this debug info
-    setTimeout(function(){
-        tilib.dumpMem('Instance')
-        web.dumpRoutes(true)    
-    }, 2000)
+    // // TODO: Remove this debug info
+    // setTimeout(function(){
+    //     tilib.dumpMem('Instance')
+    //     web.dumpRoutes(true)    
+    // }, 2000)
 
 } // ----- end of nodeInstance ----- //
 
@@ -603,6 +615,8 @@ function Uib(RED) {
             uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
             uibuilderTemplates: { value: templateConf, exportable: true }, // See require's
             uibuilderCustomServer: { value: (uib.customServer), exportable: true },
+            uibuilderCurrentVersion: { value: (uib.version), exportable: true }, // Current version of uibuilder
+            uibuilderRedeployNeeded: { value: uib.reDeployNeeded, exportable: true },
         },
     }) 
 

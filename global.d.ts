@@ -1,6 +1,7 @@
-/** Define Global RED object so that VScode typescript stops whinging. */
-
 declare var RED:any;
+
+
+/** Define Global RED object so that VScode typescript stops whinging. */
 
 //import { EditorRED } from "node-red";
 

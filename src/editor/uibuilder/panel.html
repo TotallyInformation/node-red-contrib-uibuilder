@@ -1,9 +1,9 @@
 <div class="form-row tabs-row"><ul id="tabs"></ul></div>
-<div id="tabs-content" style="border-bottom: 1px solid silver; padding-bottom: 1em; margin-bottom: 1em;">
+<div id="tabs-content" x-style="border-bottom: 1px solid silver; padding-bottom: 1em; margin-bottom: 1em;">
     <div id="tab-core">
-        <div aria-label="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
+        <div id="url-input" aria-label="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
             <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-            <input type="text" id="node-input-url" title="required, <20 chars, unique, cannot be 'templates'">
+            <input type="text" id="node-input-url" title="Cannot be 'templates. Cannot contain: space _ / \\ ..'" placeholder="Required. <20 chars. Unique">
         </div>
 
         <div id="info" aria-label="Information and utility links" class="form-row" style="display: flex; justify-content: space-between; width:450px">
@@ -166,19 +166,16 @@
     </div>
 
     <div id="tab-libraries">
-        <b>Front-End Library Manager</b>
         <p>
             Install, remove or update npm packages that provide front-end libraries such as
             VueJS, jQuery, MoonJS, etc.
+        <br>
+            Search for packages on <a href="https://www.npmjs.com/" target="_blank" style="color:var(--red-ui-text-color-link);text-decoration:underline;">official npm site</a> 
+            or <a href="https://npms.io/" target="_blank" style="color:var(--red-ui-text-color-link);text-decoration:underline;">npms.io</a>.
         </p>
 
-        <p>
-            Search for packages: <a href="https://www.npmjs.com/" target="_blank" class="red-ui-button editor-button">official npm site</a> 
-            or <a href="https://npms.io/" target="_blank" class="red-ui-button editor-button">npms.io</a>.<br>
-            Copy the name, click on "+ add" below and paste in the input.
-        </p>
-
-        <div aria-label="Package List Container" class="form-row">
+        <div aria-label="Package List Container" class="form-row" id="package-list-container">
+            <!-- <div class="red-ui-editableList-border red-ui-editableList-container" id="node-input-option-container-div"> -->
             <ol id="node-input-packageList"></ol>
         </div>
     </div>

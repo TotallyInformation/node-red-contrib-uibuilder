@@ -335,49 +335,7 @@ function adminRouterV2(uib, log) {
             }
             // default to 'html' output type
             default: {
-                //console.log('Expresss 3.x - app.routes: ', app.routes) // Expresss 3.x
-                //console.log('Expresss 3.x with express.router - app.router.stack: ', app.router.stack) // Expresss 3.x with express.router
-                //console.log('Expresss 4.x - app._router.stack: ', app._router.stack) // Expresss 4.x
-                //console.log('Restify - server.router.mounts: ', server.router.mounts) // Restify
-
-                // Update the uib.vendorPaths master variable
-                web.checkInstalledPackages()
-
-                // Include socket.io as a client library (but don't add to vendorPaths)
-                // let sioFolder = packageMgt.findPackage('socket.io', userDir)
-                // let sioVersion = packageMgt.readPackageJson( sioFolder ).version
-
-                // Collate current ExpressJS urls and details
-                var otherPaths = [], uibPaths = []
-                var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
-                // req.app._router.stack.forEach( function(r, i, stack) { // shows Node-RED admin server paths
-                // eslint-disable-next-line no-unused-vars
-                web.app._router.stack.forEach( function(r, i, stack) { // shows Node-RED user server paths
-                    let rUrl = r.regexp.toString().replace(urlRe, '')
-                    if ( rUrl === '' ) {
-                        uibPaths.push( {
-                            'name': r.name,
-                            'regex': r.regexp.toString(), 
-                            'route': r.route,
-                            'path': r.path,
-                            'params': r.params,
-                            'keys': r.keys,
-                            'method': r.route ? Object.keys(r.route.methods)[0].toUpperCase() : 'ANY',
-                            'handle': r.handle.toString(),
-                        } )
-                    } else {
-                        otherPaths.push( {
-                            'name': r.name,
-                            'regex': r.regexp.toString(), 
-                            'route': r.route,
-                            'path': r.path,
-                            'params': r.params,
-                            'keys': r.keys,
-                            'method': r.route ? Object.keys(r.route.methods)[0].toUpperCase() : 'ANY',
-                            'handle': r.handle.toString(),
-                        } )
-                    }
-                })
+                
                 const routes = web.dumpRoutes(false)
 
                 // Build the web page
@@ -394,6 +352,9 @@ function adminRouterV2(uib, log) {
                         <h1>uibuilder Detailed Information Page</h1>
                         <p>
                             Note that this page is only accessible to users with Node-RED admin authority.
+                        </p>
+                        <p>
+                            If this page looks ugly, try using the uibuilder library manager to install <code>bootstrap</code>.
                         </p>
                 `
 
@@ -436,7 +397,7 @@ function adminRouterV2(uib, log) {
                 page += `
                     <h2>Vendor Client Libraries</h2>
                     <p>
-                        You can include these libraries in any uibuilder served web page.
+                        You can include these libraries (packages) in any uibuilder served web page.
                         Note though that you need to find out the correct file and relative folder either by looking on 
                         your Node-RED server in the location shown or by looking at the packages source online.
                     </p>
@@ -444,32 +405,20 @@ function adminRouterV2(uib, log) {
                         <thead><tr>
                             <th>Package</th>
                             <th>Version</th>
-                            <th>uibuilder URL <a href="#vl1"><sup>(1)</sup></a></th>
-                            <th>Browser Entry Point (est.) <a href="#vl2"><sup>(2)</sup></a></th>
+                            <th>Browser Entry Point (est.) <a href="#vl1"><sup>(1)</sup></a> <a href="#vl2"><sup>(2)</sup></a></th>
                             <th>Server Filing System Folder</th>
                         </tr></thead><tbody>
                 `
-                Object.keys(uib.installedPackages).forEach(packageName => {
-                    let pj = uib.installedPackages[packageName]
+                let installedPackages = packageMgt.uibPackageJson.uibuilder.packages
+                Object.keys(installedPackages).forEach(packageName => {
+                    let pj = installedPackages[packageName]
                     
-                    /** Are either the `browser` or `main` properties set in package.json?
-                     *  If so, add them to the output as an indicator of where to look.
-                     */
-                    let mainTxt = '<i>Not Supplied</i>'
-                    //console.log('==>> ',uib.nodeRoot, pj.url,pj.browser)
-                    if ( pj.browser !== '' ) {
-                        mainTxt = `<a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, pj.url.replace('..',''), pj.browser).replace('/','')}">${pj.url}/${pj.browser}</a>`
-                    } else if ( pj.main !== '' ) {
-                        mainTxt = `<a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, pj.url.replace('..',''), pj.main).replace('/','')}">${pj.url}/${pj.main}</a>`
-                    }
-
                     page += `
                         <tr>
-                            <td><a href="${pj.homepage}">${packageName}</a></td>
-                            <td>${pj.version}</td>
-                            <td>${pj.url}</td>
-                            <td>${mainTxt}</td>
-                            <td>${pj.folder}</td>
+                            <td><a href="${pj.homepage}" title="Click to go to package's home page">${packageName}</a></td>
+                            <td title="Installed Version, Version Spec='${pj.spec}'">${pj.installedVersion}</td>
+                            <td title="Use this in your front-end code">${pj.url}</td>
+                            <td>${pj.installFolder}</td>
                         </tr>
                     `
                 })
@@ -591,55 +540,51 @@ function adminRouterV2(uib, log) {
                     <pre>${tilib.syntaxHighlight( web.app.mountpath )}</pre>
                 `
 
-                /** Installed Packages */
-                page += `
-                    <h2>Installed Packages</h2>
-                    <p>
-                        These are the front-end libraries uibuilder knows to be installed and made available via ExpressJS serve-static.
-                        This is the raw view of the Vendor Client Libraries table above.
-                    </p>
-                    <pre>${tilib.syntaxHighlight( uib.installedPackages )}</pre>
-                `
-
                 // Show the ExpressJS paths currently defined
+                // web.routers contains descriptive info on routes, routes.user contains the ExpressJS route stack info.
                 page += `
+                    <hr>
                     <h2>uibuilder ExpressJS Routes</h2>
+                    <p>These tables show all of the web URL routes for uibuilder.</p>
                 `
-
                 page += `
                     <h3>User-Facing Routes</h3>
-                `
-                page += `
-                    <h4>Application Routes (<code>../*</code>)</h4>
+                    ${web.htmlBuildTable( web.routers.user, ['name', 'desc', 'path', 'type', 'folder'] )}
+                    <h4>ExpressJS technical route data for admin routes</h4>
+                    <h5>Application Routes (<code>../*</code>)</h5>
                     ${web.htmlBuildTable( routes.user.app, ['name','path', 'folder', 'route'] )}
-                `
-                page += `
-                    <h4>uibuilder generic Routes (<code>../uibuilder/*</code>)</h4>
+                    <h5>uibuilder generic Routes (<code>../uibuilder/*</code>)</h5>
                     ${web.htmlBuildTable( routes.user.uibRouter, ['name','path', 'folder', 'route'] )}
-                `
-                page += `
-                    <h4>Vendor Routes (<code>../uibuilder/vendor/*</code>)</h4>
+                    <h5>Vendor Routes (<code>../uibuilder/vendor/*</code>)</h5>
                     ${web.htmlBuildTable( routes.user.vendorRouter, ['name','path', 'folder', 'route'] )}
                 `
                 page += `
-                    <h2>Other ExpressJS Paths</h2>
-                    <p>A raw view of all other app.use paths being served.</p>
-                    <pre>${tilib.syntaxHighlight( otherPaths )}</pre>
-                `
-
-                page += `
+                    <hr>
                     <h3>Per-Instance User-Facing Routes</h3>
                 `
                 Object.keys(routes.instances).forEach( url => {
-                    
+                    page += `
+                        <h4>${url}</h4>
+                        ${web.htmlBuildTable( web.routers.instances[url], ['name', 'desc', 'path', 'type', 'folder'] )}
+                        <h5>ExpressJS technical route data for <code>${url}</code> (<code>../${url}/*</code>)</h5>
+                        ${web.htmlBuildTable( routes.instances[url], ['name','path', 'folder', 'route'] )}
+                    `                    
                 } )
-
                 page += `
+                    <hr>
                     <h3>Admin-Facing Routes</h3>
-                `
-                page += `
-                    <h4>Application Routes (<code>../*</code>)</h4>
-                    ${web.htmlBuildTable( routes.user.app, ['name','path', 'folder', 'route'] )}
+                    ${web.htmlBuildTable( web.routers.admin, ['name', 'desc', 'path', 'type', 'folder'] )}
+                    <h4>ExpressJS technical route data for admin routes</h4>
+                    <h5>Node-RED Admin Routes (<code>../*</code>)</h5>
+                    <p>Note: Shows ALL Node-RED top-level admin routes, not just uibuilder</p>
+                    ${web.htmlBuildTable( routes.admin.app, ['name','path', 'folder', 'route'] )}
+                    <h5>Admin uibuilder Routes (<code>../uibuilder/*</code>)</h5>
+                    ${web.htmlBuildTable( routes.admin.admin, ['name','path', 'folder', 'route'] )}
+                    <h5>Admin v3 API Routes (<code>../uibuilder/admin</code>)</h5>
+                    <p>Note: This route uses the following methods: all, get, put, post, delete.</p>
+                    ${web.htmlBuildTable( routes.admin.v3, ['name','path', 'folder', 'route'] )}
+                    <h5>Admin v2 API Routes (<code>../uibuilder/*</code>)</h5>
+                    ${web.htmlBuildTable( routes.admin.v2, ['name','path', 'folder', 'route'] )}
                 `
 
                 page += '</div></body></html>'
@@ -664,14 +609,10 @@ function adminRouterV2(uib, log) {
             return
         }
 
-        // TODO: get rid of web. and consolidate output
-
         // Update the installed packages list
-        web.checkInstalledPackages('', /** @type {string} */ (params.url) )
-        // res.json(uib.installedPackages)
+        web.serveVendorPackages()
 
-        let pkgs = packageMgt.updateInstalledPackages(params.url)
-        res.json( { ...uib.installedPackages, pkgs: pkgs} )
+        res.json( packageMgt.uibPackageJson.uibuilder.packages )
 
         
     }) // ---- End of uibvendorpackages ---- //
@@ -724,75 +665,68 @@ function adminRouterV2(uib, log) {
             return
         }
 
-        // package location must exist and be either 'userdir', 'common' or 'local'
-        if ( params.loc === undefined ) {
-            log.error('[uibuilder:API:uibnpmmanage] uibuilder Admin API. No location provided for npm management.')
-            res.statusMessage = 'npm loc parameter not provided'
-            res.status(500).end()
-            return
-        }
-        switch (params.loc) {
-            case 'userdir':
-            case 'common':
-            case 'local':
-                break
-        
-            default:
-                log.error('[uibuilder:API:uibnpmmanage] Admin API. Invalid location provided for npm management.')
-                res.statusMessage = 'npm loc parameter is invalid'
+        // For install/upd, package location must exist and be either 'npmjs', 'github' or 'local'
+        if ( params.cmd !== 'remove' ) {
+            if ( params.loc === undefined ) {
+                log.error('[uibuilder:API:uibnpmmanage] uibuilder Admin API. No location provided for npm management.')
+                res.statusMessage = 'npm loc parameter not provided'
                 res.status(500).end()
                 return
+            }
+            switch (params.loc) {
+                case 'npmjs':
+                case 'github':
+                case 'local':
+                    break
+            
+                default:
+                    log.error(`[uibuilder:API:uibnpmmanage] Admin API. Invalid location provided for npm management. "${params.loc}"`)
+                    res.statusMessage = 'npm loc parameter is invalid'
+                    res.status(500).end()
+                    return
+            }
         }
 
-        // We need the node instance as well
-        // @ts-ignore
-        const chkUrl = chkParamUrl(params)
-        if ( chkUrl.status !== 0 ) {
-            log.error(`[uibuilder:API:uibnpmmanage] Admin API. ${chkUrl.statusMessage}`)
-            res.statusMessage = chkUrl.statusMessage
-            res.status(chkUrl.status).end()
-            return
+        // If install/update, we need the node instance as well
+        if ( params.cmd !== 'remove' ) {
+            // @ts-ignore
+            const chkUrl = chkParamUrl(params)
+            if ( chkUrl.status !== 0 ) {
+                log.error(`[uibuilder:API:uibnpmmanage] Admin API. ${chkUrl.statusMessage}`)
+                res.statusMessage = chkUrl.statusMessage
+                res.status(chkUrl.status).end()
+                return
+            }
         }
 
         //#endregion ---- ----
         
         const folder = RED.settings.userDir
 
-        log.info(`[uibuilder:API:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} in location ${params.loc}`)
+        log.info(`[uibuilder:API:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} from '${params.loc}' with tag/version '${params.tag}'`)
 
         // delete package lock file as it seems to mess up sometimes - no error if it fails
         fs.removeSync(path.join(folder, 'package-lock.json'))
 
         // Formulate the command to be run
-        //var command = ''
         switch (params.cmd) {
             case 'update':
             case 'install': {
-                // npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json <packageName>@latest // --save-prefix="~" 
-                //command = `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
-                packageMgt.npmInstallPackage(params.url, params.loc, params.package)
-                    .then((val) => {
-                        let success = false
+                packageMgt.npmInstallPackage(params.url, params.package, params.loc, params.tag)
+                    .then((npmOutput) => {
+                        //let success = false
                         
                         // Update the packageList
-                        uib.installedPackages = web.checkInstalledPackages(/** @type {string} */ (params.package), /** @type {string} */ (params.url) )
-                        console.log('>> uib.installedPackages >>', uib.installedPackages)
+                        web.serveVendorPackages()
 
-                        // package name should exist in uib.installedPackages
-                        if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) {
-                            // Add an ExpressJS URL (only for install since update should already be served)
-                            if (params.cmd==='install') web.servePackage( /** @type {string} */ (params.package) )
-                            success = true
-                            log.info(`[uibuilder:API:uibnpmmanage:install] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
-                        } else {
-                            log.error(`[uibuilder:API:uibnpmmanage:install] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`)
-                        }
-            
-                        res.json({'success':success, 'result': val})
-                        return success
+                        res.json({'success':true, 'result': [npmOutput, packageMgt.uibPackageJson.uibuilder.packages]})
+
+                        //return success
+                        return true
                     })
                     .catch((err) => {
                         //log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
+                        console.dir(err)
                         log.warn(`[uibuilder:API:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({'success':false, 'result':err.all})
                         return false
@@ -800,24 +734,15 @@ function adminRouterV2(uib, log) {
                 break
             }
             case 'remove': {
-                // npm remove --no-audit --no-update-notifier --color=false --json <packageName> // --save-prefix="~" 
-                //command = `npm remove --no-audit --no-update-notifier --color=false --json ${params.package}`
-                packageMgt.npmRemovePackage(RED.settings.userDir, params.package)
-                    .then((val) => {
-                        // Update the packageList
-                        uib.installedPackages = web.checkInstalledPackages(/** @type {string} */ (params.package))
+                packageMgt.npmRemovePackage(params.package)
+                    .then((npmOutput) => {
 
-                        // package name should NOT exist in uib.installedPackages
-                        if ( ! Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) {
-                            log.info(`[uibuilder:API:uibnpmmanage:remove] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
-                            // Remove ExpressJS URL
-                            web.unservePackage(/** @type {string} */(params.package))
-                            res.json({'success':true, 'result': val})
-                        } else {
-                            log.error(`[uibuilder:API:uibnpmmanage:remove] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`)
-                            res.json({'success':false, 'result': val})
-                        }
+                        // TODO remove - just send back success
+
+                        // Update the packageList
+                        web.serveVendorPackages()
                         
+                        res.json({'success':true, 'result': npmOutput})
                         return true
                     })
                     .catch((err) => {
@@ -836,98 +761,7 @@ function adminRouterV2(uib, log) {
             }
         }
 
-        // if ( command === '' ) {
-        //     log.error('[uibuilder:API:uibnpmmanage] Admin API. No valid command available for npm management.')
-        //     res.statusMessage = 'No valid npm command available'
-        //     res.status(500).end()
-        //     return
-        // }
-
-        // if ( command !== '' ) {
-        //     // Run the command - against the correct instance or userDir (cwd)
-        //     var output = [], errOut = null, success = false
-        //     child_process.exec(command, {'cwd': folder}, (error, stdout, stderr) => {
-        //         if ( error ) {
-        //             log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, error)
-        //         }
-
-        //         // try to force output & error output to JSON (or split by newline)
-        //         try {
-        //             output.push(JSON.parse(stdout))
-        //         } catch (err) {
-        //             output.push(stdout.split('\n'))
-        //         }
-        //         try {
-        //             errOut = JSON.parse(stderr)
-        //         } catch (err) {
-        //             errOut = stderr.split('\n')
-        //         }
-
-        //         // Find the actual JSON output in amongst all the other crap that npm can produce
-        //         var result = null
-        //         try {
-        //             result = stdout.slice(stdout.search(/^\{/m), stdout.search(/^\}/m)+1) //stdout.match(/\n\{.*\}\n/)
-        //         } catch (e) {
-        //             result = e
-        //         }
-        //         var jResult = null
-        //         try {
-        //             jResult = JSON.parse(result)
-        //         } catch (e) {
-        //             jResult = {'ERROR': e, 'RESULT': result}
-        //         }
-
-        //         //log.trace(`[uibuilder:API:uibnpmmanage] Writing stdout to ${path.join(uib.rootFolder,uib.configFolder,'npm-out-latest.txt')}`)
-        //         //fs.writeFile(path.join(uib.configFolder,'npm-out-latest.txt'), stdout, 'utf8', function(){})
-
-        //         // Update the packageList
-        //         // @ts-ignore
-        //         uib.installedPackages = web.checkInstalledPackages(params.package)
-
-        //         // Check the results of the command
-        //         switch (params.cmd) {
-        //             // check pkg exiss in uib.installedPackages, if so, serve it up
-        //             case 'install': {
-        //                 // package name should exist in uib.installedPackages
-        //                 if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
-        //                 if (success === true) {
-        //                     // Add an ExpressJS URL
-        //                     web.servePackage( /** @type {string} */ (params.package) )
-        //                 }
-        //                 break
-        //             }
-        //             // Check pkg does not exist in uib.installedPackages, if so, remove served url
-        //             case 'remove': {
-        //                 // package name should NOT exist in uib.installedPackages
-        //                 if ( ! Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
-        //                 if (success === true) {
-        //                     // Remove ExpressJS URL
-        //                     // @ts-ignore
-        //                     web.unservePackage(params.package)
-        //                 }
-        //                 break
-        //             }
-        //             // Check pkg still exists in uib.installedPackages
-        //             case 'update': {
-        //                 // package name should exist in uib.installedPackages
-        //                 if ( Object.prototype.hasOwnProperty.call(uib.installedPackages, params.package) ) success = true
-        //                 break
-        //             }
-        //         }
-
-        //         if (success === true) {
-        //             log.info(`[uibuilder:API:uibnpmmanage] Admin API. npm command success. npm ${params.cmd} for package ${params.package}`)
-        //         } else {
-        //             log.error(`[uibuilder:API:uibnpmmanage] Admin API. npm command failed. npm ${params.cmd} for package ${params.package}`, jResult)
-        //         }
-
-        //         res.json({'success':success,'result':jResult,'output':output,'errOut':errOut})
-
-        //     })
-        // }
-
     }) // ---- End of npmmanage ---- //
-
 
     return admin_Router_V2
 }
