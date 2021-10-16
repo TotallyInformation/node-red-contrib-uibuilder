@@ -120,7 +120,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '5.0.0-dev'
+        self.version = '5.0.0-dev1'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
@@ -460,7 +460,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 // Allow incoming control msg to indicate that this instance of the uibuilder node has security turned on
                 if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') ) {
                     self.security = receivedCtrlMsg.security
-                    self.uiDebug('warn', `[uibuilderfe:ioSetup:on-ctrl-recvd] Security is ${self.security}`)
                 }
 
                 // @since 2018-10-07 v1.0.9: Work out local time offset from server
@@ -471,14 +470,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
                 /** Process control msg types */
                 switch(receivedCtrlMsg.uibuilderCtrl) {
-                    // DEPRECATED? Initial startup msg from Node-RED server
-                    case 'ready for content':
-                        if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
-
-                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "ready for content" from server')
-
-                        break
-
                     // Node-RED is shutting down
                     case 'shutdown':
                         self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "shutdown" from server')
@@ -487,6 +478,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
                     /** We are connected to the server - 1st msg from server */
                     case 'client connect': {
+                        self.uiDebug('info', `[uibuilderfe:ioSetup] ${self.ioChannels.control} Received "client connect" from server`)
+                        self.uiDebug('info', `[uibuilderfe:ioSetup] Server: Security=${receivedCtrlMsg.security}, Version=${receivedCtrlMsg.version}, Time=${receivedCtrlMsg.serverTimestamp}.`)
+                        if ( self.version !== receivedCtrlMsg.version)
+                            console.warn( `[uibuilderfe:ioSetup] Server version (${receivedCtrlMsg.version}) not the same as the client version (${self.version})`)
+
+                        // TODO - might need to relax this for now?
                         // If security is on
                         if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security' && receivedCtrlMsg === true ) ) {
                             // Initialise client security
@@ -494,8 +491,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                             // DO NOT RETURN ANYTHING ELSE UNTIL SERVER CONFIRMS VALID AUTHORISATION
                         } else {
                             if ( self.autoSendReady === true ) { // eslint-disable-line no-lonely-if
-                                self.uiDebug('info', '[uibuilderfe:ioSetup] ' + self.ioChannels.control + ' Received "client connect" from server, auto-sending REPLAY control msg')
-
+                                self.uiDebug( 'info', '[uibuilderfe:ioSetup] Auto-sending ready-for-content/replay msg to server')
                                 // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
                                 self.send({
                                     'uibuilderCtrl':'ready for content',
