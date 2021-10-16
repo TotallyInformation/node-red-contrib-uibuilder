@@ -52,7 +52,7 @@ class UibSockets {
         //#region ---- References to core Node-RED & uibuilder objects ---- //
         /** @type {runtimeRED} */
         this.RED = undefined
-        /** @type {object} Reference link to uibuilder.js global configuration object */
+        /** @type {uibConfig} Reference link to uibuilder.js global configuration object */
         this.uib = undefined
         /** Reference to uibuilder's global log functions */
         this.log = undefined
@@ -374,14 +374,13 @@ class UibSockets {
             node.statusDisplay.text = 'connected ' + ioNs.ioClientsCount
             uiblib.setNodeStatus( node )
 
+            // Initial client connect message
             const msg = {
                 'uibuilderCtrl': 'client connect',
-                //'cacheControl': 'REPLAY',          // @since v4.2.0 REMOVED
-                // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
-                // time difference (UTC->Local) without needing clever libraries.
                 'serverTimestamp': (new Date()),
                 'topic': node.topic || undefined,
-                'security': node.useSecurity, // let the client know whether to use security or not
+                'security': node.useSecurity,   // Let the client know whether to use security or not
+                'version': uib.version,         // Let the front-end know what v of uib is in use
                 '_socketId': socket.id,
             }
 
@@ -596,14 +595,8 @@ class UibSockets {
  */
 
 try { // Wrap in a try in case any errors creep into the class
-
     let uibsockets = new UibSockets()
     module.exports = uibsockets
-
-    // Make this globally available so that it can be shared with other common nodes from TotallyInformation
-    if ( ! global.totallyInformationShared ) global.totallyInformationShared = {}
-    global.totallyInformationShared.uibsockets = uibsockets
-
 } catch (e) {
     console.error(`[uibuilder:socket.js] Unable to create class instance. Error: ${e.message}`)
 }
