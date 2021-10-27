@@ -6,9 +6,15 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.2...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.3...main)
 
 Nothing currently.
+
+## [4.1.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.2...v4.1.3)
+
+### Fixed
+
+* [Issue #155](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/155) Cannot edit files in a uibuilder instance's root folder.
 
 ## [4.1.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...v4.1.2)
 
