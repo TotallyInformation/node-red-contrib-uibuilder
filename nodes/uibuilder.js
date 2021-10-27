@@ -827,6 +827,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                     }        
                 }
         
+                // Fix for Issue #155 - if fldr = root, no folder
+                if ( params.folder === 'root' ) params.folder = ''
+
                 let fullname = path.join(uib.rootFolder, params.url, params.folder)
                 if (params.cmd === 'newfile' ) {
                     fullname = path.join(fullname, params.fname)
@@ -903,6 +906,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
                 }        
             }
     
+            // Fix for Issue #155 - if fldr = root, no folder
+            if ( params.folder === 'root' ) params.folder = ''
+
             let fullname = path.join(uib.rootFolder, params.url, params.folder)
             if (params.cmd === 'deletefile' ) {
                 fullname = path.join(fullname, params.fname)
@@ -991,7 +997,7 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         if ( params.folder === 'root' ) params.folder = ''
 
         // @ts-ignore
-        const filePathRoot = path.join(uib.rootFolder, req.query.url, params.folder)
+        const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
         // @ts-ignore
         const filePath = path.join(filePathRoot, req.query.fname)
 
@@ -1053,6 +1059,9 @@ module.exports = function(/** @type {runtimeRED} */ RED) {
         //#endregion ====== ====== //
         
         log.trace(`[uibuilder:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
+
+        // Fix for Issue #155 - if fldr = root, no folder
+        if ( params.folder === 'root' ) params.folder = '.'
 
         const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
 
