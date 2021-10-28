@@ -52,6 +52,8 @@ module.exports = {
         'jsdoc/newline-after-description': 0,
         'jsdoc/no-multi-asterisks': 0,
         'jsdoc/tag-lines': 0,
+        'jsdoc/valid-types': 0, // Rubbish, fails on common type configs
+        // @ts-ignore
         'jsdoc/no-undefined-types': ['error'|'warn', {'definedTypes':['Promise']}],
 
         'sonarjs/cognitive-complexity': ['error', 50],  // default is 15! Need to try and improve this :-)
