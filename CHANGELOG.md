@@ -6,9 +6,19 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.3...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.4...main)
 
 Nothing currently.
+
+## [4.1.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.3...v4.1.4)
+
+### Fixed
+
+* Change degit call to turn off cache which was producing a `could not find commit hash for HEAD` error. See [degit Issue #37](https://github.com/Rich-Harris/degit/issues/37). Partial fix for [Issue #155](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/155).
+
+### Changed
+
+* Updated Socket.IO to v4.3.1
 
 ## [4.1.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.2...v4.1.3)
 

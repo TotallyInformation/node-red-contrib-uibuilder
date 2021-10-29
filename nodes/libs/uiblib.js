@@ -865,7 +865,7 @@ module.exports = {
             const degit = require('degit')
 
             uib.degitEmitter = degit(extTemplate, {
-                cache: true,
+                cache: false,  // Fix for Issue #155 part 3 - degit error
                 force: true,
                 verbose: false,
             })
