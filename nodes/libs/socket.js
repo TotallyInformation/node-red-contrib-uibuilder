@@ -238,13 +238,17 @@ class UibSockets {
         const url = ioNs.url = node.url
         ioNs.nodeId = node.id // allows us to track back to the actual node in Node-RED
         ioNs.ioClientsCount = 0
+        ioNs.ioClientIPs = [] // track connected client IPs to send with Control msgs
         ioNs.rcvMsgCount = 0
 
         const that = this
 
-        ioNs.on('connection', function(socket) {
+        ioNs.on('connection', async function(socket) {
             ioNs.ioClientsCount++
             node.ioClientsCount = ioNs.ioClientsCount
+
+            ioNs.ioClientIPs = (await ioNs.fetchSockets()).map(socket => socket.handshake.address);
+            console.log("ioNs.ioClientsIPs", ioNs.ioClientIPs);
 
             log.trace(`[uibuilder:socket:addNS:${url}] Socket connected for node ${node.id} clientCount: ${ioNs.ioClientsCount}, Socket ID: ${socket.id}`)
 
@@ -265,6 +269,7 @@ class UibSockets {
                 // @since 2018-10-07 v1.0.9 - send server timestamp so that client can work out
                 // time difference (UTC->Local) without needing clever libraries.
                 'serverTimestamp': (new Date()),
+                "connected_ips": ioNs.ioClientIPs,  // connected IPs
                 topic: node.topic || undefined,
             }, node, socket.id, true)
             //ioNs.emit( uib.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
@@ -336,9 +341,13 @@ class UibSockets {
 
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
-            socket.on('disconnect', function(reason) {
+            socket.on('disconnect', async function(reason) {
                 ioNs.ioClientsCount--
                 node.ioClientsCount = ioNs.ioClientsCount
+
+                ioNs.ioClientIPs = (await ioNs.fetchSockets()).map(socket => socket.handshake.address);
+                console.log("ioNs.ioClientsIPs", ioNs.ioClientIPs);
+
                 log.trace(
                     `[uibuilder:socket:${url}] Socket disconnected, clientCount: ${ioNs.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
                 )
@@ -349,6 +358,7 @@ class UibSockets {
                     'uibuilderCtrl': 'client disconnect',
                     'reason': reason,
                     topic: node.topic || undefined,
+                    "connected_ips": ioNs.ioClientIPs // connected IPs
                 }, node, socket.id, true)
                 //node.send([null, {'uibuilderCtrl': 'client disconnect', '_socketId': socket.id, 'topic': node.topic}])
             }) // --- End of on-connection::on-disconnect() --- //
