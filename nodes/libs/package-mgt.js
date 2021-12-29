@@ -345,43 +345,19 @@ class UibPackages {
      *       Editor->API->This fn->API cont.->web.serveVendorPackages->getUibRootPackageJson->API cont2->Editor
      * @param {string} url Node instance url
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
-     * @param {string} fromLocation One of 'npmjs', 'github' or 'local', where is the source of the package?
-     * @param {string} tag Specifier for a version, tag, branch, etc. with leading @ for npm and # for GitHub installs
+     * @param {string} [tag] Default=''. Specifier for a version, tag, branch, etc. with leading @ for npm and # for GitHub installs
+     * @param {string} [toLocation] Where to install to. Defaults to uibRoot
      * @returns {Promise<string>} [Combined stdout/stderr, updated list of package details]
      */
-    async npmInstallPackage(url, pkgName, fromLocation, tag='') {
+    async npmInstallPackage(url, pkgName, tag='', toLocation=this.uib.rootFolder) {
         if ( this._isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:npmInstallPackage] Cannot run. Setup has not been called.')
             return
         }
 
-        //? Maybe - allow installs in other locations?
-        /* let folder
-        switch (location) {
-            case 'userdir': {
-                folder = this.RED.settings.userDir
-                break
-            }
-            case 'common': {
-                folder = this.uib.rootFolder
-                break
-            }
-            case 'local': {
-                folder = path.join( this.uib.rootFolder, url )
-                break
-            }
-        
-            default: {
-                folder = this.RED.settings.userDir
-                break
-            }
-        } */
-
-        // TODO process tag - check if it starts with '#' or '@'
-
         // https://github.com/sindresorhus/execa#options
         const opts = {
-            'cwd': this.uib.rootFolder,
+            'cwd': toLocation,
             'all': true,
         }
         const args = [ // `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
