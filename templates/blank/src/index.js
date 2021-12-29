@@ -1,11 +1,13 @@
+/* eslint-disable strict */
 /* jshint browser: true, esversion: 6, asi: true */
 /* globals uibuilder */
 // @ts-nocheck
 
 /** Minimalist code for uibuilder and Node-RED */
+'use strict'
 
 // return formatted HTML version of JSON object
-function syntaxHighlight(json) {
+window.syntaxHighlight = function (json) {
     json = JSON.stringify(json, undefined, 4)
     json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
@@ -37,6 +39,6 @@ window.onload = function() {
 
         // dump the msg as text to the "msg" html element
         const eMsg = document.getElementById('msg')
-        eMsg.innerHTML = syntaxHighlight(msg)
+        eMsg.innerHTML = window.syntaxHighlight(msg)
     })
 }
