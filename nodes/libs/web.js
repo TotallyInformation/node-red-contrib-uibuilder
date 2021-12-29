@@ -336,6 +336,7 @@ class UibWeb {
         */
 
         // TODO - process login
+        /*
         const http = require('http')
         const data = JSON.stringify({
             username: 'john',
@@ -354,6 +355,7 @@ class UibWeb {
         http.get(options, resp => {
             console.log('====> ', resp.statusCode)
         })
+        */
 
 
     } // --- End of webSetup() --- //
