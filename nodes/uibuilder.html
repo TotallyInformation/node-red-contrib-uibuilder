@@ -672,11 +672,19 @@
 </script>
 
 <script type="text/javascript">
+    /* eslint-disable es/no-object-values, strict */
     /* globals JQuery */
-    /* eslint-disable strict */
+    
     // Isolate this code
     (function () {
         'use strict'
+    
+        const uibDebug = location.hostname === '127.0.0.1'
+        const mylog = uibDebug ? console.log : function() {}
+        mylog('[uibuilder] DEBUG ON (because running on localhost)')
+    
+        //mylog('>> GLOBALS >>', window)
+        //mylog('>> SETTINGS >>', RED.settings)
     
         /** Typedefs
          * typedef {import("node-red").EditorRED} Red
@@ -694,32 +702,42 @@
     
                 return resArray
             }
+        if (!Object.values) {
+            const reduce = Function.bind.call(Function.call, Array.prototype.reduce)
+            const keys = Reflect.ownKeys // eslint-disable-line no-undef
+            const concat = Function.bind.call(Function.call, Array.prototype.concat)
+            const isEnumerable = Function.bind.call(Function.call, Object.prototype.propertyIsEnumerable)
+            Object.values = function values(O) {
+                return reduce(keys(O), (v, k) => concat(v, typeof k === 'string' && isEnumerable(O, k) ? [O[k]] : []), [])
+            }
+        }
         //#endregion ----------------- Pollyfills -------------------- //
     
         //#region --------- "global" variables for the panel --------- //
     
         /** Module name must match this nodes html file @constant {string} moduleName */
-        var moduleName  = 'uibuilder'
+        const moduleName  = 'uibuilder'
         /** Node's label @constant {string} paletteCategory */
-        var nodeLabel  = 'uibuilder'
+        const nodeLabel  = 'uibuilder'
         /** Node's palette category @constant {string} paletteCategory */
-        var paletteCategory  = 'uibuilder'
+        const paletteCategory  = 'uibuilder'
         /** Node's background color @constant {string} paletteColor */
-        var paletteColor  = '#E6E0F8'
+        const paletteColor  = '#E6E0F8'
         /** Default session length (in seconds) if security is active @type {Number} */
-        var defaultSessionLength = 432000
+        const defaultSessionLength = 432000
         /** Default JWT secret if security is active - to ensure it isn't blank @type {String} */
-        var defaultJwtSecret = 'Replace This With A Real Secret'
+        const defaultJwtSecret = 'Replace This With A Real Secret'
+        /** Default template name */
+        const defaultTemplate = 'blank'
+        /** Track which urls have been used - required to handle copy/paste and import
+         *  as these can contain duplicate urls before deployment.
+         */
+        const editorInstances = {}
+    
         /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
         var packages = []
-        /** Default template name */
-        var defaultTemplate = 'blank'
-        /** Set to true if we want to force a (re)deploy */
-        var mustChange = false
-        /** Is the URL valid? */
-        var urlValid = false
-        /** Does the server folder for this instance exist? */
-        var folderExists = false
+        /** List of the instances in use by id [{node_id: url}], updated in validateUrl() */
+        var uibuilderInstances = RED.settings.uibuilderInstances
     
         /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
          * @typedef {object} uiace Options for the ACE/Monaco code editor
@@ -728,7 +746,7 @@
          * @property {string} fname What filename was last edited
          * @property {boolean} fullscreen Is the editor in fullscreen mode?
          */
-        var uiace = {
+        const uiace = {
             'format': 'html',
             'folder': 'src',
             'fname' : 'index.html',
@@ -736,6 +754,44 @@
         }
     
         //#endregion ------------------------------------------------- //
+    
+        //#region --------- Node-RED Event Handlers  --------- //
+        // These are registered once for the node type
+    
+        /** Track which urls have been used - required to handle copy/paste and import
+         *  as these can contain duplicate urls before deployment.
+         */
+        RED.events.on('nodes:add', function(node) {
+            if ( node.type === 'uibuilder') {
+                // Keep a list of uib nodes in the editor
+                // may be different to the deployed list
+                editorInstances[node.id] = node.url
+                // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. --
+            }
+        })
+        RED.events.on('nodes:change', function(node) {
+            if ( node.type === 'uibuilder') {
+                mylog('nodes:change:', node)
+                editorInstances[node.id] = node.url
+            }
+        })
+        RED.events.on('nodes:remove', function(node) {
+            if ( node.type === 'uibuilder') {
+                mylog('>> nodes:remove >>', node)
+                delete editorInstances[node.id]
+            }
+        })
+        // RED.events.on('deploy', function() {
+        //     console.log('Deployed')
+        // })
+        // RED.events.on('workspace:dirty', function(data) {
+        //     console.log('Workspace dirty:', data)
+        // })
+        // RED.events.on('runtime-state', function(event) {
+        //     console.log('>> Runtime State >>', event)
+        // })
+    
+        //#endregion --------- Node-RED Event Handlers  --------- //
     
         //#region --------- "global" functions for the panel --------- //
     
@@ -755,15 +811,7 @@
                 hRow  = `
                     <div>
                         <label for="packageList-input-${index}" style="width:3em;">Name:</label>
-                        <input type="text" id="packageList-input-${index}" title="" style="width:80%">
-                    </div>
-                    <div>
-                        <label for="packageList-src-${index}" style="width:3em;">From:</label>
-                        <select id="packageList-src-${index}" title="Choose where to install from" style="width:80%">
-                            <option value="npmjs" selected>npmjs.com</option>
-                            <option value="github">GitHub</option>
-                            <option value="fs" title="The server's filing system">Server</option>
-                        </select>
+                        <input type="text" id="packageList-input-${index}" title="" style="width:80%" placeholder="Valid npm package name">
                     </div>
                     <div>
                         <label for="packageList-tag-${index}" style="width:3em;">Tag:</label>
@@ -791,11 +839,11 @@
                 // addItem method was called with a packageName passed
                 hRow = `
                     <div id="packageList-row-${index}" class="packageList-row-data">
-                        <a href="${pkgSpec.homepage}" target="_blank"><b>${data}</b></a>, ${pkgSpec.installedVersion}
+                        <a href="${pkgSpec.homepage}" target="_blank" title="Click to open homepage in a new tab"><b>${data}</b></a>, <span title="${pkgSpec.spec}">${pkgSpec.installedVersion}</span>
                         <br>
-                        URL to use: <i title="NB: The actual resource is an estimate, check the package docs for the actual entry point">
+                        URL to use: <code style="white-space:inherit;" title="NB: The actual resource is an estimate, check the package docs for the actual entry point">
                             ${pkgSpec.url}
-                        </i>
+                        </code>
                     </div>
                 `
             }
@@ -819,22 +867,22 @@
                 // show activity spinner
                 $('i.spinner').show()
                 
+                // Get the data from the input fields
                 var packageName = String($(`#packageList-input-${index}`).val())
-                var packageLoc = String($(`#packageList-src-${index}`).val())
                 var packageTag = String($(`#packageList-tag-${index}`).val())
     
                 if ( packageName.length !== 0 ) {
                     RED.notify('Installing npm package ' + packageName)
     
                     // Call the npm installPackage API (it updates the package list)
-                    $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&loc=${packageLoc}&tag=${packageTag}`, function(data){
+                    $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&tag=${packageTag}`, function(data){
                         const npmOutput = data.result[0]
     
                         if ( data.success === true) {
                             packages = data.result[1]
     
-                            console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, packageLoc, node.url, '\n\n', npmOutput, '\n ')
-                            RED.notify(`Successful installation of npm package ${packageName} in ${packageLoc} for ${node.url}`, 'success')
+                            console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ')
+                            RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
     
                             // reset and populate the list
                             $('#node-input-packageList').editableList('empty')
@@ -842,8 +890,8 @@
                             $('#node-input-packageList').editableList('addItems', Object.keys(packages))
     
                         } else {
-                            console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, packageLoc, node.url, '\n\n', npmOutput, '\n ' )
-                            RED.notify(`FAILED installation of npm package ${packageName} in ${packageLoc} for ${node.url}`, 'error')
+                            console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
+                            RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
                         }
     
                         // Hide the progress spinner
@@ -852,7 +900,7 @@
                     })
                         .fail(function(_jqXHR, textStatus, errorThrown) {
                             console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
-                            RED.notify(`FAILED installation of npm package ${packageName} in ${packageLoc} for ${node.url}`, 'error')
+                            RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
     
                             $('i.spinner').hide()
                             return 'addPackageRow failed'
@@ -1354,81 +1402,196 @@
         //#endregion ==== File Management Functions ==== //
     
         //#region ==== Validation Functions ==== //
+        // These are called on editor load & node added to flow as well as on form change
+        // Use `$('#node-input-url').length > 0` to check if form exists
     
+        /** Show key data for URL changes
+         * @param {*} node 
+         * @param {*} value 
+         */
+        function debugUrl(node, value) {
+            if (!uibDebug) return
+    
+            console.group(`>> validateUrl >> ${node.id}`)
+            mylog('-- isDeployed --', node.isDeployed )
+            mylog('-- node.url --',node.url, '-- node.oldUrl --', node.oldUrl)
+            mylog('-- value --', value)
+            mylog('-- Editor URL Changed? --', node.urlChanged, '-- Valid? --', node.urlValid )
+            mylog('-- Deployed URL Changed? --', node.urlDeployedChanged )
+            mylog('-- uibuilderInstances[node.id] --', uibuilderInstances[node.id])
+            mylog('-- editorInstances[node.id] --', editorInstances[node.id])
+            mylog('-- is Dup? -- Deployed:', node.urlDeployedDup, ', Editor:', node.urlEditorDup)
+            mylog('-- URL Errors --', node.urlErrors )
+            mylog('-- Node Changed? --', node.changed, '-- Valid? --', node.valid )
+            mylog('-- this --', node)
+            console.groupEnd()
+        }
         /** Validation Function: Validate the url property
          * Max 20 chars, can't contain any of ['..', ]
          * @param {*} value The url value to validate
          * @returns {boolean} true = valid
+         * @this {*}
          **/
         function validateUrl(value) {
             // NB: `this` is the node instance configuration as at last press of Done
             //     Validation fns are run on every node instance when the Editor is loaded (value is populated but jQuery val is undefined).
             //     and again when the config panel is opened (because jquery change is fired. value, jquery val and this.url are all the same).
-    
-            urlValid = false
-    
-            // If value is undefined, node hasn't been configured yet
-            if ( this.url === undefined && value === undefined ) return false
-    
-            /** If the url hasn't really changed - no need to validate but might need to allow Done (for other settings)
-             * e.g. user changes is back after trying something different but didn't commit between
-             * Initial flow run and Initial load of admin config ui - don't check for dups as it always will be a dup
+            /**
+             * Saved/this (me)
+             *  url
+             *  oldUrl
+             * this (me)
+             *  urlValid
+             *  urlErrors
+             *  urlDeployedDup
+             *  urlEditorDup
+             * this (node-red)
+             *  isDeployed
+             *  validationErrors
+             *  valid
+             *  changed
              */
-            if ( value === this.url ) {
-                urlValid = true
-                return true
-            }
     
-            // Max 20 chars
-            if ( value.length > 20 ) return false
-            // Cannot contain ..
-            if ( value.indexOf('..') !== -1 ) return false
-            // Cannot contain / or \
-            if ( value.indexOf('/') !== -1 ) return false
-            if ( value.indexOf('\\') !== -1 ) return false
-            // Cannot contain spaces
-            if ( value.indexOf(' ') !== -1 ) return false
-            // Cannot start with _ or .
-            if ( value.substring(0,1) === '_' ) return false
-            if ( value.substring(0,1) === '.' ) return false
-            // Cannot be 'templates' as this is a reserved value (for v2)
-            if ( value.toLowerCase().substring(0,9) === 'templates' ) return false
-    
-            // Check whether the url is already in use via a call to the admin API
-            var exists = false
+            // Update the deployed instances list
             $.ajax({
                 type: 'GET',
                 async: false,
                 dataType: 'json',
                 url: `./uibuilder/admin/${value}`,
                 data: {
-                    'cmd': 'checkurls',
+                    'cmd': 'listinstances', //'checkurls',
                 },
-                success: function(check) {
-                    exists = check
+                success: function(data) {
+                    //console.log('>> update instances >>', value, data)
+                    uibuilderInstances = data
                 }
             })
     
-            /** If the url already exists - prevent the "Done" button from being pressed. */
-            // @ts-ignore
-            if ( exists === true ) {
-                RED.notify(`<b>ERROR</b>: <p>The chosen URL (${value}) is already in use (or the folder exists).<br>It must be changed before you can save/commit</p>`, {type: 'error'})
-                return false
+            //this.urlValid = false
+            this.urlErrors = {}
+            this.isDeployed = uibuilderInstances[this.id] !== undefined
+    
+            this.urlDeployedChanged = uibuilderInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
+            this.urlChanged = (this.url !== value)
+    
+            let f = Object.values(uibuilderInstances).indexOf(value)
+            this.urlDeployedDup = ( f > -1 && Object.keys(uibuilderInstances)[f] !== this.id )
+            f = Object.values(editorInstances).indexOf(value)
+            this.urlEditorDup = ( f > -1 && Object.keys(editorInstances)[f] !== this.id )
+    
+            // node has been deployed and values haven't changed so no need for more checks
+            if ( this.isDeployed === true && this.urlChanged === false ) {
+                this.urlValid = true
+                debugUrl(this, value)
+                return true
             }
     
-            urlValid = true
+            // Node is an editor dup but not deployed therefore must be a copy/paste or maybe an import
+            if ( this.isDeployed === false && this.urlEditorDup === true ) {
+                mylog('>> Copy/Paste >>', this.id, this.url ) 
+                this.urlErrors.config = 'Pasted or imported, URL must be changed'
+                // RED.notify('<b>WARNING</b>: <p>Copy/Paste or Import of existing uibuilder nodes results in duplicate URL.<br>It must be changed before you can save/commit</p>', {type: 'warning'})
+            }
+    
+            // If value is undefined, node hasn't been configured yet - we assume empty url which is invalid
+            if ( value === undefined ) {
+                this.urlErrors.config = 'Not yet configured, valid URL needed'
+            }
+    
+            // Must be >0 chars
+            if ( value === undefined || value === '' ) 
+                this.urlErrors.none = 'Must not be empty'
+            else { // These will fail for empty value
+                // Max 20 chars
+                if ( value.length > 20 ) 
+                    this.urlErrors.len = 'Too long, must be <= 20 chars'
+                // Cannot contain ..
+                if ( value.indexOf('..') !== -1 ) 
+                    this.urlErrors.dbldot = 'Cannot contain <code>..</code> (double-dot)'
+                // Cannot contain / or \
+                if ( value.indexOf('/') !== -1 ) 
+                    this.urlErrors.fslash = 'Cannot contain <code>/</code>'
+                if ( value.indexOf('\\') !== -1 ) 
+                    this.urlErrors.bslash = 'Cannot contain <code>\\</code>'
+                // Cannot contain spaces
+                if ( value.indexOf(' ') !== -1 ) 
+                    this.urlErrors.sp = 'Cannot contain spaces'
+                // Cannot start with _ or .
+                if ( value.substring(0,1) === '_' ) 
+                    this.urlErrors.strtU = 'Cannot start with <code>_</code> (underscore)'
+                if ( value.substring(0,1) === '.' ) 
+                    this.urlErrors.strtDot = 'Cannot start with <code>.</code> (dot)'
+                // Cannot be 'templates' as this is a reserved value (for v2)
+                if ( value.toLowerCase().substring(0,9) === 'templates' ) 
+                    this.urlErrors.templ = 'Cannot be "templates"'
+            }
+    
+            //! TODO Notify's shouldn't be here - only needed if "Done" (or event change)
+    
+            // Check whether the url is already in use in another deployed uib node
+            if ( this.urlDeployedDup === true ) {
+                // RED.notify(`<b>ERROR</b>: <p>The chosen URL (${value}) is already in use.<br>It must be changed before you can save/commit</p>`, {type: 'error'})
+                this.urlErrors.dup = 'Cannot be a URL already deployed'
+            }
+    
+            // Check whether the url is already in use in another undeployed uib node
+            if ( this.urlEditorDup === true ) {
+                // RED.notify(`<b>ERROR</b>: <p>The chosen URL (${value}) is already in use in another undeployed uib node.<br>It must be changed before you can save/commit</p>`, {type: 'error'})
+                this.urlErrors.dup = 'Cannot be a URL already in use'
+            }
+    
+            if ( Object.keys(this.urlErrors).length > 0) {
+                this.urlValid = false
+            } else {
+                this.urlValid = true    
+            }
+    
+            // Check whether the folder already exists - if it does, give a warning & adopt it
+            if ( value !== undefined && value !== '') {
+                let exists = false
+                $.ajax({
+                    type: 'GET',
+                    async: false,
+                    dataType: 'json',
+                    url: `./uibuilder/admin/${value}`,
+                    data: {
+                        'cmd': 'checkfolder', //'checkurls',
+                    },
+                    success: function(check) {
+                        // mylog('>> check folder exists >>', value, check)
+                        exists = check
+                    }
+                })
+    
+                /** If the folder already exists - lock out the editor panel. */
+                // @ts-ignore
+                if ( exists === true && this.urlChanged === true ) {
+                    mylog('>> folder already exists >>', this.url, this.id)
+                    RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, {type: 'warning'})
+                }
+            }
     
             // Warn user when changing URL. NOTE: Set/reset old url in the onsave function not here
-            if ( this.url !== undefined && value !== this.url )
+            if ( this.isDeployed && this.deployedUrlChanged === true ) {
+                mylog('>> deployed url changed >>', this.url, this.oldUrl, this.id)
+                this.urlErrors.warnChange = `Renaming from ${this.url} to ${value}. <b>MUST</b> redeploy now`
                 RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, {type: 'warning'})
+            }
     
-            return true
+            debugUrl(this, value)
+    
+            return this.urlValid
+    
+            // NOTE: Also see the on-change fn in oneditprepare that calls urlChange()
+            //       This fn runs on startup, reload, on change, on cpy/paste, on import, and on Done.
+            //       The on-change fn only runs when the val actually changes (+open editor panel)
     
         } // --- End of validateUrl --- //
     
         /** Validation Function: Validate the session length property
          * If security is on, must contain a number
          * @returns {boolean} true = valid, false = not valid
+         * @this {*}
          **/
         function validateSessLen() {
             // NB: `this` is the node instance configuration as at last press of Done
@@ -1464,6 +1627,7 @@
          * In uibuilder.js, can change uib.reDeployNeeded to be the last version before the v that made a breaking change.
          * @example If the node was last deployed with v4.1.2 and the current version is now v5.0.0, set uib.reDeployNeeded to '4.1.2'
          * @returns {boolean} True if valid
+         * @this {*}
          */
         function validateVersion() {
             if ( this.url !== undefined ) { // Undefined means that the node hasn't been configured at all yet
@@ -1474,7 +1638,7 @@
                         fixed: false,
                         type: 'warning', // 'compact', 'success', 'warning', 'error'
                     })
-                    mustChange = true
+                    this.mustChange = true
                     return false
                 }
             }
@@ -1766,45 +1930,52 @@
         function urlChange(node, jqThis) {
             var thisurl = $(jqThis).val()
     
-            // Find out if the server folder for this instance exists yet
-            folderExists = queryFolderExists(thisurl)
+            console.log('>> oneditprepare:urlChange >>')
     
-            if ( urlValid && folderExists ) {
+            $('#folder-not-exist').remove()
+    
+            // Find out if the server folder for this instance exists yet
+            node.folderExists = queryFolderExists(thisurl)
+    
+            if ( node.urlValid && node.folderExists ) {
                 enableEdit(true)
             } else {
                 enableEdit(false)
             }
     
-            if (!urlValid && (thisurl !== undefined && thisurl !== '')) {
-                $('#folder-not-exist').remove()
+            if (!node.urlValid) {
                 $('#url-input').after(`
                     <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
-                        Invalid URL.<br>
-                        Cannot contain <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">space</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">..</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">/</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">\\</code>.<br>
-                        Must be <=20 characters, not start with <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">_</code> or <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">.</code>.<br>
-                        Must not be <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">templates</code> or an existing URL.
+                        ${Object.values(node.urlErrors).join('<br>')}
                     </div>
                 `)
-            } else if (!folderExists) {
-                $('#folder-not-exist').remove()
-                if (node.url === undefined) {
-                    $('#url-input').after(`
-                        <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
-                            Server folder has not yet been created.<br>
-                            You must Deploy before you can make other changes.
-                        </div>
-                    `)
-                } else {
-                    $('#url-input').after(`
-                        <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
-                            Server folder does not exist.<br>
-                            You must Deploy before you can make other changes.
-                        </div>
-                    `)
-                }
-            } else {
-                $('#folder-not-exist').remove()
             }
+            // if (!urlValid && (thisurl !== undefined && thisurl !== '')) {
+            //     $('#url-input').after(`
+            //         <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
+            //             Invalid URL.<br>
+            //             Cannot contain <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">space</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">..</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">/</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">\\</code>.<br>
+            //             Must be <=20 characters, not start with <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">_</code> or <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">.</code>.<br>
+            //             Must not be <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">templates</code> or an existing URL.
+            //         </div>
+            //     `)
+            // } else if (!folderExists) {
+            //     if (node.url === undefined) {
+            //         $('#url-input').after(`
+            //             <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
+            //                 Server folder has not yet been created.<br>
+            //                 You must Deploy before you can make other changes.
+            //             </div>
+            //         `)
+            //     } else {
+            //         $('#url-input').after(`
+            //             <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
+            //                 Server folder does not exist.<br>
+            //                 You must Deploy before you can make other changes.
+            //             </div>
+            //         `)
+            //     }
+            // }
     
             var eUrlSplit = window.origin.split(':')
             //var nrPort = Number(eUrlSplit[2])
@@ -1830,7 +2001,14 @@
             $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
             // NB: The index url link is only shown if the option is turned on
             $('#show-src-folder-idx-url').empty()
-                .append('<div>at <a href="' + urlPrefix + nodeRoot + $(this).val() + '/idx" target="_blank" style="color:var(--red-ui-text-color-link);text-decoration:underline;">' + nodeRoot + $(this).val() + '/idx</a></div>')        
+                .append(
+                    `<div>at 
+                        <a href="${urlPrefix}${nodeRoot}${$(this).val()}/idx" target="_blank" 
+                                style="color:var(--red-ui-text-color-link);text-decoration:underline;">
+                            ${nodeRoot}${$(this).val()}/idx
+                        </a>
+                    </div>`
+                )
     
         } // ---- end of urlChange ---- //
     
@@ -2037,17 +2215,9 @@
          */
         function onEditPrepare(node) {
     
-            // RED.events.on('deploy', function() {
-            //     console.log('Deployed')
-            // })
-            // RED.events.on('workspace:dirty', function(data) {
-            //     console.log('Workspace dirty:', data)
-            // })
-            // RED.events.on('nodes:change', function(data) {
-            //     console.log('nodes:change:', data)
-            // })
-            
             packageList(node.url)
+    
+            // console.log('>> ONEDITPREPARE: NODE >>', node) 
     
             // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
             if ( node.templateFolder === undefined || node.templateFolder === '' ) node.templateFolder = defaultTemplate
@@ -2425,7 +2595,11 @@
             outputLabels: ['Data from front-end', 'Control Msgs from front-end'],
             icon: 'ui_template.png',
             paletteLabel: nodeLabel,
-            label: function () { return this.url || this.name || nodeLabel },
+            label: function () {
+                const url = this.url ? `<${this.url}>` : '<no url>'
+                const name = this.name ? `${this.name} ` : ''
+                return `${name}${url}` 
+            },
             //#endregion --- options --- //
     
             /** Available methods: 
@@ -2441,7 +2615,7 @@
             /** Prepares the Editor panel */
             oneditprepare: function() { onEditPrepare(this) },
     
-            /** Runs before save (Actually before Done button pressed)
+            /** Runs before save (Actually when Done button pressed)
              * @this {RED}
              */
             oneditsave: function() {
@@ -2457,18 +2631,22 @@
                 // Check for url rename - note that validation of new url is done in the validate function
                 if ( $('#node-input-url').val() !== this.url ) {
                     this.oldUrl = this.url
+                    mylog(`>> URL CHANGED >> New=${$('#node-input-url').val()}, Old=${this.url}` )
                 } else if ( this.oldUrl !== undefined ) {
                     this.oldUrl = undefined
                 }
     
                 // If something has changed or if something must change, update the deployed version
-                if ( this.changed || mustChange )
+                if ( this.changed || this.mustChange )
                     this.deployedVersion = RED.settings.uibuilderCurrentVersion
     
             }, // ---- End of oneditsave ---- //
     
             /** Runs before cancel */
             oneditcancel: function() {
+                // Reset the url in editorInstances[this.id] if cancelled
+                //editorInstances[this.id] = this.url
+    
                 // Get rid of the editor
                 if ( uiace.editorLoaded === true ) {
                     uiace.editor.destroy()
@@ -2492,43 +2670,48 @@
     
             /** Show notification warning before allowing delete */
             oneditdelete: function() {
-                const that = this
-                let myNotify = RED.notify(`<b>DELETE</b>: <p>You are deleting a uibuilder instance with url <i>${this.url}</i>.<br>Would you like to also delete the folder?<br><b>WARNING</b>: This cannot be undone.</p>`, {
-                    modal: true,
-                    fixed: true,
-                    type: 'warning', // 'compact', 'success', 'warning', 'error'
-                    buttons: [
-                        {
-                            text: 'Yes',
-                            click: function() { // (e) {
-                                // Mark folder for Deletion (actually done by the js file in `node.on('close', ..)`, handed off to uiblib:processClose)
-                                $.ajax({
-                                    type: 'PUT',
-                                    dataType: 'json',
-                                    url: './uibuilder/admin/' + that.url,
-                                    data: {
-                                        'cmd': 'deleteondelete',
-                                    },
-                                })
-                                    .fail(function(jqXHR, textStatus, errorThrown) {
-                                        console.error( '[uibuilder:oneditdelete:PUT] Error ' + textStatus, errorThrown )
-                                        RED.notify(`uibuilder: Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, {type:'error'})
-                                    })
+                // Remove the recorded instance
+                //delete editorInstances[this.id]
     
-                                myNotify.close()
-                                RED.notify(`The folder <i>${that.url}</i> will be deleted when you redeploy.`, {type:'compact'})
+                // Only warn if the node has been deployed
+                if ( this.isDeployed ) {
+                    const that = this
+                    let myNotify = RED.notify(`<b>DELETE</b>: <p>You are deleting a uibuilder instance with url <i>${this.url}</i>.<br>Would you like to also delete the folder?<br><b>WARNING</b>: This cannot be undone.</p>`, {
+                        modal: true,
+                        fixed: true,
+                        type: 'warning', // 'compact', 'success', 'warning', 'error'
+                        buttons: [
+                            {
+                                text: 'Yes',
+                                click: function() { // (e) {
+                                    // Mark folder for Deletion (actually done by the js file in `node.on('close', ..)`, handed off to uiblib:processClose)
+                                    $.ajax({
+                                        type: 'PUT',
+                                        dataType: 'json',
+                                        url: './uibuilder/admin/' + that.url,
+                                        data: {
+                                            'cmd': 'deleteondelete',
+                                        },
+                                    })
+                                        .fail(function(jqXHR, textStatus, errorThrown) {
+                                            console.error( '[uibuilder:oneditdelete:PUT] Error ' + textStatus, errorThrown )
+                                            RED.notify(`uibuilder: Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, {type:'error'})
+                                        })
+    
+                                    myNotify.close()
+                                    RED.notify(`The folder <i>${that.url}</i> will be deleted when you redeploy.`, {type:'compact'})
+                                }
+                            },
+                            {
+                                text: 'NO',
+                                class:'primary',
+                                click: function() { // (e) {
+                                    myNotify.close()
+                                }
                             }
-                        },
-                        {
-                            text: 'NO',
-                            class:'primary',
-                            click: function() { // (e) {
-                                myNotify.close()
-                            }
-                        }
-                    ]
-            
-                })
+                        ]
+                    })
+                }
             }, // ---- End of oneditdelete ---- //
     
         }) // ---- End of registerType() ---- //
