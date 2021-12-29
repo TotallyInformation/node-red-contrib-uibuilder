@@ -12,6 +12,7 @@
  *  https://www.npmjs.com/package/gulp-once    - Only do things if files have changed
  *  https://www.npmjs.com/package/gulp-replace - String replacer
  *  https://www.npmjs.com/package/gulp-debug
+ *  https://github.com/jonschlinkert/gulp-htmlmin
  * 
  *  https://www.npmjs.com/package/gulp-concat
  *  https://www.npmjs.com/package/gulp-sourcemaps
@@ -35,6 +36,7 @@ const once = require('gulp-once')
 //const prompt = require('gulp-prompt')
 const replace = require('gulp-replace')
 const debug = require('gulp-debug')
+const htmlmin = require('gulp-htmlmin')
 const execa = require('execa')
 const fs = require('fs')
 //const { promisify } = require('util')
@@ -80,10 +82,18 @@ function packfe(cb) {
 
 /** Combine the parts of uibuilder.html */
 function buildPanelUib(cb) {
+    src('src/editor/uibuilder/editor.js')
+        // .pipe(debug({title:'1', minimal:true}))
+        // .pipe(once())
+        // .pipe(debug({title:'2', minimal:true}))
+        .pipe(uglify())
+        .pipe(rename('editor.min.js'))
+        .pipe(dest('src/editor/uibuilder'))
     src('src/editor/uibuilder/main.html')
         .pipe(include())
         .pipe(once())
         .pipe(rename('uibuilder.html'))
+        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
         .pipe(dest(nodeDest))
 
     cb()
@@ -94,6 +104,7 @@ function buildPanelSender(cb) {
         .pipe(include())
         .pipe(once())
         .pipe(rename('uib-sender.html'))
+        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
         .pipe(dest(nodeDest))
 
     cb()
@@ -117,7 +128,7 @@ function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('front-end/src/uibuilderfe.js', packfe)
     // Re-combine uibuilder.html if the source changes
-    watch('src/editor/uibuilder/*', buildPanelUib)
+    watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.min.js'], buildPanelUib)
     watch('src/editor/uib-sender/*', buildPanelSender)
     //watch('src/editor/uib-receiver/*', buildPanelReceiver)
 

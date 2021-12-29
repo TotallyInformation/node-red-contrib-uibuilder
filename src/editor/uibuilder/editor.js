@@ -93,14 +93,14 @@
             // may be different to the deployed list
             editorInstances[node.id] = node.url
             // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. --
-        }
+        } 
     })
     RED.events.on('nodes:change', function(node) {
         if ( node.type === 'uibuilder') {
             mylog('nodes:change:', node)
             editorInstances[node.id] = node.url
         }
-    })
+    }) 
     RED.events.on('nodes:remove', function(node) {
         if ( node.type === 'uibuilder') {
             mylog('>> nodes:remove >>', node)
@@ -1956,7 +1956,7 @@
 
             // Check for url rename - note that validation of new url is done in the validate function
             if ( $('#node-input-url').val() !== this.url ) {
-                this.oldUrl = this.url
+                this.oldUrl = this.url 
                 mylog(`>> URL CHANGED >> New=${$('#node-input-url').val()}, Old=${this.url}` )
             } else if ( this.oldUrl !== undefined ) {
                 this.oldUrl = undefined
