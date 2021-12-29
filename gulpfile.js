@@ -98,18 +98,19 @@ function buildPanelSender(cb) {
 
     cb()
 }
-/** Combine the parts of uib-sender.html */
-function buildPanelReceiver(cb) {
-    src('src/editor/uib-receiver/main.html')
-        .pipe(include())
-        .pipe(once())
-        .pipe(rename('uib-receiver.html'))
-        .pipe(dest(nodeDest))
+/** Combine the parts of uib-receiver.html */
+// function buildPanelReceiver(cb) {
+//     src('src/editor/uib-receiver/main.html')
+//         .pipe(include())
+//         .pipe(once())
+//         .pipe(rename('uib-receiver.html'))
+//         .pipe(dest(nodeDest))
 
-    cb()
-}
+//     cb()
+// }
 
-const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
+//const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
+const buildme = parallel(buildPanelUib, buildPanelSender)
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
@@ -118,7 +119,7 @@ function watchme(cb) {
     // Re-combine uibuilder.html if the source changes
     watch('src/editor/uibuilder/*', buildPanelUib)
     watch('src/editor/uib-sender/*', buildPanelSender)
-    watch('src/editor/uib-receiver/*', buildPanelReceiver)
+    //watch('src/editor/uib-receiver/*', buildPanelReceiver)
 
     cb()
 }
