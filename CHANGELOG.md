@@ -14,49 +14,40 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### TODO
 
+IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
+
 * FIXES NEEDED:
   * [ ] ERRORCHECK: Imported node with not default template had default template on first deploy
   * [ ] ERROR: Removing a module after install but without closing and reopening editor panel did nothing
+  * [ ] ERROR: When switching from src to dist, local code not found, had to restart node-red
   * [ ] When turning on idx, link won't work until node re-deployed - reflect in panel UI
-  * [ ] On connection, send current uib version to client
+  * [ ] If a node with no url has been deployed
+    * [ ] and is then edited - 2x notification errors are given. `The selected uibuilder template (vue) is MISSING the following dependencies` (that warning also needs the url adding)
+    * [ ] when url then changed & deployed - `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` error is output.
+  * [ ] Copying a node that hasn't been deployed - 1st time only - doesn't reset the url
+  * [ ] Cannot save changes to files in instance root folder `"[uibuilder:uibputfile] Admin API. File write FAIL. url=test1a, file=root/.eslintrc.js"`
 
-* Move package management to a new singleton class
-  * [x] Use execa promise-based calls to npm
-  * [x] Allow any valid npm name spec in editor
-  * [x] Use `uibRoot`s package.json file for package management and add custom `uibuilder` property to it for managing package metadata and other config.
-  * [x] Add display of version & URL path on installed packages list
-  * [x] Allow version spec on install
-  * [x] Move package management out of web.js
-  * [x] Remove uib.vendorPaths
-  * [-] Allow installation of GitHub and local packages - Need to finish LOCAL installs
-  * [ ] Check for new versions of installed packages when entering the library manager
+* General
+  * [ ] **Use package.json to track deployed nodes (id and url) - remove `oldUrl` - use tracker to watch for url changes** - No, use uib.instances
+  * [ ] **Ensure correct package.json file is created when a new template is deployed**
+  * [ ] When a template changes, run `npm install`
+  * [ ] Add 'use strict' to template index.js 
+  * [ ] Check for methods/functions/variables that can be deprecated.
+  * [ ] Allow socket.io config
+  * [ ] Allow expressjs config
+  * [ ] Add a new template and example to demonstrate the sender node.
+  * [ ] Add instance API middleware https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6
+  * [ ] Allow changes to socket.io config. [issue](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4)
 
-* [x] Add uib-sender node
-  * [x] Dropdown to choose uib URL
-  * [x] Allow passthrough of msg
-  * Future enhancements:
-    * Allow multi-instance sending
-    * _Maybe_ Include schema checks - filter on available schema's from uib compatible components
-    
-* FE Changes
-  * [x] Add optional `originator` param to send fn
-  * [x] Add `setOriginator` method to set default originator
-  * [ ] How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
-  * [ ] Add mapper to map component id to originator & extend `eventSend` accordingly
-  * [ ] Add version check
+* uib-sender
+  * [ ] Track undeployed uib nodes via RED.events
+  * [ ] Store links by node.id not url since url may change
 
 * uibuilder Panel
-  * [x] Switch from hide/show interface to tabbed interface
-  * Files tab
-    * [x] Remove the close button
-    * [ ] _Maybe_ Move folder management to a popup dialog (to save vertical space)
-  * Libraries
-    * [ ] Remove the close button
-    * [ ] Show additional info for each package: installed version, (location), served folder
   * [ ] Show template (instance root) folder
 
-* [ ] Add a new template and example to demonstrate the sender node.
-* [ ] Allow changes to socket.io config. [issue](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4)
+* FE
+  * [ ] Add `onMsg` convenience handler (maybe allow wildcard topics?)
 
 * Templates
   * [ ] **Add ability to specify library dependencies in package.json** - not using the dependencies prop because we dont want to install libraries in the instance root but rather the uibRoot. Will need matching code in the Editor panel & a suitable API.
@@ -64,22 +55,12 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   * [ ] Add example flows - using the pluggable libraries feature of Node-RED v2.1
 
 
-* *Maybe*
-  * *Maybe* Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained
-  * *Maybe* add in/out msg counts to status?
-  * *Maybe* add prev/curr version and checks?
-  * *Maybe* add alternate `uibDashboard` node that uses web components and data-driven composition.
-  * _Maybe_ On change of URL - signal other nodes? As no map currently being maintained - probably not possible
-  * [ ] _Maybe_ Add uib-receiver node
-    * [ ] Status msg to show node-id
-    * [ ] Have to manually send to by adding originator property
-  * _Maybe_ Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
-    * [ ] Update docs
-    * [ ] Add processing to nodes to be able to mark them as experimental.
-  * *Maybe* Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's.
-  
 
 * Security
+  * SIMPLIFY FOR THIS RELEASE!
+
+    * 
+
   * Add roles/tags options to JWT? Or at least to the user session record
   * Editor
     * Make JWT IP address check optional `jwtCheckIp`
@@ -110,6 +91,41 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     * Functions:
       * self.initSecurity
       * self.setStore
+
+### Future Versions To Do
+
+* Editor (uibuilder.html)
+  * Extend folder/file management
+  * Check for new versions of installed packages when entering the library manager
+
+* FE Changes
+  * [ ] How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
+  * [ ] Add mapper to map component id to originator & extend `eventSend` accordingly
+
+* *Maybe*
+  * uibuilder.js
+    * Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained
+    * add in/out msg counts to status?
+    * On change of URL - signal other nodes? As no map currently being maintained - probably not possible
+  
+  * Editor (uibuilder.html)
+    * Move folder management to a popup dialog (to save vertical space)
+  
+  * uibSender Node
+    * Allow multi-instance sending - send to multiple uibuilder nodes.
+    * Include schema checks - filter on available schema's from uib compatible components
+
+  * Other Nodes
+    * add alternate `uibDashboard` node that uses web components and data-driven composition.
+  
+  * Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
+    * [ ] Update docs
+    * [ ] Add processing to nodes to be able to mark them as experimental.
+  
+  * Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's.
+  
+  * Add client IP address to trace messages on connection.
+  
 
 ### BREAKING
 
@@ -156,8 +172,17 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * Updated node status display. Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
 
 * Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
+* Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
 
 ### Changed
+
+* uibuilder nodes now show the url in angle-brackets. If the url is not defined, `<no url>` shows. If the node has a name, this is shown before the url. e.g. `My UI <myui>`. If you want to have the url show on a different line to the name, add ` \n ` to the end of the name.
+
+* When adding a new uibuilder node, the url is now blank. This helps prevent accidentally creating two nodes with the same url which is confusing to recover from. As a blank url is not a valid configuration, the red triangle will show.
+
+* When copying and pasting a uibuilder node, the pasted node(s) will have their URL changed to blank to prevent nodes with duplicate url's being deployed.
+
+* When editing the configuration for a uibuilder node, if the URL is invalid or the server folder hasn't yet been created, you cannot access various parts of the panel.
 
 * `uibuilderfe.js` client library updated to allow for the use of an `originator` metadata property. This facilitates routing of messages back to an alternative node instead of the main uibuilder node.
 
@@ -287,6 +312,9 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * Fixed an issue when removing uibuilder nodes caused by the move to socket.io v4. Should fix the failure to remove unused uib instance root folders and fix renaming problems as well.
 * URL rename failed if user updates template before committing url change. This is now blocked.
 * File editor failed if the node hadn't been deployed yet. Blocked if instance folder hasn't yet been created.
+* Change degit call to turn off cache which was producing a `could not find commit hash for HEAD` error. See [degit Issue #37](https://github.com/Rich-Harris/degit/issues/37). Partial fix for [Issue #155](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/155).
+* If deleting a node that hasn't been deployed, a delete folder warning is given - add check to see if the folder actually exists before giving the error.
+
 
 
 
