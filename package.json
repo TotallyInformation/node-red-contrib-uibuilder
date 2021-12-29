@@ -29,6 +29,7 @@
   "dependencies": {
     "@totallyinformation/ti-common-event-handler": "^1.0.0",
     "degit": "^2.8.4",
+    "execa": "^5.1.1",
     "express": "^4.17.1",
     "express-session": "^1.17.2",
     "express-validator": "^6.13.0",
@@ -55,9 +56,9 @@
     "eslint-plugin-jsdoc": "^37.0.3",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-sonarjs": "^0.11.0",
-    "execa": "^5.1.1",
     "gulp": "^4.0.2",
     "gulp-debug": "^4.0.0",
+    "gulp-htmlmin": "^5.0.1",
     "gulp-include": "^2.4.1",
     "gulp-once": "^2.1.1",
     "gulp-prompt": "^1.2.0",
