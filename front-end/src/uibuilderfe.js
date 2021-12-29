@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/cognitive-complexity, sonarjs/no-duplicate-string */
 /*
-  Copyright (c) 2017-2021 Julian Knight (Totally Information)
+  Copyright (c) 2017-2022 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -24,7 +24,12 @@
 
 'use strict'
 
-// @since 2017-10-17 CL: tell webpack that we need socket.io client if running from webpack build
+/** Tell Webpack/Parcel that we need socket.io client if running from webpack build
+ * For this to work, you have to have the socket.io-client package installed as a dev
+ * dependency in your front-end project.
+ * ! NOTE: It is preferable NOT to bundle the socket.io client since there is a danger
+ *         that you will end up with an incompatible version. You gain little to nothing anyway.
+ */
 if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-disable-line block-scoped-var, no-use-before-define
     // @ts-expect-error ts(2307)
     var io = require('socket.io-client')
