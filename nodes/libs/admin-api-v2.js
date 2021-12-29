@@ -217,10 +217,11 @@ function adminRouterV2(uib, log) {
 
         log.trace(`[uibuilder:uibgetfile] Admin API. File get requested. url=${params.url}, file=${params.folder}/${params.fname}`)
 
+        // if fldr = root, no folder
         if ( params.folder === 'root' ) params.folder = ''
 
         // @ts-ignore
-        const filePathRoot = path.join(uib.rootFolder, req.query.url, params.folder)
+        const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
         // @ts-ignore
         const filePath = path.join(filePathRoot, req.query.fname)
 
@@ -281,6 +282,9 @@ function adminRouterV2(uib, log) {
         //#endregion ====== ====== //
         
         log.trace(`[uibuilder:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
+
+        // Fix for Issue #155 - if fldr = root, no folder
+        if ( params.folder === 'root' ) params.folder = '.'
 
         const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
 
@@ -703,7 +707,7 @@ function adminRouterV2(uib, log) {
         
         const folder = RED.settings.userDir
 
-        log.info(`[uibuilder:API:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} from '${params.loc}' with tag/version '${params.tag}'`)
+        log.info(`[uibuilder:API:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag}'`)
 
         // delete package lock file as it seems to mess up sometimes - no error if it fails
         fs.removeSync(path.join(folder, 'package-lock.json'))
@@ -712,7 +716,7 @@ function adminRouterV2(uib, log) {
         switch (params.cmd) {
             case 'update':
             case 'install': {
-                packageMgt.npmInstallPackage(params.url, params.package, params.loc, params.tag)
+                packageMgt.npmInstallPackage(params.url, params.package, params.tag)
                     .then((npmOutput) => {
                         //let success = false
                         
