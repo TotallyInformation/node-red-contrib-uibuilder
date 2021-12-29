@@ -2,6 +2,7 @@
  * Note that the first entry will be the default.
  * THE OBJECT NAME MUST BE THE SAME AS THE FOLDER NAME
  */
+'use strict'
 
 module.exports = {
     vue: {
