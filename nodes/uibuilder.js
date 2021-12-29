@@ -1,6 +1,6 @@
 /* eslint-disable block-scoped-var */
 /**
- * Copyright (c) 2017-2021 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -462,7 +462,9 @@ function nodeInstance(config) {
         // rename (move) folder if possible - but don't overwrite
         try {
             fs.moveSync(path.join(uib.rootFolder, this.oldUrl), this.customFolder, {overwrite: false})
+            log.trace(`[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
         } catch (e) {
+            log.trace(`[uibuilder:nodeInstance:${this.url}] Could not rename folder. ${e.message}`)
             // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
             if ( e.code !== 'ENOENT' ) {
                 log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${this.url}, oldUrl=${this.oldUrl}, Fldr=${this.customFolder}. Error=${e.message}`, e)
@@ -611,12 +613,20 @@ function Uib(RED) {
         credentials: {
             jwtSecret: {type:'password'},
         },
+        // Makes these available to the editor as RED.settings.uibuilderxxxxxx
         settings: {
+            // The server's NODE_ENV environment var (e.g. PRODUCTION or DEVELOPMENT)
             uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
-            uibuilderTemplates: { value: templateConf, exportable: true }, // See require's
+            // Available templates and details
+            uibuilderTemplates: { value: templateConf, exportable: true },
+            // Custom server details
             uibuilderCustomServer: { value: (uib.customServer), exportable: true },
-            uibuilderCurrentVersion: { value: (uib.version), exportable: true }, // Current version of uibuilder
+            // Current version of uibuilder
+            uibuilderCurrentVersion: { value: (uib.version), exportable: true },
+            // Should the editor tell the user that a redeploy is needed (based on uib versions)
             uibuilderRedeployNeeded: { value: uib.reDeployNeeded, exportable: true },
+            // List of the deployed uib instances [{node_id: url}]
+            uibuilderInstances: { value: uib.instances, exportable: true },
         },
     }) 
 
