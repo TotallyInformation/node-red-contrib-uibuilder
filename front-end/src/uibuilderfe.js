@@ -1355,7 +1355,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             msg: self.msg,
 
             /** Helper fn, Send a message to NR
-             * @example: uibuilder.send({payload:'Hello'})
+             * @example uibuilder.send({payload:'Hello'})
              * @param {object} msg Message to send
              * @param {string} [originator] A Node-RED node ID to return the message to
              */
