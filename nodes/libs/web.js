@@ -26,7 +26,6 @@
  */
 
 const path = require('path')
-const util = require('util')
 const fs = require('fs-extra')
 const tilib = require('./tilib')
 const serveIndex = require('serve-index')
@@ -575,6 +574,10 @@ class UibWeb {
         // (1b) masterMiddleware - Generic dynamic middleware to add uibuilder specific headers & cookie
         this.instanceRouters[node.url].use(this.addMasterMiddleware(node) )
 
+        // TODO (1c) Add API middleware option - see https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6
+        let instanceApiRouter = this.getInstanceApiRouter(node)
+        if (instanceApiRouter) this.instanceRouters[node.url].use( '/api', instanceApiRouter )
+
         // (2) THIS IS THE IMPORTANT ONE - customStatic - Add static route for instance local custom files (src or dist)
         this.instanceRouters[node.url].use( this.setupInstanceStatic(node) )
 
@@ -597,7 +600,7 @@ class UibWeb {
         // Apply this instances router to the url path on `<httpNodeRoot>/<url>/`
         this.app.use( tilib.urlJoin(node.url), this.instanceRouters[node.url])
 
-    }
+    } // --- End of instanceSetup --- //
 
     /** (1a) Optional middleware from a file
      * @param {uibNode} node Reference to the uibuilder node instance
@@ -626,7 +629,7 @@ class UibWeb {
         } catch (e) {
             log.trace(`[uibuilder:web:addMiddlewareFile:${node.url}] uibuilder Middleware file failed to load. Reason: `, e.message)
         }
-    } // --- End of addMiddlewareFile() --- //
+    } // --- End of addMiddlewareFile --- //
 
     /** (1b) Return Generic dynamic middleware to add uibuilder specific headers & cookies
      * @param {uibNode} node Reference to the uibuilder node instance
@@ -655,7 +658,7 @@ class UibWeb {
 
             next()
         }
-    } // --- End of addMasterMiddleware() --- //
+    } // --- End of addMasterMiddleware --- //
 
     /** (2) Front-end code is mounted here - Add static ExpressJS route for an instance local resource files
      * Called on startup but may also be called if user changes setting Advanced/Serve
@@ -708,46 +711,53 @@ class UibWeb {
         // Return the serveStatic
         return express.static( customFull, uib.staticOpts )
 
-    }
+    } // --- End of setupInstanceStatic --- //
 
-    // TODO: Need to check that this still works properly - do we even need it any more?
-    /** Remove all of the app.use middleware for this instance
-     * @param {uibNode} node Reference to the uibuilder node instance
+    /** Load & return an ExpressJS Router from a file in <uibRoot>/<node.url>/lib/api.js
+     * @param {uibNode} node 
      */
-    removeInstanceMiddleware(node) {
-        
-        // We need to remove the app.use paths too as they will be recreated on redeploy
-        // we check whether the regex string matches the current node.url, if so, we splice it out of the stack array
-        var removePath = []
-        var urlRe = new RegExp('^' + tilib.escapeRegExp('/^\\' + tilib.urlJoin(node.url)) + '.*$')
-        var urlReVendor = new RegExp('^' + tilib.escapeRegExp('/^\\/uibuilder\\/vendor\\') + '.*$')
-        // For each entry on ExpressJS's server stack...
-        this.app._router.stack.forEach( function(r, i, _stack) { // eslint-disable-line no-unused-vars
-            // Check whether the URL matches a vendor path...
-            let rUrlVendor = r.regexp.toString().replace(urlReVendor, '')
-            // If it DOES NOT, then...
-            if (rUrlVendor !== '') {
-                // Check whether the URL is a uibuilder one...
-                let rUrl = r.regexp.toString().replace(urlRe, '')
-                // If it IS ...
-                if ( rUrl === '' ) {
-                    // Mark it for removal because it will be re-created by nodeGo() when the nodes restart
-                    removePath.push( i )
-                    // @since 2017-10-15 Nasty bug! Splicing changes the length of the array so the next splice is wrong!
-                    //app._router.stack.splice(i,1)
-                }
-            }
-            // NB: We do not want to remove the vendor URL's because they are only created ONCE when Node-RED initialises
-        })
-        // TODO Remove instance debug admin route `RED.httpAdmin.get('/uib/instance/${node.url}')`
+    getInstanceApiRouter(node) {
+        // Reference static vars
+        const uib = this.uib
+        //const RED = this.RED
+        const log = this.log
 
-        // @since 2017-10-15 - proper way to remove array entries - in reverse order so the ids don't change - doh!
-        for (var i = removePath.length -1; i >= 0; i--) {
-            this.app._router.stack.splice(removePath[i],1)
-        }
+        // let instanceApiPath = path.join(uib.rootFolder, node.url, 'lib', 'api.js')
+        // console.log('>> instanceApiPath >>', instanceApiPath)
+        // //try { 
+        // const instanceApi = require(instanceApiPath)
+        // console.log('>> instanceApi >>', 
+        //     'route' in instanceApi,
+        //     'post' in instanceApi,
+        //     'head' in instanceApi,
+        //     'patch' in instanceApi,
+        //     'm-search' in instanceApi
+        // )
+        //     (instanceApi instanceof express.Router),
+        // Object.getPrototypeOf(instanceApi) == express.Router,
+        //     Object.getPrototypeOf(instanceApi),
+        //     type(instanceApi, true), 
+        //     instanceApi.constructor.name, 
+        //     instanceApi.constructor, 
+        //     typeof instanceApi, 
+        //     Object.prototype.toString.call(instanceApi)
+        // )
+            // if ( typeof uibMiddleware === 'function' ) {
+            //     //! TODO: Add some more checks in here (e.g. does the function have a next()?)
+            //     // @ts-ignore
+            //     this.instanceRouters[node.url].use( uibMiddleware )
+            //     log.trace(`[uibuilder:web:addMiddlewareFile:${node.url}] uibuilder Middleware file loaded.`)
+            //     this.routers.instances[node.url].push( {name: 'Master Middleware', path:`${this.uib.httpRoot}/${node.url}`, desc: 'Adds user custom handler from a file', type:'Handler', folder: uib.configFolder} )
+            // }    
+        // } catch (e) {
+        //     // Only trace as it is OK not to be able to load this
+        //     if ( e.message.startsWith('Cannot find module'))
+        //         log.trace(`[uibuilder:web:getInstanceApiRouter:${node.url}] instance api router file failed to load. Reason: ${e.message}`)
+        //     else
+        //         log.warn(`[uibuilder:web:getInstanceApiRouter:${node.url}] instance api router file failed to load. Reason: ${e.message}`)
+        // }
+    } // ---- End of getInstanceApiRouter ---- //
 
-    } // --- End of removeAllMiddleware() --- //
-    
     // TODO Add this.routers & maybe this.dumpInstanceRoutes(false)
     /** Create instance details web page
      * @param {Express.Request} req ExpressJS Request object
@@ -910,7 +920,7 @@ class UibWeb {
         page += '</body></html>'
 
         return page
-    } // ---- End of showInstanceDetails() ---- //
+    } // ---- End of showInstanceDetails ---- //
 
     //#endregion ====== Per-node instance processing ====== //
 
