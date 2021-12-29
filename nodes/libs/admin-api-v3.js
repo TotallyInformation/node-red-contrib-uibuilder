@@ -393,6 +393,9 @@ function adminRouterV3(uib, log) {
                     }        
                 }
         
+                // Fix for Issue #155 - if fldr = root, no folder
+                if ( params.folder === 'root' ) params.folder = ''
+
                 let fullname = path.join(uib.rootFolder, params.url, params.folder)
                 if (params.cmd === 'newfile' ) {
                     fullname = path.join(fullname, params.fname)
@@ -469,6 +472,9 @@ function adminRouterV3(uib, log) {
                     return
                 }        
             }
+
+            // Fix for Issue #155 - if fldr = root, no folder
+            if ( params.folder === 'root' ) params.folder = ''
 
             let fullname = path.join(uib.rootFolder, params.url, params.folder)
             if (params.cmd === 'deletefile' ) {
