@@ -669,28 +669,6 @@ function adminRouterV2(uib, log) {
             return
         }
 
-        // For install/upd, package location must exist and be either 'npmjs', 'github' or 'local'
-        if ( params.cmd !== 'remove' ) {
-            if ( params.loc === undefined ) {
-                log.error('[uibuilder:API:uibnpmmanage] uibuilder Admin API. No location provided for npm management.')
-                res.statusMessage = 'npm loc parameter not provided'
-                res.status(500).end()
-                return
-            }
-            switch (params.loc) {
-                case 'npmjs':
-                case 'github':
-                case 'local':
-                    break
-            
-                default:
-                    log.error(`[uibuilder:API:uibnpmmanage] Admin API. Invalid location provided for npm management. "${params.loc}"`)
-                    res.statusMessage = 'npm loc parameter is invalid'
-                    res.status(500).end()
-                    return
-            }
-        }
-
         // If install/update, we need the node instance as well
         if ( params.cmd !== 'remove' ) {
             // @ts-ignore
