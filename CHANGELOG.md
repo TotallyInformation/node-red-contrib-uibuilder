@@ -17,6 +17,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
+  * [ ] New uib, set url - no visual indication you now need to commit before anything else
   * [ ] ERRORCHECK: Imported node with not default template had default template on first deploy
   * [ ] ERROR: Removing a module after install but without closing and reopening editor panel did nothing
   * [ ] ERROR: When switching from src to dist, local code not found, had to restart node-red
@@ -28,16 +29,12 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * [ ] Cannot save changes to files in instance root folder `"[uibuilder:uibputfile] Admin API. File write FAIL. url=test1a, file=root/.eslintrc.js"`
 
 * General
-  * [ ] **Use package.json to track deployed nodes (id and url) - remove `oldUrl` - use tracker to watch for url changes** - No, use uib.instances
-  * [ ] **Ensure correct package.json file is created when a new template is deployed**
-  * [ ] When a template changes, run `npm install`
-  * [ ] Add 'use strict' to template index.js 
+  * [ ] When a template changes, run `npm install` - optional
   * [ ] Check for methods/functions/variables that can be deprecated.
-  * [ ] Allow socket.io config
   * [ ] Allow expressjs config
   * [ ] Add a new template and example to demonstrate the sender node.
-  * [ ] Add instance API middleware https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6
-  * [ ] Allow changes to socket.io config. [issue](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4)
+  * [ ] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
+  
 
 * uib-sender
   * [ ] Track undeployed uib nodes via RED.events
@@ -48,11 +45,9 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FE
   * [ ] Add `onMsg` convenience handler (maybe allow wildcard topics?)
+  * [ ] Add watch for instance fe file changes - send reload msg
 
 * Templates
-  * [ ] **Add ability to specify library dependencies in package.json** - not using the dependencies prop because we dont want to install libraries in the instance root but rather the uibRoot. Will need matching code in the Editor panel & a suitable API.
-  * [ ] Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
-  * [ ] Add example flows - using the pluggable libraries feature of Node-RED v2.1
 
 
 
@@ -107,7 +102,19 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
     * Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained
     * add in/out msg counts to status?
     * On change of URL - signal other nodes? As no map currently being maintained - probably not possible
-  
+
+  * Templates
+    * Maybe move dependencies and other template meta-data into the template package.json file.
+      
+      Would require making sure that package.json always exists (e.g. after template change). May need to be able to reload package.json file as well.
+      
+      Couldn't use the dependencies prop because we dont want to install libraries in the instance root but rather the uibRoot. 
+      
+      Will need matching code in the Editor panel & a suitable API.
+
+    * [ ] Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
+    * [ ] Add example flows - using the pluggable libraries feature of Node-RED v2.1
+
   * Editor (uibuilder.html)
     * Move folder management to a popup dialog (to save vertical space)
   
@@ -173,6 +180,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
 * Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
+* Allow socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4).
 
 ### Changed
 
@@ -281,6 +289,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * Editor changes
 
   * Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
+  * Minified the Editor panel html file (using Gulp) - should load faster now.
 
 * v3 admin API changes
   

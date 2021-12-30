@@ -1,5 +1,6 @@
 * [Home](/)
 * Using uibuilder
+  * [Configuring uibuilder](uib-configuration.md)
   * [Changing the root folder (uibRoot)](changing-uibroot.md)
   * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
 * Developing UI's

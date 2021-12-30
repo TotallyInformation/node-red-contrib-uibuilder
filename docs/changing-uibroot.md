@@ -24,7 +24,7 @@ If the uibuilder module has to create a missing sub-folder for a deployed node, 
 
 ## Changing the uibRoot folder
 
-To change the folder to a different location, edit the Node-RED `settings.js` file that is found in the userDir folder (normally `~/.node-redsettings.js`).
+To change the folder to a different location, edit the Node-RED `settings.js` file that is found in the userDir folder (normally `~/.node-red/settings.js`).
 
 Add a new section to the exported object:
 

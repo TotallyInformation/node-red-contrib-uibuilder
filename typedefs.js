@@ -58,6 +58,7 @@
  * @property {object} [uibuilder] Optional uibuilder specific Node-RED settings
  * @property {number} [uibuilder.port] Port number if uib is using its own ExpressJS instance
  * @property {string} [uibuilder.uibRoot] Folder name that will hold all uib runtime and instance folders
+ * @property {object} [uibuilder.sioOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
  * 
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version
