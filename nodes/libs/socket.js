@@ -1,10 +1,8 @@
-/* eslint-disable class-methods-use-this */
-/* eslint-disable sonarjs/no-duplicate-string */
-/* eslint-disable max-params */
+/* eslint-disable class-methods-use-this, sonarjs/no-duplicate-string, max-params */
 /** Manage Socket.IO on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  * 
- * Copyright (c) 2017-2021 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -128,17 +126,18 @@ class UibSockets {
     _socketIoSetup() {
         // Reference static vars
         const uib = this.uib
-        //const RED = this.RED
+        const RED = this.RED
         const log = this.log
         const server = this.server
         const uib_socketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
         log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uib_socketPath}` )
+        // Socket.Io server options, see https://socket.io/docs/v4/server-options/
         let ioOptions = {
             'path': uib_socketPath,
             // Socket.Io 3+ CORS is disabled by default, also options have changed.
             // for CORS need to handle preflight request explicitly 'cause there's an
-            // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v2/handling-cors/
+            // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v4/handling-cors/
             // handlePreflightRequest: (req, res) => {
             //     res.writeHead(204, {
             //         'Access-Control-Allow-Origin': req.headers['origin'], // eslint-disable-line dot-notation
@@ -148,6 +147,11 @@ class UibSockets {
             //     })
             //     res.end()
             // },
+        }
+
+        // Merge in overrides from settings.js if given.
+        if ( RED.settings.uibuilder && RED.settings.uibuilder.sioOptions ) {
+            ioOptions = Object.assign( {}, RED.settings.uibuilder.sioOptions, ioOptions )
         }
 
         // @ts-ignore ts(2349)
