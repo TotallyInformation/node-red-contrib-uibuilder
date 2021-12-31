@@ -149,6 +149,7 @@ class UibPackages {
 
         // Make sure it exists & contains valid JSON
         if ( ! fs.existsSync(fileName) ) {
+            this.log.warn('[uibuilder:package-mgt:getUibRootPackageJson] No uibRoot/package.json file, creating minimal file.')
             // Create a minimal one
             fs.writeJsonSync(fileName, {
                 'name': 'uib_root',
