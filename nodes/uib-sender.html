@@ -52,7 +52,7 @@
                 if ( $(this).prop('checked') === true ) {
                     node.outputs = 1
                     $('#node-input-return').prop('checked', false)
-                } else {
+                } else if ( $('#node-input-return').prop('checked') === false ) {
                     node.outputs = 0
                 }
             })
@@ -65,7 +65,9 @@
                 if ( $(this).prop('checked') === true ) {
                     node.outputs = 1
                     $('#node-input-passthrough').prop('checked', false)
-                } else node.outputs = 0
+                } else if ( $('#node-input-passthrough').prop('checked') === false ) {
+                    node.outputs = 0
+                }
             })
             
         // Deal with the url
