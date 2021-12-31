@@ -208,8 +208,9 @@ class UibWeb {
                 log.trace(`[uibuilder:web:webSetup] Using Node-RED ExpressJS server at ${uib.customServer.type}://${add}:${RED.settings.uiPort}`)
         })
         // Set http(s) according to Node-RED settings (will use the same certs if https)
-        // TODO Allow override in uibuilder settings
-        if ( RED.settings.https ) uib.customServer.type = 'https'
+        if ( RED.settings.uibuilder && RED.settings.uibuilder.customType ) {
+            uib.customServer.type = RED.settings.uibuilder.customType
+        } else if ( RED.settings.https ) uib.customServer.type = 'https'
         else uib.customServer.type = 'http'
 
         if ( uib.customServer.port && uib.customServer.port !== RED.settings.uiPort ) {
@@ -223,8 +224,26 @@ class UibWeb {
              * TODO: Switch from https to http/2?
              */
             if ( uib.customServer.type === 'https' ) {
-                // TODO Allow https settings separate from RED.settings.https
-                this.server = require('https').createServer(RED.settings.https, this.app)
+                // Allow https settings separate from RED.settings.https
+                if ( RED.settings.uibuilder && RED.settings.uibuilder.https ) {
+                    try {
+                        this.server = require('https').createServer(RED.settings.uibuilder.https, this.app)
+                    } catch (e) {
+                        RED.log.error(
+                            `[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server.\n\t Check uibuilder.https in settings.js,\n\t make sure the key and cert files exist and are accessible.\n\t ${e.message}\n \n `,
+                            e
+                        )    
+                    }
+                } else {
+                    console.log('>>>>',RED.settings.https)
+                    if ( RED.settings.https !== undefined ) {
+                        this.server = require('https').createServer(RED.settings.https, this.app)
+                    } else {
+                        RED.log.error(
+                            '[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server using NR https settings.\n\t Check https property in settings.js,\n\t make sure the key and cert files exist and are accessible.\n \n '
+                        )
+                    }
+                }
             } else {
                 this.server = require('http').createServer(this.app)
             }
@@ -239,7 +258,12 @@ class UibWeb {
                     RED.log.error(
                         `[uibuilder:web:webSetup:CreateServer] ERROR: Port ${uib.customServer.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`
                     )
-                }    
+                } else {
+                    RED.log.error(
+                        `[uibuilder:web:webSetup:CreateServer] ERROR: ExpressJS error. Cannot create uibuilder server. ${err.message}`,
+                        err
+                    )
+                }
             })
 
             this.server.listen(uib.customServer.port, () => {
@@ -470,7 +494,14 @@ class UibWeb {
         }
 
         // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
-        const sioPath = packageMgt.getPackagePath2('socket.io', this.RED.settings.userDir)
+        let sioPath = packageMgt.getPackagePath2('socket.io', this.RED.settings.userDir)
+        // If it can't be found the usual way - probably because Docker being used & socket.io not in usual place
+        if ( sioPath === null ) {
+            try {
+                sioPath = path.join(path.dirname(require.resolve('socket.io')),'..')
+            } catch (e) {}
+        }
+
         if ( sioPath !== null ) {
             this.vendorRouter.use( '/socket.io', express.static( sioPath, this.uib.staticOpts ) )
         } else {
