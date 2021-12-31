@@ -17,9 +17,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
-  * [x] [Issue](https://discourse.nodered.org/t/uibuilder-the-next-step-3rd-party-comms-with-a-uibuilder-front-end/51684/19?u=totallyinformation) - need to amend warning msg in `web.js`.
-  * [ ] Bugs in sender node. [Issue](https://discourse.nodered.org/t/uibuilder-the-next-step-3rd-party-comms-with-a-uibuilder-front-end/51684/16?u=totallyinformation)
-  * [ ] Remove code and file for sioMiddleware as it stopped working after Socket.io v2. Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159).
+  * [ ] Remove code and file for sioMiddleware as it stopped working after Socket.io v2. Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159). Use `sioUse` instead.
   * [ ] New uib, set url - no visual indication you now need to commit before anything else
   * [ ] ERRORCHECK: Imported node with not default template had default template on first deploy
   * [ ] ERROR: Removing a module after install but without closing and reopening editor panel did nothing
@@ -86,7 +84,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * Review all changes
   * Add note about [default msg size](https://github.com/socketio/socket.io/issues/3946#issuecomment-850704139)
   * Update custom express settings
-  * 
   * FE
     * Variables:
       * self.security - flag: indicates if server has security turned on
@@ -173,6 +170,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   Note that this same method can be used by ANY custom node, check out the code to see how it works. It requires the use of an external, shared event module [`@TotallyInformation/ti-common-event-handler`](https://github.com/TotallyInformation/ti-common-event-handler). The msg metadata looks like: `{ _uib: {originator: <sender_node_id>}, payload: ... }`. The sender node id is just that, the Node-RED node id for the sender node instance.
 
   The `uibuilderfe.js` library has been updated to allow easy use of the `originator` property for `uibuilder.send()`. See below for details.
+
+  There is a new page in the Tech Docs on using the sender node.
 
 * Package Management. You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
   
@@ -334,6 +333,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * File editor failed if the node hadn't been deployed yet. Blocked if instance folder hasn't yet been created.
 * Change degit call to turn off cache which was producing a `could not find commit hash for HEAD` error. See [degit Issue #37](https://github.com/Rich-Harris/degit/issues/37). Partial fix for [Issue #155](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/155).
 * If deleting a node that hasn't been deployed, a delete folder warning is given - add check to see if the folder actually exists before giving the error.
+* If using Node-RED Docker with recommended install, uib couldn't find the Socket.IO client folder to serve. [Issue](https://discourse.nodered.org/t/uibuilder-the-next-step-3rd-party-comms-with-a-uibuilder-front-end/51684/19?u=totallyinformation). Extra check and cleared warnings added.
+
 
 
 
