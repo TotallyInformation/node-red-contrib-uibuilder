@@ -1,21 +1,4 @@
-<!--
-    Copyright (c) 2021 Julian Knight (Totally Information)
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
--->
-
-<script type="text/javascript">
-/* eslint-disable strict */
+<script type="text/javascript">/* eslint-disable strict */
 
 // Isolate this code
 (function () {
@@ -122,12 +105,7 @@
         
     }) // ---- End of registerType() ---- //
 
-}())
-
-</script>
-
-<script type="text/html" data-template-name="uib-sender">
-<div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
+}())</script><script type="text/html" data-template-name="uib-sender"><div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
     <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
     <select id="node-input-url">
         <option value="">--choose a uibuilder instance--</option>
@@ -151,14 +129,12 @@
 <div class="form-row">
     <input type="checkbox" id="node-input-return" style="display:inline-block; width:15px; vertical-align:baseline;">
     <label for="node-input-return" style="width: 90%;">Allow return messages?</label>
-</div>
-
-</script>
-
-<script type="text/html" data-help-name="uib-sender">
+</div></script><script type="text/html" data-help-name="uib-sender"><p>
+    An easy method of sending messages to your uibuilder front-end from anywhere in your flows 
+    and a method of easily getting a response back again.
+</p>
 <p>
-    Event-driven notifications. Create an event from an input msg.topic.
-    Any <code>event-in</code> node with a matching topic specified will receive the input msg.
+    See <a href="./uibuilder/techdocs/#/sender-node" target="_blank">Tech Docs: Using the sender node</a> for more detail.
 </p>
 
 <h3>Inputs</h3>
@@ -172,22 +148,35 @@
 
 <h3>Outputs</h3>
 <p>
-    If <code>passthrough</code> is set, the input message is sent to the output.
+    If <code>Pass input msg to output?</code> is set, the input message is sent to the output.
+</p>
+<p>
+    If <code>Allow return messages?</code> is set, any message send from the matching uibuilder front-end app
+    and containing the right <code>_uib.originator</code> property is sent to the output.
 </p>
 
 <h3>Node Settings</h3>
 <dl class="message-properties">
+    <dt>URL <span class="property-type">string (dropdown)</span></dt>
+    <dd>An existing uibuilder node.</dd>
+
     <dt>Name <span class="property-type">string</span></dt>
-    <dd>A short description shown in the admin interface</dd>
+    <dd>A short description shown in the admin interface.</dd>
 
     <dt>Topic <span class="property-type">string</span></dt>
     <dd>A topic name to use if the incoming msg does not contain one.</dd>
 
-    <dt>passthrough <span class="property-type">boolean</span></dt>
+    <dt>Pass input msg to output? <span class="property-type">boolean</span></dt>
     <dd>
         If selected, an output port will appear and any input msg will be also delivered to the output.
-        This allows you to use the node in-line with a flow but still benefit from listeners elsewhere in your flows and tabs.
+        This allows you to use the node in-line with a flow.
     </dd>
-</dl>
 
-</script>
+    <dt>Allow return messages? <span class="property-type">boolean</span></dt>
+    <dd>
+        If selected, an output port will appear.
+        This allows you to get return messages back from your uibuilder front-end app.
+        When returning a message, include the <code>_uib.originator</code> property with a value of
+        the sender node's node ID. You can get that by sending a message through the sender node.
+    </dd>
+</dl></script>

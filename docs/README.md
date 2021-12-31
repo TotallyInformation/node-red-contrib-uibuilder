@@ -27,6 +27,7 @@ WIKI, Code, documentation, and examples are all welcome contributions and I alwa
 * [How to configure uibuilder](uib-configuration.md)
 * [Changing the root folder (uibRoot)](changing-uibroot.md)
 * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
+* [How & why to use the sender node](sender-node.md)
 
 ## Developing UI's
 
