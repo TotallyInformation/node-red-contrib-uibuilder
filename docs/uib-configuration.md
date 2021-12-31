@@ -51,3 +51,9 @@ example that describes all of the current options.
 ```
 
 ## `<uibRoot>/.config/`
+
+TBC
+
+## `uibRoot>/<instance-url>/`
+
+TBC

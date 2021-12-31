@@ -17,6 +17,9 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
+  * [x] [Issue](https://discourse.nodered.org/t/uibuilder-the-next-step-3rd-party-comms-with-a-uibuilder-front-end/51684/19?u=totallyinformation) - need to amend warning msg in `web.js`.
+  * [ ] Bugs in sender node. [Issue](https://discourse.nodered.org/t/uibuilder-the-next-step-3rd-party-comms-with-a-uibuilder-front-end/51684/16?u=totallyinformation)
+  * [ ] Remove code and file for sioMiddleware as it stopped working after Socket.io v2. Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159).
   * [ ] New uib, set url - no visual indication you now need to commit before anything else
   * [ ] ERRORCHECK: Imported node with not default template had default template on first deploy
   * [ ] ERROR: Removing a module after install but without closing and reopening editor panel did nothing
@@ -31,7 +34,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * General
   * [ ] When a template changes, run `npm install` - optional
   * [ ] Check for methods/functions/variables that can be deprecated.
-  * [ ] Allow expressjs config
   * [ ] Add a new template and example to demonstrate the sender node.
   * [ ] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
   
@@ -39,9 +41,12 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * uib-sender
   * [ ] Track undeployed uib nodes via RED.events
   * [ ] Store links by node.id not url since url may change
+  * [ ] Add docs on how to use
+  * [ ] Remove ref to in node in help panel
 
 * uibuilder Panel
   * [ ] Show template (instance root) folder
+  * [ ] Show Socket.io server version
 
 * FE
   * [ ] Add `onMsg` convenience handler (maybe allow wildcard topics?)
@@ -78,7 +83,10 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
     * Make sure localStorage _auth is always updated after control msg from server
     * Make bootstrap-vue toasts optional, add auth change notices
 * DOC UPDATES NEEDED:
+  * Review all changes
   * Add note about [default msg size](https://github.com/socketio/socket.io/issues/3946#issuecomment-850704139)
+  * Update custom express settings
+  * 
   * FE
     * Variables:
       * self.security - flag: indicates if server has security turned on
@@ -169,6 +177,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * Package Management. You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
   
   Note that _only_ packages installed into the `uibRoot` folder will be recognised.
+
+  Also note that if you manually install a package rather than using the library manager, you will need to restart Node-RED.
   
 * New layout for the Editor panel.
 
@@ -180,7 +190,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
 * Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
-* Allow socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4).
+* Allow socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
+* If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
 
 ### Changed
 
