@@ -55,9 +55,12 @@
  * @property {Function} httpAdminAuth : [Getter/Setter],
  * @property {Function} httpNodeAuth : [Getter/Setter],
  * @property {object|Function} [https] If present, https will be used for ExpressJS servers.
+ * 
  * @property {object} [uibuilder] Optional uibuilder specific Node-RED settings
  * @property {number} [uibuilder.port] Port number if uib is using its own ExpressJS instance
  * @property {string} [uibuilder.uibRoot] Folder name that will hold all uib runtime and instance folders
+ * @property {('http'|'https')} [uibuilder.customType] Connection type - only if using custom ExpressJS instance
+ * @property {object|Function} [uibuilder.https] Override https server settings (key/cert) - if not specified, uses main NR https prop
  * @property {object} [uibuilder.sioOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
  * 
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
