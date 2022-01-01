@@ -17,16 +17,10 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
+  * [ ] Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to move to its own fn called from oneditprepare.
   * [ ] Remove code and file for sioMiddleware as it stopped working after Socket.io v2. Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159). Use `sioUse` instead.
-  * [ ] New uib, set url - no visual indication you now need to commit before anything else
-  * [ ] ERRORCHECK: Imported node with not default template had default template on first deploy
   * [ ] ERROR: Removing a module after install but without closing and reopening editor panel did nothing
-  * [ ] ERROR: When switching from src to dist, local code not found, had to restart node-red
   * [ ] When turning on idx, link won't work until node re-deployed - reflect in panel UI
-  * [ ] If a node with no url has been deployed
-    * [ ] and is then edited - 2x notification errors are given. `The selected uibuilder template (vue) is MISSING the following dependencies` (that warning also needs the url adding)
-    * [ ] when url then changed & deployed - `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` error is output.
-  * [ ] Copying a node that hasn't been deployed - 1st time only - doesn't reset the url
   * [ ] Cannot save changes to files in instance root folder `"[uibuilder:uibputfile] Admin API. File write FAIL. url=test1a, file=root/.eslintrc.js"`
 
 * General
@@ -39,8 +33,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * uib-sender
   * [ ] Track undeployed uib nodes via RED.events
   * [ ] Store links by node.id not url since url may change
-  * [ ] Add docs on how to use
-  * [ ] Remove ref to in node in help panel
 
 * uibuilder Panel
   * [ ] Show template (instance root) folder
@@ -52,6 +44,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * Templates
 
+* Examples
+  * sender node
 
 
 * Security
@@ -285,6 +279,10 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * Massive number of minor code improvements to `uibuilder.html` and `uibuilder.js` & to the supporting libs and `uibuilderfe.js` thanks to the impoved linting.
 
+* Removed deprecated functions.
+
+* Remove old console.log statements used for testing and no longer required.
+
 * Even more massive restructuring of `uibuilder.js`. 
 
   * Removing the need for the `node` object. This meant the use of some arrow functions to be able to retain the correct context in event handlers and callbacks.
@@ -325,6 +323,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 ### Fixed
 
+* URL validation should now work as expected for all edge-cases.
+* Fixed the problem that required a restart of Node-RED to switch between `src` and `dist` folder serving.
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 * A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
 * In `uibuilderfe.js`, security was being turned on even if the server set it to false.
@@ -334,6 +334,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * Change degit call to turn off cache which was producing a `could not find commit hash for HEAD` error. See [degit Issue #37](https://github.com/Rich-Harris/degit/issues/37). Partial fix for [Issue #155](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/155).
 * If deleting a node that hasn't been deployed, a delete folder warning is given - add check to see if the folder actually exists before giving the error.
 * If using Node-RED Docker with recommended install, uib couldn't find the Socket.IO client folder to serve. [Issue](https://discourse.nodered.org/t/uibuilder-the-next-step-3rd-party-comms-with-a-uibuilder-front-end/51684/19?u=totallyinformation). Extra check and cleared warnings added.
+* Spurious instance folder rename when it wasn't needed.
 
 
 
