@@ -81,7 +81,7 @@ function packfe(cb) {
 }
 
 /** Combine the parts of uibuilder.html */
-function buildPanelUib(cb) {
+function buildPanelUib1(cb) {
     src('src/editor/uibuilder/editor.js')
         // .pipe(debug({title:'1', minimal:true}))
         // .pipe(once())
@@ -89,15 +89,21 @@ function buildPanelUib(cb) {
         .pipe(uglify())
         .pipe(rename('editor.min.js'))
         .pipe(dest('src/editor/uibuilder'))
+
+    cb()
+}
+/** compress */
+function buildPanelUib2(cb) {
     src('src/editor/uibuilder/main.html')
         .pipe(include())
-        .pipe(once())
+        //.pipe(once())
         .pipe(rename('uibuilder.html'))
         .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
         .pipe(dest(nodeDest))
 
     cb()
 }
+
 /** Combine the parts of uib-sender.html */
 function buildPanelSender(cb) {
     src('src/editor/uib-sender/main.html')
@@ -121,14 +127,15 @@ function buildPanelSender(cb) {
 // }
 
 //const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
-const buildme = parallel(buildPanelUib, buildPanelSender)
+const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender)
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('front-end/src/uibuilderfe.js', packfe)
+    watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
-    watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.min.js'], buildPanelUib)
+    watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
     watch('src/editor/uib-sender/*', buildPanelSender)
     //watch('src/editor/uib-receiver/*', buildPanelReceiver)
 
@@ -214,7 +221,7 @@ async function createTag(cb) {
 
 exports.default     = series( packfe, buildme ) // series(runLinter,parallel(generateCSS,generateHTML),runTests)
 exports.watch       = watchme
-exports.buildPanelUib = buildPanelUib
+exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
 exports.build       = buildme
 exports.packfe      = packfe
 exports.createTag   = createTag
