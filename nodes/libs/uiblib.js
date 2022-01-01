@@ -3,7 +3,7 @@
 /**
  * Utility library for uibuilder
  * 
- * Copyright (c) 2017-2021 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -189,7 +189,7 @@ module.exports = {
             
             let myclone = await uib.degitEmitter.clone(fullname)
 
-            console.log({myclone})
+            //console.log({myclone})
             let statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
             log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
             res.statusMessage = statusMsg

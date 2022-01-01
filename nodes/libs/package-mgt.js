@@ -436,7 +436,7 @@ class UibPackages {
         let res
         try {
             const {all} = await execa('npm', args, opts)
-            console.log('>>>>>', all)
+            //console.log('>>>>>', all)
             res = all
         } catch (e) {
             console.error('>>>>>', e.all)    

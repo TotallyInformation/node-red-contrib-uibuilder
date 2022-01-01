@@ -255,7 +255,6 @@ function adminRouterV2(uib, log) {
     admin_Router_V2.post('/uibputfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         //#region ====== Parameter validation ====== //
         const params = req.body
-        console.log(req.body)
 
         const chkUrl = chkParamUrl(params)
         if ( chkUrl.status !== 0 ) {

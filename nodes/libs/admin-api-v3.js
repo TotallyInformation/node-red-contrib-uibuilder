@@ -2,7 +2,7 @@
  * 
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
  * 
- * Copyright (c) 2021 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -273,7 +273,7 @@ function adminRouterV3(uib, log) {
                             })
                         }
                     })
-                    console.log(web.app._router.stack[0])
+                    //console.log(web.app._router.stack[0])
 
                     log.trace('[uibuilder:admin-router:GET:listurls] Admin API. List of all user urls in use.')
                     res.statusMessage = 'URLs listed successfully'
