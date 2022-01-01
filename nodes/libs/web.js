@@ -1,7 +1,7 @@
 /** Manage ExpressJS on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  * 
- * Copyright (c) 2017-2021 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -235,7 +235,6 @@ class UibWeb {
                         )    
                     }
                 } else {
-                    console.log('>>>>',RED.settings.https)
                     if ( RED.settings.https !== undefined ) {
                         this.server = require('https').createServer(RED.settings.https, this.app)
                     } else {
@@ -432,12 +431,7 @@ class UibWeb {
         // @ts-ignore
         this.uibRouter.post('/uiblogin', express.json, checkSchema(loginSchema), (req, res) => {
     
-            console.log('[uiblogin] BODY: ', req.body)
-            //console.log('[uiblogin] HEADERS: ', req.headers)
-    
-            // Finds the validation errors in this request and wraps them in an object with handy functions
             const errors = validationResult(req)
-            console.log('[uiblogin] Validation Errors: ', errors)
     
             // Request body failed validation, return 400 - bad request
             if (!errors.isEmpty()) {
@@ -577,10 +571,23 @@ class UibWeb {
 
     //#region ====== Per-node instance processing ====== //
 
+    /** Remove an ExpressJS router from the stack
+     * @param {string} url The url of the router to remove
+     */
+    removeRouter(url) {
+        this.app._router.stack.forEach( (route, i, routes) => {
+            if (route.regexp.toString() === `/^\\/${url}\\/?(?=\\/|$)/i` ) {
+                routes.splice(i, 1)
+            }
+        })
+    } // ---- End of removeRouter ---- //
+
     /** Setup the web resources for a specific uibuilder instance
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     instanceSetup(node) {
+        this.uib.RED.log.trace(`[uibuilder:web.js:instanceSetup] Setup for URL: ${node.url}`)
+
         // Reference static vars
         const uib = this.uib
         //const RED = this.RED
@@ -591,6 +598,7 @@ class UibWeb {
 
         // Reset the routes for this instance
         this.routers.instances[node.url] = []
+        this.removeRouter(node.url)
 
         /** Make sure that the common static folder is only loaded once */
         node.commonStaticLoaded = false
@@ -633,6 +641,8 @@ class UibWeb {
         // Apply this instances router to the url path on `<httpNodeRoot>/<url>/`
         this.app.use( tilib.urlJoin(node.url), this.instanceRouters[node.url])
 
+        // this.dumpUserRoutes(true)
+        // this.dumpInstanceRoutes(true, node.url)
     } // --- End of instanceSetup --- //
 
     /** (1a) Optional middleware from a file
