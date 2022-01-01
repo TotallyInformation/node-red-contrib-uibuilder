@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 /** Manage npm packages
  * 
- * Copyright (c) 2021 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
