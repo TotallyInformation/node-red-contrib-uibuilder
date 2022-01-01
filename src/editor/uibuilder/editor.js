@@ -286,16 +286,14 @@
         
     } // ---- End of removePackageRow ---- //
 
-    /** Get list of installed packages via API - save to master list
-     * @param {string} url Used to find locally install packages for this node from uibRoot/url/
-     */
-    function packageList(url) {
+    /** Get list of installed packages via API - save to master list */
+    function packageList() {
 
         $.ajax({
 
             dataType: 'json',
             method: 'get',
-            url: `uibuilder/uibvendorpackages?url=${url}`,
+            url: 'uibuilder/uibvendorpackages',
             async: false,
             //data: { url: node.url},
             
@@ -731,6 +729,114 @@
     // These are called on editor load & node added to flow as well as on form change
     // Use `$('#node-input-url').length > 0` to check if form exists
 
+    /** Find out if a server folder exists for this url
+     * @param {string} url URL to check
+     * @returns {boolean} Whether the folder exists
+     */
+    function queryFolderExists(url) {
+        if (url === undefined) return false
+        let check = false 
+        $.ajax({
+            type: 'GET',
+            async: false,
+            dataType: 'json',
+            url: `./uibuilder/admin/${url}`,
+            data: {
+                'cmd': 'checkfolder',
+            },
+            success: function(data) {
+                check = data
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                if (errorThrown !== 'Not Found')
+                    console.error( '[uibuilder:queryFolderExists] Error ' + textStatus, errorThrown )
+                check = false
+            },
+        })
+        return check
+    } // ---- end of queryFolderExists ---- //
+
+    /** (Dis)Allow uibuilder configuration other than URL changes
+     * @param {object} urlErrors List of errors
+     * @param {boolean} enable True=Enable config editing, false=disable
+     */
+    function enableEdit(urlErrors, enable=true) {
+        if (enable === true) {
+            // $('#node-dialog-ok')
+            //     .prop('disabled', false)
+            //     .css( 'cursor', 'pointer' )
+            //     .addClass('primary')
+
+            $('#node-input-templateFolder, #btn-load-template')
+                .prop('disabled', false)
+                .css({
+                    'cursor': 'auto',
+                })
+
+            $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
+                .css({
+                    'pointer-events': 'auto',
+                    'cursor': 'auto',
+                })
+            $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
+                .css({
+                    'color': 'var(--nr-db-dark-text)',
+                    'cursor': 'auto',
+                })
+
+            $('#uibuilderurl, #uibinstanceconf')
+                .css({
+                    'pointer-events': 'auto',
+                    'background-color': '',
+                    'cursor': 'auto',
+                })
+
+            $('#url-errors').remove()
+
+        } else {
+            // Don't disable the Done button if the folder doesn't exist
+            // if (!folderExists)
+            //     $('#node-dialog-ok')
+            //         .prop('disabled', true)
+            //         .css( 'cursor', 'not-allowed' )
+            //         .removeClass('primary')
+
+            $('#node-input-templateFolder, #btn-load-template')
+                .prop('disabled', true)
+                .css({
+                    'cursor': 'not-allowed',
+                })
+
+            $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
+                .css({
+                    'pointer-events': 'none',
+                    'cursor': 'not-allowed',
+                })
+            $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
+                .css({
+                    'color': 'var(--nr-db-disabled-text)',
+                    'cursor': 'not-allowed',
+                })
+
+            $('#uibuilderurl, #uibinstanceconf')
+                .css({
+                    'pointer-events': 'none',
+                    'background-color': 'var(--red-ui-secondary-background-selected)',
+                    'cursor': 'not-allowed',
+                })
+
+            // Show errors
+            $('#url-errors').remove()
+            $('#url-input').after(`
+                <div id="url-errors" class="form-row" style="color:var(--red-ui-text-color-error)">
+                    ${Object.values(urlErrors).join('<br>')} 
+                </div>
+            `)
+
+        }
+
+    } // ---- End of enableEdit ---- //
+
     /** Show key data for URL changes
      * @param {*} node 
      * @param {*} value 
@@ -754,14 +860,20 @@
     }
     /** Validation Function: Validate the url property
      * Max 20 chars, can't contain any of ['..', ]
-     * @param {*} value The url value to validate
+     * @param {string} value The url value to validate
      * @returns {boolean} true = valid
      * @this {*}
      **/
     function validateUrl(value) {
-        // NB: `this` is the node instance configuration as at last press of Done
-        //     Validation fns are run on every node instance when the Editor is loaded (value is populated but jQuery val is undefined).
-        //     and again when the config panel is opened (because jquery change is fired. value, jquery val and this.url are all the same).
+        /** Notes: 
+         *  1) `this` is the node instance configuration as at last press of Done.
+         *  2) Validation fns are run on every node instance when the Editor is loaded (e.g. panel not open) -
+         *     value is populated but jQ val is undefined.
+         *  3) Validation for an instance is run when a new node instance added - value & jq value both `undefined`.
+         *  4) Validation for an instance is run when a field value has changed (on blur) - value & jq value are the same.
+         *  4) jq values are undefined when this is called on load (e.g. panel not open).
+         *  5) value and jq value both undefined when a new instance added to flow. Validation is fired at that point.
+         */
         /**
          * Saved/this (me)
          *  url
@@ -805,13 +917,6 @@
         f = Object.values(editorInstances).indexOf(value)
         this.urlEditorDup = ( f > -1 && Object.keys(editorInstances)[f] !== this.id )
 
-        // node has been deployed and values haven't changed so no need for more checks
-        if ( this.isDeployed === true && this.urlChanged === false ) {
-            this.urlValid = true
-            debugUrl(this, value)
-            return true
-        }
-
         // Node is an editor dup but not deployed therefore must be a copy/paste or maybe an import
         if ( this.isDeployed === false && this.urlEditorDup === true ) {
             mylog('>> Copy/Paste >>', this.id, this.url ) 
@@ -852,7 +957,7 @@
                 this.urlErrors.templ = 'Cannot be "templates"'
         }
 
-        //! TODO Notify's shouldn't be here - only needed if "Done" (or event change)
+        // TODO ?MAYBE? Notify's shouldn't be here - only needed if "Done" (or event change)
 
         // Check whether the url is already in use in another deployed uib node
         if ( this.urlDeployedDup === true ) {
@@ -866,34 +971,18 @@
             this.urlErrors.dup = 'Cannot be a URL already in use'
         }
 
-        if ( Object.keys(this.urlErrors).length > 0) {
-            this.urlValid = false
-        } else {
-            this.urlValid = true    
-        }
-
         // Check whether the folder already exists - if it does, give a warning & adopt it
         if ( value !== undefined && value !== '') {
-            let exists = false
-            $.ajax({
-                type: 'GET',
-                async: false,
-                dataType: 'json',
-                url: `./uibuilder/admin/${value}`,
-                data: {
-                    'cmd': 'checkfolder', //'checkurls',
-                },
-                success: function(check) {
-                    // mylog('>> check folder exists >>', value, check)
-                    exists = check
-                }
-            })
+            this.folderExists = queryFolderExists(value)
 
             /** If the folder already exists - lock out the editor panel. */
-            // @ts-ignore
-            if ( exists === true && this.urlChanged === true ) {
+            if ( this.folderExists === true && this.urlChanged === true ) {
                 mylog('>> folder already exists >>', this.url, this.id)
                 RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, {type: 'warning'})
+            }
+
+            if ( this.folderExists === false ) {
+                this.urlErrors.fldNotExist = 'URL does not yet exist. You must Deploy first.<br>If changing a deployed URL, the folder will be renamed on Deploy'
             }
         }
 
@@ -904,13 +993,25 @@
             RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, {type: 'warning'})
         }
 
-        debugUrl(this, value)
+        // Process panel display for valid/invalid URL - NB repeated once in oneditprepare cause 1st time this is called, the panel doesn't yet exist
+        if ( Object.keys(this.urlErrors).length > 0) {
+            // Changed URL not valid: turn off other edits, show errors
+            this.urlValid = false
+            enableEdit(this.urlErrors, false)
+        } else {
+            // Changed URL valid: turn on other edits
+            this.urlValid = true
+            enableEdit(this.urlErrors, true)
+        } 
+
+        //debugUrl(this, value)
+
+        // Add exception if the only error is that the fldr doesn't yet exist
+        if ( Object.keys(this.urlErrors).length === 1 &&  this.urlErrors.fldNotExist ) {
+            return true
+        }
 
         return this.urlValid
-
-        // NOTE: Also see the on-change fn in oneditprepare that calls urlChange()
-        //       This fn runs on startup, reload, on change, on cpy/paste, on import, and on Done.
-        //       The on-change fn only runs when the val actually changes (+open editor panel)
 
     } // --- End of validateUrl --- //
 
@@ -1172,140 +1273,16 @@
         $('#node-input-reload').prop('checked', node.reload)
     }
 
-    /** (Dis)Allow uibuilder configuration other than URL changes
-     * @param {boolean} enable True=Enable config editing, false=disable
+    /** Handle URL changes - update web links (called from onEditPrepare)
+     * @param {object} evt A jQuery Event object
+     * @this {Element} the selected jQuery object $('#node-input-url')
      */
-    function enableEdit(enable=true) {
-        if (enable) {
-            // $('#node-dialog-ok')
-            //     .prop('disabled', false)
-            //     .css( 'cursor', 'pointer' )
-            //     .addClass('primary')
-
-            $('#node-input-templateFolder, #btn-load-template')
-                .prop('disabled', false)
-
-            $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
-                .css('pointer-events', 'auto')
-            $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
-                .css('color', 'var(--nr-db-dark-text)')
-
-            $('#uibuilderurl, #uibinstanceconf')
-                .css({
-                    'pointer-events': 'auto',
-                    'background-color': '',
-                })
-
-        } else {
-            // Don't disable the Done button if the folder doesn't exist
-            // if (!folderExists)
-            //     $('#node-dialog-ok')
-            //         .prop('disabled', true)
-            //         .css( 'cursor', 'not-allowed' )
-            //         .removeClass('primary')
-
-            $('#node-input-templateFolder, #btn-load-template')
-                .prop('disabled', true)
-
-            $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
-                .css('pointer-events', 'none')
-            $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
-                .css('color', 'var(--nr-db-disabled-text)')
-
-            $('#uibuilderurl, #uibinstanceconf')
-                .css({
-                    'pointer-events': 'none',
-                    'background-color': 'var(--red-ui-secondary-background-selected)',
-                })
-        }
-
-    } // ---- End of enableEdit ---- //
-
-    /** Find out if a server folder exists for this url
-     * @param {*} url URL to check
-     * @returns {boolean} Whether the folder exists
-     */
-    function queryFolderExists(url) {
-        if (url === undefined) return false
-        let check = false 
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: `./uibuilder/admin/${url}`,
-            data: {
-                'cmd': 'checkfolder',
-            },
-            success: function(data) {
-                check = data
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                if (errorThrown !== 'Not Found')
-                    console.error( '[uibuilder:queryFolderExists] Error ' + textStatus, errorThrown )
-                check = false
-            },
-        })
-        return check
-    } // ---- end of queryFolderExists ---- //
-
-    /** Handle URL changes (called from onEditPrepare)
-     * `this` is the selected jQuery object $('#node-input-url')
-     * @param {object} node A reference to the panel's `this` object
-     * @param {object} jqThis A jQuery object
-     */
-    function urlChange(node, jqThis) {
-        var thisurl = $(jqThis).val()
-
-        console.log('>> oneditprepare:urlChange >>')
-
-        $('#folder-not-exist').remove()
-
-        // Find out if the server folder for this instance exists yet
-        node.folderExists = queryFolderExists(thisurl)
-
-        if ( node.urlValid && node.folderExists ) {
-            enableEdit(true)
-        } else {
-            enableEdit(false)
-        }
-
-        if (!node.urlValid) {
-            $('#url-input').after(`
-                <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
-                    ${Object.values(node.urlErrors).join('<br>')}
-                </div>
-            `)
-        }
-        // if (!urlValid && (thisurl !== undefined && thisurl !== '')) {
-        //     $('#url-input').after(`
-        //         <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
-        //             Invalid URL.<br>
-        //             Cannot contain <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">space</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">..</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">/</code>, <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">\\</code>.<br>
-        //             Must be <=20 characters, not start with <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">_</code> or <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">.</code>.<br>
-        //             Must not be <code style="background-color:var(--red-ui-border-color-warning);color:var(--red-ui-header-text-color)">templates</code> or an existing URL.
-        //         </div>
-        //     `)
-        // } else if (!folderExists) {
-        //     if (node.url === undefined) {
-        //         $('#url-input').after(`
-        //             <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
-        //                 Server folder has not yet been created.<br>
-        //                 You must Deploy before you can make other changes.
-        //             </div>
-        //         `)
-        //     } else {
-        //         $('#url-input').after(`
-        //             <div id="folder-not-exist" class="form-row" style="color:var(--red-ui-text-color-error)">
-        //                 Server folder does not exist.<br>
-        //                 You must Deploy before you can make other changes.
-        //             </div>
-        //         `)
-        //     }
-        // }
-
-        var eUrlSplit = window.origin.split(':')
+    function urlChange(evt) {
+        const thisurl = /** @type {string} */ ($(this).val()) 
+        
+        const eUrlSplit = window.origin.split(':')
         //var nrPort = Number(eUrlSplit[2])
-        var nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
+        let nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
         $('#info-webserver').empty()
 
         // Is uibuilder using a custom server?
@@ -1320,7 +1297,7 @@
                 .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
         }
 
-        var urlPrefix = eUrlSplit.join(':') + '/'
+        const urlPrefix = eUrlSplit.join(':') + '/'
         // Show the root URL
         $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl)
             .text('Open ' + nodeRoot + thisurl)
@@ -1541,7 +1518,7 @@
      */
     function onEditPrepare(node) {
 
-        packageList(node.url)
+        packageList()
 
         // console.log('>> ONEDITPREPARE: NODE >>', node) 
 
@@ -1557,14 +1534,6 @@
         $(`#node-input-sourceFolder option[value="${node.sourceFolder || 'src'}"]`).prop('selected', true)
         $('#node-input-sourceFolder').val(node.sourceFolder || 'src')
 
-        /** When the url changes (NB: Also see the validation function) change visible folder names & links
-         * NB: Actual URL change processing is done in validation which also happens on change
-         *     Change happens when config panel is opened as well as for a real change
-         */
-        $('#node-input-url').on('change', function() {
-            urlChange(node, this)
-        })
-
         // When the show web view (index) of source files changes
         $('#node-input-showfolder').on('change', function() {
             if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
@@ -1576,6 +1545,13 @@
 
         // security settings
         securitySettings()
+
+        // Update web links on url change
+        $('#node-input-url').on('change', urlChange)
+
+        // Repeat process panel display for 1 time when panel 1st opens
+        if ( node.url === undefined || node.url === '' )
+            enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1)
 
         // TODO Move to separate function
         //#region ---- File Editor ---- //
@@ -1704,13 +1680,13 @@
         $('#edit-save').on('click', function(e) {
             e.preventDefault() // don't trigger normal click event
 
-            var authTokens = RED.settings.get('auth-tokens')
+            const authTokens = RED.settings.get('auth-tokens')
             
             // Post the updated content of the file via the admin API
             // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
             // Clients will be reloaded if the reload checkbox is set.
-            var request = new XMLHttpRequest()
-            var params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
+            const request = new XMLHttpRequest()
+            const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
                 '&url=' + $('#node-input-url').val() + 
                 '&reload=' + $('#node-input-reload').val() + 
                 '&data=' + encodeURIComponent(uiace.editorSession.getValue())
@@ -1955,9 +1931,11 @@
             }
 
             // Check for url rename - note that validation of new url is done in the validate function
-            if ( $('#node-input-url').val() !== this.url ) {
+            let url
+            if ( $('#node-input-url').val() !== '' ) url = $('#node-input-url').val()
+            if ( url !== this.url ) {
                 this.oldUrl = this.url 
-                mylog(`>> URL CHANGED >> New=${$('#node-input-url').val()}, Old=${this.url}` )
+                mylog(`>> oneditsave URL CHANGED >> New=${$('#node-input-url').val()}, Old=${this.url}` )
             } else if ( this.oldUrl !== undefined ) {
                 this.oldUrl = undefined
             }
