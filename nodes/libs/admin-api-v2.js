@@ -2,7 +2,7 @@
  * 
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
  * 
- * Copyright (c) 2021 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -255,10 +255,11 @@ function adminRouterV2(uib, log) {
     admin_Router_V2.post('/uibputfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         //#region ====== Parameter validation ====== //
         const params = req.body
+        console.log(req.body)
 
         const chkUrl = chkParamUrl(params)
         if ( chkUrl.status !== 0 ) {
-            log.error(`[uibuilder:uibputfile] Admin API. ${chkUrl.statusMessage}`)
+            log.error(`[uibuilder:uibputfile] Admin API v2. ${chkUrl.statusMessage}`)
             res.statusMessage = chkUrl.statusMessage
             res.status(chkUrl.status).end()
             return
@@ -602,22 +603,11 @@ function adminRouterV2(uib, log) {
 
     /** Check & update installed front-end library packages, return list as JSON - this runs when NR Editor is loaded if a uib instance deployed */
     admin_Router_V2.get('/uibvendorpackages', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        const params = req.query
-
-        // @ts-ignore
-        const chkUrl = chkParamUrl(params)
-        if ( chkUrl.status !== 0 ) {
-            log.error(`[uibuilder:uibputfile] Admin API. ${chkUrl.statusMessage}`)
-            res.statusMessage = chkUrl.statusMessage
-            res.status(chkUrl.status).end()
-            return
-        }
 
         // Update the installed packages list
         web.serveVendorPackages()
 
         res.json( packageMgt.uibPackageJson.uibuilder.packages )
-
         
     }) // ---- End of uibvendorpackages ---- //
 
