@@ -2,7 +2,7 @@
 /**
  * General utility library for Node.JS
  * 
- * Copyright (c) 2019-2021 Julian Knight (Totally Information)
+ * Copyright (c) 2019-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -20,7 +20,7 @@
 'use strict'
 
 const path = require('path')
-const fs = require('fs-extra')
+//const fs = require('fs-extra')
 
 const mylog = (process.env.TI_ENV === 'debug') ? console.log : function() {}
 
@@ -132,107 +132,7 @@ module.exports = {
             '</pre>'
         return json
     }, // ----  ---- //
-    
-    /** Find package install folder
-     * Searches in: userDir, nrc-uibuilder/node_modules, require.resolve(packageName) in that order.
-     * NOTE: require.resolve can be a little ODD! 
-     *       When run from a linked package, it uses the link root not the linked location, 
-     *       this throws out the tree search. That's why we have to try several different locations here.
-     *       Also, it finds the "main" script name which might not be in the package root.
-     *       Also, it won't find ANYTHING if a `main` entry doesn't exist :(
-     * @param {string} packageName - Name of the package who's root folder we are looking for.
-     * @param {string} userDir - Home folder for Node-RED modules - needed to allow search for installation
-     * @returns {null|string} Actual filing system path to the installed package
-     */
-    DEPRECATEDfindPackage: function(packageName, userDir) {
-
-        let debug = false
-        // if ( packageName === 'startbootstrap-sb-admin-2' ) {
-        //     debug = true
-        //     if (debug) console.debug(`\n[UIBUILDER] Looking for package ${packageName}`)
-        // }
-        
-        let found = false, packagePath = ''
-        // Try in userDir first
-        try {
-            packagePath = path.dirname( require.resolve(packageName, {paths: [userDir]}) )
-            if (debug) console.log(`[UIBUILDER] ${packageName} found from userDir`, packagePath)
-            found = true
-        } catch (e) {
-            if (debug) console.log(`[UIBUILDER] ${packageName} not found from userDir. Path: ${userDir}`)
-        }
-        // Then try without a path
-        if (found === false) try {
-            packagePath = path.dirname( require.resolve(packageName) )
-            if (debug) console.log(`[UIBUILDER] ${packageName} found (no path)`, packagePath)
-            found = true
-        } catch (e) {
-            if (debug) console.log(`[UIBUILDER] ${packageName} not found (no path)`)
-        }
-        // Finally try in the uibuilder source folder
-        if (found === false) try {
-            packagePath = path.dirname( require.resolve(packageName, {paths: [path.join(__dirname,'..')]}) )
-            if (debug) console.log(`[UIBUILDER] ${packageName} found from uibuilder path`, packagePath)
-            found = true
-        } catch (e) {
-            if (debug) console.log(`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
-        }
-        /** No, REALLY finally this time - because require.resolve only works if a package has a `main` entry point defined
-         * We will make one final effort to find something using a manual trawl through <userDir>/node_modules
-         * @since v2.0.3
-         **/
-        if (found === false) {
-            let loc = path.join(userDir, 'node_modules', packageName)
-            if ( fs.existsSync( loc ) ) {
-                found = true
-                packagePath = loc
-                if (debug)
-                    console.log(`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
-            } else if (debug)
-                console.log(`[UIBUILDER] ${packageName} not found from uibuilder path. Path: ${path.join(__dirname,'..')}`)
-        }
-
-        if ( found === false ) {
-            if (debug) console.log(`[UIBUILDER] ${packageName} not found anywhere\n`)
-            return null
-        }
-
-        /** require.resolve returns the "main" script, this may not be in the root folder for the package
-         *  so we change that here. We check whether the last element of the path matches the package
-         *  name. If not, we walk back up the tree until it is or we run out of tree.
-         *  If we don't do this, when it is used with serveStatic, we may not get everything we need served.
-         * NB: Only assuming 3 levels here.
-         * NB2: Added packageName split to allow for more complex npm package names.
-         */
-        let pathSplit = packagePath.split(path.sep)
-        let packageLast = packageName.split('/').pop() // Allow for package names like `@riophae/vue-treeselect`
-        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageLast) ) pathSplit.pop()
-        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageLast) ) pathSplit.pop()
-        if ( (pathSplit.length > 1) && (pathSplit[pathSplit.length - 1] !== packageLast) ) pathSplit.pop()
-        packagePath = pathSplit.join(path.sep)
-
-        if (debug) console.debug(`[UIBUILDER:findPackage] PackagePath: ${packagePath}\n`)
-        return packagePath
-    }, // ----  ---- //
-
-    /** Read the contents of a package.json file 
-     * @param {string} folder The folder containing a package.json file
-     * @returns {object|null} Object representation of JSON if found otherwise null
-     */
-    DEPRECATEDreadPackageJson: function(folder) {
-        let debug = false
-        let file = null
-        try {
-            // @ts-expect-error ts(2559)
-            file = fs.readJsonSync( path.join(folder, this.packageJson), 'utf8' )
-            if (debug) console.log('[uibuilder] tilib.readPackageJson - read successfully ', folder)
-        } catch (err) {
-            if (debug) console.error('[uibuilder] tilib.readPackageJson - failed to read ', folder, this.packageJson, err)
-            file = {'ERROR': err}
-        }
-        return file
-    }, // ----  ---- //
-
+  
     /** Compare 2 simple arrays, return array of arrays - additions and deletions
      * @param {Array} a1 First array
      * @param {Array} a2 Second array
