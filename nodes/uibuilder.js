@@ -435,7 +435,7 @@ function nodeInstance(config) {
     log.trace(`[uibuilder:nodeInstance:${this.url}] Node instance settings: ${JSON.stringify({'name': this.name, 'topic': this.topic, 'url': this.url, 'copyIndex': this.copyIndex, 'fwdIn': this.fwdInMessages, 'allowScripts': this.allowScripts, 'allowStyles': this.allowStyles, 'showfolder': this.showfolder })}`)
     
     // Keep a log of the active uib.instances @since 2019-02-02
-    uib.instances[this.id] = this.url
+    uib.instances[this.id] = this.url 
     log.trace(`[uibuilder:nodeInstance:${this.url}] Node uib.Instances Registered: ${JSON.stringify(uib.instances)}`)
 
     // Keep track of the number of times each instance is deployed.
@@ -458,7 +458,7 @@ function nodeInstance(config) {
     this.customFolder = path.join(uib.rootFolder, this.url)
 
     // Check whether the url has been changed. If so, rename the folder
-    if ( this.oldUrl !== undefined && this.url !== this.oldUrl ) {
+    if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl ) {
         // rename (move) folder if possible - but don't overwrite
         try {
             fs.moveSync(path.join(uib.rootFolder, this.oldUrl), this.customFolder, {overwrite: false})
@@ -529,6 +529,7 @@ function nodeInstance(config) {
     }
 
     // We've checked that the custom folder is there and has the correct structure
+    // TODO Add check for src folder?
     if ( customFoldersOK === true ) {
         // local custom folders are there ...
         log.trace(`[uibuilder:nodeInstance:${this.url}] Using local front-end folders in: ${this.customFolder}` )
