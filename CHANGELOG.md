@@ -17,6 +17,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
+  * [ ] Error in security.js [Issue](https://discourse.nodered.org/t/uibuilder-vnext-v5-updates/56013/4?u=totallyinformation). Extra error log already added, consider using a different name for `<uibRoot>/.config/security.js` to save future issues for people.
 
 * General
   * [ ] Check for methods/functions/variables that can be deprecated.

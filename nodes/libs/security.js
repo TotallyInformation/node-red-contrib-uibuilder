@@ -158,7 +158,14 @@ class UibSec {
         this.log = uib.RED.log
 
         /** Replace dummy methods with those from <uibRoot>/.config/security.js - need to reassign again at node instance level in case local override is used */
-        const securityjs = require( path.join(uib.rootFolder, uib.configFolderName, securityjsFileName) )
+        let securityjs
+        try {
+            securityjs = require( path.join(uib.rootFolder, uib.configFolderName, securityjsFileName) )
+        } catch (e) {
+            this.log.error('[uibuilder:security:setup] Could not require uibRoot/.config/security.js, please check that it is valid.')
+            return
+        }
+        
         this.reallocateMethod('userSignup', securityjs)
         this.reallocateMethod('userValidate', securityjs)
         this.reallocateMethod('captureUserAuth', securityjs)
