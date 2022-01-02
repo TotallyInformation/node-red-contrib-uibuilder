@@ -125,7 +125,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '5.0.0-dev1'
+        self.version = '5.0.0-dev'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
@@ -476,14 +476,15 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 /** Process control msg types */
                 switch(receivedCtrlMsg.uibuilderCtrl) {
                     // Node-RED is shutting down
-                    case 'shutdown':
-                        self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.control + ' Received "shutdown" from server')
+                    case 'shutdown': {
+                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "shutdown" from server`)
                         self.set('serverShutdown', undefined)
                         break
+                    }
 
                     /** We are connected to the server - 1st msg from server */
                     case 'client connect': {
-                        self.uiDebug('info', `[uibuilderfe:ioSetup] ${self.ioChannels.control} Received "client connect" from server`)
+                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "client connect" from server`)
                         self.uiDebug('info', `[uibuilderfe:ioSetup] Server: Security=${receivedCtrlMsg.security}, Version=${receivedCtrlMsg.version}, Time=${receivedCtrlMsg.serverTimestamp}.`)
                         if ( self.version !== receivedCtrlMsg.version)
                             console.warn( `[uibuilderfe:ioSetup] Server version (${receivedCtrlMsg.version}) not the same as the client version (${self.version})`)
@@ -509,27 +510,36 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     }
 
                     // Login was accepted by the Node-RED server - note that payload may contain more info
-                    case 'authorised':
-                        self.uiDebug('info', '[uibuilderfe:ioSetup:' + self.ioChannels.control + '] Received "authorised" from server', receivedCtrlMsg._auth)
+                    case 'authorised': {
+                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "authorised" from server`, receivedCtrlMsg._auth)
                         self.updateAuth(receivedCtrlMsg._auth)
                         break
+                    }
 
                     // Login was rejected by the Node-RED server - note that payload may contain more info
-                    case 'not authorised':
-                        self.uiDebug('info', '[uibuilderfe:ioSetup:' + self.ioChannels.control + '] Received "not authorised" from server')
+                    case 'not authorised': {
+                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "not authorised" from server`)
                         //self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._auth.authData)
                         self.updateAuth(receivedCtrlMsg._auth)
                         break
+                    }
 
                     // Logoff confirmation from server - note that payload may contain more info
-                    case 'logged off':
-                        self.uiDebug('info', '[uibuilderfe:ioSetup:' + self.ioChannels.control + '] Received "logged off" from server')
+                    case 'logged off': {
+                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "logged off" from server`)
                         //self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._auth)
                         self.updateAuth(receivedCtrlMsg._auth)
                         break
+                    }
+
+                    // Received a socket error - an untrapped error from the server, possibly from sioUse.js
+                    case 'socket error': {
+                        console.error( `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "socket error" from server. ${receivedCtrlMsg.error}`)
+                        break
+                    }
 
                     default: {
-                        self.uiDebug('info', '[uibuilderfe:ioSetup:' + self.ioChannels.control + '] Received "' + receivedCtrlMsg.uibuilderCtrl + '" from server')
+                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
                         if ( receivedCtrlMsg._auth ) self.updateAuth(receivedCtrlMsg._auth)
                         // Anything else
                     }
@@ -561,13 +571,15 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             // Socket.io connection error - probably the wrong ioPath
             self.socket.on('connect_error', function onConnectErr(err) {
-                self.uiDebug('error', 'uibuilderfe:ioSetup: SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
+                //self.uiDebug('error', 'uibuilderfe:ioSetup: SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
+                console.error( 'uibuilderfe:ioSetup: SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
                 //console.dir(err)
             }) // --- End of socket connect error processing ---
             
             // Socket.io error - from the server (socket.use middleware triggered an error response)
             self.socket.on('error', function onSocErr(err) {
-                self.uiDebug('warn', 'uibuilderfe:ioSetup: SOCKET ERROR from server - MESSAGE: ', err)
+                //self.uiDebug('warn', 'uibuilderfe:ioSetup: SOCKET ERROR from server - MESSAGE: ', err)
+                console.error( 'uibuilderfe:ioSetup: SOCKET ERROR from server - MESSAGE: ', err)
                 self.set('socketError', err)
                 //console.dir(err)
             }) // --- End of socket error processing ---
