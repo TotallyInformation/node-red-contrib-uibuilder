@@ -1,6 +1,7 @@
-/* globals module, log */
+/* globals module */
 /**
  * Template Socket.IO Connection Middleware for uibuilder.
+ * UPDATED: 2022-01-02
  *
  * NOTES & WARNINGS:
  *   1) This function is only called ONCE - when a new client connects. So any authentication/security processing is limited
@@ -10,22 +11,39 @@
  *   4) You have to restart Node-RED if you change this file.
  *
  * Allows custom processing for authentication, session management, connection validation, logging, rate limiting, etc.
+ * 
+ * see also https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html#websocket-implementation-hints
+ * 
+ * @param {*} socket Socket.IO socket object
+ * @param {function} next The callback to hand off to the next middleware
  */
+ function sioMw(socket, next) {
+    // Some SIO related info that might be useful in security checks
+    console.log('== [sioMiddleware.js] ====================')
+    console.log('New client connected to Namespace')
+    console.log('--socket.request.connection.remoteAddress--', socket.request.connection.remoteAddress)
+    console.log('--socket id--', socket.id)
+    // Added by uibuilder when Namespace is created by uibuilder node instance - Note also that socket.nsp.log can be used to output to the Node-RED log
+    console.log('--socket namespace metadata (server)--', {
+        name: socket.nsp.name,
+        url: socket.nsp.url,
+        nodeId: socket.nsp.nodeId,
+        useSecurity: socket.nsp.useSecurity,
+    })
+    //console.log('--socket handshake--', socket.handshake)
+    //console.log('--socket properties--', Object.keys(socket))
+    console.log('==========================================\n ')
 
-//module.exports = function(socket, next) {
-    /* Some SIO related info that might be useful in security checks
-     * console.log('--socket.request.connection.remoteAddress--')
-     * console.dir(socket.request.connection.remoteAddress)
-     * console.log('--socket.handshake.address--')
-     * console.dir(socket.handshake.address)
-     * console.dir(io.sockets.connected)
-     */
-    /*
-    if ( socket.request.headers.cookie) {
-        log.info('[uibuilder:Module] io.use - Authentication OK - ID: ' + socket.id)
-        log.info('[uibuilder:Module] Cookie', socket.request.headers.cookie)  // socket.handshake.headers.cookie
-        return next()
+    // Simplistic auth example
+    let auth = true
+    if (auth !== true) {
+        socket.nsp.log.error(`[uibuilder:sioMiddleware.js] - Authentication error, client disconnected - ID: ${socket.id}`)
+        return next (new Error(`[uibuilder:sioMiddleware.js] - Authentication error, client disconnected - ID: ${socket.id}` ))
     }
-    next (new Error('UIbuilder:io.use - Authentication error - ID: ' + socket.id ))
-    */
-//}
+
+    return next()
+
+} // Remember to end with a `next()` statement or nothing will work.
+
+// Uncomment this for example to work.
+//module.exports = sioMw

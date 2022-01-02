@@ -1,6 +1,6 @@
 /* globals module */
 /**
- * Copyright (c) 2020-2021 Julian Knight (Totally Information)
+ * Copyright (c) 2020-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -109,7 +109,7 @@ function userValidate(_auth) {
 } // ---- End of userValidate ---- //
 
 
-module.exports = {
+const toExport = {
 
     /** Allow users to sign up for themselves.
      * Build in any workflow you like.
@@ -133,5 +133,7 @@ module.exports = {
     jwtCreateCustom: function() {},
 
 }
+
+module.exports = toExport
 
 //EOF
