@@ -17,14 +17,8 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
-  * [ ] Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to move to its own fn called from oneditprepare.
-  * [ ] Remove code and file for sioMiddleware as it stopped working after Socket.io v2. Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159). Use `sioUse` instead.
-  * [ ] ERROR: Removing a module after install but without closing and reopening editor panel did nothing
-  * [ ] When turning on idx, link won't work until node re-deployed - reflect in panel UI
-  * [ ] Cannot save changes to files in instance root folder `"[uibuilder:uibputfile] Admin API. File write FAIL. url=test1a, file=root/.eslintrc.js"`
 
 * General
-  * [ ] When a template changes, run `npm install` - optional
   * [ ] Check for methods/functions/variables that can be deprecated.
   * [ ] Add a new template and example to demonstrate the sender node.
   * [ ] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
@@ -89,8 +83,10 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 ### Future Versions To Do
 
 * Editor (uibuilder.html)
-  * Extend folder/file management
-  * Check for new versions of installed packages when entering the library manager
+  * [ ] Extend folder/file management
+  * [ ] Check for new versions of installed packages when entering the library manager
+  * [ ] Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
+  * [ ] When a template changes, run `npm install` - optional
 
 * FE Changes
   * [ ] How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
@@ -212,6 +208,12 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * Improvements to the "uibuilder details" page should make it easier to read. The data for ExpressJS Routes is much improved.
 
+* Added documentation for Socket.IO middleware and error handling.
+
+* Minor improvements to the  `.config` middleware templates.
+
+* Improved logging for npm commands in library manager.
+
 * Security improvements:
 
   * When security is active, a client that re-connects to Node-RED will attempt to reuse its existing authorisation (see the localStorage bullet below).
@@ -325,6 +327,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * URL validation should now work as expected for all edge-cases.
 * Fixed the problem that required a restart of Node-RED to switch between `src` and `dist` folder serving.
+* Fixed Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159) where sioMiddlware.js wasn't working due to the move to Socket.Io v4.
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 * A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
 * In `uibuilderfe.js`, security was being turned on even if the server set it to false.
