@@ -157,21 +157,6 @@ class UibSockets {
         // @ts-ignore ts(2349)
         const io = this.io = socketio(server, ioOptions) // listen === attach
 
-        // Socket.IO v3+ no longer needed (default) and io.set no longer allowed
-        //io.set('transports', ['polling', 'websocket'])
-
-        /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev3 */
-        let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
-        try {
-            const sioMiddleware = require(sioMwPath)
-            if ( typeof sioMiddleware === 'function' ) {
-                // TODO as of socket.io v3, this won't trigger, move to namespace
-                io.use(require(sioMwPath))
-            }    
-        } catch (e) {
-            log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO Middleware failed to load. Reason: ${e.message}`)
-        }
-
     } // --- End of socketIoSetup() --- //
 
     /** Allow the isConfigured flag to be read (not written) externally 
@@ -353,13 +338,37 @@ class UibSockets {
         const uib = this.uib
 
         const ioNs = this.ioNamespaces[node.url] = this.io.of(node.url)
+
+        // Add some additional metadata to NS
         const url = ioNs.url = node.url
         ioNs.nodeId = node.id // allows us to track back to the actual node in Node-RED
         ioNs.useSecurity = node.useSecurity // Is security on for this node instance?
         ioNs.ioClientsCount = 0
         ioNs.rcvMsgCount = 0
+        ioNs.log = log // Make Node-RED's log available to middleware via custom ns property 
+
+        /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present. 
+         * Applies ONCE on a new client connection.
+         * Had to move to addNS since MW no longer globally loadable since sio v3
+         */
+        let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
+        try {
+            const sioMiddleware = require(sioMwPath)
+            if ( typeof sioMiddleware === 'function' ) {
+                ioNs.use(sioMiddleware)
+                log.trace(`[uibuilder:socket:addNs:${url}] Socket.IO Middleware loaded successfully for NS.`)
+            } else {
+                log.trace(`[uibuilder:socket:addNs:${url}] Socket.IO Middleware failed to execute for NS - check that uibRoot/.config/sioMiddleware.js has a valid exported fn.`)
+            }
+        } catch (e) {
+            log.trace(`[uibuilder:socket:addNs:${url}] Socket.IO Middleware failed to load for NS. Reason: ${e.message}`)
+        }
 
         const that = this
+
+        ioNs.on('connect_error', function(err) {
+            log.error(`[uibuilder:socket:addNS:${url}] Client connection error for node ${node.id}. ${err.message}`)
+        })
 
         ioNs.on('connection', function(socket) {
             ioNs.ioClientsCount++
@@ -367,13 +376,18 @@ class UibSockets {
 
             log.trace(`[uibuilder:socket:addNS:${url}] Socket connected for node ${node.id} clientCount: ${ioNs.ioClientsCount}, Socket ID: ${socket.id}`)
 
-            // Try to load the sioUse middleware function
+            // Try to load the sioUse middleware function - sioUse applies to all incoming msgs
             try {
                 const sioUseMw = require( path.join(uib.configFolder, uib.sioUseMwName) )
-                if ( typeof sioUseMw === 'function' ) socket.use(sioUseMw)
+                if ( typeof sioUseMw === 'function' ) {
+                    socket.use(sioUseMw)
+                    log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware loaded successfully for NS ${url}.`)
+                } else {
+                    log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware failed to execute for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
+                }
             } catch(e) {
-                log.trace(`[uibuilder:socket:addNS:${url}] Socket.use Failed to load Use middleware. Reason: ${e.message}`)
-            }
+                log.trace(`[uibuilder:socket:addNS:${url}] sioUse Failed to load Use middleware. Reason: ${e.message}`)
+            } 
 
             node.statusDisplay.text = 'connected ' + ioNs.ioClientsCount
             uiblib.setNodeStatus( node )
@@ -518,9 +532,13 @@ class UibSockets {
                 
             }) // --- End of on-connection::on-disconnect() --- //
 
+            socket.on('connect_error', function(err) {
+                log.error(`[uibuilder:socket:addNS:${url}] Client connection error for node ${node.id}. ${err.message}`)
+            })
+        
             socket.on('error', function(err) {
 
-                log.error(`[uibuilder:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
+                log.error(`[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
                 
                 // Let the control output port know there has been an error
                 const ctrlMsg = {
