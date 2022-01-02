@@ -1470,7 +1470,7 @@
             },
             removeItem: removePackageRow, // function(data){},
             //resizeItem: function() {}, // function(_row,_index) {},
-            header: $('<div>').append('<b>Installed Packages</b>'),
+            header: $('<div>').append('<b>Installed Packages (Install again to update)</b>'),
             height: getLibrariesListHeight(),
             addButton: true,
             removable: true,
