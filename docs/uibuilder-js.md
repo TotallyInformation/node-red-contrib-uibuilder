@@ -8,26 +8,29 @@ lastUpdated: 2021-06-27 21:18:53
 
 Note that uibuilder [URI paths are documented in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths).
 
-* [Key processing elements](#key-processing-elements)
-  * [Installation](#installation)
-  * [Global Initialisation](#global-initialisation)
-  * [Instance Initialisation](#instance-initialisation)
-  * [Adding staticServer paths for vendor packages](#adding-staticserver-paths-for-vendor-packages)
-  * [Client Connection](#client-connection)
-  * [Client Disconnection](#client-disconnection)
-* [Global/Module Variables](#globalmodule-variables)
-  * [`uib` {Object} [Module global]](#uib-object-module-global)
-  * [Other variables](#other-variables)
-* [uibuilder Node Instance Variables](#uibuilder-node-instance-variables)
-  * [From the admin Editor ui](#from-the-admin-editor-ui)
-  * [Locally configured (not set in Editor)](#locally-configured-not-set-in-editor)
-  * [Internals & Typedef](#internals--typedef)
-* [Functions/Methods](#functionsmethods)
-  * [Module level](#module-level)
-  * [Instance level](#instance-level)
-  * [Utility Classes](#utility-classes)
-  * [Utility Functions](#utility-functions)
-* [Admin API's](#admin-apis)
+- [Key processing elements](#key-processing-elements)
+  - [Installation](#installation)
+  - [Global Initialisation](#global-initialisation)
+  - [Instance Initialisation](#instance-initialisation)
+  - [Adding staticServer paths for vendor packages](#adding-staticserver-paths-for-vendor-packages)
+  - [Client Connection](#client-connection)
+  - [Client Disconnection](#client-disconnection)
+- [Global/Module Variables](#globalmodule-variables)
+  - [`uib` {Object} [Module global]](#uib-object-module-global)
+  - [Other variables](#other-variables)
+- [uibuilder Node Instance Variables](#uibuilder-node-instance-variables)
+  - [From the admin Editor ui](#from-the-admin-editor-ui)
+    - [Advanced Settings](#advanced-settings)
+    - [Security Related](#security-related)
+    - [Credentials](#credentials)
+  - [Locally configured (not set in Editor)](#locally-configured-not-set-in-editor)
+  - [Internals & Typedef](#internals--typedef)
+- [Functions/Methods](#functionsmethods)
+  - [Module level](#module-level)
+  - [Instance level](#instance-level)
+  - [Utility Classes](#utility-classes)
+  - [Utility Functions](#utility-functions)
+- [Admin API's](#admin-apis)
 
 ## Key processing elements
 
@@ -327,7 +330,7 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
 ### Utility Classes
 
 * [UibWeb (`nodes/web.js`)](web-js.md) - A singleton class that manages the interactions with ExpressJS and so provides all of the web server capabilities.
-* [UibSockets (`socket.js`)](sockets-js.md) - A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
+* [UibSockets (`socket.js`)](socket-js.md) - A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
 
 ?> Note that a singleton class is one that can only be instantiated once. Thanks to the way that Node.js's `require` function works, whenever a singleton class is required, the same instance will always be used.
 

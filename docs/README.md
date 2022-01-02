@@ -60,7 +60,7 @@ Deep dives into the internals of uibuilder. This is where to go if you need to u
 * [`nodes/uiblib.js`](uiblib-js.md)
 * [`nodes/tilib.js`](tilib-js.md)
 * [`nodes/web.js`](web-js.md)
-* [`nodes/sockets.js`](sockets-js.md)
+* [`nodes/socket.js`](socket-js.md)
 
 ## Testing
 

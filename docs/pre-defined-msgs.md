@@ -3,24 +3,28 @@ title: Pre-defined uibuilder messages
 description: >
    Documents the different types of uibuilder messages between a Node-RED uibuilder node and a uibuilder front-end.
 created: 2020-09-24 18:14:00
-lastUpdated: 2021-06-27 18:02:55
+lastUpdated: 2022-01-02 20:13:15
 ---
 
-* [Standard msg properties used by uibuilder](#standard-msg-properties-used-by-uibuilder)
-  * [msg._auth `{Object}` (uibuilder v3+)](#msg_auth-object-uibuilder-v3)
-  * [msg.script `{String}`](#msgscript-string)
-  * [msg.style `{String}`](#msgstyle-string)
-  * [msg._uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
-  * [msg.uibDomEvent `{Object}` (uibuilder v3.2+)](#msguibdomevent-object-uibuilder-v32)
-* [From Node-RED uibuilder node to the front-end (browser)](#from-node-red-uibuilder-node-to-the-front-end-browser)
-  * [Client (re)Connection (Control Message)](#client-reconnection-control-message)
-  * [VueJS UI Notification [Toast] (Control Message)](#vuejs-ui-notification-toast-control-message)
-  * [Browser client reload page](#browser-client-reload-page)
-* [From the front-end (browser) to the Node-RED uibuilder node](#from-the-front-end-browser-to-the-node-red-uibuilder-node)
-  * [Client Ready for Content (Control Message)](#client-ready-for-content-control-message)
-  * [DOM Event (standard message from eventSend function)](#dom-event-standard-message-from-eventsend-function)
-* [From either Node-RED or the client](#from-either-node-red-or-the-client)
-  * [Clear Cache (Control Message)](#clear-cache-control-message)
+- [Standard msg properties used by uibuilder](#standard-msg-properties-used-by-uibuilder)
+  - [msg._auth `{Object}` (uibuilder v3+)](#msg_auth-object-uibuilder-v3)
+  - [msg.script `{String}`](#msgscript-string)
+  - [msg.style `{String}`](#msgstyle-string)
+  - [msg._uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
+  - [msg.uibDomEvent `{Object}` (uibuilder v3.2+)](#msguibdomevent-object-uibuilder-v32)
+- [From Node-RED uibuilder node to the front-end (browser)](#from-node-red-uibuilder-node-to-the-front-end-browser)
+  - [Client (re)Connection (Control Message)](#client-reconnection-control-message)
+  - [Errors](#errors)
+  - [VueJS UI Notification [Toast] (Control Message)](#vuejs-ui-notification-toast-control-message)
+    - [Simple version](#simple-version)
+    - [More complex example](#more-complex-example)
+  - [Browser client reload page](#browser-client-reload-page)
+    - [Msg Schema](#msg-schema)
+- [From the front-end (browser) to the Node-RED uibuilder node](#from-the-front-end-browser-to-the-node-red-uibuilder-node)
+  - [Client Ready for Content (Control Message)](#client-ready-for-content-control-message)
+  - [DOM Event (standard message from eventSend function)](#dom-event-standard-message-from-eventsend-function)
+- [From either Node-RED or the client](#from-either-node-red-or-the-client)
+  - [Clear Cache (Control Message)](#clear-cache-control-message)
 
 ## Standard msg properties used by uibuilder
 
@@ -77,6 +81,24 @@ when an existing client re-connects (by reloading their page).
     "_msgid": "8d4307ce.d5e428"         // Node-RED internal msg id
 }
 ```
+
+### Errors
+
+On an untrapped Socket.IO error, uibuilder attempts to let the client(s) know that something has happened. uibuilder sends a
+control msg to the client(s) such as the following example.
+
+```json
+{
+    "uibuilderCtrl": "socket error",
+    "error": "Oops! Some kind of error happened",
+    "_socketId": "I02mCJZ1oKGGYiK8AAAu",
+    "from": "server"
+}
+```
+
+If an error is raised in `<uibRoot>/.config/sioUse.js` for example, this kind of message might be sent. See the default template for that file for an example.
+
+See the [Developer documentation for `socket.js`](socket-js.md) for more information.
 
 ### VueJS UI Notification [Toast] (Control Message)
 
