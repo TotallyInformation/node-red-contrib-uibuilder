@@ -363,18 +363,19 @@ class UibPackages {
         }
         const args = [ // `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
             'install', 
+            '--no-fund',
             '--no-audit',
             '--no-update-notifier',
             '--save',
             '--production',
             '--color=false',
-            '--no-fund',
             //'--json',
             pkgName + tag,
         ]
         
         // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
         const {all} = await execa('npm', args, opts)
+        this.log.info(`[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${all}\n `)
 
         return all
 
@@ -401,12 +402,15 @@ class UibPackages {
             '--save',
             '--color=false',
             '--no-fund',
+            '--no-audit',
+            '--no-update-notifier',
             //'--json',
             pkgName,
         ]
         
         // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
         const {all} = await execa('npm', args, opts)
+        this.log.info(`[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${all}\n `)
 
         return all
 
