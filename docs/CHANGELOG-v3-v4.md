@@ -111,7 +111,7 @@ Current major version changelog can be found in the root of this package: `../CH
   Don't forget that you can access the tech docs on the Internet from [GitHub](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/) AND locally from within Node-RED.
 
 * `nodes/web.js` - Added web.isConfigured to allow a check to see whether web.setup has been called.
-* `nodes/sockets.js` - Added socket.isConfigured to allow a check to see whether socket.setup has been called.
+* `nodes/socket.js` - Added socket.isConfigured to allow a check to see whether socket.setup has been called.
 * Add a new icon to the main readme that allows editing of uibuilder code using VSCode either via a remote repository or via a Docker container.
 
 ### Fixed
