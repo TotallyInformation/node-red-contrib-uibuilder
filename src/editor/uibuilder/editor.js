@@ -1273,16 +1273,19 @@
         $('#node-input-reload').prop('checked', node.reload)
     }
 
-    /** Handle URL changes - update web links (called from onEditPrepare)
-     * @param {object} evt A jQuery Event object
-     * @this {Element} the selected jQuery object $('#node-input-url')
+    /** Show what server is in use
+     * @param {object} node A reference to the panel's `this` object 
      */
-    function urlChange(evt) {
-        const thisurl = /** @type {string} */ ($(this).val()) 
-        
+    function showServerInUse(node) {
+        console.log('>>>>>', RED.settings.uibuilderCustomServer, RED.settings.get('uibuilder'))
+
+        let svrType
+
         const eUrlSplit = window.origin.split(':')
         //var nrPort = Number(eUrlSplit[2])
-        let nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
+        
+        node.nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
+
         $('#info-webserver').empty()
 
         // Is uibuilder using a custom server?
@@ -1292,23 +1295,37 @@
             // Use the correct port
             eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
             // When using custom server, no base path is used
-            nodeRoot = ''
-            $('#info-webserver')
-                .append(`<div class="form-tips node-help">uibuilder is using a custom webserver at ${eUrlSplit.join(':') + '/'} </div>`)
+            node.nodeRoot = ''
+            svrType = 'a custom'
+        } else {
+            svrType = 'Node-RED\'s'
         }
 
-        const urlPrefix = eUrlSplit.join(':') + '/'
+        node.urlPrefix = `${eUrlSplit.join(':')}/${node.nodeRoot}`
+
+        $('#info-webserver')
+            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at ${node.urlPrefix} </div>`)
+
+    } // ---- end of showServerInUse ---- //
+
+    /** Handle URL changes - update web links (called from onEditPrepare)
+     * @param {object} node A jQuery Event object
+     * @this {Element} the selected jQuery object $('#node-input-url')
+     */
+    function urlChange(node) {
+        const thisurl = /** @type {string} */ ($(this).val()) 
+        
         // Show the root URL
-        $('#uibuilderurl').prop('href', urlPrefix + nodeRoot + thisurl)
-            .text('Open ' + nodeRoot + thisurl)
+        $('#uibuilderurl').prop('href', `${node.urlPrefix}${thisurl}`)
+            .text(`Open ${node.nodeRoot}${thisurl}`)
         $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
         // NB: The index url link is only shown if the option is turned on
         $('#show-src-folder-idx-url').empty()
             .append(
                 `<div>at 
-                    <a href="${urlPrefix}${nodeRoot}${$(this).val()}/idx" target="_blank" 
+                    <a href="${node.urlPrefix}${thisurl}/idx" target="_blank" 
                             style="color:var(--red-ui-text-color-link);text-decoration:underline;">
-                        ${nodeRoot}${$(this).val()}/idx
+                        ${node.nodeRoot}${thisurl}/idx
                     </a>
                 </div>`
             )
@@ -1546,10 +1563,14 @@
         // security settings
         securitySettings()
 
-        // Update web links on url change
-        $('#node-input-url').on('change', urlChange)
+        // Show the server in use
+        showServerInUse(node)
 
-        // Repeat process panel display for 1 time when panel 1st opens
+        // Update web links on url change
+        $('#node-input-url').on('change', function() {
+            urlChange.call(this, node)
+        })
+        // Show url errors for 1 time when panel 1st opens (after that, the verify fn takes over)
         if ( node.url === undefined || node.url === '' )
             enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1)
 
