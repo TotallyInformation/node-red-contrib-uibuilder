@@ -32,6 +32,8 @@
     })
     //console.log('--socket handshake--', socket.handshake)
     //console.log('--socket properties--', Object.keys(socket))
+    // Show the client id (set by uibuilder ExpressJS middleware)
+    console.log('--client id--', socket.handshake.headers['x-clientid'])
     console.log('==========================================\n ')
 
     // Simplistic auth example

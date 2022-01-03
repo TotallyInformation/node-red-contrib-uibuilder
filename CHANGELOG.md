@@ -24,7 +24,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * [ ] Add a new template and example to demonstrate the sender node.
   * [ ] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
   
-
 * uib-sender
   * [ ] Track undeployed uib nodes via RED.events
   * [ ] Store links by node.id not url since url may change
@@ -183,6 +182,10 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * Allow socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
 * If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
 
+* uibuilderfe library
+  * Received cookies are now available as an object variable key'd on cookie name. `uibuilder.get('cookies')`.
+  * The unique client id set by uibuilder is available as a string variable. `uibuilder.get('clientId')`. This changes if the page is reloaded but not if the client loses then regains a Socket.IO connection (where the socket id will change). It is passed to the client as a cookie. The client sends it to the server as a custom header but only on Socket.IO polling requests since custom headers are not available on websocket connections). _Caution should be used if making use of this feature since it is likely to change in the future_.
+
 ### Changed
 
 * uibuilder nodes now show the url in angle-brackets. If the url is not defined, `<no url>` shows. If the node has a name, this is shown before the url. e.g. `My UI <myui>`. If you want to have the url show on a different line to the name, add ` \n ` to the end of the name.
@@ -214,6 +217,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * Minor improvements to the  `.config` middleware templates.
 
 * Improved logging for npm commands in library manager.
+
+* Added client IP address to client connect & client disconnect control msgs
 
 * Security improvements:
 
@@ -329,6 +334,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * URL validation should now work as expected for all edge-cases.
 * Fixed the problem that required a restart of Node-RED to switch between `src` and `dist` folder serving.
 * Fixed Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159) where sioMiddlware.js wasn't working due to the move to Socket.Io v4.
+* Client connect and disconnect msgs not being sent to uibuilder control port (#2). NOTE: As of Socket.io v4, it appears as though the disconnect event is received _after_ the connect when a client is reconnecting. You cannot rely on the order.
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 * A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
 * In `uibuilderfe.js`, security was being turned on even if the server set it to false.
