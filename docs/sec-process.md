@@ -8,9 +8,10 @@ On an initial client web connection, uibuilder adds 2 cookies & 1 custom header 
 
 > Both cookies are session cookies, they are destroyed if the client page is closed. They have strict same-path settings and will be marked as secure if the server is using HTTPS/HTTP2.
 
-After the web connection, the `uibuilder.start()` process attempts to connect back to Node-RED using Socket.IO. When it does so and _only while in polling mode_ (usually before the "upgrade" to websockets after the initial handshake), it adds a custom HTTP header to the response:
+After the web connection, the `uibuilder.start()` process attempts to connect back to Node-RED using Socket.IO. When it does so and _only while in polling mode_ (usually before the "upgrade" to websockets after the initial handshake), it adds a custom HTTP header and an auth property to the response:
 
 * Custom HTTP Header: `x-clientid` which takes the form: `uibuilderfe; Dn8IWInlSnCqChzraiZYh` where `uibuilderfe; ` is fixed and the remainder is the client ID.
+* Auth property: `clientId`. Available as `socket.handshake.auth.clientId` in server-side handlers such as the `<uibRoot>/.config/sioMiddleware.js` file.
 
 The client ID is available in your front-end code as `uibuilder.get('clientId')`. You may therefore use it in your own processing and may pass it back to Node-RED in your own messages. It may be used in authentication processing in the future. The ID is cryptographically secure with a 1 in several billion chance of an id clash (slightly better than a standard UUID. It uses the `nanoid` package).
 

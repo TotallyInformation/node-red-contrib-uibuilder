@@ -70,6 +70,8 @@ If you raise an error in this, the client will not be able to procede and the co
 For this reason, you can use this middleware to assist with authentication and/or authorisation. **As long as you remember that it is only called
 on the first connection** which means that you cannot use it to monitor for session timeouts.
 
+This middleware has access to the `socket` object. The client adds the client ID (set by uibuilder on initial HTTP connection from client) to `socket.handshake.auth.clientId`
+
 ### Client message Middleware - `sioUse.js`
 
 This middleware runs on the server every time a message from a client is sent.

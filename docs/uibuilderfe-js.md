@@ -3,7 +3,7 @@ title: Developer documentation for the `uibuilderfe.js` library
 description: >
    This is the uibuilder front-end library. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions.
 created: 2019-05-25 19:05:00
-lastUpdated: 2022-01-03 15:25:12
+lastUpdated: 2022-01-03 17:14:33
 ---
 
 For user documentation, please refer to the [Working with the uibuilderfe Library](front-end-library) page.
@@ -56,7 +56,7 @@ It is very rare, if ever, that you will need to manually `get` any of these apar
 
 * `authData` {Object} Standard object containing details of the (to be) authorised user id. uibuilder may add metadata to this object on logon. For example, an expiry timestamp or message-of-the-day
 
-* `clientId` {string} Client UUID set by uibuilder (a client is a browser window)
+* `clientId` {string} Client UUID set by uibuilder (a client is a browser window).
 
 * `cookies` {Object} Parsed cookies set by uibuilder (and possibly other things on the same server).
   uibuilder uses 2 cookies: `uibuilder-namespace` and `uibuilder-client-id`.

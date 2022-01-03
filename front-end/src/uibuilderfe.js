@@ -386,6 +386,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             self.socketOptions = { 
                 path: self.ioPath, 
                 transports: self.ioTransport, 
+                auth: {
+                    clientId: self.clientId,
+                },
                 transportOptions: {
                     // Can only set headers when polling
                     polling: {

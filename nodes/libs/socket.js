@@ -374,7 +374,7 @@ class UibSockets {
 
                 node.ioClientsCount = ioNs.sockets.size
                 log.trace(
-                    `[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${socket.handshake.address}, for node ${node.id}`
+                    `[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${socket.handshake.address}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
                 )
                 node.statusDisplay.text = 'connected ' + ioNs.sockets.size
                 uiblib.setNodeStatus( node )
@@ -516,8 +516,9 @@ class UibSockets {
             
             node.ioClientsCount = ioNs.sockets.size
 
+
             log.trace(
-                `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${socket.handshake.address}, for node ${node.id}`
+                `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${socket.handshake.address}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
             )
 
             // Try to load the sioUse middleware function - sioUse applies to all incoming msgs
