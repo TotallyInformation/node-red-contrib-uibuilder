@@ -132,6 +132,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.debug = self.isUnminified === true ? true : false // do not change directly - use .debug() method
         /** Default originator node id */
         self.originator = ''
+        self.cookies = {}
+        document.cookie.split(';').forEach( function(c){
+            let splitC = c.split('=')
+            self.cookies[splitC[0].trim()] = splitC[1]
+        })
+        /** Client ID set by uibuilder */
+        self.clientId = self.cookies['uibuilder-client-id']
 
         /** Debugging function
          * param {string} type One of log|error|warn|info|dir, etc
@@ -171,15 +178,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             var ioNamespace = ''
 
-            /** Try getting the namespace cookie. 
-             * since 2020-01-25 Changed to allow for duplicate cookies */
-            try {
-                ioNamespace = document.cookie.match(/uibuilder-namespace\s*=.*?\s*;/g)[0].replace('uibuilder-namespace=','').replace(';','')
-            // eslint-disable-next-line no-empty
-            } catch(e) {}
+            /** Try getting the namespace cookie. */
+            ioNamespace = self.cookies['uibuilder-namespace']
 
             // if it wasn't available, try using the current url path
-            if (ioNamespace === '' ) {
+            if ( ioNamespace === undefined || ioNamespace === '' ) {
                 // split url path & eliminate any blank elements, and trailing or double slashes
                 var u = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
 
@@ -387,7 +390,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     // Can only set headers when polling
                     polling: {
                         extraHeaders: {
-                            'x-clientid': 'uibuilderfe',
+                            'x-clientid': `uibuilderfe; ${self.clientId}`,
                             //Authorization: 'test', //TODO: Replace with self.jwt variable? // Authorization: `Bearer ${your_jwt}`
                         }
                     },
@@ -857,13 +860,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             }
         } // ---- End of addAuth ---- //
 
-        /** Set the default originator. Set to '' to ignore.
+        /** Set the default originator. Set to '' to ignore. Used with uib-sender.
          * @param {string} [originator] A Node-RED node ID to return the message to
          */
         self.setOriginator = function setOriginator(originator='') {
             self.originator = originator
         } // ---- End of setOriginator ---- //
-
 
         /** Send a standard or control msg back to Node-RED via Socket.IO
          * NR will generally expect the msg to contain a payload topic
@@ -1267,7 +1269,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                  */
                 var excluded = [
                     'autoSendReady',
-                    'ctrlMsg', 
+                    'clientId', 'cookies', 'ctrlMsg', 
                     'debug', 
                     'events', 
                     'httpNodeRoot',

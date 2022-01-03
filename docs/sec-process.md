@@ -1,5 +1,30 @@
 # Security sequences
 
+On an initial client web connection, uibuilder adds 2 cookies & 1 custom header to the response. This is done in the `masterMiddleware` function of `web.js`.
+
+* Cookie 1: `uibuilder-namespace`. Tells the client what Socket.IO namespace is in use. As this is only based on the URL for the uibuilder instance, it may be incorrect in some circumstances. This is the reason that the client function `uibuilder.start()` can take a namespace parameter. Use the parameter if serving front-end files from a sub-folder or a different server.
+* Cookie 2: `uibuilder-client-id`. Gives a unique identifier string to the client. This allows tracking of the client even if the Socket.IO id changes which happens if the client page reloads or has a temporary loss of websocket connection.
+* Custom HTTP Header: `uibuilder-namespace`. As for cookie 1. This is only accessible on client side via an XHR call or a web worker script but would work even if cookies are blocked.
+
+> Both cookies are session cookies, they are destroyed if the client page is closed. They have strict same-path settings and will be marked as secure if the server is using HTTPS/HTTP2.
+
+After the web connection, the `uibuilder.start()` process attempts to connect back to Node-RED using Socket.IO. When it does so and _only while in polling mode_ (usually before the "upgrade" to websockets after the initial handshake), it adds a custom HTTP header to the response:
+
+* Custom HTTP Header: `x-clientid` which takes the form: `uibuilderfe; Dn8IWInlSnCqChzraiZYh` where `uibuilderfe; ` is fixed and the remainder is the client ID.
+
+The client ID is available in your front-end code as `uibuilder.get('clientId')`. You may therefore use it in your own processing and may pass it back to Node-RED in your own messages. It may be used in authentication processing in the future. The ID is cryptographically secure with a 1 in several billion chance of an id clash (slightly better than a standard UUID. It uses the `nanoid` package).
+
+_Use the client id in your own code with caution as it is very likely to change in the future_.
+
+Notes:
+
+* "client" means a browser tab. You may therefore have multiple clients connected from a single device.
+* The client ID will change if a user reloads the client page. I will be attempting to stop this but how is uncertain.
+
+---
+
+>! This is a work in progress. Do not assume the following is correct.
+
 If this is not a login msg
    If no JWT
       Check for session db for _auth.id
