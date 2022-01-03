@@ -184,7 +184,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * uibuilderfe library
   * Received cookies are now available as an object variable key'd on cookie name. `uibuilder.get('cookies')`.
-  * The unique client id set by uibuilder is available as a string variable. `uibuilder.get('clientId')`. This changes if the page is reloaded but not if the client loses then regains a Socket.IO connection (where the socket id will change). It is passed to the client as a cookie. The client sends it to the server as a custom header but only on Socket.IO polling requests since custom headers are not available on websocket connections). _Caution should be used if making use of this feature since it is likely to change in the future_.
+  * The unique client id set by uibuilder is available as a string variable. `uibuilder.get('clientId')`. This changes if the page is reloaded but not if the client loses then regains a Socket.IO connection (where the socket id will change). It is passed to the client as a cookie. The client sends it to the server as a custom header but only on Socket.IO polling requests since custom headers are not available on websocket connections). _Caution should be used if making use of this feature since it is likely to change in the future_. See the updated `sioMiddleware.js` for an example of use.
 
 ### Changed
 
