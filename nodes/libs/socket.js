@@ -468,7 +468,9 @@ class UibSockets {
                     }
                     that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
                     // Copy to port#2 for reference
-                    node.send(null,msg)
+                    ctrlMsg.ip = socket.handshake.address
+                    ctrlMsg.clientId = socket.handshake.auth.clientId
+                    node.send([null,ctrlMsg])
                     //}
 
                 } else if (node.useSecurity === true) {
@@ -482,6 +484,8 @@ class UibSockets {
 
                     // Only send the msg onward if the user is validated or if unauth traffic permitted or if the msg is the initial ready for content handshake.
                     if ( node.allowUnauth === true || msg._auth.jwt !== undefined || msg.uibuilderCtrl === 'ready for content' ) {
+                        msg.ip = socket.handshake.address
+                        msg.clientId = socket.handshake.auth.clientId
                         node.send([null,msg])
                         tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
                     } else 
@@ -490,6 +494,8 @@ class UibSockets {
                 } else {
 
                     // Send out the message on port #2 for downstream flows
+                    msg.ip = socket.handshake.address
+                    msg.clientId = socket.handshake.auth.clientId
                     node.send([null,msg])
 
                 }
@@ -509,7 +515,9 @@ class UibSockets {
                 }
                 that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
                 // Copy to port#2 for reference
-                node.send(null,msg)
+                ctrlMsg.ip = socket.handshake.address
+                ctrlMsg.clientId = socket.handshake.auth.clientId
+                node.send([null,ctrlMsg])
                     
             }) // --- End of on-connection::on-error() --- //
 
