@@ -389,7 +389,7 @@ function nodeInstance(config) {
      * @param {uibNode} this _
      */
     RED.nodes.createNode(this, config)
-
+    
     //#region ====== Create local copies of the node configuration (as defined in the .html file) ====== //
     // NB: this.id and this.type are also available
     this.name            = config.name  || ''
