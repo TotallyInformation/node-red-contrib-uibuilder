@@ -31,6 +31,7 @@ const tilib = require('./tilib')
 const serveIndex = require('serve-index')
 const packageMgt = require('./package-mgt.js')
 const express = require('express')
+const {nanoid} = require('nanoid')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
@@ -679,25 +680,37 @@ class UibWeb {
      * @returns {express.Handler} Master middleware handler
      */
     addMasterMiddleware(node) { // eslint-disable-line class-methods-use-this
+        const uib = this.uib
         // Track routes
         this.routers.instances[node.url].push( {name: 'Master Middleware', path:`${this.uib.httpRoot}/${node.url}`, desc: 'Adds custom headers', type:'Handler'} )
 
         // Return a middleware handler
         return function masterMiddleware (/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
             //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
-            // Help reduce risk of XSS and other attacks
-            res.setHeader('X-XSS-Protection','1;mode=block')
-            res.setHeader('X-Content-Type-Options','nosniff')
-            //res.setHeader('X-Frame-Options','SAMEORIGIN')
-            //res.setHeader('Content-Security-Policy',"script-src 'self'")
-
-            // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
-            res.setHeader('x-powered-by','uibuilder')
-
-            // Tell the client what Socket.IO namespace to use,
-            // trim the leading slash because the cookie will turn it into a %2F
-            res.setHeader('uibuilder-namespace', node.url)
-            res.cookie('uibuilder-namespace', node.url, {path: node.url, sameSite: true}) // tilib.trimSlashes(node.url), {path: node.url, sameSite: true})
+            const qSec = uib.customServer.type === 'http' ? false : true
+            res
+                // Help reduce risk of XSS and other attacks
+                .setHeader('X-XSS-Protection','1;mode=block')
+                .setHeader('X-Content-Type-Options','nosniff')
+                //.setHeader('X-Frame-Options','SAMEORIGIN')
+                //.setHeader('Content-Security-Policy',"script-src 'self'")
+                // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
+                .setHeader('x-powered-by','uibuilder')
+                // Tell the client what Socket.IO namespace to use,
+                .setHeader('uibuilder-namespace', node.url) // only client accessible from xhr or web worker 
+                .cookie('uibuilder-namespace', node.url, {
+                    path: node.url, 
+                    sameSite: true,
+                    expires: 0, // session cookie only
+                    secure: qSec,
+                })
+                // Give the client a fixed session id
+                .cookie('uibuilder-client-id', nanoid(), {
+                    path: node.url, 
+                    sameSite: true,
+                    expires: 0, // session cookie only
+                    secure: qSec,
+                })
 
             next()
         }
@@ -758,6 +771,7 @@ class UibWeb {
 
     /** Load & return an ExpressJS Router from a file in <uibRoot>/<node.url>/lib/api.js
      * @param {uibNode} node 
+     * @returns {object|undefined} Valid instance router or undefined
      */
     getInstanceApiRouter(node) {
         // Reference static vars
@@ -799,6 +813,8 @@ class UibWeb {
         //     else
         //         log.warn(`[uibuilder:web:getInstanceApiRouter:${node.url}] instance api router file failed to load. Reason: ${e.message}`)
         // }
+
+        return undefined
     } // ---- End of getInstanceApiRouter ---- //
 
     // TODO Add this.routers & maybe this.dumpInstanceRoutes(false)
