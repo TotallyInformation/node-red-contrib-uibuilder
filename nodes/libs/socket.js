@@ -516,8 +516,6 @@ class UibSockets {
             
             node.ioClientsCount = ioNs.sockets.size
 
-            console.log('>> cookies >>', socket.handshake)
-    
             log.trace(
                 `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${socket.handshake.address}, for node ${node.id}`
             )
@@ -535,7 +533,7 @@ class UibSockets {
                 log.trace(`[uibuilder:socket:addNS:${url}] sioUse Failed to load Use middleware. Reason: ${e.message}`)
             } 
 
-            node.statusDisplay.text = 'connected ' + ioNs.sockets.size
+            node.statusDisplay.text = `connected ${ioNs.sockets.size}`
             uiblib.setNodeStatus( node )
 
             // Initial client connect message
@@ -550,7 +548,6 @@ class UibSockets {
 
             // Let the clients (and output #2) know we are connecting
             that.sendToFe(msg, node.url, uib.ioChannels.control)
-            //ioNs.emit( uib.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
 
             // Copy to port#2 for reference
             msg.ip = socket.handshake.address
