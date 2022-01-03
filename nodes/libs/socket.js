@@ -154,8 +154,8 @@ class UibSockets {
             ioOptions = Object.assign( {}, RED.settings.uibuilder.sioOptions, ioOptions )
         }
 
-        // @ts-ignore ts(2349)
-        const io = this.io = socketio(server, ioOptions) // listen === attach
+        // @ts-ignore ts(2769)
+        this.io = new socketio.Server(server, ioOptions) // listen === attach
 
     } // --- End of socketIoSetup() --- //
 
@@ -343,7 +343,6 @@ class UibSockets {
         const url = ioNs.url = node.url
         ioNs.nodeId = node.id // allows us to track back to the actual node in Node-RED
         ioNs.useSecurity = node.useSecurity // Is security on for this node instance?
-        ioNs.ioClientsCount = 0
         ioNs.rcvMsgCount = 0
         ioNs.log = log // Make Node-RED's log available to middleware via custom ns property 
 
@@ -366,49 +365,36 @@ class UibSockets {
 
         const that = this
 
-        ioNs.on('connect_error', function(err) {
-            log.error(`[uibuilder:socket:addNS:${url}] Client connection error for node ${node.id}. ${err.message}`)
-        })
-
         ioNs.on('connection', function(socket) {
-            ioNs.ioClientsCount++
-            node.ioClientsCount = ioNs.ioClientsCount
 
-            log.trace(`[uibuilder:socket:addNS:${url}] Socket connected for node ${node.id} clientCount: ${ioNs.ioClientsCount}, Socket ID: ${socket.id}`)
+            //#region ----- Event Handlers ----- //
 
-            // Try to load the sioUse middleware function - sioUse applies to all incoming msgs
-            try {
-                const sioUseMw = require( path.join(uib.configFolder, uib.sioUseMwName) )
-                if ( typeof sioUseMw === 'function' ) {
-                    socket.use(sioUseMw)
-                    log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware loaded successfully for NS ${url}.`)
-                } else {
-                    log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware failed to execute for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
+            // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
+            socket.on('disconnect', function(reason) {
+
+                node.ioClientsCount = ioNs.sockets.size
+                log.trace(
+                    `[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${socket.handshake.address}, for node ${node.id}`
+                )
+                node.statusDisplay.text = 'connected ' + ioNs.sockets.size
+                uiblib.setNodeStatus( node )
+
+                // Let the control output port know a client has disconnected
+                const ctrlMsg = {
+                    'uibuilderCtrl': 'client disconnect',
+                    'reason': reason,
+                    'topic': node.topic || undefined,
+                    '_socketId': socket.id,
                 }
-            } catch(e) {
-                log.trace(`[uibuilder:socket:addNS:${url}] sioUse Failed to load Use middleware. Reason: ${e.message}`)
-            } 
 
-            node.statusDisplay.text = 'connected ' + ioNs.ioClientsCount
-            uiblib.setNodeStatus( node )
+                that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
 
-            // Initial client connect message
-            const msg = {
-                'uibuilderCtrl': 'client connect',
-                'serverTimestamp': (new Date()),
-                'topic': node.topic || undefined,
-                'security': node.useSecurity,   // Let the client know whether to use security or not
-                'version': uib.version,         // Let the front-end know what v of uib is in use
-                '_socketId': socket.id,
-            }
+                // Copy to port#2 for reference
+                ctrlMsg.ip = socket.handshake.address
+                node.send([null,ctrlMsg])
+                
+            }) // --- End of on-connection::on-disconnect() --- //
 
-            // Let the clients (and output #2) know we are connecting
-            that.sendToFe(msg, node.url, uib.ioChannels.control)
-            //ioNs.emit( uib.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
-
-            // Copy to port#2 for reference
-            node.send(null,msg)
-            
             // Listen for msgs from clients only on specific input channels:
             
             socket.on(uib.ioChannels.client, function(msg) {
@@ -509,33 +495,6 @@ class UibSockets {
 
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
-            socket.on('disconnect', function(reason) {
-
-                ioNs.ioClientsCount--
-                node.ioClientsCount = ioNs.ioClientsCount
-                log.trace(
-                    `[uibuilder:socket:${url}] Socket disconnected, clientCount: ${ioNs.ioClientsCount}, Reason: ${reason}, ID: ${socket.id}`
-                )
-                node.statusDisplay.text = 'connected ' + ioNs.ioClientsCount
-                uiblib.setNodeStatus( node )
-
-                // Let the control output port know a client has disconnected
-                const ctrlMsg = {
-                    'uibuilderCtrl': 'client disconnect',
-                    'reason': reason,
-                    'topic': node.topic || undefined,
-                    '_socketId': socket.id,
-                }
-                that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
-                // Copy to port#2 for reference
-                node.send(null,msg)
-                
-            }) // --- End of on-connection::on-disconnect() --- //
-
-            socket.on('connect_error', function(err) {
-                log.error(`[uibuilder:socket:addNS:${url}] Client connection error for node ${node.id}. ${err.message}`)
-            })
-        
             socket.on('error', function(err) {
 
                 log.error(`[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
@@ -553,41 +512,51 @@ class UibSockets {
                     
             }) // --- End of on-connection::on-error() --- //
 
-            /* More Socket.IO events but we really don't need to monitor them
-                socket.on('disconnecting', function(reason) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' DISCONNECTING received', 'ID': socket.id,
-                        'data': reason
-                    })
-                })
-                socket.on('newListener', function(data) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' NEWLISTENER received', 'ID': socket.id,
-                        'data': data
-                    })
-                })
-                socket.on('removeListener', function(data) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' REMOVELISTENER received', 'ID': socket.id,
-                        'data': data
-                    })
-                })
-                // ping is received every 30 sec
-                socket.on('ping', function(data) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' PING received', 'ID': socket.id,
-                        'data': data
-                    })
-                })
-                socket.on('pong', function(data) {
-                    RED.log.audit({
-                        'UIbuilder': node.url+' PONG received', 'ID': socket.id,
-                        'data': data
-                    })
-                })
-            */
+            //#endregion ----- Event Handlers ----- //            
             
-        }) // --- End of addNS() --- //
+            node.ioClientsCount = ioNs.sockets.size
+
+            console.log('>> cookies >>', socket.handshake)
+    
+            log.trace(
+                `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${socket.handshake.address}, for node ${node.id}`
+            )
+
+            // Try to load the sioUse middleware function - sioUse applies to all incoming msgs
+            try {
+                const sioUseMw = require( path.join(uib.configFolder, uib.sioUseMwName) )
+                if ( typeof sioUseMw === 'function' ) {
+                    socket.use(sioUseMw)
+                    log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware loaded successfully for NS ${url}.`)
+                } else {
+                    log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware failed to execute for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
+                }
+            } catch(e) {
+                log.trace(`[uibuilder:socket:addNS:${url}] sioUse Failed to load Use middleware. Reason: ${e.message}`)
+            } 
+
+            node.statusDisplay.text = 'connected ' + ioNs.sockets.size
+            uiblib.setNodeStatus( node )
+
+            // Initial client connect message
+            const msg = {
+                'uibuilderCtrl': 'client connect',
+                'serverTimestamp': (new Date()),
+                'topic': node.topic || undefined,
+                'security': node.useSecurity,   // Let the client know whether to use security or not
+                'version': uib.version,         // Let the front-end know what v of uib is in use
+                '_socketId': socket.id,
+            }
+
+            // Let the clients (and output #2) know we are connecting
+            that.sendToFe(msg, node.url, uib.ioChannels.control)
+            //ioNs.emit( uib.ioChannels.control, { 'uibuilderCtrl': 'server connected', 'debug': node.debugFE } )
+
+            // Copy to port#2 for reference
+            msg.ip = socket.handshake.address
+            node.send([null,msg])
+            
+        }) // --- End of on-connection() --- //
 
     } // --- End of addNS() --- //
 
