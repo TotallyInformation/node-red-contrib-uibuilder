@@ -391,6 +391,7 @@ class UibSockets {
 
                 // Copy to port#2 for reference
                 ctrlMsg.ip = socket.handshake.address
+                ctrlMsg.clientId = socket.handshake.auth.clientId
                 node.send([null,ctrlMsg])
                 
             }) // --- End of on-connection::on-disconnect() --- //
@@ -552,6 +553,7 @@ class UibSockets {
 
             // Copy to port#2 for reference
             msg.ip = socket.handshake.address
+            msg.clientId = socket.handshake.auth.clientId
             node.send([null,msg])
             
         }) // --- End of on-connection() --- //

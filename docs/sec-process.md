@@ -21,6 +21,7 @@ Notes:
 
 * "client" means a browser tab. You may therefore have multiple clients connected from a single device.
 * The client ID will change if a user reloads the client page. I will be attempting to stop this but how is uncertain.
+* The client ID is included in the uibuilder control messages for connect and disconnect of clients as well.
 
 ---
 
