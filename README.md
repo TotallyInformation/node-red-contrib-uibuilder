@@ -9,7 +9,6 @@
 [![Package Quality](http://npm.packagequality.com/shield/node-red-contrib-uibuilder.png)](http://packagequality.com/#?package=node-red-contrib-uibuilder)
 [![DeepScan grade](https://deepscan.io/api/teams/13157/projects/16160/branches/340901/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=13157&pid=16160&bid=340901)
 [![CodeQL](https://github.com/TotallyInformation/node-red-contrib-uibuilder/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/actions/workflows/codeql-analysis.yml)
-[![Dependencies](https://img.shields.io/david/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
 [![Open Issues](https://img.shields.io/github/issues-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues)
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
 [![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/TotallyInformation/node-red-contrib-uibuilder)
@@ -73,20 +72,21 @@ uibuilder should generally also be a **lot** faster and more resource efficient 
 ## Contents
 <!-- TOC -->
 
-* [node-red-contrib-uibuilder](#node-red-contrib-uibuilder)
-  * [Contents](#contents)
-  * [1. Additional Documentation](#1-additional-documentation)
-  * [2. Getting Started](#2-getting-started)
-    * [2.1. Install](#21-install)
-    * [2.2. Simple flow](#22-simple-flow)
-    * [2.3. Edit the source files](#23-edit-the-source-files)
-    * [2.4. Install additional front-end libraries](#24-install-additional-front-end-libraries)
-    * [2.5. Additional Documentation](#25-additional-documentation)
-  * [3. Features](#3-features)
-  * [4. Known Issues](#4-known-issues)
-  * [5. Discussions and suggestions](#5-discussions-and-suggestions)
-  * [6. Contributing](#6-contributing)
-  * [7. Developers/Contributors](#7-developerscontributors)
+- [node-red-contrib-uibuilder](#node-red-contrib-uibuilder)
+  - [Contents](#contents)
+  - [1. Additional Documentation](#1-additional-documentation)
+  - [2. Getting Started](#2-getting-started)
+    - [2.1. Install](#21-install)
+    - [2.2. Simple flow](#22-simple-flow)
+    - [2.3. Edit the source files](#23-edit-the-source-files)
+    - [2.4. Install additional front-end libraries](#24-install-additional-front-end-libraries)
+      - [2.4.a Using VueJS](#24a-using-vuejs)
+    - [2.5. Additional Documentation](#25-additional-documentation)
+  - [3. Features](#3-features)
+  - [4. Known Issues](#4-known-issues)
+  - [5. Discussions and suggestions](#5-discussions-and-suggestions)
+  - [6. Contributing](#6-contributing)
+  - [7. Developers/Contributors](#7-developerscontributors)
 
 <!-- /TOC -->
 
