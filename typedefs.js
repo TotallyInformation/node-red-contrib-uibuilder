@@ -320,16 +320,18 @@
  *  deleted on deploy - see html file oneditdelete, updated by admin api
  * 
  *  Schema: `{ <url>: <boolean> }`
- * @property {object}           customServer 
+ * @property {object}           customServer Set in libs/web.js:_webSetup()
  *  Parameters for custom webserver if required. Port is undefined if using Node-RED's webserver.
- * @property {undefined|number|string=} customServer.port Optional TCP/IP port number. 
+ * @property {undefined|number} customServer.port TCP/IP port number. 
  * 
  *  If defined, uibuilder will use its own ExpressJS server/app. 
  * 
  *  If undefined, uibuilder will use the Node-RED user-facing ExpressJS server
- * @property {string}           customServer.type Node.js server type. One of ['http', 'https', 'http2']
+ * @property {('http'|'https'|'http2')} customServer.type Node.js server type. One of ['http', 'https', 'http2']
  * @property {undefined|string} customServer.host uibuilder Host. sub(domain) name or IP Address
  * @property {undefined|string} customServer.hostName The host name of the Node-RED server
+ * @property {boolean}          customServer.isCustom Is uibuilder using a custom ExpressJS server?
+ * 
  * @property {undefined|object} degitEmitter Event emitter for degit, populated on 1st use. See POST admin API
  * @property {undefined|runtimeRED} RED Keep a reference to RED for convenience. Set at the start of Uib
  * @property {string=} version The deployed version of uibuilder (from `package.json`)

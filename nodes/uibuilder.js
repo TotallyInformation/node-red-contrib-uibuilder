@@ -87,13 +87,12 @@ const uib = {
     nodeVersion: process.version.replace('v','').split('.'),
     staticOpts: {}, //{ maxAge: 31536000, immutable: true, },
     deleteOnDelete: {},
-    customServer: {
+    customServer: { // set correctly in libs/web.js:_webSetup()
         port: undefined,
         type: 'http',
-        /** @type {undefined|string} uibuilder Host. sub(domain) name or IP Address */
         host: undefined,
-        /** @type {undefined|string} The host name of the Node-RED server */
         hostName: undefined,
+        isCustom: false,
     },
     reDeployNeeded: '4.1.2',
     degitEmitter: undefined,
@@ -136,15 +135,12 @@ function runtimeSetup() {
             RED.log.info('+-----------------------------------------------------')
             RED.log.info(`| ${uib.moduleName} v${uib.version} initialised`)
             RED.log.info(`| root folder: ${uib.rootFolder}`)
-            if ( uib.customServer.port ) {
+            if ( uib.customServer.isCustom === true ) {
                 RED.log.info('| Using custom ExpressJS webserver at:')
             } else {
                 RED.log.info('| Using Node-RED\'s webserver at:')
             }
-            let port = Number(RED.settings.uiPort)
-            if ( uib.customServer.port !== undefined && uib.customServer.port != port ) port = Number(uib.customServer.port) // eslint-disable-line eqeqeq
-            
-            RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${port}/ or ${uib.customServer.type}://localhost:${port}/`)
+            RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}/ or ${uib.customServer.type}://localhost:${uib.customServer.port}/`)
             RED.log.info('| Installed packages:')
             const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
             for (let i = 0; i < pkgs.length; i+=4) {
