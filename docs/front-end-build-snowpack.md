@@ -3,7 +3,7 @@ title: How-to configure and use a front-end build step using Snowpack
 description: >
    Describes how to use Snowpack to build your front-end code.
 created: 2021-04-22 09:53:00
-lastUpdated: 2021-06-27 17:39:08
+lastUpdated: 2022-01-05 21:57:26
 ---
 
 Status: **Incomplete**
@@ -18,12 +18,17 @@ This page covers the installation and configuraiton of the [Snowpack](https://ww
 is the root of your uibuilder project on your Node-RED server. For example, if you have a uibuilder node with
 a URL set to `myapp`, your start folder is likely to be something like `~/.node-red/uibuilder/myapp`.
 
-Make sure you have a package.json file
-Install Snowpack
-Install Vue plugin - `npm install --save-dev @snowpack/plugin-vue`
-Run `npx snowpack init`
+Make sure you have a package.json file (run `npm init -y` if not), then:
+
+1. Install Snowpack
+2. Install the Vue or other plugin's as needed - `npm install --save-dev @snowpack/plugin-vue`
+3. Run `npx snowpack init`
+4. Configure your snowpack configuration file as shown below.
+5. Run `npx snowpack dev` to use the development server (don't forget to change the .html links and the uibuilder.start namespace). Or, run `npx snowpack build` to update the `dist` folder ready for use.
+
 Note that you have to use npx to run snowpack when it is installed locally as recommended. Alternatively, you can set up an npm script in your package.json file, in that case, you don't need to use npx since npm will know where the snowpack executable exists.
 
+Don't forget to change the uibuilder node's advanced settings to use the `dist` folder once you have built your code.
 
 ## Default Snowpack config file
 
@@ -40,7 +45,7 @@ module.exports = {
         'src': '/'
     },
     plugins: [
-        '@snowpack/plugin-vue',
+        '@snowpack/plugin-vue', // Only if using VueJS
     ],
     packageOptions: {
         /* ... */
