@@ -1,12 +1,13 @@
 * [Home](/)
 * Using uibuilder
+  * [Creating data-driven web apps](web-app-workflow.md)
   * [Configuring uibuilder](uib-configuration.md)
   * [Changing the root folder (uibRoot)](changing-uibroot.md)
   * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
   * [How & why to use the sender node](sender-node.md)
 * Developing UI's
   * [The uibuilderfe Library](front-end-library.md)
-  * [Optimise & Transpile](front-end-builds.md)
+  * [Optimise & Transpile (Build)](front-end-builds.md)
   * [Snowpack as build tool](front-end-build-snowpack.md)
 * UI Frameworks
   * [Vue Components](vue-component-handling.md)

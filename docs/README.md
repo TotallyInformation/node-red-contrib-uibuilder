@@ -3,7 +3,7 @@ title: uibuilder Technical Documentation
 description: >
    uibuilder is a low-code solution for easily building data-driven web sites and web apps in conjunction with Node-RED.
 created: 2019-06-16 16:16:00
-lastUpdated: 2021-12-30 17:40:40
+lastUpdated: 2022-01-05 21:56:21
 ---
 
 All you need is a uibuilder node added to your flows. Select a suitable URL path and deploy.
@@ -24,6 +24,7 @@ WIKI, Code, documentation, and examples are all welcome contributions and I alwa
 
 ## Using uibuilder
 
+* [Creating data-driven web apps with uibuilder and Node-RED](web-app-workflow.md)
 * [How to configure uibuilder](uib-configuration.md)
 * [Changing the root folder (uibRoot)](changing-uibroot.md)
 * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
@@ -34,7 +35,7 @@ WIKI, Code, documentation, and examples are all welcome contributions and I alwa
 Information on using the front-end uibuilderfe library in your own code. Information on using build processes if you need them.
 
 * [The uibuilderfe Library](front-end-library.md)
-* [Optimise & Transpile](front-end-builds.md)
+* [Optimise & Transpile (Build)](front-end-builds.md)
 * [Snowpack as build tool](front-end-build-snowpack.md)
 
 ## UI Frameworks
