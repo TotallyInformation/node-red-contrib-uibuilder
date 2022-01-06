@@ -12,31 +12,32 @@ It manages the communications and provides a number of helper functions to make 
 
 The detailed documentation for the library is in the [uibuildefe developer documentation](uibuilderfe-js). If you don't find what you need here, please look there.
 
-* [Startup](#startup)
-  * [Startup Optional Parameters](#startup-optional-parameters)
-  * [Examples](#examples)
-  * [Errors](#errors)
-* [Events](#events)
-  * [Example onChange event handler](#example-onchange-event-handler)
-  * [Currently available pre-defined events](#currently-available-pre-defined-events)
-* [Variable Handling](#variable-handling)
-* [Helper Methods (functions)](#helper-methods-functions)
-  * [`autoSendReady` Turn on/off the ready for content control msg](#autosendready-turn-onoff-the-ready-for-content-control-msg)
-  * [`debug` Turn on/off debugging console messages](#debug-turn-onoff-debugging-console-messages)
-  * [`eventSend` Helper fn to send event data](#eventsend-helper-fn-to-send-event-data)
-  * [`get` Get the value of a uibuilder variable](#get-get-the-value-of-a-uibuilder-variable)
-  * [`logon` Send a logon (authentication) control request to Node-RED](#logon-send-a-logon-authentication-control-request-to-node-red)
-  * [`logoff` Send a logoff control request to Node-RED](#logoff-send-a-logoff-control-request-to-node-red)
-  * [`me` Return uibuilder info](#me-return-uibuilder-info)
-  * [`msg` Convenience method to access the last standard msg from Node-RED](#msg-convenience-method-to-access-the-last-standard-msg-from-node-red)
-  * [`onChange` Subscribe to a uibuilder variable change event](#onchange-subscribe-to-a-uibuilder-variable-change-event)
-  * [`send` Send a standard msg to Node-RED](#send-send-a-standard-msg-to-node-red)
-  * [`sendCtrl` Send a control msg to Node-RED](#sendctrl-send-a-control-msg-to-node-red)
-  * [`set` Set the value of a uibuilder variable, creates subscribable event for changes](#set-set-the-value-of-a-uibuilder-variable-creates-subscribable-event-for-changes)
-  * [`showComponentDetails` (VueJS only) Return a control msg contining details of a Vue component](#showcomponentdetails-vuejs-only-return-a-control-msg-contining-details-of-a-vue-component)
-  * [`showToast` (VueJS only) Shows a popup message in the UI](#showtoast-vuejs-only-shows-a-popup-message-in-the-ui)
-  * [`start` Start up the front-end library](#start-start-up-the-front-end-library)
-  * [`uiDebug` Conditional debug output (controlled by debug setting)](#uidebug-conditional-debug-output-controlled-by-debug-setting)
+- [Startup](#startup)
+  - [Startup Optional Parameters](#startup-optional-parameters)
+    - [Parameters](#parameters)
+  - [Examples](#examples)
+  - [Errors](#errors)
+- [Events](#events)
+  - [Example onChange event handler](#example-onchange-event-handler)
+  - [Currently available pre-defined events](#currently-available-pre-defined-events)
+- [Variable Handling](#variable-handling)
+- [Helper Methods (functions)](#helper-methods-functions)
+  - [`autoSendReady` Turn on/off the ready for content control msg](#autosendready-turn-onoff-the-ready-for-content-control-msg)
+  - [`debug` Turn on/off debugging console messages](#debug-turn-onoff-debugging-console-messages)
+  - [`eventSend` Helper fn to send event data](#eventsend-helper-fn-to-send-event-data)
+  - [`get` Get the value of a uibuilder variable](#get-get-the-value-of-a-uibuilder-variable)
+  - [`logon` Send a logon (authentication) control request to Node-RED](#logon-send-a-logon-authentication-control-request-to-node-red)
+  - [`logoff` Send a logoff control request to Node-RED](#logoff-send-a-logoff-control-request-to-node-red)
+  - [`me` Return uibuilder info](#me-return-uibuilder-info)
+  - [`msg` Convenience method to access the last standard msg from Node-RED](#msg-convenience-method-to-access-the-last-standard-msg-from-node-red)
+  - [`onChange` Subscribe to a uibuilder variable change event](#onchange-subscribe-to-a-uibuilder-variable-change-event)
+  - [`send` Send a standard msg to Node-RED](#send-send-a-standard-msg-to-node-red)
+  - [`sendCtrl` Send a control msg to Node-RED](#sendctrl-send-a-control-msg-to-node-red)
+  - [`set` Set the value of a uibuilder variable, creates subscribable event for changes](#set-set-the-value-of-a-uibuilder-variable-creates-subscribable-event-for-changes)
+  - [`showComponentDetails` (VueJS only) Return a control msg contining details of a Vue component](#showcomponentdetails-vuejs-only-return-a-control-msg-contining-details-of-a-vue-component)
+  - [`showToast` (VueJS only) Shows a popup message in the UI](#showtoast-vuejs-only-shows-a-popup-message-in-the-ui)
+  - [`start` Start up the front-end library](#start-start-up-the-front-end-library)
+  - [`uiDebug` Conditional debug output (controlled by debug setting)](#uidebug-conditional-debug-output-controlled-by-debug-setting)
 
 ## Startup
 
@@ -55,20 +56,25 @@ In addition, if you are using VueJS, you can pass the Vue app instance to the `s
 * `namespace` {Object=|string=} Optional. One of:
   
   * Object containing ref to vueApp, 
+  
   * Object containing settings using the property names given here, or 
+  
   * IO Namespace override. Changes self.ioNamespace from the default.
     
     If you are not sure about the correct namespace, use the "Instance Details" button in the uibuilder node configuration panel (in the Node-RED Editor) and search for "ioNamespace" in the resulting page.
 
-    The namespace to use here is that result prefixed with a leading `/`
+    The namespace to use here is that result prefixed with a leading `/`. However if you are serving your code from a different server or a different port on the same
+    server (e.g. when using a build tool dev server), you must include the full URL of Node-RED (or the uibuilder custom URL if using its custom ExpressJS server feature).
   
-* `ioPath` {string=} Optional. changes self.ioPath from the default
+* `ioPath` {string=} Optional. **Note that you should not need to change this**. It changes self.ioPath from the default
 
   The ioPath is a combination of:
   
   * A leading `/`,
   * `httpNodeRoot` - normally empty unless you have changed it in `settings.js`
   * "/uibuilder/vendor/socket.io"
+
+  While uibuilderfe does its best to work out the ioPath (from a cookie first and then the request url), it cannot determing the httpNodeRoot if you are serving your js code from a different server or a different url path on the same server (e.g. when using a build tool dev server). It is in these cases that you must specify it manually.
 
 * `vueApp` {Object=}  Optional. reference to the VueJS instance
 
