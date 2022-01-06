@@ -193,6 +193,9 @@ class UibWeb {
         uib.customServer.port = Number(RED.settings.uiPort)
         uib.customServer.type = 'http'
         if ( RED.settings.https ) uib.customServer.type = 'https'
+        // Record the httpNodeRoot for later use
+        uib.nodeRoot = RED.settings.httpNodeRoot
+
 
         // Override Node-RED's web server settings if required
         if ( RED.settings.uibuilder ) {
@@ -201,6 +204,8 @@ class UibWeb {
             if ( RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort ) { // eslint-disable-line eqeqeq
                 uib.customServer.isCustom = true
                 uib.customServer.port = Number(RED.settings.uibuilder.port)
+                // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change instead if needed.
+                uib.nodeRoot = ''
             }
 
             // http, https or http2
@@ -238,9 +243,6 @@ class UibWeb {
             // Port has been specified & is different to NR's port so create a new instance of express & app
             const express = require('express') 
             this.app = express()
-
-            // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change.
-            uib.nodeRoot = ''
 
             /** Socket.io needs an http(s) server rather than an ExpressJS app
              * As we want Socket.io on the same port, we have to create our own server
@@ -291,15 +293,10 @@ class UibWeb {
             })
 
         } else {
-            uib.customServer.isCustom = false
-
             // Port not specified (default) so reuse Node-RED's ExpressJS server and app
             // @ts-ignore
             this.app = /** @type {express.Application} */ (RED.httpNode) // || RED.httpAdmin
             this.server = RED.server
-            // Record the httpNodeRoot for later use
-            uib.nodeRoot = RED.settings.httpNodeRoot
-
         } 
 
         // Note: Keep the router vars separate so that they can be used for reporting
@@ -729,6 +726,13 @@ class UibWeb {
                 .cookie('uibuilder-client-id', nanoid(), {
                     path: node.url, 
                     sameSite: true,
+                    expires: 0, // session cookie only
+                    secure: qSec,
+                })
+                // Tell clients what httpNodeRoot to use (affects Socket.io path)
+                .cookie('uibuilder-webRoot', uib.nodeRoot.replace(/\//g,''), {
+                    //path: node.url, 
+                    //sameSite: true,
                     expires: 0, // session cookie only
                     secure: qSec,
                 })

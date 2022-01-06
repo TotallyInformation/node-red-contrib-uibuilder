@@ -140,7 +140,8 @@ function runtimeSetup() {
             } else {
                 RED.log.info('| Using Node-RED\'s webserver at:')
             }
-            RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}/ or ${uib.customServer.type}://localhost:${uib.customServer.port}/`)
+            const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
+            RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
             RED.log.info('| Installed packages:')
             const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
             for (let i = 0; i < pkgs.length; i+=4) {
