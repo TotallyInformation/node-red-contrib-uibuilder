@@ -11,6 +11,8 @@ lastUpdated: 2022-01-02 20:11:42
 - [Socket.IO Middleware](#socketio-middleware)
   - [Namespace Middleware - `sioMiddleware.js`](#namespace-middleware---siomiddlewarejs)
   - [Client message Middleware - `sioUse.js`](#client-message-middleware---siousejs)
+- [Socket.IO Options](#socketio-options)
+- [Default CORS Options](#default-cors-options)
 
 ## Socket.IO Server Options
 
@@ -104,3 +106,13 @@ uibuilder.onChange('ctrlMsg', function(msg){
 ```
 
 Of course, some errors may result in the client being unable to connect and therefore they will not get the message. However, the Node-RED log will still show an error.
+
+## Socket.IO Options
+
+You can override the default Socket.IO server options by using the `uibuilder.sioOptions` property in settings.js. All Socket.IO server options can be
+overridden. This can be useful for changing the default buffer size (which limits message sizes) and for changing the default CORS options.
+
+## Default CORS Options
+
+These are set by default to allow requests from any source. This is not terribly secure. It is strongly recommended to change this if allowing
+communications over the Internet or other un-/semi-trusted network.
