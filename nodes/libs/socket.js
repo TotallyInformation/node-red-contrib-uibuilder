@@ -131,10 +131,15 @@ class UibSockets {
         const server = this.server
         const uib_socketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
-        log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uib_socketPath}` )
+        log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uib_socketPath}, CORS Origin=*` )
         // Socket.Io server options, see https://socket.io/docs/v4/server-options/
         let ioOptions = {
             'path': uib_socketPath,
+            // https://github.com/expressjs/cors#configuration-options, https://socket.io/docs/v3/handling-cors/
+            cors: {
+                origin: '*',
+                //allowedHeaders: ['x-clientid'],
+            }
             // Socket.Io 3+ CORS is disabled by default, also options have changed.
             // for CORS need to handle preflight request explicitly 'cause there's an
             // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v4/handling-cors/
@@ -149,9 +154,9 @@ class UibSockets {
             // },
         }
 
-        // Merge in overrides from settings.js if given.
+        // Merge in overrides from settings.js if given. NB: settings.uibuilder.sioOptions will override the above defaults.
         if ( RED.settings.uibuilder && RED.settings.uibuilder.sioOptions ) {
-            ioOptions = Object.assign( {}, RED.settings.uibuilder.sioOptions, ioOptions )
+            ioOptions = Object.assign( {}, ioOptions, RED.settings.uibuilder.sioOptions )
         }
 
         // @ts-ignore ts(2769)
