@@ -1277,8 +1277,6 @@
      * @param {object} node A reference to the panel's `this` object 
      */
     function showServerInUse(node) {
-        console.log('>>>>>', RED.settings.uibuilderCustomServer, RED.settings.get('uibuilder'))
-
         let svrType
 
         const eUrlSplit = window.origin.split(':')
@@ -1289,7 +1287,7 @@
         $('#info-webserver').empty()
 
         // Is uibuilder using a custom server?
-        if (RED.settings.uibuilderCustomServer.port) {
+        if (RED.settings.uibuilderCustomServer.isCustom === true) {
             // Use the correct protocol (http or https)
             eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2','https')
             // Use the correct port
