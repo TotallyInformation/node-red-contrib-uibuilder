@@ -18,7 +18,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
   * [ ] Error in security.js [Issue](https://discourse.nodered.org/t/uibuilder-vnext-v5-updates/56013/4?u=totallyinformation). Extra error log already added, consider using a different name for `<uibRoot>/.config/security.js` to save future issues for people.
-
+  * [ ] Instance details page - ioNamespace shows as `undefined`
+  
 * General
   * [ ] Check for methods/functions/variables that can be deprecated.
   * [ ] Add a new template and example to demonstrate the sender node.
@@ -69,13 +70,18 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
     * Make sure localStorage _auth is always updated after control msg from server
     * Make bootstrap-vue toasts optional, add auth change notices
 * DOC UPDATES NEEDED:
+  * Extra cookie for nodeRoot
   * Review all changes
   * Add note about [default msg size](https://github.com/socketio/socket.io/issues/3946#issuecomment-850704139)
   * Update custom express settings
+  * web.js
+    * Variables:
+      * uib.customServer.isCustom
   * FE
     * Variables:
       * self.security - flag: indicates if server has security turned on
       * self.storePrefix
+      * 
     * Functions:
       * self.initSecurity
       * self.setStore
@@ -92,14 +98,39 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * [ ] How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
   * [ ] Add mapper to map component id to originator & extend `eventSend` accordingly
 
+* [ ] Allow client id to be set externally.
+
 * *Maybe*
   * uibuilder.js
-    * Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained
-    * add in/out msg counts to status?
+    * ~~Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained~~ See other nodes below. Probably best kept as a separate node.
+    * add in/out msg counts to status? Maybe as an option.
     * On change of URL - signal other nodes? As no map currently being maintained - probably not possible
+    * Maybe switch from static to rendering to allow dynamic content:
+  
+      ```js
+      var bodyParser = require('body-parser');
+      var express = require('express');
+      var app = express();
+
+      app.use(express.static(__dirname + '/'));
+      app.use(bodyParser.urlencoded({
+        extend: true
+      }));
+      app.engine('html', require('ejs').renderFile);
+      app.set('view engine', 'ejs');
+      app.set('views', __dirname);
+
+      app.get('/', function(req, res) {
+        res.render("index");
+      });
+      ```
+
+      Maybe set as optional with flag? Allow choice of render engine? Only render .ejs files instead of .html?
 
   * Templates
-    * Maybe move dependencies and other template meta-data into the template package.json file.
+    * [ ] Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
+    * [ ] Add example flows - using the pluggable libraries feature of Node-RED v2.1
+    * [ ] Maybe move dependencies and other template meta-data into the template package.json file.
       
       Would require making sure that package.json always exists (e.g. after template change). May need to be able to reload package.json file as well.
       
@@ -107,8 +138,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
       
       Will need matching code in the Editor panel & a suitable API.
 
-    * [ ] Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
-    * [ ] Add example flows - using the pluggable libraries feature of Node-RED v2.1
 
   * Editor (uibuilder.html)
     * Move folder management to a popup dialog (to save vertical space)
@@ -119,6 +148,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   * Other Nodes
     * add alternate `uibDashboard` node that uses web components and data-driven composition.
+    * add cache node and start to explore caching modes. Starting with `by-topic` with optional number of msgs for each topic to retain. Possibly adding a persistence option similar to [node-red-contrib-simple-gate](https://flows.nodered.org/node/node-red-contrib-simple-gate). Add option to chose what msg.xxxx property to use or to cache all msgs individually (see the debug node). Add option to let incoming msgs avoid the cache.
   
   * Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
     * [ ] Update docs
@@ -335,6 +365,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * Fixed the problem that required a restart of Node-RED to switch between `src` and `dist` folder serving.
 * Fixed Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159) where sioMiddlware.js wasn't working due to the move to Socket.Io v4.
 * Client connect and disconnect msgs not being sent to uibuilder control port (#2). NOTE: As of Socket.io v4, it appears as though the disconnect event is received _after_ the connect when a client is reconnecting. You cannot rely on the order.
+* Fixed CORS problems after move to Socket.IO v4. (NB: CORS is defaulted to allow requests from ANY source, override with the `uibuilder.sioOptions` overrides available in settings.js).
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 * A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
 * In `uibuilderfe.js`, security was being turned on even if the server set it to false.
