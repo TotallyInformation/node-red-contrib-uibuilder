@@ -47,8 +47,8 @@ example that describes all of the current options.
        */
       uibRoot: process.env.UIBROOT || path.join(os.homedir(), 'myuibroot')',
       /** Optional: Socket.IO Server Options. See https://socket.io/docs/v4/server-options/
-       * Note that the `path` property will be ignored, it is set by uibuilder itself.
-       * You can set anything else though you might break uibuilder unless you know what you are doing.
+       * Note that you can set any option though you might break uibuilder unless you know what you are doing.
+       * Also note that you should change the CORS options for live running over the Internet.
        * @type {Object}
       */
       sioOptions: {
