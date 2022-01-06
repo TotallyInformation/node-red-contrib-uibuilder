@@ -167,7 +167,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         self.uiDebug('log', '\nuibuilderfe: Debug? ', self.debug, '\n\t\tVersion? ', self.version, '\n\t\tRunning Packed version? ', !self.isUnminified, '\n ')
 
-
         /** Try to get the Socket.IO namespace from the current URL - won't work if page is in a sub-folder
          * since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
          * since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
@@ -271,13 +270,18 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         //#endregion ---- ---- ---- ---- //
 
         //#region - Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
-        // split current url path, eliminate any blank elements and trailing or double slashes
-        var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
-        /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
-        if ( fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith('.html') ) fullPath.pop()
-        self.url = fullPath.pop() // not actually used and only gives the last path section of the url anyway
-        self.httpNodeRoot = '/' + fullPath.join('/')
-        self.ioPath       = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')
+        /** httpNodeRoot (to set path) */
+        if ( self.cookies['uibuilder-webRoot'] )
+            self.httpNodeRoot = self.cookies['uibuilder-webRoot']
+        else {
+            // split current url path, eliminate any blank elements and trailing or double slashes
+            var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
+            /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
+            if ( fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith('.html') ) fullPath.pop()
+            self.url = fullPath.pop() // not actually used and only gives the last path section of the url anyway
+            self.httpNodeRoot = '/' + fullPath.join('/')
+        }
+        self.ioPath = urlJoin(self.httpNodeRoot, self.moduleName, 'vendor', 'socket.io')
         self.uiDebug('debug', 'uibuilderfe: ioPath: ' + self.ioPath + ', httpNodeRoot: ' + self.httpNodeRoot + ', uibuilder url (not used): ' + self.url)
         //#endregion
 
@@ -1468,7 +1472,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 if (ioPath !== undefined && ioPath !== null) self.ioPath = ioPath
                 if (vueApp !== undefined && vueApp !== null) self.vueApp = vueApp
 
-                self.uiDebug('log', '[uibuilderfe:start] Final Socket.IO params - namespace', namespace, 'ioPath', ioPath)
+                self.uiDebug('log', '[uibuilderfe:start] Final Socket.IO params - namespace', self.ioNamespace, 'ioPath', self.ioPath)
 
                 self.ioSetup()
 
