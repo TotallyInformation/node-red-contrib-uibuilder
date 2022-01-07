@@ -291,11 +291,12 @@ function externalEvents(node) {
 /** 3) Handler function for node flow input events (when a node instance receives a msg from the flow)
  * NOTE: `this` context is still the parent within the function.
  *       Also, this function does NOT have access to RED
- * @see https://nodered.org/blog/2019/09/20/node-done 
+ * see https://nodered.org/blog/2019/09/20/node-done 
  * @param {object} msg The msg object received.
  * @param {Function} send Per msg send function, node-red v1+
  * @param {Function} done Per msg finish function, node-red v1+
  * @returns {undefined|null} Not a lot
+ * @this {uibNode}
  **/
 function inputMsgHandler (msg, send, done) {
     //const RED = uib.RED
