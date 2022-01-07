@@ -1,0 +1,216 @@
+<script type="text/javascript">/* eslint-disable strict */
+
+// Isolate this code
+(function () {
+    'use strict'
+
+    /** Module name must match this nodes html file @constant {string} moduleName */
+    const moduleName  = 'uib-cache'
+    /** Node's label @constant {string} paletteCategory */
+    const nodeLabel  = moduleName
+    /** Node's palette category @constant {string} paletteCategory */
+    const paletteCategory  = 'uibuilder'
+    /** Node's background color @constant {string} paletteColor */
+    const paletteColor  = '#F6E0F8' //'#E6E0F8'
+
+    /** Populate the store dropdown
+     * @param {string} item Context store name
+     */
+    function addStoreSelect(item){
+        $('#node-input-storeName').append(`<option value="${item}">${item}</option>`)
+    }
+
+    /**
+     * 
+     * @returns {string} Text to show if "Cache By" is set
+     */
+    function helpTextNumMsgsCacheBy(){
+        return ` <b>for each msg.${ $('#node-input-cacheKey').val() } value</b>`
+    }
+
+    /** If caching my a msg.xxxxx value, show/hide bits of help text
+     * @param {boolean} isVisible Whether the Cache By field is visible
+     */
+    function keyVisibility(isVisible) {
+        if (isVisible === true) {
+
+            $('#cacheKey-row').show()
+            $('#help-per').show()
+            $('#caspan').hide()
+        } else {
+            $('#cacheKey-row').hide()
+            $('#help-per').hide()
+            $('#caspan').show()
+        }
+    }
+
+    /** Prep for edit
+     * @param {*} node A node instance as seen from the Node-RED Editor
+     */
+    function onEditPrepare(node) {
+        // initial checkbox states
+        //if (!node.persistence) node.persistence = false
+        if (!node.cacheall) node.persistence = false
+
+        // Make sure that the key always as a value - default to msg.topic
+        if (!node.cacheKey || node.cacheKey === '' ) node.cacheKey = 'topic'
+
+        // Set up context store select drop-down
+        RED.settings.context.stores.forEach(addStoreSelect)
+
+        // Update help text if Cache By value changes
+        $('#node-input-cacheKey').on('change', function(){
+            $('#help-per').html( helpTextNumMsgsCacheBy() )
+        })
+
+        // Either all or by prop, not both
+        $('#node-input-cacheall').on('change', function(){
+            keyVisibility(!$(this).is(':checked'))
+        })
+
+        // Set storeName dropdown
+        $(`#node-input-storeName option[value="${node.storeName || 'default'}"]`).prop('selected', true)
+        $('#node-input-storeName').val(node.storeName || 'default')
+
+    } // ----- end of onEditPrepare() ----- //
+
+    RED.nodes.registerType(moduleName, {
+        category: paletteCategory,
+        color: paletteColor,
+        defaults: {
+            cacheall: { value: false },
+            cacheKey: { value: 'topic' },
+            num: { value: 1, required: true },
+            //persistence: { value: false },
+            storeName: { value: 'default', required: true },
+            name: { value: ''},
+        },
+        //align:'right',
+        inputs: 1,
+        inputLabels: 'Msg to cache or cache control msg',
+        outputs: 1,
+        outputLabels: ['Through msg or msg from cache'],
+        icon: 'parser-json.svg',
+        paletteLabel: nodeLabel,
+        label: function () { 
+            if ( this.cacheall === true ) return this.name || `Cache All (${this.num})`
+            return this.name || `Cache by msg.${this.cacheKey} (${this.num})`
+        },
+
+        oneditprepare: function() { onEditPrepare(this) },
+        
+    }) // ---- End of registerType() ---- //
+
+}())</script><script type="text/html" data-template-name="uib-cache"><div aria-label="Choose what msg property to group cache by" id="cacheKey-row" class="form-row">
+    <label for="node-input-cacheKey"><i class="fa fa-tag"></i> Cache by</label>
+    msg.<input type="text" id="node-input-cacheKey" placeholder="Enter a msg property. ">
+</div>
+<div aria-label="Cache all or group by" title="Turn off cache by and record all msgs up to #" class="form-row">
+    <input type="checkbox" id="node-input-cacheall" style="display: inline-block; width: auto; vertical-align: top;">
+    <label for="node-input-cacheall" style="width: 90%;">Cache all messages individually?<span id="caspan"> (Up to # given below)</span></label>
+</div>
+<div aria-label="How many msgs to cache" title="Use 0 for unlimited (up to memory availability)" class="form-row">
+    <label for="node-input-num"><i class="fa fa-tag"></i> # msgs</label>
+    <input type="number" id="node-input-num">
+</div>
+<div aria-label="Info for cache settings" class="form-row form-tips node-help">
+    Number of msgs to cache<span id="help-per"> per topic</span>.<br>
+    Messages are dropped off front of queue once limit is reached.<br>
+    Use 0 for unlimited but take care not to run out of memory.
+</div>
+
+<div aria-label="Select which context store to use" class="form-row">
+    <label for="node-input-storeName"><i class="fa fa-database"></i> Use Store</label>
+    <select id="node-input-storeName"></select>
+</div>
+<div aria-label="Info for context store" class="form-row form-tips node-help">
+    Select a context store to use if you have more than one set up.<br>
+    Use a persistent store if you want the cache to survive a system reset.<br>
+    If you change the store, you will have to manually delete the old one.
+</div>
+
+<div aria-label="Name label" title="Only used for labelling in the flow" class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+</div></script><script type="text/html" data-help-name="uib-cache"><p>
+    A simple caching node that works with uibuilder.
+</p>
+<p>
+    See <a href="./uibuilder/techdocs/#/cache-node" target="_blank">Tech Docs: Using the cache node</a> for more detail.
+</p>
+
+<h3>Inputs</h3>
+<p>
+    Any msg can be sent into the node.
+</p>
+<p>
+    In addition, the node recognises uibuilder control messages for cache replay and cache clear.<br>
+    See <a href="./uibuilder/techdocs/#/pre-defined-msgs" target="_blank">Tech Docs: pre-defined messages</a> 
+    for the structure of those messages.
+</p>
+
+<h3>Outputs</h3>
+<p>
+    Any non-uibuilder-control message is passed to the output.
+</p>
+<p>
+    If the node receives a REPLAY control message, all of the cached messages are sent to the output.
+</p>
+<p>
+    Upon replay, the output messages will have the socket id of the control message (if present) added
+    so that the replayed messages are sent to the correct client. Any socket id saved in the cached messages
+    is ignored.
+</p>
+<p>
+    Upon replay, the output messages will also get a <code>_uib.cache</code> property added with a value of "REPLAY".
+    This can be used in your front-end code if you need to differentiate between original and replayed messages.
+</p>
+<p>
+    If the node receives a CLEAR control message, all of the cached messages are deleted and nothing is sent to the output.
+</p>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt>Cache by <span class="property-type">string</span></dt>
+    <dd>
+        Enter an incoming message property to group cached entries by.<br>
+        When choosing a property to group by, be mindful of the number of messages
+        that may end up in the cache. If too many large messages are cached, Node-RED <b>WILL</b> crash.<br>
+        The default entry is "topic".
+    </dd>
+
+    <dt>Cache individually? <span class="property-type">boolean</span></dt>
+    <dd>
+        If selected, the "Cache by" field will be hidden. All messages will be
+        cached as a single group.
+    </dd>
+
+    <dt># messages <span class="property-type">integer</span></dt>
+    <dd>
+        The maximum number of messages <b>per group</b> that will be cached.<br>
+        Once the max number is reached, the oldest messages will be dropped.<br>
+        If you change this number and re-deploy, the node will automatically trim
+        the number of messages cached.<br>
+        You can use a number of zero to allow an infinite number of cached entries,
+        however, you need to take great care in that case not to exceede the available
+        memory, the node will not check for you.<br>
+        The default number is one. This means that the last recorded message for each group
+        will be replayed which is generally the expected result.
+    </dd>
+
+    <dt>Use Store <span class="property-type">string (drop-down)</span></dt>
+    <dd>
+        The drop-down is pre-populated with the <code>contextStorage</code> modules you define in <code>settings.js</code>.
+        You can use this to choose a persistent context store if desired so that the cache survives system restarts.<br>
+        If you change this value, you may need to manually delete the old version of the node context variable to avoid confusion.
+        Select the node, view the Context Data side-panel, refresh the entries and delete the appropriate <code>uib_cache</code> entry.
+    </dd>
+
+    <dt>Name <span class="property-type">string</span></dt>
+    <dd>A short description shown in the admin interface.</dd>
+</dl>
+
+<p>
+    <b>NOTE</b> that there is an example flow in the examples library that demonstrates the use of this node.
+    Use the Editor's menu, import, Examples, node-red-contrib-uibuilder and import the <code>uib-cache-test</code> example.
+</p></script>

@@ -1,0 +1,33 @@
+<div aria-label="Choose what msg property to group cache by" id="cacheKey-row" class="form-row">
+    <label for="node-input-cacheKey"><i class="fa fa-tag"></i> Cache by</label>
+    msg.<input type="text" id="node-input-cacheKey" placeholder="Enter a msg property. ">
+</div>
+<div aria-label="Cache all or group by" title="Turn off cache by and record all msgs up to #" class="form-row">
+    <input type="checkbox" id="node-input-cacheall" style="display: inline-block; width: auto; vertical-align: top;">
+    <label for="node-input-cacheall" style="width: 90%;">Cache all messages individually?<span id="caspan"> (Up to # given below)</span></label>
+</div>
+<div aria-label="How many msgs to cache" title="Use 0 for unlimited (up to memory availability)" class="form-row">
+    <label for="node-input-num"><i class="fa fa-tag"></i> # msgs</label>
+    <input type="number" id="node-input-num">
+</div>
+<div aria-label="Info for cache settings" class="form-row form-tips node-help">
+    Number of msgs to cache<span id="help-per"> per topic</span>.<br>
+    Messages are dropped off front of queue once limit is reached.<br>
+    Use 0 for unlimited but take care not to run out of memory.
+</div>
+
+<div aria-label="Select which context store to use" class="form-row">
+    <label for="node-input-storeName"><i class="fa fa-database"></i> Use Store</label>
+    <select id="node-input-storeName"></select>
+</div>
+<div aria-label="Info for context store" class="form-row form-tips node-help">
+    Select a context store to use if you have more than one set up.<br>
+    Use a persistent store if you want the cache to survive a system reset.<br>
+    If you change the store, you will have to manually delete the old one.
+</div>
+
+<div aria-label="Name label" title="Only used for labelling in the flow" class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+</div>
+

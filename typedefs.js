@@ -1,7 +1,7 @@
 /* eslint-disable no-irregular-whitespace */
 /** Define typedefs for linting and JSDoc/ts checks - does not actually contain live code
  * 
- * Copyright (c) 2017-2021 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -347,6 +347,18 @@
  *   return: boolean;
  *   url: string;
  * }} senderNode1
+ */
+
+/** cacheNode1
+ * @typedef {object} cacheNode1 Local copy of the node instance config + other info
+ * @property {boolean} cacheall Flag indicating each individual msg is cached
+ * @property {string}  cacheKey msg property to use to group cached msgs
+ * @property {number}  num number of cached msgs to retain
+ * @property {string}  storeName Which store to use for the context variable
+ * @property {string}  name only used for labelling the node in the flow
+ * @property {object}  cache A reference to the actual cache for this node instance
+ * @property {Function} getC A reference to the context get function for this node instance
+ * @property {Function} setC A reference to the context set function for this node instance
  */
 
 /** MsgAuth

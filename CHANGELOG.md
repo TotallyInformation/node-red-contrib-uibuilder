@@ -104,6 +104,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * uibuilder.js
     * ~~Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained~~ See other nodes below. Probably best kept as a separate node.
     * add in/out msg counts to status? Maybe as an option.
+    * Add option to turn on/off connect/disconnect control msgs
     * On change of URL - signal other nodes? As no map currently being maintained - probably not possible
     * Maybe switch from static to rendering to allow dynamic content:
   
@@ -126,6 +127,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
       ```
 
       Maybe set as optional with flag? Allow choice of render engine? Only render .ejs files instead of .html?
+    * Create some [HTML Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements) to extend uib for modern browsers. Maybe replace Vue toast component for example?
+    * Trial use of [web-workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) since majority support goes back to 2014.
 
   * Templates
     * [ ] Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
@@ -148,7 +151,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   * Other Nodes
     * add alternate `uibDashboard` node that uses web components and data-driven composition.
-    * add cache node and start to explore caching modes. Starting with `by-topic` with optional number of msgs for each topic to retain. Possibly adding a persistence option similar to [node-red-contrib-simple-gate](https://flows.nodered.org/node/node-red-contrib-simple-gate). Add option to chose what msg.xxxx property to use or to cache all msgs individually (see the debug node). Add option to let incoming msgs avoid the cache.
   
   * Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
     * [ ] Update docs
@@ -175,6 +177,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
 
+* Minimum Node.js version supported is now v12.20. Minimum browser version remains the same and must be one that supports ES6.
+
 ### New
 
 * **New node `uib-sender`** - this node allows you to send a msg to any uibuilder instance's connected front-end clients.
@@ -192,6 +196,12 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   The `uibuilderfe.js` library has been updated to allow easy use of the `originator` property for `uibuilder.send()`. See below for details.
 
   There is a new page in the Tech Docs on using the sender node.
+
+* **New node** `uib-cache` - this node allows you to cache input messages in various ways and recognises uibuilder's 
+  cache control messages so that a client browser (re)connecting to a web page will automatically get a copy of the cached pages.
+  See the Tech Docs for details. An example flow is included in the uibuilder examples library.
+
+  Note that you can use this node without uibuilder if you want to.
 
 * Package Management. You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
   

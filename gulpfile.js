@@ -104,6 +104,18 @@ function buildPanelUib2(cb) {
     cb()
 }
 
+/** Combine the parts of uib-cache.html */
+function buildPanelCache(cb) {
+    src('src/editor/uib-cache/main.html')
+        .pipe(include())
+        .pipe(once())
+        .pipe(rename('uib-cache.html'))
+        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
+        .pipe(dest(nodeDest))
+
+    cb()
+}
+
 /** Combine the parts of uib-sender.html */
 function buildPanelSender(cb) {
     src('src/editor/uib-sender/main.html')
@@ -127,7 +139,7 @@ function buildPanelSender(cb) {
 // }
 
 //const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
-const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender)
+const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache)
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
@@ -138,6 +150,7 @@ function watchme(cb) {
     watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
     watch('src/editor/uib-sender/*', buildPanelSender)
     //watch('src/editor/uib-receiver/*', buildPanelReceiver)
+    watch('src/editor/uib-cache/*', buildPanelCache)
 
     cb()
 }
