@@ -2,7 +2,7 @@
 
 This is the uibuilder front-end library. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages.
 
-For user documentation, please refer to the [Working with the uibuilderfe Library](front-end-library) page.
+For user documentation, please refer to the [Working with the uibuilderfe Library](front-end-library.md) page.
 
 ## ToC
 * [Developer documentation for the `uibuilderfe.js` library](#developer-documentation-for-the-uibuilderfejs-library)
@@ -21,13 +21,13 @@ For user documentation, please refer to the [Working with the uibuilderfe Librar
 
 In order to use the front-end library for uibuilder, you must call the start function: `uibuilder.start()`.
 
-Details are on the [Working with uibuilderfe](front-end-library) page.
+Details are on the [Working with uibuilderfe](front-end-library.md) page.
 
 ## Events
 
 uibuilderfe has its own, simple, event handling system. This lets you "subscribe" to an event with an `onChange` function that is executed automatically when the event fires.
 
-The publicly available events are listed on the [Working with uibuilderfe](front-end-library) page.
+The publicly available events are listed on the [Working with uibuilderfe](front-end-library.md) page.
 
 ## Variable Handling
 
