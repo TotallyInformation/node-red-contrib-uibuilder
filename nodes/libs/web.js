@@ -707,15 +707,17 @@ class UibWeb {
             //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             const qSec = uib.customServer.type === 'http' ? false : true
             res
-                // Help reduce risk of XSS and other attacks
-                .setHeader('X-XSS-Protection','1;mode=block')
-                .setHeader('X-Content-Type-Options','nosniff')
-                //.setHeader('X-Frame-Options','SAMEORIGIN')
-                //.setHeader('Content-Security-Policy',"script-src 'self'")
-                // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
-                .setHeader('x-powered-by','uibuilder')
-                // Tell the client what Socket.IO namespace to use,
-                .setHeader('uibuilder-namespace', node.url) // only client accessible from xhr or web worker 
+                .header({
+                    // Help reduce risk of XSS and other attacks
+                    'X-XSS-Protection': '1;mode=block',
+                    'X-Content-Type-Options': 'nosniff',
+                    // 'X-Frame-Options': 'SAMEORIGIN',
+                    // Content-Security-Policy': "script-src 'self'",
+                    // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
+                    'x-powered-by': 'uibuilder',
+                    // Tell the client what Socket.IO namespace to use,
+                    'uibuilder-namespace': node.url, // only client accessible from xhr or web worker
+                }) 
                 .cookie('uibuilder-namespace', node.url, {
                     path: node.url, 
                     sameSite: true,

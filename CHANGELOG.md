@@ -382,6 +382,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * URL validation should now work as expected for all edge-cases.
 * Fixed the problem that required a restart of Node-RED to switch between `src` and `dist` folder serving.
 * Fixed Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159) where sioMiddlware.js wasn't working due to the move to Socket.Io v4.
+* Fix issue reported in Discource of an error in masterMiddleware when setting headings. Corrected heading syntax for ExpressJS v4.
 * Client connect and disconnect msgs not being sent to uibuilder control port (#2). NOTE: As of Socket.io v4, it appears as though the disconnect event is received _after_ the connect when a client is reconnecting. You cannot rely on the order.
 * Fixed CORS problems after move to Socket.IO v4. (NB: CORS is defaulted to allow requests from ANY source, override with the `uibuilder.sioOptions` overrides available in settings.js).
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
