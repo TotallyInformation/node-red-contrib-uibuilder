@@ -5,6 +5,7 @@
 
 //console.log(process.env)
 
+/** */
 ;(function () {
     //cd .. && npm install mime vue bootstrap-vue
     console.log('========================= [UIBUILDER POSTINSTALL] =========================')
@@ -35,6 +36,6 @@
         console.log(stdout)
         console.log('Post-install completed\n===========================================================================\n')
     })
-})()
+}())
 
 //EOF

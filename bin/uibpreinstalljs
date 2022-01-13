@@ -8,14 +8,10 @@ if ( process.env.UIBDEBUG === 'true' ) debug = true
 
 //cd .. && npm install mime vue bootstrap-vue
 console.log('======================================= [UIBUILDER PREINSTALL] =======================================')
-console.log('Please ignore warnings about missing peer dependencies for jquery, vue, bootstrap-vue')
-console.log('*** WARNING: npm is incapable of safely installing packages from within pre-/post-install scripts. ***')
-console.log('             So vue and bootstrap-vue are no longer installed by uibuilder.')
-console.log('             You must install them yourself using the command:')
-console.log('                 npm install vue@"2.*" bootstrap-vue@"2.*"')
+console.log('Please ignore warnings about missing peer dependencies for jquery')
 console.log('==================================================================================================\n\n')
 
-
+/**  */
 function oldprocess() {
     const fs = require('fs'), path = require('path'), child_process = require('child_process')
     //const { exec } = require('child_process')

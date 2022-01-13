@@ -177,6 +177,14 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
 
+* Peer installation of VueJS and bootstrap-vue yet again removed since these now need to be in the `uibRoot` folder which
+  we don't necessarily know at preinstall time.
+
+  We will be looking at another alternative method. Now that template switching is even more powerful and so is 
+  package management, it is likely that we will build something into the template installation process.
+
+  Until then, please install th `vue` and `bootstrap-vue` packages via the uibuilder library manager if you need them.
+
 * Minimum Node.js version supported is now v12.20. Minimum browser version remains the same and must be one that supports ES6.
 
 ### New
