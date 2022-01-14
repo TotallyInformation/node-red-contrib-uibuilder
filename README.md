@@ -101,11 +101,16 @@ There is a lot more information available in the [WIKI](https://github.com/Total
 
 To install the current live version, please use Node-RED's Palette Manager.
 
-**NOTE**: As of v3.1.3, npm cannot safely install the VueJS and bootstrap-vue default dependencies. If you want to use the provided VueJS templates, you must install these yourself. Either use uibuilder's library manager or manually install from the command line:
+**NOTE**: As of v3.1.3, npm cannot safely install the VueJS and bootstrap-vue default dependencies. If you want to use the provided VueJS templates, you must install these yourself. Either use uibuilder's library manager or manually install from the command line.
 
+#### Command line method
+First create a Directory for node_modules:
 ```bash
-#cd <userDir>
-npm install vue@"2.*" bootstrap-vue@"2.*"
+mkdir -p $HOME/<uibRoot>/node_modules
+```
+Then you can install them yourself using the command:
+```bash
+npm install --prefix $HOME/<uibRoot> vue@"2.*" bootstrap-vue@"2.*"
 ```
 
 To install a specific uibuilder development or test branch from GitHub, use `npm install TotallyInformation/node-red-contrib-uibuilder#<BRANCH-NAME>` from the command line on the server, having first changed to the `userDir` folder (normally `~/.node-red`). If you just want the `main` branch which contains the latest development build, you can do `npm install TotallyInformation/node-red-contrib-uibuilder`
