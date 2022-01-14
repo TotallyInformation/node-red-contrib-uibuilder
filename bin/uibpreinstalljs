@@ -9,7 +9,19 @@ if ( process.env.UIBDEBUG === 'true' ) debug = true
 //cd .. && npm install mime vue bootstrap-vue
 console.log('======================================= [UIBUILDER PREINSTALL] =======================================')
 console.log('Please ignore warnings about missing peer dependencies for jquery')
-console.log('==================================================================================================\n\n')
+console.log('*** NOTE: For installing front-end packages. ***')
+console.log('	It\'s recomended that you install front-end packages within')
+console.log('	the uibuilder\'s node Properties inside node-red\'s editor')
+console.log('	')
+console.log('	However if you know your uibuilder\'s uibRoot directory')
+console.log('	normaly located @ <userDir>/uibuilder')
+console.log('	')
+console.log('	First create a Directory for node_modules:')
+console.log('	/full-path-to/<userDir>/<uibRoot>/node_modules')
+console.log('	')
+console.log('	Then you can install them yourself. Example installing vue and bootstrap-vue:')
+console.log('	npm install --prefix /full-path-to/<userDir>/<uibRoot> vue@"2.*" bootstrap-vue@"2.*"')
+console.log('======================================================================================================\n\n')
 
 /**  */
 function oldprocess() {
