@@ -19,6 +19,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * FIXES NEEDED:
   * [ ] Error in security.js [Issue](https://discourse.nodered.org/t/uibuilder-vnext-v5-updates/56013/4?u=totallyinformation). Extra error log already added, consider using a different name for `<uibRoot>/.config/security.js` to save future issues for people.
   * [ ] Instance details page - ioNamespace shows as `undefined`
+  * [ ] socket.js: IP addr not correct when using a proxy. [meeki007](https://discourse.nodered.org/t/help-finding-where-ip-msg-object-is-created-in-your-code/56815).
   
 * General
   * [ ] Check for methods/functions/variables that can be deprecated.
@@ -93,6 +94,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * [ ] Check for new versions of installed packages when entering the library manager
   * [ ] Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
   * [ ] When a template changes, run `npm install` - optional
+  * [ ] Custom locations for delivery folder (normally `src/` or `dist/`) and for api's folder (normally `api/`)
 
 * FE Changes
   * [ ] How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
@@ -148,6 +150,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * uibSender Node
     * Allow multi-instance sending - send to multiple uibuilder nodes.
     * Include schema checks - filter on available schema's from uib compatible components
+    * Allow sending to a cache node rather than just a uibuilder node.
 
   * Other Nodes
     * add alternate `uibDashboard` node that uses web components and data-driven composition.
@@ -211,6 +214,14 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   Note that you can use this node without uibuilder if you want to.
 
+* **New Feature** - _Instance API's_. You can now define your own API's to support your front-end UI. These run as part of the Node-RED server and can be called
+  from your UI, or indeed from anywhere with access to the Node-RED server's user endpoints.
+
+  You can add any number of *.js files to a folder `<uibInstanceRoot>/api/`. Each file will be loaded into the uibuilder instance and tested to make sure that it
+  contains either a single function or an object containing functions who's property names match either an HTTP method name (get, put, etc) or the generic `use`.
+
+  Such functions are added to the instances router. See the Tech Docs for more information on how to use the instance API's.
+
 * Package Management. You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
   
   Note that _only_ packages installed into the `uibRoot` folder will be recognised.
@@ -242,7 +253,13 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * When copying and pasting a uibuilder node, the pasted node(s) will have their URL changed to blank to prevent nodes with duplicate url's being deployed.
 
-* When editing the configuration for a uibuilder node, if the URL is invalid or the server folder hasn't yet been created, you cannot access various parts of the panel.
+* Improvements to the "uibuilder details" page should make it easier to read. The data for ExpressJS Routes is much improved.
+
+* Editor panel
+
+  * Improvements to the Editor help panel. Should hopefully be clearer and includes all of the settings and custom msg properties. Now uses a tabbed interface.
+  * File editor now excludes `.git/**`, `.vscode/**`, `node_modules/**` and `_*`.
+  * When editing the configuration for a uibuilder node, if the URL is invalid or the server folder hasn't yet been created, you cannot access various parts of the panel.
 
 * `uibuilderfe.js` client library updated to allow for the use of an `originator` metadata property. This facilitates routing of messages back to an alternative node instead of the main uibuilder node.
 
@@ -256,9 +273,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   Note that at present, control messages from the front-end cannot be routed to a different originator node, they all go to the main uibuilder node. This will be reviewed in a future release. Let me know if you think that it is needed.
 
-* Improvements to the Editor help panel. Should hopefully be clearer and includes all of the settings and custom msg properties. Now uses a tabbed interface.
-
-* Improvements to the "uibuilder details" page should make it easier to read. The data for ExpressJS Routes is much improved.
 
 * Added documentation for Socket.IO middleware and error handling.
 

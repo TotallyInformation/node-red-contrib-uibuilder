@@ -27,11 +27,13 @@
 
 const path = require('path')
 const fs = require('fs-extra')
+const fg = require('fast-glob')
 const tilib = require('./tilib')
 const serveIndex = require('serve-index')
 const packageMgt = require('./package-mgt.js')
 const express = require('express')
 const {nanoid} = require('nanoid')
+const { type } = require('os')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
@@ -635,8 +637,9 @@ class UibWeb {
         this.instanceRouters[node.url].use(this.addMasterMiddleware(node) )
 
         // TODO (1c) Add API middleware option - see https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6
-        let instanceApiRouter = this.getInstanceApiRouter(node)
-        if (instanceApiRouter) this.instanceRouters[node.url].use( '/api', instanceApiRouter )
+        // let instanceApiRouter = this.getInstanceApiRouter(node)
+        // if (instanceApiRouter) this.instanceRouters[node.url].use( '/api', instanceApiRouter )
+        this.addInstanceApiRouter(node)
 
         // (2) THIS IS THE IMPORTANT ONE - customStatic - Add static route for instance local custom files (src or dist)
         this.instanceRouters[node.url].use( this.setupInstanceStatic(node) )
@@ -800,46 +803,65 @@ class UibWeb {
      * @param {uibNode} node 
      * @returns {object|undefined} Valid instance router or undefined
      */
-    getInstanceApiRouter(node) {
+    addInstanceApiRouter(node) {
         // Reference static vars
         const uib = this.uib
         //const RED = this.RED
         const log = this.log
 
-        // let instanceApiPath = path.join(uib.rootFolder, node.url, 'lib', 'api.js')
-        // console.log('>> instanceApiPath >>', instanceApiPath)
-        // //try { 
-        // const instanceApi = require(instanceApiPath)
-        // console.log('>> instanceApi >>', 
-        //     'route' in instanceApi,
-        //     'post' in instanceApi,
-        //     'head' in instanceApi,
-        //     'patch' in instanceApi,
-        //     'm-search' in instanceApi
-        // )
-        //     (instanceApi instanceof express.Router),
-        // Object.getPrototypeOf(instanceApi) == express.Router,
-        //     Object.getPrototypeOf(instanceApi),
-        //     type(instanceApi, true), 
-        //     instanceApi.constructor.name, 
-        //     instanceApi.constructor, 
-        //     typeof instanceApi, 
-        //     Object.prototype.toString.call(instanceApi)
-        // )
-            // if ( typeof uibMiddleware === 'function' ) {
-            //     //! TODO: Add some more checks in here (e.g. does the function have a next()?)
-            //     // @ts-ignore
-            //     this.instanceRouters[node.url].use( uibMiddleware )
-            //     log.trace(`[uibuilder:web:addMiddlewareFile:${node.url}] uibuilder Middleware file loaded.`)
-            //     this.routers.instances[node.url].push( {name: 'Master Middleware', path:`${this.uib.httpRoot}/${node.url}`, desc: 'Adds user custom handler from a file', type:'Handler', folder: uib.configFolder} )
-            // }    
-        // } catch (e) {
-        //     // Only trace as it is OK not to be able to load this
-        //     if ( e.message.startsWith('Cannot find module'))
-        //         log.trace(`[uibuilder:web:getInstanceApiRouter:${node.url}] instance api router file failed to load. Reason: ${e.message}`)
-        //     else
-        //         log.warn(`[uibuilder:web:getInstanceApiRouter:${node.url}] instance api router file failed to load. Reason: ${e.message}`)
-        // }
+        // Allow all .js files in api folder to be loaded, always returns an array - NB: Fast Glob requires fwd slashes even on Windows
+        const apiFiles = fg.sync(`${uib.rootFolder}/${node.url}/api/*.js`)
+        // console.log('>> apiFiles >>', `${uib.rootFolder}/${node.url}/api/*.js`, apiFiles)
+        apiFiles.forEach( instanceApiPath => {
+            // console.log('>> api file >>', fileName)
+
+            // Try to require the api module file
+            let instanceApi
+            try {
+                instanceApi = require(instanceApiPath)
+            } catch (e) {
+                log.error(`[uibuilder:webjs:addInstanceApiRouter] Could not require instance API file. API not added. '${node.url}', '${instanceApiPath}'. ${e.message}`)
+                return false
+            }
+
+            // if instanceApi is a function, simply .use it on /api
+            if ( instanceApi && typeof instanceApi === 'function' ) {
+                this.instanceRouters[node.url].use( '/api', instanceApi )
+                return
+            } 
+
+            // Make sure we can understand the contents
+            let keys
+            try {
+                keys = Object.keys(instanceApi)
+            } catch (e) {
+                log.error(`[uibuilder:webjs:addInstanceApiRouter] Could not understand API file properties - is it an object? It must be an object or a function, see the docs for details. '${node.url}', '${instanceApiPath}'. ${e.message}`)
+                return false
+            }
+
+            // allow `path` property - if present, use as api path
+            let apipath
+            if ( instanceApi.path ) apipath = instanceApi.path
+            else apipath = '/api/*'
+
+            // allow apiSetup function
+            if ( instanceApi.apiSetup && typeof instanceApi.apiSetup === 'function' ) {
+                instanceApi.apiSetup(node, uib)
+            }
+
+            // Each property in the imported object MUST match an ExpressJS method or `use` & must be a function
+            keys.forEach( fnName => {
+                if ( fnName === 'path' || fnName === 'apiSetup' ) return // ignore this
+
+                console.log( `>> Key for ${instanceApiPath} >> '${fnName}'`)
+
+                // TODO validate verb
+                if ( typeof instanceApi[fnName] === 'function' ) {
+                    this.instanceRouters[node.url][fnName]( apipath, instanceApi[fnName] )
+                }
+            })
+    
+        })
 
         return undefined
     } // ---- End of getInstanceApiRouter ---- //
