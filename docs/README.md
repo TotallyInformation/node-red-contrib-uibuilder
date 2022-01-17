@@ -30,6 +30,7 @@ WIKI, Code, documentation, and examples are all welcome contributions and I alwa
 * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
 * [How & why to use the sender node](sender-node.md)
 * [How to use the cache node](cache-node.md)
+* [How to define and use Instance API's](instance-apis.md)
 
 ## Developing UI's
 
