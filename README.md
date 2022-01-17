@@ -327,7 +327,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 
 - [Julian Knight](https://github.com/TotallyInformation) - the designer and main author.
 - [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
-- [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections and contributed code.
+- [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections, contributed code and design ideas.
 - [Ellie Lee](https://github.com/ellieejlee) - many thanks for the PR fixing duplicate msgs.
 - [Thomas Wagner](https://github.com/Thomseeen) - thanks for the steer and PR on using projects folder if active.
 - [Arlena Derksen](https://github.com/boisei0) - thanks for suggestions, bug checks and Issue #59/PR #60.
@@ -336,6 +336,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Stephen McLaughlin - Steve-Mcl](https://discourse.nodered.org/u/Steve-Mcl) - thanks for the fix for [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71) and for the enhancement idea [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102).
 - [Sergio Rius](https://github.com/SergioRius) - thanks for reporting [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) and providing [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122) as a fix.
 - [Thorsten von Eicken](https://github.com/tve) - thanks for providing [PR #131](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/131) to improve CORS handling for Socket.IO.
+- [meeki007](https://github.com/meeki007) - thanks for supplying various documentation improvements and code fixes.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 
