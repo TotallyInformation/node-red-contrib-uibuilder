@@ -202,7 +202,31 @@ function adminRouterV3(uib, log) {
                     // get list of all (sub)folders (follow symlinks as well)
                     const out = {'root':[]}
                     const root2 = uib.rootFolder.replace(/\\/g, '/')
-                    fg.stream([`${root2}/${params.url}/**`], { dot: true, onlyFiles: false, deep: 10, followSymbolicLinks: true, markDirectories: true })
+                    fg.stream(
+                        [
+                            // '**',
+                            // '!node_modules',
+                            // '!.git',
+                            // '!.vscode',
+                            // '!_*',
+                            // '!/**/_*/',
+                            `${root2}/${params.url}/**`,
+                            `!${root2}/${params.url}/node_modules`,
+                            `!${root2}/${params.url}/.git`,
+                            `!${root2}/${params.url}/.vscode`,
+                            `!${root2}/${params.url}/_*`,
+                            `!${root2}/${params.url}/**/[_]*`,
+
+                        ], 
+                        {
+                            // cwd: `${root2}/${params.url}/`,
+                            dot: true, 
+                            onlyFiles: false, 
+                            deep: 10, 
+                            followSymbolicLinks: true, 
+                            markDirectories: true,
+                        }
+                    )
                         .on('data', entry => {
                             entry = entry.replace(`${root2}/${params.url}/`, '')
                             let fldr
@@ -217,7 +241,10 @@ function adminRouterV3(uib, log) {
                                 let last = splitEntry.pop()
                                 fldr = splitEntry.join('/')
                                 if ( fldr === '' ) fldr = 'root'
-                                out[fldr].push(last)
+                                // Wrap in a try because we can't exclude xxx/_yyyy/som.thing and that seems to crash the push.
+                                try {
+                                    out[fldr].push(last)
+                                } catch (e){ /* Nothing needed here */ }
                             }
                         })
                         .on('end', () => {
