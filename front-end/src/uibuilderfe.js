@@ -333,9 +333,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         /** Function used to check whether Socket.IO is connected to the server, reconnect if not (recursive)
          * @param {number} delay Initial delay before checking (ms)
          * @param {number} factor Multiplication factor for subsequent checks (delay*factor)
+         * @param {number} [depth] Recursion depth
          */
-        self.checkConnect = function checkConnect(delay, factor) {
-            var depth = depth++ || 1 // eslint-disable-line no-use-before-define
+        self.checkConnect = function checkConnect(delay, factor, depth=1) {
+            //var depth = depth++ || 1 // eslint-disable-line no-use-before-define
 
             //self.uiDebug('debug', `uibuilderfe:checkConnect. Reconnect - Depth: ${depth}, Delay: ${delay}, Factor: ${factor}`)
             self.uiDebug('debug', 'uibuilderfe:checkConnect. Reconnect - Depth: ' + depth + ', Delay: ' + delay + ', Factor: ' + factor, self.ioNamespace, self.ioPath)
@@ -359,7 +360,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 self.timerid = null
 
                 // Create new timer for next time round with extended delay
-                self.checkConnect(delay * factor, factor)
+                self.checkConnect(delay * factor, factor, depth++)
             }, delay)
         } // --- End of checkConnect Fn--- //
 
@@ -501,7 +502,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
                         // TODO - might need to relax this for now?
                         // If security is on
-                        if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security' && receivedCtrlMsg === true ) ) {
+                        if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') && receivedCtrlMsg === true ) {
                             // Initialise client security
                             self.initSecurity()
                             // DO NOT RETURN ANYTHING ELSE UNTIL SERVER CONFIRMS VALID AUTHORISATION
