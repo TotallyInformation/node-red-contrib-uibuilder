@@ -325,7 +325,7 @@ class UibSec {
 
         // Has the client included msg._auth? If not, send back an unauth msg
         // TODO: Only send if msg was on std channel NOT on control channel
-        if (!msg._auth || msg._auth === undefined) {
+        if (!msg._auth) { //|| msg._auth === undefined) {
             node.warn('No msg._auth provided')
             _auth.info.error = 'Client did not provide a msg._auth'
 

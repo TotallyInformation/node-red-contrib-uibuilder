@@ -33,7 +33,7 @@ const serveIndex = require('serve-index')
 const packageMgt = require('./package-mgt.js')
 const express = require('express')
 const {nanoid} = require('nanoid')
-const { type } = require('os')
+//const { type } = require('os')
 
 // Filename for default web page
 const defaultPageName = 'index.html'

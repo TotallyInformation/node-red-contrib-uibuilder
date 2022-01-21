@@ -27,7 +27,7 @@
 const path = require('path')
 //const util = require('util')
 const fs = require('fs-extra')
-const tilib = require('./tilib')
+//const tilib = require('./tilib')
 const execa = require('execa')
 
 class UibPackages {

@@ -187,7 +187,7 @@ module.exports = {
                 log.trace(`[uibuilder:uiblib:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
             })
             
-            let myclone = await uib.degitEmitter.clone(fullname)
+            await uib.degitEmitter.clone(fullname)
 
             //console.log({myclone})
             let statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
