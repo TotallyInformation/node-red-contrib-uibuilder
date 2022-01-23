@@ -190,6 +190,10 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 
 ### Changed
 
+* Cookie handling has changed for the better. There are 3 cookies set by uibuilder: `uibuilder-namespace` (what SockeT.IO needs to communicate), `uibuilder-client-id` (see new features above), and `uibuilder-webRoot` (if you are using `httpNodeRoot` in settings.js). Each is set as a session cookie which means that if you close the window/tab showing your UI, the cookies are deleted. However, if you are being super-strict about EU and California law, you should inform your users that they exist. The cookies are limited to the exact path for the uibuilder instance they come from so there shouldn't be any cross-contamination. However, you should clear any old cookies when upgrading to uibuilder v5 from v4 or before.
+
+  Custom headers are also added by uibuilder. These are only accessible via XHR API calls, not by uibuilderfe itself. `x-powered-by` (set to `uibuilder`), `uibuilder-namespace`, and `uibuilder-node` (the node id of the uibuilder node). In addition, uibuilder sets `X-XSS-Protection` to `1;mode=block` and `X-Content-Type-Options` to `nosniff` for added security. You can, of course, override all of these using custom middleware.
+
 * uibuilder nodes now show the url in angle-brackets. If the url is not defined, `<no url>` shows. If the node has a name, this is shown before the url. e.g. `My UI <myui>`. If you want to have the url show on a different line to the name, add ` \n ` to the end of the name.
 
 * When adding a new uibuilder node, the url is now blank. This helps prevent accidentally creating two nodes with the same url which is confusing to recover from. As a blank url is not a valid configuration, the red triangle will show.
