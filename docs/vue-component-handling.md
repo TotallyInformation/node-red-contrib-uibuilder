@@ -8,6 +8,8 @@ and in those cases, the extra features will do nothing and won't get in the way.
 
 ## "Toast" Notifications
 
+>! From uibuilder v5, toasts are also available if Vue/bootstrap-vue are not in use. In that case, they present a simple full-screen overlay attached after the `body` element.
+
 This feature allows you to send a msg with standard properties that will result
 in a pop-up notification appearing in the front-end user interface.
 
@@ -37,8 +39,8 @@ This is the structure of the `msg` to send through the uibuilder node in Node-RE
             "title": "Notification Title", // Optional. String or HTML. Title is not bolded by default, add style or surround with h4 if needed.
             "content": "Optional. A string. Will appear second in the resulting pop-up. Can be HTML.",
             "append": false, // Optional. If TRUE, new notifications are added to the END of the list instead of the start.
-            "autoHideDelay": 500, // Optional. If set, must be the number of milliseconds to display the notification. Default is 500ms
-            "noAutoHide": true, // Optional. If set to true, the toast will not auto-hide.
+            "autoHideDelay": 5000, // Optional. If set, must be the number of milliseconds to display the notification. Default is 10s (10000ms)
+            "noAutoHide": true, // Optional. If set to true, the toast will not auto-hide. You could use the `autoHide` property instead.
 
             // Other Toasts options may also be included, see the bootstrap-vue and bootstrap documentation for details.
         }
