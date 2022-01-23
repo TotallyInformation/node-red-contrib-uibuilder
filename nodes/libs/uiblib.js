@@ -34,6 +34,7 @@
 const path = require('path')
 const fs = require('fs-extra')
 //const tilib = require('./tilib')
+const {nanoid} = require('nanoid')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 module.exports = {
@@ -239,6 +240,22 @@ module.exports = {
         }
 
     }, // ----- End of replaceTemplate() ----- //
+
+    /** Get the client id from req headers cookie string OR, create a new one and return that
+     * @param {*} req ExpressJS request object
+     * @returns {string} The clientID
+     */
+    getClientId: function getClientId(req) {
+        let clientId
+        if ( req.headers.cookie ) {
+            let matches = req.headers.cookie.match(/uibuilder-client-id=(?<id>.{21})/)
+            if ( !matches.groups.id ) clientId = nanoid()
+            else clientId = matches.groups.id
+        } else {
+            clientId = nanoid()
+        }
+        return clientId
+    }
   
 } // ---- End of module.exports ---- //
 
