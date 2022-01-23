@@ -6,25 +6,24 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...main)
-
-<!-- Nothing currently. -->
-
-**WARNING**: Though I've done some work on the security features, they are still not ready. Do please try them but **NOT IN PRODUCTION**.
-
-### TODO
+## To do/In-preogress
 
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
+  * [ ] Error in cache node - not clearing
   * [ ] Error in security.js [Issue](https://discourse.nodered.org/t/uibuilder-vnext-v5-updates/56013/4?u=totallyinformation). Extra error log already added, consider using a different name for `<uibRoot>/.config/security.js` to save future issues for people.
   * [ ] Instance details page - ioNamespace shows as `undefined`
-  * [ ] socket.js: IP addr not correct when using a proxy. [meeki007](https://discourse.nodered.org/t/help-finding-where-ip-msg-object-is-created-in-your-code/56815).
+  * [ ] CHECK: whether manual package installs to uibRoot are correctly creating the metadata in package.json.
+  * [ ] CHECK: If pasting flow with uibuilder - is template respected?
+  * [ ] https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=522282&prid=&subview=issues&impact=%5B%22High%22%2C%22Medium%22%2C%22Low%22%5D&page=1
   
+* Package Manager Class
+  * [ ] Output npm log to NR log debug level (or maybe trace?)
+
 * General
-  * [ ] Check for methods/functions/variables that can be deprecated.
-  * [ ] Add a new template and example to demonstrate the sender node.
-  * [ ] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
+  * [-] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
+    * [ ] Wrap with option (web.js)
   
 * uib-sender
   * [ ] Track undeployed uib nodes via RED.events
@@ -37,12 +36,19 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * FE
   * [ ] Add `onMsg` convenience handler (maybe allow wildcard topics?)
   * [ ] Add watch for instance fe file changes - send reload msg
+  * [ ] Add a visual warning/alert if uib cannot connect over websockets. Use toast.
+  * [x] Add non-Vue toast 
+    * [x] Add auto-clear
+    * [ ] Change bg to use a variable - expose var to allow dynamic changes
+    * [ ] Add variants (like bootstrap-vue) - define as classes.
+    * [ ] ? Add other color vars: dark-bg, fg, dark-fg
 
 * Templates
+  * [ ] Add a new template and example to demonstrate the sender node.
 
 * Examples
   * sender node
-
+  * cache node
 
 * Security
   * SIMPLIFY FOR THIS RELEASE!
@@ -87,84 +93,19 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
       * self.initSecurity
       * self.setStore
 
-### Future Versions To Do
+Note that future To-do and future direction is [documented in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/To-Do).
 
-* Editor (uibuilder.html)
-  * [ ] Extend folder/file management
-  * [ ] Check for new versions of installed packages when entering the library manager
-  * [ ] Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
-  * [ ] When a template changes, run `npm install` - optional
-  * [ ] Custom locations for delivery folder (normally `src/` or `dist/`) and for api's folder (normally `api/`)
+----
 
-* FE Changes
-  * [ ] How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
-  * [ ] Add mapper to map component id to originator & extend `eventSend` accordingly
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...main)
 
-* [ ] Allow client id to be set externally.
+<!-- Nothing currently. -->
 
-* *Maybe*
-  * uibuilder.js
-    * ~~Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained~~ See other nodes below. Probably best kept as a separate node.
-    * add in/out msg counts to status? Maybe as an option.
-    * Add option to turn on/off connect/disconnect control msgs
-    * On change of URL - signal other nodes? As no map currently being maintained - probably not possible
-    * Maybe switch from static to rendering to allow dynamic content:
-  
-      ```js
-      var bodyParser = require('body-parser');
-      var express = require('express');
-      var app = express();
-
-      app.use(express.static(__dirname + '/'));
-      app.use(bodyParser.urlencoded({
-        extend: true
-      }));
-      app.engine('html', require('ejs').renderFile);
-      app.set('view engine', 'ejs');
-      app.set('views', __dirname);
-
-      app.get('/', function(req, res) {
-        res.render("index");
-      });
-      ```
-
-      Maybe set as optional with flag? Allow choice of render engine? Only render .ejs files instead of .html?
-    * Create some [HTML Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements) to extend uib for modern browsers. Maybe replace Vue toast component for example?
-    * Trial use of [web-workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) since majority support goes back to 2014.
-
-  * Templates
-    * [ ] Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
-    * [ ] Add example flows - using the pluggable libraries feature of Node-RED v2.1
-    * [ ] Maybe move dependencies and other template meta-data into the template package.json file.
-      
-      Would require making sure that package.json always exists (e.g. after template change). May need to be able to reload package.json file as well.
-      
-      Couldn't use the dependencies prop because we dont want to install libraries in the instance root but rather the uibRoot. 
-      
-      Will need matching code in the Editor panel & a suitable API.
-
-
-  * Editor (uibuilder.html)
-    * Move folder management to a popup dialog (to save vertical space)
-  
-  * uibSender Node
-    * Allow multi-instance sending - send to multiple uibuilder nodes.
-    * Include schema checks - filter on available schema's from uib compatible components
-    * Allow sending to a cache node rather than just a uibuilder node.
-
-  * Other Nodes
-    * add alternate `uibDashboard` node that uses web components and data-driven composition.
-  
-  * Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
-    * [ ] Update docs
-    * [ ] Add processing to nodes to be able to mark them as experimental.
-  
-  * Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's.
-  
-  * Add client IP address to trace messages on connection.
-  
+**WARNING**: Though I've done some work on the security features, they are still not ready. Do please try them but **NOT IN PRODUCTION**.
 
 ### BREAKING
+
+* **Clear client cookies** - You may get some odd results if you don't because cookie handling as been significantly reworked.
 
 * **Installation of packages** for use in your front-end code has been **moved** from the `userDir` to `uibRoot`.
 
@@ -180,15 +121,15 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
 
-* Peer installation of VueJS and bootstrap-vue yet again removed since these now need to be in the `uibRoot` folder which
+* **Peer installation of VueJS and bootstrap-vue yet again removed**. Since these now need to be in the `uibRoot` folder which
   we don't necessarily know at preinstall time.
 
   We will be looking at another alternative method. Now that template switching is even more powerful and so is 
   package management, it is likely that we will build something into the template installation process.
 
-  Until then, please install th `vue` and `bootstrap-vue` packages via the uibuilder library manager if you need them.
+  Until then, please install the `vue` and `bootstrap-vue` packages via the uibuilder library manager if you need them.
 
-* Minimum Node.js version supported is now v12.20. Minimum browser version remains the same and must be one that supports ES6.
+* **Minimum Node.js version supported is now v12.20**. Minimum browser version remains the same and must be one that supports ES6.
 
 ### New
 
@@ -214,7 +155,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   Note that you can use this node without uibuilder if you want to.
 
-* **New Feature** - _Instance API's_. You can now define your own API's to support your front-end UI. These run as part of the Node-RED server and can be called
+* **New Feature** _Instance API's_. You can now define your own API's to support your front-end UI. These run as part of the Node-RED server and can be called
   from your UI, or indeed from anywhere with access to the Node-RED server's user endpoints.
 
   You can add any number of *.js files to a folder `<uibInstanceRoot>/api/`. Each file will be loaded into the uibuilder instance and tested to make sure that it
@@ -222,28 +163,30 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
   Such functions are added to the instances router. See the Tech Docs for more information on how to use the instance API's.
 
-* Package Management. You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
+* **Extended Feature** _Package Management_ - You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
   
   Note that _only_ packages installed into the `uibRoot` folder will be recognised.
 
   Also note that if you manually install a package rather than using the library manager, you will need to restart Node-RED.
   
-* New layout for the Editor panel.
+* **New layout for the Editor panel**
 
   This is a much cleaner and clearer layout. It also blocks access to parts of the config that don't work until a newly added node has been Deployed for the first time so that its server folder has been created.
 
   There are also some additional error and warning messages to make things clearer.
   
-* Updated node status display. Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
+* **Extended Feature** _Updated node status display_ - Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
 
-* Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
-* Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
-* Allow socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
+* **New Feature** - Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
+* **Extended Feature** - Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
+* **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
 * If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
 
 * uibuilderfe library
-  * Received cookies are now available as an object variable key'd on cookie name. `uibuilder.get('cookies')`.
-  * The unique client id set by uibuilder is available as a string variable. `uibuilder.get('clientId')`. This changes if the page is reloaded but not if the client loses then regains a Socket.IO connection (where the socket id will change). It is passed to the client as a cookie. The client sends it to the server as a custom header but only on Socket.IO polling requests since custom headers are not available on websocket connections). It also adds it to the `socket.handshake.auth.clientId` property which should always be available to the server event handlers. _Caution should be used if making use of this feature since it is likely to change in the future_. See the updated `sioMiddleware.js` for an example of use. The client id is also included in the uibuilder control msgs output to port #2 on a client connect and disconnect.
+  * **New Feature** - Received cookies are now available as an object variable key'd on cookie name. `uibuilder.get('cookies')`.
+  * **New Feature** - A new unique client id set by uibuilder is available as a string variable. `uibuilder.get('clientId')`. This changes if the page is reloaded but not if the client loses then regains a Socket.IO connection (where the socket id will change). It is passed to the client as a cookie. The client sends it to the server as a custom header but only on Socket.IO polling requests since custom headers are not available on websocket connections). It also adds it to the `socket.handshake.auth.clientId` property which should always be available to the server event handlers. _Caution should be used if making use of this feature since it is likely to change in the future_. See the updated `sioMiddleware.js` for an example of use. The client id is also included in the uibuilder control msgs output to port #2 on a client connect and disconnect. The ID is created using the `nanoid` package.
+  * **Extended Feature** - Toast notifications (notifications that overlay the UI) are now available even without VueJS and bootstrap-vue. They can be styled using the `uib-toaster`, `uib-toast`, and `uib-toast-head` classes when not using bootstrap-vue. Toast notifications can be set either by a standard msg from Node-RED or by calling `uibuilder.setToast(msg)` (where the msg matches the same format used from Node-RED). Internal uibuilder visual notifications will also use this mechanism. Notifications auto-clear after 10s (used to 5) unless otherwise controlled via the options.
+  * **New Feature** - A hidden style sheet has been introduced. This is created by uibuilderfe and is attached to the _start_ of the `head` section so that it can easily be overridden by including your own style sheet in the head. In addition to the toast classes, `:root { --main-bg-color: white; }` is defined. This is used by the document body background and by the toast message by default. This makes it easy to change the background colour. Use the Elements tab and Styles panel in your browser developer tools (F12) to review the styles and CSS variables.
 
 ### Changed
 
@@ -355,6 +298,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * Even more massive restructuring of `uibuilder.js`. 
 
+  * A lot of the core logic now moved into dedicated modules, each containing a singleton class.
   * Removing the need for the `node` object. This meant the use of some arrow functions to be able to retain the correct context in event handlers and callbacks.
   * Destructuring the big exported function into a series of smaller functions. Makes the code a lot clearer and easier to follow. Also helped identify a few bits of logic that were not quite sane or not needed at all (the result of evolutionary growth of the code).
   * Using named functions throughout should make future debugging a little easier.
@@ -409,6 +353,7 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * If deleting a node that hasn't been deployed, a delete folder warning is given - add check to see if the folder actually exists before giving the error.
 * If using Node-RED Docker with recommended install, uib couldn't find the Socket.IO client folder to serve. [Issue](https://discourse.nodered.org/t/uibuilder-the-next-step-3rd-party-comms-with-a-uibuilder-front-end/51684/19?u=totallyinformation). Extra check and cleared warnings added.
 * Spurious instance folder rename when it wasn't needed.
+* Bad cookie handling!
 
 
 
