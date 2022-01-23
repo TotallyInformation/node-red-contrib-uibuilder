@@ -29,10 +29,11 @@ const path = require('path')
 const fs = require('fs-extra')
 const fg = require('fast-glob')
 const tilib = require('./tilib')
+const uiblib = require('./uiblib')
 const serveIndex = require('serve-index')
 const packageMgt = require('./package-mgt.js')
 const express = require('express')
-const {nanoid} = require('nanoid')
+//const { isBuffer } = require('util')
 //const { type } = require('os')
 
 // Filename for default web page
@@ -705,10 +706,18 @@ class UibWeb {
         // Track routes
         this.routers.instances[node.url].push( {name: 'Master Middleware', path:`${this.uib.httpRoot}/${node.url}`, desc: 'Adds custom headers', type:'Handler'} )
 
+        let mypath
+        if ( uib.nodeRoot === '' || uib.nodeRoot === '/' )  mypath = `/${node.url}/`
+        else mypath = `${uib.nodeRoot}${node.url}/`
+
+        const qSec = uib.customServer.type === 'http' ? false : true
+
         // Return a middleware handler
         return function masterMiddleware (/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
+            // Check for client id from client - if it exists, reuse it otherwise create one
+            const clientId = uiblib.getClientId(req)
+            
             //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
-            const qSec = uib.customServer.type === 'http' ? false : true
             res
                 .header({
                     // Help reduce risk of XSS and other attacks
@@ -720,24 +729,26 @@ class UibWeb {
                     'x-powered-by': 'uibuilder',
                     // Tell the client what Socket.IO namespace to use,
                     'uibuilder-namespace': node.url, // only client accessible from xhr or web worker
+                    'uibuilder-node': node.id,
+                    //'uibuilder-path': mypath,
                 }) 
                 .cookie('uibuilder-namespace', node.url, {
-                    path: node.url, 
+                    path: mypath, 
                     sameSite: true,
                     expires: 0, // session cookie only
                     secure: qSec,
                 })
                 // Give the client a fixed session id
-                .cookie('uibuilder-client-id', nanoid(), {
-                    path: node.url, 
+                .cookie('uibuilder-client-id', clientId, {
+                    path: mypath, 
                     sameSite: true,
                     expires: 0, // session cookie only
                     secure: qSec,
                 })
                 // Tell clients what httpNodeRoot to use (affects Socket.io path)
                 .cookie('uibuilder-webRoot', uib.nodeRoot.replace(/\//g,''), {
-                    //path: node.url, 
-                    //sameSite: true,
+                    path: mypath, 
+                    sameSite: true,
                     expires: 0, // session cookie only
                     secure: qSec,
                 })
@@ -852,8 +863,6 @@ class UibWeb {
             // Each property in the imported object MUST match an ExpressJS method or `use` & must be a function
             keys.forEach( fnName => {
                 if ( fnName === 'path' || fnName === 'apiSetup' ) return // ignore this
-
-                console.log( `>> Key for ${instanceApiPath} >> '${fnName}'`)
 
                 // TODO validate verb
                 if ( typeof instanceApi[fnName] === 'function' ) {
