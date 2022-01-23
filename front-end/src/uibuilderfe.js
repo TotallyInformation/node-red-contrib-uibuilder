@@ -1,3 +1,4 @@
+/* eslint-disable array-bracket-newline */
 /* eslint-disable sonarjs/cognitive-complexity, sonarjs/no-duplicate-string */
 /*
   Copyright (c) 2017-2022 Julian Knight (Totally Information)
@@ -132,6 +133,27 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.debug = self.isUnminified === true ? true : false // do not change directly - use .debug() method
         /** Default originator node id */
         self.originator = ''
+
+        /** Debugging function
+         * param {string} type One of log|error|warn|info|dir, etc
+         * param {...*} msg Msg(s) to send to console
+         * WARNING: ...args is ES6, it doesn't work on IE11
+         * since 2019-02-01 Apply any number of args
+         * since 2022-01-21 Allow single arg, default log type to 'log'
+         */
+        self.uiDebug = function () {
+            if (!self.debug) return
+
+            let type
+            if ( arguments.length < 2 ) type = 'log'
+            else type = arguments[0]
+
+            /** since v2.0.0-dev3 2019-05-27 changed from ...apply(undefined,...) to ...apply(console,...) Fixes Issue #49 */
+            //console[type](...args)
+            console[type].apply(console, [].slice.call(arguments, 1))
+
+        } // --- End of debug function --- //
+
         self.cookies = {}
         document.cookie.split(';').forEach( function(c){
             let splitC = c.split('=')
@@ -139,24 +161,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         })
         /** Client ID set by uibuilder */
         self.clientId = self.cookies['uibuilder-client-id']
-
-        /** Debugging function
-         * param {string} type One of log|error|warn|info|dir, etc
-         * param {...*} msg Msg(s) to send to console
-         * WARNING: ...args is ES6, it doesn't work on IE11
-         * since 2019-02-01 Apply any number of args
-         */
-        //self.uiDebug = function (type, ...args) {
-        self.uiDebug = function () {
-            if (!self.debug) return
-
-            var type = arguments[0]
-
-            /** since v2.0.0-dev3 2019-05-27 changed from ...apply(undefined,...) to ...apply(console,...) Fixes Issue #49 */
-            //console[type](...args)
-            console[type].apply(console, [].slice.call(arguments, 1))
-
-        } // --- End of debug function --- //
 
         /** Returns the self object if debugging otherwise just the current version
          * @returns {object|string} Returns self or version
@@ -191,9 +195,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 // Get the last part of the url path, this MUST match the namespace in uibuilder
                 ioNamespace = u.pop()
 
-                self.uiDebug('log', 'uibuilderfe: IO Namespace - Found via url path: ' + ioNamespace)
+                self.uiDebug('log', '[uibuilderfe:setIOnamespace] Found via url path: ' + ioNamespace)
             } else {
-                self.uiDebug('log', 'uibuilderfe: IO Namespace - Found via cookie: ' + ioNamespace)
+                self.uiDebug('log', '[uibuilderfe:setIOnamespace] Found via cookie: ' + ioNamespace)
             }
 
             // Namespace HAS to start with a /
@@ -968,6 +972,35 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             self.events = []
         } // ---- End of clearEventListeners() ---- //
 
+        /** Add a new CSS Class to the internal style sheet and create the sheet if needed
+         * @param {string[]|string} styleDefs String or string array definition(s) of the new style(s) to add
+         */
+        self.addCSSClass = function addCSSClass(styleDefs) {
+
+            if ( styleDefs === '' || (typeof styleDefs === 'undefined') ) return
+            if ( !Array.isArray(styleDefs) ) styleDefs = [styleDefs]
+
+            self.uiDebug('log', '[uibuilderfe:addCSSClass] style: ' + styleDefs)
+
+            let uibStyle = document.getElementById('uibstyle')
+            if ( uibStyle === null ) {
+                self.uiDebug('log', '[uibuilderfe:addCSSClass] Adding uibstyle stylesheet')
+                uibStyle = document.createElement('style')
+                uibStyle.title = uibStyle.id = 'uibstyle'
+                //Add to start of head so that user added styles will take preference
+                document.head.insertAdjacentElement('afterbegin', uibStyle)
+            }
+
+            // @ts-ignore
+            const uibStyles = /** @type {CSSStyleSheet} */ (uibStyle.sheet)
+
+            for (let styleDef of styleDefs) {
+                self.uiDebug('log', `[uibuilderfe:addCSSClass] Adding style ${styleDef}`)
+                uibStyles.insertRule(styleDef)
+            }
+            
+        } // ---- End of addCSSClass ---- //
+
         //#region ---------- Our own event handling system ---------- //
 
         self.events = {}  // placeholder for event listener callbacks by property name
@@ -1018,49 +1051,72 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if ( style === '' || (typeof style === 'undefined') ) return
 
             self.uiDebug('log', 'uibuilderfe: newStyle - style: ' + style)
-            var newStyle = document.createElement('style')
+            const uibStyles = document.createElement('style')
             // @ts-ignore
-            newStyle.textContent = style
-            document.getElementsByTagName('head')[0].appendChild(newStyle)
+            uibStyles.textContent = style
+            //document.getElementsByTagName('head')[0].appendChild(uibStyles)
+            document.head.appendChild(uibStyles)
         }
 
         //#endregion ---------- End of Handle incoming code via received msg ---------- //
 
-        //#region ---------- VueJS Specific functions ---------- //
-        /** Simple function to create a bootstrap-vue toast notification from an incoming msg
-         * Requires a reference to a VueJS instance and a msg object from Node-RED.
-         * Place inside the uibuilder.on('msg', ...) function inside your Vue app's
-         * mounted section.
-         * @see https://bootstrap-vue.org/docs/components/toast
-         * @param {object} msg A msg from Node-RED with appropriate formatting
+        //#region ---------- Vanilla HTML display functions ---------- //
+
+        /** Simple function to create a overlay toast notification from an incoming msg
+         * Called if bootstrap-vue is not available
+         * Place inside the uibuilder.on('msg', ...) function 
+         * param {object} msg A msg from Node-RED with appropriate formatting
+         * @param {string} content toast content (may be HMTL string)
+         * @param {object} toastOptions Various options that control the display 
          */
-        self.showToast = function showToast(msg) {                
+        self.showToastVanilla = function showToastVanilla(content, toastOptions) {
 
-            // We need self.vueApp to be set
-            if ( ! self.vueApp ) {
-                console.warn('[uibuilder:toast] Vue app object not available, cannot create a toast')
-                return
+            // Create a toaster container element if not already created - or get a ref to it
+            let toaster = document.getElementById('toaster')
+            if ( toaster === null ) {
+                toaster = document.createElement('div')
+                toaster.id = 'toaster'
+                toaster.title = 'Click to clear'
+                toaster.setAttribute('class', 'uib-toaster')
+                //toaster.style.cssText = 'position:absolute;top:0;left:0;min-width:100vw;min-height:100vh;background:RGBA(0,0,0,.8);display:flex;flex-direction:column;justify-content:center;align-items:center;'
+                toaster.onclick = function(){
+                    toaster.remove()
+                }
+                document.body.insertAdjacentElement('afterbegin', toaster)
             }
 
-            /** Make sure that we have Vue loaded with the $bvToast function
-             *  That lets us dynamically create a toast object directly in the virtual DOM */
-            if ( ! self.vueApp.$bvToast ) {
-                console.warn('[uibuilder:toast] bootstrap-vue toast component not available, cannot create a toast')
-                return
+            // Create a toast element
+            const toast = document.createElement('div')
+            toast.setAttribute('class', 'uib-toast')
+            //toast.style.cssText = 'border:1px solid silver;min-width:50vw;max-width:50vw;max-height:50vh;overflow-y:auto;background-color:white;'
+            // const styles = { border: '1px solid silver', minWidth: '50vw', maxWidth: '50vw', maxHeight: '50vh', backgroundColor: 'white', overflowY: 'auto', paddingLeft: '1em', paddingRight: '1em', paddingBottom: '1em', paddingTop: '1em', marginBottom: '.5em', marginTop: '.5em', }
+            // Object.assign(toast.style, styles)
+            if ( toastOptions.title ) {
+                content = `<p class="uib-toast-head">${toastOptions.title}</p><p>${content}</p>`
             }
+            toast.innerHTML = content
+            toaster.insertAdjacentElement(toastOptions.appendToast === true ? 'beforeend' : 'afterbegin', toast)
+            // Auto-hide
+            if ( toastOptions.autohide === true ) {
+                setInterval( () => {
+                    toast.remove()
+                    if ( toaster.childElementCount < 1 ) toaster.remove()
+                }, toastOptions.autoHideDelay)
+            }
+        }
+
+        //#endregion ---------- Vanilla HTML display functions ---------- //
+
+        self.showToast = function showToast(msg) {
             /** Make sure that we have a msg._uib object */
             if ( ! msg._uib || msg._uib === null || msg._uib.constructor.name !== 'Object' ) {
                 console.warn('[uibuilder:toast] Incoming msg requires msg._uib object, cannot create a toast')
                 return
             }
 
-            // $createElement is a Vue function that lets you create Vue virtual DOM
-            // elements. We use it here to let us render HTML in the toast.
-            const h = self.vueApp.$createElement
-
             /** Toast options
              * @type {object} toastOptions Optional metadata for the toast.
-             * @param {string|VNode|VNode[]} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
+             * @param {string} [toastOptions.title] Optional title, may be HTML (vNode or array of vNodes)
              * @param {boolean} [toastOptions.appendToast] Optional. Whether to show new toasts below previous ones still on-screen (true). Or to replace previous (false - default)
              * @param {number} [toastOptions.autoHideDelay] Optional. Ms until toast is auto-hidden.
              */
@@ -1068,13 +1124,80 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if ( msg._uib.options ) toastOptions = Object.assign({}, msg._uib.options) // Need a copy here otherwise debug output breaks
 
             /** Main content of the toast
-             * @type {string|VNode|VNode[]}
+             * @type {string} //|VNode|VNode[]}
              */
             let content = ''
             
             // Main body content
             if ( msg.payload ) content += msg.payload
             if ( toastOptions.content ) content += toastOptions.content
+            
+            // Do we want new toasts to be shown at the bottom of the list (true) instead of the top (false - default)?
+            if ( toastOptions.append ) toastOptions.appendToast = toastOptions.append
+
+            // Toasts auto-hide by default after 10s
+            if ( toastOptions.noAutohide ) toastOptions.autohide = !toastOptions.noAutohide
+            if ( ! Object.prototype.hasOwnProperty.call(toastOptions, 'autohide') ) toastOptions.autohide = true
+            // If set, number of ms until toast is auto-hidden
+            if ( toastOptions.autoHideDelay ) {
+                toastOptions.autohide = true
+                toastOptions.delay = toastOptions.autoHideDelay
+            }
+            if ( toastOptions.autohide === true && !toastOptions.autoHideDelay ) toastOptions.autoHideDelay = 10000 // default = 10s
+
+            // Allow for variants
+            if ( !toastOptions.variant ) toastOptions.variant = 'info'
+
+            console.log( '>> toast options >>', toastOptions)
+
+            // Toast wont show anyway if content is empty, may as well warn user
+            if ( content === '' ) {
+                console.warn('[uibuilder:toast] Toast content is blank. Not shown.')
+                return
+            }
+
+            // Either Vue/bootstrap-vue or vanilla HTML
+            if ( self.vueApp && self.vueApp.$bvToast ) {
+                self.showToastVue(content, toastOptions)
+                self.uiDebug('[uibuilder:showToast] Bootstrap-Vue available, using to create a toast')
+            } else {
+                self.showToastVanilla(content, toastOptions)
+                self.uiDebug('[uibuilder:showToast] Bootstrap-Vue available, using to create a toast')
+            }
+        }
+
+        //#region ---------- VueJS Specific functions ---------- //
+
+        /** Simple function to create a bootstrap-vue toast notification from an incoming msg
+         * Requires a reference to a VueJS instance and a msg object from Node-RED.
+         * Place inside the uibuilder.on('msg', ...) function inside your Vue app's
+         * mounted section.
+         * @see https://bootstrap-vue.org/docs/components/toast
+         * param {object} msg A msg from Node-RED with appropriate formatting
+         * @param {string} content toast content (may be HMTL string)
+         * @param {object} toastOptions Various options that control the display 
+         */
+        self.showToastVue = function showToastVue(content, toastOptions) {                
+
+            // We need self.vueApp to be set
+            if ( ! self.vueApp ) {
+                console.warn('[uibuilder:toast] Vue app object not available, cannot create a Vue toast, falling back to vanilla.')
+                self.showToastVanilla(content, toastOptions)
+                return
+            }
+
+            /** Make sure that we have Vue loaded with the $bvToast function
+             *  That lets us dynamically create a toast object directly in the virtual DOM */
+            if ( ! self.vueApp.$bvToast ) {
+                console.warn('[uibuilder:toast] bootstrap-vue toast component not available, cannot create a Bootstrap-Vue toast, falling back to vanilla.')
+                self.showToastVanilla(content, toastOptions)
+                return
+            }
+
+            // $createElement is a Vue function that lets you create Vue virtual DOM
+            // elements. We use it here to let us render HTML in the toast.
+            const h = self.vueApp.$createElement
+
             // Assume that the input content is or could be HTML. create a virtual DOM element
             const vNodesContent = h(
                 'p', {
@@ -1093,27 +1216,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 }
             )
 
-            // Do we want new toasts to be shown at the bottom of the list (true) instead of the top (false - default)?
-            if ( toastOptions.append ) toastOptions.appendToast = toastOptions.append
-
-            // If set, number of ms until toast is auto-hidden
-            if ( toastOptions.autoHideDelay ) {
-                toastOptions.autohide = true
-                toastOptions.delay = toastOptions.autoHideDelay
-            }
-
-            // Toast wont show anyway if content is empty, may as well warn user
-            if ( content === '' ) {
-                console.warn('[uibuilder:toast] Toast content is blank. Not shown.')
-                return
-            }
-
             // Dynamically insert the toast to the virtual DOM
             // Will show at top-right of the HTML element that is the app root
             // unless you include a <b-toaster> element
             self.vueApp.$bvToast.toast(vNodesContent, toastOptions)
 
-        } // --- End of makeToast() --- //
+        } // --- End of showToastVue() --- //
 
         /** Simple function to show a bootstrap-vue alert (globalAlerts) */
         self.showAlert = function showAlert() {}
@@ -1165,10 +1273,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @param {object} msg Message object from Node-RED
          */
         self.onChange('msg', function onMsgRcvd(msg) {
-
-            // Only if Vue is in use and a reference to the Vue master app is available ...
-            if ( !self.vueApp ) return
-            
             // Do nothing if the msg doesn't have a _uib property
             if ( !msg._uib ) return
 
@@ -1181,8 +1285,28 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             // Do nothing if the msg doesn't have a component ref
             if ( !msg._uib.componentRef ) return
 
-            let vueApp = self.vueApp
             let componentRef = msg._uib.componentRef
+
+            // Deal with toast requests (notifications)
+            if (componentRef === 'globalNotification') {
+                self.uiDebug('[uibuilder:internalOnChange] globalNotification triggered - showToast() ')
+                // This dynamically inserts a toast into the DOM
+                self.showToast(msg)
+                return
+            }
+            
+            // Deal with alert requests
+            if (componentRef === 'globalAlert') {
+                // This dynamically inserts an alert into the DOM
+                self.showAlert(msg)
+                return
+            }
+
+            //#region ---- Only VueJS specific features from here ---- //
+
+            // Only if Vue is in use and a reference to the Vue master app is available ...
+            if ( !self.vueApp ) return
+            let vueApp = self.vueApp
 
             // 1) Return ctrl msg containing component instance details
             if ( msg._uib.requestDetails ) {
@@ -1193,21 +1317,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 }
                 return
             }
-
-            // 2) Deal with toast requests (notifications)
-            if (componentRef === 'globalNotification') {
-                // This dynamically inserts a toast into the DOM
-                self.showToast(msg)
-                return
-            }
             
-            // 3) Deal with alert requests (using b-modal message boxes)
-            if (componentRef === 'globalAlert') {
-                // This dynamically inserts an alert into the DOM
-                self.showAlert(msg)
-                return
-            }
-
             // 4) Does the component ref exist? Remember to include a ref="xxxx" on each component instance in your html - note: this doesn't always work, depends on component
             if ( componentRef in vueApp.$refs ) {
 
@@ -1256,7 +1366,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 self.send(m, self.ioChannels.control)
             }
 
+            //#endregion ---- Only VueJS specific features from here ---- //
+
         }) // ---- End of internal onChange(msg) handler ---- //
+
         //#endregion ---------- VueJS Specific functions ---------- //
 
         //#endregion ===== end of internal functions ===== //
@@ -1561,6 +1674,19 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         //#endregion ++++++++++ End of setup ++++++++++ //
 
         //#region ++++++++++ @ runtime: start of execution ++++++++++ //
+
+        const bodyStyles = window.getComputedStyle( document.documentElement) //document.querySelector('body') )
+        console.log('>> body color >>', bodyStyles.getPropertyValue('background-color'))
+
+
+        // Add our internal stylesheet
+        self.addCSSClass([
+            ':root { --main-bg-color: white; }',
+            'body { background-color:var(--main-bg-color); }',
+            '.uib-toaster {position:absolute; top:0; left:0; min-width:100vw; min-height:100vh; background:RGBA(0,0,0,.8); display:flex; flex-direction:column; justify-content:center; align-items:center;  }',
+            '.uib-toast {border:1px solid silver; background-color:var(--main-bg-color); min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto; padding-left:1em; padding-right:1em; padding-bottom:1em; padding-top:1em; margin-bottom:.5em; margin-top:.5em;}',
+            '.uib-toast-head {font-weight:bold}',
+        ])
 
         /** @ runtime: Are all browser resources loaded?
          * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
