@@ -25,9 +25,19 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * [-] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
     * [ ] Wrap with option (web.js)
   
+  * [ ] Serve uibuilderfe on `../uibuilder/` path as well as `./` for greater consistency
+  * [ ] Template processing
+    * [ ] Serve instance package.json `dependencies` on `../uibuilder/vendor/` path
+      Complexity: this would end up with packages installed locally - would the uib central packages be recognised? Maybe use `uibuilder.dependencies` instead?
+      * [ ] Change '../../templates/template_dependencies' in api v3
+      * [ ] Update built-in templates to use package.json
+    * [ ] uibuilder version checker - https://github.com/npm/node-semver
+    * [ ] watcher
+  
 * uib-sender
   * [ ] Track undeployed uib nodes via RED.events
   * [ ] Store links by node.id not url since url may change
+  * [ ] Bind ctrl-s to save button
 
 * uibuilder Panel
   * [ ] Show template (instance root) folder
@@ -37,14 +47,21 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * [ ] Add `onMsg` convenience handler (maybe allow wildcard topics?)
   * [ ] Add watch for instance fe file changes - send reload msg
   * [ ] Add a visual warning/alert if uib cannot connect over websockets. Use toast.
+  * [ ] Document root CSS vars
   * [x] Add non-Vue toast 
     * [x] Add auto-clear
-    * [ ] Change bg to use a variable - expose var to allow dynamic changes
-    * [ ] Add variants (like bootstrap-vue) - define as classes.
-    * [ ] ? Add other color vars: dark-bg, fg, dark-fg
+    * [x] Change bg to use a variable - expose var to allow dynamic changes
+    * [x] Add variants (like bootstrap-vue) - define as classes.
+    * [x] ? Add other color vars: dark-bg, fg, dark-fg
 
 * Templates
   * [ ] Add a new template and example to demonstrate the sender node.
+  * [ ] Template - Docsify CMS
+  * [ ] Add uibuilder property to package.json - define
+    * [ ] uibuilder version checker - https://github.com/npm/node-semver
+    * [ ] required fe packages
+    * [ ] watch - dict of watches: `{'path':'scriptname'}` or `{['path1',...]:'scriptname'}`
+    * [ ] add `dependencies` to `../uibuilder/vendor/` path
 
 * Examples
   * sender node
@@ -181,6 +198,8 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * **Extended Feature** - Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
 * **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
 * If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
+
+* **New Feature** - Built-in default stylesheet (`front-end/src/uib-styles.css`). This is served to `./uib-styles.css` and is included in the template `index.css` files as `@import url("./uib-styles.css");` so that you don't have to load it manually. Note the use of `body.uib` class. Add `class="uib"` to your HTML body tag to get a simple formatting that adjusts to whether your browser is asking for a dark or a light theme.
 
 * uibuilderfe library
   * **New Feature** - Received cookies are now available as an object variable key'd on cookie name. `uibuilder.get('cookies')`.
