@@ -1,6 +1,2 @@
-/*  Colours for Syntax Highlighted pre's */
-.syntax-highlight {color:white;background-color:black;padding:5px 10px;}
-.syntax-highlight > .key {color:#ffbf35}
-.syntax-highlight > .string {color:#5dff39;}
-.syntax-highlight > .number {color:#70aeff;}
-.syntax-highlight > .boolean {color:#b993ff;}
+/* Load the defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/src/uib-styles.css` */
+@import url("./uib-styles.css");
