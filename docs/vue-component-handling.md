@@ -1,20 +1,36 @@
-# Special VueJS component handling in uibuilderfe
+---
+title: Special VueJS component handling in uibuilderfe
+description: >
+   For a while, VueJS along with bootstrap-vue were the default frameworks supplied with uibuilder.
+   As such, a few extra handlers were build into the uibuilderfe library. This page describes those features.
+created: 2020-12-11 16:38:00
+lastUpdated: 2022-01-30 21:40:57
+---
 
-Since VueJS is the default framework that is included with the install of uibuilder,
-some special features are starting to be built into the uibuilderfe library.
+Note that these do not impact the use of uibuilder with other (or no) frameworks and in those cases, the extra features will do nothing and won't get in the way.
 
-Note that these do not impact the use of uibuilder with other (or no) frameworks
-and in those cases, the extra features will do nothing and won't get in the way.
+- ["Toast" Notifications](#toast-notifications)
+  - [Message schema](#message-schema)
+  - [Example](#example)
+- [Discover a Vue components capabilities](#discover-a-vue-components-capabilities)
+  - [Message schema](#message-schema-1)
+- [Control Vue components direct from a Node-RED message](#control-vue-components-direct-from-a-node-red-message)
+  - [`v-bind="objAllProps"`](#v-bindobjallprops)
+    - [Example](#example-1)
+      - [HTML](#html)
+      - [JavaScript](#javascript)
+      - [Msg](#msg)
+  - [Dynamically change components](#dynamically-change-components)
+  - [Alternative no-code solution](#alternative-no-code-solution)
+  - [Message schema](#message-schema-2)
 
 ## "Toast" Notifications
 
->! From uibuilder v5, toasts are also available if Vue/bootstrap-vue are not in use. In that case, they present a simple full-screen overlay attached after the `body` element.
+!> From uibuilder v5, toasts are also available if Vue and bootstrap-vue are not in use. See the [pre-defined messages](./pre-defined-msgs.md) page for details.
 
-This feature allows you to send a msg with standard properties that will result
-in a pop-up notification appearing in the front-end user interface.
+This feature allows you to send a msg with standard properties that will result in a pop-up notification appearing in the front-end user interface.
 
-No front-end code is required for this to work. However, you can also access the feature
-from your front-end code should you wish to do so.
+No front-end code is required for this to work. However, you can also access the feature from your front-end code should you wish to do so.
 
 This feature requires **`bootstrap-vue`** to be loaded.
 
@@ -30,22 +46,42 @@ This is the structure of the `msg` to send through the uibuilder node in Node-RE
 
 ```json
 {
-    "topic": "Optional. Can be anything",
-    "_uib": { // Required
-        // This is a pseudo ref, you don't have to actually put it in your HTML
-        "componentRef": "globalNotification",
-        // Optional.
-        "options": {
-            "title": "Notification Title", // Optional. String or HTML. Title is not bolded by default, add style or surround with h4 if needed.
-            "content": "Optional. A string. Will appear second in the resulting pop-up. Can be HTML.",
-            "append": false, // Optional. If TRUE, new notifications are added to the END of the list instead of the start.
-            "autoHideDelay": 5000, // Optional. If set, must be the number of milliseconds to display the notification. Default is 10s (10000ms)
-            "noAutoHide": true, // Optional. If set to true, the toast will not auto-hide. You could use the `autoHide` property instead.
+    "_uib": {  // Required. VueJS Component data    
+        "componentRef": "globalNotification", // Required.
+        // options object is optional. Options are passed directly to the bootstra-vue `<toast>` component.
+        // These are examples only.
+        "options": { // all of the entries are optional.
+            // Creates a title section above the content that is highlighted
+            "title": "This is the <i>title</i>",
+            // Main message content (appears after any payload). May contain HTML.
+            "content": "This is content <span style=\"color:red;\">in addition to</span> the payload",
+            // Default false. If true stops auto-Hide. 
+            // Click on the close button (BV) to remove the toast.
+            // For non-BV, click on box to clear it or on background to clear all.
+            "noAutoHide": true,
+            // 5000 by default, how long the message stays on-screen. Hover over message to pause countdown.
+            "autoHideDelay": 1500,
+            // Optional colour variant. error, warning, info, primary, secondary, success
+            "variant": "info",
+            // Default display is semi-transparent (BV only), set this to true to make the message solid colour.
+            "solid": true,
 
-            // Other Toasts options may also be included, see the bootstrap-vue and bootstrap documentation for details.
-        }
+            // BV Only. New message appears above old by default (false), change to true to add to the bottom instead.
+            "append": true,
+            // BV Only. If present, the whole message is turned into a link. Click takes the client to the URL.
+            "href": "https://bbc.co.uk",
+            // BV Only. Controls where on the page the toast appears. Several standard locations are available.
+            // default is top-right. Custom positions can be set by including a <toaster> element in your HTML.
+            "toaster": "b-toaster-top-center",
+            // For BV, more options are available. @see https://bootstrap-vue.org/docs/components/toast
+        },
     },
-    "payload": "Optional. A string. Will appear first in the resulting pop-up. Can be HTML."
+
+    // Optional. Will be added to the notification message (content). May be HTML.
+    "payload": "<any>",
+
+    // Optional. ID of client (from Socket.IO) - msg would only be sent to this client.
+    "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",
 }
 ```
 

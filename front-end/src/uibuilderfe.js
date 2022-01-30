@@ -1076,9 +1076,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if ( toaster === null ) {
                 toaster = document.createElement('div')
                 toaster.id = 'toaster'
-                toaster.title = 'Click to clear'
+                toaster.title = 'Click to clear all notifcations'
                 toaster.setAttribute('class', 'uib-toaster')
-                //toaster.style.cssText = 'position:absolute;top:0;left:0;min-width:100vw;min-height:100vh;background:RGBA(0,0,0,.8);display:flex;flex-direction:column;justify-content:center;align-items:center;'
                 toaster.onclick = function(){
                     toaster.remove()
                 }
@@ -1087,14 +1086,17 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             // Create a toast element
             const toast = document.createElement('div')
-            toast.setAttribute('class', 'uib-toast')
-            //toast.style.cssText = 'border:1px solid silver;min-width:50vw;max-width:50vw;max-height:50vh;overflow-y:auto;background-color:white;'
-            // const styles = { border: '1px solid silver', minWidth: '50vw', maxWidth: '50vw', maxHeight: '50vh', backgroundColor: 'white', overflowY: 'auto', paddingLeft: '1em', paddingRight: '1em', paddingBottom: '1em', paddingTop: '1em', marginBottom: '.5em', marginTop: '.5em', }
-            // Object.assign(toast.style, styles)
+            toast.title = 'Click to clear this notifcation'
+            toast.setAttribute('class', `uib-toast ${toastOptions.variant}`)
             if ( toastOptions.title ) {
                 content = `<p class="uib-toast-head">${toastOptions.title}</p><p>${content}</p>`
             }
             toast.innerHTML = content
+            toast.onclick = function(evt){
+                evt.stopPropagation()
+                toast.remove()
+                if ( toaster.childElementCount < 1 ) toaster.remove()
+            }
             toaster.insertAdjacentElement(toastOptions.appendToast === true ? 'beforeend' : 'afterbegin', toast)
             // Auto-hide
             if ( toastOptions.autohide === true ) {
@@ -1146,7 +1148,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if ( toastOptions.autohide === true && !toastOptions.autoHideDelay ) toastOptions.autoHideDelay = 10000 // default = 10s
 
             // Allow for variants
-            if ( !toastOptions.variant ) toastOptions.variant = 'info'
+            if ( !toastOptions.variant || !['', 'primary', 'secondary', 'success',  'info', 'warn', 'error'].includes(toastOptions.variant)) toastOptions.variant = ''
 
             console.log( '>> toast options >>', toastOptions)
 
@@ -1158,11 +1160,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             // Either Vue/bootstrap-vue or vanilla HTML
             if ( self.vueApp && self.vueApp.$bvToast ) {
+                self.uiDebug('[uibuilder:showToast] Bootstrap-Vue available, using to create a toast')
                 self.showToastVue(content, toastOptions)
-                self.uiDebug('[uibuilder:showToast] Bootstrap-Vue available, using to create a toast')
             } else {
+                self.uiDebug('[uibuilder:showToast] Bootstrap-Vue NOT available, creating a vanilla HTML toast')
                 self.showToastVanilla(content, toastOptions)
-                self.uiDebug('[uibuilder:showToast] Bootstrap-Vue available, using to create a toast')
             }
         }
 
@@ -1675,26 +1677,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ @ runtime: start of execution ++++++++++ //
 
-        const bodyStyles = window.getComputedStyle( document.documentElement) //document.querySelector('body') )
-        console.log('>> body color >>', bodyStyles.getPropertyValue('background-color'))
-
-
-        // Add our internal stylesheet
-        self.addCSSClass([
-            ':root { --main-bg-color: white; }',
-            'body { background-color:var(--main-bg-color); }',
-            '.uib-toaster {position:absolute; top:0; left:0; min-width:100vw; min-height:100vh; background:RGBA(0,0,0,.8); display:flex; flex-direction:column; justify-content:center; align-items:center;  }',
-            '.uib-toast {border:1px solid silver; background-color:var(--main-bg-color); min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto; padding-left:1em; padding-right:1em; padding-bottom:1em; padding-top:1em; margin-bottom:.5em; margin-top:.5em;}',
-            '.uib-toast-head {font-weight:bold}',
-        ])
-
-        /** @ runtime: Are all browser resources loaded?
+        /** At runtime: Are all browser resources loaded?
          * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
          * load: All resources are loaded
          */
-        /* document.addEventListener('DOMContentLoaded', function(){
-           self.send({'uibuilderCtrl':'DOMContentLoaded'},self.ioChannels.control)
-          }) */
         window.addEventListener('load', function(){
             self.uiDebug('debug', 'uibuilderfe:load: All resources loaded')
             self.loaded = true

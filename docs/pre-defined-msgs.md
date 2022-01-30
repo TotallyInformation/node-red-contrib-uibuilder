@@ -3,7 +3,7 @@ title: Pre-defined uibuilder messages
 description: >
    Documents the different types of uibuilder messages between a Node-RED uibuilder node and a uibuilder front-end.
 created: 2020-09-24 18:14:00
-lastUpdated: 2022-01-02 20:13:15
+lastUpdated: 2022-01-30 21:20:29
 ---
 
 - [Standard msg properties used by uibuilder](#standard-msg-properties-used-by-uibuilder)
@@ -15,7 +15,7 @@ lastUpdated: 2022-01-02 20:13:15
 - [From Node-RED uibuilder node to the front-end (browser)](#from-node-red-uibuilder-node-to-the-front-end-browser)
   - [Client (re)Connection (Control Message)](#client-reconnection-control-message)
   - [Errors](#errors)
-  - [VueJS UI Notification [Toast] (Control Message)](#vuejs-ui-notification-toast-control-message)
+  - [UI Notification [Toast] (Control Message)](#ui-notification-toast-control-message)
     - [Simple version](#simple-version)
     - [More complex example](#more-complex-example)
   - [Browser client reload page](#browser-client-reload-page)
@@ -25,6 +25,7 @@ lastUpdated: 2022-01-02 20:13:15
   - [DOM Event (standard message from eventSend function)](#dom-event-standard-message-from-eventsend-function)
 - [From either Node-RED or the client](#from-either-node-red-or-the-client)
   - [Clear Cache (Control Message)](#clear-cache-control-message)
+
 
 ## Standard msg properties used by uibuilder
 
@@ -57,13 +58,18 @@ Text must be valid CSS and will be dynamically added to the client page DOM.
 
 ### msg._uib `{Object}` (uibuilder v3+)
 
-Used by the [showToast](showtoast-vuejs-only-shows-a-popup-message-in-the-ui) and [showComponentDetails](showcomponentdetails-vuejs-only-return-a-control-msg-contining-details-of-a-vue-component) functions and their equivalent messages from Node-RED.
+Used by the [Browser client reload page](#browser-client-reload-page), [showToast](#vuejs-ui-notification-toast-control-message) and [showComponentDetails](./vue-component-handling?id=discover-a-vue-components-capabilities) functions and their equivalent messages from Node-RED.
+
+Should be used in the future for any other standardised interactions with uibuilderfe.
 
 ### msg.uibDomEvent `{Object}` (uibuilder v3.2+)
 
 Used by the [eventSend](front-end-library?id=eventsend-helper-fn-to-send-event-data) function.
 
+
 ## From Node-RED uibuilder node to the front-end (browser)
+
+In addition to these messages, see also the [VueJS component handling page](./vue-component-handling).
 
 ### Client (re)Connection (Control Message)
 
@@ -100,10 +106,14 @@ If an error is raised in `<uibRoot>/.config/sioUse.js` for example, this kind of
 
 See the [Developer documentation for `socket.js`](socket-js.md) for more information.
 
-### VueJS UI Notification [Toast] (Control Message)
 
-Sending this message (uibuilder v3+) to the client will pop-over a dynamic
-message to the user in the browser. No code is required at the front-end.
+### UI Notification [Toast] (Control Message)
+
+Sending this message (uibuilder v3+) to the client will pop-over a dynamic message to the user in the browser. No code is required at the front-end.
+
+Prior to v5, this required VueJS and bootstrap-vue. If these are available, then bootstrap-vue's toast component will be used.
+
+From v5, this works without VueJS as well. Just make sure that you include the default uibuilder stylesheet by putting `@import url("./uib-styles.css");` at the start of your `index.css` file. The toast will appear overlaid on all other content. Clicking on a notification will clear that one. Clicking on the background will clear all notifications.
 
 #### Simple version
 
@@ -120,6 +130,8 @@ This would send a notification to all connected clients. May be injected to a ui
 
 #### More complex example
 
+Note: `BV` means `bootstrap-vue`
+
 ```json
 {
     "_uib": {  // Required. VueJS Component data    
@@ -131,28 +143,33 @@ This would send a notification to all connected clients. May be injected to a ui
             "title": "This is the <i>title</i>",
             // Main message content (appears after any payload). May contain HTML.
             "content": "This is content <span style=\"color:red;\">in addition to</span> the payload",
-            // New message appears above old by default (false), change to true to add to the bottom instead.
-            "append": true,
+            // Default false. If true stops auto-Hide. 
+            // Click on the close button (BV) to remove the toast.
+            // For non-BV, click on box to clear it or on background to clear all.
+            "noAutoHide": true,
             // 5000 by default, how long the message stays on-screen. Hover over message to pause countdown.
             "autoHideDelay": 1500,
-            // Bootstrap-vue colour variant. Primary, Secondary, Error, Warning, Info
+            // Optional colour variant. error, warning, info, primary, secondary, success
             "variant": "info",
-            // Default display is semi-transparent, set this to true to make the message solid colour.
+            // Default display is semi-transparent (BV only), set this to true to make the message solid colour.
             "solid": true,
-            // If present, the whole message is turned into a link. Click takes the client to the URL.
+
+            // BV Only. New message appears above old by default (false), change to true to add to the bottom instead.
+            "append": true,
+            // BV Only. If present, the whole message is turned into a link. Click takes the client to the URL.
             "href": "https://bbc.co.uk",
-            // Controls where on the page the toast appears. Several standard locations are available.
+            // BV Only. Controls where on the page the toast appears. Several standard locations are available.
             // default is top-right. Custom positions can be set by including a <toaster> element in your HTML.
             "toaster": "b-toaster-top-center",
-            // Default false. If true stops auto-Hide. Click on the close button to remove the toast.
-            "noAutoHide": true
-            // More options are available. @see https://bootstrap-vue.org/docs/components/toast
+            // For BV, more options are available. @see https://bootstrap-vue.org/docs/components/toast
         },
     },
 
-    "payload": "<any>",      // Optional. Will be added to the notification message (content). May be HTML.       
+    // Optional. Will be added to the notification message (content). May be HTML.
+    "payload": "<any>",
 
-    "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",    // Optional. ID of client (from Socket.IO) - msg would only be sent to this client.
+    // Optional. ID of client (from Socket.IO) - msg would only be sent to this client.
+    "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",
 }
 ```
 

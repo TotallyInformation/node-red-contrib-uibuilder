@@ -2,63 +2,107 @@
  * see https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
- * @updated: 2022-01-30
+ * @created: 2022-01-30
  *
  * NOTES:
  * - Watch out for the order of loading of style sheets!
  * - uibuilder attempts to auto-load this sheet BUT you may need to do it manually to get the right order.
+ * - Include in your index.css file as `@import url("./uib-styles.css");`
  */
 
  /* :root applies to everything */
 :root {
     --uib-color-light: 201, 209, 217;
-    --uib-color-dark: 36, 36, 36;
-    --uib-fg: var(--uib-color-dark);
-    --uib-bg: var(--uib-color-light);
+    --uib-color-dark:  36, 36, 36;
+    --uib-color-info:  23, 162, 184; /* Cyan  */
+    --uib-color-warn:  255, 193, 7;  /* Amber */
+    --uib-color-error: 220, 53, 69;  /* Red   */
+    --uib-color-primary:   0, 123, 255;   /* Blue  */
+    --uib-color-secondary: 108, 117, 125; /* Grey  */
+    --uib-color-success:   40, 167, 69;   /* Green */
+
+    --uib-color-fg: var(--uib-color-dark);
+    --uib-color-bg: var(--uib-color-light);
+}
+
+.test{
+    color:rgb(0, 123, 255);
+    color:rgb(108, 117, 125);
+    color:rgb(40, 167, 69);
 }
 
 /* If the browser reports it, we can adjust for light/dark theme preferences */
 @media (prefers-color-scheme: light) {
     :root {
-        --uib-fg: var(--uib-color-dark);
-        --uib-bg: var(--uib-color-light);
+        --uib-color-fg: var(--uib-color-dark);
+        --uib-color-bg: var(--uib-color-light);
     }
 }
 @media (prefers-color-scheme: dark) {
     :root {
-        --uib-fg: var(--uib-color-light);
-        --uib-bg: var(--uib-color-dark);
+        --uib-color-fg: var(--uib-color-light);
+        --uib-color-bg: var(--uib-color-dark);
     }
 }
 
+/* Apply `class="uib" to body tag if desired */
 body.uib {
     margin: 1rem;
     font-family: sans-serif;
-    background-color: rgb(var(--uib-bg));
-    color: rgb(var(--uib-fg));
+    background-color: rgb(var(--uib-color-bg));
+    color: rgb(var(--uib-color-fg));
 }
+
+/*#region -- Toasts - Readable pop-over notifications -- */
 
 .uib-toaster {
     /* all: unset;  */
     position:absolute; 
     top:0; left:0; min-width:100vw; min-height:100vh; 
-    background: rgb(var(--uib-bg), .3);
+    background: rgb(var(--uib-color-bg), .3);
     backdrop-filter: grayscale(60%) blur(10px); 
     display:flex; flex-direction:column; justify-content:center; align-items:center;
     z-index:998;
 }
 .uib-toast {
     /* all: unset;  */
-    border:2px solid rgb(var(--uib-fg)); 
-    background-color: rgb(var(--uib-bg), 1);
-    color: rgb(var(--uib-fg));
+    border:2px solid rgb(var(--uib-color-fg)); 
+    background-color: rgb(var(--uib-color-bg), 1);
+    color: rgb(var(--uib-color-fg));
     box-shadow: 10px 10px 15px rgb(var(--uib-color-dark));
     /* filter: drop-shadow(16px 16px 10px RGB(var(--uib-color-dark))); */
     min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto; 
     padding:1em; margin-bottom:.5em; margin-top:.5em;
     z-index:999;
 }
+.uib-toast.info {
+    background-color: rgb(var(--uib-color-info), 1);
+    color: rgb(var(--uib-color-dark));
+}
+.uib-toast.warn {
+    background-color: rgb(var(--uib-color-warn), 1);
+    color: rgb(var(--uib-color-dark));
+}
+.uib-toast.error {
+    background-color: rgb(var(--uib-color-error), 1);
+    color: rgb(var(--uib-color-light));
+}
+.uib-toast.primary {
+    background-color: rgb(var(--uib-color-primary), 1);
+    color: rgb(var(--uib-color-light));
+}
+.uib-toast.secondary {
+    background-color: rgb(var(--uib-color-secondary), 1);
+    color: rgb(var(--uib-color-light));
+}
+.uib-toast.success {
+    background-color: rgb(var(--uib-color-success), 1);
+    color: rgb(var(--uib-color-dark));
+}
+
 .uib-toast-head {font-weight:bold}
+
+/*#endregion -- Toasts - Readable pop-over notifications -- */
 
 /*  Colours for Syntax Highlighted pre's */
 .syntax-highlight {color:white;background-color:black;padding:5px 10px;font-family: monospace;white-space: pre;}
