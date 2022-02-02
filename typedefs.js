@@ -291,13 +291,10 @@
  *  Default 'packageList.json'
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  * 
- *  Default `../templates`
- * @property {string} masterStaticDistFolder Location of master dist folder (containing built core front-end code).
+ *  Default `../template`
+ * @property {string} masterStaticFeFolder Location of master FE folder (containing built core front-end code).
  * 
- *  Default `../front-end/dist`
- * @property {string} masterStaticSrcFolder Location of master src folder (containing src core front-end code).
- * 
- *  Default `../front-end/src`
+ *  Default `../front-end`
  * @property {string|null} rootFolder Folder on the server FS to hold common & custom files & folders for all instances of uibuilder.
  * 
  *  Cannot be set until we have the RED object and know if projects are being used. 

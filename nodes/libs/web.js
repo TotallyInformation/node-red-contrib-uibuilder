@@ -473,7 +473,7 @@ class UibWeb {
      
     }
 
-    /** Set which folder to use for the central, static, front-end resources
+    /** Set folder to use for the central, static, front-end resources
      *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
      * @protected */
     _setMasterStaticFolder() {
@@ -488,17 +488,11 @@ class UibWeb {
         const log = this.log
         
         try {
-            /** Will we use "compiled" version of module front-end code? */
-            fs.accessSync( path.join(uib.masterStaticDistFolder, defaultPageName), fs.constants.R_OK )
-            log.trace('[uibuilder:web:setMasterStaticFolder] Using master production build folder')
-            // If the ./../front-end/dist/index.html exists use the dist folder...
-            this.masterStatic = uib.masterStaticDistFolder
+            fs.accessSync( path.join(uib.masterStaticFeFolder, defaultPageName), fs.constants.R_OK )
+            log.trace(`[uibuilder:web:setMasterStaticFolder] Using master production build folder. ${uib.masterStaticFeFolder}`)
+            this.masterStatic = uib.masterStaticFeFolder
         } catch (e) {
-            // ... otherwise, use dev resources at ./../front-end/src/
-            //TODO: Check if path.join(__dirname, 'src') actually exists & is accessible - else fail completely
-            log.trace('[uibuilder:web:setMasterStaticFolder] Using master folder: src')
-            log.trace(`    Reason for not using master dist folder: ${e.message}` )
-            this.masterStatic = uib.masterStaticSrcFolder
+            throw new Error(`setMasterStaticFolder: Cannot serve master production build folder. ${uib.masterStaticFeFolder}`)
         }
     } // --- End of setMasterStaticFolder() --- //
 
@@ -646,7 +640,8 @@ class UibWeb {
         this.instanceRouters[node.url].use( this.setupInstanceStatic(node) )
 
         // (3) Master Static - Add static route for uibuilder's built-in front-end code
-        this.instanceRouters[node.url].use( express.static( this.masterStatic, uib.staticOpts ) )
+        if ( this.masterStatic !== undefined )
+            this.instanceRouters[node.url].use( express.static( this.masterStatic, uib.staticOpts ) )
 
         /** (4) If enabled, allow for directory listing of the custom instance folder */
         if ( node.showfolder === true ) {

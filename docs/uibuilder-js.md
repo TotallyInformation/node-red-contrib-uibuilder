@@ -138,16 +138,12 @@ Note that if a client disconnects then reconnects it will have a different `_soc
 * `masterPackageListFilename` {String}: Default `masterPackageList.json`. 
   File name of the master package list used to check for commonly installed FE libraries.
 
-* `masterStaticDistFolder` {String}: Default: `__dirname/../front-end/dist`. 
+* `masterStaticFeFolder` {String}: Default: `__dirname/../front-end`. 
   Location of the distribution (built) versions of the core master static files.
-  This folder is only used if it contains an `index.html` file otherwise, the `src` folder is used.
 
-  Currently unused.
+  Contains `uibuilderfe.js`, `uibuilderfe.min.js`, `uib-styles.css` and an `images` folder containing some standard uibuilder images and `ico` files. Also a fallback `index.html` which will be served if your custom index.html page cannot be found.
 
-* `masterStaticSrcFolder` {String}: Default: `__dirname/../front-end/src`. 
-  Location of the source version of the core master static files
-  (e.g. the master library `uibuilderfe.js`).
-  Only used if the `dist` folder is not used.
+  Anything in the `masterStaticFeFolder` folder will be served on the `./` URL path.
 
 * `masterTemplateFolder` {String}: Default: `__dirname/../templates`. 
   Location of master template folders (containing default front-end code).

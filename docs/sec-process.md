@@ -1,3 +1,60 @@
+
+Changes
+
+* Editor
+  * Flag to allow flow-based security (ignores loading custom security middleware, passes all id/authentication/authorisation in ctrl msgs). Have override flag in settings.js
+
+---
+
+## Core Info
+
+uib control msgs allowed.
+WARNING: a client JWT is NOT an assumption of client validity.
+
+### Data
+
+* client ip
+* client id
+* user id
+* user pw
+
+## Flow-based process
+
+### On client connect
+
+1. only control msgs allowed until authenticated
+2. initial control msg to client
+3. client sends logon info
+4. logon info exposed in control msg (port 2) to flow
+5. Flow has to return an authentication msg to uibuilder with success/fail details.
+6. If fail, return to client in control msg
+7. If success, uib creates JWT & sends to client in control msg
+8. Client must include at least the ids used by the flow and the token in all future msgs or they are rejected with a msg to the client and a control msg on port 2.
+9. The flow is responsible for tracking ongoing use of the session and deciding when to terminate the session.
+10. At end of session or client disconnect (if desired) the flow must send a logoff control msg to uib - uib will fwd to the client if it can.
+
+NOTE: The flow is responsible for checking client validity. This process potentially allows a client to disconnect but retain the JWT. That JWT could be passed by the client on reconnection..
+
+---
+
+## Custom Security Middleware Process
+
+### On Load
+
+* Use uib node's jwt secret, token expiry and session expiry
+* 
+
+
+### On Client connect
+
+1. If sec on, tell client on initial connect so client can process. Only allow control msgs until *authenticated*.
+2. On receipt of logon control msg, 
+
+
+
+
+-----------------------------------------------------------
+
 # Security sequences
 
 On an initial client web connection, uibuilder adds 2 cookies & 1 custom header to the response. This is done in the `masterMiddleware` function of `web.js`.

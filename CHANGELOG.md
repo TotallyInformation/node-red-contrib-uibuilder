@@ -70,9 +70,8 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 * Security
   * SIMPLIFY FOR THIS RELEASE!
 
-    * 
-
   * Add roles/tags options to JWT? Or at least to the user session record
+
   * Editor
     * Make JWT IP address check optional `jwtCheckIp`
     * Add "copy local security.js template" button to security section to reset the local overrides.
@@ -330,6 +329,8 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * Removed `inputHandler` function from `uiblib.js`. Code folded into the `inputMsgHandler` function in `uibuilder.js` which has been destructured so is small enough to have it as a single function.
 
 * Package management rewritten. Should be faster and uses async/Promise functions.
+
+* Removed `uib.masterStaticDistFolder` and `uib.masterStaticSrcFolder`, no longer required. Only a distribution folder now gets served. Source folder will never be served. This is defined in `uib.masterStaticFeFolder`. If the folder cannot be accessed, uibuilder throws an error.
 
 * Editor changes
 

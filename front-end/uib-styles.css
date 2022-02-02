@@ -25,12 +25,6 @@
     --uib-color-bg: var(--uib-color-light);
 }
 
-.test{
-    color:rgb(0, 123, 255);
-    color:rgb(108, 117, 125);
-    color:rgb(40, 167, 69);
-}
-
 /* If the browser reports it, we can adjust for light/dark theme preferences */
 @media (prefers-color-scheme: light) {
     :root {

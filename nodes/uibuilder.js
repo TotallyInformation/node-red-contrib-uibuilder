@@ -58,8 +58,6 @@ try {
 const path          = require('path')
 
 // 3rd-party
-// TODO remove Express - only being used for typedefs
-const Express       = require('express') // eslint-disable-line no-unused-vars
 const fs            = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 
 //#endregion ----- Require packages ----- //
@@ -75,8 +73,7 @@ const uib = {
     masterPackageListFilename: 'masterPackageList.json',
     packageListFilename: 'packageList.json',
     masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
-    masterStaticDistFolder: path.join( __dirname, '..', 'front-end', 'dist' ),
-    masterStaticSrcFolder: path.join( __dirname, '..', 'front-end', 'src' ),
+    masterStaticFeFolder: path.join( __dirname, '..', 'front-end' ),
     rootFolder: null,
     configFolder: null,
     configFolderName: '.config',
@@ -584,7 +581,7 @@ function nodeInstance(config) {
 
     // TODO Move to web
     // Shows an instance details debug page
-    RED.httpAdmin.get(`/uibuilder/instance/${this.url}`, (/** @type {Express.Request} */ req, /** @type {Express.Response} */ res) => {
+    RED.httpAdmin.get(`/uibuilder/instance/${this.url}`, (req, res) => {
         let page = web.showInstanceDetails(req, this)
         res.status(200).send( page )
     })

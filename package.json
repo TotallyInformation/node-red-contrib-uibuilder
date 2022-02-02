@@ -1,29 +1,13 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "5.0.0-dev",
+  "version": "5.0.0-dev.2",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. VueJS and bootstrap-vue included but change as desired.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
-    "prepush": "gulp",
-    "push": "git push origin",
-    "pull": "git pull origin",
-    "presync": "npm run pull",
-    "sync": "npm run push",
     "build": "gulp",
     "buildfe": "gulp packfe",
     "watch": "gulp watch",
-    "_build": "esbuild ./nodes/uibuilder.js --platform=node --outfile=./nodes/uibuilder.min.js",
-    "_buildfe": "esbuild ./front-end/src/uibuilderfe.js --bundle --minify --sourcemap --outfile=./front-end/src/uibuilderfe.dev.js ",
-    "_packfe": "minify ./front-end/src/uibuilderfe.js --out-file ./front-end/src/uibuilderfe.min.js",
-    "_prepublishOnly": "gulp packfe",
     "listbin": "ls ./node_modules/bin",
-    "npmtags": "npm dist-tag ls node-red-contrib-uibuilder",
-    "npmtagnext": "npm dist-tag add node-red-contrib-uibuilder@$npm_package_version next",
-    "gittags": "git tag",
-    "gittag": "git tag -a v%npm_package_version%",
-    "gitmergemain": "git merge origin/main",
-    "gitpushtags": "git push origin --tags",
-    "release": "github-release-from-changelog --dry-run",
     "docs": "docsify serve ./docs"
   },
   "dependencies": {
@@ -35,6 +19,7 @@
     "express-validator": "^6.13.0",
     "fast-glob": "^3.2.7",
     "fs-extra": "^10.0.0",
+    "gulp-json-editor": "^2.5.6",
     "jsonwebtoken": "^8.5.1",
     "nanoid": "^3.1.30",
     "passport": "^0.5.0",
@@ -84,81 +69,53 @@
     "test": "./tests"
   },
   "main": "./nodes/uibuilder.js",
-  "browser": "./nodes/src/uibuilderfe.js",
-  "browserslist": [
-    "> 0.5%",
-    "maintained node versions",
-    "last 2 versions",
-    "not dead",
-    "not ie < 11"
-  ],
-  "keywords": [
-    "node-red",
-    "ui",
-    "gui",
-    "dashboard",
-    "spa",
-    "web",
-    "website",
-    "data-driven",
-    "webpage"
-  ],
+  "browser": "./front-end/uibuilderfe.min.js",
+  "style": "./front-end/uib-styles.css",
+  "browserslist": ["> 0.5%", "maintained node versions", "last 2 versions", "not dead", "not ie < 11"],
+  "keywords": ["node-red", "ui", "gui", "dashboard", "spa", "web", "website", "data-driven", "webpage"],
   "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
   "author": {
     "name": "Julian Knight",
     "url": "https://github.com/TotallyInformation"
   },
-  "contributors": [
-    {
-      "name": "Julian Knight",
-      "url": "https://github.com/TotallyInformation"
-    },
-    {
-      "name": "Colin Law",
-      "url": "https://github.com/colinl"
-    },
-    {
-      "name": "Steve Rickus",
-      "url": "https://github.com/shrickus"
-    },
-    {
-      "name": "Ellie Lee",
-      "url": "https://github.com/ellieejlee"
-    },
-    {
-      "name": "Thomas Wagner",
-      "url": "https://github.com/Thomseeen"
-    },
-    {
-      "name": "Arlena Derksen",
-      "url": "https://github.com/boisei0"
-    },
-    {
-      "name": "cflurin",
-      "url": "https://discourse.nodered.org/u/cflurin"
-    },
-    {
-      "name": "Scott Page - IndySoft",
-      "url": "https://github.com/scottpageindysoft"
-    },
-    {
-      "name": "Stephen McLaughlin - Steve-Mcl",
-      "url": "https://discourse.nodered.org/u/Steve-Mcl"
-    },
-    {
-      "name": "Sergio Rius",
-      "url": "https://github.com/SergioRius"
-    },
-    {
-      "name": "Thorsten von Eicken",
-      "url": "https://github.com/tve"
-    },
-    {
-      "name": "meeki007",
-      "url": "https://github.com/meeki007"
-    }
-  ],
+  "contributors": [{
+    "name": "Julian Knight",
+    "url": "https://github.com/TotallyInformation"
+  }, {
+    "name": "Colin Law",
+    "url": "https://github.com/colinl"
+  }, {
+    "name": "Steve Rickus",
+    "url": "https://github.com/shrickus"
+  }, {
+    "name": "Ellie Lee",
+    "url": "https://github.com/ellieejlee"
+  }, {
+    "name": "Thomas Wagner",
+    "url": "https://github.com/Thomseeen"
+  }, {
+    "name": "Arlena Derksen",
+    "url": "https://github.com/boisei0"
+  }, {
+    "name": "cflurin",
+    "url": "https://discourse.nodered.org/u/cflurin"
+  }, {
+    "name": "Scott Page - IndySoft",
+    "url": "https://github.com/scottpageindysoft"
+  }, {
+    "name": "Stephen McLaughlin - Steve-Mcl",
+    "url": "https://discourse.nodered.org/u/Steve-Mcl"
+  }, {
+    "name": "Sergio Rius",
+    "url": "https://github.com/SergioRius"
+  }, {
+    "name": "Thorsten von Eicken",
+    "url": "https://github.com/tve"
+  }, {
+    "name": "meeki007",
+    "url": "https://github.com/meeki007"
+  }],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
