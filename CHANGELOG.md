@@ -11,11 +11,10 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * FIXES NEEDED:
-  * [ ] Error in cache node - not clearing
+  * [ ] If instance folder doesn't exist - need to mark node as changed to force deploy.
   * [ ] Error in security.js [Issue](https://discourse.nodered.org/t/uibuilder-vnext-v5-updates/56013/4?u=totallyinformation). Extra error log already added, consider using a different name for `<uibRoot>/.config/security.js` to save future issues for people.
   * [ ] Instance details page - ioNamespace shows as `undefined`
   * [ ] CHECK: whether manual package installs to uibRoot are correctly creating the metadata in package.json.
-  * [ ] CHECK: If pasting flow with uibuilder - is template respected?
   * [ ] https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=522282&prid=&subview=issues&impact=%5B%22High%22%2C%22Medium%22%2C%22Low%22%5D&page=1
   
 * Package Manager Class
@@ -364,7 +363,7 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * URL validation should now work as expected for all edge-cases.
 * Fixed the problem that required a restart of Node-RED to switch between `src` and `dist` folder serving.
 * Fixed Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159) where sioMiddlware.js wasn't working due to the move to Socket.Io v4.
-* Fix issue reported in Discource of an error in masterMiddleware when setting headings. Corrected heading syntax for ExpressJS v4.
+* Fix issue reported in Discourse of an error in masterMiddleware when setting headings. Corrected heading syntax for ExpressJS v4.
 * Client connect and disconnect msgs not being sent to uibuilder control port (#2). NOTE: As of Socket.io v4, it appears as though the disconnect event is received _after_ the connect when a client is reconnecting. You cannot rely on the order.
 * Fixed CORS problems after move to Socket.IO v4. (NB: CORS is defaulted to allow requests from ANY source, override with the `uibuilder.sioOptions` overrides available in settings.js).
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
@@ -378,6 +377,9 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * If using Node-RED Docker with recommended install, uib couldn't find the Socket.IO client folder to serve. [Issue](https://discourse.nodered.org/t/uibuilder-the-next-step-3rd-party-comms-with-a-uibuilder-front-end/51684/19?u=totallyinformation). Extra check and cleared warnings added.
 * Spurious instance folder rename when it wasn't needed.
 * Bad cookie handling!
+* Copy/paste of uib nodes detected correctly, url forced to blank and url change process surpressed - prevents several bugs
+* Correct template now loaded when new instance deployed - fixes copy/paste where copied node had non-default template
+* Fixed folder not deleted when new deploy is followed by delete of node
 
 
 
