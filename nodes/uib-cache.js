@@ -43,6 +43,13 @@ const mod = {
 
 //#region ----- Module-level support functions ----- //
 
+/** Set status msg in Editor
+ * @param {runtimeNode & cacheNode} node Reference to node instance
+ */
+function setNodeStatus(node) {
+    node.status({ fill: 'blue', shape: 'dot', text: `${node.cacheKey} entries: ${Object.keys(node.cache).length}` })
+} // ---- end of setStatus ---- //
+
 /** Trim all of the cache to the requested number of entries
  * @param {runtimeNode & cacheNode} node Reference to node instance
  */
@@ -72,6 +79,7 @@ function addToCache(msg, node) {
 
     // HAS to be a CLONE to avoid downstream changes impacting cache
     const clone = mod.RED.util.cloneMessage(msg)
+    delete clone._msgid
 
     // Add a new entry to the array - 
     node.cache[clone[node.cacheKey]].push(clone)
@@ -84,46 +92,56 @@ function addToCache(msg, node) {
     // Save the cache
     node.setC('uib_cache', node.cache, node.storeName)
 
+    setNodeStatus(node)
+
 } // ---- end of addToCache ---- //
 
 /** Clear the cache
  * @param {runtimeNode & cacheNode} node Reference to node instance
  */
- function clearCache(node) {
+function clearCache(node) {
 
-    // Get ref to this node's context store
-    //const context = node.context()
     // Save the cache or initialise it if new
-    node.setC('uib_cache', {}, node.storeName)  
+    node.setC('uib_cache', {}, node.storeName)
+    node.cache = {}
+
+    setNodeStatus(node)
 
 } // ---- end of clearCache ---- //
 
 /** Send the cache
  * @param {Function} send Reference to the Node's send function
  * @param {runtimeNode & cacheNode} node Reference to node instance
- * @param {string} [socketId] Optional. If provided, and if not turned off in settings, only send to specific client
+ * @param {object} msg Reference to the input message
  */
-function sendCache(send, node, socketId) {
+function sendCache(send, node, msg) {
 
-    Object.values(node.cache).forEach( msgs => {
-        //const msgs = node.cache[key]
+    const toSend = []
 
-        msgs.forEach( msg => {
+    Object.values(node.cache).forEach( cachedMsgs => {
+        // toSend.push(...cachedMsgs)
+
+        cachedMsgs.forEach( cachedMsg => {
             // Has to be a clone to prevent changes from downstream nodes
-            const clone =  mod.RED.util.cloneMessage(msg)
+            const clone =  mod.RED.util.cloneMessage(cachedMsg)
 
             // Add replay indicator
             if (!clone._uib) clone._uib = {}
             clone._uib.cache = 'REPLAY'
 
-            // Add socketId if needed
+            // Add socketId if needed - only for uib control msgs
             // TODO Add flag override
-            if (socketId) clone._socketId = socketId
+            if (msg.uibuilderCtrl && msg._socketId) {
+                clone._socketId = msg._socketId
+            }
     
-            send( clone )    
+            //send( clone )
+            toSend.push( clone )
         })
 
     })
+
+    send([toSend])
 
 } // ---- end of sendCache ---- //
 
@@ -152,17 +170,17 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
         if ( msg.cacheControl ) {
             if ( msg.cacheControl === 'REPLAY' ) {
                 // Send the cache
-                sendCache(send, this, msg._socketId)
+                sendCache(send, this, msg)
             } else if ( msg.cacheControl === 'CLEAR' ) {
                 // Clear the cache
                 clearCache(this)
             }
         }
     } else {
-        // Add to cache
-        addToCache(msg, this)
         // Forward
         send(msg)
+        // Add to cache
+        addToCache(msg, this)
     }
 
     // We are done
@@ -190,6 +208,9 @@ function nodeInstance(config) {
     this.num = config.num || 1 // zero is unlimited cache
     this.storeName = config.storeName || 'default'
     this.name = config.name
+
+    // Show if anythink in the cache
+    setNodeStatus(this)
 
     // Get ref to this node's context store
     const context = this.context()
