@@ -729,6 +729,28 @@
     // These are called on editor load & node added to flow as well as on form change
     // Use `$('#node-input-url').length > 0` to check if form exists
 
+    /** Update the deployed instances list
+     * @param {object} node Pass in this
+     */
+    function updateDeployedInstances(node) {
+        // Update the deployed instances list
+        $.ajax({
+            type: 'GET',
+            async: false,
+            dataType: 'json',
+            url: './uibuilder/admin/_', // pass dummy url _ as not needed for this query
+            data: {
+                'cmd': 'listinstances', //'checkurls',
+            },
+            success: function(data) {
+                //console.log('>> update instances >>', value, data)
+                uibuilderInstances = data
+            }
+        })
+
+        if ( node ) node.isDeployed = uibuilderInstances[node.id] !== undefined
+    }
+
     /** Find out if a server folder exists for this url
      * @param {string} url URL to check
      * @returns {boolean} Whether the folder exists
@@ -890,24 +912,11 @@
          *  changed
          */
 
-        // Update the deployed instances list
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: `./uibuilder/admin/${value}`,
-            data: {
-                'cmd': 'listinstances', //'checkurls',
-            },
-            success: function(data) {
-                //console.log('>> update instances >>', value, data)
-                uibuilderInstances = data
-            }
-        })
+        // Update the deployed instances list (also updates this.isDeployed)
+        updateDeployedInstances(this)
 
         //this.urlValid = false
         this.urlErrors = {}
-        this.isDeployed = uibuilderInstances[this.id] !== undefined
 
         this.urlDeployedChanged = uibuilderInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
         this.urlChanged = (this.url !== value)
@@ -919,9 +928,12 @@
 
         // Node is an editor dup but not deployed therefore must be a copy/paste or maybe an import
         if ( this.isDeployed === false && this.urlEditorDup === true ) {
-            mylog('>> Copy/Paste >>', this.id, this.url ) 
             this.urlErrors.config = 'Pasted or imported, URL must be changed'
-            // RED.notify('<b>WARNING</b>: <p>Copy/Paste or Import of existing uibuilder nodes results in duplicate URL.<br>It must be changed before you can save/commit</p>', {type: 'warning'})
+            // Reset the url's because we need a new one (but don't trigger url change as this will be new)
+            value = ''
+            this.url = this.oldUrl = undefined
+            $('#node-input-url').val('')
+            mylog('[uib] >> Copy/Paste >>', this.id, 'this.url:', this.url, ', value:', value, ', this.oldUrl:', this.oldUrl ) 
         }
 
         // If value is undefined, node hasn't been configured yet - we assume empty url which is invalid
@@ -988,7 +1000,7 @@
 
         // Warn user when changing URL. NOTE: Set/reset old url in the onsave function not here
         if ( this.isDeployed && this.deployedUrlChanged === true ) {
-            mylog('>> deployed url changed >>', this.url, this.oldUrl, this.id)
+            mylog('[uib] >> deployed url changed >> this.url:', this.url, ', this.oldUrl:', this.oldUrl, this.id)
             this.urlErrors.warnChange = `Renaming from ${this.url} to ${value}. <b>MUST</b> redeploy now`
             RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, {type: 'warning'})
         }
@@ -1940,8 +1952,8 @@
          * @this {RED}
          */
         oneditsave: function() {
-            // xfer the editor text back to the template var
-            //$('#node-input-template').val(this.editor.getValue())
+            mylog('[uib] >> this >>', this)
+
             // Get rid of the editor
             if ( uiace.editorLoaded === true ) {
                 uiace.editor.destroy()
@@ -1993,8 +2005,12 @@
 
         /** Show notification warning before allowing delete */
         oneditdelete: function() {
+            // Update the deployed instances list (also updates this.isDeployed)
+            updateDeployedInstances(this)
+
             // Remove the recorded instance
             //delete editorInstances[this.id]
+            mylog('[uib] >> deleting >> isDeployed? ', this.isDeployed, uibuilderInstances[this.id] !== undefined)
 
             // Only warn if the node has been deployed
             if ( this.isDeployed ) {
