@@ -1138,7 +1138,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if ( toastOptions.append ) toastOptions.appendToast = toastOptions.append
 
             // Toasts auto-hide by default after 10s
-            if ( toastOptions.noAutohide ) toastOptions.autohide = !toastOptions.noAutohide
+            if ( toastOptions.noAutohide ) toastOptions.noAutoHide = toastOptions.noAutohide
+            if ( toastOptions.noAutoHide ) toastOptions.autohide = !toastOptions.noAutoHide
             if ( ! Object.prototype.hasOwnProperty.call(toastOptions, 'autohide') ) toastOptions.autohide = true
             // If set, number of ms until toast is auto-hidden
             if ( toastOptions.autoHideDelay ) {
@@ -1148,9 +1149,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             if ( toastOptions.autohide === true && !toastOptions.autoHideDelay ) toastOptions.autoHideDelay = 10000 // default = 10s
 
             // Allow for variants
-            if ( !toastOptions.variant || !['', 'primary', 'secondary', 'success',  'info', 'warn', 'error'].includes(toastOptions.variant)) toastOptions.variant = ''
+            if ( !toastOptions.variant || !['', 'primary', 'secondary', 'success',  'info', 'warn', 'warning', 'error', 'danger'].includes(toastOptions.variant)) toastOptions.variant = ''
 
-            console.log( '>> toast options >>', toastOptions)
+            // Use msg.topic as title if no title provided
+            if ( !toastOptions.title && msg.topic ) toastOptions.title = msg.topic
 
             // Toast wont show anyway if content is empty, may as well warn user
             if ( content === '' ) {
@@ -1161,7 +1163,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             // Either Vue/bootstrap-vue or vanilla HTML
             if ( self.vueApp && self.vueApp.$bvToast ) {
                 self.uiDebug('[uibuilder:showToast] Bootstrap-Vue available, using to create a toast')
-                self.showToastVue(content, toastOptions)
+                self.showToastBVue(content, toastOptions)
             } else {
                 self.uiDebug('[uibuilder:showToast] Bootstrap-Vue NOT available, creating a vanilla HTML toast')
                 self.showToastVanilla(content, toastOptions)
@@ -1179,7 +1181,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @param {string} content toast content (may be HMTL string)
          * @param {object} toastOptions Various options that control the display 
          */
-        self.showToastVue = function showToastVue(content, toastOptions) {                
+        self.showToastBVue = function showToastBVue(content, toastOptions) {                
 
             // We need self.vueApp to be set
             if ( ! self.vueApp ) {
@@ -1217,6 +1219,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     }
                 }
             )
+
+            if (toastOptions.variant === 'error') toastOptions.variant = 'danger'
+            if (toastOptions.variant === 'warn') toastOptions.variant = 'warning'
+            if (!toastOptions.solid) toastOptions.solid = true
 
             // Dynamically insert the toast to the virtual DOM
             // Will show at top-right of the HTML element that is the app root
