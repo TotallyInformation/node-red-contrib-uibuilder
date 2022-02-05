@@ -47,7 +47,10 @@ const mod = {
  * @param {runtimeNode & cacheNode} node Reference to node instance
  */
 function setNodeStatus(node) {
-    node.status({ fill: 'blue', shape: 'dot', text: `${node.cacheKey} entries: ${Object.keys(node.cache).length}` })
+    let len = 0
+    if (node.cache) len = Object.keys(node.cache).length
+
+    node.status({ fill: 'blue', shape: 'dot', text: `${node.cacheKey} entries: ${len}` })
 } // ---- end of setStatus ---- //
 
 /** Trim all of the cache to the requested number of entries
