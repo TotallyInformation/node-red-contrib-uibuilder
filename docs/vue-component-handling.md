@@ -61,11 +61,11 @@ This is the structure of the `msg` to send through the uibuilder node in Node-RE
             "noAutoHide": true,
             // 5000 by default, how long the message stays on-screen. Hover over message to pause countdown.
             "autoHideDelay": 1500,
-            // Optional colour variant. error, warning, info, primary, secondary, success
+            // Optional colour variant. error (danger), warn (warning), info, primary, secondary, success
             "variant": "info",
-            // Default display is semi-transparent (BV only), set this to true to make the message solid colour.
-            "solid": true,
 
+            // BV Only. Default display is solid, set this to false to make the message semi-transparent.
+            "solid": true,
             // BV Only. New message appears above old by default (false), change to true to add to the bottom instead.
             "append": true,
             // BV Only. If present, the whole message is turned into a link. Click takes the client to the URL.
