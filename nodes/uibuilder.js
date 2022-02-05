@@ -471,16 +471,16 @@ function nodeInstance(config) {
         // we continue to do the normal checks in case something failed or if this is an initial deploy (so no original folder exists)
     }
 
-    // Does the custom folder exist? If not, create it and copy blank template to it. Otherwise make sure it is accessible.
+    // Does the custom folder exist? If not, create it and copy template to it. Otherwise make sure it is accessible.
     var customFoldersOK = true
     if ( ! fs.existsSync(this.customFolder) ) {
-
         // Does not exist so check whether built-in or external template wanted
         if ( this.templateFolder !== 'external' ) {
 
             // Internal template wanted - so copy it now
             const cpyOpts = {'preserveTimestamps':true}
-            let copyFrom = path.join( uib.masterTemplateFolder, 'blank' )
+            
+            let copyFrom = path.join( uib.masterTemplateFolder, this.templateFolder )
             try {
                 fs.copySync( copyFrom, this.customFolder, cpyOpts)
                 log.info(`[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
