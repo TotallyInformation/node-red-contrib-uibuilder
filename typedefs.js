@@ -165,6 +165,7 @@
  * @property {Function} on Event listeners for the node instance ('input', 'close')
  * @property {Function} removeListener Event handling
  * @property {Function} error Error log output, also logs to the Editor's debug panel
+ * @property {Function} status Show a status message under the node in the Editor
  * @property {object=} credentials Optional secured credentials
  * @property {object=} name Internal.
  * @property {object=} id Internal. uid of node instance.
