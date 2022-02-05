@@ -16,7 +16,7 @@
         "type": "uibuilder",
         "z": "106ba95c.ff91e7",
         "name": "vuejs",
-        "url": "vue",
+        "url": "",
         "x": 270,
         "y": 260,
         "wires": [
