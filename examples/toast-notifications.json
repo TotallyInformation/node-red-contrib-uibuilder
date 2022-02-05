@@ -1,0 +1,469 @@
+[
+    {
+        "id": "432d913ca01b43a1",
+        "type": "group",
+        "z": "1246a8f0cb162581",
+        "name": "A selection of toast! Examples to use with or without bootstrap-vue \\n ",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "fded6f0222cfdfba",
+            "efe54bddeedd2a56",
+            "6378f55115eabe2c",
+            "9f45867079a188b7",
+            "1848961e8fcc13c6",
+            "da07c611247c647d",
+            "01f2f1f6a4004f2c",
+            "2c33d81c083e0eee",
+            "4ce31b35fee54269",
+            "8d9f4ee2c875362e",
+            "81e42d869a9bf66f",
+            "b04df6720939b99d",
+            "f72856ac143cc5e5"
+        ],
+        "x": 294,
+        "y": 143,
+        "w": 592,
+        "h": 498
+    },
+    {
+        "id": "fded6f0222cfdfba",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Plain Toast",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "_uib.componentRef",
+                "v": "globalNotification",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "This is a plain toast notification from Node-RED!",
+        "payloadType": "str",
+        "x": 460,
+        "y": 200,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    },
+    {
+        "id": "efe54bddeedd2a56",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Buttered Toast",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"title\":\"NiceTitle!\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast",
+        "payload": "This is a buttered toast notification from Node-RED!",
+        "payloadType": "str",
+        "x": 450,
+        "y": 240,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    },
+    {
+        "id": "6378f55115eabe2c",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Plain, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 450,
+        "y": 280,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    },
+    {
+        "id": "9f45867079a188b7",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Warn, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true,\"title\":\"Buttered, Yum!\",\"variant\":\"warn\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 450,
+        "y": 320,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    },
+    {
+        "id": "1848961e8fcc13c6",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Error, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true,\"title\":\"Buttered, Yum!\",\"variant\":\"error\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 450,
+        "y": 400,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ],
+        "info": "variant danger === error"
+    },
+    {
+        "id": "da07c611247c647d",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Info, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true,\"title\":\"Buttered, Yum!\",\"variant\":\"info\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast, No Auto",
+        "payload": "This is a buttered toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 450,
+        "y": 480,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    },
+    {
+        "id": "01f2f1f6a4004f2c",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Primary, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true,\"variant\":\"primary\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 440,
+        "y": 520,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    },
+    {
+        "id": "2c33d81c083e0eee",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Secondary, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true,\"variant\":\"secondary\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 430,
+        "y": 560,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    },
+    {
+        "id": "4ce31b35fee54269",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Success, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true,\"variant\":\"success\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast, No Auto",
+        "payload": "This is a success toast notification <b>with HTML</b> from <i>Node-RED</i> that doesn't <span style=\"color:red;background-color:yellow;\">auto-expire</span>",
+        "payloadType": "str",
+        "x": 430,
+        "y": 600,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    },
+    {
+        "id": "8d9f4ee2c875362e",
+        "type": "uibuilder",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Vanilla",
+        "topic": "",
+        "url": "",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": true,
+        "useSecurity": false,
+        "allowUnauth": false,
+        "allowAuthAnon": false,
+        "sessionLength": 432000,
+        "tokenAutoExtend": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "5.0.0-dev.2",
+        "x": 730,
+        "y": 360,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "81e42d869a9bf66f",
+        "type": "uibuilder",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Bootstrap-Vue",
+        "topic": "",
+        "url": "",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "vue-simple",
+        "extTemplate": "",
+        "showfolder": true,
+        "useSecurity": false,
+        "allowUnauth": false,
+        "allowAuthAnon": false,
+        "sessionLength": 432000,
+        "tokenAutoExtend": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "5.0.0-dev.2",
+        "x": 750,
+        "y": 420,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "b04df6720939b99d",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Danger, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true,\"title\":\"Buttered, Yum!\",\"variant\":\"danger\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 440,
+        "y": 440,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ],
+        "info": "variant danger === error"
+    },
+    {
+        "id": "f72856ac143cc5e5",
+        "type": "inject",
+        "z": "1246a8f0cb162581",
+        "g": "432d913ca01b43a1",
+        "name": "Warning, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutoHide\":true,\"title\":\"Buttered, Yum!\",\"variant\":\"warning\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 440,
+        "y": 360,
+        "wires": [
+            [
+                "8d9f4ee2c875362e"
+            ]
+        ]
+    }
+]

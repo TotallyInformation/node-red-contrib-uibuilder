@@ -1,0 +1,293 @@
+[
+    {
+        "id": "52f2635d02dd7baa",
+        "type": "group",
+        "z": "bbba670ae518c0ec",
+        "name": "Test uibuilder cache node \\n ",
+        "style": {
+            "fill": "#ffefbf",
+            "fill-opacity": "0.34",
+            "label": true
+        },
+        "nodes": [
+            "9decb7b08e0f9509",
+            "a45178d5cf51bfc7",
+            "454e0df97994b5d4",
+            "ce2ce0572b0e0d21",
+            "1bc0c7c6c93fb821",
+            "103e8b5e23f94630",
+            "4f597d829aa4f4c1",
+            "d7dfd431360c348b",
+            "8b6fabdd8e5df1f4",
+            "76d2697515112656",
+            "453898d2b4b5f974"
+        ],
+        "x": 74,
+        "y": 603,
+        "w": 932,
+        "h": 278
+    },
+    {
+        "id": "9decb7b08e0f9509",
+        "type": "inject",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Empty Topic",
+        "payloadType": "str",
+        "x": 210,
+        "y": 740,
+        "wires": [
+            [
+                "ce2ce0572b0e0d21"
+            ]
+        ]
+    },
+    {
+        "id": "a45178d5cf51bfc7",
+        "type": "debug",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 910,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "454e0df97994b5d4",
+        "type": "debug",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "ce2ce0572b0e0d21",
+        "type": "uib-cache",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "cacheall": false,
+        "cacheKey": "topic",
+        "num": "4",
+        "storeName": "default",
+        "name": "",
+        "x": 490,
+        "y": 740,
+        "wires": [
+            [
+                "454e0df97994b5d4",
+                "4f597d829aa4f4c1"
+            ]
+        ]
+    },
+    {
+        "id": "1bc0c7c6c93fb821",
+        "type": "inject",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "two",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "two",
+        "payload": "{\"a\":\"Number Two\",\"b\":{\"b1\":1,\"b2\":{\"b2i\":1,\"b2ii\":2}}}",
+        "payloadType": "json",
+        "x": 230,
+        "y": 700,
+        "wires": [
+            [
+                "ce2ce0572b0e0d21"
+            ]
+        ]
+    },
+    {
+        "id": "103e8b5e23f94630",
+        "type": "inject",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "one",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "one",
+        "payload": "Number One",
+        "payloadType": "str",
+        "x": 230,
+        "y": 660,
+        "wires": [
+            [
+                "ce2ce0572b0e0d21"
+            ]
+        ]
+    },
+    {
+        "id": "4f597d829aa4f4c1",
+        "type": "change",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "",
+        "rules": [
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "Number",
+                "fromt": "str",
+                "to": "Some mumber",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 740,
+        "y": 740,
+        "wires": [
+            [
+                "a45178d5cf51bfc7"
+            ]
+        ]
+    },
+    {
+        "id": "d7dfd431360c348b",
+        "type": "inject",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "str",
+        "x": 135,
+        "y": 800,
+        "wires": [
+            [
+                "8b6fabdd8e5df1f4"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "8b6fabdd8e5df1f4",
+        "type": "function",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "REPLAY",
+        "func": "\nreturn { \n    \"uibuilderCtrl\": \"replay\", \n    \"cacheControl\": \"REPLAY\", \n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 800,
+        "wires": [
+            [
+                "ce2ce0572b0e0d21"
+            ]
+        ]
+    },
+    {
+        "id": "76d2697515112656",
+        "type": "inject",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "str",
+        "x": 135,
+        "y": 840,
+        "wires": [
+            [
+                "453898d2b4b5f974"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "453898d2b4b5f974",
+        "type": "function",
+        "z": "bbba670ae518c0ec",
+        "g": "52f2635d02dd7baa",
+        "name": "CLEAR",
+        "func": "\nreturn { \n    \"uibuilderCtrl\": \"clear cache\", \n    \"cacheControl\": \"CLEAR\", \n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 840,
+        "wires": [
+            [
+                "ce2ce0572b0e0d21"
+            ]
+        ]
+    }
+]
