@@ -3,7 +3,7 @@ title: How-to configure and use a front-end build step using Snowpack
 description: >
    Describes how to use Snowpack to build your front-end code.
 created: 2021-04-22 09:53:00
-lastUpdated: 2022-01-05 21:57:26
+lastUpdated: 2022-02-05 21:19:50
 ---
 
 Status: **Incomplete**
@@ -12,7 +12,7 @@ Snowpack's development server does not dynamically update the build directory an
 
 See the general [Front-end Builds page](./front-end-builds.md) for background information on what a build step is and what tools you might want.
 
-This page covers the installation and configuraiton of the [Snowpack](https://www.snowpack.dev/) build tool to use with uibuilder.
+This page covers the installation and configuration of the [Snowpack](https://www.snowpack.dev/) build tool to use with uibuilder.
 
 **Important note**: This how-to may use the command-line. When it does, it is assuming that the starting folder
 is the root of your uibuilder project on your Node-RED server. For example, if you have a uibuilder node with
