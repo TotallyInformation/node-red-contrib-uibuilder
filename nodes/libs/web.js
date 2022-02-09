@@ -320,7 +320,7 @@ class UibWeb {
         // Assign the uibRouter to the ../uibuilder url path
         this.app.use( tilib.urlJoin(uib.moduleName), this.uibRouter )
 
-        //! ==== Passport tests ====
+        //! ==== Passport tests (Needs passport and pp local adding to package.json )====
         /*
         // const session = require('express-session')
         // // const bodyParser = express.text()
