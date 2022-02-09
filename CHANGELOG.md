@@ -1,3 +1,7 @@
+---
+typora-root-url: docs\images
+---
+
 # Changelog
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
@@ -6,7 +10,7 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ----
 
-## To do/In-preogress
+## To do/In-progress
 
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
@@ -15,11 +19,13 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * [ ] Error in security.js [Issue](https://discourse.nodered.org/t/uibuilder-vnext-v5-updates/56013/4?u=totallyinformation). Extra error log already added, consider using a different name for `<uibRoot>/.config/security.js` to save future issues for people.
   * [ ] Instance details page - ioNamespace shows as `undefined`
   * [ ] CHECK: whether manual package installs to uibRoot are correctly creating the metadata in package.json.
-  * [ ] https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=522282&prid=&subview=issues&impact=%5B%22High%22%2C%22Medium%22%2C%22Low%22%5D&page=1
+  * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
+  * [ ] [Check Deepscan for code quality](https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=522282&prid=&subview=issues&impact=%5B%22High%22%2C%22Medium%22%2C%22Low%22%5D&page=1)
   
 * Package Manager Class
   * [ ] Output npm log to NR log debug level (or maybe trace?)
-
+  * [ ] When checking for URL to use - scan for a `dist` folder.
+  
 * General
   * [-] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
     * [ ] Wrap with option (web.js)
@@ -46,12 +52,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
   * [ ] Add `onMsg` convenience handler (maybe allow wildcard topics?)
   * [ ] Add watch for instance fe file changes - send reload msg
   * [ ] Add a visual warning/alert if uib cannot connect over websockets. Use toast.
-  * [ ] Document root CSS vars
-  * [x] Add non-Vue toast 
-    * [x] Add auto-clear
-    * [x] Change bg to use a variable - expose var to allow dynamic changes
-    * [x] Add variants (like bootstrap-vue) - define as classes.
-    * [x] ? Add other color vars: dark-bg, fg, dark-fg
 
 * Templates
   * [ ] Add a new template and example to demonstrate the sender node.
@@ -64,7 +64,6 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
 * Examples
   * sender node
-  * cache node
 
 * Security
   * SIMPLIFY FOR THIS RELEASE!
@@ -170,6 +169,8 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 
   Note that you can use this node without uibuilder if you want to.
 
+  There is a new example flow demonstrating the use of the cache node.
+
 * **New Feature** _Instance API's_. You can now define your own API's to support your front-end UI. These run as part of the Node-RED server and can be called
   from your UI, or indeed from anywhere with access to the Node-RED server's user endpoints.
 
@@ -193,17 +194,33 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * **Extended Feature** _Updated node status display_ - Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
 
 * **New Feature** - Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
-* **Extended Feature** - Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
-* **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
-* If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
 
-* **New Feature** - Built-in default stylesheet (`front-end/src/uib-styles.css`). This is served to `./uib-styles.css` and is included in the template `index.css` files as `@import url("./uib-styles.css");` so that you don't have to load it manually. Note the use of `body.uib` class. Add `class="uib"` to your HTML body tag to get a simple formatting that adjusts to whether your browser is asking for a dark or a light theme.
+* **Extended Feature** - Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
+
+* **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
+
+* **Extended Feature** -  If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
+
+* **New Feature** - A default CSS style sheet has been introduced. Either include in your `index.css` file as `@import url("./uib-styles.css");`. Or in your `index.html before the reference to `./index.css` as `<link type="text/css" rel="stylesheet" href="./uib-styles.css" media="all">`.
+  
+  Currently this contains some `:root` classes defining colours and a switcher that picks up whether your browser is set to light or dark themes. 
+
+  It also has a number of classes that style the toast notifications if you are not using `bootstrap-vue`.
+
+  Add the `uib` class to your `<body>` tag in `index.html` to pick up the full styles for your page. If you use this, your page will switch between light and dark modes depending on your browser settings. Note that, when using bootstrap-vue, these styles are ignored.
+
+  The style sheet file may be found in the `front-end/src/uib-styles.css` package folder.
 
 * uibuilderfe library
+  
   * **New Feature** - Received cookies are now available as an object variable key'd on cookie name. `uibuilder.get('cookies')`.
+  
   * **New Feature** - A new unique client id set by uibuilder is available as a string variable. `uibuilder.get('clientId')`. This changes if the page is reloaded but not if the client loses then regains a Socket.IO connection (where the socket id will change). It is passed to the client as a cookie. The client sends it to the server as a custom header but only on Socket.IO polling requests since custom headers are not available on websocket connections). It also adds it to the `socket.handshake.auth.clientId` property which should always be available to the server event handlers. _Caution should be used if making use of this feature since it is likely to change in the future_. See the updated `sioMiddleware.js` for an example of use. The client id is also included in the uibuilder control msgs output to port #2 on a client connect and disconnect. The ID is created using the `nanoid` package.
+  
   * **Extended Feature** - Toast notifications (notifications that overlay the UI) are now available even without VueJS and bootstrap-vue. They can be styled using the `uib-toaster`, `uib-toast`, and `uib-toast-head` classes when not using bootstrap-vue. Toast notifications can be set either by a standard msg from Node-RED or by calling `uibuilder.setToast(msg)` (where the msg matches the same format used from Node-RED). Internal uibuilder visual notifications will also use this mechanism. Notifications auto-clear after 10s (used to 5) unless otherwise controlled via the options.
-  * **New Feature** - A hidden style sheet has been introduced. This is created by uibuilderfe and is attached to the _start_ of the `head` section so that it can easily be overridden by including your own style sheet in the head. In addition to the toast classes, `:root { --main-bg-color: white; }` is defined. This is used by the document body background and by the toast message by default. This makes it easy to change the background colour. Use the Elements tab and Styles panel in your browser developer tools (F12) to review the styles and CSS variables.
+
+    There is a new example flow to illustrate the use of toasts.
+
 
 ### Changed
 

@@ -85,26 +85,17 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Extend folder/file management
   * Add the `common` folder to the file editor.
   * Allow renaming of files/folders.
-
 * Editor Help: Change output msgs headers to include guidance to say that port 1 is the upper port and port 2 the lower port.
-
 * Check for new versions of installed packages when entering the library manager.
-
 * Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
-
 * When a template changes, optionally install required front-end packages. Probably use a new property in package.json - note, don't use the dependencies property as these are for local dependencies not for packages that uibuilder will make available to the front-end via ExpressJS. Or possibly make this a button for easy install?
-
 * Allow custom locations for delivery folder (normally `src/` or `dist/`) and for api's folder (normally `api/`)
-
 * Method to show output from npm package handling.
-
 * Add all local package.json script entries as links/buttons so they can be run from the editor panel.
-
 * Add a reminder to the Editor help about examples. Add an onclick to that <a> icon that calls RED.actions.invoke('core:show-import-dialog'); as a quick action to get the user to the import dialog. See [here](https://discourse.nodered.org/t/documentation-example-flows-for-contributed-nodes/44198/2?u=totallyinformation) for more info.
-
 * If `dev` script discovered in local package.json scripts, enable a dev button so that a CI dev service can be spun up (e.g. Svelte). Will need debug output to be visible in Editor?
-
 * Add optional plugin displaying drop-down in Editors header bar - listing links to all deployed uib URLs. See example: https://github.com/kazuhitoyokoi/node-red-contrib-plugin-header
+* Allow the use of `public` as well as `src` and `dist`. Svelte outputs to the public folder by default. Also add warnings if no index.html file exists in the folder in use.
 
 ### Front-End Changes (`uibuilderfe.js`)
 
@@ -117,6 +108,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Allow client id to be set externally.
 * Use [chokidar](https://github.com/paulmillr/chokidar) to send a control msg to the fe when files change. Change the front-end to allow the browser to automatically reload (location.reload()). Put everything behind an optional flag and don't load the chokidar library unless the flag is set. May want an auto-rebuild feature as well.
 * Add package.json `style` property to Instance details page and packages list if it exists. Make sure that `browser` is prioritised over `main`.
+* See if typedefs.js can be migrated to index.d.ts.
+* Switch to [dynamic imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports) for require's with low probability of usage. [ref](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_import_expressions).
+* Migrate from commonjs to [ES modules](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_commonjs_json_and_native_modules). (2) [JSON can't be imported directly in ESMs](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_experimental_json_modules), use createRequire.
+* Add funding link to package.json (see `man 5 package.json`)
+* Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
 
 
 
