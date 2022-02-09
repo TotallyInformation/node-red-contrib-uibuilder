@@ -82,7 +82,7 @@ The general direction of uibuilder (or associated modules) is likely to include:
 </details>
 
 <details><summary>Current limitations are: </summary>
-  
+
   * You have to write your own HTML, uibuilder doesn't (yet) do it for you. *This is by design. I hope to have a component design available at some point which will give additional options and make the UI building easier.*
   * You have to know the front-end library locations for installed libraries and edit your HTML accordingly. The `uibindex` admin API (accessible from any node's admin ui) shows you all of the root folders and what the package authors report as the main entry point for all active packages. There is now also a simplified information page for the currently viewed uibuilder node instance, this is access from a button in the configuration panel.
     
@@ -106,11 +106,11 @@ The general direction of uibuilder (or associated modules) is likely to include:
   - [1. Additional Documentation](#1-additional-documentation)
   - [2. Getting Started](#2-getting-started)
     - [2.1. Install](#21-install)
-      - [Installing front-end libraries](#installing-front-end-libraries)
+      - [2.1.1 Installing front-end libraries](#211-installing-front-end-libraries)
     - [2.2. Simple flow](#22-simple-flow)
     - [2.3. Edit the source files](#23-edit-the-source-files)
     - [2.4. Install additional front-end libraries](#24-install-additional-front-end-libraries)
-      - [2.4.a Using VueJS](#24a-using-vuejs)
+      - [2.4.1 Using VueJS](#241-using-vuejs)
   - [3. Features](#3-features)
   - [4. Known Issues](#4-known-issues)
   - [5. Discussions and suggestions](#5-discussions-and-suggestions)
@@ -119,7 +119,7 @@ The general direction of uibuilder (or associated modules) is likely to include:
 
 <!-- /TOC -->
 
----- 
+----
 ## 1. Additional Documentation
 
 Most of the detailed documentation is moving into the Technical Documentation. This can be accessed on the [GitHub pages site](https://totallyinformation.github.io/node-red-contrib-uibuilder). Or from the button in the Node-RED Editor's configuration panel for any instance of the uibuilder node (url `<node-red-editor-url>/uibdocs/`). You will find the raw versions in the [docs](/docs) folder of this package.
@@ -130,6 +130,8 @@ Also, don't forget that there are example flows built into the Node-RED library 
 
 ## 2. Getting Started
 
+If this is all new to you, please do take a look at the *[first-timers walkthough of using uibuilder](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/walkthrough1)*. It aims to take you through, step-by-step, installing uibuilder and creating your first simple web app. If you have any difficulties, please feel free to ask questions on the [Node-RED forum]([Latest node-red-contrib-uibuilder topics - Node-RED Forum (nodered.org)](https://discourse.nodered.org/tag/node-red-contrib-uibuilder)).
+
 ### 2.1. Install
 
 To install the current live version, please use Node-RED's Palette Manager.
@@ -138,9 +140,9 @@ To install a specific uibuilder development or test branch from GitHub, use `npm
 
 To install a specific release from npm, use `npm install node-red-contrib-uibuilder@<VERSION>`. In addition to release versions (e.g. 1.2.2), you can also use `latest` and `v1-last`. Sometimes, `next` may also be available. Check out the [Versions tab](https://www.npmjs.com/package/node-red-contrib-uibuilder?activeTab=versions) on the npm site for available versions.
 
-#### Installing front-end libraries
+#### 2.1.1 Installing front-end libraries
 
-You may also want to install some front-end libraries. In particular, you need to install VueJS and bootstrap-vue if you want to use the various VueJS templates. You should do this using uibuilder's **library manager**. 
+You may also want to install some front-end libraries. In particular, you will need to install VueJS and bootstrap-vue if you want to use the various VueJS templates. You should do this using uibuilder's **library manager**. 
 
 As of v5, front-end libraries will be installed into the `<uibRoot>` folder. By default, this will be `~/.node-red/uibuilder/`. If migrating from v4 to v5, you will need to reinstall libraries. You can then remove the previous versions from your `<userDir>` folder. It is possible to manually install front-end libraries if you wish. The `<uibRoot>/package.json` file contains additional details regarding the packages that are installed, this is updated automatically.
 
@@ -176,7 +178,7 @@ You can also remove installed libraries from here.
 
 The uibuilder _Detailed Information_ API page (link in the configuration panel) shows details of all packages installed, their URL for your html pages and their physical location on the server (so that you can track down the right file to include in your HTML).
 
-#### 2.4.a Using VueJS
+#### 2.4.1 Using VueJS
 
 If you want to use the VueJS based templates, you will need to install `vue` and `bootstrap-vue` libraries.
 
@@ -254,7 +256,7 @@ _[back to top](#contents)_
          */
         uibRoot: process.env.UIBROOT || '/where/i/want/it',
     },
-  ```
+```
 
 - On deployment of any new instance, a new sub-folder within `uibuilder` is created.
   
