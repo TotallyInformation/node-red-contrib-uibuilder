@@ -31,7 +31,7 @@ const path     = require('path')
 const socketio = require('socket.io')
 const tilib    = require('./tilib')    // General purpose library (by Totally Information)
 const uiblib   = require('./uiblib')   // Utility library for uibuilder
-const security = require('./security') // uibuilder security module
+const security = require('./sec-lib') // uibuilder security module
 const tiEventManager = require('@totallyinformation/ti-common-event-handler')
 
 //Get client real ip address

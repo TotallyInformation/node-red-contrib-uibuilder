@@ -364,7 +364,7 @@
  * Note that any other data may be passed from your front-end code in the _auth.info object.
  * _auth.info.error, _auth.info.validJwt, _auth.info.message, _auth.info.warning
  * @property {object} MsgAuth .
- * @property {string} MsgAuth.id Required. A unique user identifier.
+ * @property {string|null} MsgAuth.id Required. A unique user identifier.
  * @property {string} [MsgAuth.password] Required for login only.
  * @property {string} [MsgAuth.jwt] Required if logged in. Needed for ongoing session validation and management.
  * @property {number} [MsgAuth.sessionExpiry] Required if logged in. Milliseconds since 1970. Needed for ongoing session validation and management.

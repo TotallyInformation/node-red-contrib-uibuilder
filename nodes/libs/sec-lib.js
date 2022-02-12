@@ -1,7 +1,7 @@
 /** Manage Security on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  * 
- * Copyright (c) 2017-2021 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -62,11 +62,11 @@ const dummyAuth = {
 //#region ----- Minimal security functions that should be overridden by uibRoot>/.config/security.js or a node instance override -----
 /** Dummy user signup function */
 function userSignup() {
-    throw new Error('[uibuilder:libs/security.js:userSignup] No actual userSignup function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
+    throw new Error('[uibuilder:libs/sec-lib.js:userSignup] No actual userSignup function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
 /** Dummy user validate function */
 function userValidate() {
-    throw new Error('[uibuilder:libs/security.js:userValidate] No actual userValidate function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
+    throw new Error('[uibuilder:libs/sec-lib.js:userValidate] No actual userValidate function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
 
 /** Capture user logins. Needed to control msgs from Node-RED to the Front-End
@@ -74,24 +74,24 @@ function userValidate() {
  * to only authorised users.
  */
 function captureUserAuth() {
-    throw new Error('[uibuilder:libs/security.js:captureUserAuth] No actual captureUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
+    throw new Error('[uibuilder:libs/sec-lib.js:captureUserAuth] No actual captureUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
 /** Dummy remove user auth function */
 function removeUserAuth() {
-    throw new Error('[uibuilder:libs/security.js:removeUserAuth] No actual removeUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
+    throw new Error('[uibuilder:libs/sec-lib.js:removeUserAuth] No actual removeUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
 /** Dummy check user auth function */
 function checkUserAuth() {
-    throw new Error('[uibuilder:libs/security.js:checkUserAuth] No actual checkUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
+    throw new Error('[uibuilder:libs/sec-lib.js:checkUserAuth] No actual checkUserAuth function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
 
 /** Dummy JWT custom validation function */
 function jwtValidateCustom() {
-    throw new Error('[uibuilder:libs/security.js:jwtValidateCustom] No actual jwtValidateCustom function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
+    throw new Error('[uibuilder:libs/sec-lib.js:jwtValidateCustom] No actual jwtValidateCustom function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
 /** Dummy JWT create custom function */
 function jwtCreateCustom() {
-    throw new Error('[uibuilder:libs/security.js:jwtCreateCustom] No actual jwtCreateCustom function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
+    throw new Error('[uibuilder:libs/sec-lib.js:jwtCreateCustom] No actual jwtCreateCustom function provided. Check that <uibRoot>/.config/security.js exists and contains a valid version of this function. Cannot continue.')
 }
 //#endregion ----- -----
  
@@ -143,12 +143,12 @@ class UibSec {
             // Can't set up this instance until we know that security is required
             // on at least 1 instance of uib. So this will be called at instance
             // level and therefore is bound to be called >1 - so don't warn.
-            uib.RED.log.trace('[uibuilder:security:setup] Setup has already been called, calling again is ignored.')
+            uib.RED.log.trace('[uibuilder:sec-lib:setup] Setup has already been called, calling again is ignored.')
             return
         }
 
         if ( ! uib ) {
-            throw new Error('[uibuilder:security.js] Called without required uib parameter')
+            throw new Error('[uibuilder:sec-lib.js] Called without required uib parameter')
         }
 
         /** @type {runtimeRED} */
@@ -162,7 +162,7 @@ class UibSec {
         try {
             securityjs = require( path.join(uib.rootFolder, uib.configFolderName, securityjsFileName) )
         } catch (e) {
-            this.log.error('[uibuilder:security:setup] Could not require uibRoot/.config/security.js, please check that it is valid.')
+            this.log.error('[uibuilder:sec-lib:setup] Could not require uibRoot/.config/security.js, please check that it is valid.')
             return
         }
         
@@ -248,7 +248,7 @@ class UibSec {
 
         // Track
         if (this.trackNodes[node.url]) {
-            log.info(`[uibuilder:security:setupInstance] ${node.url} is already set up, calling again is ignored.`)
+            log.info(`[uibuilder:sec-lib:setupInstance] ${node.url} is already set up, calling again is ignored.`)
             return
         }
         this.trackNodes[node.url] = {
@@ -256,7 +256,7 @@ class UibSec {
             nodeId: node.id // allows us to track back to the actual node in Node-RED
         }
 
-        tilib.mylog(`[uibuilder:security:setupInstance] ${node.url} security is set up.`)
+        tilib.mylog(`[uibuilder:sec-lib:setupInstance] ${node.url} security is set up.`)
 
         if ( node.useSecurity !== true ) return
         // The rest of the setup is only for if security is turned on
@@ -274,17 +274,17 @@ class UibSec {
 
                     // And output a warning if in dev mode, fail in production mode
                     if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev') {
-                        log.warn('[uibuilder:uiblib:logon] Security is ON but no `security.js` found. Using master template. Please replace with your own code.')
+                        log.warn('[uibuilder:sec-lib:logon] Security is ON but no `security.js` found. Using master template. Please replace with your own code.')
 
                         fs.copy(this.securitySrc, path.join(uib.configFolderName,securityjsFileName), {overwrite:false, preserveTimestamps:true}, err => {
-                            if (err) log.error('[uibuilder:uiblib:logon] Copy of master template `security.js` FAILED.', err)
+                            if (err) log.error('[uibuilder:sec-lib:logon] Copy of master template `security.js` FAILED.', err)
                             else {
-                                log.warn('[uibuilder:uiblib:logon] Copy of master template `security.js` SUCCEEDED. Please restart Node-RED to use it.')
+                                log.warn('[uibuilder:sec-lib:logon] Copy of master template `security.js` SUCCEEDED. Please restart Node-RED to use it.')
                             }
                         })
                     } else {
                         // In production mode, don't allow insecure processes - fail now
-                        log.error('[uibuilder:uiblib:logon] Security is ON but no `security.js` found. See uibuilder security docs for details.')
+                        log.error('[uibuilder:sec-lib:logon] Security is ON but no `security.js` found. See uibuilder security docs for details.')
                     }
                 }
             }
@@ -293,14 +293,14 @@ class UibSec {
             try {
                 securityjs = require( this.securitySrc )
             } catch (e) {
-                log.error('[uibuilder:uiblib:logon] Security is ON but `security.js` could not be `required`. Cannot process logons. Is security.js a valid Node.js module?', e)
+                log.error('[uibuilder:sec-lib:logon] Security is ON but `security.js` could not be `required`. Cannot process logons. Is security.js a valid Node.js module?', e)
             }
         }
 
         // Make sure that securityjs has the correct functions available or log and exit
         // TODO Validate for additional functions?
         if ( ! securityjs.userValidate ) {
-            log.error('[uibuilder:uiblib:logon] Security is ON but `security.js` does not contain the required function(s). Cannot process logon. Check docs and change file.')
+            log.error('[uibuilder:sec-lib:logon] Security is ON but `security.js` does not contain the required function(s). Cannot process logon. Check docs and change file.')
         }
 
     } // --- end of setupInstance --- //
@@ -321,7 +321,7 @@ class UibSec {
         //const ioNs = sockets.getNs(node)
 
         // TODO: remove log output
-        tilib.mylog('[uibuilder:authCheck] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
+        tilib.mylog('[uibuilder:sec-lib:authCheck] Use Security _auth: ', msg._auth, `. Node ID: ${node.id}`)
 
         // Has the client included msg._auth? If not, send back an unauth msg
         // TODO: Only send if msg was on std channel NOT on control channel
@@ -360,7 +360,7 @@ class UibSec {
         _auth = this.checkToken(msg._auth, node)
 
         /*
-        console.log('[uibuilder:socket.on.control] result of checkToken _auth: ', _auth)
+        console.log('[uibuilder:sec-lib:authCheck] result of checkToken _auth: ', _auth)
         if (_auth.info.validJwt === true) {
             uiblib.sendControl({
                 'uibuilderCtrl': 'session valid',
@@ -396,7 +396,7 @@ class UibSec {
             if (jsonwebtoken === null) jsonwebtoken = require('jsonwebtoken')
 
             if (node.jwtSecret === undefined ) {
-                log.error('[uibuilder.security.js:createToken] Nodes JWT Secret is undefined, using default.')
+                log.error('[uibuilder:sec-lib:createToken] Nodes JWT Secret is undefined, using default.')
                 node.jwtSecret = 'this IS not MUCH of a SEcrET'
             }
 
@@ -430,7 +430,7 @@ class UibSec {
             _auth.info.validJwt = false
             _auth.info.error = 'Could not create JWT'
 
-            log.error(`[uibuilder.security.js:createToken] Could not create JWT. ${e.message}`)
+            log.error(`[uibuilder:sec-lib:createToken] Could not create JWT. ${e.message}`)
         }
 
         return _auth
@@ -478,7 +478,7 @@ class UibSec {
 
             // verify does not check custom payload properties
             if ( node.jwtCheckIp === true && jwtData.ip !== clientDetails.remoteAddress ) 
-                throw new Error('JWT IP Address does not match client IP')
+                throw new Error('[uibuilder:sec-lib:checkToken] JWT IP Address does not match client IP')
 
             // TODO ??? Add security.js function call to enable further validation of token contents 
 
@@ -492,13 +492,13 @@ class UibSec {
             _auth.info.error = 'JWT is invalid, client authorisation removed. See server logs for details.'
             _auth.info.validJwt = false
             if (node.useSecurity) { // not an error if security not being used
-                log.error(`[uibuilder.security.js:checkToken] '${node.url}' JWT Error. ${e.message}`)
+                log.error(`[uibuilder:sec-lib:checkToken] '${node.url}' JWT Error. ${e.message}`)
             }
 
         }
 
-        //tilib.mylog('[uibuilder:socket.js:checkToken] JWT DECODED:', jwtData)
-        //tilib.mylog('[uibuilder:socket.js:checkToken] response: ', _auth)
+        //tilib.mylog('[uibuilder:sec-lib:checkToken] JWT DECODED:', jwtData)
+        //tilib.mylog('[uibuilder:sec-lib:checkToken] response: ', _auth)
 
         return _auth
 
@@ -526,7 +526,7 @@ class UibSec {
 
         // Only process if security is turned on. Otherwise output info to log, inform client and exit
         if ( node.useSecurity !== true ) {
-            log.info('[uibuilder:socket.js:logon] Security is not turned on, ignoring logon attempt.')
+            log.info('[uibuilder:sec-lib:logon] Security is not turned on, ignoring logon attempt.')
 
             _auth.info.error = 'Security is not turned on for this uibuilder instance'
 
@@ -549,12 +549,12 @@ class UibSec {
 |    This works, but with warnings.   |
 +---------------------------------------------------------------+
 `
-            log.warn(`[uibuilder:socket.js:logon] **WARNING** ${_auth.info.warning}`)
+            log.warn(`[uibuilder:sec-lib:logon] **WARNING** ${_auth.info.warning}`)
         }
 
         // Make sure that we at least have a user id, if not, inform client and exit
         if ( ! _auth.id ) {
-            log.warn('[uibuilder:socket.js:logon] No _auth.id provided')
+            log.warn('[uibuilder:sec-lib:logon] No _auth.id provided')
 
             //TODO ?? record fail ??
             _auth.userValidated = false
@@ -583,12 +583,12 @@ class UibSec {
 
         // Validate the _auth object - full ensure the following props exist: id, userValidated, info. And ensures that password DOES NOT EXIST
         if ( ! this.chkAuth(_auth, 'full') ) {
-            log.error(`[uibuilder:uiblib:logon] _auth is not valid, logon cancelled. Please check 'userValidate()' in '${uib.configFolder}/security.js'.\n\t\tIt MUST return an object with at least id, userValidated, info props. info must be an object.`)
-            console.log('[uibuilder:uiblib:logon] _auth=',_auth)  // NB: leave this console log in place for error reporting
+            log.error(`[uibuilder:sec-lib:logon] _auth is not valid, logon cancelled. Please check 'userValidate()' in '${uib.configFolder}/security.js'.\n\t\tIt MUST return an object with at least id, userValidated, info props. info must be an object.`)
+            console.log('[uibuilder:sec-lib:logon] _auth=',_auth)  // NB: leave this console log in place for error reporting
             return false 
         }
 
-        console.log('[uibuilder:uiblib.js:logon] Updated _auth: ', _auth)
+        console.log('[uibuilder:sec-lib:logon] Updated _auth: ', _auth)
 
         // Send responses
         //TODO Should output to port #2 be an option? Should less data be sent?
@@ -693,14 +693,14 @@ class UibSec {
 
         // if no jwt, create one now
         if (!_auth.jwt) {
-            //tilib.mylog('[uibuilder:uiblib.js:authCheck2] No JWT. Creating. ')
+            //tilib.mylog('[uibuilder:sec-lib:authCheck2] No JWT. Creating. ')
             _auth = this.createToken(_auth, node, clientDetails)
         } else {
-            //tilib.mylog('[uibuilder:uiblib.js:authCheck2] JWT, checking. ', _auth)
+            //tilib.mylog('[uibuilder:sec-lib:authCheck2] JWT, checking. ', _auth)
             _auth = this.checkToken(_auth, node, clientDetails)
         }
 
-        //tilib.mylog('[uibuilder:uiblib.js:authCheck2] _auth after JWT. ', _auth)
+        //tilib.mylog('[uibuilder:sec-lib:authCheck2] _auth after JWT. ', _auth)
 
         // If valid JWT, check if user still valid
         if ( _auth.info.validJwt === true )
@@ -708,7 +708,7 @@ class UibSec {
         else // Otherwise, make sure that users auth is removed
             this.removeUserAuth(_auth)
 
-        //tilib.mylog('[uibuilder:socket.js:authCheck2] Ending auth check. ', _auth)
+        //tilib.mylog('[uibuilder:sec-lib:authCheck2] Ending auth check. ', _auth)
         return _auth
     }
 
@@ -717,7 +717,7 @@ class UibSec {
 } // ==== End of UibSec Class Definition ==== //
 
 /** Singleton model. Only 1 instance of UibSec should ever exist.
- * Use as: `const security = require('.libs/security.js')`
+ * Use as: `const security = require('.libs/sec-lib.js')`
  * Wrap in try/catch to force out better error logging if there is a problem
  */
 let uibsec = new UibSec()

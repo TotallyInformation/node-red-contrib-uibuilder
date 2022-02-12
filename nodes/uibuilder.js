@@ -49,7 +49,7 @@ try {
     console.error('[uibuilder] REQUIRE WEB failed::', e)
 }
 try {
-    var security      = require('./libs/security') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
+    var security      = require('./libs/sec-lib') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 } catch (e) {
     console.error('[uibuilder] REQUIRE SECURITY failed::', e)
 }
