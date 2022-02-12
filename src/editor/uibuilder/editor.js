@@ -792,25 +792,27 @@
             $('#node-input-templateFolder, #btn-load-template')
                 .prop('disabled', false)
                 .css({
-                    'cursor': 'auto',
+                    'cursor': 'pointer',
                 })
 
             $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
                 .css({
-                    'pointer-events': 'auto',
-                    'cursor': 'auto',
+                    'cursor': 'pointer',
                 })
             $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
+                .prop('disabled', false)    
                 .css({
-                    'color': 'var(--nr-db-dark-text)',
-                    'cursor': 'auto',
+                    'pointer-events': 'auto',
+                    'cursor': 'pointer',
+                    'opacity': 1,
                 })
 
             $('#uibuilderurl, #uibinstanceconf')
+                .prop('disabled', false)
                 .css({
-                    'pointer-events': 'auto',
-                    'background-color': '',
-                    'cursor': 'auto',
+                    // 'pointer-events': 'auto',
+                    'cursor': 'pointer',
+                    'opacity': 1,
                 })
 
             $('#url-errors').remove()
@@ -831,20 +833,22 @@
 
             $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
                 .css({
-                    'pointer-events': 'none',
                     'cursor': 'not-allowed',
                 })
             $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
+                .prop('disabled', true)
                 .css({
-                    'color': 'var(--nr-db-disabled-text)',
+                    'pointer-events': 'none',
                     'cursor': 'not-allowed',
+                    'opacity': 0.3,
                 })
 
             $('#uibuilderurl, #uibinstanceconf')
+                .prop('disabled', true)
                 .css({
-                    'pointer-events': 'none',
-                    'background-color': 'var(--red-ui-secondary-background-selected)',
+                    // 'pointer-events': 'none',
                     'cursor': 'not-allowed',
+                    'opacity': 0.3,
                 })
 
             // Show errors
