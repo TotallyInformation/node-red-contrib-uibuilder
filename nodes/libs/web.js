@@ -894,18 +894,19 @@ class UibWeb {
             url.port = uib.customServer.port.toString()
         }
         const urlPrefix = url.href 
-        let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
+        //let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
+        let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${node.url}`
 
         page += `
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
                 <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
-                <link type="text/css" rel="stylesheet" href="${urlRoot}/vendor/bootstrap/dist/css/bootstrap.min.css" media="screen">
+                <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-styles.css" media="screen">
                 <style type="text/css" rel="stylesheet" media="all">
                     h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                     .col3i tbody>tr>:nth-child(3){ font-style:italic; }
                 </style>
-            </head><body><div class="container">
+            </head><body class="uib"><div class="container">
                 <h1>uibuilder Instance Debug Page</h1>
                 <p>
                     Note that this page is only accessible to users with Node-RED admin authority.
