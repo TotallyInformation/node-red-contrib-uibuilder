@@ -12,6 +12,8 @@ It manages the communications and provides a number of helper functions to make 
 
 The detailed documentation for the library is in the [uibuildefe developer documentation](uibuilderfe-js). If you don't find what you need here, please look there.
 
+## Contents
+
 - [Startup](#startup)
   - [Startup Optional Parameters](#startup-optional-parameters)
     - [Parameters](#parameters)
@@ -38,6 +40,7 @@ The detailed documentation for the library is in the [uibuildefe developer docum
   - [`showToast` (VueJS only) Shows a popup message in the UI](#showtoast-vuejs-only-shows-a-popup-message-in-the-ui)
   - [`start` Start up the front-end library](#start-start-up-the-front-end-library)
   - [`uiDebug` Conditional debug output (controlled by debug setting)](#uidebug-conditional-debug-output-controlled-by-debug-setting)
+
 
 ## Startup
 
@@ -229,7 +232,7 @@ The msg returned to Node-RED will be:
 ### `get` Get the value of a uibuilder variable
 
 Get the value of a variable inside the library.
-  
+
 Note that the get function protects private variables preventing easy access. This is not a security function since JavaScript has no mechanism for completely protecting private variables.
 
 ### `logon` Send a logon (authentication) control request to Node-RED
@@ -288,7 +291,7 @@ The library will add some standard properties to the message so you only need to
 ### `sendCtrl` Send a control msg to Node-RED
 
 Send a control message back to Node-RED. Requires an object as its single parameter. The object is the msg object to be sent.
-  
+
 Note that you shouldn't really need to ever send a control msg since the library takes care of all of that. However, there may be rare occasions when you might want to do something like trigger a cache replay or cache clear.
 
 The library will add some standard properties to the message so you only need to add your own data.
@@ -296,7 +299,7 @@ The library will add some standard properties to the message so you only need to
 ### `set` Set the value of a uibuilder variable, creates subscribable event for changes
 
 Set a variables value inside the library. Also creates an event that can be subscribed to using the `onChange` function.
-  
+
 Note that the set function protects private variables and prevents the overwriting of internal function names.
 
 ### `showComponentDetails` (VueJS only) Return a control msg contining details of a Vue component
