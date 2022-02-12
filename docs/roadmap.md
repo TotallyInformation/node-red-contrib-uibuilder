@@ -82,6 +82,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Editor (`uibuilder.html`)
 
+* Show template (instance root) folder
 * Extend folder/file management
   * Add the `common` folder to the file editor.
   * Allow renaming of files/folders.
@@ -96,11 +97,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * If `dev` script discovered in local package.json scripts, enable a dev button so that a CI dev service can be spun up (e.g. Svelte). Will need debug output to be visible in Editor?
 * Add optional plugin displaying drop-down in Editors header bar - listing links to all deployed uib URLs. See example: https://github.com/kazuhitoyokoi/node-red-contrib-plugin-header
 * Allow the use of `public` as well as `src` and `dist`. Svelte outputs to the public folder by default. Also add warnings if no index.html file exists in the folder in use.
+* If instance folder doesn't exist - need to mark node as changed to force deploy.
+* Show Socket.io server version
 
 ### Front-End Changes (`uibuilderfe.js`)
 
 * How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
 * Add mapper to map component id to originator & extend `eventSend` accordingly
+* Add `onMsg` convenience handler (maybe allow wildcard topics?)
+* Add a visual warning/alert if uib cannot connect over websockets. Use toast.
 
 ### General
 
@@ -113,6 +118,42 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Migrate from commonjs to [ES modules](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_commonjs_json_and_native_modules). (2) [JSON can't be imported directly in ESMs](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_experimental_json_modules), use createRequire.
 * Add funding link to package.json (see `man 5 package.json`)
 * Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
+* Serve uibuilderfe on `../uibuilder/` path as well as `./` for greater consistency
+
+### Package Manager Class
+
+* Output npm log to NR log debug level (or maybe trace?)
+* When checking for URL to use - scan for a `dist` folder.
+
+### Templates
+
+* Serve instance package.json `dependencies` on `../uibuilder/vendor/` path
+
+  * Complexity: this would end up with packages installed locally - would the uib central packages be recognised? Maybe use `uibuilder.dependencies` instead?
+
+  * Change '../../templates/template_dependencies' in api v3
+
+  * Update built-in templates to use package.json
+
+* uibuilder version checker - https://github.com/npm/node-semver
+* watcher
+* Add a new template and example to demonstrate the sender node.
+* Template - Docsify CMS
+* Add uibuilder property to package.json - define
+  * uibuilder version checker - https://github.com/npm/node-semver
+  * required fe packages
+  * watch - dict of watches: `{'path':'scriptname'}` or `{['path1',...]:'scriptname'}`
+  * add `dependencies` to `../uibuilder/vendor/` path
+
+### uib-sender
+
+* Track undeployed uib nodes via RED.events
+* Store links by node.id not url since url may change
+* Bind ctrl-s to save button
+
+### uib-cache
+
+* On close, delete cache
 
 
 
@@ -217,11 +258,11 @@ These are some thoughts about possible future direction. They need further thoug
 
 ## In Progress
 
-- [ ] Add validation hints for users - started, url rename hints added
+* Add validation hints for users - started, url rename hints added
 
-* [ ] Partially completed in v3. Create a security capable version - with built-in websocket security - logon/logoff/session management/user verification/token creation & refresh.
+* Partially completed in v3. Create a security capable version - with built-in websocket security - logon/logoff/session management/user verification/token creation & refresh.
 
-* [ ] Define msg.uib property as reserved. To allow for comms to specific component types and html ID's.
+* Define msg.uib property as reserved. To allow for comms to specific component types and html ID's.
 
    * uibuilderfe: If msg.uib present on incoming normal msg, don't include in normal msg event. Will be used in
          dedicated uib components to allow a Dashboard-like experience.
@@ -231,37 +272,37 @@ These are some thoughts about possible future direction. They need further thoug
 
 See also the [To Do Project](https://github.com/TotallyInformation/node-red-contrib-uibuilder/projects/1)
 
-* [ ] Admin ui: In file editor, add rename button for both folders and files.
-* [ ] Further improve notifications in the Editor
-* [ ] File editor needs to handle common folder not just the instance folder.
-- [ ] Add a file upload button to the file editor.
-- [ ] Improve handling for when Node-RED changes projects.
-- [ ] Add a package.json to the templates. On application of a template, have a script that adjusts the content of the file if needed (e.g. name). Include a "build" script example.
+* Admin ui: In file editor, add rename button for both folders and files.
+* Further improve notifications in the Editor
+* File editor needs to handle common folder not just the instance folder.
+* Add a file upload button to the file editor.
+* Improve handling for when Node-RED changes projects.
+* Add a package.json to the templates. On application of a template, have a script that adjusts the content of the file if needed (e.g. name). Include a "build" script example.
 
 ## Ideas
 
 ### Documentation
 
-* [ ] Create end-to-end comprehensive security example. Including:
+* Create end-to-end comprehensive security example. Including:
 
-    - Login page
-    - Logout button
-    - Session timeout
-    - Websocket security
-    - Link to ExpressJS authentication schemes
-    - Page authorisation (group & user level)
+    * Login page
+    * Logout button
+    * Session timeout
+    * Websocket security
+    * Link to ExpressJS authentication schemes
+    * Page authorisation (group & user level)
 
 ### Front End (`uibuilderfe.js`)
 
-* [ ] Add ability to send msg that auto-updates a VueJS app data variable so no code is required.
-* [ ] Add `react` function to uibuilderfe. To make it easier to for beginners to return a value to Node-RED on change or on click without needing any extra code. Really want to be able to return the source element ID if possible.
-* [ ] Maybe retain last incoming msg.topic and automatically use when sending unless overwritten.
+* Add ability to send msg that auto-updates a VueJS app data variable so no code is required.
+* Add `react` function to uibuilderfe. To make it easier to for beginners to return a value to Node-RED on change or on click without needing any extra code. Really want to be able to return the source element ID if possible.
+* Maybe retain last incoming msg.topic and automatically use when sending unless overwritten.
 
 ## Back End (`uibuilder.js`)
 
-* [ ] Replace dummy middleware functions and instead test for whether the variable is a function - this saves adding ExpressJS paths where none are actually needed. (Partly completed)
-* [ ] Add index web page for the `common` folder.
-* [ ] Create a [Progressive Web App](https://web.dev/what-are-pwas/) (PWA) capable version with [Service Worker](https://developers.google.com/web/fundamentals/primers/service-workers) [Mozilla](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
+* Replace dummy middleware functions and instead test for whether the variable is a function - this saves adding ExpressJS paths where none are actually needed. (Partly completed)
+* Add index web page for the `common` folder.
+* Create a [Progressive Web App](https://web.dev/what-are-pwas/) (PWA) capable version with [Service Worker](https://developers.google.com/web/fundamentals/primers/service-workers) [Mozilla](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
   
   Enabling semi-offline use so speeding up the whole interface after the first load.
   Also makes more native app-like features available such as mobile content sharing & badges, background downloading, etc.
@@ -277,78 +318,78 @@ See also the [To Do Project](https://github.com/TotallyInformation/node-red-cont
 
   [fxos-components/serviceworkerware](https://github.com/fxos-components/serviceworkerware#serviceworkerware): An Express-like layer on top of Service Workers to provide a way to easily plug functionality.
 
-* [ ] Method to import/export front-end files. Needs ZIP/Unzip functions at the back-end.
+* Method to import/export front-end files. Needs ZIP/Unzip functions at the back-end.
 
-* [ ] New node: allowing a socket.io "room" to be defined. Will need to pick a current main instance from a dropdown (using API)
+* New node: allowing a socket.io "room" to be defined. Will need to pick a current main instance from a dropdown (using API)
 
    * Change FE to allow for rooms.
 
-* [ ] New node: cache - see WIKI cache page for details.
+* New node: cache - see WIKI cache page for details.
 
 ### Admin UI (`uibuilder.html`)
 
-- [ ] Admin ui/uiblib.checkInstalledPackages: Pass package file read errors back to admin ui. Currently only shows in Node-RED log. Partially complete - info is shown in browser dev console.
+* Admin ui/uiblib.checkInstalledPackages: Pass package file read errors back to admin ui. Currently only shows in Node-RED log. Partially complete - info is shown in browser dev console.
 
-- [ ] Add option to allow new front-end code files to be input via inbound msg.
+* Add option to allow new front-end code files to be input via inbound msg.
 
    Allows a flow to read a file and save to the server. Optional because it could be a security issue.
    Allow folder name as well as file name.
 
-- [ ] Make the project, src and dist folders selectable so that they can be anywhere (advanced only).
+* Make the project, src and dist folders selectable so that they can be anywhere (advanced only).
 
-- [ ] Add (advanced) flag to make use of project folder optional.
+* Add (advanced) flag to make use of project folder optional.
 
-- [ ] Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - 
+* Allow (advanced option) use of a NEW ExpressJS app (rather than reusing RED.httpNode) - 
   giving the ability to have extra control, use a different port and separate security.
 
-- [ ] Add option to keep backups for edited files + button to reset to backup + hide backup files
+* Add option to keep backups for edited files + button to reset to backup + hide backup files
 
-- [ ] Add npm package delete confirmation - probably via std NR notifications
+* Add npm package delete confirmation - probably via std NR notifications
 
-- [ ] When adding a package, make sure that the input field gets focus & add <keyb>Enter</keyb> & <keyb>Esc</keyb> key processing.
+* When adding a package, make sure that the input field gets focus & add <keyb>Enter</keyb> & <keyb>Esc</keyb> key processing.
 
-- [ ] Add all instances endpoint folders
+* Add all instances endpoint folders
 
-- [ ] Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates
+* Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates
 
-* [ ] Deal with instance folders build script if found.
-* [ ] Build script processing needs the ability to do npm handling for the instance folder not just for userDir.
-- [ ] Add a "Build" button, disabled by default. uibuilder will check whether there is a `package.json` file in the `<uibRoot>/<uibUrl>` folder 
+* Deal with instance folders build script if found.
+* Build script processing needs the ability to do npm handling for the instance folder not just for userDir.
+* Add a "Build" button, disabled by default. uibuilder will check whether there is a `package.json` file in the `<uibRoot>/<uibUrl>` folder 
   and whether it contains a script called "build". If that exists, the build button will be enabled.
 
      This will need you to have followed the [build instructions in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Using-VueJS-with-Webpack). Or to have come up with some other build process.
 
-    - Add example webpack build file.
+    * Add example webpack build file.
 
-- [ ] Provide template package.json file to go into `<uibRoot>/<uibUrl>` - provided automatically if user creates a file called package.json.
+* Provide template package.json file to go into `<uibRoot>/<uibUrl>` - provided automatically if user creates a file called package.json.
 
 
 ## Maybe
 
-- FE - special control msg to create a new channel or room - to be used for components. Could be a separate node.
-- FE - add function to reload the page - allow for a control msg to do so.
+* FE - special control msg to create a new channel or room - to be used for components. Could be a separate node.
+* FE - add function to reload the page - allow for a control msg to do so.
 
-- BE - new node - "component" - Define a component to load {name, file/url, (schema)}. Trigger FE to lazy load the component on new (re)connection. Create socket.io channel
+* BE - new node - "component" - Define a component to load {name, file/url, (schema)}. Trigger FE to lazy load the component on new (re)connection. Create socket.io channel
 
-- Allow folder name to be independent of uibuilder.url?
+* Allow folder name to be independent of uibuilder.url?
 
-- Consider option to expose both `src` and `dist` folders to the web server. Switchable.
+* Consider option to expose both `src` and `dist` folders to the web server. Switchable.
 
     Not directly related to this feature set but probably quite useful anyway as it would allow admins to switch between them. 
 
-- Add GIT processing?
-   - Is git command available?
-   - is front-end src folder a git repository?
-   - git commit
-   - git push
+* Add GIT processing?
+   * Is git command available?
+   * is front-end src folder a git repository?
+   * git commit
+   * git push
 
-* [ ] Allow passing of code & css from the backend. This is live but only in a very simplistic way. Suggested enhancements:
+* Allow passing of code & css from the backend. This is live but only in a very simplistic way. Suggested enhancements:
 
-  - Passed code should _replace_ the previous.
+  * Passed code should _replace_ the previous.
 
     Currently, it is always added. Needs an ID adding.
 
-* [ ] Split loading of libraries (moon, etc) to limit the number of paths added to ExpressJS - allowing for lower overheads when using different libraries for different endpoints.
+* Split loading of libraries (moon, etc) to limit the number of paths added to ExpressJS - allowing for lower overheads when using different libraries for different endpoints.
 
 * Add build steps and devDependencies to allow for build steps when adding components.
 
@@ -356,7 +397,7 @@ See also the [To Do Project](https://github.com/TotallyInformation/node-red-cont
 * Create some standard component names. Allowing for standards across multiple libraries.
 * Create some standard components in one of the libraries. Probably VueJS now it has matured a lot.
 
-* [ ] Review socket security - ensure that it works, provide example middleware.
+* Review socket security - ensure that it works, provide example middleware.
 
 * Split back-end code so that library/path loads are moved to a configuration node, allowing it to be used by multiple uibuilder node instances without having to re-run.
 
@@ -364,50 +405,50 @@ See also the [To Do Project](https://github.com/TotallyInformation/node-red-cont
 
 * Node(s) for specific web components. Possibly allowing the component to be pushed over ws. [Ref.1](https://markus.oberlehner.net/blog/distributed-vue-applications-pushing-content-and-component-updates-to-the-client/)
 
-- Add instance source folder location edit field to admin interface to allow it to go somewhere different. Thanks to @Thomseeen for raising this in [Issue 44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44).
+* Add instance source folder location edit field to admin interface to allow it to go somewhere different. Thanks to @Thomseeen for raising this in [Issue 44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44).
 
-- Extend middleware hook feature to allow for different middleware for each node instance
+* Extend middleware hook feature to allow for different middleware for each node instance
   instead of one for all instances.
 
-- Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
+* Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
 
   Started: script/style is removed if disallowed in settings, uibuilder control msgs dropped (since v1.0.0)
 
-- See [Security Design in the WIKI](Security-Design). ~~Add integrated ExpressJS security to Socket.IO~~
+* See [Security Design in the WIKI](Security-Design). ~~Add integrated ExpressJS security to Socket.IO~~
 
-- See [Security Design in the WIKI](Security-Design). ~~Process `httpNodeAuth`~~
+* See [Security Design in the WIKI](Security-Design). ~~Process `httpNodeAuth`~~
 
-- ~~Add ability to auto-install missing modules.~~ Added notifications instead.
+* ~~Add ability to auto-install missing modules.~~ Added notifications instead.
 
-- Use webpack to "compile" resources into distribution folders upon (re)deployment -
+* Use webpack to "compile" resources into distribution folders upon (re)deployment -
   allowing for the use of more resource types such as: less/scss; UI frameworks such as Bootstrap, Foundation, Material UI; jsx or other dynamic templating; front-end frameworks such as VueJS, Angular or REACT.
 
-- If using `dist` code, Add a check for new file changes in local `src` folder
+* If using `dist` code, Add a check for new file changes in local `src` folder
 
 ## Possibilities for further thought
 
 These are random thoughts that might make it into the To Do list but really need more thought before committing to them.
 
-- Rethink security - ensure both pages and sockets are secured. Allow for external authentication and authorisation. Allow for secure JWT-based approaches.
+* Rethink security - ensure both pages and sockets are secured. Allow for external authentication and authorisation. Allow for secure JWT-based approaches.
 
-- Investigate replacement of Socket.IO with something lighter.
+* Investigate replacement of Socket.IO with something lighter.
 
   Maybe SockJS though it would probably also need some plugins to that we get unique channels for each uibuilder instance (maybe)
 
-- Add sender IP address when sending msg from browser - so that Node-RED can
+* Add sender IP address when sending msg from browser - so that Node-RED can
   differentiate where things are coming from.
 
   The `_socketId` obviously already identifies the originator technically but additional info might be helpful.
   _Possibly make this optional. Maybe have other optional data too such as device_
 
-- _(Maybe compile template resources to dist folder?)_
+* _(Maybe compile template resources to dist folder?)_
 
-- _We might need to add some checks for updated master templates? Maybe issue a warning? Not sure._
+* _We might need to add some checks for updated master templates? Maybe issue a warning? Not sure._
 
-- Layout creator
+* Layout creator
 
   Have something that allows layouts to be easily created direct from Node Red. Almost certainly would require tying to a specific library like VueJS. Something like [vue-grid-layout](https://jbaysolutions.github.io/vue-grid-layout/) might be a good starting point. More examples can be seen at [this list](https://vuejsexamples.com/tag/drag/).
 
-- Enable tilib.findPackage to deal with meta-packages. e.g. @syncfusion/ej2-vue-schedule - This does not install a package called "ej2-vue-schedule" but in fact installs 17 other packages! [Issue #69](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/69). The workaround for this is to use a build step so this is the bottom of the pile unless someone wants to do a PR. Any "fix" would likely require a lot of code for very little, if any, reward.
+* Enable tilib.findPackage to deal with meta-packages. e.g. @syncfusion/ej2-vue-schedule - This does not install a package called "ej2-vue-schedule" but in fact installs 17 other packages! [Issue #69](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/69). The workaround for this is to use a build step so this is the bottom of the pile unless someone wants to do a PR. Any "fix" would likely require a lot of code for very little, if any, reward.
 
 * Node(s) for specific web components. Possibly allowing the component to be pushed over ws. [Ref.1](https://markus.oberlehner.net/blog/distributed-vue-applications-pushing-content-and-component-updates-to-the-client/)
