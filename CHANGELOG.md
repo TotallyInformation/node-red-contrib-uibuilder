@@ -4,67 +4,23 @@ typora-root-url: docs\images
 
 # Changelog
 
-All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-
-uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-----
-
 ## To do/In-progress
 
 IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 
+[Check Deepscan for code quality](https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=522282&prid=&subview=issues&impact=%5B%22High%22%2C%22Medium%22%2C%22Low%22%5D&page=1)
+
+Check the [roadmap](./docs/roadmap.md) for future developments.
+
 * FIXES NEEDED:
-  * [ ] If instance folder doesn't exist - need to mark node as changed to force deploy.
-  * [ ] Error in security.js [Issue](https://discourse.nodered.org/t/uibuilder-vnext-v5-updates/56013/4?u=totallyinformation). Extra error log already added, consider using a different name for `<uibRoot>/.config/security.js` to save future issues for people.
   * [ ] Instance details page - ioNamespace shows as `undefined`
   * [ ] CHECK: whether manual package installs to uibRoot are correctly creating the metadata in package.json.
   * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
-  * [ ] [Check Deepscan for code quality](https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=522282&prid=&subview=issues&impact=%5B%22High%22%2C%22Medium%22%2C%22Low%22%5D&page=1)
-  
-* Package Manager Class
-  * [ ] Output npm log to NR log debug level (or maybe trace?)
-  * [ ] When checking for URL to use - scan for a `dist` folder.
-  
 * General
   * [-] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
     * [ ] Wrap with option (web.js)
-  
-  * [ ] Serve uibuilderfe on `../uibuilder/` path as well as `./` for greater consistency
-  * [ ] Template processing
-    * [ ] Serve instance package.json `dependencies` on `../uibuilder/vendor/` path
-      Complexity: this would end up with packages installed locally - would the uib central packages be recognised? Maybe use `uibuilder.dependencies` instead?
-      * [ ] Change '../../templates/template_dependencies' in api v3
-      * [ ] Update built-in templates to use package.json
-    * [ ] uibuilder version checker - https://github.com/npm/node-semver
-    * [ ] watcher
-  
-* uib-sender
-  * [ ] Track undeployed uib nodes via RED.events
-  * [ ] Store links by node.id not url since url may change
-  * [ ] Bind ctrl-s to save button
-
-* uibuilder Panel
-  * [ ] Show template (instance root) folder
-  * [ ] Show Socket.io server version
-
-* FE
-  * [ ] Add `onMsg` convenience handler (maybe allow wildcard topics?)
-  * [ ] Add watch for instance fe file changes - send reload msg
-  * [ ] Add a visual warning/alert if uib cannot connect over websockets. Use toast.
-
-* Templates
-  * [ ] Add a new template and example to demonstrate the sender node.
-  * [ ] Template - Docsify CMS
-  * [ ] Add uibuilder property to package.json - define
-    * [ ] uibuilder version checker - https://github.com/npm/node-semver
-    * [ ] required fe packages
-    * [ ] watch - dict of watches: `{'path':'scriptname'}` or `{['path1',...]:'scriptname'}`
-    * [ ] add `dependencies` to `../uibuilder/vendor/` path
-
 * Examples
   * sender node
-
 * Security
   * SIMPLIFY FOR THIS RELEASE!
 
@@ -321,11 +277,11 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * Shared event handler implemented. This enables external nodes to send and receive data to/from uibuilder front-end clients.
 
 * Gulp implemented
-  
+
   *  initially for composing the `uibuilder.html` from the contents of `src/editor`
   *  and to replace the previously manual minify step for `uibuilderfe.js`
   *  _other tasks likely to be added in the future to make more efficient code and ease the release/publish process_.
-  
+
 * New eslint rulesets implemented & config restructured. Along with the .html file decomposition, this makes for a much more accurate linting process.
 
 * Massive number of minor code improvements to `uibuilder.html` and `uibuilder.js` & to the supporting libs and `uibuilderfe.js` thanks to the impoved linting.
@@ -354,7 +310,7 @@ Note that future To-do and future direction is [documented in the WIKI](https://
   * Minified the Editor panel html file (using Gulp) - should load faster now.
 
 * v3 admin API changes
-  
+
   * Moved v3 admin API to its own module (`libs/admin-api-v3.js`) and changed to be an ExpressJS router instance.
   * Moved the setup from uibuilder.js to web.js
   * New v3 admin API command added to list all of the deployed instances of uibuilder. Issue a GET with `cmd=listinstances`. This allows other nodes to get a list of all of the uibuilder instance URL's and the ID's of the nodes that create them. See the `uib-sender` node's html file for details.
@@ -374,6 +330,7 @@ Note that future To-do and future direction is [documented in the WIKI](https://
    * Removed the separate `body-parser` npm package. This is now built into ExpressJS and not required separately.
    * Moved the user-facing API's to web.js from uibuilder.js and moved to their own Express.Router on `../uibuilder/...`.
    * Added a new `this.routers` object - this helps with uibuilder live configuration documentation as it records all of the ExpressJS Routes that uibuilder adds.
+* `libs/security.js` renamed to `libs/sec-lib.js` to save confusion with the user-facing security.js file.
 
 ### Fixed
 
