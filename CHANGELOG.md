@@ -13,14 +13,10 @@ IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * FIXES NEEDED:
-  * [ ] Instance details page - ioNamespace shows as `undefined`
-  * [ ] CHECK: whether manual package installs to uibRoot are correctly creating the metadata in package.json.
   * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
 * General
   * [-] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
     * [ ] Wrap with option (web.js)
-* Examples
-  * sender node
 * Security
   * SIMPLIFY FOR THIS RELEASE!
 
@@ -99,18 +95,20 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 
   Until then, please install the `vue` and `bootstrap-vue` packages via the uibuilder library manager if you need them.
 
+* **URL cannot be "uibuilder"** - As this url is now used by various services, allowing it would potentially create name clashes and hard to debug errors. If you have an endpoint named "uibuilder", please rename it to prevent problems.
+
 * **Minimum Node.js version supported is now v12.20**. Minimum browser version remains the same and must be one that supports ES6.
 
 ### New
 
 * **New node `uib-sender`** - this node allows you to send a msg to any uibuilder instance's connected front-end clients.
-  
+
   That means that it is pretty much the same as sending a message directly into a uibuilder node.
 
   You select the instance of uibuilder you want to use by selecting an existing uibuilder URL from the dropdown.
 
   You can also select whether you want input messages to go straight to the output port as well. 
-  
+
   Or, more usefully, you can allow "return messages". This allows a front-end client to send a message to node-red with some pre-defined metadata added that will route the message back to the `uib-sender` node. In this way, the sender node can be used as a semi-independent component.
 
   Note that this same method can be used by ANY custom node, check out the code to see how it works. It requires the use of an external, shared event module [`@TotallyInformation/ti-common-event-handler`](https://github.com/TotallyInformation/ti-common-event-handler). The msg metadata looks like: `{ _uib: {originator: <sender_node_id>}, payload: ... }`. The sender node id is just that, the Node-RED node id for the sender node instance.
@@ -136,17 +134,17 @@ Note that future To-do and future direction is [documented in the WIKI](https://
   Such functions are added to the instances router. See the Tech Docs for more information on how to use the instance API's.
 
 * **Extended Feature** _Package Management_ - You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
-  
+
   Note that _only_ packages installed into the `uibRoot` folder will be recognised.
 
   Also note that if you manually install a package rather than using the library manager, you will need to restart Node-RED.
-  
+
 * **New layout for the Editor panel**
 
   This is a much cleaner and clearer layout. It also blocks access to parts of the config that don't work until a newly added node has been Deployed for the first time so that its server folder has been created.
 
   There are also some additional error and warning messages to make things clearer.
-  
+
 * **Extended Feature** _Updated node status display_ - Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
 
 * **New Feature** - Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
@@ -158,7 +156,7 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * **Extended Feature** -  If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
 
 * **New Feature** - A default CSS style sheet has been introduced. Either include in your `index.css` file as `@import url("./uib-styles.css");`. Or in your `index.html before the reference to `./index.css` as `<link type="text/css" rel="stylesheet" href="./uib-styles.css" media="all">`.
-  
+
   Currently this contains some `:root` classes defining colours and a switcher that picks up whether your browser is set to light or dark themes. 
 
   It also has a number of classes that style the toast notifications if you are not using `bootstrap-vue`.
@@ -167,15 +165,23 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 
   The style sheet file may be found in the `front-end/src/uib-styles.css` package folder.
 
-* uibuilderfe library
-  
+* **uibuilderfe library**
+
   * **New Feature** - Received cookies are now available as an object variable key'd on cookie name. `uibuilder.get('cookies')`.
-  
+
   * **New Feature** - A new unique client id set by uibuilder is available as a string variable. `uibuilder.get('clientId')`. This changes if the page is reloaded but not if the client loses then regains a Socket.IO connection (where the socket id will change). It is passed to the client as a cookie. The client sends it to the server as a custom header but only on Socket.IO polling requests since custom headers are not available on websocket connections). It also adds it to the `socket.handshake.auth.clientId` property which should always be available to the server event handlers. _Caution should be used if making use of this feature since it is likely to change in the future_. See the updated `sioMiddleware.js` for an example of use. The client id is also included in the uibuilder control msgs output to port #2 on a client connect and disconnect. The ID is created using the `nanoid` package.
-  
+
   * **Extended Feature** - Toast notifications (notifications that overlay the UI) are now available even without VueJS and bootstrap-vue. They can be styled using the `uib-toaster`, `uib-toast`, and `uib-toast-head` classes when not using bootstrap-vue. Toast notifications can be set either by a standard msg from Node-RED or by calling `uibuilder.setToast(msg)` (where the msg matches the same format used from Node-RED). Internal uibuilder visual notifications will also use this mechanism. Notifications auto-clear after 10s (used to 5) unless otherwise controlled via the options.
 
     There is a new example flow to illustrate the use of toasts.
+
+* **New Example Flows**
+
+  * *uib-sender* - How to use the uib-sender node. A new flow tab. Based on the blank template so does not need any libraries installing.
+  * *uib-cache* - How to use the uib-cache node. A new flow tab containing two examples, one with and one without uibuilder. The uibuilder example is based on the blank template so does not need any libraries installing.
+  * *toast-notifcations* - A group containing 2 uibuilder nodes (with empty URL's) and a bunch of inputs for testing Toast notifications. One of the uibuilder nodes uses the blank template (so no libraries needed), the other uses VueJS and bootstrap-vue.
+  * Other example flows have been updated to remove the default URL to ensure that duplicate folders are not accidentally created on import. In addition, the MoonJS example has been removed as it was out-of-date.
+
 
 
 ### Changed
@@ -192,6 +198,8 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 
 * Improvements to the "uibuilder details" page should make it easier to read. The data for ExpressJS Routes is much improved.
 
+* Improvements to the "instance details" page. Now includes the ExpressJS routes for that instance.
+
 * Editor panel
 
   * Improvements to the Editor help panel. Should hopefully be clearer and includes all of the settings and custom msg properties. Now uses a tabbed interface.
@@ -203,7 +211,7 @@ Note that future To-do and future direction is [documented in the WIKI](https://
   There are three ways to make use of this:
 
   * Use the new `uibuilder.setOrigin('<sender_node_id>')` function. This will then route ALL messages from the client back to the specified node. This is of marginal use because the main use-case for the property is to automate routing of data to/from web components of which there are likely to be several on a web page.
-  * Use the new override parameter for the send function. `uibuilder.send(msg, '<sender_node_id>')`. This will send this one message back to the specified node. It will override the `setOrigin`. The utility `uibuilder.eventSend()` method has also been updated to allow the originator parameter.
+  * Use the new optional override parameter for the send function. `uibuilder.send(msg, '<sender_node_id>')`. This will send this one message back to the specified node. It will override the `setOrigin`. The utility `uibuilder.eventSend()` method (that lets you easily send a msg back to Node-RED from a DOM event) has also been updated to allow the originator parameter.
   * Manually add the metadata to the node `{ _uib: {originator: <sender_node_id>}, payload: ... }`. This is not generally recommended as it is error prone. However, if writing custom front-end components, you may want to include the origin property as an option to allow end-to-end automatic routing of messages to/from your component instances.
 
   See the new `uib-sender` node details above for an example of using the `originator` property. That node adds the property to its received msgs before sending to your connected clients.

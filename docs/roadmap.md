@@ -99,6 +99,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Allow the use of `public` as well as `src` and `dist`. Svelte outputs to the public folder by default. Also add warnings if no index.html file exists in the folder in use.
 * If instance folder doesn't exist - need to mark node as changed to force deploy.
 * Show Socket.io server version
+* Introduce standard events: url-change
 
 ### Front-End Changes (`uibuilderfe.js`)
 
@@ -119,6 +120,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add funding link to package.json (see `man 5 package.json`)
 * Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
 * Serve uibuilderfe on `../uibuilder/` path as well as `./` for greater consistency
+* Introduce standard events: url-change
 
 ### Package Manager Class
 
