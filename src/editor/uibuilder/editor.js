@@ -971,6 +971,9 @@
             // Cannot be 'templates' as this is a reserved value (for v2)
             if ( value.toLowerCase().substring(0,9) === 'templates' ) 
                 this.urlErrors.templ = 'Cannot be "templates"'
+            // Must not be `uibuilder` (breaking change in v5)
+            if ( value.toLowerCase() === 'uibuilder' ) 
+                this.urlErrors.uibname = 'Cannot be "uibuilder" (since v5)'
         }
 
         // TODO ?MAYBE? Notify's shouldn't be here - only needed if "Done" (or event change)
