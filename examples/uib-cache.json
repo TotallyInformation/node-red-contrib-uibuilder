@@ -1,37 +1,75 @@
 [
     {
-        "id": "52f2635d02dd7baa",
+        "id": "f748d0e6cc78a2ba",
+        "type": "tab",
+        "label": "uib-cache",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "c582e19b78889a25",
         "type": "group",
-        "z": "bbba670ae518c0ec",
-        "name": "Test uibuilder cache node \\n ",
+        "z": "f748d0e6cc78a2ba",
+        "name": "Test uibuilder cache node without uibuilder \\n ",
         "style": {
             "fill": "#ffefbf",
             "fill-opacity": "0.34",
             "label": true
         },
         "nodes": [
-            "9decb7b08e0f9509",
-            "a45178d5cf51bfc7",
-            "454e0df97994b5d4",
-            "ce2ce0572b0e0d21",
-            "1bc0c7c6c93fb821",
-            "103e8b5e23f94630",
-            "4f597d829aa4f4c1",
-            "d7dfd431360c348b",
-            "8b6fabdd8e5df1f4",
-            "76d2697515112656",
-            "453898d2b4b5f974"
+            "4a1f0bc164fe96de",
+            "d948fc054b6c30ce",
+            "fd7084be579b5186",
+            "c4e341169cc82e9a",
+            "5e8d1fafc5a22dd0",
+            "1e87041b4bddbcba",
+            "5a8f49f1dff31d2f",
+            "8ea537cb67792d7f",
+            "122489d70f19ca24",
+            "0768c71d136a2c86",
+            "d3685f462ab15042"
         ],
-        "x": 74,
-        "y": 603,
+        "x": 54,
+        "y": 83,
         "w": 932,
         "h": 278
     },
     {
-        "id": "9decb7b08e0f9509",
+        "id": "124607d308a0f6a6",
+        "type": "group",
+        "z": "f748d0e6cc78a2ba",
+        "name": "Example of using the cache with uibuilder \\n ",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "9c253e4c5651a568",
+            "acccaec15b621319",
+            "594248fc5dc5f799",
+            "445a19cff9f8da1f",
+            "f9af5b7d2545e9e5",
+            "06327985e9dae780",
+            "c6306e9378b9c1f2",
+            "ed061d1aaea36b27",
+            "2fac9874556f1c88",
+            "4330971395e0a4b9",
+            "49d6a6f1bd5358ee",
+            "ac3988907ad3ccaa",
+            "95d8b757da5c9fd4",
+            "417119b1765dd5b1",
+            "309727329638650e"
+        ],
+        "x": 44,
+        "y": 403,
+        "w": 1082,
+        "h": 298
+    },
+    {
+        "id": "4a1f0bc164fe96de",
         "type": "inject",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "",
         "props": [
             {
@@ -45,19 +83,19 @@
         "topic": "",
         "payload": "Empty Topic",
         "payloadType": "str",
-        "x": 210,
-        "y": 740,
+        "x": 190,
+        "y": 220,
         "wires": [
             [
-                "ce2ce0572b0e0d21"
+                "c4e341169cc82e9a"
             ]
         ]
     },
     {
-        "id": "a45178d5cf51bfc7",
+        "id": "d948fc054b6c30ce",
         "type": "debug",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "",
         "active": true,
         "tosidebar": true,
@@ -67,15 +105,15 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 910,
-        "y": 740,
+        "x": 890,
+        "y": 220,
         "wires": []
     },
     {
-        "id": "454e0df97994b5d4",
+        "id": "fd7084be579b5186",
         "type": "debug",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "",
         "active": true,
         "tosidebar": true,
@@ -85,34 +123,34 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 690,
-        "y": 700,
+        "x": 670,
+        "y": 180,
         "wires": []
     },
     {
-        "id": "ce2ce0572b0e0d21",
+        "id": "c4e341169cc82e9a",
         "type": "uib-cache",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "cacheall": false,
         "cacheKey": "topic",
         "num": "4",
         "storeName": "default",
         "name": "",
-        "x": 490,
-        "y": 740,
+        "x": 470,
+        "y": 220,
         "wires": [
             [
-                "454e0df97994b5d4",
-                "4f597d829aa4f4c1"
+                "fd7084be579b5186",
+                "5a8f49f1dff31d2f"
             ]
         ]
     },
     {
-        "id": "1bc0c7c6c93fb821",
+        "id": "5e8d1fafc5a22dd0",
         "type": "inject",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "two",
         "props": [
             {
@@ -130,19 +168,19 @@
         "topic": "two",
         "payload": "{\"a\":\"Number Two\",\"b\":{\"b1\":1,\"b2\":{\"b2i\":1,\"b2ii\":2}}}",
         "payloadType": "json",
-        "x": 230,
-        "y": 700,
+        "x": 210,
+        "y": 180,
         "wires": [
             [
-                "ce2ce0572b0e0d21"
+                "c4e341169cc82e9a"
             ]
         ]
     },
     {
-        "id": "103e8b5e23f94630",
+        "id": "1e87041b4bddbcba",
         "type": "inject",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "one",
         "props": [
             {
@@ -160,19 +198,19 @@
         "topic": "one",
         "payload": "Number One",
         "payloadType": "str",
-        "x": 230,
-        "y": 660,
+        "x": 210,
+        "y": 140,
         "wires": [
             [
-                "ce2ce0572b0e0d21"
+                "c4e341169cc82e9a"
             ]
         ]
     },
     {
-        "id": "4f597d829aa4f4c1",
+        "id": "5a8f49f1dff31d2f",
         "type": "change",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "",
         "rules": [
             {
@@ -190,19 +228,19 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 740,
-        "y": 740,
+        "x": 720,
+        "y": 220,
         "wires": [
             [
-                "a45178d5cf51bfc7"
+                "d948fc054b6c30ce"
             ]
         ]
     },
     {
-        "id": "d7dfd431360c348b",
+        "id": "8ea537cb67792d7f",
         "type": "inject",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "",
         "props": [
             {
@@ -215,20 +253,20 @@
         "onceDelay": 0.1,
         "topic": "",
         "payloadType": "str",
-        "x": 135,
-        "y": 800,
+        "x": 115,
+        "y": 280,
         "wires": [
             [
-                "8b6fabdd8e5df1f4"
+                "122489d70f19ca24"
             ]
         ],
         "l": false
     },
     {
-        "id": "8b6fabdd8e5df1f4",
+        "id": "122489d70f19ca24",
         "type": "function",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "REPLAY",
         "func": "\nreturn { \n    \"uibuilderCtrl\": \"replay\", \n    \"cacheControl\": \"REPLAY\", \n}",
         "outputs": 1,
@@ -236,19 +274,19 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 220,
-        "y": 800,
+        "x": 200,
+        "y": 280,
         "wires": [
             [
-                "ce2ce0572b0e0d21"
+                "c4e341169cc82e9a"
             ]
         ]
     },
     {
-        "id": "76d2697515112656",
+        "id": "0768c71d136a2c86",
         "type": "inject",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "",
         "props": [
             {
@@ -261,20 +299,20 @@
         "onceDelay": 0.1,
         "topic": "",
         "payloadType": "str",
-        "x": 135,
-        "y": 840,
+        "x": 115,
+        "y": 320,
         "wires": [
             [
-                "453898d2b4b5f974"
+                "d3685f462ab15042"
             ]
         ],
         "l": false
     },
     {
-        "id": "453898d2b4b5f974",
+        "id": "d3685f462ab15042",
         "type": "function",
-        "z": "bbba670ae518c0ec",
-        "g": "52f2635d02dd7baa",
+        "z": "f748d0e6cc78a2ba",
+        "g": "c582e19b78889a25",
         "name": "CLEAR",
         "func": "\nreturn { \n    \"uibuilderCtrl\": \"clear cache\", \n    \"cacheControl\": \"CLEAR\", \n}",
         "outputs": 1,
@@ -282,11 +320,378 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 220,
-        "y": 840,
+        "x": 200,
+        "y": 320,
         "wires": [
             [
-                "ce2ce0572b0e0d21"
+                "c4e341169cc82e9a"
+            ]
+        ]
+    },
+    {
+        "id": "30809c9afab08529",
+        "type": "comment",
+        "z": "f748d0e6cc78a2ba",
+        "name": "Examples of using the uib-cache node with and without uibuilder itself.",
+        "info": "",
+        "x": 310,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "9c253e4c5651a568",
+        "type": "uibuilder",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "topic": "",
+        "url": "uib-cache-example",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": true,
+        "useSecurity": false,
+        "allowUnauth": false,
+        "allowAuthAnon": false,
+        "sessionLength": 432000,
+        "tokenAutoExtend": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "5.0.0-dev.2",
+        "x": 680,
+        "y": 540,
+        "wires": [
+            [
+                "49d6a6f1bd5358ee"
+            ],
+            [
+                "445a19cff9f8da1f",
+                "c6306e9378b9c1f2"
+            ]
+        ]
+    },
+    {
+        "id": "acccaec15b621319",
+        "type": "inject",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Empty Topic",
+        "payloadType": "str",
+        "x": 190,
+        "y": 540,
+        "wires": [
+            [
+                "ed061d1aaea36b27"
+            ]
+        ]
+    },
+    {
+        "id": "594248fc5dc5f799",
+        "type": "debug",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1065,
+        "y": 520,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "445a19cff9f8da1f",
+        "type": "debug",
+        "z": "f748d0e6cc78a2ba",
+        "d": true,
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 885,
+        "y": 580,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "f9af5b7d2545e9e5",
+        "type": "debug",
+        "z": "f748d0e6cc78a2ba",
+        "d": true,
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 595,
+        "y": 500,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "06327985e9dae780",
+        "type": "link in",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "links": [
+            "c6306e9378b9c1f2"
+        ],
+        "x": 245,
+        "y": 580,
+        "wires": [
+            [
+                "ed061d1aaea36b27"
+            ]
+        ]
+    },
+    {
+        "id": "c6306e9378b9c1f2",
+        "type": "link out",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "06327985e9dae780"
+        ],
+        "x": 845,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "ed061d1aaea36b27",
+        "type": "uib-cache",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "cacheall": false,
+        "cacheKey": "topic",
+        "num": "4",
+        "storeName": "default",
+        "name": "",
+        "x": 440,
+        "y": 540,
+        "wires": [
+            [
+                "9c253e4c5651a568",
+                "f9af5b7d2545e9e5"
+            ]
+        ]
+    },
+    {
+        "id": "2fac9874556f1c88",
+        "type": "inject",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "two",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "two",
+        "payload": "{\"a\":\"Number Two\",\"b\":{\"b1\":1,\"b2\":{\"b2i\":1,\"b2ii\":2}}}",
+        "payloadType": "json",
+        "x": 210,
+        "y": 500,
+        "wires": [
+            [
+                "ed061d1aaea36b27"
+            ]
+        ]
+    },
+    {
+        "id": "4330971395e0a4b9",
+        "type": "inject",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "one",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "one",
+        "payload": "Number One",
+        "payloadType": "str",
+        "x": 210,
+        "y": 460,
+        "wires": [
+            [
+                "ed061d1aaea36b27"
+            ]
+        ]
+    },
+    {
+        "id": "49d6a6f1bd5358ee",
+        "type": "change",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "rules": [
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "Number",
+                "fromt": "str",
+                "to": "Some mumber",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 920,
+        "y": 520,
+        "wires": [
+            [
+                "594248fc5dc5f799"
+            ]
+        ],
+        "info": "If you change the uibuilder settings to fwd \r\ninput messages, this function changes an\r\nentry to make certain that the cached variables\r\nare NOT REFERENCES but completely separate\r\nclones. In other words, it makes sure that there\r\nare no unintended consequences of using the\r\ncache."
+    },
+    {
+        "id": "ac3988907ad3ccaa",
+        "type": "inject",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "str",
+        "x": 105,
+        "y": 620,
+        "wires": [
+            [
+                "95d8b757da5c9fd4"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "95d8b757da5c9fd4",
+        "type": "function",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "REPLAY",
+        "func": "\nreturn { \n    \"uibuilderCtrl\": \"Gimme something\", \n    \"cacheControl\": \"REPLAY\", \n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 620,
+        "wires": [
+            [
+                "ed061d1aaea36b27"
+            ]
+        ]
+    },
+    {
+        "id": "417119b1765dd5b1",
+        "type": "inject",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "str",
+        "x": 105,
+        "y": 660,
+        "wires": [
+            [
+                "309727329638650e"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "309727329638650e",
+        "type": "function",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "CLEAR",
+        "func": "\nreturn { \n    \"uibuilderCtrl\": \"Clear me out!\", \n    \"cacheControl\": \"CLEAR\", \n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 660,
+        "wires": [
+            [
+                "ed061d1aaea36b27"
             ]
         ]
     }

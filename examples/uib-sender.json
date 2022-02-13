@@ -1,0 +1,277 @@
+[
+    {
+        "id": "08281f5a146fee7f",
+        "type": "tab",
+        "label": "uib-sender",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2b82c232b05410a5",
+        "type": "group",
+        "z": "08281f5a146fee7f",
+        "name": "Main uibuilder node \\n ",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "c6d5ea48b39d1428",
+            "be455b4d4caff567",
+            "ef16c5036419f2d1",
+            "6a22f49cbb9a5929"
+        ],
+        "x": 34,
+        "y": 263,
+        "w": 602,
+        "h": 138
+    },
+    {
+        "id": "43efdb3cb9d5a750",
+        "type": "group",
+        "z": "08281f5a146fee7f",
+        "name": "uib-sender node \\n ",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "2646630c56235673",
+            "1251bc74cd96765c",
+            "50c73c4d00f6ba6c"
+        ],
+        "x": 34,
+        "y": 423,
+        "w": 602,
+        "h": 98
+    },
+    {
+        "id": "2646630c56235673",
+        "type": "uib-sender",
+        "z": "08281f5a146fee7f",
+        "g": "43efdb3cb9d5a750",
+        "url": "uib-sender-example",
+        "name": "",
+        "topic": "",
+        "passthrough": false,
+        "return": true,
+        "outputs": 1,
+        "x": 420,
+        "y": 480,
+        "wires": [
+            [
+                "50c73c4d00f6ba6c"
+            ]
+        ]
+    },
+    {
+        "id": "c6d5ea48b39d1428",
+        "type": "uibuilder",
+        "z": "08281f5a146fee7f",
+        "g": "2b82c232b05410a5",
+        "name": "",
+        "topic": "",
+        "url": "uib-sender-example",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "useSecurity": false,
+        "allowUnauth": false,
+        "allowAuthAnon": false,
+        "sessionLength": 432000,
+        "tokenAutoExtend": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "5.0.0-dev.2",
+        "x": 420,
+        "y": 340,
+        "wires": [
+            [
+                "ef16c5036419f2d1"
+            ],
+            [
+                "6a22f49cbb9a5929"
+            ]
+        ]
+    },
+    {
+        "id": "be455b4d4caff567",
+        "type": "inject",
+        "z": "08281f5a146fee7f",
+        "g": "2b82c232b05410a5",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "msg-direct",
+        "payload": "msg direct",
+        "payloadType": "str",
+        "x": 180,
+        "y": 340,
+        "wires": [
+            [
+                "c6d5ea48b39d1428"
+            ]
+        ]
+    },
+    {
+        "id": "ef16c5036419f2d1",
+        "type": "debug",
+        "z": "08281f5a146fee7f",
+        "g": "2b82c232b05410a5",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 575,
+        "y": 320,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "1251bc74cd96765c",
+        "type": "inject",
+        "z": "08281f5a146fee7f",
+        "g": "43efdb3cb9d5a750",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "msg-from-uib-sender",
+        "payload": "Msg from uib-sender",
+        "payloadType": "str",
+        "x": 170,
+        "y": 480,
+        "wires": [
+            [
+                "2646630c56235673"
+            ]
+        ]
+    },
+    {
+        "id": "50c73c4d00f6ba6c",
+        "type": "debug",
+        "z": "08281f5a146fee7f",
+        "g": "43efdb3cb9d5a750",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 575,
+        "y": 480,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "6a22f49cbb9a5929",
+        "type": "debug",
+        "z": "08281f5a146fee7f",
+        "g": "2b82c232b05410a5",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 575,
+        "y": 360,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "6ebce417868118d4",
+        "type": "comment",
+        "z": "08281f5a146fee7f",
+        "name": "index.html",
+        "info": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n    <title>uib-sender node example - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - uib-sender node example\">\n    <link rel=\"icon\" href=\"./images/node-blue.ico\">\n\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n</head><body class=\"uib\">\n    \n    <h1>uibuilder Blank Template</h1>\n\n    <button onclick=\"fnSendToMain()\">Send a message back to main node</button>\n    <button onclick=\"fnSendToSender()\">Send a message back to uib-sender node</button>\n\n    <p>\n        The first button sends a message back to the main uibuilder node. Attach a debug node to port #1 of that node to see it.\n    </p>\n    <p>\n        The second button only works if you have first sent a message via a uib-sender node. When you do, pressing the button\n        will return a msg back to the sender node and not to the main node.\n    </p>\n\n    <pre id=\"msg\" class=\"syntax-highlight\">Waiting for a message from Node-RED</pre>\n\n    <p>\n        Note that there are only around 5 required lines of HMTL and around 30 lines of JavaScript required to make this\n        example work. Thanks to the uibuilderfe library along with uibuilder which do all the hard work.\n        Only 1 line of CSS gives you a decent looking output.\n        😁\n    </p>\n\n    <script src=\"../uibuilder/vendor/socket.io/socket.io.js\"></script>\n    <script src=\"./uibuilderfe.min.js\"></script>\n    <script src=\"./index.js\"></script>\n\n</body></html>",
+        "x": 100,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "f484ff03b341de2c",
+        "type": "comment",
+        "z": "08281f5a146fee7f",
+        "name": "index.js",
+        "info": "/* eslint-disable strict */\n/* jshint browser: true, esversion: 6, asi: true */\n/* globals uibuilder */\n// @ts-nocheck\n\n/** Minimalist code for uibuilder and Node-RED */\n'use strict'\n\n// return formatted HTML version of JSON object\nwindow.syntaxHighlight = function (json) {\n    json = JSON.stringify(json, undefined, 4)\n    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')\n    json = json.replace(/(\"(\\\\u[a-zA-Z0-9]{4}|\\\\[^u]|[^\\\\\"])*\"(\\s*:)?|\\b(true|false|null)\\b|-?\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d+)?)/g, function (match) {\n        var cls = 'number'\n        if (/^\"/.test(match)) {\n            if (/:$/.test(match)) {\n                cls = 'key'\n            } else {\n                cls = 'string'\n            }\n        } else if (/true|false/.test(match)) {\n            cls = 'boolean'\n        } else if (/null/.test(match)) {\n            cls = 'null'\n        }\n        return '<span class=\"' + cls + '\">' + match + '</span>'\n    })\n    return json\n} // --- End of syntaxHighlight --- //\n\nfunction fnSendToMain() {\n    uibuilder.send({\n        topic: 'msg-from-fe-to-main-node',\n        payload: 'msg from FE to main node',\n    })\n}\n\nfunction fnSendToSender() {\n    let lastMsg = uibuilder.get('msg')\n\n    if ( lastMsg._uib && lastMsg._uib.originator ) {\n        let orig = lastMsg._uib.originator\n        uibuilder.send(\n            {\n                topic: 'msg-from-fe-to-main-node',\n                payload: 'msg from FE to main node',\n            },\n            orig\n        )\n    } else {\n        uibuilder.showToast('Send me a msg from a uib-sender node then you can reply with the button.')\n    }\n}\n\n// run this function when the document is loaded\nwindow.onload = function() {\n    // Start up uibuilder - see the docs for the optional parameters\n    uibuilder.start()\n\n    // Listen for incoming messages from Node-RED\n    uibuilder.onChange('msg', function(msg){\n        console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', msg)\n\n        // dump the msg as text to the \"msg\" html element\n        const eMsg = document.getElementById('msg')\n        eMsg.innerHTML = window.syntaxHighlight(msg)\n    })\n}",
+        "x": 270,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "a15e0ef0848b0a74",
+        "type": "comment",
+        "z": "08281f5a146fee7f",
+        "name": "index.css",
+        "info": "/* Load the defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/src/uib-styles.css` */\n@import url(\"./uib-styles.css\");\n",
+        "x": 440,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "13f96c4ce8b686ed",
+        "type": "comment",
+        "z": "08281f5a146fee7f",
+        "name": "Make sure that you take the content of the 3 comments below and \\n put them into the appropriate files using the uibuilder file editor",
+        "info": "",
+        "x": 270,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "4e6f404e6dd580b4",
+        "type": "comment",
+        "z": "08281f5a146fee7f",
+        "name": "As soon as you import this example, press Deploy before doing anything else. \\n This will create the required folders.",
+        "info": "",
+        "x": 310,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "97a6a2230c6ef108",
+        "type": "comment",
+        "z": "08281f5a146fee7f",
+        "name": "If you change the uibuilder URL for this example, \\n make sure you Deploy and then change the selection in the uib-sender node to match.",
+        "info": "",
+        "x": 340,
+        "y": 600,
+        "wires": []
+    }
+]
