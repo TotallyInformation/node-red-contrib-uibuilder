@@ -550,8 +550,6 @@ function adminRouterV2(uib, log) {
                     <hr>
                     <h2>uibuilder ExpressJS Routes</h2>
                     <p>These tables show all of the web URL routes for uibuilder.</p>
-                `
-                page += `
                     <h3>User-Facing Routes</h3>
                     ${web.htmlBuildTable( web.routers.user, ['name', 'desc', 'path', 'type', 'folder'] )}
                     <h4>ExpressJS technical route data for admin routes</h4>
@@ -561,8 +559,6 @@ function adminRouterV2(uib, log) {
                     ${web.htmlBuildTable( routes.user.uibRouter, ['name','path', 'folder', 'route'] )}
                     <h5>Vendor Routes (<code>../uibuilder/vendor/*</code>)</h5>
                     ${web.htmlBuildTable( routes.user.vendorRouter, ['name','path', 'folder', 'route'] )}
-                `
-                page += `
                     <hr>
                     <h3>Per-Instance User-Facing Routes</h3>
                 `
