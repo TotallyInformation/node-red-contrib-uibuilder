@@ -28,6 +28,14 @@ window.syntaxHighlight = function (json) {
     return json
 } // --- End of syntaxHighlight --- //
 
+// Send a message back to Node-RED
+window.fnSendToNR = function fnSendToNR(payload) {
+    uibuilder.send({
+        'topic': 'msg-from-uibuilder-front-end',
+        'payload': payload,
+    })
+}
+
 // run this function when the document is loaded
 window.onload = function() {
     // Start up uibuilder - see the docs for the optional parameters
