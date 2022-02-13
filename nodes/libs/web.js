@@ -28,11 +28,12 @@
 const path = require('path')
 const fs = require('fs-extra')
 const fg = require('fast-glob')
+const serveIndex = require('serve-index')
+const express = require('express')
 const tilib = require('./tilib')
 const uiblib = require('./uiblib')
-const serveIndex = require('serve-index')
 const packageMgt = require('./package-mgt.js')
-const express = require('express')
+const socket = require('./socket.js')
 //const { isBuffer } = require('util')
 //const { type } = require('os')
 
@@ -141,9 +142,9 @@ class UibWeb {
 
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
         this._adminApiSetup()
+        this._setMasterStaticFolder()
         this._webSetup()
         this._userApiSetup()
-        this._setMasterStaticFolder()
 
     } // --- End of setup() --- //
 
@@ -307,6 +308,9 @@ class UibWeb {
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router({mergeParams:true}) // eslint-disable-line new-cap
 
+        // Add masterStatic to ../uibuilder - serves up front-end/... uib-styles.css, uibuilderfe...
+        if ( this.masterStatic !== undefined )
+            this.uibRouter.use( express.static( this.masterStatic, uib.staticOpts ) )
         // Add vendor paths for installed front-end libraries - from `<uibRoot>/package.json`
         this.serveVendorPackages()
         // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
@@ -897,6 +901,18 @@ class UibWeb {
         //let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
         let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${node.url}`
 
+        const nodeKeys = [
+            'id', 'type',  
+            'name', 'wires', '_wireCount', 'credentials', 'topic', 'url', 
+            'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder', 
+            'useSecurity', 'sessionLength', 'tokenAutoExtend', 'customFolder', 
+            'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
+        ]
+        // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]
+        // Keep secret: ['jwtSecret', ]
+
+        let ns = socket.getNs(node.url)
+
         page += `
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
@@ -911,126 +927,125 @@ class UibWeb {
                 <p>
                     Note that this page is only accessible to users with Node-RED admin authority.
                 </p>
-            `
-    
-        page += `
-            <h2>Instance Information for '${node.url}'</h2>
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <th>The node id for this instance</th>
-                        <td>${node.id}<br>
-                            This can be used to search for the node in the Editor.
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Filing system path to front-end resources</th>
-                        <td>${node.customFolder}<br>
-                            Contains all of your UI code and other resources.
-                            Folders and files can be viewed, edited, created and deleted using the "Edit Files" button.
-                            You <b>MUST</b> keep at least the <code>src</code> and <code>dist</code> folders otherwise things may not work.
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>URL for the front-end resources</th>
-                        <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, node.url).replace('/','')}" target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
-                    </tr>
-                    <tr>
-                        <th>Node-RED userDir folder</th>
-                        <td>${userDir}<br>
-                            Also the location for any installed vendor resources (installed library packages)
-                            and your other nodes.
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>URL for vendor resources</th>
-                        <td>../uibuilder/vendor/<br>
-                            See the <a href="../../uibindex" target="_blank">Detailed Information Page</a> for more details.
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Filing system path to common (shared) front-end resources</th>
-                        <td>${uib.commonFolder}<br>
-                            Resource files in this folder are accessible from the main URL.
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Filing system path to common uibuilder configuration resource files</th>
-                        <td>${uib.configFolder}<br>
-                            Contains the package list, master package list, authentication and authorisation middleware.
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Filing system path to uibuilder master template files</th>
-                        <td>${uib.masterTemplateFolder}<br>
-                            These are copied to any new instance of the uibuilder node.
-                            If you keep the copy flag turned on they are re-copied if deleted.
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>uibuilder version</th>
-                        <td>${uib.version}</td>
-                    </tr>
-                    <tr>
-                        <th>Node-RED version</th>
-                        <td>${RED.settings.version}<br>
-                            Minimum version required by uibuilder is ${uib.me['node-red'].version}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Node.js version</th>
-                        <td>${uib.nodeVersion.join('.')}<br>
-                            Minimum version required by uibuilder is ${uib.me.engines.node}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            `
-
-        const nodeKeys = [
-            'id', 'type',  
-            'name', 'wires', '_wireCount', 'credentials', 'topic', 'url', 
-            'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder', 
-            'useSecurity', 'sessionLength', 'tokenAutoExtend', 'customFolder', 
-            'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
-        ]
-        // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]
-        // Keep secret: ['jwtSecret', ]
-    
-        page += `
-            <h2>Node Instance Configuration Items</h2>
-            <p>
-                Shows the internal configuration.
-            </p>
-            <table class="table">
-                <tbody>
-            `
+                <h2>Instance Information for '${node.url}'</h2>
+                <table class="uib-info-tb">
+                    <tbody>
+                        <tr>
+                            <th>The node id for this instance</th>
+                            <td>${node.id}<br>
+                                This can be used to search for the node in the Editor.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Filing system path to front-end resources</th>
+                            <td>${node.customFolder}<br>
+                                Contains all of your UI code and other resources.
+                                Folders and files can be viewed, edited, created and deleted using the "Edit Files" button.
+                                You <b>MUST</b> keep at least the <code>src</code> and <code>dist</code> folders otherwise things may not work.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>URL for the front-end resources</th>
+                            <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, node.url).replace('/','')}" target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
+                        </tr>
+                        <tr>
+                            <th>Node-RED userDir folder</th>
+                            <td>${userDir}<br>
+                                Also the location for any installed vendor resources (installed library packages)
+                                and your other nodes.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>URL for vendor resources</th>
+                            <td>../uibuilder/vendor/<br>
+                                See the <a href="../../uibindex" target="_blank">Detailed Information Page</a> for more details.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Filing system path to common (shared) front-end resources</th>
+                            <td>${uib.commonFolder}<br>
+                                Resource files in this folder are accessible from the main URL.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Filing system path to common uibuilder configuration resource files</th>
+                            <td>${uib.configFolder}<br>
+                                Contains the package list, master package list, authentication and authorisation middleware.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Filing system path to uibuilder master template files</th>
+                            <td>${uib.masterTemplateFolder}<br>
+                                These are copied to any new instance of the uibuilder node.
+                                If you keep the copy flag turned on they are re-copied if deleted.
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>uibuilder version</th>
+                            <td>${uib.version}</td>
+                        </tr>
+                        <tr>
+                            <th>Node-RED version</th>
+                            <td>${RED.settings.version}<br>
+                                Minimum version required by uibuilder is ${uib.me['node-red'].version}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Node.js version</th>
+                            <td>${uib.nodeVersion.join('.')}<br>
+                                Minimum version required by uibuilder is ${uib.me.engines.node}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h2>Node Instance Configuration Items</h2>
+                <p>
+                    Shows the internal configuration.
+                </p>
+                <table class="uib-info-tb">
+                    <tbody>
+        `
 
         nodeKeys.sort().forEach( item => {
             let info = node[item]
+
+            if ( item === 'ioNamespace' ) info = ns.name
+            if ( item === 'ioClientsCount' ) info = ns.sockets.size
+
             try {
                 if ( info !== null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
             } catch (e) {
                 if ( info !== undefined )
-                    RED.log.warn(`[uibuilder:uiblib:showInstanceDetails] ${node.id}, ${url}: Item '${item}' failed to stringify. ${e.message}`)
+                    RED.log.warn(`[uibuilder:webjs:showInstanceDetails] ${node.id}, ${url}: Item '${item}' failed to stringify. ${e.message}`)
             }
+
             page += `
-                <tr>
-                    <th>${item}</th>
-                    <td>${info}</td>
-                </tr>
-                `
+                        <tr>
+                            <th>${item}</th>
+                            <td>${info}</td>
+                        </tr>
+            `
         })
 
         page += `
-                </tbody>
-            </table>
-            `
+                    </tbody>
+                </table>
+                <div></div>
+        `
 
-        page += '' // eslint-disable-line no-implicit-coercion
-        page += '<div></div>'
+        let iRoutes = Object.values(this.dumpInstanceRoutes(false, node.url))[0]
+        console.log(iRoutes)
+        page += `
+            <h4>Instance Routes for ${node.url}</h4>
+            ${this.htmlBuildTable( this.routers.instances[node.url], ['name', 'desc', 'path', 'type', 'folder'] )}
+            <h5>ExpressJS technical route data for <code>${node.url}</code> (<code>../${node.url}/*</code>)</h5>
+            ${this.htmlBuildTable( iRoutes, ['name','path', 'folder', 'route'] )}
+            `                    
 
-        page += '</body></html>'
+        page += `
+            </body></html>
+
+        `
 
         return page
     } // ---- End of showInstanceDetails ---- //
@@ -1213,7 +1228,7 @@ class UibWeb {
         if (!cols) {
             cols = Object.keys(input[0])
         }
-        let html = '<div class="table-responsive"><table  class="table table-sm"><tr>'
+        let html = '<div class="table-responsive"><table  class="uib-info-tb table table-sm"><thead><tr>'
 
         const escapeHTML = str => 
             str.replace(/[&<>'"]/g, 
@@ -1245,7 +1260,7 @@ class UibWeb {
             html += col
             html += '</th>'
         })
-        html += '</tr>'
+        html += '</tr></thead>'
 
         for (const entry of input) {
             html += '<tr>'
