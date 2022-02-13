@@ -20,6 +20,11 @@
     --uib-color-primary:   0, 123, 255;   /* Blue  */
     --uib-color-secondary: 108, 117, 125; /* Grey  */
     --uib-color-success:   40, 167, 69;   /* Green */
+    /* Use these for lightening backgrounds using background-blend-mode: lighten; */
+    --uib-lum-22: hsl(0, 0%, 22%);
+    --uib-lum-28: hsl(0, 0%, 28%);
+    --uib-lum-78: hsl(0, 0%, 78%);
+    --uib-lum-72: hsl(0, 0%, 72%);
 
     --uib-color-fg: var(--uib-color-dark);
     --uib-color-bg: var(--uib-color-light);
@@ -30,12 +35,20 @@
     :root {
         --uib-color-fg: var(--uib-color-dark);
         --uib-color-bg: var(--uib-color-light);
+        --uib-lum-lighten: linear-gradient(var(--uib-lum-72),var(--uib-lum-78),var(--uib-lum-72));
+        --uib-border: rgb(var(--uib-color-dark));
+        --uib-link: blue; /*-webkit-link;*/
+        --uib-link-visited: purple;
     }
 }
 @media (prefers-color-scheme: dark) {
     :root {
         --uib-color-fg: var(--uib-color-light);
         --uib-color-bg: var(--uib-color-dark);
+        --uib-lum-lighten: linear-gradient(var(--uib-lum-22),var(--uib-lum-28),var(--uib-lum-22));
+        --uib-border: rgb(var(--uib-color-light));
+        --uib-link: rgb(135, 206, 250);
+        --uib-link-visited: rgb(109, 75, 141);
     }
 }
 
@@ -45,6 +58,11 @@ body.uib {
     font-family: sans-serif;
     background-color: rgb(var(--uib-color-bg));
     color: rgb(var(--uib-color-fg));
+}
+body.uib div, body.uib p, body.uib code {
+    margin:0.3em;
+    padding:0.3em;
+    font-size:110%;
 }
 
 /*#region -- Toasts - Readable pop-over notifications -- */
@@ -98,10 +116,39 @@ body.uib {
 
 /*#endregion -- Toasts - Readable pop-over notifications -- */
 
-/*  Colours for Syntax Highlighted pre's */
+/* Info table (used by instance details/debug page) */
+.uib-info-tb {
+    border-collapse: collapse;
+    border: 1px solid var(--uib-border);
+}
+.uib-info-tb thead th {
+    color: rgb(var(--uib-color-bg));
+    background: rgb(var(--uib-color-fg));
+}
+
+.uib-info-tb th, .uib-info-tb td {
+    padding: .5rem;
+}
+.uib-info-tb th {
+    text-align: left;
+}
+.uib-info-tb tbody tr:nth-child(even) {
+    color: rgb(var(--uib-color-fg));
+    background: var(--uib-lum-lighten);
+    background-blend-mode: lighten;
+}
+
+a:link {
+    color: var(--uib-link);
+}
+a:visited {
+    color: var(--uib-link-visited);
+}
+
+/*#region  Colours for Syntax Highlighted pre's */
 .syntax-highlight {color:white;background-color:black;padding:5px 10px;font-family: monospace;white-space: pre;}
 .syntax-highlight > .key {color:#ffbf35}
 .syntax-highlight > .string {color:#5dff39;}
 .syntax-highlight > .number {color:#70aeff;}
 .syntax-highlight > .boolean {color:#b993ff;}
-
+/*#endregion */
