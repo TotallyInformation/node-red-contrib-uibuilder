@@ -133,10 +133,6 @@ class UibWeb {
 
         this.routers.config = {httpRoot: this.uib.httpRoot, httpAdminRoot: this.RED.settings.httpAdminRoot}
 
-        /** Optional port. If set, uibuilder will use its own ExpressJS server */
-        // @ts-ignore
-        if ( RED.settings.uibuilder && RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort) uib.customServer.port = RED.settings.uibuilder.port // eslint-disable-line eqeqeq
-
         // At this point we have the refs to uib and RED
         this._isConfigured = true
 
@@ -193,35 +189,6 @@ class UibWeb {
         const RED = this.RED
         const log = this.log
 
-        uib.customServer.isCustom = false
-        uib.customServer.port = Number(RED.settings.uiPort)
-        uib.customServer.type = 'http'
-        if ( RED.settings.https ) uib.customServer.type = 'https'
-        // Record the httpNodeRoot for later use
-        uib.nodeRoot = RED.settings.httpNodeRoot
-
-
-        // Override Node-RED's web server settings if required
-        if ( RED.settings.uibuilder ) {
-
-            // Are we using a custom server?
-            if ( RED.settings.uibuilder.port && RED.settings.uibuilder.port != RED.settings.uiPort ) { // eslint-disable-line eqeqeq
-                uib.customServer.isCustom = true
-                uib.customServer.port = Number(RED.settings.uibuilder.port)
-                // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change instead if needed.
-                uib.nodeRoot = ''
-            }
-
-            // http, https or http2
-            if ( RED.settings.uibuilder.customType ) {
-                uib.customServer.type = RED.settings.uibuilder.customType
-            }
-
-        }
-
-        // Note the system host name
-        uib.customServer.hostName = require('os').hostname()
-
         // Try to find the external LAN IP address of the server
         require('dns').lookup(uib.customServer.hostName, function (err, add) {
             if ( err ) {
@@ -259,18 +226,15 @@ class UibWeb {
                     try {
                         this.server = require('https').createServer(RED.settings.uibuilder.https, this.app)
                     } catch (e) {
-                        RED.log.error(
-                            `[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server.\n\t Check uibuilder.https in settings.js,\n\t make sure the key and cert files exist and are accessible.\n\t ${e.message}\n \n `,
-                            e
-                        )    
+                        // Throw error - we don't want to continue if https is needed but we can't create the server
+                        throw new Error(`[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server.\n\t Check uibuilder.https in settings.js,\n\t make sure the key and cert files exist and are accessible.\n\t ${e.message}\n \n `)
                     }
                 } else {
                     if ( RED.settings.https !== undefined ) { // eslint-disable-line no-lonely-if
                         this.server = require('https').createServer(RED.settings.https, this.app)
                     } else {
-                        RED.log.error(
-                            '[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server using NR https settings.\n\t Check https property in settings.js,\n\t make sure the key and cert files exist and are accessible.\n \n '
-                        )
+                        // Throw error - we don't want to continue if https is needed but we can't create the server
+                        throw new Error('[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server using NR https settings.\n\t Check https property in settings.js,\n\t make sure the key and cert files exist and are accessible.\n \n ')
                     }
                 }
             } else {
@@ -635,7 +599,7 @@ class UibWeb {
         // (1b) masterMiddleware - Generic dynamic middleware to add uibuilder specific headers & cookie
         this.instanceRouters[node.url].use(this.addMasterMiddleware(node) )
 
-        // TODO (1c) Add API middleware option - see https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6
+        // (1c) Add user-provided API middleware
         // let instanceApiRouter = this.getInstanceApiRouter(node)
         // if (instanceApiRouter) this.instanceRouters[node.url].use( '/api', instanceApiRouter )
         this.addInstanceApiRouter(node)
@@ -809,7 +773,7 @@ class UibWeb {
 
     } // --- End of setupInstanceStatic --- //
 
-    /** Load & return an ExpressJS Router from a file in <uibRoot>/<node.url>/lib/api.js
+    /** Load & return an ExpressJS Router from file(s) in <uibRoot>/<node.url>/api/*.js
      * @param {uibNode} node 
      * @returns {object|undefined} Valid instance router or undefined
      */
@@ -874,7 +838,6 @@ class UibWeb {
         return undefined
     } // ---- End of getInstanceApiRouter ---- //
 
-    // TODO Add this.routers & maybe this.dumpInstanceRoutes(false)
     /** Create instance details web page
      * @param {Express.Request} req ExpressJS Request object
      * @param {uibNode} node configuration data for this instance

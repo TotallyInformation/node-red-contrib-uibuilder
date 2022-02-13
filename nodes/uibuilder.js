@@ -94,6 +94,7 @@ const uib = {
     reDeployNeeded: '4.1.2',
     degitEmitter: undefined,
     RED: undefined,
+    instanceApiAllowed: false,
 }
 
 /** Current module version (taken from package.json) @constant {string} uib.version */
@@ -156,23 +157,50 @@ function runtimeSetup() {
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
     userDir = RED.settings.userDir
 
-    // Set the root folder
-    if ( RED.settings.uibuilder && RED.settings.uibuilder.uibRoot && typeof RED.settings.uibuilder.uibRoot === 'string') {
-        // Does the folder exist and is it accessible?
-        if ( ! fs.existsSync(RED.settings.uibuilder.uibRoot) ) {
-            // This is not recoverable so stop the Node here.
-            throw new Error(`Folder does not exist. Check settings.js:uibuilder.uibRoot '${RED.settings.uibuilder.uibRoot}'`)
+    // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uib
+    if ( RED.settings.uibuilder ) {
+        const settings = RED.settings.uibuilder
+
+        // Set the root folder
+        if ( settings.uibRoot && typeof settings.uibRoot === 'string') {
+            // Does the folder exist and is it accessible?
+            if ( ! fs.existsSync(settings.uibRoot) ) {
+                // This is not recoverable so stop the Node here.
+                throw new Error(`Folder does not exist. Check settings.js:uibuilder.uibRoot '${settings.uibRoot}'`)
+            }
+            uib.rootFolder = settings.uibRoot
+        } else {
+            // No override supplied
+            uib.rootFolder = path.join(userDir, uib.moduleName)
+            // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
+            if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
+                const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
+                if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
+            }
         }
-        uib.rootFolder = RED.settings.uibuilder.uibRoot
-    } else {
-        // No override supplied
-        uib.rootFolder = path.join(userDir, uib.moduleName)
-        // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
-        if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
-            const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
-            if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
+
+        // Get web-relavent uibuilder settings from settings.js
+        uib.customServer.port = Number(RED.settings.uiPort)
+        // Record the httpNodeRoot for later use
+        uib.nodeRoot = RED.settings.httpNodeRoot
+        // Note the system host name
+        uib.customServer.hostName = require('os').hostname()
+        /** HTTP(s) port. If set & different to node-red, uibuilder will use its own ExpressJS server */
+        // @ts-ignore - deliberately allowing string/number comparison
+        if ( settings.port && settings.port != RED.settings.uiPort) { // eslint-disable-line eqeqeq
+            uib.customServer.isCustom = true
+            uib.customServer.port = Number(settings.port)
+            // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change instead if needed.
+            uib.nodeRoot = ''
         }
-    }
+        // http, https or http2 (default=http)
+        if ( RED.settings.https ) uib.customServer.type = 'https'
+        if ( settings.customType ) uib.customServer.type = settings.customType
+
+        // Allow instance-level api's to be loaded (default=false)
+        if ( settings.instanceApiAllowed === true ) uib.instanceApiAllowed = true
+
+    } // --- end of settings.js --- //
 
     /** Locations for uib config can common folders */
     uib.configFolder = path.join(uib.rootFolder,uib.configFolderName) 

@@ -62,6 +62,7 @@
  * @property {('http'|'https')} [uibuilder.customType] Connection type - only if using custom ExpressJS instance
  * @property {object|Function} [uibuilder.https] Override https server settings (key/cert) - if not specified, uses main NR https prop
  * @property {object} [uibuilder.sioOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
+ * @property {boolean} [uibuilder.instanceApiAllowed] Allow instance-level custom API's to be loaded. Could be a security issue so it is controlled in settings.js
  * 
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version
@@ -335,6 +336,7 @@
  * @property {string=} version The deployed version of uibuilder (from `package.json`)
  * @property {string=} httpRoot Copy of RED.settings.httpRoot for ease of use
  * @property {string=} reDeployNeeded If the last deployed version is this version or earlier and the current version is greater than this, tell the Editor that a redeploy is needed
+ * @property {boolean} instanceApiAllowed Are instance-level API's allowed to be loaded? Could be a security issue so controlled from settings.js uibuilder.instanceApiAllowed. Default=false
  */
 
 /** senderNode1
