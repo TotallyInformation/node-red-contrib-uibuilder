@@ -9,8 +9,9 @@ lastUpdated: 2022-01-17 20:04:17
 
 Notes:
 
-* **WARNING** - This feature potentially allows flow authors and front-end developers
-* Note that it is generally best practice to stick with computing data in Node-RED flows and sending to uibuilder nodes rather than
+* **WARNING** - This feature potentially allows flow authors and front-end developers to create API's that may access the internals of Node-RED and even the server it is running on. For this reason, you must enable it in settings.js by setting `uibuilder.instanceApiAllowed` to `true`. It is turned off by default. It is recommended that you leave it that way unless you know what you are doing.
+
+* It is generally best practice to stick with computing things in Node-RED flows and sending to uibuilder nodes rather than
 using separate API's. However, there may be times when an API will be useful. API endpoints can, of course be called from any front-end
 code and so may also be used by other web apps.
 
@@ -20,7 +21,18 @@ Bottom line is that Instance API's should be a facility of last resort and used 
 
 ## Controlling access to the Instance API features
 
+Edit the settings.js file for the instance of Node-RED and change or add a `uibuilder` property with a `instanceApiAllowed` sub-property set to true.
 
+```js
+    /** Custom settings for all uibuilder node instances */
+    uibuilder: {
+        /** Controls whether the uibuilder instance API feature is enabled
+         *  Off by default since uncontrolled instance api's are a security and 
+         *  operational risk. Use with caution.
+         */
+        instanceApiAllowed: true,
+    },
+```
 
 ## Creating an API
 
@@ -94,7 +106,11 @@ These examples use the following assumed settings:
 
 ### Single Function
 
+TBC
+
 ### Multiple functions with no path property
+
+TBC
 
 ### Multiple functions with a path property
 
