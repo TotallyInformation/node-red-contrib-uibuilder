@@ -360,6 +360,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Sergio Rius](https://github.com/SergioRius) - thanks for reporting [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) and providing [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122) as a fix.
 - [Thorsten von Eicken](https://github.com/tve) - thanks for providing [PR #131](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/131) to improve CORS handling for Socket.IO.
 - [meeki007](https://github.com/meeki007) - thanks for supplying various documentation improvements and code fixes.
+- [Scott - talltechdude](https://github.com/talltechdude) - thanks for supplying PR #170.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 
