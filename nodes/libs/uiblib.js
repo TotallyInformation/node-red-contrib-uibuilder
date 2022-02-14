@@ -249,7 +249,7 @@ module.exports = {
         let clientId
         if ( req.headers.cookie ) {
             let matches = req.headers.cookie.match(/uibuilder-client-id=(?<id>.{21})/)
-            if ( !matches.groups.id ) clientId = nanoid()
+            if ( !matches || !matches.groups.id ) clientId = nanoid()
             else clientId = matches.groups.id
         } else {
             clientId = nanoid()
