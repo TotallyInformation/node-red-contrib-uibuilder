@@ -575,7 +575,7 @@ class UibWeb {
         // Reference static vars
         const uib = this.uib
         //const RED = this.RED
-        //const log = this.log
+        const log = this.log
 
         // NOTE: When an instance is renamed or deleted, the routes are removed
         //       See the relevant parts of uibuilder.js for details.
@@ -602,7 +602,8 @@ class UibWeb {
         // (1c) Add user-provided API middleware
         // let instanceApiRouter = this.getInstanceApiRouter(node)
         // if (instanceApiRouter) this.instanceRouters[node.url].use( '/api', instanceApiRouter )
-        this.addInstanceApiRouter(node)
+        if (uib.instanceApiAllowed === true ) this.addInstanceApiRouter(node)
+        else log.trace(`[uibuilder:webjs:instanceSetup] Instance API's not permitted. '${node.url}'`)
 
         // (2) THIS IS THE IMPORTANT ONE - customStatic - Add static route for instance local custom files (src or dist)
         this.instanceRouters[node.url].use( this.setupInstanceStatic(node) )
@@ -785,9 +786,9 @@ class UibWeb {
 
         // Allow all .js files in api folder to be loaded, always returns an array - NB: Fast Glob requires fwd slashes even on Windows
         const apiFiles = fg.sync(`${uib.rootFolder}/${node.url}/api/*.js`)
-        // console.log('>> apiFiles >>', `${uib.rootFolder}/${node.url}/api/*.js`, apiFiles)
+        //console.log('>> apiFiles >>', `${uib.rootFolder}/${node.url}/api/*.js`, apiFiles)
         apiFiles.forEach( instanceApiPath => {
-            // console.log('>> api file >>', fileName)
+            // console.log('>> api file >>', instanceApiPath)
 
             // Try to require the api module file
             let instanceApi
@@ -800,6 +801,7 @@ class UibWeb {
 
             // if instanceApi is a function, simply .use it on /api
             if ( instanceApi && typeof instanceApi === 'function' ) {
+                log.trace(`[uibuilder:webjs:addInstanceApiRouter] ${node.url} function api added`)
                 this.instanceRouters[node.url].use( '/api', instanceApi )
                 return
             } 
@@ -829,6 +831,7 @@ class UibWeb {
 
                 // TODO validate verb
                 if ( typeof instanceApi[fnName] === 'function' ) {
+                    log.trace(`[uibuilder:webjs:addInstanceApiRouter] ${node.url} api added. ${fnName}, ${apipath}`)
                     this.instanceRouters[node.url][fnName]( apipath, instanceApi[fnName] )
                 }
             })
@@ -997,7 +1000,6 @@ class UibWeb {
         `
 
         let iRoutes = Object.values(this.dumpInstanceRoutes(false, node.url))[0]
-        console.log(iRoutes)
         page += `
             <h4>Instance Routes for ${node.url}</h4>
             ${this.htmlBuildTable( this.routers.instances[node.url], ['name', 'desc', 'path', 'type', 'folder'] )}
