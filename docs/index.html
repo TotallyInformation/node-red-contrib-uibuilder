@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="description" content="uibuilder Technical Documentation">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="./favicon.ico">
+    <link rel="icon" type="image/png" href="./images/favicon.ico">
 
     <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@latest/themes/vue.css" /> -->
     <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/style.min.css"
@@ -21,15 +21,34 @@
         :root {
             --base-font-size: 20px;
             --sidebar-width: 22em;
-            /* --base-font-family: Frutiger W01, Arial, Sans-serif; */
+            /* --base-font-family: Arial, Sans-serif; */
             /*--sidebar-background: #005EB8;*/
         }
         .dhide {
             display: none;
         }
-
         img[src*="#cool"] {
             display: none;
+        }
+        .sidebar-nav > ul > li li {
+            font-style: normal;
+        }
+        .sidebar-nav > ul > li {
+            font-style: italic;
+        }
+        .sidebar-nav > ul > li > a {
+            font-style: normal;
+        }
+        .app-name-link img {
+            width: 5rem;
+            float:left
+        }
+        .app-name-link {
+            font-size: 80%;
+        }
+        .app-name-link::after {
+            content: "uibuilder v5 docs";
+            float:right;
         }
     </style>
 </head><body>
@@ -49,7 +68,7 @@
             // mergeNavbar: true,
             loadSidebar: true,
             autoHeader: false,
-            logo: '/node-blue-192x192.png',
+            logo: '/images/node-blue-192x192.png',
             auto2top: true,
             alias: {
                 '/.*/_sidebar.md': '/_sidebar.md', // use the same sidebar everywhere. See #301
