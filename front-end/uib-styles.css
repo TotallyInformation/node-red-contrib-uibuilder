@@ -13,7 +13,9 @@
  /* :root applies to everything */
 :root {
     --uib-color-light: 201, 209, 217;
+    --uib-color-light-30: 201, 209, 217, 0.3;
     --uib-color-dark:  36, 36, 36;
+    --uib-color-medium-dark:  56, 56, 56;
     --uib-color-info:  23, 162, 184; /* Cyan  */
     --uib-color-warn:  255, 193, 7;  /* Amber */
     --uib-color-error: 220, 53, 69;  /* Red   */
@@ -27,14 +29,16 @@
     --uib-lum-72: hsl(0, 0%, 72%);
 
     --uib-color-fg: var(--uib-color-dark);
-    --uib-color-bg: var(--uib-color-light);
+    --uib-color-bg: var(--uib-color-light-30);
 }
 
 /* If the browser reports it, we can adjust for light/dark theme preferences */
 @media (prefers-color-scheme: light) {
     :root {
         --uib-color-fg: var(--uib-color-dark);
-        --uib-color-bg: var(--uib-color-light);
+        --uib-color-fg-lighter: var(--uib-color-medium-dark);
+        --uib-color-bg: var(--uib-color-light-30);
+        --uib-color-bg-lighter: var(--uib-color-light);
         --uib-lum-lighten: linear-gradient(var(--uib-lum-72),var(--uib-lum-78),var(--uib-lum-72));
         --uib-border: rgb(var(--uib-color-dark));
         --uib-link: blue; /*-webkit-link;*/
@@ -44,7 +48,9 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --uib-color-fg: var(--uib-color-light);
+        --uib-color-fg-lighter: var(--uib-color-light);
         --uib-color-bg: var(--uib-color-dark);
+        --uib-color-bg-lighter: var(--uib-color-medium-dark);
         --uib-lum-lighten: linear-gradient(var(--uib-lum-22),var(--uib-lum-28),var(--uib-lum-22));
         --uib-border: rgb(var(--uib-color-light));
         --uib-link: rgb(135, 206, 250);
@@ -52,18 +58,108 @@
     }
 }
 
-/* Apply `class="uib" to body tag if desired */
-body.uib {
-    margin: 1rem;
+/*#region --- Basic reset --- */
+
+* {
+    /* margin: 0; */
+    /* padding: 0; */
+}
+html {
+    line-height: 1.5;
+    font-size: 100%;
+}
+body {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    /* padding: 0.3rem; */
     font-family: sans-serif;
     background-color: rgb(var(--uib-color-bg));
     color: rgb(var(--uib-color-fg));
 }
-body.uib div, body.uib p, body.uib code {
-    margin:0.3em;
-    padding:0.3em;
-    font-size:110%;
+h1, h2, h3, h4, h5, h6 {
+    line-height: 1.3;
 }
+img, picture, video, canvas, svg {
+    /* display: block; */
+    object-fit: cover;
+    vertical-align: bottom;
+    max-width: 100%;
+    background-color: grey;
+}
+p, h1, h2, h3, h4, h5, h6, li, dl, dt, blockquote {
+    overflow-wrap: break-word;
+    hyphens: auto;
+    word-break: break-word;
+}
+div > p {
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+code, button {
+    /* margin:0.3rem; */
+    /* margin-top: 1rem; */
+    /* margin-bottom: 1rem; */
+    /* padding:0.3rem; */
+    /* font-size:110%; */
+}
+button, input[type="button" i] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding: .5rem 1rem;
+    text-decoration: none;
+    background-color: rgb(var(--uib-color-info));
+    color: rgb(var(--uib-color-dark));
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.1;
+    cursor: pointer;
+    text-align: center;
+    transition: background 250ms ease-in-out, transform 150ms ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border-radius: 8px;
+    /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
+    box-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
+                inset -2px -2px 3px rgba(0,0,0, .3);
+}
+button:hover, input[type="button" i]:hover {
+    background-color: rgb(var(--uib-color-info), .5);
+}
+
+button:focus, input[type="button" i]:focus {
+    outline: 1px solid rgb(var(--uib-color-fg));
+    outline-offset: -4px;
+}
+
+button:active, input[type="button" i]:active {
+    transform: scale(0.97);
+}
+table {
+    border-collapse: collapse;
+    border: 1px solid var(--uib-border);
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+thead th {
+    color: rgb(var(--uib-color-bg-lighter));
+    background: rgb(var(--uib-color-fg-lighter));
+}
+th, td {
+    padding: .5rem;
+}
+input, button, textarea, select {
+    font: inherit;
+}
+a:link {
+    color: var(--uib-link);
+}
+a:visited {
+    color: var(--uib-link-visited);
+}
+
+/*#region --- Basic reset --- */
 
 /*#region -- Toasts - Readable pop-over notifications -- */
 
@@ -122,8 +218,8 @@ body.uib div, body.uib p, body.uib code {
     border: 1px solid var(--uib-border);
 }
 .uib-info-tb thead th {
-    color: rgb(var(--uib-color-bg));
-    background: rgb(var(--uib-color-fg));
+    color: rgb(var(--uib-color-bg-lighter));
+    background: rgb(var(--uib-color-fg-lighter));
 }
 
 .uib-info-tb th, .uib-info-tb td {
@@ -138,12 +234,7 @@ body.uib div, body.uib p, body.uib code {
     background-blend-mode: lighten;
 }
 
-a:link {
-    color: var(--uib-link);
-}
-a:visited {
-    color: var(--uib-link-visited);
-}
+
 
 /*#region  Colours for Syntax Highlighted pre's */
 .syntax-highlight {color:white;background-color:black;padding:5px 10px;font-family: monospace;white-space: pre;}
