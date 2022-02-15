@@ -14,9 +14,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * FIXES NEEDED:
   * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
-* General
-  * [-] Add instance API middleware. [Request & complexities discussion](https://discourse.nodered.org/t/can-i-host-stand-alone-nodejs-apps-inside-uibuilder-nodes-if-so-should-i/51813/6)
-    * [ ] Wrap with option (web.js)
 * Security
   * SIMPLIFY FOR THIS RELEASE!
 
@@ -128,10 +125,11 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * **New Feature** _Instance API's_. You can now define your own API's to support your front-end UI. These run as part of the Node-RED server and can be called
   from your UI, or indeed from anywhere with access to the Node-RED server's user endpoints.
 
-  You can add any number of *.js files to a folder `<uibInstanceRoot>/api/`. Each file will be loaded into the uibuilder instance and tested to make sure that it
-  contains either a single function or an object containing functions who's property names match either an HTTP method name (get, put, etc) or the generic `use`.
+  You can add any number of `*.js` files to a folder `<uibInstanceRoot>/api/`. Each file will be loaded into the uibuilder instance and tested to make sure that it contains either a single function or an object containing functions who's property names match either an HTTP method name (`get`,  `put`, etc) or the generic `use`.
 
   Such functions are added to the instances router. See the Tech Docs for more information on how to use the instance API's.
+
+  *Note that, because such API definitions reside in a potentially user-facing folder and may be significant security risks, their use is controlled by a flag in Node-RED's settings.js file `uibuilder.instanceApiAllowed`. This must be set to `true` for API's to be loaded.*
 
 * **Extended Feature** _Package Management_ - You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
 
