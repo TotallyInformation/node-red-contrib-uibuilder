@@ -3,7 +3,7 @@ title: Front-End Build Steps and Tools
 description: >
    Describes how to use a build step to transpile and optimise your front-end code.
 created: 2021-04-22 09:53:00
-lastUpdated: 2022-01-05 21:56:10
+lastUpdated: 2022-02-15 16:25:14
 ---
 
 A build step is simply a way to take things that your browser wont understand directly (like .vue, .jsx files)
@@ -16,6 +16,7 @@ Along the way, it will try to optimise everything to give the best possible perf
 - [Using a build development server](#using-a-build-development-server)
 - [Tools](#tools)
   - [Snowpack](#snowpack)
+  - [ESbuild](#esbuild)
   - [Webpack](#webpack)
   - [Parcel](#parcel)
   - [Rollup](#rollup)
@@ -68,6 +69,17 @@ tools that are a LOT simpler than the earlier ones
 
 See the [How-to configure and use a front-end build step using Snowpack](front-end-build-snowpack.md) page for more details.
 
+Snowpack works well with uibuilder.
+
+### [ESbuild](https://esbuild.github.io/)
+
+Unlike the other tools listed here, esbuild _only_ does a build. It does not attempt to provide a development server or do clever transpilation (converting from a newer version of JavaScript to an older one).
+
+And that may well be all that you need since Node-RED is providing a web server and modern browsers are less likely to require transpilation.
+
+Julia Evans is a well-known blogger and has written a [simple guide to using esbuild with VueJS](https://jvns.ca/blog/2021/11/15/esbuild-vue/).
+
+
 ### [Webpack](https://webpack.js.org/)
 
 TBC
@@ -84,6 +96,6 @@ TBC
 
 > "an opinionated web dev build tool that serves your code via native ES Module imports during development and bundles it with Rollup for production."
   
-While Vite was written by the author of VueJS, it is certainly not only for Vue projects. Out of the box, it supports REACT, JSX as well as various CSS pre-processors and templates. It uses Rollup under the skin.
+While Vite was written by the author of VueJS, it is certainly not only for Vue projects. Out of the box, it supports REACT, JSX as well as various CSS pre-processors and templates. It uses ESBuild under the skin.
 
 It uses native browser ES imports to make everything fast.
