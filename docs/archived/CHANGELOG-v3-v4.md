@@ -231,7 +231,7 @@ Added try/catch around Untrapped `JSON.stringify` in uiblib.js `showInstanceDeta
 
 - The Editor will now tell you if you have missing dependencies for your chosen template.
   
-  ![missing packages warning](docs/missing-packages-warning.png)
+  ![missing packages warning](../images/missing-packages-warning.png)
 
   Useful for people who forget to install vue and bootstrap-vue now that they have been removed from the default install.
 
