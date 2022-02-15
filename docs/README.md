@@ -6,7 +6,7 @@ created: 2019-06-16 16:16:00
 lastUpdated: 2021-07-03 21:48:29
 ---
 
-?> These are the docs for uibuilder v5.
+?> These are the docs for uibuilder v4.
 
 All you need is a uibuilder node added to your flows. Select a suitable URL path and deploy.
 Now you can send messages to your front end and send messages back to Node-RED.
