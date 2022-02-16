@@ -46,6 +46,10 @@ If your .js file exports and object, each property of the object that is a funct
 
 Where multiple API files are provided, each function is added to the appropriate path. Where overlapping functions are provided **all** functions are executed in order of loading except if the function provides a terminating function such as `res.send()` and as long as `next()` is the final function call. Note that it is not guarenteed that multiple files will be loaded in order, this is controlled by node.js and your host operating system, however, they will normally load in a usual sort order.
 
+## Making changes to the API
+
+The API .js files are loaded and integrated to the uibuilder instance at flow initialisation time. This means that, if you subsequently make changes, you must either restart node-red or at least use the deploy menu "Restart Flows".
+
 ## Order of operation
 
 Because the instance API feature makes use of ExpressJS routing handler functions, the order of definition and the actions of your functions is very important.
