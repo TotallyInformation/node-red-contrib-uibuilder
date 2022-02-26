@@ -61,7 +61,8 @@
  * @property {string} [uibuilder.uibRoot] Folder name that will hold all uib runtime and instance folders
  * @property {('http'|'https')} [uibuilder.customType] Connection type - only if using custom ExpressJS instance
  * @property {object|Function} [uibuilder.https] Override https server settings (key/cert) - if not specified, uses main NR https prop
- * @property {object} [uibuilder.sioOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
+ * @property {object} [uibuilder.serverOptions] Optional ExpressJS server options for uib custom server
+ * @property {object} [uibuilder.socketOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
  * @property {boolean} [uibuilder.instanceApiAllowed] Allow instance-level custom API's to be loaded. Could be a security issue so it is controlled in settings.js
  * 
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
@@ -252,6 +253,7 @@
  * @property {Function=} done Dummy done Function for pre-Node-RED 1.0 servers
  * @property {Function=} on Event handler
  * @property {Function=} removeListener Event handling
+ * @property {Function=} context Function that accesses the nodes context vars or the flow/global vars
  * @property {object=} credentials Optional secured credentials
  * @property {object=} z Internal
  * @property {object=} wires Internal. The wires attached to this node instance (uid's)
@@ -269,7 +271,7 @@
  * @property {boolean} allowUnauth Allow msgs to flow even if client is unauthorised
  */
 
-/** uibConfig - THe module-level uib configuration variable
+/** uibConfig - THe module-level `uib` configuration variable
  * @typedef {object} uibConfig Local copy of the node master config + other module-level info
  * @property {object} me Contents of uibuilder's `package.json` file
  * @property {string} moduleName Module name must match this nodes html file. 
@@ -330,6 +332,7 @@
  * @property {undefined|string} customServer.host uibuilder Host. sub(domain) name or IP Address
  * @property {undefined|string} customServer.hostName The host name of the Node-RED server
  * @property {boolean}          customServer.isCustom Is uibuilder using a custom ExpressJS server?
+ * @property {object}           customServer.serverOptions Optional ExpressJS server options
  * 
  * @property {undefined|object} degitEmitter Event emitter for degit, populated on 1st use. See POST admin API
  * @property {undefined|runtimeRED} RED Keep a reference to RED for convenience. Set at the start of Uib
