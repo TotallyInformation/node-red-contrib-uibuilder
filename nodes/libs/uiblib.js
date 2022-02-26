@@ -430,28 +430,30 @@ module.exports = {
     `
                 log.warn(`[uibuilder:uiblib:logon] **WARNING** ${_auth.info.warning}`)
             } else {
-                _auth.info.error = `
+                _auth.info.warning = `
     
     +---------------------------------------------------------------+
     | uibuilder security warning:                                   |
     |    A logon is being processed without TLS security turned on. |
-    |    This IS NOT PERMITTED for non-development environments.    |
+    |    - Please ignore this warning if TLS provided externally. - |
+    |    DO NOT DO THIS IN PRODUCTION ENVIRONMENTS.                 |
     |    See the uibuilder security docs for details.               |
     +---------------------------------------------------------------+
     `
-                log.error(`[uibuilder:uiblib:logon] **ERROR** ${_auth.info.error}`)
+                log.warn(`[uibuilder:uiblib:logon] **WARNING** ${_auth.info.warning}`)
                 
+                /** @since 2022-02-26, v4.1.5, error changed to a warning in case TLS provided externally */
                 // Report fail to client but don't output to port #2 as error msg already sent
-                _auth.userValidated = false
-                _auth.info.error = 'Logons cannot be processed without TLS in non-development environments'
+                // _auth.userValidated = false
+                // _auth.info.error = 'Logons cannot be processed without TLS in non-development environments'
 
-                this.sendControl({
-                    uibuilderCtrl: 'authorisation failure',
-                    topic: msg.topic || node.topic,
-                    '_auth': _auth,
-                }, ioNs, node, uib, socket.id, false)
+                // this.sendControl({
+                //     uibuilderCtrl: 'authorisation failure',
+                //     topic: msg.topic || node.topic,
+                //     '_auth': _auth,
+                // }, ioNs, node, uib, socket.id, false)
 
-                return _auth.userValidated
+                // return _auth.userValidated
             }
         }
 

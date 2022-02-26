@@ -10,6 +10,12 @@ uibuilder adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing currently.
 
+## [4.1.5](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.4...v4.1.5)
+
+### Changed
+
+* Logon control msg no longer fails if Node-RED TLS not turned on and in production mode. TLS might be provided by an external tool. Resolves [Issue #149](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/149).
+
 ## [4.1.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.3...v4.1.4)
 
 ### Fixed
