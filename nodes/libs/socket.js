@@ -168,9 +168,9 @@ class UibSockets {
             // },
         }
 
-        // Merge in overrides from settings.js if given. NB: settings.uibuilder.sioOptions will override the above defaults.
-        if ( RED.settings.uibuilder && RED.settings.uibuilder.sioOptions ) {
-            ioOptions = Object.assign( {}, ioOptions, RED.settings.uibuilder.sioOptions )
+        // Merge in overrides from settings.js if given. NB: settings.uibuilder.socketOptions will override the above defaults.
+        if ( RED.settings.uibuilder && RED.settings.uibuilder.socketOptions ) {
+            ioOptions = Object.assign( {}, ioOptions, RED.settings.uibuilder.socketOptions )
         }
 
         // @ts-ignore ts(2769)
