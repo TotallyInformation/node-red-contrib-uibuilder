@@ -14,36 +14,21 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * FIXES NEEDED:
   * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
+  * [ ] Error if settings.js uibuilder not there? [[Update on progress\] node-red-contrib-uibuilder vNext/v5 - Share Your Nodes - Node-RED Forum (nodered.org)](https://discourse.nodered.org/t/update-on-progress-node-red-contrib-uibuilder-vnext-v5/57088/6)
+* Allow ExpressJS settings for custom server: uibuilder.serverOptions, [Express 4.x - API Reference (expressjs.com)](http://expressjs.com/en/api.html#app.settings.table)
 * Security
-  * SIMPLIFY FOR THIS RELEASE!
+  * REMOVE FOR THIS RELEASE!
+  * Allow loading of security.js
+  * Retain logon/logoff control msgs but direct to fns in external security.js file (which should allow call from both express and socket.io)
+  * change docs/security.md
+  * ?? What headers to push from reverse proxy to support knowing if user is auth?
 
-  * Add roles/tags options to JWT? Or at least to the user session record
-
-  * Editor
-    * Make JWT IP address check optional `jwtCheckIp`
-    * Add "copy local security.js template" button to security section to reset the local overrides.
-    * Add ability to edit security.js code to the editor.
-  * BE
-    * **MAKE SURE THAT THE CLIENT ID IS IN THE JWT & CHECK _auth.id against JWT ID (`sub` - subject id)**
-    * Add 2nd expiry length to the security settings: JWT ping (minutes), session expiry (days)
-    * ~~Consider adding a client ID - to be built into the JWT~~
-    * Add JWT even if user unauth - it is just a token and allows for unauth traffic
-    * Add sec processing to incoming disconnect signal from socket.io
-    * JWT extension processing - needs processing on client as well as server
-    * security.js
-      * move instance-specific load of .config/security.js up to instanceSetup()
-    * ?? Add security to user API's ??
-    * NB: May get a new connect without a disconnect
-  * FE
-    * Send cache request on server auth response - only if unauth msg flow enabled(?)
-    * Make sure self.security is externally read-only
-    * Make sure localStorage _auth is always updated after control msg from server
-    * Make bootstrap-vue toasts optional, add auth change notices
 * DOC UPDATES NEEDED:
   * Extra cookie for nodeRoot
   * Review all changes
   * Add note about [default msg size](https://github.com/socketio/socket.io/issues/3946#issuecomment-850704139)
   * Update custom express settings
+  * Finish NGINX docs
   * web.js
     * Variables:
       * uib.customServer.isCustom
@@ -56,7 +41,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
       * self.initSecurity
       * self.setStore
 
-Note that future To-do and future direction is [documented in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/To-Do).
+
 
 ----
 
@@ -149,7 +134,7 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 
 * **Extended Feature** - Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
 
-* **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.sioOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
+* **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.socketOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
 
 * **Extended Feature** -  If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
 
@@ -345,7 +330,7 @@ Note that future To-do and future direction is [documented in the WIKI](https://
 * Fixed Issue [#159](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/159) where sioMiddlware.js wasn't working due to the move to Socket.Io v4.
 * Fix issue reported in Discourse of an error in masterMiddleware when setting headings. Corrected heading syntax for ExpressJS v4.
 * Client connect and disconnect msgs not being sent to uibuilder control port (#2). NOTE: As of Socket.io v4, it appears as though the disconnect event is received _after_ the connect when a client is reconnecting. You cannot rely on the order.
-* Fixed CORS problems after move to Socket.IO v4. (NB: CORS is defaulted to allow requests from ANY source, override with the `uibuilder.sioOptions` overrides available in settings.js).
+* Fixed CORS problems after move to Socket.IO v4. (NB: CORS is defaulted to allow requests from ANY source, override with the `uibuilder.socketOptions` overrides available in settings.js).
 * `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 * A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
 * In `uibuilderfe.js`, security was being turned on even if the server set it to false.
