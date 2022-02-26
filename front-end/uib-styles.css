@@ -95,13 +95,6 @@ div > p {
     margin-left: 1rem;
     margin-right: 1rem;
 }
-code, button {
-    /* margin:0.3rem; */
-    /* margin-top: 1rem; */
-    /* margin-bottom: 1rem; */
-    /* padding:0.3rem; */
-    /* font-size:110%; */
-}
 button, input[type="button" i] {
     display: inline-flex;
     align-items: center;
@@ -237,9 +230,17 @@ a:visited {
 
 
 /*#region  Colours for Syntax Highlighted pre's */
-.syntax-highlight {color:white;background-color:black;padding:5px 10px;font-family: monospace;white-space: pre;}
+.syntax-highlight {
+    color:white;
+    background-color:black;
+    padding:5px 10px;
+    font-family: Consolas, "ui-monospace", "Lucida Console", monospace;
+    white-space: pre;
+}
 .syntax-highlight > .key {color:#ffbf35}
 .syntax-highlight > .string {color:#5dff39;}
 .syntax-highlight > .number {color:#70aeff;}
 .syntax-highlight > .boolean {color:#b993ff;}
+.syntax-highlight > .null {color:#93ffe4;}
+.syntax-highlight > .undefined {color:#ff93c9;}
 /*#endregion */
