@@ -90,6 +90,7 @@ const uib = {
         host: undefined,
         hostName: undefined,
         isCustom: false,
+        serverOptions: {},
     },
     reDeployNeeded: '4.1.2',
     degitEmitter: undefined,
@@ -199,6 +200,8 @@ function runtimeSetup() {
 
         // Allow instance-level api's to be loaded (default=false)
         if ( settings.instanceApiAllowed === true ) uib.instanceApiAllowed = true
+
+        if ( settings.serverOptions ) uib.customServer.serverOptions = settings.serverOptions
 
     } // --- end of settings.js --- //
 
