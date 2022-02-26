@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2022-02-01 11:31:35
+lastUpdated: 2022-02-18 13:48:52
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -32,10 +32,11 @@ The core features of uibuilder:
 
 The general direction of uibuilder (or associated modules) is likely to include:
 
-* An extensible security model.
 * A set of extension front-end components with well defined (reusable) data schemas for doing common UI tasks. The defined data schema's would cover both the component content and configuration data so that both could be sent from Node-RED via uibuilder and any return data structures would similarly be well defined.
 * A capability to have configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code.
 * A UI designer allowing users without HTML/CSS/JS skills to create reasonable web apps without code.
+
+Information also needs to be provided to enable people to build security, identity, authentication and authorisation. As at v5, the experimental security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication.
 
 ### Focus for the near future
 
@@ -80,6 +81,34 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ## Ideas based on v5/vNext development
 
+### General
+
+* **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views
+
+  Maybe set as optional with flag? Allow choice of render engine? Only render .ejs files instead of .html?
+
+* Publish `uibuilderfe` on `../uibuilder/` as well as on `./` for greater consistency with other paths.
+
+* Allow client id to be set externally.
+
+* Use [chokidar](https://github.com/paulmillr/chokidar) to send a control msg to the fe when files change. Change the front-end to allow the browser to automatically reload (location.reload()). Put everything behind an optional flag and don't load the chokidar library unless the flag is set. May want an auto-rebuild feature as well.
+
+* Add package.json `style` property to Instance details page and packages list if it exists. Make sure that `browser` is prioritised over `main`.
+
+* See if typedefs.js can be migrated to index.d.ts.
+
+* Switch to [dynamic imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports) for require's with low probability of usage. [ref](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_import_expressions).
+
+* Migrate from commonjs to [ES modules](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_commonjs_json_and_native_modules). (2) [JSON can't be imported directly in ESMs](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_experimental_json_modules), use createRequire.
+
+* Add funding link to package.json (see `man 5 package.json`)
+
+* Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
+
+* Serve uibuilderfe on `../uibuilder/` path as well as `./` for greater consistency
+
+* Introduce standard events: url-change
+
 ### Editor (`uibuilder.html`)
 
 * Show template (instance root) folder
@@ -107,20 +136,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add mapper to map component id to originator & extend `eventSend` accordingly
 * Add `onMsg` convenience handler (maybe allow wildcard topics?)
 * Add a visual warning/alert if uib cannot connect over websockets. Use toast.
-
-### General
-
-* Publish `uibuilderfe` on `../uibuilder/` as well as on `./` for greater consistency with other paths.
-* Allow client id to be set externally.
-* Use [chokidar](https://github.com/paulmillr/chokidar) to send a control msg to the fe when files change. Change the front-end to allow the browser to automatically reload (location.reload()). Put everything behind an optional flag and don't load the chokidar library unless the flag is set. May want an auto-rebuild feature as well.
-* Add package.json `style` property to Instance details page and packages list if it exists. Make sure that `browser` is prioritised over `main`.
-* See if typedefs.js can be migrated to index.d.ts.
-* Switch to [dynamic imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports) for require's with low probability of usage. [ref](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_import_expressions).
-* Migrate from commonjs to [ES modules](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_commonjs_json_and_native_modules). (2) [JSON can't be imported directly in ESMs](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_experimental_json_modules), use createRequire.
-* Add funding link to package.json (see `man 5 package.json`)
-* Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
-* Serve uibuilderfe on `../uibuilder/` path as well as `./` for greater consistency
-* Introduce standard events: url-change
 
 ### Package Manager Class
 
@@ -158,48 +173,30 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * On close, delete cache
 
 
-
 ## *Maybe*
 
 These are some thoughts about possible future direction. They need further thought and design.
 
+### General
+
+* Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
+  * Update docs
+  * Add processing to nodes to be able to mark them as experimental.
+* Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's.
+* Add client IP address to trace messages on connection.
+* Add optional sidebar displaying list of all uib URLs (and link to nodes).
+* Create some [HTML Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements) to extend uib for modern browsers. Maybe replace Vue toast component for example?
+* Trial use of [web-workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) since majority support goes back to 2014.
+* Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's
+* Add support for HTTP/2 with auto-push. See [http2-express-autopush - npm](https://www.npmjs.com/package/http2-express-autopush)
+
 ### Core (`uibuilder.js`)
 
 * ~~Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained~~ See other nodes below. Probably best kept as a separate node.
-
 * add in/out msg counts to status? Maybe as an option.
-
 * Add option to turn on/off connect/disconnect control msgs
-
 * On change of URL - signal other nodes? As no map currently being maintained - probably not possible
-
-* Maybe switch from static to rendering to allow dynamic content:
-
-  ```js
-  var bodyParser = require('body-parser');
-  var express = require('express');
-  var app = express();
-
-  app.use(express.static(__dirname + '/'));
-  app.use(bodyParser.urlencoded({
-    extend: true
-  }));
-  app.engine('html', require('ejs').renderFile);
-  app.set('view engine', 'ejs');
-  app.set('views', __dirname);
-
-  app.get('/', function(req, res) {
-    res.render("index");
-  });
-  ```
-
-  Maybe set as optional with flag? Allow choice of render engine? Only render .ejs files instead of .html?
-
-* Create some [HTML Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements) to extend uib for modern browsers. Maybe replace Vue toast component for example?
-
-* Trial use of [web-workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) since majority support goes back to 2014.
 * 
-* Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's
 
 ### Templates
 
@@ -240,17 +237,12 @@ These are some thoughts about possible future direction. They need further thoug
 
 * Add a signup() function to fe and a matching handler in security.js. Possibly add option to turn on/off signup processing to editor.
 
-### General
+### Testing
 
-* Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
-  * Update docs
-  * Add processing to nodes to be able to mark them as experimental.
+* Look at the possibility of using https://www.cypress.io/ to automate some front-end and Editor testing.
 
-* Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's.
 
-* Add client IP address to trace messages on connection.
-  
-* Add optional sidebar displaying list of all uib URLs (and link to nodes).
+
 
 ----
 
@@ -454,3 +446,30 @@ These are random thoughts that might make it into the To Do list but really need
 * Enable tilib.findPackage to deal with meta-packages. e.g. @syncfusion/ej2-vue-schedule - This does not install a package called "ej2-vue-schedule" but in fact installs 17 other packages! [Issue #69](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/69). The workaround for this is to use a build step so this is the bottom of the pile unless someone wants to do a PR. Any "fix" would likely require a lot of code for very little, if any, reward.
 
 * Node(s) for specific web components. Possibly allowing the component to be pushed over ws. [Ref.1](https://markus.oberlehner.net/blog/distributed-vue-applications-pushing-content-and-component-updates-to-the-client/)
+
+
+
+## Security - NOTE: Removed in v5, may come back later
+
+* Add roles/tags options to JWT? Or at least to the user session record
+
+* Editor
+  * Make JWT IP address check optional `jwtCheckIp`
+  * Add "copy local security.js template" button to security section to reset the local overrides.
+  * Add ability to edit security.js code to the editor.
+* BE
+  * **MAKE SURE THAT THE CLIENT ID IS IN THE JWT & CHECK _auth.id against JWT ID (`sub` - subject id)**
+  * Add 2nd expiry length to the security settings: JWT ping (minutes), session expiry (days)
+  * ~~Consider adding a client ID - to be built into the JWT~~
+  * Add JWT even if user unauth - it is just a token and allows for unauth traffic
+  * Add sec processing to incoming disconnect signal from socket.io
+  * JWT extension processing - needs processing on client as well as server
+  * security.js
+    * move instance-specific load of .config/security.js up to instanceSetup()
+  * ?? Add security to user API's ??
+  * NB: May get a new connect without a disconnect
+* FE
+  * Send cache request on server auth response - only if unauth msg flow enabled(?)
+  * Make sure self.security is externally read-only
+  * Make sure localStorage _auth is always updated after control msg from server
+  * Make bootstrap-vue toasts optional, add auth change notices

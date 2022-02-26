@@ -18,7 +18,7 @@ Open the uibuilder node and click on the button to open your web app in a new ta
 
 node-red-contrib-uibuilder is contained in a GitHub repository that you can get to using the icon at the top-right of the page.
 
-Help is available in these documents, the help sidebar in Node-RED and the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). If you get stuck, you can also create a new topic in the [Node-RED Discourse Forum](https://discourse.nodered.org/) or in the [GitHub discusion section](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions).
+Help is available in these documents, the help sidebar in Node-RED and the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). If you get stuck, you can also create a new topic in the [Node-RED Discourse Forum](https://discourse.nodered.org/) or in the [GitHub discussion section](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions).
 
 Issues occuring with uibuilder should be raised in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
 
@@ -42,7 +42,7 @@ Information on using the front-end uibuilderfe library in your own code. Informa
 * [The uibuilderfe Library](front-end-library.md)
 * [Browser auto-refresh](browser-refresh.md)
 * [Avoiding a build step](front-end-no-build.md)
-* [Optimise & Transpile (Build)](front-end-builds.md)
+* [Optimise & transpile (build)](front-end-builds.md)
 * [Snowpack as build tool](front-end-build-snowpack.md)
 * [Instance-specific API's](instance-apis.md)
 
@@ -52,15 +52,13 @@ Working with uibuilder and specific front-end frameworks.
 
 * [VueJS complexities](vue-complexities.md)
 * [VueJS Components](vue-component-handling.md)
-* Svelte - TBC
+* [Svelte](svelte.md)
 * W3C Web Components - TBC
 
 ## Security
 
-How to use uibuilder's built-in security features. 
-
-* [General Security](security.md)
-* [Local Security: security.js](securityjs.md)
+* [Securing Node-RED & uibuilder web apps](security.md)
+* [Securing apps using NGINX](uib-security-nginx.md)
 
 ## Developer Documentation
 
@@ -86,9 +84,9 @@ Deep dives into the internals of uibuilder. This is where to go if you need to u
 
     This is not developed directly. The actual code to edit is in `src/editor/front-end/` and is built using `gulp` scripts.
   
-* uib-cache node
-* uib-sender node
-* Gulp scripts
+* uib-cache node - TBC
+* uib-sender node - TBC
+* Gulp scripts - TBC
 
 ## Testing
 

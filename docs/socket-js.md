@@ -17,7 +17,7 @@ lastUpdated: 2022-01-02 20:11:42
 ## Socket.IO Server Options
 
 The [Socket.IO server options](https://socket.io/docs/v4/server-options/) can be changed by adding a custom
-property (`uibuilder.sioOptions`) to your Node-RED `settings.js` file.
+property (`uibuilder.socketOptions`) to your Node-RED `settings.js` file.
 
 You can override anything except the `path` property. However, use caution as careless settings may break
 communications between Node-RED and your front-end code.
@@ -41,7 +41,7 @@ uibuilder: {
     * You can set anything else though you might break uibuilder unless you know what you are doing.
     * @type {Object}
     */
-   sioOptions: {
+   socketOptions: {
       // Make the default buffer larger (default=1MB)
       maxHttpBufferSize: 1e8 // 100 MB
    },
@@ -109,7 +109,7 @@ Of course, some errors may result in the client being unable to connect and ther
 
 ## Socket.IO Options
 
-You can override the default Socket.IO server options by using the `uibuilder.sioOptions` property in settings.js. All Socket.IO server options can be
+You can override the default Socket.IO server options by using the `uibuilder.socketOptions` property in settings.js. All Socket.IO server options can be
 overridden. This can be useful for changing the default buffer size (which limits message sizes) and for changing the default CORS options.
 
 ## Default CORS Options

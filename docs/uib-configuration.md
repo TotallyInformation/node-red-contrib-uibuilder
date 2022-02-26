@@ -70,7 +70,7 @@ example that describes all of the current options.
          * might break uibuilder unless you know what you are doing.
          * @type {Object}
          */
-        // sioOptions: {
+        // socketOptions: {
         //     // Make the default buffer larger (default=1MB)
         //     maxHttpBufferSize: 1e8 // 100 MB
         // },

@@ -16,9 +16,10 @@
 * UI Frameworks
   * [VueJS complexities](vue-complexities.md)
   * [VueJS components](vue-component-handling.md)
+  * [Svelte](svelte.md)
 * Security
-  * [General security](security.md)
-  * [Local security: security.js](securityjs.md)
+  * [Securing uib web apps](security.md)
+  * [Securing apps using NGINX](uib-security-nginx.md)
 * [Developer documentation](/?id=developer-documentation)
   * [`front-end/src/uibuilderfe.js`](uibuilderfe-js.md)
   * [`nodes/uibuilder.js`](uibuilder-js.md)
