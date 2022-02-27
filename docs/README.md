@@ -57,8 +57,9 @@ Working with uibuilder and specific front-end frameworks.
 
 ## Security
 
-* [Securing Node-RED & uibuilder web apps](security.md)
-* [Securing apps using NGINX](uib-security-nginx.md)
+* [Securing uib web apps](security.md "Overview of general web app security with some specifics for Node-RED and uibuilder")
+* [Securing Data](securing-data.md "How to use flows and uibiulder middleware to secure your data")
+* [Securing apps using NGINX](uib-security-nginx.md "How to use NGINX as a reverse proxy with TLS and identity authentication")
 
 ## Developer Documentation
 

@@ -18,8 +18,9 @@
   * [VueJS components](vue-component-handling.md)
   * [Svelte](svelte.md)
 * Security
-  * [Securing uib web apps](security.md)
-  * [Securing apps using NGINX](uib-security-nginx.md)
+  * [Securing uib web apps](security.md "Overview of general web app security with some specifics for Node-RED and uibuilder")
+  * [Securing Data](securing-data.md "How to use flows and uibiulder middleware to secure your data")
+  * [Securing apps using NGINX](uib-security-nginx.md "How to use NGINX as a reverse proxy with TLS and identity authentication")
 * [Developer documentation](/?id=developer-documentation)
   * [`front-end/src/uibuilderfe.js`](uibuilderfe-js.md)
   * [`nodes/uibuilder.js`](uibuilder-js.md)

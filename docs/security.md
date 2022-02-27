@@ -3,10 +3,12 @@ title: uibuilder Security Documentation
 description: >
    Some thoughts on how to correctly and safely secure a uibuilder app.
 created: 2020-01-05 20:45:00
-lastUpdated: 2022-02-21 11:24:12
+lastUpdated: 2022-02-27 16:17:22
 ---
 
-As at uibuilder v5, the experimental security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication. Such services can be independently tested and verified.
+As at uibuilder v5, many of the experimental security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication. Such services can be independently tested and verified.
+
+However, there are a number of supporting features in uibuilder that let you control information flow into and out-of a uibuilder-based front-end. They assume, however, that you have either provided authentication externally or written your own middleware-based security functions.
 
 !> **WARNING**: I am **not** a professional developer, nor am I an operational DevOps person. I make no claims nor do I provide any warrenties or guarantees about the fundamental security of a web app developed with uibuilder. If you are unsure, you need to pay a professional to audit and penetration test your specific configuration as well as my code.
 
@@ -23,21 +25,26 @@ IT Security in general is a complex and specialist area. As such it comes with i
 
 ## How do I secure my uibuilder app?
 
-Step #1 is to make sure that all access to both te Node-RED Editor and your UI is encrypted using TLS (e.g. using HTTPS not HTTP). If you don't do this, any other work on security is meaningless.
+Before you even get started trying to secure Node-RED or a uibuilder app, you must note that all of the steps below are _worthless_ if an attacker can simply bypass your security by gaining access to your network and servers. So everthing is dependent on ensuring that they are also secured. However, that is outside the scope of this page.
 
-Step #2 is to make sure that any information provided by a user (or another system) is **sanitised**. That's to say, that input is restricted to a sensible length and character set as a minimum, ideally restricting input to a specific format where that makes sense (e.g. emails). This is to ensure that your system cannot be broken or hacked by someone or something entering invalid information. There are many attacks based on abusing input, so don't overlook this step, it is critical.
+1. Step #1 is to make sure that all access to both the Node-RED Editor and your UI is encrypted using TLS (e.g. using HTTPS not HTTP and WSS not WS). If you don't do this, any other work on security is meaningless.
 
-Step #3 is to have a means to record the identities of users and a means to enable those users to prove that they are who they claim to be. This is the _identity_ and _authentication_ step. You can hand-off user identities to a 3rd-party if you prefer or keep your own record. Authentication can also be handed-off by using a standard such as OAuth/OIDC or SAML.
+2. Step #2 is to make sure that any information provided by a user (or another system) is **sanitised**. That's to say, that input is restricted to a sensible length and character set as a minimum. Ideally restricting input to a specific format where that makes sense (e.g. emails). This is to ensure that your system cannot be broken or hacked by someone or something entering invalid information. There are many attacks based on abusing input, so don't overlook this step, it is critical.
 
-Step #4 is **Test, Test, Test!**. Your system is not secure unless you have proven it to be so. Obviously, for low-value, small-target systems such as a home automation system, you won't be able to hire a professional to do Penetration Testing. However, for a commercial service and for anything of value, you **must** do professional grade security testing.
+3. Step #3 is to have a means to record the *identities* of users and a means to enable those users to prove that they are who they claim to be. This is the _identity_ and _authentication_ step. You can hand-off user identities to a 3rd-party if you prefer or keep your own record. Authentication can also be handed-off by using a standard such as OAuth/OIDC (for public cloud services such as Google, Azure, GitHub, Facebook, etc) or SAML (typically for enterprise systems).
 
-An optional step #5 is _Authorisation_. For many web apps, authentication is sufficient, but if you want to be able to have different levels of protection for different areas of your app, you may need a way to give users different levels of access.
+4. An optional step #4 is _authorisation_. For many web apps, authentication is sufficient, but if you want to be able to have different levels of protection for different areas of your app, you may need a way to give users different levels of access.
 
-Step #6 is _Monitoring_. If you think you have secured your web app but don't monitor it, you will never actually _known_ whether you are successful. You also need to remember that something that is secure now may not be tomorrow. So record & check access, monitor data quality.
+5. Step #5 is to ensure that any restricted data can only be accessed by authenticated and authorised identities. For uibuilder, this may be done using Node-RED flows and uibuilder ExpressJS and Socket.IO middleware.
 
-Finally, it is worth noting that all of the above is worthless if an attacker can simply bypass your security by gaining access to your network and servers. So everthing is dependent on ensuring that they are also secured.
+6. Step #6 is **Test, Test, Test!**. Your system is not secure unless you have proven it to be so. Obviously, for low-value, small-target systems such as a home automation system, you won't be able to hire a professional to do Penetration Testing. However, for a commercial service and for anything of value, you **must** do professional grade security testing.
 
-### TLS (HTTPS)
+7. Step #7 is _Monitoring_. If you think you have secured your web app but don't monitor it, you will never actually _know_ whether you are successful. You also need to remember that something that is secure now may not be tomorrow. So record & check access, monitor data quality.
+
+
+Some additional information about these steps is given below.
+
+### Step #1: TLS (HTTPS)
 
 If you can run a *reverse proxy* on the same device as Node-RED or on another device connected to the Node-RED server via a secured, internal-only network, then you should configure that proxy to handle the TLS encryption as this will almost certainly always be more secure, easier to manage and more performant. See the [Securing apps using NGINX](uib-security-nginx.md) page for an example. 
 
@@ -45,9 +52,9 @@ If you cannot run a reverse proxy at all, then you will have to configure Node-R
 
 If you can run a reverse proxy but it or Node-RED is on a network that may get lots of different traffic, it is strongly recommended that you still use the proxy for external security but also configure Node-RED to use TLS as well.
 
-*A reverse proxy provides a number of advantages and is the recommended approach.*
+?> A reverse proxy provides a number of advantages and is the recommended approach.
 
-### Sanitising Inputs
+### Step #2: Sanitising Inputs
 
 Step #2 of securing any web app is to make sure that a potential attacker or just a ham-fisted user cannot break, damage or gain unwarrented access simply by what they enter into a form or select on a URL.
 
@@ -57,7 +64,9 @@ Step #2 of securing any web app is to make sure that a potential attacker or jus
 
 Don't forget that API inputs need to be sanitised as well as user inputs.
 
-### Identity and authentication
+?> For simple systems, doing this step via Node-RED and/or uibuilder middleware may be sufficient. In more secure systems, sanitisation of inputs may be done at multiple levels for additional protection and may use tools such as a *Web Application Firewall* or an *Intrusion Protection System*.
+
+### Step #3: Identity and authentication
 
 Step #3 of securing any web app is generally working out secure methods for identifying users and authenticating them.
 
@@ -67,23 +76,45 @@ The guidance here is generic and should only be used on low-security, low-value 
 
 **_NOTE_: The rest of this section is TBC**.
 
-### Security Testing
+?> While identity and authorisation _may_ be done using uibuilder ExpressJS/Socket.IO middleware, it is strongly recommended to use a separate service such as a reverse proxy with an authentication extension.
 
-Step #4. This is a whole subject area of its own and I can't do it full justice here. However, obviously, how much and what type of security testing you do is going to depend on the value of your system, its visibility to the outside world and many other factors.
+### Step #4: Authorisation
 
-### Authorisation
-
-Step #5 for securing web apps isn't always needed. It controls authorisation for what each user or group of users can and cannot do.
+This step for securing web apps isn't always needed. It controls authorisation for what each user or group of users can and cannot do.
 
 For simple IoT home automation, this is probably overkill. For entrprise production and customer-facing apps, this will certainly be needed.
 
 Authorisation controls however are a whole other topic beyond the scope of this document. At some point, I will try to create some guidance documents for doing authorisation with uibuilder apps.
 
-### Logging & Monitoring
+### Step #5: Restricting access to data
 
-Step #6. Log when someone accesses your app. The date/time and the identity. For high-value systems, log critical changes. **Review** the logs!
+Once you have ensured that you have a secure way to prove the identity of a person or system accessing your app, you then need to provide some mechanisms to prevent access except where it is allowed.
 
-In addition, be prepared to have separate scripts or processes for monitoring data quality.
+Typically, for inexperienced developers, this step is where they may start but as you can see, there are several important steps before this.
+
+?> It is worth noting here that steps 2, 3, and 4 _can_ all be done in Node-RED and uibuilder. However, it is not recommended. It is better to have a "separation of concerns" and keep specialist tasks such as identity and authorisation in their own tools.
+
+For Node-RED and uibuilder-based apps, controlling access is done by writing flows and/or ExpressJS/Socket.IO middleware to make use of the identity (and authorisation if configured) that has been authenticated. 
+
+Of course, that requires that any external security services are passing suitable data down to Node-RED.
+
+?> It is important to remember that uibuilder apps are *web pages* - they *run in the browser*, not in Node-RED. You cannot make things secure in the front-end code of a web app since the user will _always_ be able to make changes. So security _must_ be done at the server. Node-RED flows and uibuilder middleware run on the server. <br>It is also important to remember that uibuilder makes extensive use of websockets to send and recieve data between Node-RED and the browser. This presents some technical challanges for ensuring data security.
+
+This topic is covered in more detail on a separate page: [Securing Data](securing-data.md).
+
+### Step #6: Security Testing
+
+This is a whole subject area of its own and I can't do it full justice here. However, obviously, how much and what type of security testing you do is going to depend on the value of your system, its visibility to the outside world and many other factors.
+
+### Step #7: Logging & Monitoring
+
+Do not assume that you have got security right. Also do not assume that good security at one point in time will still be good later on. 
+
+So ensure that you log when someone accesses your app. The date/time and the identity. For high-value systems, also log critical changes to both settings and dat. 
+
+Then make sure that you regularly **Review the logs**! Security logging is pretty useless unless you actually check the logs periodically.
+
+In addition, it is a good idea to have separate scripts or processes for *monitoring data quality*. Security isn't just about inappropriate acceess to the system, it is about ensuring the data is good over time. Data can be spoiled either by deliberate attack or by accidental mistakes. Even by random error events in the system. If your data has value, make sure it is good.
 
 ### Securing the Infrastructure
 
@@ -153,7 +184,7 @@ uibuilder: {
 
 ## Standard Schema for `msg._auth`
 
-Although the built-in security processing has been removed from uibuilder in v5, I am leaving this in place as a recommendation because it is useful as a potential standard not only for uibuilder.
+?> Although much of the built-in security processing has been removed from uibuilder in v5, I am leaving this in place as a recommendation because it is useful as a potential standard not only for uibuilder. When creating your own security processing in Node-RED and uibuilder middleware, please use this schema for campatibility and consistency.
 
 
 This uses the `_auth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
