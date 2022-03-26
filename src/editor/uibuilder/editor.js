@@ -1719,14 +1719,14 @@
             e.preventDefault() // don't trigger normal click event
 
             const authTokens = RED.settings.get('auth-tokens')
-            
+
             // Post the updated content of the file via the admin API
             // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
             // Clients will be reloaded if the reload checkbox is set.
             const request = new XMLHttpRequest()
             const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
                 '&url=' + $('#node-input-url').val() + 
-                '&reload=' + $('#node-input-reload').val() + 
+                '&reload=' + $('#node-input-reload').prop('checked') + 
                 '&data=' + encodeURIComponent(uiace.editorSession.getValue())
             request.open('POST', 'uibuilder/uibputfile', true)
             request.onreadystatechange = function() {
