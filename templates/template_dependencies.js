@@ -17,6 +17,12 @@ module.exports = {
         'dependencies': [ 'vue', 'bootstrap-vue' ],
         'description': 'Simplest VueJS and bootstrap-vue template.'
     },
+    'svelte-basic': {
+        'name': 'Svelte Basic',
+        'folder': 'svelte-basic',
+        'dependencies': [ ],
+        'description': 'Simple Svelte template. Requires Svelte installation, see README.md'
+    },
     // DO NOT EVER REMOVE EITHER OF THESE
     blank: {
         'name': 'Blank template, no framework',
