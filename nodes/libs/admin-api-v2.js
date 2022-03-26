@@ -301,7 +301,7 @@ function adminRouterV2(uib, log) {
                 res.statusMessage = 'File written successfully'
                 res.status(200).end()
                 // Reload connected clients if required by sending them a reload msg
-                if ( params.reload ) {
+                if ( params.reload === 'true' ) {
                     sockets.send({
                         '_uib': {
                             'reload': true,
