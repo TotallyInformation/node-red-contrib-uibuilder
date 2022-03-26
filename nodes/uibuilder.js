@@ -155,29 +155,24 @@ function runtimeSetup() {
     })
 
     //#region ----- Constants for standard setup ----- //
+
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
     userDir = RED.settings.userDir
+
+    uib.rootFolder = path.join(userDir, uib.moduleName)
+    // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
+    if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
+        const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
+        if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
+    }
 
     // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uib
     if ( RED.settings.uibuilder ) {
         const settings = RED.settings.uibuilder
 
-        // Set the root folder
+        // Change the root folder
         if ( settings.uibRoot && typeof settings.uibRoot === 'string') {
-            // Does the folder exist and is it accessible?
-            if ( ! fs.existsSync(settings.uibRoot) ) {
-                // This is not recoverable so stop the Node here.
-                throw new Error(`Folder does not exist. Check settings.js:uibuilder.uibRoot '${settings.uibRoot}'`)
-            }
             uib.rootFolder = settings.uibRoot
-        } else {
-            // No override supplied
-            uib.rootFolder = path.join(userDir, uib.moduleName)
-            // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
-            if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
-                const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
-                if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
-            }
         }
 
         // Get web-relavent uibuilder settings from settings.js
@@ -415,7 +410,7 @@ function nodeInstance(config) {
      * @param {uibNode} this _
      */
     RED.nodes.createNode(this, config)
-    
+
     //#region ====== Create local copies of the node configuration (as defined in the .html file) ====== //
     // NB: this.id and this.type are also available
     this.name            = config.name  || ''
