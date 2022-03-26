@@ -287,6 +287,8 @@ class UibWeb {
         this.serveVendorPackages()
         // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
         this.serveVendorSocketIo()
+        // Serve the ping endpoint (../uibuilder/ping)
+        this.servePing()
 
         //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
         // Serve up the master common folder (e.g. <httpNodeRoute>/uibuilder/common/)
@@ -321,7 +323,9 @@ class UibWeb {
         }
     } // --- End of setMasterStaticFolder() --- //
 
-    /** Add ExpressJS Route for Socket.IO client */
+    /** Add ExpressJS Route for Socket.IO client that can be used with an import or build
+     * The socket.io server supplies one to use with an html script tag
+     */
     serveVendorSocketIo() {
         if ( this._isConfigured !== true ) {
             this.log.warn('[uibuilder:web.js:serveVendorSocketIo] Cannot run. Setup has not been called.')
@@ -329,19 +333,27 @@ class UibWeb {
         }
 
         // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
-        let sioPath = packageMgt.getPackagePath2('socket.io', this.RED.settings.userDir)
+        let sioPath = packageMgt.getPackagePath2('socket.io-client', this.RED.settings.userDir)
+        if ( sioPath === null ) sioPath = packageMgt.getPackagePath2('socket.io-client', path.join(__dirname, '..', '..') )
+        
+        //let sioPath = packageMgt.getPackagePath2('socket.io', this.RED.settings.userDir)
         // If it can't be found the usual way - probably because Docker being used & socket.io not in usual place
         if ( sioPath === null ) {
             try {
-                sioPath = path.join(path.dirname(require.resolve('socket.io')),'..')
+                sioPath = path.join(path.dirname(require.resolve('socket.io-client')),'..')
             } catch (e) {}
         }
 
         if ( sioPath !== null ) {
-            this.vendorRouter.use( '/socket.io', express.static( sioPath, this.uib.staticOpts ) )
+            console.log('>> this.uib.staticOpts >>', this.uib.staticOpts)
+            sioPath += '/dist'
+            this.vendorRouter.use( '/socket.io-client', express.static( sioPath, this.uib.staticOpts ) )
+            this.routers.user.push( {name: 'Socket.IO Client', path:`${this.uib.httpRoot}/uibuilder/vendor/socket.io-client/*`, desc: 'Socket.IO Clients', type:'Static', folder: sioPath} )
+            //! No! This never actually worked! :} - The socket.io SERVER actually creates the path for the client used in script tag but that doesn't work with import/build
+            //this.vendorRouter.use( '/socket.io', express.static( sioPath, opts ) )
         } else {
             // Error: Can't find Socket.IO
-            this.log.error(`[uibuilder:web.js:serveVendorSocketIo] Cannot find installation of Socket.IO. It should be in userDir (${this.RED.settings.userDir}) but is not. Check that uibuilder is installed correctly. Run 'npm ls socket.io'.`)
+            this.log.error(`[uibuilder:web.js:serveVendorSocketIo] Cannot find installation of Socket.IO Client. It should be in userDir (${this.RED.settings.userDir}) but is not. Check that uibuilder is installed correctly. Run 'npm ls socket.io-client'.`)
         }
     } // --- End of serveVendorSocketIo() --- //
 
@@ -400,6 +412,16 @@ class UibWeb {
         packageMgt.setUibRootPackageJson(pj)
 
     } // ---- End of serveVendorPackages ---- //
+
+    /** Add the ping endpoint
+     * This just returns a 201 (No Content) response and can be used for a keepalive process from the client.
+     */
+    servePing() {
+        this.uibRouter.all('/ping', (err, res) => {
+            res.status(201).end()
+        })
+        this.routers.user.push( {name: 'Ping', path:`${this.uib.httpRoot}/uibuilder/ping`, desc: 'Ping/keep-alive endpoint, returns 201', type:'Endpoint'} )        
+    }
 
     //#endregion ==== End of Setup ==== //
 
