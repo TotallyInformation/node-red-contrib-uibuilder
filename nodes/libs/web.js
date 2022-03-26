@@ -345,7 +345,7 @@ class UibWeb {
         }
 
         if ( sioPath !== null ) {
-            console.log('>> this.uib.staticOpts >>', this.uib.staticOpts)
+            // console.log('>> this.uib.staticOpts >>', this.uib.staticOpts)
             sioPath += '/dist'
             this.vendorRouter.use( '/socket.io-client', express.static( sioPath, this.uib.staticOpts ) )
             this.routers.user.push( {name: 'Socket.IO Client', path:`${this.uib.httpRoot}/uibuilder/vendor/socket.io-client/*`, desc: 'Socket.IO Clients', type:'Static', folder: sioPath} )
@@ -507,7 +507,7 @@ class UibWeb {
             if (this.app.get('view engine')) {
                 filePath = path.join(pathRoot, `${requestedView.name}.ejs`)
                 if (fs.existsSync(filePath)) {
-                    console.log('>> render >>', requestedView.name, filePath) //! TODO - remove
+                    // console.log('>> render >>', requestedView.name, filePath) //! TODO - remove
                     // TODO Remove test options
                     try {
                         res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
@@ -519,7 +519,7 @@ class UibWeb {
             } else {
                 filePath = path.join(pathRoot, requestedView.base)
                 if (fs.existsSync(filePath)) {
-                    console.log('>> sendFile >>', req.path, requestedView, filePath) //! TODO - remove
+                    // console.log('>> sendFile >>', req.path, requestedView, filePath) //! TODO - remove
                     res.sendFile( requestedView.base, { root: pathRoot } )
                     return
                 }
@@ -1029,7 +1029,7 @@ class UibWeb {
                 console.table(instances[url])
             })
 
-            console.log('>> Master Static Folder >>', this.masterStatic)
+            // console.log('>> Master Static Folder >>', this.masterStatic)
         }
 
         return instances
@@ -1154,15 +1154,15 @@ class UibWeb {
             url: r.url, //from node.js url
             xhr: r.xhr,
         })
-        console.log('>> app >>', {
-            locals: r.app.locals
-        })
-        const s = res
-        console.log('>> res >>', {
-            headersSent: s.headersSent,
-            locals: s.locals,
-            headers: s.headers,
-        })
+        // console.log('>> app >>', {
+        //     locals: r.app.locals
+        // })
+        // const s = res
+        // console.log('>> res >>', {
+        //     headersSent: s.headersSent,
+        //     locals: s.locals,
+        //     headers: s.headers,
+        // })
     } // --- end of dumpReq --- //
 
     //#endregion ==== ExpressJS Route Reporting ==== //
