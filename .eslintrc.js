@@ -26,6 +26,12 @@ module.exports = {
         Set: true, // Not sure why eslint doesn't recognise this as it is part of node.js since v0.12
         RED: true,
     },
+    overrides: [
+        {
+            files: ['*.mod.js', '*.mjs'],
+            parserOptions: { sourceType: 'module' },
+        }
+    ],
     plugins: [
         'html',     // Check scripts in HTML. https://www.npmjs.com/package/eslint-plugin-html
         'es',       // Help avoid js that is too new. https://eslint-plugin-es.mysticatea.dev/
@@ -144,7 +150,7 @@ module.exports = {
         indent: [
             'warn',
             4,
-            {'SwitchCase': 1}
+            { 'SwitchCase': 1 }
         ],
         'indent-legacy': 'off',
         'init-declarations': 'off',
