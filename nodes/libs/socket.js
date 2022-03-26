@@ -149,6 +149,7 @@ class UibSockets {
         // Socket.Io server options, see https://socket.io/docs/v4/server-options/
         let ioOptions = {
             'path': uib_socketPath,
+            serveClient: true, // Needed for backwards compatibility
             // https://github.com/expressjs/cors#configuration-options, https://socket.io/docs/v3/handling-cors/
             cors: {
                 origin: '*',
