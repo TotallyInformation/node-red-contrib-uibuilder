@@ -3,7 +3,7 @@ title: Working with the uibuilderfe Front-End Library
 description: >
    How to work with uibuilder's front-end library in your own UI code.
 created: 2021-02-17 14:28:00
-lastUpdated: 2021-06-27 17:51:09
+lastUpdated: 2022-03-09 14:09:35
 ---
 
 `uibuildefe.js` is the library that lets you interact with your uibuilder nodes in Node-RED.
@@ -14,6 +14,7 @@ The detailed documentation for the library is in the [uibuildefe developer docum
 
 ## Contents
 
+- [Contents](#contents)
 - [Startup](#startup)
   - [Startup Optional Parameters](#startup-optional-parameters)
     - [Parameters](#parameters)
@@ -351,7 +352,7 @@ See the [Working with Vue Components](vue-component-handling) documentation page
 
 Note that you can trigger this automatically (without front-end code) by sending a msg from Node-RED in the form:
 
-```
+```jsonc
 {
     "_uib": {
         // This can actually be anything, if it doesn't exist, 
@@ -372,6 +373,17 @@ Note that you can trigger this automatically (without front-end code) by sending
         }
     }
 }
+```
+
+You can also trigger it from within your front-end code with:
+
+```js
+/** Show a pop-over msg
+ * @argument {string} Text to show
+ * @argument {string|null} Location to show the toast (Vue/Bootstrap-vue only)
+ * @argument {object|null} Options that control the toast display
+ */
+uibuilder.showToast("Hello",null,{"variant": "warn"})
 ```
 
 ### `start` Start up the front-end library
