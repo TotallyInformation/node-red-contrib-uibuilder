@@ -24,6 +24,12 @@ module.exports = {
     globals: {
         RED: true,
     },
+    overrides: [
+        {
+            files: ['*.mod.js', '*.mjs'],
+            parserOptions: { sourceType: 'module' },
+        }
+    ],
     rules: {
         'jsdoc/multiline-blocks': 0,
         'jsdoc/newline-after-description': 0,
