@@ -1,7 +1,8 @@
 {
   "name": "vue",
-  "version": "1.0.0",
-  "description": "The default template for uibuilder. You need to have installed `vue` v2 and `bootstrap-vue` v2 to use this template. uibuilder will warn you if you don't have them installed.",
+  "version": "5.0.0",
+  "description": "A VueJS and bootstrap-vue example template for uibuilder with Node-RED. You need to have installed `vue` v2 and `bootstrap-vue` v2 to use this template. uibuilder will warn you if you don't have them installed.",
+  "private": true,
   "browser": "./src/index.js",
   "scripts": {
     "build": "echo \"Error: no build process specified\" && exit 1"
@@ -20,6 +21,6 @@
     "maintained versions",
     "last 2 versions",
     "not dead",
-    "not ie < 11"
+    "not ie > 0"
   ]
 }

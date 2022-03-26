@@ -57,23 +57,22 @@ const app = new Vue({
         hLastRcvd: function() {
             var msgRecvd = this.msgRecvd
             if (typeof msgRecvd === 'string') return 'Last Message Received = ' + msgRecvd
-            else return 'Last Message Received = ' + this.syntaxHighlight(msgRecvd)
+            return 'Last Message Received = ' + this.syntaxHighlight(msgRecvd)
         },
         hLastSent: function() {
             var msgSent = this.msgSent
             if (typeof msgSent === 'string') return 'Last Message Sent = ' + msgSent
-            else return 'Last Message Sent = ' + this.syntaxHighlight(msgSent)
+            return 'Last Message Sent = ' + this.syntaxHighlight(msgSent)
         },
         hLastCtrlRcvd: function() {
             var msgCtrl = this.msgCtrl
             if (typeof msgCtrl === 'string') return 'Last Control Message Received = ' + msgCtrl
-            else return 'Last Control Message Received = ' + this.syntaxHighlight(msgCtrl)
+            return 'Last Control Message Received = ' + this.syntaxHighlight(msgCtrl)
         },
         hLastCtrlSent: function() {
             var msgCtrlSent = this.msgCtrlSent
             if (typeof msgCtrlSent === 'string') return 'Last Control Message Sent = ' + msgCtrlSent
-            //else return 'Last Message Sent = ' + this.callMethod('syntaxHighlight', [msgCtrlSent])
-            else return 'Last Control Message Sent = ' + this.syntaxHighlight(msgCtrlSent)
+            return 'Last Control Message Sent = ' + this.syntaxHighlight(msgCtrlSent)
         },
 
     }, // --- End of computed --- //
@@ -85,7 +84,7 @@ const app = new Vue({
             console.log('Button Pressed. Event Data: ', event)
 
             // Increment the count by one
-            this.counterBtn = this.counterBtn + 1
+            this.counterBtn += 1
             var topic = this.msgRecvd.topic || 'uibuilder/vue'
             uibuilder.send( {
                 'topic': topic,
@@ -108,15 +107,15 @@ const app = new Vue({
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
                 var cls = 'number'
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
+                if ((/^"/).test(match)) {
+                    if ((/:$/).test(match)) {
                         cls = 'key'
                     } else {
                         cls = 'string'
                     }
-                } else if (/true|false/.test(match)) {
+                } else if ((/true|false/).test(match)) {
                     cls = 'boolean'
-                } else if (/null/.test(match)) {
+                } else if ((/null/).test(match)) {
                     cls = 'null'
                 }
                 return '<span class="' + cls + '">' + match + '</span>'

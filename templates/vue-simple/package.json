@@ -1,6 +1,7 @@
 {
   "name": "vue-simple",
-  "version": "1.0.0",
+  "version": "5.0.0",
+  "private": true,
   "description": "Simplified uibuilder template with VueJS. You need to have installed `vue` v2 and `bootstrap-vue` v2 to use this template. uibuilder will warn you if you don't have them installed.",
   "browser": "./src/index.js",
   "scripts": {
@@ -20,6 +21,6 @@
     "maintained versions",
     "last 2 versions",
     "not dead",
-    "not ie < 11"
+    "not ie > 0"
   ]
 }

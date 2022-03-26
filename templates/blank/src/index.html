@@ -4,10 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Node-RED uibuilder - Blank template</title>
+    <title>Blank template - Node-RED uibuilder</title>
     <meta name="description" content="Node-RED uibuilder - Blank template">
     <link rel="icon" href="./images/node-blue.ico">
 
+    <!-- Your own CSS -->
     <link type="text/css" rel="stylesheet" href="./index.css" media="all">
 
 </head><body class="uib">
@@ -18,8 +19,10 @@
 
     <pre id="msg" class="syntax-highlight">Waiting for a message from Node-RED</pre>
 
-    <script src="../uibuilder/vendor/socket.io/socket.io.js"></script>
-    <script src="./uibuilderfe.min.js"></script>
-    <script src="./index.js"></script>
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
+    <script src="../uibuilder/vendor/socket.io/socket.io.js">/* REQUIRED: Socket.IO is loaded only once for all instances. Without this, you don't get a websocket connection */</script>
+    <script src="./uibuilderfe.min.js">/* REQUIRED: remove 'min.' to use dev version */</script>
+    <script src="./index.js">/* OPTIONAL: Put your custom code here */</script>
+    <!-- #endregion -->
 
 </body></html>

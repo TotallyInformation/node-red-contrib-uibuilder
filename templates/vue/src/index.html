@@ -2,11 +2,10 @@
 <html lang="en"><head>
 
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Node-RED UI Builder - VueJS + bootstrap-vue default template</title>
-    <meta name="description" content="Node-RED UI Builder - VueJS + bootstrap-vue default template">
+    <title>VueJS + bootstrap-vue template - Node-RED uibuilder</title>
+    <meta name="description" content="Node-RED uibuilder - VueJS + bootstrap-vue template">
 
     <link rel="icon" href="./images/node-blue.ico">
 
@@ -17,11 +16,11 @@
 
 </head><body>
 
-    <div id="app" class="uib" v-cloak>
-        <b-container id="app_container">
+    <div id="app" class="uib" v-cloak><!-- All UI code needs to be in here -->
+        <b-container id="app_container"><!-- Wraps the bootstrap-vue formatting -->
 
             <b-img src="./images/node-blue-192x192.png" rounded left v-bind="imgProps" alt="Blue Node-RED" class="mt-1 mr-2"></b-img>
-            <h1>UIbuilder + Vue.js + bootstrap-vue for Node-RED</h1>
+            <h1>uibuilder + Vue.js + bootstrap-vue for Node-RED</h1>
             <p>
                 This is a uibuilder example using <a href="https://vuejs.org/">Vue.js</a> as a front-end library.
                 See the
@@ -102,23 +101,16 @@
         </b-container>
     </div>
 
-    <!-- These MUST be in the right order. Note no leading / -->
-
-    <!-- REQUIRED: Socket.IO is loaded only once for all instances. Without this, you don't get a websocket connection -->
-    <script src="../uibuilder/vendor/socket.io/socket.io.js"></script>
-
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
+    <script src="../uibuilder/vendor/socket.io/socket.io.js">/* REQUIRED: Socket.IO is loaded only once for all instances. Without this, you don't get a websocket connection */</script>
     <!-- Vendor Libraries - Load in the right order, use minified, production versions for speed -->
-    <script src="../uibuilder/vendor/vue/dist/vue.js"></script> <!-- dev version with component compiler -->
-    <!-- <script src="../uibuilder/vendor/vue/dist/vue.min.js"></script>   prod version with component compiler -->
-    <!-- <script src="../uibuilder/vendor/vue/dist/vue.runtime.min.js"></script>   prod version without component compiler -->
-    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.js"></script> <!-- Dev version -->
-    <!-- <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js"></script>   Prod version -->
+    <script src="../uibuilder/vendor/vue/dist/vue.min.js">/* prod version with component compiler */</script>
+    <!-- <script src="../uibuilder/vendor/vue/dist/vue.js">/* dev version with component compiler */</script> -->
+    <!-- <script src="../uibuilder/vendor/vue/dist/vue.runtime.min.js">/* prod version without component compiler */</script> -->
+    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js">/* remove 'min.' to use dev version */</script> <!--  -->
 
-    <!-- REQUIRED: Sets up Socket listeners and the msg object -->
-    <script src="./uibuilderfe.js"></script> <!-- dev version -->
-    <!-- <script src="./uibuilderfe.min.js"></script>     prod version -->
-
-    <!-- OPTIONAL: You probably want this. Put your custom code here -->
-    <script src="./index.js"></script>
+    <script src="./uibuilderfe.min.js">/* REQUIRED: remove 'min.' to use dev version */</script>
+    <script src="./index.js">/* OPTIONAL: Put your custom code here */</script>
+    <!-- #endregion -->
 
 </body></html>
