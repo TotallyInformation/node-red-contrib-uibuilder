@@ -179,6 +179,10 @@ These are some thoughts about possible future direction. They need further thoug
 
 ### General
 
+* Add HTML loader & Syntax Highlight web components.
+* Add `uibuilder` prop to `<uibInstanceRoot>/package.json`
+  * `uibuilder.loader` - an array of folder paths - relative to `<uibInstanceRoot>` that would be served using uibuilder's ExpressJS web server. Allowing instance-specific front-end resources. To be used by things like components.
+* Add new node to specify component instances to add to the UI. Would need to auto-cache. Will need a way to specify settings - as these will be different for different components - sucggest making this JSON to begin with. Needs a way to know what components are available for a uib instance. Components should specify their settings and provide a default json settings file. Might be able to use JSON Schema? See New Nodes section below.
 * Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
   * Update docs
   * Add processing to nodes to be able to mark them as experimental.
@@ -189,6 +193,8 @@ These are some thoughts about possible future direction. They need further thoug
 * Trial use of [web-workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) since majority support goes back to 2014.
 * Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's
 * Add support for HTTP/2 with auto-push. See [http2-express-autopush - npm](https://www.npmjs.com/package/http2-express-autopush)
+* Consider changing my custom event handler in uibuilderfe.js to use a dummy html element never attached to the dom. This then inherits the JS event hander capabilities.
+* Allow transfer of files via Socket.IO. https://stackoverflow.com/a/59224495/1309986
 
 ### Core (`uibuilder.js`)
 

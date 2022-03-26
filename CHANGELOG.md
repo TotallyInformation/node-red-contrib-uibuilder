@@ -14,8 +14,22 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * FIXES NEEDED:
   * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
-  * [ ] Error if settings.js uibuilder not there? [[Update on progress\] node-red-contrib-uibuilder vNext/v5 - Share Your Nodes - Node-RED Forum (nodered.org)](https://discourse.nodered.org/t/update-on-progress-node-red-contrib-uibuilder-vnext-v5/57088/6)
+  * [ ] Auto-reload is happening even if not selected (turned on for all instead of one?)
+  * [ ] Client sends request for replay after disconnection even though the tab wasn't closed. Need a way to know if the page still has data but was disconnected for a while.
+
+* Add msg send middleware
+* Switch uibindex to use new CSS instead of bootstrap. Also change "User-Facing Routes" to "Client-Facing Routes".
+  
+* Add client id to standard msgs not just control ones. (optional?)
+
+* ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
+
+* Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
+
+* Add a standard logging fn to uibuilderfe - allow that to return log statements back to Node-RED via control msgs.
+
 * Allow ExpressJS settings for custom server: uibuilder.serverOptions, [Express 4.x - API Reference (expressjs.com)](http://expressjs.com/en/api.html#app.settings.table)
+
 * Security
   * REMOVE FOR THIS RELEASE!
   * Allow loading of security.js
@@ -81,7 +95,32 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * **Minimum Node.js version supported is now v12.20**. Minimum browser version remains the same and must be one that supports ES6.
 
+* **New Dependency** - I've finally given in and included the socket.io-client package in the dependencies. The reason for this is that the server does not correctly include the client package as expected. While it works if you are including the client using a `<script src="...">` line in your `index.html`, it _does not work_ if you are using web components or a build step with an import statement. So in that instance, you should use.
+
+   Note the change of path when writing your HTML:
+
+   ```html
+   <script src="../uibuilder/vendor/socket.io-client/socket.io.min.js"></script>
+   ```
+
+   Though the old path works as well.
+
+   However, if you want to use uibuilder with web modules or with a build step and wish to `import` socket.io client, you **must not** load via a script tag. Instead, in your JavaScript or framework code:
+
+   ```js
+   import { io } from '../uibuilder/vendor/socket.io-client/socket.io.esm.min.js'
+   ```
+
+   Better still, use the module compatible version of the uibuilderfe client `uibuiderfe.mod.min.js` or `uibuiderfe.mod.js` which will import the correct socket.io client for you.
+
+
 ### New
+
+* **New layout for the Editor panel**
+
+  This is a much cleaner and clearer layout. It also blocks access to parts of the config that don't work until a newly added node has been Deployed for the first time so that its server folder has been created.
+
+  There are also some additional error and warning messages to make things clearer.
 
 * **New node `uib-sender`** - this node allows you to send a msg to any uibuilder instance's connected front-end clients.
 
@@ -116,27 +155,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
   *Note that, because such API definitions reside in a potentially user-facing folder and may be significant security risks, their use is controlled by a flag in Node-RED's settings.js file `uibuilder.instanceApiAllowed`. This must be set to `true` for API's to be loaded.*
 
-* **Extended Feature** _Package Management_ - You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
-
-  Note that _only_ packages installed into the `uibRoot` folder will be recognised.
-
-  Also note that if you manually install a package rather than using the library manager, you will need to restart Node-RED.
-
-* **New layout for the Editor panel**
-
-  This is a much cleaner and clearer layout. It also blocks access to parts of the config that don't work until a newly added node has been Deployed for the first time so that its server folder has been created.
-
-  There are also some additional error and warning messages to make things clearer.
-
-* **Extended Feature** _Updated node status display_ - Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
-
 * **New Feature** - Added a version checker that allows uibuilder to notify users if a node instance must be updated due to a change of version.
-
-* **Extended Feature** - Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
-
-* **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.socketOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
-
-* **Extended Feature** -  If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
 
 * **New Feature** - A default CSS style sheet has been introduced. Either include in your `index.css` file as `@import url("./uib-styles.css");`. Or in your `index.html before the reference to `./index.css` as `<link type="text/css" rel="stylesheet" href="./uib-styles.css" media="all">`.
 
@@ -147,6 +166,31 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   Add the `uib` class to your `<body>` tag in `index.html` to pick up the full styles for your page. If you use this, your page will switch between light and dark modes depending on your browser settings. Note that, when using bootstrap-vue, these styles are ignored.
 
   The style sheet file may be found in the `front-end/src/uib-styles.css` package folder.
+
+* **New Feature** - HTTP Ping. The uibuilder server now has a new endpoint `../uibuilder/ping` that will return a 201 status code (No Content). The client has a new function `uibuilder.setPing(ms)` that will call that endpoint either once (`ping(0)`) or every n milliseconds (`ping(n)`). You can use this to check whether the server is responding. But more usefully, you can use it to help keep alive a security session.
+
+  The function also fires an event that you can listen for:
+
+  ```javascript
+  uibuilder.setPing(3600000) // Once an hour
+  uibuilder.onChange('ping', function(data) {
+    console.log('pinger', data)
+  })
+  ```
+  
+* **Extended Feature** _Package Management_ - You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
+
+  Note that _only_ packages installed into the `uibRoot` folder will be recognised.
+
+  Also note that if you manually install a package rather than using the library manager, you will need to restart Node-RED.
+
+* **Extended Feature** _Updated node status display_ - Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
+
+* **Extended Feature** - Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
+
+* **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.socketOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
+
+* **Extended Feature** -  If using a custom ExpressJS server for uibuilder, allow different https settings (key and cert files) from Node-RED itself. Uses a new property  in `settings.js` - `uibuilder.https`.
 
 * **uibuilderfe library**
 
@@ -203,6 +247,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 
 * Added documentation for Socket.IO middleware and error handling.
+
+* Added socket.io-client as a dependency and use it where possible - this simplifies access to the client library, especially when using uibuilderfe as a module. It will also help people doing their own build step and wanting to bundle the socket.io client and uibuilderfe library.
 
 * Minor improvements to the  `.config` middleware templates.
 
