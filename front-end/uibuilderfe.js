@@ -29,11 +29,11 @@
  * For this to work, you have to have the socket.io-client package installed as a dev
  * dependency in your front-end project.
  * ! NOTE: It is preferable NOT to bundle the socket.io client since there is a danger
- *         that you will end up with an incompatible version. You gain little to nothing anyway.
+ * !       that you will end up with an incompatible version. You gain little to nothing anyway.
  */
 if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-disable-line block-scoped-var, no-use-before-define
     // @ts-expect-error ts(2307)
-    var io = require('socket.io-client')
+    const io = require('socket.io-client') // eslint-disable-line no-unused-vars
 }
 
 /** Create a single global using "new" with an anonymous function
@@ -126,7 +126,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '5.0.0-dev.2'
+        self.version = '5.0.0'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
@@ -1001,6 +1001,43 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             
         } // ---- End of addCSSClass ---- //
 
+        /** Ping/Keep-alive - makes a call back to uibuilder's ExpressJS server and receives a 201 response
+         * Can be used to keep sessions alive.
+         * @example
+         *   uibuilder.setPing(2000) // repeat every 2 sec. Re-issue with ping(0) to turn off repeat.
+         *   uibuilder.onChange('ping', function(data) {
+         *      console.log('pinger', data)
+         *   })
+         * @param {number} ms Repeat interval in ms
+         */
+        self.setPing = function setPing(ms=0) {
+            const oReq = new XMLHttpRequest()
+            oReq.addEventListener('load', function() {
+                const headers = (oReq.getAllResponseHeaders()).split('\r\n')
+                //console.log('PING', oReq.status, oReq.getAllResponseHeaders())
+                self.set('ping', {
+                    success: oReq.status === 201 ? true : false,
+                    status: oReq.status,
+                    headers: headers,
+                })
+            })
+
+            if ( self.pingInterval) {
+                clearInterval(self.pingInterval)
+                delete self.pingInterval
+            }
+
+            if ( ms < 1 ) {
+                oReq.open('GET', '../uibuilder/ping')
+                oReq.send()
+            } else {
+                self.pingInterval = setInterval(() => {
+                    oReq.open('GET', '../uibuilder/ping')
+                    oReq.send()
+                }, ms)
+            }
+        } // ---- End of ping ---- //
+
         //#region ---------- Our own event handling system ---------- //
 
         self.events = {}  // placeholder for event listener callbacks by property name
@@ -1676,6 +1713,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             /** auto map msg.topic's to variables */
             automap: self.automap,
+
+            /** Ping/keep-alive */
+            setPing: self.setPing,
 
         } // --- End of return callback functions --- //
 
