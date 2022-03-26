@@ -6,24 +6,19 @@ typora-root-url: docs\images
 
 ## To do/In-progress
 
-IF uibuilderInstances <> editorInstances THEN there are undeployed instances.
-
 [Check Deepscan for code quality](https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=522282&prid=&subview=issues&impact=%5B%22High%22%2C%22Medium%22%2C%22Low%22%5D&page=1)
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * FIXES NEEDED:
   * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
-  * [ ] Auto-reload is happening even if not selected (turned on for all instead of one?)
   * [ ] Client sends request for replay after disconnection even though the tab wasn't closed. Need a way to know if the page still has data but was disconnected for a while.
 
 * Add msg send middleware
 * Switch uibindex to use new CSS instead of bootstrap. Also change "User-Facing Routes" to "Client-Facing Routes".
   
 * Add client id to standard msgs not just control ones. (optional?)
-
 * ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
-
 * Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
 
 * Add a standard logging fn to uibuilderfe - allow that to return log statements back to Node-RED via control msgs.
