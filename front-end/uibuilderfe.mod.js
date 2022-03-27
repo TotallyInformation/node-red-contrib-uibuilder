@@ -42,6 +42,7 @@
 // @ts-ignore
 import { io } from '../uibuilder/vendor/socket.io-client/socket.io.esm.min.js'
 //import { io } from "https://cdn.socket.io/4.3.2/socket.io.esm.min.js"
+if ( io === undefined ) console.error('[uibuilder] Socket.IO client failed to load')
 
 /** Makes a null or non-object into an object
  * If not null, moves "thing" to {payload:thing}
