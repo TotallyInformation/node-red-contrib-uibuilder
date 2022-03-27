@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2022-02-18 13:48:52
+lastUpdated: 2022-03-26 20:48:36
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -50,15 +50,13 @@ Current focus (beyond what has already been developed) is on:
 * Filling in some gaps and issues identified in various discussions.
 * Continuing to improve the technical documentation. Updating details and changes, adding how-to's, moving some things from the WIKI. Improving language consistency.
 * Maturing the 2 new nodes.
-* Trying, yet again, to think about a sensible but robust approach to security.
 
 Next immediate focus will be on:
 
-* Possibility of turning on server-side rendering with the EJS template engine
+* ~~Possibility of turning on server-side rendering with the EJS template engine~~ - 😁already done!
 * Enabling instance npm scripts to be run from the Editor.
 * Displaying and enabling updatable packages in the package manager.
 * Enable templates to provide examples to the Node-RED example library.
-* Enabling security.
 * Add *option* to auto-install npm dependencies on change of Template.
 
 If you would like to contribute to any of these future features, please get in touch via the Node-RED forum or GitHub so that we can plan things out.
@@ -105,9 +103,17 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
 
-* Serve uibuilderfe on `../uibuilder/` path as well as `./` for greater consistency
-
 * Introduce standard events: url-change
+
+* Switch uibindex to use new CSS instead of bootstrap. Also change "User-Facing Routes" to "Client-Facing Routes".
+  
+* Add client id to standard msgs not just control ones. (optional?)
+* ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
+* Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
+
+* Add a standard logging fn to uibuilderfe - allow that to return log statements back to Node-RED via control msgs.
+
+* Retain logon/logoff control msgs but direct to fns in external security.js file (which should allow call from both express and socket.io)
 
 ### Editor (`uibuilder.html`)
 

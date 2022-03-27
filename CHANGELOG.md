@@ -15,26 +15,14 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * [ ] Client sends request for replay after disconnection even though the tab wasn't closed. Need a way to know if the page still has data but was disconnected for a while.
 
 * Add msg send middleware
-* Switch uibindex to use new CSS instead of bootstrap. Also change "User-Facing Routes" to "Client-Facing Routes".
-  
-* Add client id to standard msgs not just control ones. (optional?)
-* ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
-* Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
-
-* Add a standard logging fn to uibuilderfe - allow that to return log statements back to Node-RED via control msgs.
-
-* Allow ExpressJS settings for custom server: uibuilder.serverOptions, [Express 4.x - API Reference (expressjs.com)](http://expressjs.com/en/api.html#app.settings.table)
 
 * Security
   * REMOVE FOR THIS RELEASE!
-  * Allow loading of security.js
-  * Retain logon/logoff control msgs but direct to fns in external security.js file (which should allow call from both express and socket.io)
   * change docs/security.md
   * ?? What headers to push from reverse proxy to support knowing if user is auth?
 
 * DOC UPDATES NEEDED:
   * Extra cookie for nodeRoot
-  * Review all changes
   * Add note about [default msg size](https://github.com/socketio/socket.io/issues/3946#issuecomment-850704139)
   * Update custom express settings
   * Finish NGINX docs
@@ -42,12 +30,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
     * Variables:
       * uib.customServer.isCustom
   * FE
+    * Event list
     * Variables:
-      * self.security - flag: indicates if server has security turned on
-      * self.storePrefix
-      * 
+      * self.storePrefix 
     * Functions:
-      * self.initSecurity
       * self.setStore
 
 
@@ -57,8 +43,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...main)
 
 <!-- Nothing currently. -->
-
-**WARNING**: Though I've done some work on the security features, they are still not ready. Do please try them but **NOT IN PRODUCTION**.
 
 ### BREAKING
 
@@ -77,6 +61,14 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   The files `<uibRoot>/.config/packageList.json` and `<uibRoot>/.config/masterPackageList.json` are no longer used and may be deleted.
 
   You can now install not only packages from npmjs.com but also from GitHub and even local development packages. @scopes are fully supported and versions, tags, and branches are supported for both npmjs and GitHub installs.
+
+* **Removal of Security Processing** - The built-in security features of uibuilder have now been removed.
+
+  This is because I was not getting any closer to a design that was robust and safe and it was having a serious impact on development.
+
+  The recommendation is that you use _external_ security processing via a reverse proxy service (e.g. NGINX). I will be trying to provide some documentation for this.
+
+  Alternatively, you can still provide security processing by making use of the various 
 
 * **Peer installation of VueJS and bootstrap-vue yet again removed**. Since these now need to be in the `uibRoot` folder which
   we don't necessarily know at preinstall time.
@@ -227,6 +219,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Improvements to the Editor help panel. Should hopefully be clearer and includes all of the settings and custom msg properties. Now uses a tabbed interface.
   * File editor now excludes `.git/**`, `.vscode/**`, `node_modules/**` and `_*`.
   * When editing the configuration for a uibuilder node, if the URL is invalid or the server folder hasn't yet been created, you cannot access various parts of the panel.
+  * **ctrl-s** - in the file editor, pressing <kbd>ctrl</kbd>-<kbd>s</kbd> will save the file rather than trying to save the web page. If, like me, you have a strong muscle memory for saving using ctrl-s, this should save you a LOT of annoyances. 😁
 
 * `uibuilderfe.js` client library updated to allow for the use of an `originator` metadata property. This facilitates routing of messages back to an alternative node instead of the main uibuilder node.
 
