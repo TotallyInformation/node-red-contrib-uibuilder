@@ -723,6 +723,41 @@
 
     } // --- End of setACEheight --- //
 
+    /** Save Edited File */
+    function saveFile() {
+
+        const authTokens = RED.settings.get('auth-tokens')
+
+        // Post the updated content of the file via the admin API
+        // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
+        // Clients will be reloaded if the reload checkbox is set.
+        const request = new XMLHttpRequest()
+        const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
+            '&url=' + $('#node-input-url').val() + 
+            '&reload=' + $('#node-input-reload').prop('checked') + 
+            '&data=' + encodeURIComponent(uiace.editorSession.getValue())
+        request.open('POST', 'uibuilder/uibputfile', true)
+        request.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                if (this.status === 200) {
+                    // Request successful
+                    // display msg - blank msg when new edits present
+                    $('#file-action-message').text('File Saved')
+                    fileIsClean(true)
+                } else {
+                    // Request failed
+                    // display msg - blank msg when new edits present
+                    $('#file-action-message').text('File Save FAILED')
+                }
+            }
+        }
+        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+        // If admin ui is protected with a login, we need to send the access token
+        if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+        request.send(params)
+
+    } // ---- End of saveFile ---- //
+
     //#endregion ==== File Management Functions ==== //
 
     //#region ==== Validation Functions ==== //
@@ -1457,6 +1492,16 @@
             }) */
             uiace.editorLoaded = true
 
+            // When inside the editor, allow ctrl-s to save the file rather than the default of saving the web page
+            const aceDiv = document.getElementsByClassName('red-ui-editor-text-container')
+            aceDiv.item(0).addEventListener('keydown', (evt) => {
+                // @ts-ignore
+                if ( evt.ctrlKey === true && evt.key === 's' ) {
+                    evt.preventDefault()
+                    saveFile()
+                }
+            })
+
             // Resize to max available height
             setACEheight()
             
@@ -1718,35 +1763,7 @@
         $('#edit-save').on('click', function(e) {
             e.preventDefault() // don't trigger normal click event
 
-            const authTokens = RED.settings.get('auth-tokens')
-
-            // Post the updated content of the file via the admin API
-            // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
-            // Clients will be reloaded if the reload checkbox is set.
-            const request = new XMLHttpRequest()
-            const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
-                '&url=' + $('#node-input-url').val() + 
-                '&reload=' + $('#node-input-reload').prop('checked') + 
-                '&data=' + encodeURIComponent(uiace.editorSession.getValue())
-            request.open('POST', 'uibuilder/uibputfile', true)
-            request.onreadystatechange = function() {
-                if (this.readyState === XMLHttpRequest.DONE) {
-                    if (this.status === 200) {
-                        // Request successful
-                        // display msg - blank msg when new edits present
-                        $('#file-action-message').text('File Saved')
-                        fileIsClean(true)
-                    } else {
-                        // Request failed
-                        // display msg - blank msg when new edits present
-                        $('#file-action-message').text('File Save FAILED')
-                    }
-                }
-            }
-            request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
-            // If admin ui is protected with a login, we need to send the access token
-            if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-            request.send(params)
+            saveFile()
 
         })
 
