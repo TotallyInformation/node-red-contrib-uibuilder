@@ -191,58 +191,57 @@ class UibSockets {
     /** Output a msg to the front-end.
      * @param {object} msg The message to output, include msg._socketId to send to a single client
      * @param {string} url THe uibuilder id
-     * @param {string} channel Which channel to send to (see uib.ioChannels)
+     * @param {string=} channel Optional. Which channel to send to (see uib.ioChannels) - defaults to client
      */
     sendToFe( msg, url, channel ) {
         const uib = this.uib
         const log = this.log
 
+        if ( channel === undefined ) channel = uib.ioChannels.client
+
         const ioNs = this.ioNamespaces[url]
 
         let socketId = msg._socketId || undefined
 
+        // Control msgs should say where they came from
         if ( channel === uib.ioChannels.control ) msg.from = 'server'
 
-        //console.log('> > > > ', msg)
+        // TODO Process outbound middleware (middleware should already be loaded)
+
+        // TODO: Sending should have some safety validation on it. Is msg an object? Is channel valid?
 
         // pass the complete msg object to the uibuilder client
-        // TODO: This should have some safety validation on it! Also need to add security processing
         if (socketId !== undefined) { // Send to specific client
-            // TODO ...If socketId not validated as having a current session, don't send
             log.trace(`[uibuilder:socket.js:sendToFe:${url}] msg sent on to client ${socketId}. Channel: ${channel}. ${JSON.stringify(msg)}`)
             ioNs.to(socketId).emit(channel, msg)
         } else { // Broadcast
-            //? - is there any way to prevent sending to clients not logged in?
             log.trace(`[uibuilder:socket.js:sendToFe:${url}] msg sent on to ALL clients. Channel: ${channel}. ${JSON.stringify(msg)}`)
-            //console.log('> > > > ', channel, ioNs.name, msg)
-
             ioNs.emit(channel, msg)
         }
 
     } // ---- End of sendToFe ---- //
 
-    /** Output a normal msg to the front-end. WARNING: Cannot use uibuilder security on this because! Currently only used to send a reload msg to FE.
-     * To add security, would need reference to node. When called from a uib api, the node isn't available.
+    /** Output a normal msg to the front-end. Can override socketid
+     * Currently only used for the auto-reload on edit in admin-api-v2.js
      * @param {object} msg The message to output
      * @param {object} url The uibuilder instance url - will be unique. Used to lookup the correct Socket.IO namespace for sending.
      * @param {string=} socketId Optional. If included, only send to specific client id (mostly expecting this to be on msg._socketID so not often required)
      */
-    send(msg, url, socketId) { // eslint-disable-line class-methods-use-this
+    sendToFe2(msg, url, socketId) { // eslint-disable-line class-methods-use-this
         const uib = this.uib
         const ioNs = this.ioNamespaces[url]
 
         if (socketId) msg._socketId = socketId
 
-        // TODO: This should have some safety validation on it!
+        // TODO: This should have some safety validation on it
         if (msg._socketId) {
-            //  TODO If socketId not validated as having a current session, don't send
-            this.log.trace(`[uibuilder:socket:send:${url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            this.log.trace(`[uibuilder:socket:sendToFe2:${url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
         } else {
-            this.log.trace(`[uibuilder:socket:send:${url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            this.log.trace(`[uibuilder:socket:sendToFe2:${url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.emit(uib.ioChannels.server, msg)
         }
-    }
+    } // ---- End of sendToFe2 ---- //
 
     /** Get client details for JWT security check
      * @param {socketio.Socket} socket Reference to client socket connection
