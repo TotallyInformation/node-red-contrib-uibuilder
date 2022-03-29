@@ -4,17 +4,15 @@ description: >
    If you haven't used uibuilder before, it can be a little confusing as it brings together concepts from
    several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-lastUpdated: 2021-09-24 16:51:11
+lastUpdated: 2022-03-27 13:30:46
 ---
 
-Status: **Incomplete**
-
-Like uibuilder itself, this walkthrough may look complex. But you should bear in mind that if you follow the 7 steps in the [How to get started](#how-to-get-started) section, that is basically it.
+Like uibuilder itself, this walkthrough may look complex. But you should bear in mind that if you follow the 7 steps in the [How to get started](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
 The rest starts to unpack some of the things that you can then do with uibuilder and how to do them. Please consider them as additional walkthroughs.
 
 ## What is uibuilder
 
-Node-RED's Dashboard and uibuilder are both different approaches to the same use-case. How to present data to users in a web browser tab and get information back from them into Node-RED.
+Node-RED's Dashboard and uibuilder are both different approaches to the same use-case. How to present data to users in a web browser tab and get information back from them into Node-RED. Remembering that the users browser and the Node-RED server are completely different environments and may be on different devices.
 
 We refer to this as a "data-driven web application".
 
@@ -26,13 +24,13 @@ Suddenly things go from being very simple to very complex.
 
 uibuilder takes the opposite approach to Dashboard. Its main purpose is to be a _foundation_ on which you can build whatever you like, however you like.
 
-It does the complex background tasks for you and then gets out of the way. Please see the uibuilder documentation for more details.
+It does the complex background tasks for you and then gets out of the way.
 
-uibuilder is a bridge between the Node-RED server and any connected clients (web browser tabs). Each browser tab pointing at the same uibuilder instance is a client so you can have many clients running from 1 browser if you like.
+uibuilder is a *bridge* between the Node-RED server and any connected clients (web browser tabs). Each browser tab pointing at the same uibuilder instance is a *client* and you can have many clients running from 1 browser, 1 device/many browsers or different devices - however you like.
 
 ## How to get started - 4 steps to a data-driven web app
 
-It may look complex, but really it isn't.
+It may look complex, but really it isn't. 😊
 
 1. Install node-red-contrib-uibuilder via Node-RED's "Manage palette" menu.
 
@@ -62,7 +60,7 @@ It may look complex, but really it isn't.
 
    That port outputs uibuilder _control_ messages. The messages tell you where they came from, either the server (the uibuilder node itself) or the client and what they represent ("Client Connect" and "Ready for Content").
    You will also see a property called `cacheControl` with a value of "REPLAY". This can be wired back to the uibuilder input and used to send cached data when a new client connects 
-   (or and existing client reloads the page).
+   (or an existing client reloads the page).
 
    Note that the top output port on the uibuilder node outputs messages from your client(s). There is a helper function in the `uibuilderfe` library: `uibuilder.send({...})` that sends a message back to Node-RED. The message must be structured the same as a Node-RED message. That is to say that it must be a JavaScript object containing properties with values. For example: `{ "payload": "Message from the client", "topic": "mymessage" }`. See below for more information on working with the front-end code.
 
@@ -76,23 +74,23 @@ You now have a fully working uibuilder configuration. However, it doesn't do any
 Now that you have the basics running, it is time to look at the front-end code. The important points to remember are:
 
 * The code is completely standard web code using HTML, CSS and JavaScript (and any libraries you might choose to use).
-* There is a JavaScript helper library `uibuilderfe.js` that provides the magic connections between the front and back ends. See the technical docs for more information.
-* All of the front-end code for a uibuilder node instance is stored in a single folder (with some pre-defined sub-folders).
+* There is a JavaScript helper library `uibuilderfe.js` that provides the magic connections between the front and back ends. See the technical docs for more information. A second library called `socket.io` or `socket.io-client` is also needed in order to enable the communications.
+* All of the front-end code for a uibuilder node instance is stored in a single folder (with some pre-defined and any desired sub-folders).
 
 There are two ways to look at and change the content of an instance's root folder (which, remember, sits on the Node-RED server).
 
 1. Use the built-in "Edit Files" button in the uibuilder Editor panel.
    
-   This is best for quick edits and maybe if your server is remote and you do not have ease access to files on it normally.
+   This is best for quick edits and maybe if your server is remote and you do not have easy access to files on it normally.
    However, it is not the best experience as your code starts to get longer and it does not let you keep multiple files
    open.
 
    1. Click on the "Edit Files" button
    2. Select a file to edit from the drop-down. Noting that you can also change which folder to look in. 
-      The folder called "root" is the root folder and should contain a `package.json` file.
-      The folder called "src" will be the one you will most commonly use.
+      The folder called "root" is the root folder for this node instance and should contain a `package.json` file, `src` and `dist` folders.
+      The folder called `src` will be the one you will most commonly use unless you are using a more complex template and framework such as Svelte.
 
-      See the uibuilder documentation for more details about the instance folders, what they mean and how to make use of them.
+      See the [web-app workflow](web-app-workflow#code-folders) documentation for more details about the instance folders, what they mean and how to make use of them.
 
    3. In the `index.html` file, change the the line that says `<h1>uibuilder Blank Template</h1>` to `<h1>My Data-Driven Web App</h1>`.
    4. Click the "Save" button.
