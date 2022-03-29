@@ -332,7 +332,7 @@ class UibWeb {
             return
         }
 
-        // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
+        // Add socket.io client (../uibuilder/vendor/socket.io-client/socket.io.js)
         let sioPath = packageMgt.getPackagePath2('socket.io-client', this.RED.settings.userDir)
         if ( sioPath === null ) sioPath = packageMgt.getPackagePath2('socket.io-client', path.join(__dirname, '..', '..') )
         
@@ -341,7 +341,9 @@ class UibWeb {
         if ( sioPath === null ) {
             try {
                 sioPath = path.join(path.dirname(require.resolve('socket.io-client')),'..')
-            } catch (e) {}
+            } catch (e) {
+                this.log.error(`[uibuilder:web:serveVendorSocketIo] Cannot find socket.io-client. ${e.message}`)
+            }
         }
 
         if ( sioPath !== null ) {
