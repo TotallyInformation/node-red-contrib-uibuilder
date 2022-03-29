@@ -11,14 +11,14 @@
 [![CodeQL](https://github.com/TotallyInformation/node-red-contrib-uibuilder/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/actions/workflows/codeql-analysis.yml)
 [![Open Issues](https://img.shields.io/github/issues-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues)
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/TotallyInformation/node-red-contrib-uibuilder)
 
-<img class="dhide" align="right" src="/docs/images/node-blue-192x192.png" title="uibuilder icon" />
+<img class="dhide" align="right" src="docs/images/node-blue-125x125.png" title="uibuilder icon" />
 
 **Please Note** that:
 
-* v5.0.0 has breaking changes from v4.1.4, please see the [CHANGELOG](CHANGELOG.md) for details. 
+* v5.0.0 is a very large change and has breaking changes from v4.1.4, please see the [CHANGELOG](CHANGELOG.md) for details. 
 * Node.js v12.20 and Node-RED v1.3+ are required.
+* uibuilder follows [semantic version numbering](https://docs.npmjs.com/about-semantic-versioning) - as such, each major number change indicates breaking changes and you should review them carefully before installation.
 
 Older changes can be found in the previous change documents: [CHANGELOG-V3/V4](/docs/CHANGELOG-v3-v4.md), [CHANGELOG-v2](/docs/CHANGELOG-v2.md), and [CHANGELOG-v2](/docs/CHANGELOG-v1.md)
 
@@ -361,6 +361,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Thorsten von Eicken](https://github.com/tve) - thanks for providing [PR #131](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/131) to improve CORS handling for Socket.IO.
 - [meeki007](https://github.com/meeki007) - thanks for supplying various documentation improvements and code fixes.
 - [Scott - talltechdude](https://github.com/talltechdude) - thanks for supplying PR #170.
+- [Calum Knott](https://github.com/calumk) - Thanks for the tidied up node-blue logo.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 
