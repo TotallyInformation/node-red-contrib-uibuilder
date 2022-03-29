@@ -90,7 +90,7 @@ const uib = {
         host: undefined,
         hostName: undefined,
         isCustom: false,
-        serverOptions: {},
+        serverOptions: {}, 
     },
     reDeployNeeded: '4.1.2',
     degitEmitter: undefined,
@@ -325,11 +325,6 @@ function inputMsgHandler (msg, send, done) {
     //const RED = uib.RED
 
     log.trace(`[uibuilder:${this.url}] nodeInstance:nodeInputHandler - emit received msg - Namespace: ${this.url}`) //debug
-
-    // If this is pre-1.0, 'send' will be undefined, so fallback to this.send
-    send = send || function() { this.send.apply(this,arguments) }
-    // If this is pre-1.0, 'done' will be undefined, so fallback to dummy function
-    done = done || function() { if (arguments.length>0) this.done.apply(this,arguments) }
 
     // If msg is null, nothing will be sent
     if ( msg !== null ) {
