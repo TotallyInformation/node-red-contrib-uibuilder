@@ -28,6 +28,7 @@
  */
 
 const path     = require('path')
+const fs = require('fs-extra')
 const socketio = require('socket.io')
 const tilib    = require('./tilib')    // General purpose library (by Totally Information)
 const uiblib   = require('./uiblib')   // Utility library for uibuilder
@@ -317,31 +318,35 @@ class UibSockets {
         // If the sender hasn't added msg._socketId, add the Socket.id now
         if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
-        // If security is active...
-        if (node.useSecurity === true) {
+        // Send out the message for downstream flows
+        // TODO: This should probably have safety validations!
+        this.sendIt(msg, node)
 
-            /** Check for valid auth and session - JWT is removed if not authorised
-             * @type {MsgAuth} */
-            msg._auth = security.authCheck2( msg, node, this.getClientDetails(socket) )
-            //msg._auth = security.authCheck(msg, node, socket.id)
-            //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
+        // // If security is active...
+        // if (node.useSecurity === true) {
 
-            //console.log('[UIBUILDER:addNs:on-client-msg] _auth: ', msg._auth)
+        //     /** Check for valid auth and session - JWT is removed if not authorised
+        //      * @type {MsgAuth} */
+        //     msg._auth = security.authCheck2( msg, node, this.getClientDetails(socket) )
+        //     //msg._auth = security.authCheck(msg, node, socket.id)
+        //     //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
 
-            // Only send the msg onward if the user is validated or if unauth traffic permitted
-            if ( node.allowUnauth === true || msg._auth.jwt !== undefined ) {
-                this.sendIt(msg, node)
-                tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
-            } else
-                log.info(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. Ignoring.`)
+        //     //console.log('[UIBUILDER:addNs:on-client-msg] _auth: ', msg._auth)
 
-        } else {
+        //     // Only send the msg onward if the user is validated or if unauth traffic permitted
+        //     if ( node.allowUnauth === true || msg._auth.jwt !== undefined ) {
+        //         this.sendIt(msg, node)
+        //         tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
+        //     } else
+        //         log.info(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. Ignoring.`)
 
-            // Send out the message for downstream flows
-            // TODO: This should probably have safety validations!
-            this.sendIt(msg, node)
+        // } else {
 
-        }
+        //     // Send out the message for downstream flows
+        //     // TODO: This should probably have safety validations!
+        //     this.sendIt(msg, node)
+
+        // }
     } // ---- End of listenFromClient ---- //
 
     /** Add a new Socket.IO NAMESPACE
@@ -544,22 +549,26 @@ class UibSockets {
 
             node.ioClientsCount = ioNs.sockets.size
 
-
             log.trace(
                 `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
             )
 
             // Try to load the sioUse middleware function - sioUse applies to all incoming msgs
-            try {
-                const sioUseMw = require( path.join(uib.configFolder, uib.sioUseMwName) )
-                if ( typeof sioUseMw === 'function' ) {
-                    socket.use(sioUseMw)
-                    log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware loaded successfully for NS ${url}.`)
-                } else {
-                    log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware failed to execute for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
+            const mwfile = path.join(uib.configFolder, uib.sioUseMwName)
+            if ( fs.existsSync(mwfile) ) { // not interested if the file doesn't exist
+                try {
+                    const sioUseMw = require( mwfile )
+                    if ( Object.keys(sioUseMw).length ) { // ignore if nothing exported
+                        if ( typeof sioUseMw === 'function' ) { // if exported, has to be a function
+                            socket.use(sioUseMw)
+                            log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware loaded successfully for NS ${url}.`)
+                        } else {
+                            log.warn(`[uibuilder:socket:onConnect:${url}] sioUse Middleware failed to execute for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
+                        }
+                    }
+                } catch(e) {
+                    log.warn(`[uibuilder:socket:addNS:${url}] sioUse Failed to load Use middleware. Reason: ${e.message}`)
                 }
-            } catch(e) {
-                log.trace(`[uibuilder:socket:addNS:${url}] sioUse Failed to load Use middleware. Reason: ${e.message}`)
             }
 
             node.statusDisplay.text = `connected ${ioNs.sockets.size}`
