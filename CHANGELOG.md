@@ -12,14 +12,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * FIXES NEEDED:
   * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
-  * [ ] Client sends request for replay after disconnection even though the tab wasn't closed. Need a way to know if the page still has data but was disconnected for a while.
-
-* Add msg send middleware
-
-* Security
-  * REMOVE FOR THIS RELEASE!
-  * change docs/security.md
-  * ?? What headers to push from reverse proxy to support knowing if user is auth?
 
 * DOC UPDATES NEEDED:
   * Extra cookie for nodeRoot
@@ -141,6 +133,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
   There is a new example flow demonstrating the use of the cache node.
 
+* **New Feature** _Msg send middleware_. You can now add a custom middleware file `<uibRoot>/.config/sioMsgOut.js`. The exported function in it will be called every time any msg is sent from any uibuilder node to any connected client. Please see the template file for more details. This rounds out the ExpressJS and other socket.io middleware (connect and on msg receipt) and helps make up for the removal of the uibuilder security features by allowing you to create your own bespoke identity and authorisation processing.
+  
 * **New Feature** _Instance API's_. You can now define your own API's to support your front-end UI. These run as part of the Node-RED server and can be called
   from your UI, or indeed from anywhere with access to the Node-RED server's user endpoints.
 
@@ -179,8 +173,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
   Also note that if you manually install a package rather than using the library manager, you will need to restart Node-RED.
 
-* **Extended Feature** _Updated node status display_ - Any instance of uibuilder will now show additional information in the status. In addition to the existing text information, the status icon will be YELLOW if security is turned on (default is blue). In addition, if _Allow unauthorised msg traffic_ is on, the icon will show as a ring instead of a dot.
-
 * **Extended Feature** - Added uib version to the connect msg to clients and a warning in the client console if the client version not the same as the server.
 
 * **Extended Feature** - Now allows socket.io options to be specified via a new property in `settings.js` - `uibuilder.socketOptions`. See the [discussion here](https://discourse.nodered.org/t/uibuilderfe-socket-disconnect-reason-transport-close-when-receiving-json-from-node-red/52288/4). The Tech Docs have also been updated.
@@ -203,8 +195,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * *uib-cache* - How to use the uib-cache node. A new flow tab containing two examples, one with and one without uibuilder. The uibuilder example is based on the blank template so does not need any libraries installing.
   * *toast-notifcations* - A group containing 2 uibuilder nodes (with empty URL's) and a bunch of inputs for testing Toast notifications. One of the uibuilder nodes uses the blank template (so no libraries needed), the other uses VueJS and bootstrap-vue.
   * Other example flows have been updated to remove the default URL to ensure that duplicate folders are not accidentally created on import. In addition, the MoonJS example has been removed as it was out-of-date.
-
-
 
 ### Changed
 
@@ -254,58 +244,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Added client IP address to client connect & client disconnect control msgs
 
-* Security improvements:
+* **Removed Features** - all security processing has been removed from uibuilder along with the appropriate settings. Please use the ExpressJS and Socket.IO custom middleware features instead. These can be combined with external authentication and authorisation services such as a reverse proxy.
 
-  * When security is active, a client that re-connects to Node-RED will attempt to reuse its existing authorisation (see the localStorage bullet below).
-    
-    This means that opening a new tab or window in the same browser profile will automatically connect without having to log in again.
-
-    This process assumes that your local security tracks connected clients and is able to reconnect to them without needing the password to re-authenticate.
-
-    To achieve this, the server sends the 'client connect' control msg to the client which responds with an 'auth' control msg containing the existing msg._auth recovered from localStorage. The server validates the JWT and then runs the customisable `userValidate` process.
-  
-  * JWT processing now includes more checks. In addition to expiry, subject, issuer and audience are validated. Optionally the client IP address can also be validated (see new flag in the security section of the config panel in the Editor).
-
-    Also, returned errors and messages should be clearer to indicate what went wrong. Additional error information is shown in the Node-RED log.
-  
-  * When security is active, any uibuilder node in a flow will have a status with a yellow (instead of the normal blue) icon. If the icon is filled, no messages
-    can flow unless a client is authenticated. If it is a ring, messages will flow regardless and it is up to the flow author to control things.
-
-  * When security is active, pass flag to front-end. Use `uibuilder.get('security')` to get the current status. The flag is passed on the initial connection message from the server.
-  
-  * `uibuilderfe.js`
-    
-    * Added auth details to localStorage so that they are available on page reload and available from any browser window or tab on the same machine/browser profile.
-    * Made sure that all updates to auth details use `self.set` to trigger update events.
-  
-  * Move core security functions from `/nodes/libs/uiblib.js` to `/nodes/libs/security.js` which is a singleton class instance to match the style of socket.js and web.js
-  
-  * `/front-end/src/uibuilderfe.js`
-
-    * New security flag
-    * Only run security related functions when security flag is active
-    * Add some bootstrap_vue toast warnings to match the console output warnings (only does anything if you are using bootstrap-vue, otherwise does nothing)
-
-  * `/nodes/libs/security.js`
-
-    * Add security flag to initial control message to client
-    * Prevent client from sending msgs if security is on but client not authorised (is dependent on keeping track of clients on the server)
-  
-  * `/nodes/libs/uiblib.js`
-
-    * Start to work on blocking msgs from node-red to client when security is on but client not authorised. **WARNING: NOT WORKING YET** _messages will always get through_.
-    * `sendControl()` - make Socket.ID optional.
-    * `authCheck()` - change from `socket` parameter to `socketId` to make it easier to call from more places. Also add more extensive `_auth` and `_auth.id` checks.
-    * `logon()` - change warnings to remove note about not permitted in production as this is no longer the case (see change notes for v4.1.1)
-
-  * `/templates/.config/security.js`
-
-    * Add new functions `jwtCreateCustom` and `jwtValidateCustom`. In readiness for more flexible and secure JWT handling.
-    * Add new functions `captureUserAuth`, `removeUserAuth`, and `checkUserAuth`. These will support being able to restrict sending of msgs from Node-RED to clients.
-      Without them, any msg input to a uibuilder node will be passed to clients regardless of whether they are logged in or not.
-    * Add new function `userSignup`. This will (optionally) allow you to offer a self-service sign-up process.
-
-  * Tech docs - some minor improvements to the security process docs and bring into line with current process.
 
 ### Internal and development improvements
 
@@ -365,7 +305,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
    * Removed the separate `body-parser` npm package. This is now built into ExpressJS and not required separately.
    * Moved the user-facing API's to web.js from uibuilder.js and moved to their own Express.Router on `../uibuilder/...`.
    * Added a new `this.routers` object - this helps with uibuilder live configuration documentation as it records all of the ExpressJS Routes that uibuilder adds.
-* `libs/security.js` renamed to `libs/sec-lib.js` to save confusion with the user-facing security.js file.
+
+* Redundant security code files moved to an `archive` folder.
 
 ### Fixed
 
@@ -375,9 +316,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Fix issue reported in Discourse of an error in masterMiddleware when setting headings. Corrected heading syntax for ExpressJS v4.
 * Client connect and disconnect msgs not being sent to uibuilder control port (#2). NOTE: As of Socket.io v4, it appears as though the disconnect event is received _after_ the connect when a client is reconnecting. You cannot rely on the order.
 * Fixed CORS problems after move to Socket.IO v4. (NB: CORS is defaulted to allow requests from ANY source, override with the `uibuilder.socketOptions` overrides available in settings.js).
-* `uiblib.js` `logon()` - Fixed error that prevented logon from actually working due to misnamed JWT property.
 * A number of hard to spot bugs in `uibuilder.html` thanks to better linting & disaggregation into component parts
-* In `uibuilderfe.js`, security was being turned on even if the server set it to false.
 * Fixed an issue when removing uibuilder nodes caused by the move to socket.io v4. Should fix the failure to remove unused uib instance root folders and fix renaming problems as well.
 * URL rename failed if user updates template before committing url change. This is now blocked.
 * File editor failed if the node hadn't been deployed yet. Blocked if instance folder hasn't yet been created.
@@ -400,8 +339,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 **WARNING**: _Consider these features **experimental**, some parts may not work and might even cause Node-RED to crash if used. Do not yet use on production._
 
-**Leave the security flag OFF for production.**
-
 ### NOT YET FULLY WORKING
 
 - Added configuration option to add browser/proxy caching control to all static assets - set the length of time before assets will be reloaded from the server. This may sometimes significantly improve performance in the browser. It depends on the performance of your server and the complexity of the UI.
@@ -416,61 +353,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 - If you use Node-RED's projects feature, restart Node-RED after changing projects otherwise uibuilder will not recognise the new root folder location.
   
-### New security features
-
-#### Summary
-
-_Security is mostly controlled via websocket messages, not by HTTP. The web UI itself is assumed to be non-sensitive. Only msg transfer is controlled. Read the security document for details._ **Don't put anything sensitive into your front-end code**.
-
-- Security features can be turned on via a flag in the node configuration. They are off by default.
-- If running in Production mode but without using TLS encryption, the security won't turn on. This is to stop you sending secure information in plain-text over the wire. In Development mode, you will get a warning.
-  
-- Added a new standardised property to uibuilder control msg's. `msg._auth`. This contains all the necessary data for logon and ongoing session maintenance. As a minimum, this must contain an `id` property which uniquely identifies the user. It will also contain the JWT token since websockets don't allow custom headers.
-  
-- Security _does_ use JWT but only as a convenience. JWT is _NOT_ a security feature (despite what much of the web would have you believe). _Session processing_ is _required_ if you want real security. Again, see the security doc for details.
-- Logon/logoff processing is done from the front-end using new `logon()` and `logoff()` functions in uibuilderfe.
-- Logon/logoff and logon failure events are reported via uibuilder's control port (output port #2).
-- Added security headers to protect against XSS and content sniffing.
-- All custom security processing (validating user details - including password - and session validation/extension) is done via standard functions in the new `<uibRoot>/.config/security.js` file. A simple template is provided for you to use as a starting point. You can also override this with custom processing for a single instance by using `<uibRoot>/<url>/security.js`.
-
-#### Details
-
-- uibuilderfe: Added `.logon(...)` and `.logoff()` functions.
-  
-  The `logon` function takes a single parameter which must be an Object (schema not yet finalised).
-  At the least, it MUST contain an `id` property which will be used by the server to track sessions.
-  
-  Added new variables to the uibuilder object for use in your front-end code:
-  
-  - `isAuthorised` {boolean} - informs whether the current client connection is authenticated.
-  - `authTokenExpiry` {Date|null} - when the authentication token expires.
-  - `authData` {Object} - Additional data returned from logon/logoff requests. Can be used by front-end to display messages at logon/off or anything else desired.
-  - _`authToken` {String}_ - this is not externally accessible. It is sent back to the server on every msg sent and validated by the server.
-  
-  Added new control message types:
-
-  - **'authorised'** - received from server after a successful logon request. Returns the token, expiry and any optional additional data (into `authData`).
-  - **'authorisation failure'** - received from server after an **un**successful logon request.
-  - **'logged off'** - received from server after a successful logoff request. Returns optional additional data (into `authData`).
-
-- Added `useSecurity` flag. If set, the uibuilder instance will apply security processes.
-
-  Note that if not using TLS security to encrypt communications in Node-RED, you will get at least a warning (in development mode. In production mode, security will turn off as there is no point).
-
-- Added `security.js` template module and added processing from `<uibRoot>/<url>/security.js` or `<uibRoot>/.config/security.js`.
-  
-  In non-development node.js modes, logon processing will not work unless you have used your own security.js file.
-
-  See the template `security.js` file for more information about what functions you need to export and about data schema's required.
-
-  It isn't very hard to use and you don't need to know very much JavaScript/Node.js unless you want to get complex with your authentication and authorisation schemes.
-
-  This is the core of the security processing. uibuilder enforces some standards for you but **you have to validate users and sessions**, uibuilder cannot do this for you. Instead, uibuilder makes
-  this as easy as it can so that you don't have to be a mega-coder to work with it. Your user validation for example could be as simple as a file-based lookup.
-
-  I will add more examples as the code stabilises so that you should be able to copy & paste a solution if you want soething fairly simple.
-
-
 ----
 
 Because of the many changes in v5, the v3/v4 changelog has been moved to a separate file: [v3/v4 Changelog](/docs/CHANGELOG-v3-v4.md).
