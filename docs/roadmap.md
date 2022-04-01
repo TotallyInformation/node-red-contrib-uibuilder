@@ -113,7 +113,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Add a standard logging fn to uibuilderfe - allow that to return log statements back to Node-RED via control msgs.
 
-* Retain logon/logoff control msgs but direct to fns in external security.js file (which should allow call from both express and socket.io)
+* Retain logon/logoff control msgs but direct to fns in external security.js file (which should allow call from both express and socket.io).
+
+* Add settings.js options to use different paths/names for middleware files.
+
+* Add socket.io instrumentation server. See https://socket.io/docs/v4/admin-ui/
 
 ### Editor (`uibuilder.html`)
 

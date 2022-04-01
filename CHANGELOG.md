@@ -1,5 +1,5 @@
 ---
-typora-root-url: docs\images
+typora-root-url: docs/images
 ---
 
 # Changelog
@@ -68,7 +68,9 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
   The recommendation is that you use _external_ security processing via a reverse proxy service (e.g. NGINX). I will be trying to provide some documentation for this.
 
-  Alternatively, you can still provide security processing by making use of the various 
+  Alternatively, you can still provide security processing by making use of the various middleware features - see the `<uibRoot>/.config` folder for templates.
+
+  Because of this, the security settings part of the Editor config panel has been removed. This included the use security flag, session length, JWT secret and auto-extend flag. If you have been using the `vNext` development branch, the Security tab has been removed.
 
 * **Peer installation of VueJS and bootstrap-vue yet again removed**. Since these now need to be in the `uibRoot` folder which
   we don't necessarily know at preinstall time.
@@ -77,6 +79,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   package management, it is likely that we will build something into the template installation process.
 
   Until then, please install the `vue` and `bootstrap-vue` packages via the uibuilder library manager if you need them.
+
+* **.config folder templates** - In previous versions, any files in the master templates for the `<uibRoot>/.config` folder would be copied when Node-RED (re)starts - however, they would not overwrite existing files. From v5, the master .config templates have been renamed to end with `.js-template` and these will now ALWAYS overwrite whatever is in the `<uibRoot>/.config` folder whenever Node-RED (re)starts. That way, you always have easy access to the latest templates.
+
+  In addition, some of these templates have significant changes and you should review the new templates before going live with uibuilder v5. You can (and should) also safely delete any `.config/*` files you are not using.
+
+  In particular, the `masterPackageList.json` and `packageList.json` files are no longer needed or used and should be deleted.
 
 * **URL cannot be "uibuilder"** - As this url is now used by various services, allowing it would potentially create name clashes and hard to debug errors. If you have an endpoint named "uibuilder", please rename it to prevent problems.
 
@@ -213,6 +221,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Improvements to the "uibuilder details" page should make it easier to read. The data for ExpressJS Routes is much improved.
 
 * Improvements to the "instance details" page. Now includes the ExpressJS routes for that instance.
+
+* Improved uibuilder logo, many thanks to [Calum Knott](https://github.com/calumk).
 
 * Editor panel
 
