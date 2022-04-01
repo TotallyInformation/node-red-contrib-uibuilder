@@ -3,12 +3,12 @@ title: uibuilder Technical Documentation
 description: >
    uibuilder is a low-code solution for easily building data-driven web sites and web apps in conjunction with Node-RED.
 created: 2019-06-16 16:16:00
-lastUpdated: 2022-03-27 13:02:46
+lastUpdated: 2022-04-01 17:54:28
 ---
 
-?> These are the docs for uibuilder v5.
+?> These are the docs for uibuilder v5. If you need the v4 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate uibuilder version: `npm install node-red-contrib-uibuilder@4` then use the tech docs links from a uibuilder node.
 
-All you need is a uibuilder node added to your flows. Select a suitable URL path and deploy. Then click on the "Open url" button to open the new page in a new tab.
+All you need to start making use of uibuilder is a uibuilder node added to your flows. Select a suitable URL path and deploy. Then click on the "Open url" button to open the new page in a new tab.
 
 Now you can edit the front-end html, JavaScript and CSS files. You can also send messages to your front end and send messages back to Node-RED.
 
