@@ -1074,35 +1074,35 @@
      * @returns {boolean} true = valid, false = not valid
      * @this {*}
      **/
-    function validateSessLen() {
-        // NB: `this` is the node instance configuration as at last press of Done
-        // TODO: Add display comment to help user
+    // function validateSessLen() {
+    //     // NB: `this` is the node instance configuration as at last press of Done
+    //     // TODO: Add display comment to help user
 
-        var newVal = $('#node-input-sessionLength').val()
-        var newSec = $('#node-input-useSecurity').is(':checked')
+    //     var newVal = $('#node-input-sessionLength').val()
+    //     var newSec = $('#node-input-useSecurity').is(':checked')
 
-        if (newSec === true && (newVal.toString()).length < 1 ) return false
+    //     if (newSec === true && (newVal.toString()).length < 1 ) return false
 
-        return true
+    //     return true
 
-    } // --- End of validateSessLen --- //
+    // } // --- End of validateSessLen --- //
 
     /** Validation Function: Validate the jwtSecret property
      * If security is on, must contain text
      * @returns {boolean} true = valid, false = not valid
      **/
-    function validateSecret() { // eslint-disable-line no-unused-vars
-        // NB: `this` is the node instance configuration as at last press of Done
-        // TODO: Add display comment to help user
+    // function validateSecret() { // eslint-disable-line no-unused-vars
+    //     // NB: `this` is the node instance configuration as at last press of Done
+    //     // TODO: Add display comment to help user
 
-        var newVal = $('#node-input-jwtSecret').val()
-        var newSec = $('#node-input-useSecurity').is(':checked')
+    //     var newVal = $('#node-input-jwtSecret').val()
+    //     var newSec = $('#node-input-useSecurity').is(':checked')
 
-        if (newSec === true && (newVal.toString()).length < 1 ) return false
+    //     if (newSec === true && (newVal.toString()).length < 1 ) return false
 
-        return true
+    //     return true
 
-    } // --- End of validateSecret --- //
+    // } // --- End of validateSecret --- //
 
     /** Validation function: Was this node last deployed with a safe version?
      * In uibuilder.js, can change uib.reDeployNeeded to be the last version before the v that made a breaking change.

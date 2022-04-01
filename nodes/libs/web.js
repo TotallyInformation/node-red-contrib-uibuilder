@@ -518,13 +518,10 @@ class UibWeb {
                     }
                     return
                 } //! TODO else look for a .html version and sendFile it if found
-            } else {
-                filePath = path.join(pathRoot, requestedView.base)
-                if (fs.existsSync(filePath)) {
-                    // console.log('>> sendFile >>', req.path, requestedView, filePath) //! TODO - remove
-                    res.sendFile( requestedView.base, { root: pathRoot } )
-                    return
-                }
+            } else if (fs.existsSync(filePath)) { // filePath set above if statement
+                // console.log('>> sendFile >>', req.path, requestedView, filePath) //! TODO - remove
+                res.sendFile( requestedView.base, { root: pathRoot } )
+                return
             }
             return next()
         }) // --- End of render views --- //
