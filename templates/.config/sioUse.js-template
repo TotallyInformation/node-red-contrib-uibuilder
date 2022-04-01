@@ -1,0 +1,43 @@
+/**
+ * Template Socket.IO `use` middleware for uibuilder. Fn will be called for EVERY inbound msg from a client to Node-RED/uibuilder.
+ * UPDATED: 2022-04-01
+ *
+ * NOTES & WARNINGS:
+ *   1) This function is called when a client sends a "packet" of data to the server.
+ *   2) Failing to either return or call `next()` will mean that your clients will never be able to get responses.
+ *   3) You can amend the incoming msg in this middleware.
+ *   4) An error in this function will probably cause Node-RED to fail to start at all.
+ *   5) You have to restart Node-RED if you change this file.
+ *   6) If you call `next( new Error('blah') )` The error is sent back to the client and further proessing of the incoming msg stops.
+ *   7) To use for authentication/authorisation with Express and sio connection middleware, create a common node.js module.
+ *
+ * Allows you to process incoming data from clients.
+ * 
+ * see: https://socket.io/docs/v4/server-api/#socketusefn
+ * see also: uibRoot/.config/sioMiddleware.js & sioMsgOut.js
+ *           and https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html#websocket-implementation-hints
+ * 
+ * @param {[string,Array<Object>]} data The channel name (strictly the event name) and args send by a client (Socket.IO calls it a "packet"). data[0] is the channel/event name, data[args][0] is the actual msg
+ * @param {function} next The callback to hand off to the next middleware
+ */
+function sioUseMw([ channel, ...args ], next) {
+
+    const msg = args[0]
+
+    console.log('[uibuilder:Socket.IO:sioUse.js] msg from client: ', 'Channel Name:', channel, ' Msg:', msg)
+
+    // Simplistic error example - looking for specific property on the inbound msg
+    if ( msg.i_am_an_error ) {
+        // The error is sent back to the client and further processing of the msg stops
+        next(new Error('Oops! Some kind of error happened'))
+        return
+    }
+
+    // You can amend the incoming msg
+    msg._test = 'added by sioUse.js middleware'
+    
+    next()
+
+} // Do not forget to end with a call to `next()` or clients will not be able to connect
+
+module.exports = sioUseMw

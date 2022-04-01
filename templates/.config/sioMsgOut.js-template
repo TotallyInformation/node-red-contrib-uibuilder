@@ -1,0 +1,22 @@
+/**
+ * Template Socket.IO outbound per-msg middleware for uibuilder. Fn will be called for EVERY outbound msg from Node-RED/uibuilder to a client.
+ * UPDATED: 2022-04-01
+ *
+ * NOTES & WARNINGS:
+ *   1) This function is called whenever any instance of uibuilder sends a msg to any client.
+ *   2) You have to restart Node-RED if you change this file.
+ *   3) You can use this to make changes to the msg before it is sent.
+ *
+ * Allows you to process outgoing data to clients. Use it to add security/user data or anything else.
+ * 
+ * @param {object} msg The msg being seny by uibuilder to a client
+ * @param {string} url The uibuilder instance url
+ * @param {string} channel The socket.io channel being used
+ */
+ function sioMsgOutMw( msg, url, channel ) {
+
+    console.log('[uibuilder:Socket.IO:sioMsgOut.js] msg from server: ', msg, url, channel)
+
+}
+
+module.exports = sioMsgOutMw

@@ -1,7 +1,6 @@
-/* globals module */
 /**
  * Template ExpressJS Middleware for uibuilder.
- * UPDATED: 2022-01-02
+ * UPDATED: 2022-04-01
  *
  * NOTES & WARNINGS:
  *   1) This function is called EVERY TIME any web call is made to the URL defined by your uib instance.
@@ -9,6 +8,7 @@
  *   2) Failing to either return or call `next()` will cause an ExpressJS error.
  *   3) An error in this function will probably cause Node-RED to fail to start at all.
  *   4) You have to restart Node-RED if you change this file.
+ *   5) To use for authentication/authorisation with sio connection middleware, create a common node.js module.
  *
  * Allows custom processing for authentication, session management, custom logging, etc.
  * 
@@ -23,5 +23,4 @@
 
 } // Do not forget to end with a call to `next()`
 
-// Uncomment this for example to work.
-//module.exports = uibMw
+module.exports = uibMw
