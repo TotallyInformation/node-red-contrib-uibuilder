@@ -48,11 +48,11 @@ try {
 } catch (e) {
     console.error('[uibuilder] REQUIRE WEB failed::', e)
 }
-try {
-    var security      = require('./libs/sec-lib') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
-} catch (e) {
-    console.error('[uibuilder] REQUIRE SECURITY failed::', e)
-}
+// try {
+//     var security      = require('./libs/sec-lib') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
+// } catch (e) {
+//     console.error('[uibuilder] REQUIRE SECURITY failed::', e)
+// }
 
 // Core node.js
 const path          = require('path')
@@ -70,8 +70,6 @@ const uib = {
     nodeRoot: '',
     deployments: {},
     instances: {},
-    masterPackageListFilename: 'masterPackageList.json',
-    packageListFilename: 'packageList.json',
     masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
     masterStaticFeFolder: path.join( __dirname, '..', 'front-end' ),
     rootFolder: null,
@@ -80,6 +78,7 @@ const uib = {
     commonFolder: null,
     commonFolderName: 'common',
     sioUseMwName: 'sioUse.js',
+    sioMsgOutMwName: 'sioMsgOut.js',
     ioChannels: {control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder'},
     nodeVersion: process.version.replace('v','').split('.'),
     staticOpts: {}, //{ maxAge: 31536000, immutable: true, },
@@ -235,7 +234,8 @@ function runtimeSetup() {
     }
     // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
     if (uib_rootFolder_OK === true) {
-        const fsOpts = {'overwrite': false, 'preserveTimestamps':true}
+        // We want to always overwrite the .config template files
+        const fsOpts = {'overwrite': true, 'preserveTimestamps':true}
         try {
             fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
             log.trace(`[uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
@@ -245,6 +245,7 @@ function runtimeSetup() {
         }
 
         // and copy the common folder from template (contains the default blue node-red icon)
+        fsOpts.overwrite = false // we don't want to overwrite any common folder files
         try {
             fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err){
                 if(err){
@@ -267,11 +268,11 @@ function runtimeSetup() {
     //#endregion ----- root folder ----- //
     
     /** Set up the basics for security in case we need them for any uib instance */
-    try {
-        security.setup(uib)
-    } catch (e) {
-        console.error('[uibuilder:runtimeSetup] Security setup error ', e)
-    } 
+    // try {
+    //     security.setup(uib)
+    // } catch (e) {
+    //     console.error('[uibuilder:runtimeSetup] Security setup error ', e)
+    // } 
 
     /** Do this before doing the web setup so that the packages can be served */
     packageMgt.setup(uib)
@@ -419,8 +420,8 @@ function nodeInstance(config) {
     this.templateFolder  = config.templateFolder || templateConf.blank.folder
     this.extTemplate     = config.extTemplate
     this.showfolder      = config.showfolder === undefined ? false : config.showfolder
-    this.useSecurity     = config.useSecurity
-    this.allowUnauth     = config.allowUnauth === undefined ? false : config.allowUnauth
+    // this.useSecurity     = config.useSecurity
+    // this.allowUnauth     = config.allowUnauth === undefined ? false : config.allowUnauth
     this.sessionLength   = Number(config.sessionLength) || 120  // in seconds
     this.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
     this.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
@@ -442,8 +443,8 @@ function nodeInstance(config) {
     }
 
     this.statusDisplay = { fill: 'blue', shape: 'dot', text: 'Configuring node' }
-    if ( this.useSecurity === true ) this.statusDisplay.fill = 'yellow'
-    if ( this.allowUnauth === true ) this.statusDisplay.shape = 'ring'
+    // if ( this.useSecurity === true ) this.statusDisplay.fill = 'yellow'
+    // if ( this.allowUnauth === true ) this.statusDisplay.shape = 'ring'
     uiblib.setNodeStatus( this )
 
     //#region ====== Instance logging/audit ====== //
@@ -557,7 +558,7 @@ function nodeInstance(config) {
     //#endregion ====== End of Local folder structure ====== //
 
     // If security turned on, set up security for this instance - NB: most sec processing done from socket.js
-    if ( this.useSecurity === true ) security.setupInstance(this)
+    // if ( this.useSecurity === true ) security.setupInstance(this)
 
     // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this)
