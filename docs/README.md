@@ -3,26 +3,27 @@ title: uibuilder Technical Documentation
 description: >
    uibuilder is a low-code solution for easily building data-driven web sites and web apps in conjunction with Node-RED.
 created: 2019-06-16 16:16:00
-lastUpdated: 2022-02-15 21:03:41
+lastUpdated: 2022-03-27 13:02:46
 ---
 
 ?> These are the docs for uibuilder v5.
 
-All you need is a uibuilder node added to your flows. Select a suitable URL path and deploy.
-Now you can send messages to your front end and send messages back to Node-RED.
+All you need is a uibuilder node added to your flows. Select a suitable URL path and deploy. Then click on the "Open url" button to open the new page in a new tab.
 
-uibuilder comes with some simple default templates, front-end code files that define your user interface (UI).
-Open the uibuilder node and click on the button to open your web app in a new tab. Load a different template if you like, use the editor to customise the UI and the library manager if you need any front-end libraries or frameworks.
+Now you can edit the front-end html, JavaScript and CSS files. You can also send messages to your front end and send messages back to Node-RED.
+
+uibuilder comes with some simple default *templates*, front-end code files that define your user interface (UI).
+Load a different template if you like, use the editor to customise the UI or the library manager if you need any front-end libraries or frameworks (this adds the appropriate folders to the web server so that you can access them from your UI).
 
 ## Getting help and contributing
 
-node-red-contrib-uibuilder is contained in a GitHub repository that you can get to using the icon at the top-right of the page.
+node-red-contrib-uibuilder is contained in a GitHub repository that you can get to using the icon at the top-right of this page.
 
-Help is available in these documents, the help sidebar in Node-RED and the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). If you get stuck, you can also create a new topic in the [Node-RED Discourse Forum](https://discourse.nodered.org/) or in the [GitHub discussion section](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions).
+Help is available in these documents, the help sidebar in Node-RED and the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). If you get stuck, you can also create a new topic in the [Node-RED Discourse Forum](https://discourse.nodered.org/tag/node-red-contrib-uibuilder) or in the [GitHub discussion section](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions).
 
-Issues occuring with uibuilder should be raised in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
+Issues occuring with uibuilder should be raised in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) but please feel free to discuss in the Node-RED forum first if you like.
 
-WIKI, Code, documentation, and examples are all welcome contributions and I always aim to give credit to contributors. Please see the [contribution guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/.github/CONTRIBUTING.md).
+WIKI, code (PR's), documentation, and examples are all welcome contributions and I always aim to give credit to contributors. Please see the [contribution guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/.github/CONTRIBUTING.md).
 
 ## Using uibuilder
 
@@ -98,10 +99,9 @@ Some information on testing uibuilder. Unfortunately, I have no real clue about 
 ## Other
 
 * [Glossary of Terms](glossary.md)
-* [Changelog](changelog) - What has changed between releases.
-* [What's Next/In Progress](https://github.com/TotallyInformation/node-red-contrib-uibuilder/projects/1) - On GitHub, development happening or about to happen. Also check out anything in the "unreleased" section of the [Changelog](changelog).
-* [Roadmap](roadmap)
-* [Main Readme](uibhome)
+* [Changelog](changelog) - What has changed between releases. What is currently in-progress/outstanding (the "unreleased" section)
+* [Roadmap](roadmap) - All about where uibuilder is going in general, what I think needs doing next and some speculation about longer-term change.
+* [Main Readme](uibhome) - This is what appears in [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder), [npm](https://www.npmjs.com/package/node-red-contrib-uibuilder]) and the [Node-RED flows page](https://flows.nodered.org/node/node-red-contrib-uibuilder).
 
 ## Archives
 
