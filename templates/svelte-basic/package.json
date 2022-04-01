@@ -1,11 +1,11 @@
 {
-  "name": "svelte-app",
+  "name": "svelte-basic",
+  "description": "A basic Svelte template for uibuilder and Node-RED.",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "start": "sirv public --no-clear"
+    "build": "rollup -c --environment NODE_ENV:production",
+    "dev": "rollup -c -w --environment NODE_ENV:development"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",

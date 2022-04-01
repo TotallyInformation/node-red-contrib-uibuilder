@@ -1,14 +1,16 @@
-import svelte from 'rollup-plugin-svelte';
-import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve';
-import livereload from 'rollup-plugin-livereload';
-import { terser } from 'rollup-plugin-terser';
-import css from 'rollup-plugin-css-only';
+import svelte from 'rollup-plugin-svelte'
+import commonjs from '@rollup/plugin-commonjs'
+import resolve from '@rollup/plugin-node-resolve'
+import livereload from 'rollup-plugin-livereload'
+import { terser } from 'rollup-plugin-terser'
+import css from 'rollup-plugin-css-only'
 
 // Added for uibuilder - the build output folder
 const uibDist = 'dist'
 
+// Assume production mode if not running dev
 const production = !process.env.ROLLUP_WATCH;
+console.log(`Production mode?: ${ production }. Output Folder: ${__dirname}/${uibDist}/build/`)
 
 function serve() {
 	let server;
@@ -65,13 +67,24 @@ export default {
 		// the bundle has been generated
 		!production && serve(),
 
-		// Watch the `public` directory and refresh the
+		// Watch the `src` directory and refresh the
 		// browser on changes when not in production
 		!production && livereload(uibDist),
 
 		// If we're building for production (npm run build
 		// instead of npm run dev), minify
-		production && terser()
+		production && terser({ 
+			ecma: 2015, // ES6
+			mangle: { toplevel: true },
+			compress: {
+				module: true,
+				toplevel: true,
+				unsafe_arrows: true,
+				drop_console: production,
+				drop_debugger: production,
+          	},
+			output: { comments: false } ,
+		})
 	],
 	watch: {
 		clearScreen: false
