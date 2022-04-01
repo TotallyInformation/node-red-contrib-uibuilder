@@ -3,10 +3,10 @@ title: uibuilder Security Documentation
 description: >
    Some thoughts on how to correctly and safely secure a uibuilder app.
 created: 2020-01-05 20:45:00
-lastUpdated: 2022-02-27 16:17:22
+lastUpdated: 2022-04-01 17:53:58
 ---
 
-As at uibuilder v5, many of the experimental security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication. Such services can be independently tested and verified.
+As at uibuilder v5, many of the security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication. Such services can be independently tested and verified.
 
 However, there are a number of supporting features in uibuilder that let you control information flow into and out-of a uibuilder-based front-end. They assume, however, that you have either provided authentication externally or written your own middleware-based security functions.
 
@@ -60,11 +60,11 @@ Step #2 of securing any web app is to make sure that a potential attacker or jus
 
 * Restrict the length of data that can be provided from your UI. For text fields, 255 characters is about the maximum you should ever allow. Unrestricted inputs can result in buffer-overflow attacks.
 * Restrict what characters can be entered. Where you don't need the full Unicode character set, don't allow it. For example, if asking for an email address, only allow valid characters.
-* Restrict specific inputs to a sensible format. For example, email addresses have a prefix, an `@` symbol followed by a domain name. A date needs `99/99/9999` or `9999-99-99`, a time in minutes needs `99:99`.
+* Restrict specific inputs to a sensible format. For example, email addresses have a prefix, an `@` symbol followed by a domain name. A date needs `99/99/9999` or `9999-99-99`, a time in hours and minutes needs `99:99` and so on.
 
 Don't forget that API inputs need to be sanitised as well as user inputs.
 
-?> For simple systems, doing this step via Node-RED and/or uibuilder middleware may be sufficient. In more secure systems, sanitisation of inputs may be done at multiple levels for additional protection and may use tools such as a *Web Application Firewall* or an *Intrusion Protection System*.
+?> For simple systems, doing this step via Node-RED and/or uibuilder middleware may be sufficient. In more secure systems, sanitisation of inputs may be done at multiple levels for additional protection and may use tools such as a *Web Application Firewall* or an *Intrusion Protection System*. For a full analysis of best practice, try the [OWASP](https://owasp.org/) documentation.
 
 ### Step #3: Identity and authentication
 
@@ -76,7 +76,7 @@ The guidance here is generic and should only be used on low-security, low-value 
 
 **_NOTE_: The rest of this section is TBC**.
 
-?> While identity and authorisation _may_ be done using uibuilder ExpressJS/Socket.IO middleware, it is strongly recommended to use a separate service such as a reverse proxy with an authentication extension.
+?> While identity and authorisation _may_ be done using uibuilder ExpressJS/Socket.IO middleware, it is strongly recommended to use a separate service such as a reverse proxy with an authentication extension and then pass through appropriate information to Node-RED/uibuilder via HTTP headers and similar mechanisms.
 
 ### Step #4: Authorisation
 
@@ -98,7 +98,7 @@ For Node-RED and uibuilder-based apps, controlling access is done by writing flo
 
 Of course, that requires that any external security services are passing suitable data down to Node-RED.
 
-?> It is important to remember that uibuilder apps are *web pages* - they *run in the browser*, not in Node-RED. You cannot make things secure in the front-end code of a web app since the user will _always_ be able to make changes. So security _must_ be done at the server. Node-RED flows and uibuilder middleware run on the server. <br>It is also important to remember that uibuilder makes extensive use of websockets to send and recieve data between Node-RED and the browser. This presents some technical challanges for ensuring data security.
+?> It is important to remember that uibuilder apps are *web pages* - they *run in the browser*, not in Node-RED. You cannot make things secure in the front-end code of a web app since the user will _always_ be able to make changes. So security _must_ be done at the server. Node-RED flows and uibuilder middleware run on the server. <br>It is also important to remember that uibuilder makes extensive use of websockets to send and recieve data between Node-RED and the browser. This presents some technical challenges for ensuring data security.
 
 This topic is covered in more detail on a separate page: [Securing Data](securing-data.md).
 
@@ -261,7 +261,9 @@ The same msg property is also used when sending information from the Node-RED se
 
 Because uibuilder lets you create custom middleware for both Express and Socket.IO, it is still possible to implement custom security just using uibuilder and Node-RED.
 
-**NOTE**: When managing sessions, do not forget that your users will rarely load a web page. Most communication happens via websockets, not http(s). Because of this, full, secure session management is actually quite hard.
+?> **NOTE**: When managing sessions, do not forget that your users will rarely load a web page. Most communication happens via websockets, not http(s). Because of this, full, secure session management is actually quite hard.<br><br> To help with this, uibuilder now implements a new HTTP(S) `ping` URL along with a `setPing` function in the front-end library. By passing an integer number of milliseconds argument to setPing, the client will access the ping endpoint every n ms. This could be used to keep a client session alive.
+
+Here are some other libraries that might be helpful in security middleware for uibuilder:
 
 * [iron-session](https://www.npmjs.com/package/iron-session#express) - Uses encrypted cookies for stateless sessions.
 * [Passport.js](https://www.passportjs.org/) - in theory, it should be possible to implement passport using express middleware.
