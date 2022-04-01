@@ -270,7 +270,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.isAuthorised = false    // Set to true if receive 'authorised' msg from server
         self.authTokenExpiry  = null // Set on successful logon. Timestamp.
         self.authData     = {}       // Additional data returned from logon/logoff requests
-        self.security     = false    // Does uibuilder have security turned on? (Set by early incoming control message)
+        // self.security     = false    // Does uibuilder have security turned on? (Set by early incoming control message)
         //#endregion ---- ---- ---- ---- //
 
         //#region - Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
@@ -391,7 +391,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.ioSetup = function ioSetup() {
 
             // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
-            self.uiDebug('debug', 'uibuilderfe:ioSetup: About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
+            self.uiDebug('debug', '[uibuilderfe:ioSetup] About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
             self.socketOptions = { 
                 path: self.ioPath, 
                 transports: self.ioTransport, 
@@ -412,7 +412,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             /** When the socket is connected - set ioConnected flag and reset connect timer  */
             self.socket.on('connect', function ioconnect() {
-                self.uiDebug('info', 'uibuilderfe:ioSetup: SOCKET CONNECTED - Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
+                self.uiDebug('info', '[uibuilderfe:ioSetup] SOCKET CONNECTED - Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
 
                 self.set('ioConnected', true)
 
@@ -426,7 +426,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             // RECEIVE a STANDARD, non-control msg from Node-RED server
             self.socket.on(self.ioChannels.server, function msgFromServer(receivedMsg) {
-                self.uiDebug('info', 'uibuilderfe:ioSetup:' + self.ioChannels.server + ' (server): msg received - Namespace: ' + self.ioNamespace, receivedMsg)
+                self.uiDebug('info', '[uibuilderfe:ioSetup:on-' + self.ioChannels.server + ' (server)] msg received - Namespace: ' + self.ioNamespace, receivedMsg)
 
                 // Make sure that msg is an object & not null
                 receivedMsg = makeMeAnObject(receivedMsg, 'payload')
@@ -478,9 +478,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'debug') ) self.debug = receivedCtrlMsg.debug
 
                 // Allow incoming control msg to indicate that this instance of the uibuilder node has security turned on
-                if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') ) {
-                    self.security = receivedCtrlMsg.security
-                }
+                // if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') ) {
+                //     self.security = receivedCtrlMsg.security
+                // }
 
                 // @since 2018-10-07 v1.0.9: Work out local time offset from server
                 self.checkTimestamp(receivedCtrlMsg)
@@ -500,52 +500,51 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     /** We are connected to the server - 1st msg from server */
                     case 'client connect': {
                         self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "client connect" from server`)
-                        self.uiDebug('info', `[uibuilderfe:ioSetup] Server: Security=${receivedCtrlMsg.security}, Version=${receivedCtrlMsg.version}, Time=${receivedCtrlMsg.serverTimestamp}.`)
+                        self.uiDebug('info', `[uibuilderfe:ioSetup:client-connect] Server: Version=${receivedCtrlMsg.version}, Time=${receivedCtrlMsg.serverTimestamp}.`)
                         if ( self.version !== receivedCtrlMsg.version)
-                            console.warn( `[uibuilderfe:ioSetup] Server version (${receivedCtrlMsg.version}) not the same as the client version (${self.version})`)
+                            console.warn( `[uibuilderfe:ioSetup:client-connect] Server version (${receivedCtrlMsg.version}) not the same as the client version (${self.version})`)
 
-                        // TODO - might need to relax this for now?
                         // If security is on
-                        if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') && receivedCtrlMsg === true ) {
-                            // Initialise client security
-                            self.initSecurity()
-                            // DO NOT RETURN ANYTHING ELSE UNTIL SERVER CONFIRMS VALID AUTHORISATION
-                        } else {
-                            if ( self.autoSendReady === true ) { // eslint-disable-line no-lonely-if
-                                self.uiDebug( 'info', '[uibuilderfe:ioSetup] Auto-sending ready-for-content/replay msg to server')
-                                // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
-                                self.send({
-                                    'uibuilderCtrl':'ready for content',
-                                    'cacheControl':'REPLAY',
-                                },self.ioChannels.control)
-                            }
+                        // if ( Object.prototype.hasOwnProperty.call(receivedCtrlMsg, 'security') && receivedCtrlMsg === true ) {
+                        //     // Initialise client security
+                        //     self.initSecurity()
+                        //     // DO NOT RETURN ANYTHING ELSE UNTIL SERVER CONFIRMS VALID AUTHORISATION
+                        // } else {
+                        if ( self.autoSendReady === true ) { // eslint-disable-line no-lonely-if
+                            self.uiDebug( 'info', '[uibuilderfe:ioSetup:client-connect] Auto-sending ready-for-content/replay msg to server')
+                            // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
+                            self.send({
+                                'uibuilderCtrl':'ready for content',
+                                'cacheControl':'REPLAY',
+                            },self.ioChannels.control)
                         }
+                        // }
 
                         break
                     }
 
                     // Login was accepted by the Node-RED server - note that payload may contain more info
-                    case 'authorised': {
-                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "authorised" from server`, receivedCtrlMsg._auth)
-                        self.updateAuth(receivedCtrlMsg._auth)
-                        break
-                    }
+                    // case 'authorised': {
+                    //     self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "authorised" from server`, receivedCtrlMsg._auth)
+                    //     self.updateAuth(receivedCtrlMsg._auth)
+                    //     break
+                    // }
 
                     // Login was rejected by the Node-RED server - note that payload may contain more info
-                    case 'not authorised': {
-                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "not authorised" from server`)
-                        //self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._auth.authData)
-                        self.updateAuth(receivedCtrlMsg._auth)
-                        break
-                    }
+                    // case 'not authorised': {
+                    //     self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "not authorised" from server`)
+                    //     //self.markLoggedOut('Logon authorisation failure', receivedCtrlMsg._auth.authData)
+                    //     self.updateAuth(receivedCtrlMsg._auth)
+                    //     break
+                    // }
 
                     // Logoff confirmation from server - note that payload may contain more info
-                    case 'logged off': {
-                        self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "logged off" from server`)
-                        //self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._auth)
-                        self.updateAuth(receivedCtrlMsg._auth)
-                        break
-                    }
+                    // case 'logged off': {
+                    //     self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "logged off" from server`)
+                    //     //self.markLoggedOut('Logged off by logout() request', receivedCtrlMsg._auth)
+                    //     self.updateAuth(receivedCtrlMsg._auth)
+                    //     break
+                    // }
 
                     // Received a socket error - an untrapped error from the server, possibly from sioUse.js
                     case 'socket error': {
@@ -574,11 +573,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 // reason === 'io server disconnect' - redeploy of Node instance
                 // reason === 'transport close' - Node-RED terminating
                 // reason === 'ping timeout' - didn't receive a pong response?
-                self.uiDebug('info', 'uibuilderfe:ioSetup: SOCKET DISCONNECTED - Namespace: ' + self.ioNamespace + ', Reason: ' + reason)
+                self.uiDebug('info', '[uibuilderfe:ioSetup:disconnect] SOCKET DISCONNECTED - Namespace: ' + self.ioNamespace + ', Reason: ' + reason)
 
                 self.set('ioConnected', false)
 
-                console.warn('[uibuilderfe:socket-disconnect] Reason: ' + reason)
+                console.warn('[uibuilderfe:ioSetup:disconnect] Disconnection Reason: ' + reason)
 
                 /** A workaround for SIO's failure to reconnect after a disconnection */
                 self.checkConnect(self.retryMs, self.retryFactor)
@@ -586,17 +585,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             // Socket.io connection error - probably the wrong ioPath
             self.socket.on('connect_error', function onConnectErr(err) {
-                //self.uiDebug('error', 'uibuilderfe:ioSetup: SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
-                console.error( 'uibuilderfe:ioSetup: SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
-                //console.dir(err)
+                console.error( '[uibuilderfe:ioSetup:connect_error] SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
             }) // --- End of socket connect error processing ---
             
             // Socket.io error - from the server (socket.use middleware triggered an error response)
             self.socket.on('error', function onSocErr(err) {
-                //self.uiDebug('warn', 'uibuilderfe:ioSetup: SOCKET ERROR from server - MESSAGE: ', err)
-                console.error( 'uibuilderfe:ioSetup: SOCKET ERROR from server - MESSAGE: ', err)
+                console.error( '[uibuilderfe:ioSetup:error] SOCKET ERROR from server - MESSAGE: ', err)
                 self.set('socketError', err)
-                //console.dir(err)
             }) // --- End of socket error processing ---
 
             // Ensure we are connected, retry if not
@@ -651,32 +646,32 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @param {string=} localReason Optional, give a reason for logoff, will be placed in self.authData
          * @param {_auth=} _auth Data from server, uses self._auth if not provided
          */
-        self.markLoggedOut = function markLoggedOut(localReason, _auth) {
-            // If _auth undefined then ignore
-            if (self._auth === undefined && _auth === undefined) return
+        // self.markLoggedOut = function markLoggedOut(localReason, _auth) {
+        //     // If _auth undefined then ignore
+        //     if (self._auth === undefined && _auth === undefined) return
 
-            // If _auth not provided, use self._auth
-            if ( _auth === undefined ) _auth = self._auth
+        //     // If _auth not provided, use self._auth
+        //     if ( _auth === undefined ) _auth = self._auth
 
-            // Reset auth info
-            //_auth = self.dummyAuth
+        //     // Reset auth info
+        //     //_auth = self.dummyAuth
 
-            // Record reason if given
-            if ( ! _auth.info ) _auth.info = {}
-            if ( localReason !== undefined ) _auth.info.message = localReason
+        //     // Record reason if given
+        //     if ( ! _auth.info ) _auth.info = {}
+        //     if ( localReason !== undefined ) _auth.info.message = localReason
 
-            // Trigger change in isAuthorised
-            self.set('isAuthorised', false) // also triggers event
+        //     // Trigger change in isAuthorised
+        //     self.set('isAuthorised', false) // also triggers event
 
-            self.uiDebug('info', '[uibuilderfe:markLoggedOut] ', _auth)
+        //     self.uiDebug('info', '[uibuilderfe:markLoggedOut] ', _auth)
 
-            // Trigger change in _auth
-            self.set('_auth', _auth)
-            // Save updated _auth to localStorage
-            self.setStore('auth', _auth)
+        //     // Trigger change in _auth
+        //     self.set('_auth', _auth)
+        //     // Save updated _auth to localStorage
+        //     self.setStore('auth', _auth)
             
-            //delete self.socketOptions.transportOptions.polling.extraHeaders.Authorization
-        } // ---- End of markLoggedOut ---- //
+        //     //delete self.socketOptions.transportOptions.polling.extraHeaders.Authorization
+        // } // ---- End of markLoggedOut ---- //
 
         /** Send a logon request control message
          * Node-RED will respond with another control msg indicating success or failure,
@@ -684,39 +679,39 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @param {_auth=} _auth Logon specific data to be passed to Node-RED, uses self._auth if not provided.
          * @param {string=} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
          */
-        self.logon = function logon(_auth, api) {
-            // If security is off, don't bother
-            if (!self.security) return
+        // self.logon = function logon(_auth, api) {
+        //     // If security is off, don't bother
+        //     if (!self.security) return
 
-            // If _auth undefined then ignore
-            if (self._auth === undefined && _auth === undefined) return
+        //     // If _auth undefined then ignore
+        //     if (self._auth === undefined && _auth === undefined) return
 
-            // If _auth not provided, use self._auth
-            if ( _auth === undefined ) _auth = self._auth
+        //     // If _auth not provided, use self._auth
+        //     if ( _auth === undefined ) _auth = self._auth
 
-            if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
-                console.error('[uibuilder:logon] No logon id supplied, ignoring request.')
-                return
-            }
+        //     if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
+        //         console.error('[uibuilder:logon] No logon id supplied, ignoring request.')
+        //         return
+        //     }
 
-            if ( ! _auth.info ) _auth.info = self.dummyAuth.info
+        //     if ( ! _auth.info ) _auth.info = self.dummyAuth.info
 
-            self.set('_auth', _auth)
-            // Save updated _auth to localStorage
-            self.setStore('auth', _auth)
+        //     self.set('_auth', _auth)
+        //     // Save updated _auth to localStorage
+        //     self.setStore('auth', _auth)
 
-            if (api) {
-                //TODO (see login method on vue2 test)
-            } else {
-                self.send({
-                    'uibuilderCtrl':'logon',
-                    'from': 'client',
-                    '_auth': self._auth,
-                },self.ioChannels.control)
-            }
+        //     if (api) {
+        //         //TODO (see login method on vue2 test)
+        //     } else {
+        //         self.send({
+        //             'uibuilderCtrl':'logon',
+        //             'from': 'client',
+        //             '_auth': self._auth,
+        //         },self.ioChannels.control)
+        //     }
 
-            self.uiDebug('log', '[uibuilder:logon] ', self._auth)
-        } // ---- End of logon ---- //
+        //     self.uiDebug('log', '[uibuilder:logon] ', self._auth)
+        // } // ---- End of logon ---- //
 
         /** Send a logoff request control message
          * Note that the local auth data is NOT removed here.
@@ -724,67 +719,67 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @param {_auth=} _auth Required. Logon specific data to be passed to Node-RED
          * @param {string} [api] Optional. If set to a valid API URL, send login data to it and process response. Otherwise send login request as a control msg
          */
-        self.logoff = function logoff(_auth, api) {
-            // If security is off, don't bother
-            if (!self.security) return
+        // self.logoff = function logoff(_auth, api) {
+        //     // If security is off, don't bother
+        //     if (!self.security) return
 
-            // If _auth undefined then ignore
-            if (self._auth === undefined && _auth === undefined) return
+        //     // If _auth undefined then ignore
+        //     if (self._auth === undefined && _auth === undefined) return
 
-            // If _auth not provided, use self._auth
-            if ( _auth === undefined ) _auth = self._auth
+        //     // If _auth not provided, use self._auth
+        //     if ( _auth === undefined ) _auth = self._auth
 
-            if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
-                console.error('[uibuilder:logoff] No logoff id supplied, ignoring request.')
-                return
-            }
+        //     if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
+        //         console.error('[uibuilder:logoff] No logoff id supplied, ignoring request.')
+        //         return
+        //     }
 
-            if ( ! _auth.info ) _auth.info = self.dummyAuth.info
+        //     if ( ! _auth.info ) _auth.info = self.dummyAuth.info
 
-            // Trigger change in _auth
-            self.set('_auth', _auth)
-            // Save updated _auth to localStorage
-            self.setStore('auth', _auth)
+        //     // Trigger change in _auth
+        //     self.set('_auth', _auth)
+        //     // Save updated _auth to localStorage
+        //     self.setStore('auth', _auth)
 
-            if (api) {
-                //TODO (see login method on vue2 test)
-            } else {
-                self.send({
-                    'uibuilderCtrl':'logoff',
-                    'from': 'client',
-                    '_auth': self._auth,
-                },self.ioChannels.control)
-            }
-        }  // ---- End of logoff ---- //
+        //     if (api) {
+        //         //TODO (see login method on vue2 test)
+        //     } else {
+        //         self.send({
+        //             'uibuilderCtrl':'logoff',
+        //             'from': 'client',
+        //             '_auth': self._auth,
+        //         },self.ioChannels.control)
+        //     }
+        // }  // ---- End of logoff ---- //
 
         /** Initialise client security
          * Called on recv 'client connect' control message
          */
-        self.initSecurity = function initSecurity() {
-            self.uiDebug('info', '[uibuilderfe:initSecurity] Initialising security')
+        // self.initSecurity = function initSecurity() {
+        //     self.uiDebug('info', '[uibuilderfe:initSecurity] Initialising security')
 
-            self.security = true
+        //     self.security = true
 
-            // Check for the localstore
-            if (localStorage.getItem('uib_auth') === null) {
-                // Not present so write the auth
-                self.setStore('auth', self._auth)
-            } else {
-                // Is present so recover the data and update _auth
-                try {
-                    // Trigger change in _auth
-                    self.set('_auth', JSON.parse(localStorage.getItem(self.storePrefix + 'auth')))
-                    self.uiDebug('info', '[uibuilderfe:initSecurity] Set self._auth from localStorage')
-                } catch (e) {
-                    console.error('[uibuilderfe:initSecurity] Could not parse localStorage', e)
-                    return
-                }
-            }
+        //     // Check for the localstore
+        //     if (localStorage.getItem('uib_auth') === null) {
+        //         // Not present so write the auth
+        //         self.setStore('auth', self._auth)
+        //     } else {
+        //         // Is present so recover the data and update _auth
+        //         try {
+        //             // Trigger change in _auth
+        //             self.set('_auth', JSON.parse(localStorage.getItem(self.storePrefix + 'auth')))
+        //             self.uiDebug('info', '[uibuilderfe:initSecurity] Set self._auth from localStorage')
+        //         } catch (e) {
+        //             console.error('[uibuilderfe:initSecurity] Could not parse localStorage', e)
+        //             return
+        //         }
+        //     }
 
-            // Send 'auth' control msg to server - NB: msg._auth is added automatically
-            self.send({'uibuilderCtrl':'auth',},self.ioChannels.control)
+        //     // Send 'auth' control msg to server - NB: msg._auth is added automatically
+        //     self.send({'uibuilderCtrl':'auth',},self.ioChannels.control)
 
-        } // --- end of initSecurity --- //
+        // } // --- end of initSecurity --- //
 
         /** Update client authorisation info from server info
          * Note that this may happen after a successful logon request or at any time
@@ -792,85 +787,85 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @param {_auth=} _auth Authorisation information. Defaults to self._auth if not supplied
          * @param {string=} control Additional optional control string
          */
-        self.updateAuth = function updateAuth(_auth, control) {
-            // If security is off, don't bother
-            if (!self.security) return
+        // self.updateAuth = function updateAuth(_auth, control) {
+        //     // If security is off, don't bother
+        //     if (!self.security) return
             
-            // If _auth undefined then ignore
-            if (self._auth === undefined && _auth === undefined) return
+        //     // If _auth undefined then ignore
+        //     if (self._auth === undefined && _auth === undefined) return
 
-            // If _auth not provided, use self._auth
-            if ( _auth === undefined ) _auth = self._auth
+        //     // If _auth not provided, use self._auth
+        //     if ( _auth === undefined ) _auth = self._auth
 
-            // Ignore if empty object
-            //if ( Object.keys(_auth).length === 0 ) return
+        //     // Ignore if empty object
+        //     //if ( Object.keys(_auth).length === 0 ) return
 
-            // We wont give out spurious warnings if this is the initial contact from the server
-            // if (control === 'init') {
-            //     return
-            // }
+        //     // We wont give out spurious warnings if this is the initial contact from the server
+        //     // if (control === 'init') {
+        //     //     return
+        //     // }
 
-            if (_auth.info && _auth.info.error) {
-                self.showToast({_uib: {options: {title:'[uibuilder:updateAuth] Error from Server',variant:'danger',noAutoHide:true}}, payload: `${_auth.info.error}<br>No authentication.`})
-                console.warn('[uibuilder:updateAuth] Error from Server: ', _auth.info.error)
-                return
-            }
-            if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
-                self.showToast({_uib: {options: {title:'[uibuilder:updateAuth] No auth id supplied by server',variant:'danger',noAutoHide:true}}, payload: 'Ignoring server response<br>No authentication.'})
-                console.error('[uibuilder:updateAuth] No auth id supplied by server, ignoring server response.')
-                return
-            }
+        //     if (_auth.info && _auth.info.error) {
+        //         self.showToast({_uib: {options: {title:'[uibuilder:updateAuth] Error from Server',variant:'danger',noAutoHide:true}}, payload: `${_auth.info.error}<br>No authentication.`})
+        //         console.warn('[uibuilder:updateAuth] Error from Server: ', _auth.info.error)
+        //         return
+        //     }
+        //     if ( _auth.id === undefined || _auth.id === null || _auth.id.length === 0 ) {
+        //         self.showToast({_uib: {options: {title:'[uibuilder:updateAuth] No auth id supplied by server',variant:'danger',noAutoHide:true}}, payload: 'Ignoring server response<br>No authentication.'})
+        //         console.error('[uibuilder:updateAuth] No auth id supplied by server, ignoring server response.')
+        //         return
+        //     }
 
-            if ( ! _auth.info ) _auth.info = self.dummyAuth.info
+        //     if ( ! _auth.info ) _auth.info = self.dummyAuth.info
 
-            // Make sure user is valid & jwt is valid and current
-            if ( _auth.userValidated && _auth.jwt && (new Date(_auth.sessionExpiry) > (new Date())) ) {
-                self.set('isAuthorised', true) // also triggers event
+        //     // Make sure user is valid & jwt is valid and current
+        //     if ( _auth.userValidated && _auth.jwt && (new Date(_auth.sessionExpiry) > (new Date())) ) {
+        //         self.set('isAuthorised', true) // also triggers event
 
-                self.set('_auth', _auth)
-                // Save updated _auth to localStorage
-                self.setStore('auth', _auth)
+        //         self.set('_auth', _auth)
+        //         // Save updated _auth to localStorage
+        //         self.setStore('auth', _auth)
 
-                //self.socketOptions.transportOptions.polling.extraHeaders.Authorization = 'Bearer ' + self.authToken
-            } else {
-                self.uiDebug('info', '[uibuilderfe:updateAuth] Client not authorised or no JWT', _auth)
-                self.markLoggedOut('Client: Not authorised or no token received')
-            }
+        //         //self.socketOptions.transportOptions.polling.extraHeaders.Authorization = 'Bearer ' + self.authToken
+        //     } else {
+        //         self.uiDebug('info', '[uibuilderfe:updateAuth] Client not authorised or no JWT', _auth)
+        //         self.markLoggedOut('Client: Not authorised or no token received')
+        //     }
 
-        } // ---- End of updateAuth ---- //
+        // } // ---- End of updateAuth ---- //
 
         /** Returns a standard msg._auth Object either with valid authToken or none
          * If token has expired, run the logout to invalidate the retained data.
          * @returns {_auth|undefined} _
          */
-        self.sendAuth = function sendAuth() {
-            // If security is off, don't supply a msg._auth
-            if (!self.security) return undefined
+        // self.sendAuth = function sendAuth() {
+        //     // If security is off, don't supply a msg._auth
+        //     if (!self.security) return undefined
 
-            // If anything goes wrong, don't send _auth to server
-            try {
+        //     // If anything goes wrong, don't send _auth to server
+        //     try {
                 
-                if ( self._auth === undefined ) return undefined
+        //         if ( self._auth === undefined ) return undefined
 
-                // TODO: Remove extra metadata from _auth before sending (info, userValidated, sessionExpiry)
-                if ( self.isAuthorised ) {                
+        //         // TODO: Remove extra metadata from _auth before sending (info, userValidated, sessionExpiry)
+        //         if ( self.isAuthorised ) {                
 
-                    if ( new Date(self._auth.sessionExpiry) > (new Date()) ) {
-                        return self._auth
-                    }
+        //             if ( new Date(self._auth.sessionExpiry) > (new Date()) ) {
+        //                 return self._auth
+        //             }
 
-                    // Token has expired so mark as logged off
-                    self.markLoggedOut('Automatically logged off. Token expired')
-                }
+        //             // Token has expired so mark as logged off
+        //             self.markLoggedOut('Automatically logged off. Token expired')
+        //         }
 
-                //self.uiDebug('info', '[uibuilderfe:sendAuth] Returning. ', self._auth)
-                return self._auth
+        //         //self.uiDebug('info', '[uibuilderfe:sendAuth] Returning. ', self._auth)
+        //         return self._auth
 
-            } catch(e) {
-                console.error('[uibuilderfe:sendAuth] Failed to validate auth. Error: ', e.message)
-                return undefined
-            }
-        } // ---- End of addAuth ---- //
+        //     } catch(e) {
+        //         console.error('[uibuilderfe:sendAuth] Failed to validate auth. Error: ', e.message)
+        //         return undefined
+        //     }
+        // } // ---- End of addAuth ---- //
 
         /** Set the default originator. Set to '' to ignore. Used with uib-sender.
          * @param {string} [originator] A Node-RED node ID to return the message to
@@ -908,7 +903,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             }
             */
 
-            self.uiDebug('log', 'uibuilderfe: sending msg - Namespace: ' + self.ioNamespace + ', Channel: ' + channel, msgToSend)
+            self.uiDebug('log', '[uibuilderfe:send] Sending msg - Namespace: ' + self.ioNamespace + ', Channel: ' + channel, msgToSend)
 
             // Make sure msgToSend is an object
             if (channel === self.ioChannels.client) {
@@ -926,7 +921,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             msgToSend._socketId = self.socket.id
 
             /** If security is on, add `_auth` to output msg */
-            msgToSend._auth = self.sendAuth()
+            //msgToSend._auth = self.sendAuth()
 
             // Track how many messages have been sent & last msg sent
             if (channel === self.ioChannels.client) {
@@ -1643,13 +1638,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
              * the `isAuthorised` variable is set accordingly to true or false.
              * @param {object} [data] Optional. Logon specific data to be passed to Node-RED
              */
-            logon: self.logon,
+            //logon: self.logon,
 
             /** Send a logoff request message
              * Note that the local auth data is NOT removed here.
              *   That happens when the client receives the control msg "logged off" from the server.
              */
-            logoff: self.logoff,
+            //logoff: self.logoff,
 
             /** Return a control msg containing the props/attribs/etc of a given Vue Component instance
              * @param {string} componentRef The ref value of the component instance to be queried
