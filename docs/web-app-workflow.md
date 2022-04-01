@@ -3,7 +3,7 @@ title: Creating a web app using uibuilder and Node-RED
 description: >
    Some recommendations on how to use uibuilder to create data-driven web applications.
 created: 2022-01-05 14:36:24
-lastUpdated: 2022-01-05 14:36:28
+lastUpdated: 2022-03-27 13:30:35
 ---
 
 While it does a few other things to help as well, uibuilder primarily provides two services:
@@ -35,6 +35,12 @@ Within that instance root folder there will always be at least 3 things:
 2. A `src` sub-folder. This holds the source code for your app. This is also the default location used to serve up your front-end code.
 3. A `dist` sub-folder. This is ignored unless you swap to it using the advanced setting in the uibuilder Editor panel.
    You will use this folder if you need to "compile" or "build" your source code into something that the browser can understand (or for efficiency).
+
+Other folders you might see or use are:
+
+* `node_modules` - this is the standard npm package folder and will be present if your instance needs any supporting packages for development.
+* `api` - this will be present if you are defining an instance-level API to use with your code. API's run on the Node-RED server. See the [How to use Instance API's](instance-apis) page for details.
+* `scripts` - A convenient folder to keep utility scripts that you may wish to run to get things done. Typically accessed by adding to the `scripts` property of the package.json file.
 
 Future changes to uibuilder are likely to give more freedom for using folder names.
 
