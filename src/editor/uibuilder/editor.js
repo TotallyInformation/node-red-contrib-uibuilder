@@ -50,9 +50,9 @@
     /** Node's background color @constant {string} paletteColor */
     const paletteColor  = '#E6E0F8'
     /** Default session length (in seconds) if security is active @type {Number} */
-    const defaultSessionLength = 432000
+    //const defaultSessionLength = 432000
     /** Default JWT secret if security is active - to ensure it isn't blank @type {String} */
-    const defaultJwtSecret = 'Replace This With A Real Secret'
+    //const defaultJwtSecret = 'Replace This With A Real Secret'
     /** Default template name */
     const defaultTemplate = 'blank'
     /** Track which urls have been used - required to handle copy/paste and import
@@ -1385,78 +1385,78 @@
     } // ---- end of urlChange ---- //
 
     /** Setup for security settings (called from onEditPrepare) */
-    function securitySettings() {
-        // Show/Hide the security settings
-        $('#show-security-props').css( 'cursor', 'pointer' )
-        $('#show-security-props').on('click', function() { // (e) {
-            $('#sec-props').toggle()
-            if ( $('#sec-props').is(':visible') ) {
-                $('#show-security-props').html('<i class="fa fa-caret-down"></i> Security Settings')
-            } else {
-                $('#show-security-props').html('<i class="fa fa-caret-right"></i> Security Settings')
-            }
-        })
+    // function securitySettings() {
+    //     // Show/Hide the security settings
+    //     $('#show-security-props').css( 'cursor', 'pointer' )
+    //     $('#show-security-props').on('click', function() { // (e) {
+    //         $('#sec-props').toggle()
+    //         if ( $('#sec-props').is(':visible') ) {
+    //             $('#show-security-props').html('<i class="fa fa-caret-down"></i> Security Settings')
+    //         } else {
+    //             $('#show-security-props').html('<i class="fa fa-caret-right"></i> Security Settings')
+    //         }
+    //     })
 
-        // One-off check for default settings
-        if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
-            $('#node-input-jwtSecret').val(defaultJwtSecret)
-        }
-        if ( $('#node-input-useSecurity').is(':checked') && /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
-            $('#node-input-sessionLength').val(defaultSessionLength)
-        }
+    //     // One-off check for default settings
+    //     if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
+    //         $('#node-input-jwtSecret').val(defaultJwtSecret)
+    //     }
+    //     if ( $('#node-input-useSecurity').is(':checked') && /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
+    //         $('#node-input-sessionLength').val(defaultSessionLength)
+    //     }
 
-        // Security turning on/off
-        $('#node-input-useSecurity').on('change', function() {
+    //     // Security turning on/off
+    //     $('#node-input-useSecurity').on('change', function() {
 
-            // security is requested, enable other settings and add warnings if needed
-            // @since v4.1.1 disable lockout of security for non-http in production
-            /* 
-                if ( this.checked ) {
-                    // If in production, cannot turn on security without https, in dev, give a warning
-                    if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
-                        if (RED.settings.uibuilderNodeEnv !== 'development') {
-                            console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
-                            $('#node-input-useSecurity').prop('checked', false); this.checked = false
-                        } else {
-                            console.warn('HTTPS NOT IN USE BUT SECURITY REQUESTED - Node environment is "development" so this is allowed but not recommended')
-                        }
-                        // TODO: Add user warnings
-                    }
-                }
-            */
-            // Yes, we do need this.checked twice :-)
-            if ( $(this).is(':checked') ) {
+    //         // security is requested, enable other settings and add warnings if needed
+    //         // @since v4.1.1 disable lockout of security for non-http in production
+    //         /* 
+    //             if ( this.checked ) {
+    //                 // If in production, cannot turn on security without https, in dev, give a warning
+    //                 if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
+    //                     if (RED.settings.uibuilderNodeEnv !== 'development') {
+    //                         console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
+    //                         $('#node-input-useSecurity').prop('checked', false); this.checked = false
+    //                     } else {
+    //                         console.warn('HTTPS NOT IN USE BUT SECURITY REQUESTED - Node environment is "development" so this is allowed but not recommended')
+    //                     }
+    //                     // TODO: Add user warnings
+    //                 }
+    //             }
+    //         */
+    //         // Yes, we do need this.checked twice :-)
+    //         if ( $(this).is(':checked') ) {
 
-                $('#node-input-allowUnauth').prop('disabled', false)        
-                $('#node-input-sessionLength').prop('disabled', false)
-                $('#node-input-jwtSecret').prop('disabled', false)
-                $('#node-input-tokenAutoExtend').prop('disabled', false)
-                // Add defaults if fields are empty
-                if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
-                    $('#node-input-jwtSecret').addClass('input-error')
-                }
-                if ( /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
-                    $('#node-input-sessionLength').val(defaultSessionLength)
-                }
-                if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
-                    $('#node-input-jwtSecret').val(defaultJwtSecret)
-                }
+    //             $('#node-input-allowUnauth').prop('disabled', false)        
+    //             $('#node-input-sessionLength').prop('disabled', false)
+    //             $('#node-input-jwtSecret').prop('disabled', false)
+    //             $('#node-input-tokenAutoExtend').prop('disabled', false)
+    //             // Add defaults if fields are empty
+    //             if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
+    //                 $('#node-input-jwtSecret').addClass('input-error')
+    //             }
+    //             if ( /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
+    //                 $('#node-input-sessionLength').val(defaultSessionLength)
+    //             }
+    //             if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
+    //                 $('#node-input-jwtSecret').val(defaultJwtSecret)
+    //             }
 
-            } else { // security not requested, disable other settings
+    //         } else { // security not requested, disable other settings
 
-                $('#node-input-allowUnauth').prop('disabled', true)        
-                $('#node-input-sessionLength').prop('disabled', true)
-                $('#node-input-jwtSecret').prop('disabled', true)
-                $('#node-input-tokenAutoExtend').prop('disabled', true)
+    //             $('#node-input-allowUnauth').prop('disabled', true)        
+    //             $('#node-input-sessionLength').prop('disabled', true)
+    //             $('#node-input-jwtSecret').prop('disabled', true)
+    //             $('#node-input-tokenAutoExtend').prop('disabled', true)
 
-            }
+    //         }
 
-        }) // -- end of security change -- //
+    //     }) // -- end of security change -- //
 
-        // What mode is Node-RED running in? development or something else?
-        $('#nrMode').text(RED.settings.uibuilderNodeEnv)
+    //     // What mode is Node-RED running in? development or something else?
+    //     $('#nrMode').text(RED.settings.uibuilderNodeEnv)
         
-    } // ---- end of securitySettings ---- //
+    // } // ---- end of securitySettings ---- //
 
     /** Run when switching to the Files tab
      * @param {object} node A reference to the panel's `this` object
@@ -1587,7 +1587,7 @@
         tabs.addTab({ id: 'tab-core',      label: 'Core'      })
         tabs.addTab({ id: 'tab-files',     label: 'Files'     })
         tabs.addTab({ id: 'tab-libraries', label: 'Libraries' })
-        tabs.addTab({ id: 'tab-security',  label: 'Security'  })
+        //tabs.addTab({ id: 'tab-security',  label: 'Security'  })
         tabs.addTab({ id: 'tab-advanced',  label: 'Advanced'  })
         
     } // ---- End of preTabs ---- //
@@ -1623,7 +1623,7 @@
         templateSettings(node)
 
         // security settings
-        securitySettings()
+        // securitySettings()
 
         // Show the server in use
         showServerInUse(node)
@@ -1932,11 +1932,11 @@
             templateFolder: { value: defaultTemplate },  // Folder for selected template
             extTemplate: { value: '' }, // Only if templateFolder=external, degit name
             showfolder: { value: false },      // Should a web index view of all source files be made available?
-            useSecurity: { value: false },
-            allowUnauth: { value: false },
-            allowAuthAnon: { value: false },
-            sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
-            tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
+            //useSecurity: { value: false },
+            //allowUnauth: { value: false },
+            //allowAuthAnon: { value: false },
+            //sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
+            //tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
             oldUrl: { value: undefined },      // If the url has been changed, this is the previous url
             reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
             sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)

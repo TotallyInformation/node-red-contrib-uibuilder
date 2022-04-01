@@ -816,7 +816,8 @@ class UibWeb {
             'id', 'type',  
             'name', 'wires', '_wireCount', 'credentials', 'topic', 'url', 
             'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder', 
-            'useSecurity', 'sessionLength', 'tokenAutoExtend', 'customFolder', 
+            //'useSecurity', 
+            'sessionLength', 'tokenAutoExtend', 'customFolder', 
             'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
         ]
         // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]

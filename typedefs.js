@@ -24,7 +24,7 @@
  * 
  */
 
-/** runtimeSettings - See settings.js for static settings.
+/** Node-RED runtimeSettings - See settings.js for static settings.
  * @typedef {object} runtimeSettings Static and Dynamic settings for Node-RED runtime
  * 
  * @property {string} uiPort The port used by Node-RED (default=1880)
@@ -88,7 +88,7 @@
  * @property {Function} setUserSettings : [Function: setUserSettings],
  */
 
-/** runtimeLogging
+/** Node-RED runtimeLogging
  * @typedef {object} runtimeLogging Logging. Levels that are output to the Node-RED log are controlled by the logging.console.level setting in settings.js
  * @property {Function} fatal Lvel 0. Lowest level, things that have broken Node-RED only.
  * @property {Function} error Level 1. Copy is sent to Editor debug panel as well as error log.
@@ -102,7 +102,7 @@
  * @property {Function} removeHandler Removes a log handler
  */
 
-/** runtimeNodes
+/** Node-RED runtimeNodes
  * @typedef {object} runtimeNodes Gives access to other active nodes in the flows.
  * @property {Function} registerType Register a new type of node to Node-RED.
  * @property {Function} createNode Create a node instance (called from within registerType Function).
@@ -199,12 +199,8 @@
  * @property {string}  templateFolder Folder name for the source of the chosen template
  * @property {string}  extTemplate Degit url reference for an external template (e.g. from GitHub)
  * @property {boolean} showfolder Provide a folder index web page?
- * @property {boolean} useSecurity Use uibuilder's built-in security features?
- * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
- * @property {number} sessionLength Lifespan of token (in seconds)
  * @property {boolean} reload If true, notify all clients to reload on a change to any source file
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
- * @property {string} jwtSecret Seed string for encryption of JWT
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -213,7 +209,6 @@
  * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {boolean} allowUnauth Allow unauthorised messaging
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  */
 
@@ -233,12 +228,8 @@
  * @property {string}  templateFolder Folder name for the source of the chosen template
  * @property {string}  extTemplate Degit url reference for an external template (e.g. from GitHub)
  * @property {boolean} showfolder Provide a folder index web page?
- * @property {boolean} useSecurity Use uibuilder's built-in security features?
- * @property {boolean} tokenAutoExtend Extend token life when msg's received from client?
- * @property {number} sessionLength Lifespan of token (in seconds)
  * @property {boolean} reload If true, notify all clients to reload on a change to any source file
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
- * @property {string} jwtSecret Seed string for encryption of JWT
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -267,8 +258,6 @@
  * @property {string} statusDisplay.text Text to display
  * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
  * @property {string} statusDisplay.shape dot or ring
- * 
- * @property {boolean} allowUnauth Allow msgs to flow even if client is unauthorised
  */
 
 /** uibConfig - THe module-level `uib` configuration variable
@@ -286,13 +275,6 @@
  *  url then add processing to ensure that the URL's are unique. 
  * 
  *  Schema: `{<node.id>: <url>}`
- * @property {string} masterPackageListFilename File name of the master package list used to check for commonly 
- *  installed FE libraries. 
- * 
- *  Default 'masterPackageList.json'
- * @property {string} packageListFilename File name of the installed package list. 
- * 
- *  Default 'packageList.json'
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  * 
  *  Default `../template`
@@ -310,7 +292,8 @@
  * @property {string} configFolderName Name of the config folder. Default `.config`
  * @property {string|null} commonFolder Location for uib common folder - set once rootFolder is finalised
  * @property {string} commonFolderName URI name of the common folder for shared resources. Default `common`
- * @property {string} sioUseMwName Name of the Socket.IO Use Middleware. Default 'sioUse.js'
+ * @property {string} sioUseMwName Name of the optional Socket.IO per-msg input `use` middleware. Default 'sioUse.js' in the uibRoot/.config folder
+ * @property {string} sioMsgOutMwName Name of the optional Socket.IO per-msg output middleware. Default 'sioMsgOut.js' in the uibRoot/.config folder
  * @property {object} ioChannels The channel names for Socket.IO.
  * @property {string} ioChannels.control Channel for control messages. Default `uiBuilderControl`
  * @property {string} ioChannels.client Channel for messages to front-end clients. Default `uiBuilderClient`

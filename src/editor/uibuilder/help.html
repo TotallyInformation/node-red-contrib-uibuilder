@@ -19,9 +19,7 @@
 
     <h3>Status display</h3>
     <p>
-        Each instance (node) of uibuilder has a status display. Normally, the icon is blue but it will be yellow if security is turned on. 
-        If the icon is a filled yellow dot, then messages are blocked unless the client is authenticated. If it is a yellow circle, messages can still flow
-        even if the client is not authenticated (see the security settings for details).<br>
+        Each instance (node) of uibuilder has a status display. Normally, the icon is blue.
         When 1 or more clients are connected, the text will show how many clients are connected.
     </p>
 
@@ -30,8 +28,8 @@
         <dt class="optional">payload <span class="property-type">string | buffer</span></dt>
         <dd> Optionally, the payload of the message to send to all connected client browser tabs. </dd>
 
-        <dt class="optional">_auth <span class="property-type">object</span></dt>
-        <dd> Optionally, the authentication and authorisation object. See the <a href="./uibuilder/techdocs/#/security?id=standard-schema-for-msg_auth">security page in the technical docs</a> for specifics.</dd>
+        <!-- <dt class="optional">_auth <span class="property-type">object</span></dt>
+        <dd> Optionally, the authentication and authorisation object. See the <a href="./uibuilder/techdocs/#/security?id=standard-schema-for-msg_auth">security page in the technical docs</a> for specifics.</dd> -->
 
         <dt class="optional">_uib <span class="property-type">object</span></dt>
         <dd>
@@ -69,12 +67,12 @@
                     Data sent by the front-end page.
                 </dd>
 
-                <dt class="optional">_auth <span class="property-type">object</span></dt>
+                <!-- <dt class="optional">_auth <span class="property-type">object</span></dt>
                 <dd>
                     The authentication and authorisation object. 
                     This <b>MUST</b> always be included when security is turned on.
                     See the <a href="./uibuilder/techdocs/#/security?id=standard-schema-for-msg_auth" target="_blank">security page in the technical docs</a> for specifics.
-                </dd>
+                </dd> -->
         
                 <dt class="optional">uibDomEvent <span class="property-type">object</span></dt>
                 <dd>
@@ -251,7 +249,7 @@
             </dd>
         </dl>
 
-        <h4>Security Settings</h4>
+        <!-- <h4>Security Settings</h4>
         <dl class="message-properties">
             <dt>Use uibuilder's security? <span class="property-type">link</span></dt>
             <dd>
@@ -284,7 +282,7 @@
                 If on, every message sent by a client will extend the session.
             </dd>
 
-        </dl>
+        </dl> -->
 
         <h4>Button Row</h4>
         <dl class="message-properties">
