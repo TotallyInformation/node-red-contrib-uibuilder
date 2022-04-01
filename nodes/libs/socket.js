@@ -32,7 +32,7 @@ const fs = require('fs-extra')
 const socketio = require('socket.io')
 const tilib    = require('./tilib')    // General purpose library (by Totally Information)
 const uiblib   = require('./uiblib')   // Utility library for uibuilder
-const security = require('./sec-lib') // uibuilder security module
+//const security = require('./sec-lib') // uibuilder security module
 const tiEventManager = require('@totallyinformation/ti-common-event-handler')
 
 //Get client real ip address
@@ -127,6 +127,24 @@ class UibSockets {
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
         this._socketIoSetup()
 
+        // If available, set up optional outbound msg middleware
+        this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null; }
+        // Try to load the sioMsgOut middleware function - sioMsgOut applies to all outgoing msgs
+        const mwfile = path.join(uib.configFolder, uib.sioMsgOutMwName)
+        if ( fs.existsSync(mwfile) ) { // not interested if the file doesn't exist
+            try {
+                const sioMsgOut = require( mwfile )
+                if ( typeof sioMsgOut === 'function' ) { // if exported, has to be a function
+                    this.outboundMsgMiddleware = sioMsgOut
+                    this.log.trace(`[uibuilder:socket:setup] sioMsgOut Middleware loaded successfully.`)
+                } else {
+                    this.log.warn(`[uibuilder:socket:setup] sioMsgOut Middleware failed to load - check that uibRoot/.config/sioMsgOut.js has a valid exported fn.`)
+                }
+            } catch(e) {
+                this.log.warn(`[uibuilder:socket:setup] sioMsgOut middleware Failed to load. Reason: ${e.message}`)
+            }
+        }
+
         this._isConfigured = true
 
     } // --- End of setup() --- //
@@ -156,18 +174,18 @@ class UibSockets {
                 origin: '*',
                 //allowedHeaders: ['x-clientid'],
             }
-            // Socket.Io 3+ CORS is disabled by default, also options have changed.
+            /* // Socket.Io 3+ CORS is disabled by default, also options have changed.
             // for CORS need to handle preflight request explicitly 'cause there's an
             // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v4/handling-cors/
-            // handlePreflightRequest: (req, res) => {
-            //     res.writeHead(204, {
-            //         'Access-Control-Allow-Origin': req.headers['origin'], // eslint-disable-line dot-notation
-            //         'Access-Control-Allow-Methods': 'GET,POST',
-            //         'Access-Control-Allow-Headers': 'X-ClientId',
-            //         'Access-Control-Allow-Credentials': true,
-            //     })
-            //     res.end()
-            // },
+            handlePreflightRequest: (req, res) => {
+                res.writeHead(204, {
+                    'Access-Control-Allow-Origin': req.headers['origin'], // eslint-disable-line dot-notation
+                    'Access-Control-Allow-Methods': 'GET,POST',
+                    'Access-Control-Allow-Headers': 'X-ClientId',
+                    'Access-Control-Allow-Credentials': true,
+                })
+                res.end()
+            }, */
         }
 
         // Merge in overrides from settings.js if given. NB: settings.uibuilder.socketOptions will override the above defaults.
@@ -194,7 +212,7 @@ class UibSockets {
      * @param {string} url THe uibuilder id
      * @param {string=} channel Optional. Which channel to send to (see uib.ioChannels) - defaults to client
      */
-    sendToFe( msg, url, channel ) {
+    sendToFe( msg, url, channel ) { 
         const uib = this.uib
         const log = this.log
 
@@ -207,7 +225,12 @@ class UibSockets {
         // Control msgs should say where they came from
         if ( channel === uib.ioChannels.control ) msg.from = 'server'
 
-        // TODO Process outbound middleware (middleware should already be loaded)
+        // Process outbound middleware (middleware is loaded in this.setup)
+        try {
+            this.outboundMsgMiddleware( msg, url, channel, ioNs ) 
+        } catch (e) {
+            this.log.warn(`[uibuilder:socket:sendToFe] outboundMsgMiddleware middleware failed to run. Reason: ${e.message}`)
+        }
 
         // TODO: Sending should have some safety validation on it. Is msg an object? Is channel valid?
 
@@ -283,7 +306,7 @@ class UibSockets {
         return this.ioNamespaces[url]
     }
 
-    /** Send a msg either directly out of the node instance OR via return event name
+    /** Send a node-red msg either directly out of the node instance OR via return event name
      * @param {object} msg Message object received from a client
      * @param {uibNode} node Reference to the uibuilder node instance
      */
@@ -296,7 +319,7 @@ class UibSockets {
         }
     }
 
-    /** Socket listener fn for msgs from clients
+    /** Socket listener fn for msgs from clients - NOTE that the optional sioUse middleware is also applied before this
      * @param {object} msg Message object received from a client
      * @param {socketio.Socket} socket Reference to the socket for this node
      * @param {uibNode} node Reference to the uibuilder node instance
@@ -366,7 +389,7 @@ class UibSockets {
         // Add some additional metadata to NS
         const url = ioNs.url = node.url
         ioNs.nodeId = node.id // allows us to track back to the actual node in Node-RED
-        ioNs.useSecurity = node.useSecurity // Is security on for this node instance?
+        // ioNs.useSecurity = node.useSecurity // Is security on for this node instance?
         ioNs.rcvMsgCount = 0
         ioNs.log = log // Make Node-RED's log available to middleware via custom ns property
 
@@ -375,16 +398,18 @@ class UibSockets {
          * Had to move to addNS since MW no longer globally loadable since sio v3
          */
         let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
-        try {
-            const sioMiddleware = require(sioMwPath)
-            if ( typeof sioMiddleware === 'function' ) {
-                ioNs.use(sioMiddleware)
-                log.trace(`[uibuilder:socket:addNs:${url}] Socket.IO Middleware loaded successfully for NS.`)
-            } else {
-                log.trace(`[uibuilder:socket:addNs:${url}] Socket.IO Middleware failed to execute for NS - check that uibRoot/.config/sioMiddleware.js has a valid exported fn.`)
+        if ( fs.existsSync(sioMwPath) ) { // not interested if the file doesn't exist
+            try {
+                const sioMiddleware = require(sioMwPath)
+                if ( typeof sioMiddleware === 'function' ) {
+                    ioNs.use(sioMiddleware)
+                    log.trace(`[uibuilder:socket:addNs:${url}] Socket.IO sioMiddleware.js middleware loaded successfully for NS.`)
+                } else {
+                    log.warn(`[uibuilder:socket:addNs:${url}] Socket.IO middleware failed to load for NS - check that uibRoot/.config/sioMiddleware.js has a valid exported fn.`)
+                }
+            } catch (e) {
+                log.warn(`[uibuilder:socket:addNs:${url}] Socket.IO middleware failed to load for NS. Reason: ${e.message}`)
             }
-        } catch (e) {
-            log.trace(`[uibuilder:socket:addNs:${url}] Socket.IO Middleware failed to load for NS. Reason: ${e.message}`)
         }
 
         const that = this
@@ -447,82 +472,82 @@ class UibSockets {
                 if ( ! msg.topic ) msg.topic = node.topic
 
                 /** If an auth/logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
-                if ( msg.uibuilderCtrl === 'logon') {
+                // if ( msg.uibuilderCtrl === 'logon') {
 
-                    //uiblib.logon(msg, ioNs, node, socket, log, uib)
-                    security.logon(msg, ioNs, node, socket)
+                //     //uiblib.logon(msg, ioNs, node, socket, log, uib)
+                //     security.logon(msg, ioNs, node, socket)
 
-                } else if ( msg.uibuilderCtrl === 'logoff') {
+                // } else if ( msg.uibuilderCtrl === 'logoff') {
 
-                    //uiblib.logoff(msg, ioNs, node, socket, log, uib)
-                    security.logoff(msg, ioNs, node, socket.id)
+                //     //uiblib.logoff(msg, ioNs, node, socket, log, uib)
+                //     security.logoff(msg, ioNs, node, socket.id)
 
-                } else if ( msg.uibuilderCtrl === 'auth') {
-                    // 'auth' is sent by client after server sends 'client connect' or 'request for logon' if security is on
-                    /**
-                     * == Server receives 'auth' control message. Checks auth
-                     *    1. If auth is dummy
-                     *       1. => Send 'request for logon' to client
-                     *          1. ++ client must prompt user for logon
-                     *          2. <= Client must send 'auth' control message to server
-                     *          3. GOTO 1.0
-                     *
-                     *    2. Otherwise
-                     *       1. == Server validates msg._auth (*1). Only succeeds if client was already auth and send a valid _auth with JWT (due to node redeploy since nr restart invalidates all JWT's).
-                     *          1. => Server returns either an 'auth succeded' or 'auth failed' message to client.
-                     *          2. If auth failed
-                     *             1. => Send 'request for logon' to client
-                     *             2. ++ client must prompt user for logon
-                     *             3. <= Client must send 'auth' control message to server
-                     *             4. GOTO 1.0
-                     */
+                // } else if ( msg.uibuilderCtrl === 'auth') {
+                //     // 'auth' is sent by client after server sends 'client connect' or 'request for logon' if security is on
+                //     /**
+                //      * == Server receives 'auth' control message. Checks auth
+                //      *    1. If auth is dummy
+                //      *       1. => Send 'request for logon' to client
+                //      *          1. ++ client must prompt user for logon
+                //      *          2. <= Client must send 'auth' control message to server
+                //      *          3. GOTO 1.0
+                //      *
+                //      *    2. Otherwise
+                //      *       1. == Server validates msg._auth (*1). Only succeeds if client was already auth and send a valid _auth with JWT (due to node redeploy since nr restart invalidates all JWT's).
+                //      *          1. => Server returns either an 'auth succeded' or 'auth failed' message to client.
+                //      *          2. If auth failed
+                //      *             1. => Send 'request for logon' to client
+                //      *             2. ++ client must prompt user for logon
+                //      *             3. <= Client must send 'auth' control message to server
+                //      *             4. GOTO 1.0
+                //      */
 
-                    msg._auth = security.authCheck2(msg, node, that.getClientDetails(socket))
+                //     msg._auth = security.authCheck2(msg, node, that.getClientDetails(socket))
 
-                    //! temp
-                    node.send([null,msg])
+                //     //! temp
+                //     node.send([null,msg])
 
-                    // Report success & send token to client & to port #2
-                    //if ( msg._auth.userValidated === true ) {
-                    const ctrlMsg = {
-                        'uibuilderCtrl': msg._auth.userValidated ? 'authorised' : 'not authorised',
-                        'topic': msg.topic || node.topic || undefined,
-                        '_auth': msg._auth,
-                        '_socketId': socket.id,
-                    }
-                    that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
-                    // Copy to port#2 for reference
-                    ctrlMsg.ip = getClientRealIpAddress(socket)
-                    ctrlMsg.clientId = socket.handshake.auth.clientId
-                    node.send([null,ctrlMsg])
-                    //}
+                //     // Report success & send token to client & to port #2
+                //     //if ( msg._auth.userValidated === true ) {
+                //     const ctrlMsg = {
+                //         'uibuilderCtrl': msg._auth.userValidated ? 'authorised' : 'not authorised',
+                //         'topic': msg.topic || node.topic || undefined,
+                //         '_auth': msg._auth,
+                //         '_socketId': socket.id,
+                //     }
+                //     that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
+                //     // Copy to port#2 for reference
+                //     ctrlMsg.ip = getClientRealIpAddress(socket)
+                //     ctrlMsg.clientId = socket.handshake.auth.clientId
+                //     node.send([null,ctrlMsg])
+                //     //}
 
-                } else if (node.useSecurity === true) {
-                    // If security is active...
+                // } else if (node.useSecurity === true) {
+                //     // If security is active...
 
-                    /** Check for valid auth and session
-                     * @type {MsgAuth} */
-                    msg._auth = security.authCheck2( msg, node, that.getClientDetails(socket) )
-                    //msg._auth = security.authCheck(msg, node, socket.id)
-                    //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
+                //     /** Check for valid auth and session
+                //      * @type {MsgAuth} */
+                //     msg._auth = security.authCheck2( msg, node, that.getClientDetails(socket) )
+                //     //msg._auth = security.authCheck(msg, node, socket.id)
+                //     //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
 
-                    // Only send the msg onward if the user is validated or if unauth traffic permitted or if the msg is the initial ready for content handshake.
-                    if ( node.allowUnauth === true || msg._auth.jwt !== undefined || msg.uibuilderCtrl === 'ready for content' ) {
-                        msg.ip = getClientRealIpAddress(socket)
-                        msg.clientId = socket.handshake.auth.clientId
-                        node.send([null,msg])
-                        tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
-                    } else
-                        log.info(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. Ignoring.`)
+                //     // Only send the msg onward if the user is validated or if unauth traffic permitted or if the msg is the initial ready for content handshake.
+                //     if ( node.allowUnauth === true || msg._auth.jwt !== undefined || msg.uibuilderCtrl === 'ready for content' ) {
+                //         msg.ip = getClientRealIpAddress(socket)
+                //         msg.clientId = socket.handshake.auth.clientId
+                //         node.send([null,msg])
+                //         tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
+                //     } else
+                //         log.info(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. Ignoring.`)
 
-                } else {
+                // } else {
 
-                    // Send out the message on port #2 for downstream flows
-                    msg.ip = getClientRealIpAddress(socket)
-                    msg.clientId = socket.handshake.auth.clientId
-                    node.send([null,msg])
+                //     // Send out the message on port #2 for downstream flows
+                //     msg.ip = getClientRealIpAddress(socket)
+                //     msg.clientId = socket.handshake.auth.clientId
+                //     node.send([null,msg])
 
-                }
+                // }
 
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
@@ -558,16 +583,14 @@ class UibSockets {
             if ( fs.existsSync(mwfile) ) { // not interested if the file doesn't exist
                 try {
                     const sioUseMw = require( mwfile )
-                    if ( Object.keys(sioUseMw).length ) { // ignore if nothing exported
-                        if ( typeof sioUseMw === 'function' ) { // if exported, has to be a function
-                            socket.use(sioUseMw)
-                            log.trace(`[uibuilder:socket:onConnect:${url}] sioUse Middleware loaded successfully for NS ${url}.`)
-                        } else {
-                            log.warn(`[uibuilder:socket:onConnect:${url}] sioUse Middleware failed to execute for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
-                        }
+                    if ( typeof sioUseMw === 'function' ) { // if exported, has to be a function
+                        socket.use(sioUseMw)
+                        log.trace(`[uibuilder:socket:onConnect:${url}] sioUse sioUse.js middleware loaded successfully for NS ${url}.`)
+                    } else {
+                        log.warn(`[uibuilder:socket:onConnect:${url}] sioUse middleware failed to load for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
                     }
                 } catch(e) {
-                    log.warn(`[uibuilder:socket:addNS:${url}] sioUse Failed to load Use middleware. Reason: ${e.message}`)
+                    log.warn(`[uibuilder:socket:addNS:${url}] sioUse failed to load Use middleware. Reason: ${e.message}`)
                 }
             }
 
@@ -579,7 +602,7 @@ class UibSockets {
                 'uibuilderCtrl': 'client connect',
                 'serverTimestamp': (new Date()),
                 'topic': node.topic || undefined,
-                'security': node.useSecurity,   // Let the client know whether to use security or not
+                //'security': node.useSecurity,   // Let the client know whether to use security or not
                 'version': uib.version,         // Let the front-end know what v of uib is in use
                 '_socketId': socket.id,
             }
