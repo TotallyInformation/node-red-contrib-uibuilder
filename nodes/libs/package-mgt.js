@@ -282,8 +282,10 @@ class UibPackages {
         /** If we can, lets work out what resource is actually needed
          *  when using one of these packages in the browser.
          *  If we can't, leave a ? to make it obvious
+         * Annoyingly, a few packages have decided to make the `browser` property an object instead of a string.
+         *   (e.g. vgauge) - ignore in that case as it isn't clear what the intent is.
          */
-        if (pkgJson.browser) pkgDetails.estimatedEntryPoint = pkgJson.browser
+        if (pkgJson.browser && (typeof pkgJson.browser === 'string') ) pkgDetails.estimatedEntryPoint = pkgJson.browser
         else if (pkgJson.jsdelivr) pkgDetails.estimatedEntryPoint = pkgJson.jsdelivr
         else if (pkgJson.unpkg) pkgDetails.estimatedEntryPoint = pkgJson.unpkg
         else if (pkgJson.main) pkgDetails.estimatedEntryPoint = pkgJson.main
