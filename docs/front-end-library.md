@@ -3,7 +3,7 @@ title: Working with the uibuilderfe Front-End Library
 description: >
    How to work with uibuilder's front-end library in your own UI code.
 created: 2021-02-17 14:28:00
-lastUpdated: 2022-03-09 14:09:35
+lastUpdated: 2022-04-02 16:44:04
 ---
 
 `uibuildefe.js` is the library that lets you interact with your uibuilder nodes in Node-RED.
@@ -26,17 +26,18 @@ The detailed documentation for the library is in the [uibuildefe developer docum
 - [Variable Handling](#variable-handling)
 - [Helper Methods (functions)](#helper-methods-functions)
   - [`autoSendReady` Turn on/off the ready for content control msg](#autosendready-turn-onoff-the-ready-for-content-control-msg)
+  - [`clearEventListeners` Forcibly removes all event listeners from the events array](#cleareventlisteners-forcibly-removes-all-event-listeners-from-the-events-array)
   - [`debug` Turn on/off debugging console messages](#debug-turn-onoff-debugging-console-messages)
   - [`eventSend` Helper fn to send event data](#eventsend-helper-fn-to-send-event-data)
   - [`get` Get the value of a uibuilder variable](#get-get-the-value-of-a-uibuilder-variable)
-  - [`logon` Send a logon (authentication) control request to Node-RED](#logon-send-a-logon-authentication-control-request-to-node-red)
-  - [`logoff` Send a logoff control request to Node-RED](#logoff-send-a-logoff-control-request-to-node-red)
   - [`me` Return uibuilder info](#me-return-uibuilder-info)
   - [`msg` Convenience method to access the last standard msg from Node-RED](#msg-convenience-method-to-access-the-last-standard-msg-from-node-red)
   - [`onChange` Subscribe to a uibuilder variable change event](#onchange-subscribe-to-a-uibuilder-variable-change-event)
   - [`send` Send a standard msg to Node-RED](#send-send-a-standard-msg-to-node-red)
   - [`sendCtrl` Send a control msg to Node-RED](#sendctrl-send-a-control-msg-to-node-red)
   - [`set` Set the value of a uibuilder variable, creates subscribable event for changes](#set-set-the-value-of-a-uibuilder-variable-creates-subscribable-event-for-changes)
+  - [`setOriginator` Sets an originating node ID](#setoriginator-sets-an-originating-node-id)
+  - [`setPing` Check if Node-RED/uibuilder server is alive, may be used to trigger session extensions](#setping-check-if-node-reduibuilder-server-is-alive-may-be-used-to-trigger-session-extensions)
   - [`showComponentDetails` (VueJS only) Return a control msg contining details of a Vue component](#showcomponentdetails-vuejs-only-return-a-control-msg-contining-details-of-a-vue-component)
   - [`showToast` (VueJS only) Shows a popup message in the UI](#showtoast-vuejs-only-shows-a-popup-message-in-the-ui)
   - [`start` Start up the front-end library](#start-start-up-the-front-end-library)
@@ -78,7 +79,7 @@ In addition, if you are using VueJS, you can pass the Vue app instance to the `s
   * `httpNodeRoot` - normally empty unless you have changed it in `settings.js`
   * "/uibuilder/vendor/socket.io"
 
-  While uibuilderfe does its best to work out the ioPath (from a cookie first and then the request url), it cannot determing the httpNodeRoot if you are serving your js code from a different server or a different url path on the same server (e.g. when using a build tool dev server). It is in these cases that you must specify it manually.
+  While uibuilderfe does its best to work out the ioPath (from cookies first and then the request url), it cannot always determine the httpNodeRoot. Sometimes, if you are serving your js code from a different server or a different url path on the same server (e.g. when using a build tool dev server), it may not be possible. It is in these cases that you must specify it manually. From v5, this should now rarely be needed.
 
 * `vueApp` {Object=}  Optional. reference to the VueJS instance
 
@@ -105,7 +106,22 @@ uibuilder.start({
 
 ### Errors
 
-If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages in your browser console, this is the most likely reason.
+If you get continual `uibuilderfe:ioSetup: SOCKET CONNECT ERROR` error messages in your browser console, the most likely reason is that you need to pass the namespace and path parameters because the library can't work them out. But first, check the content of the uibuilder cookies using your browser's dev-tools to make sure that they contain something sensible.
+
+If you get sudden client disconnects. Check the size of the data you are sending or recieving. When Socket.IO changed from v2 to v3, they changed the default maximum msg size from 100MB to 1MB. If you try to send a msg in either direction that is >1MB, the socket will disconnect. You can change this size by changing the `uibuilder.socketOptions` in `settings.json`.
+
+```javascript
+        /** Optional: Socket.IO Server options
+         * See https://socket.io/docs/v4/server-options/
+         * Note that the `path` property will be ignored, it is set by uibuilder itself.
+         * You can set anything else though you might break uibuilder unless you know what you are doing.
+         * @type {Object}
+         */
+        socketOptions: {
+            // Make the default buffer larger (default=1MB)
+            maxHttpBufferSize: 1e8 // 100 MB
+        },
+```
 
 ## Events
 
@@ -113,7 +129,7 @@ uibuilderfe has its own, simple, event handling system. This lets you "subscribe
 
 Events are created automatically by the internal `self.set` function that is used to update variables. So any internal variable updated this way automatically gets an event named after the variable name. In addition, using `uibuilder.set('varname', newVal)` also creates an event.
 
-Events are subscribed to using the `uibuilder.onChange(evtName, callback)` function. Where the callback is executed whenever anything triggers that event name.
+Events are subscribed to using the `uibuilder.onChange(evtName, callback)` function. Where the callback is a function that is executed whenever anything triggers that event name.
 
 Event processing is highly efficient since nothing actually happens if no `onChange` function has been registered against an event. Multiple `onChange` callbacks can be assigned to an event which is helpful if you have front-end code such as components. In general though, try to minimise the number of `onChange` entries.
 
@@ -133,12 +149,13 @@ uibuilder.onChange('msg', function(msg){
 
 * `ctrlMsg` - triggered whenever the client receives a control message from the server.
 * `ioConnected` - triggered whenever the client connects or disconnects from the server over Socket.IO.
-* `isAuthorised` - triggered by successful logon or logoff (on receipt of confirmation from server).
+<!-- * `isAuthorised` - triggered by successful logon or logoff (on receipt of confirmation from server). -->
 * `msg` - triggered whenever the client receives a standard msg from the server. e.g. you send a msg into the input port of the node.
 * `msgsCtrl` - triggered whenever the client receives a control message from the server. NOTE: This is superfluous and may be removed in a future release.
 * `msgsReceived` - triggered whenever the client receives a standard msg from the server. Counts the number of messages received. NOTE: This is superfluous and may be removed in a future release.
 * `msgsSent` - triggered whenever the client sends a standard message to the server. NOTE: This is superfluous and may be removed in a future release.
 * `msgsSentCtrl` - triggered whenever the client sends a control message to the server. NOTE: This is superfluous and may be removed in a future release.
+* `ping` - triggered as a result(s) of a `uibuilder.setPing(ms)`. Contains the resulting status and returned headers.
 * `sentCtrlMsg` - triggered whenever the client sends a control message to the server.
 * `sentMsg` - triggered whenever the client sends a standard message to the server.
 * `serverShutdown` - triggered when the Node-RED server sends a shutdown control msg to the client. This happens before Node-RED actually shuts down. No data is returned to the callback in this case.
@@ -167,11 +184,17 @@ The list of accessible, pre-defined variables is provided on the [uibuildefe-js 
 
 uibuilderfe has a number of helper functions that are aimed at making life easier for the author of a web UI.
 
+<!-- ### `autoMap` -->
+
 ### `autoSendReady` Turn on/off the ready for content control msg
 
 Turns on/off the "ready for content" control message that is normally sent back to Node-RED on window.load
 
 Set to false early in the processing if you want to get control over when Node-RED sends you data.
+
+### `clearEventListeners` Forcibly removes all event listeners from the events array
+
+Use if you need to re-initialise the environment.
 
 ### `debug` Turn on/off debugging console messages
 
@@ -236,7 +259,7 @@ Get the value of a variable inside the library.
 
 Note that the get function protects private variables preventing easy access. This is not a security function since JavaScript has no mechanism for completely protecting private variables.
 
-### `logon` Send a logon (authentication) control request to Node-RED
+<!-- ### `logon` Send a logon (authentication) control request to Node-RED
 
 Sends a specially formatted control msg back to Node-RED (output port 2 of the node). This is processed internally by uibuilder. A response control msg is sent back that determines whether the logon request was successful. If it was, the `isAuthorised` variable is changed to either true or false.
 
@@ -261,7 +284,7 @@ Sends a specially formatted control msg back to Node-RED (output port 2 of the n
 
 A response msg is sent back that determines whether the logoff request was successful. If it was, the `isAuthorised` variable is changed to either true or false.
 
-Once uibuilderfe recieves confirmation that the logoff was successful, it automatically clears the internal `authData` data object.
+Once uibuilderfe recieves confirmation that the logoff was successful, it automatically clears the internal `authData` data object. -->
 
 ### `me` Return uibuilder info
 
@@ -302,6 +325,16 @@ The library will add some standard properties to the message so you only need to
 Set a variables value inside the library. Also creates an event that can be subscribed to using the `onChange` function.
 
 Note that the set function protects private variables and prevents the overwriting of internal function names.
+
+### `setOriginator` Sets an originating node ID
+
+Manually sets the default originator node id. Not generally required since the uib-sender node will set the originator automatically in the message it sends and this will be used by the fe. However, might be useful if you want to return a msg to a specific node. However, the node would need to be a custom node that recognises it otherwise, you would need to route the msg yourself in your flow.
+
+### `setPing` Check if Node-RED/uibuilder server is alive, may be used to trigger session extensions
+
+Calling without an argument or with it set to `0` (zero), will cancel any repeating pings and will send an individual ping to the uibuilder ping URL. With a non-zero argument, will repeatedly ping every n milliseconds.
+
+You can use this to check whether the uibuilder web server is alive. It could also be used to automatically extend a client security session (via an external proxy or via the ExpressJS uibuilder custom middleware function). It also returns some data including the HTTP status number and the server response headers. So it can be a useful way to obtain the ExpressJS server response headers.
 
 ### `showComponentDetails` (VueJS only) Return a control msg contining details of a Vue component
 

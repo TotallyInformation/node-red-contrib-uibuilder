@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2022-04-01 17:54:21
+lastUpdated: 2022-04-02 14:36:14
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -17,20 +17,22 @@ Please note that I no longer have the time to monitor the #uibuilder channel in 
 The purpose of uibuilder is to:
 
 * Support an easy method for creating and delivering data-driven web apps.
-* Be a conduit between Node-RED and a front-end (browser) UI web app.
+* Be a conduit between Node-RED and front-end (browser) UI web apps.
 * Be UI framework agnostic. While VueJS is often used with uibuilder, it isn't a necessary dependency. Indeed no framework will be needed to use uibuilder.
 * Provide interface/data standards for exchanging data and controls with the UI.
+* Enable the creation and management of multiple web apps from a single Node-RED instance.
 
 The core features of uibuilder:
 
 * Provide a 2-way communications channel between the Node-RED server (back-end) and front-end UI code.
 * Provide a Node-RED node to act as the focus for communications.
-* Provide a front-end library to do the complex parts of the communications.
-* Provide templates for front-end code to enable people to get a quick start on creating web apps.
+* Provide a front-end library to do the complex parts of the communications in the client browser.
+* Provide easy to use templates for front-end code to enable people to get a quick start on creating web apps.
 * Allow management and serving of npm packages that provide front-end libraries consumable easily by front-end code.
 * Allow editing of front-end code (designed for small changes, use web development tools generally).
+* Enable the use of external authentication and authorisation methods and services to control multi-user access to web apps.
 
-The general direction of uibuilder (or associated modules) is likely to include:
+The general direction of uibuilder (or associated modules) that I would like to see includes:
 
 * A set of extension front-end components with well defined (reusable) data schemas for doing common UI tasks. The defined data schema's would cover both the component content and configuration data so that both could be sent from Node-RED via uibuilder and any return data structures would similarly be well defined.
 * A capability to have configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code.
@@ -57,7 +59,8 @@ Next immediate focus will be on:
 * Enabling instance npm scripts to be run from the Editor.
 * Displaying and enabling updatable packages in the package manager.
 * Enable templates to provide examples to the Node-RED example library.
-* Add *option* to auto-install npm dependencies on change of Template.
+* Add *option* to auto-install npm dependencies on change of Template (and possibly run an install script).
+* Creating and sharing some example Web Components and probably some Svelte components to make data-driven UI's even easier to create.
 
 If you would like to contribute to any of these future features, please get in touch via the Node-RED forum or GitHub so that we can plan things out.
 
@@ -65,7 +68,7 @@ If you would like to contribute to any of these future features, please get in t
 
 * Creating W3C web components to replace the VueJS ones - especially for the ones baked into the fe code. Noting that v5 already contains a non-Vue toast notification feature.
 * Creating usable components that have standardised data interfaces. So that other developers can produce similar outputs with different frameworks but the data that is exchanged with Node-RED remains the same. These components should make things easy that flow designers might typically want to do (notifications, forms, charts, tables, drag-and-drop, etc.)
-* Creating a visual layout generator to bridge the gap between uibuilder and Dashboard. Ideally this would be non-framework specific but this seems a very unlikely goal to hit. Would be happy for this to either use web components or VueJS. Svelte might also be acceptable.
+* Creating a visual layout generator to bridge the gap between uibuilder and Dashboard. Ideally this would be non-framework specific but this seems a very unlikely goal to hit. Would be happy for this to either use web components, Svelte or VueJS.
 * Possibly the addition of a `uib-dashboard` node that uses data-driven composition. As a half-way house between code-driven and visual-layout approaches.
 
 ---
@@ -81,19 +84,25 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### General
 
-* **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views
+* **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 
-  Maybe set as optional with flag? Allow choice of render engine? Only render .ejs files instead of .html?
+  Currently available by adding the appropriate ExpressJS option in settings.js.
 
 * Client sends request for replay after disconnection even though the tab wasn't closed. Need a way to know if the page still has data but was disconnected for a while.
   
 * Publish `uibuilderfe` on `../uibuilder/` as well as on `./` for greater consistency with other paths.
 
-* Allow client id to be set externally.
+* Allow client id to be set externally. Add Editor option to turn on client id and/or client IP address in standard msgs not just control msgs.
+* ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
+* Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
 
 * Use [chokidar](https://github.com/paulmillr/chokidar) to send a control msg to the fe when files change. Change the front-end to allow the browser to automatically reload (location.reload()). Put everything behind an optional flag and don't load the chokidar library unless the flag is set. May want an auto-rebuild feature as well.
 
-* Add package.json `style` property to Instance details page and packages list if it exists. Make sure that `browser` is prioritised over `main`.
+* Add package.json `style` property to Instance details page and packages list if it exists.
+
+* Add Web Reporting API endpoint(s). Set a header to tell the client where to report to. Reports are JSON and so could be directed out of port 2 as a new control msg type. See https://web.dev/reporting-api/ & https://developer.mozilla.org/en-US/docs/Web/API/Reporting_API.
+
+* Add Notifications API support. See https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API & https://developer.mozilla.org/en-US/docs/Web/API/notification.
 
 * See if typedefs.js can be migrated to index.d.ts.
 
@@ -105,14 +114,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
 
-* Introduce standard events: url-change
+* Introduce standard events: url-change (so that all uib related nodes can be notified if a uib endpoint changes url).
 
 * Switch uibindex to use new CSS instead of bootstrap. Also change "User-Facing Routes" to "Client-Facing Routes".
   
-* Add client id to standard msgs not just control ones. (optional?)
-* ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
-* Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
-
 * Add a standard logging fn to uibuilderfe - allow that to return log statements back to Node-RED via control msgs.
 
 * Retain logon/logoff control msgs but direct to fns in external security.js file (which should allow call from both express and socket.io).
@@ -123,6 +128,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Editor (`uibuilder.html`)
 
+* Add all local package.json script entries as links/buttons so they can be run from the editor panel.
+  * If `dev` script discovered in local package.json scripts, enable a dev button so that a CI dev service can be spun up (e.g. Svelte). Will need debug output to be visible in Editor?
+* Show Socket.io server & client versions
 * Show template (instance root) folder
 * Extend folder/file management
   * Add the `common` folder to the file editor.
@@ -132,14 +140,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
 * When a template changes, optionally install required front-end packages. Probably use a new property in package.json - note, don't use the dependencies property as these are for local dependencies not for packages that uibuilder will make available to the front-end via ExpressJS. Or possibly make this a button for easy install?
 * Allow custom locations for delivery folder (normally `src/` or `dist/`) and for api's folder (normally `api/`)
+  * Allow the use of `public` as well as `src` and `dist`. Svelte outputs to the public folder by default. Also add warnings if no index.html file exists in the folder in use.
 * Method to show output from npm package handling.
-* Add all local package.json script entries as links/buttons so they can be run from the editor panel.
 * Add a reminder to the Editor help about examples. Add an onclick to that <a> icon that calls RED.actions.invoke('core:show-import-dialog'); as a quick action to get the user to the import dialog. See [here](https://discourse.nodered.org/t/documentation-example-flows-for-contributed-nodes/44198/2?u=totallyinformation) for more info.
-* If `dev` script discovered in local package.json scripts, enable a dev button so that a CI dev service can be spun up (e.g. Svelte). Will need debug output to be visible in Editor?
 * Add optional plugin displaying drop-down in Editors header bar - listing links to all deployed uib URLs. See example: https://github.com/kazuhitoyokoi/node-red-contrib-plugin-header
-* Allow the use of `public` as well as `src` and `dist`. Svelte outputs to the public folder by default. Also add warnings if no index.html file exists in the folder in use.
 * If instance folder doesn't exist - need to mark node as changed to force deploy.
-* Show Socket.io server version
 * Introduce standard events: url-change
 
 ### Front-End Changes (`uibuilderfe.js`)
@@ -260,6 +265,46 @@ These are some thoughts about possible future direction. They need further thoug
 * Look at the possibility of using https://www.cypress.io/ to automate some front-end and Editor testing.
 
 
+---
+
+## Possible Components
+
+These would be Web and/or Svelte and/or VueJS components that could work stand-alone but would have additional smart features dedicated to uibuilder.
+Their purpose being aimed at ensuring ever easier composition of data-driven UI's.
+
+### Component Requirements
+
+All components:
+
+* Must have default data schema's defined to allow creation as well as update from a uibuilder message.
+* Must not rely on uibuilder and must work without it. But should recognise uibuilder's presence and make life easier if so.
+* They should include any optional labels and other "chrome" and so stand alone.
+* They must be at least WAI-AA compatible and include Aria markup.
+* They must include "slots" to allow nested content.
+
+### Wanted Components List
+
+* `http-loader` - Loads arbitary HTML snippets or JSON data into a web app. Basics already complete using pure Web Component.
+
+* `syntax-highlight` - Produces an HTML formatted representation of JSON or JavaScript Object data.  Basics already complete using pure Web Component.
+
+* `simple-switch` - https://web.dev/building-a-switch-component/
+
+* `simple-button` - 
+
+* `simple-table` - Allow passing of array of objects. Allow separate but optional column definition array/object with additional formatting/metadata. Allow caption. Only contains 1 `tbody` and 1 `thead`. Optional `tfoot`. If no col definition array given, use the first entry of the data array. If data is an object, use the property name as an ID column.
+
+* `simple-list` - Passed an array of objects, 1 list entry per array entry. Allow `type` of "ol" or "ul". Allow for entry ID to enable dynamic replacement and sorting.
+
+* `definition-list` - As for simple-list but each data entry would be an object `{term: "....", definition: "...."}`.
+
+* `simple-select` - 
+
+* `multi-select` - https://web.dev/building-a-multi-select-component/
+
+* `progress-bar` - https://web.dev/building-a-loading-bar-component/
+
+* `full-table` - As for simple-table but allowing more complex headers, search/filter, sort, multiple tbody's, multiple header rows and col groups, nested tables, table edit.
 
 
 ----

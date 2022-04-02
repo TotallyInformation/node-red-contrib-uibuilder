@@ -6,35 +6,17 @@ typora-root-url: docs/images
 
 ## To do/In-progress
 
-[Check Deepscan for code quality](https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=522282&prid=&subview=issues&impact=%5B%22High%22%2C%22Medium%22%2C%22Low%22%5D&page=1)
-
 Check the [roadmap](./docs/roadmap.md) for future developments.
-
-* FIXES NEEDED:
-  * [ ] Package Mgt: Check that package.json browser prop is a string not an object (see vgauge for example).
-
-* DOC UPDATES NEEDED:
-  * Extra cookie for nodeRoot
-  * Add note about [default msg size](https://github.com/socketio/socket.io/issues/3946#issuecomment-850704139)
-  * Update custom express settings
-  * Finish NGINX docs
-  * web.js
-    * Variables:
-      * uib.customServer.isCustom
-  * FE
-    * Event list
-    * Variables:
-      * self.storePrefix 
-    * Functions:
-      * self.setStore
-
-
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.0...main)
 
-<!-- Nothing currently. -->
+Nothing currently.
+
+## [v5.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...v5.0.0)
+
+**WARNING**: v5 is a very major release and WILL break some deployments. Please check through the changes before deploying. In most cases, opening each uibuilder node in the Node-RED Editor, clicking Done and re-deploying will be enough.
 
 ### BREAKING
 
@@ -79,6 +61,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   In particular, the `masterPackageList.json` and `packageList.json` files are no longer needed or used and should be deleted.
 
 * **URL cannot be "uibuilder"** - As this url is now used by various services, allowing it would potentially create name clashes and hard to debug errors. If you have an endpoint named "uibuilder", please rename it to prevent problems.
+
+* **Clear any old cookies** - Cookie handling has changed for v5 (see the details below). New cookies are clearer and last only for the current browser tab session. You should clear out any old cookies that have been saved by your browser for each uibuilder app URL.
 
 * **Minimum Node.js version supported is now v12.20**. Minimum browser version remains the same and must be one that supports ES6.
 
@@ -198,9 +182,11 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Changed
 
-* Cookie handling has changed for the better. There are 3 cookies set by uibuilder: `uibuilder-namespace` (what SockeT.IO needs to communicate), `uibuilder-client-id` (see new features above), and `uibuilder-webRoot` (if you are using `httpNodeRoot` in settings.js). Each is set as a session cookie which means that if you close the window/tab showing your UI, the cookies are deleted. However, if you are being super-strict about EU and California law, you should inform your users that they exist. The cookies are limited to the exact path for the uibuilder instance they come from so there shouldn't be any cross-contamination. However, you should clear any old cookies when upgrading to uibuilder v5 from v4 or before.
+* Cookie handling has changed for the better. There are 3 cookies set by uibuilder: `uibuilder-namespace` (what SockeT.IO needs to communicate), `uibuilder-client-id` (see new features above), and `uibuilder-webRoot` (if you are using `httpNodeRoot` in settings.js). Each is set as a session cookie which means that if you close the window/tab showing your UI, the cookies are deleted. However, if you are being super-strict about EU and California law, you should inform your users that they exist. The cookies are limited to the exact path for the uibuilder instance they come from so there shouldn't be any cross-contamination. However, you should clear any old cookies when upgrading to uibuilder v5 from v4 or before. The cookies do not capture or share any client data and they cannot be used for tracking.
 
   Custom headers are also added by uibuilder. These are only accessible via XHR API calls, not by uibuilderfe itself. `x-powered-by` (set to `uibuilder`), `uibuilder-namespace`, and `uibuilder-node` (the node id of the uibuilder node). In addition, uibuilder sets `X-XSS-Protection` to `1;mode=block` and `X-Content-Type-Options` to `nosniff` for added security. You can, of course, override all of these using custom middleware.
+
+  The addition of the `uibuilder-webRoot` cookie should now mean that you very rarely need to pass startup parameters (except for the Vue app) to `uibuilder.start()` as the library should now be able to work everything out for itself.
 
 * uibuilder nodes now show the url in angle-brackets. If the url is not defined, `<no url>` shows. If the node has a name, this is shown before the url. e.g. `My UI <myui>`. If you want to have the url show on a different line to the name, add ` \n ` to the end of the name.
 

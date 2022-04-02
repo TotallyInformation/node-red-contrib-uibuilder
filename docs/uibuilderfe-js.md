@@ -3,7 +3,7 @@ title: Developer documentation for the `uibuilderfe.js` library
 description: >
    This is the uibuilder front-end library. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions.
 created: 2019-05-25 19:05:00
-lastUpdated: 2022-01-03 17:14:33
+lastUpdated: 2022-04-02 16:44:14
 ---
 
 For user documentation, please refer to the [Working with the uibuilderfe Library](front-end-library) page.
@@ -59,7 +59,7 @@ It is very rare, if ever, that you will need to manually `get` any of these apar
 * `clientId` {string} Client UUID set by uibuilder (a client is a browser window).
 
 * `cookies` {Object} Parsed cookies set by uibuilder (and possibly other things on the same server).
-  uibuilder uses 2 cookies: `uibuilder-namespace` and `uibuilder-client-id`.
+  uibuilder uses 3 cookies: `uibuilder-namespace`, `uibuilder-webRoot`, and `uibuilder-client-id`.
 
 * `ctrlMsg` {Object} Copy of last control msg object received from sever
 
@@ -104,6 +104,7 @@ These are unlikely to be needed externally but can be accessed:
 These are only accessible from within the library.
 
 * `events` Holds an array of event callbacks for the event management system
+* `storePrefix` Used by the internal `setStore` function to prefix any local storage keys helping prevent name clashes.
 
 ## Public Methods
 
@@ -134,6 +135,8 @@ These are not available to users via `uibuilder.xxxx()`. They can only be access
 * `set` Set any internal variable. Also updates the event system.
 
 * `setIOnamespace` Attempt to work out the correct socket.io namespace based on the current URL. Only works if the containing HTML page is in the root URI for the uibuilder instance. Otherwise, you have to override this manually - see the `start` public variable.
+
+* `setStore` Write to browser local storage if possible. Uses the `self.storePrefix` variable to prefix any name to help avoid name clashes. Will output console error messages and return `false` but not crash if it cannot write to the store. If successful, returns `true`.
 
 * `uiDebug` Controllable console output. If the debug variable is true, this will output to console.
 

@@ -6,6 +6,8 @@ created: 2022-02-21 13:05:38
 lastUpdated: 2022-02-21 13:05:42
 ---
 
+!> Status: Incomplete
+
 Please read the [Securing uib web apps](security.md) and [Securing apps using NGINX](uib-security-nginx.md) pages before trying this configuration.
 
 !> This is not offered with any kind of guarantee or warrantee that it will be secure or even whether it will work. It merely offers some suggestions that you may wish to look at.
