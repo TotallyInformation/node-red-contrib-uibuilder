@@ -642,6 +642,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
              */
         } // ---- End of ioSetup ---- //
         
+        //#region ==== Security Functions ==== //
+
         /** Mark client as logged off & delete local auth data
          * @param {string=} localReason Optional, give a reason for logoff, will be placed in self.authData
          * @param {_auth=} _auth Data from server, uses self._auth if not provided
@@ -866,6 +868,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         //         return undefined
         //     }
         // } // ---- End of addAuth ---- //
+
+        //#endregion ==== Security Functions ==== //
 
         /** Set the default originator. Set to '' to ignore. Used with uib-sender.
          * @param {string} [originator] A Node-RED node ID to return the message to
@@ -1516,7 +1520,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
              */
             onChange: self.onChange,
 
-            /** Forcably removes all event listeners from the events array
+            /** Forcibly removes all event listeners from the events array
              * Use if you need to re-initialise the environment
              */
             clearEventListeners: self.clearEventListeners,
@@ -1707,7 +1711,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             },
 
             /** auto map msg.topic's to variables */
-            automap: self.automap,
+            //automap: self.automap,
 
             /** Ping/keep-alive */
             setPing: self.setPing,
