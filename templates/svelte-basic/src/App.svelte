@@ -9,7 +9,7 @@
 	// These are "props" - variables that can be used in a parent component when mounting this component & used in the UI
 	export let uibsend
 	export let nrMsg = ''
-	export let myGreeting = 'Hello there from App.svelte!'
+	export let myGreeting = 'Hello there from App.svelte! Send me a msg containing msg.greeting to replace this text.'
 	// Defined in main.js
 	export let anotherProp = '--'
 
