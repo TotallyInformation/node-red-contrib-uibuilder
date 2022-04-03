@@ -17,17 +17,22 @@ So for simplicity and speed of development, if a build step can be avoided, you 
 
 ## How to avoid a build step
 
-The main reasons why a build step may be needed is because your front-end code contains statements that the users browser will not understand. This may be because the code is something specific to your chosen front-end library (e.g. VueJS, REACT, etc.) or it may be that the example code you have picked up uses a new version of JavaScript than your browser supports.
+The main reasons why a build step may be needed:
 
-For the second of those, you can try loading the page in one of the browser types your users will have and see what errors you get. Then you may well be able to code those out.
+* Your front-end code contains statements that the users browser will not understand because the example code you have picked up uses a new version of JavaScript than your browser supports.
+* Your chosen front-end framework requires a build in order to work (e.g. Svelte or REACT).
 
-For the first of the issues, in order to avoid a build step, you will need a version of the front-end library that contains a dynamic build feature. Of the various popular libraries, only VueJS contains such a version as far as I know, see the WIKI links below for more details.
+For the first of those, you can try loading the page in one of the browser types your users will have and see what errors you get. Then you may well be able to code those out.
+
+For the second issue, in order to avoid a build step, you will need a version of the front-end library that contains a dynamic build feature. Of the various popular libraries, only VueJS contains such a version as far as I know, see the WIKI links below for more details. However, there are some frameworks that don't need a build such as [AlpineJS](https://alpinejs.dev/), or [petite-vue](https://github.com/vuejs/petite-vue).
 
 The final reason for possbibly wanting a build-step is for performance improvements.
 
 If you do need to use a build step, please see the [Front-End Build Steps and Tools page](front-end-builds).
 
 ## More Information
+
+### VueJS
 
 * [Dynamically load .vue files without a build step [uibuilder WIKI]]( https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Dynamically-load-.vue-files-without-a-build-step)
 * [Load Vue components without a build step (modern browsers only) [uibuilder WIKI]](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Load-Vue-components-without-a-build-step-(modern-browsers-only))
