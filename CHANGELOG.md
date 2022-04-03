@@ -8,6 +8,11 @@ typora-root-url: docs/images
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+#### Fixes Needed
+
+* [ ] uibindex page: Configuration Files section needs updating.
+* [ ] Check Deepscan issues. https://deepscan.io/dashboard#view=project&tid=13157&pid=16160&bid=340901
+
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.0...main)

@@ -241,7 +241,13 @@ These are some thoughts about possible future direction. They need further thoug
 ### Editor (`uibuilder.html`)
 
 * Move folder management to a popup dialog (to save vertical space)
-  
+
+### Front-end library (`uibuilderfe.js`)
+
+* Extend script loading to allow dynamic loading of external scripts from user code
+* Add ability to dynamically load external html from user code
+* Allow uibuilderfe script tag to have parameters specifying namespace and url prefix. See [here](https://stackoverflow.com/questions/5292372/how-to-pass-parameters-to-a-script-tag)
+
 ### uib-sender Node
 
 * Allow multi-instance sending - send to multiple uibuilder nodes.
