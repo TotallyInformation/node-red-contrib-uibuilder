@@ -88,6 +88,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
   Currently available by adding the appropriate ExpressJS option in settings.js.
 
+* uibindex page: Configuration Files section needs updating.
+* 
 * Client sends request for replay after disconnection even though the tab wasn't closed. Need a way to know if the page still has data but was disconnected for a while.
   
 * Publish `uibuilderfe` on `../uibuilder/` as well as on `./` for greater consistency with other paths.
@@ -119,8 +121,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Switch uibindex to use new CSS instead of bootstrap. Also change "User-Facing Routes" to "Client-Facing Routes".
   
 * Add a standard logging fn to uibuilderfe - allow that to return log statements back to Node-RED via control msgs.
-
-* Retain logon/logoff control msgs but direct to fns in external security.js file (which should allow call from both express and socket.io).
 
 * Add settings.js options to use different paths/names for middleware files.
 
@@ -199,6 +199,7 @@ These are some thoughts about possible future direction. They need further thoug
 * Add HTML loader & Syntax Highlight web components.
 * Add `uibuilder` prop to `<uibInstanceRoot>/package.json`
   * `uibuilder.loader` - an array of folder paths - relative to `<uibInstanceRoot>` that would be served using uibuilder's ExpressJS web server. Allowing instance-specific front-end resources. To be used by things like components.
+  * `uibuilder.scripts.deploy` - pointing to node.js file to run when the template is deployed.
 * Add new node to specify component instances to add to the UI. Would need to auto-cache. Will need a way to specify settings - as these will be different for different components - sucggest making this JSON to begin with. Needs a way to know what components are available for a uib instance. Components should specify their settings and provide a default json settings file. Might be able to use JSON Schema? See New Nodes section below.
 * Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
   * Update docs
@@ -208,9 +209,8 @@ These are some thoughts about possible future direction. They need further thoug
 * Add optional sidebar displaying list of all uib URLs (and link to nodes).
 * Create some [HTML Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements) to extend uib for modern browsers. Maybe replace Vue toast component for example?
 * Trial use of [web-workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) since majority support goes back to 2014.
-* Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's
 * Add support for HTTP/2 with auto-push. See [http2-express-autopush - npm](https://www.npmjs.com/package/http2-express-autopush)
-* Consider changing my custom event handler in uibuilderfe.js to use a dummy html element never attached to the dom. This then inherits the JS event hander capabilities.
+* Consider changing my custom event handler in uibuilderfe.js to use the `document` DOM element. This then inherits the JS event hander capabilities.
 * Allow transfer of files via Socket.IO. https://stackoverflow.com/a/59224495/1309986
 
 ### Core (`uibuilder.js`)
@@ -219,7 +219,6 @@ These are some thoughts about possible future direction. They need further thoug
 * add in/out msg counts to status? Maybe as an option.
 * Add option to turn on/off connect/disconnect control msgs
 * On change of URL - signal other nodes? As no map currently being maintained - probably not possible
-* 
 
 ### Templates
 

@@ -10,14 +10,22 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 #### Fixes Needed
 
-* [ ] uibindex page: Configuration Files section needs updating.
-* [ ] Check Deepscan issues. https://deepscan.io/dashboard#view=project&tid=13157&pid=16160&bid=340901
-
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.0...main)
 
 Nothing currently.
+
+## [v5.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.0...v5.0.1)
+
+Bug fixes only.
+
+### Fixed
+
+* When no settings.js:uibuilder property exists, initial report doesn't have ip/port. Also get `(node:2888) [DEP0118] DeprecationWarning: The provided hostname "undefined" is not a valid hostname, and is supported in the dns module solely for compatibility.` as well as `http://null:undefined or http://localhost:undefined/`
+  
+  Fixes applied to uibuilder.js and web.js
+
 
 ## [v5.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v4.1.1...v5.0.0)
 

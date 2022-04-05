@@ -189,19 +189,20 @@ class UibWeb {
         const RED = this.RED
         const log = this.log
 
-        // Try to find the external LAN IP address of the server
-        require('dns').lookup(uib.customServer.hostName, function (err, add) {
-            if ( err ) {
-                log.error('[uibuilder:web.js:_websetup] DNS lookup failed.', err)
-            }
+        // For custom server only, Try to find the external LAN IP address of the server
+        if ( uib.customServer.isCustom === true ) {
+            require('dns').lookup(uib.customServer.hostName, function (err, add) {
+                if ( err ) {
+                    log.error('[uibuilder:web.js:_websetup] DNS lookup failed.', err)
+                }
 
-            uib.customServer.host = add
+                uib.customServer.host = add
 
-            if ( uib.customServer.isCustom === true )
                 log.trace(`[uibuilder:web:webSetup] Using custom ExpressJS server at ${uib.customServer.type}://${add}:${uib.customServer.port}`)
-            else
-                log.trace(`[uibuilder:web:webSetup] Using Node-RED ExpressJS server at ${uib.customServer.type}://${add}:${RED.settings.uiPort}`)
-        })
+            })
+        } else {
+            log.trace(`[uibuilder:web:webSetup] Using Node-RED ExpressJS server at ${RED.settings.https?'https':'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${uib.nodeRoot === '' ? '/' : uib.nodeRoot}`)
+        }
 
         /** We need an http server to serve the page and vendor packages. The app is used to serve up the Socket.IO client.
          * NB: uib.nodeRoot is the root URL path for http-in/out and uibuilder nodes 
@@ -504,24 +505,20 @@ class UibWeb {
             const requestedView = path.parse(req.path)
             let filePath = path.join(pathRoot, requestedView.base)
 
-            this.app.set('foo', 'bar') //! TODO - remove
+            //this.app.set('foo', 'bar') //! TODO - remove
 
             if (this.app.get('view engine')) {
                 filePath = path.join(pathRoot, `${requestedView.name}.ejs`)
                 if (fs.existsSync(filePath)) {
                     // console.log('>> render >>', requestedView.name, filePath) //! TODO - remove
-                    // TODO Remove test options
                     try {
-                        res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
+                        //res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
+                        res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {_env: node.context().global.get('_env')} )
                     } catch (e) {
                         res.sendFile( requestedView.base, { root: pathRoot } )
                     }
                     return
-                } //! TODO else look for a .html version and sendFile it if found
-            } else if (fs.existsSync(filePath)) { // filePath set above if statement
-                // console.log('>> sendFile >>', req.path, requestedView, filePath) //! TODO - remove
-                res.sendFile( requestedView.base, { root: pathRoot } )
-                return
+                }
             }
             return next()
         }) // --- End of render views --- //

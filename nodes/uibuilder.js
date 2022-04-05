@@ -130,16 +130,17 @@ function runtimeSetup() {
     RED.events.on('runtime-event', function(event) {
         if (event.id === 'runtime-state' && initialised === false ) {
             initialised = true
+            const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
             RED.log.info('+-----------------------------------------------------')
             RED.log.info(`| ${uib.moduleName} v${uib.version} initialised`)
             RED.log.info(`| root folder: ${uib.rootFolder}`)
             if ( uib.customServer.isCustom === true ) {
                 RED.log.info('| Using custom ExpressJS webserver at:')
+                RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
             } else {
                 RED.log.info('| Using Node-RED\'s webserver at:')
+                RED.log.info(`|   ${RED.settings.https?'https':'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
             }
-            const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
-            RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
             RED.log.info('| Installed packages:')
             const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
             for (let i = 0; i < pkgs.length; i+=4) {
@@ -165,6 +166,9 @@ function runtimeSetup() {
         if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName) 
     }
 
+    // Record the httpNodeRoot for later use
+    uib.nodeRoot = RED.settings.httpNodeRoot
+
     // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uib
     if ( RED.settings.uibuilder ) {
         const settings = RED.settings.uibuilder
@@ -176,8 +180,6 @@ function runtimeSetup() {
 
         // Get web-relavent uibuilder settings from settings.js
         uib.customServer.port = Number(RED.settings.uiPort)
-        // Record the httpNodeRoot for later use
-        uib.nodeRoot = RED.settings.httpNodeRoot
         // Note the system host name
         uib.customServer.hostName = require('os').hostname()
         /** HTTP(s) port. If set & different to node-red, uibuilder will use its own ExpressJS server */
