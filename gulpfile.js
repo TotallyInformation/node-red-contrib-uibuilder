@@ -58,7 +58,7 @@ const stdio = 'inherit'
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 
 //npm version 4.2.1 --no-git-tag-version --allow-same-version
-const release = '5.0.0'
+const release = '5.0.1'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}`)
 
