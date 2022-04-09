@@ -275,9 +275,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region - Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
         /** httpNodeRoot (to set path) */
-        if ( self.cookies['uibuilder-webRoot'] )
-            self.httpNodeRoot = self.cookies['uibuilder-webRoot']
-        else {
+        if ( 'uibuilder-webRoot' in self.cookies ) {
+            self.httpNodeRoot = self.cookies['uibuilder-webRoot'] 
+        } else {
             // split current url path, eliminate any blank elements and trailing or double slashes
             var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
             /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
@@ -585,7 +585,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             // Socket.io connection error - probably the wrong ioPath
             self.socket.on('connect_error', function onConnectErr(err) {
-                console.error( '[uibuilderfe:ioSetup:connect_error] SOCKET CONNECT ERROR - Namespace: ' + self.ioNamespace + ' ioPath: ' + self.ioPath + ', Reason: ' + err.message)
+                console.error( `[uibuilderfe:ioSetup:connect_error] SOCKET CONNECT ERROR - Namespace: ${self.ioNamespace}, ioPath: ${self.ioPath}, Reason: ${err.message}`, err)
             }) // --- End of socket connect error processing ---
             
             // Socket.io error - from the server (socket.use middleware triggered an error response)
