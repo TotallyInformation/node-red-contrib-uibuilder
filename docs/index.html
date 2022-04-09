@@ -50,6 +50,24 @@
             content: "uibuilder v5 docs";
             float:right;
         }
+        img[alt$=">"] {
+            /* use as ![image alt >](/image-right.jpg) */
+            float: right;
+            max-width: 20%;
+        }
+        img[alt$="<"] {
+            float: left;
+        }
+        img[alt$="><"] {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: auto;
+            float: none!important;
+        }
+        .callout {
+            max-width: 50%; 
+        }
     </style>
 </head><body>
     <div id="app">Loading, please wait ...</div>
