@@ -2,6 +2,7 @@
 * Using uibuilder
   * [A first-timers walkthough of using uibuilder](walkthrough1.md)
   * [Creating data-driven web apps](web-app-workflow.md)
+  * [Configuring uibuilder nodes](uib-node-configuration.md)
   * [Configuring uibuilder](uib-configuration.md)
   * [Changing the root folder (uibRoot)](changing-uibroot.md)
   * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
@@ -10,6 +11,7 @@
   * [How to use instance API's](instance-apis.md)
 * Developing UI's
   * [The uibuilderfe library](front-end-library.md)
+  * [Creating Templates](creating-templates)
   * [Browser auto-refresh](browser-refresh.md)
   * [Avoiding a build step](front-end-no-build.md)
   * [Optimise & transpile (build)](front-end-builds.md)
