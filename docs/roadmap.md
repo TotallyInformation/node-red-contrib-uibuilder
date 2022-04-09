@@ -75,21 +75,31 @@ If you would like to contribute to any of these future features, please get in t
 
 ## In Progress
 
-To see what is currently being developed, please look at the "Unreleased" section of the [Changelog](changelog) and the GitHub [What's Next/In Progress Project](https://github.com/TotallyInformation/node-red-contrib-uibuilder/projects/1).
-
+To see what is currently being developed, please look at the "Unreleased" section of the [Changelog](changelog)
 
 ----
 
-## Ideas based on v5/vNext development
-
-### General
+## Next
 
 * **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 
   Currently available by adding the appropriate ExpressJS option in settings.js.
 
-* uibindex page: Configuration Files section needs updating.
-* 
+* Editor:Libraries: Change "URL to use:" to "Estimated link:". Add link to the estimated url - can use the same url prefix of the Core button+the relative url tacked onto the end. Look at how to add a link to the folder - maybe click to copy to clipboard 📋.
+
+* Add note to documentation for the library manager that you can install LOCAL folders.
+
+* Editor:
+  * Creating new folder - new folder should be selected after create.
+  * Add link to [Configuring uibuilder nodes](uib-node-configuration.md) page.
+
+* Documentation
+  * Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
+
+## Ideas based on v5/vNext development
+
+### General
+
 * Client sends request for replay after disconnection even though the tab wasn't closed. Need a way to know if the page still has data but was disconnected for a while.
   
 * Publish `uibuilderfe` on `../uibuilder/` as well as on `./` for greater consistency with other paths.
@@ -212,6 +222,7 @@ These are some thoughts about possible future direction. They need further thoug
 * Add support for HTTP/2 with auto-push. See [http2-express-autopush - npm](https://www.npmjs.com/package/http2-express-autopush)
 * Consider changing my custom event handler in uibuilderfe.js to use the `document` DOM element. This then inherits the JS event hander capabilities.
 * Allow transfer of files via Socket.IO. https://stackoverflow.com/a/59224495/1309986
+* Allow switch of log.trace to log.info for advanced debugging (would need new switch in Editor or setting in settings.js:uibuilder)
 
 ### Core (`uibuilder.js`)
 

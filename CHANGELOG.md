@@ -27,8 +27,19 @@ Nothing currently.
 
 * Tech Docs sidebar menu:
   * Link to beginners walkthrough document added to Tech Docs sidebar.
-  * Add link icons to external pages
-  * Remove redundant link to GitHub project page
+  * Add link icons to external pages.
+  * Remove redundant link to GitHub project page.
+
+* uibindex page: 
+  * Changed to use new CSS (light/dark enabled).
+  * Configuration Files section needs updating.
+  * Further improvements and tweaks.
+
+* Tech Docs updates
+  * NEW PAGE: Configuring uibuilder nodes [incomplete]
+  * NEW PAGE: Creating Templates [incomplete]
+  * Updates for Configuring uibuilder page
+
 
 ## [v5.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.0...v5.0.1)
 

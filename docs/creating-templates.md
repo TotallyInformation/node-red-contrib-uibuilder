@@ -7,3 +7,5 @@ lastUpdated: 2022-04-09 19:06:04
 ---
 
 Tbc.
+
+Some additional information on templates can be found in the [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) page
