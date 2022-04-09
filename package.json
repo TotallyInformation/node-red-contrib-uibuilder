@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Easily create web UI's for Node-RED using any (or no) front-end library. VueJS and bootstrap-vue included but change as desired.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -30,12 +30,12 @@
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/jquery": "^3.5.8",
-    "@types/node": "^14.17.33",
+    "@types/node": "^12.20.47",
     "@types/node-red": "^1.1.1",
     "eslint": "^8.2.0",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^6.2.0",
-    "eslint-plugin-jsdoc": "^38.1.6",
+    "eslint-plugin-jsdoc": "^39.0.1",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-sonarjs": "^0.13.0",
     "gulp": "^4.0.2",
@@ -74,54 +74,84 @@
   "style": "./front-end/uib-styles.css",
   "types": "index.d.ts",
   "type": "commonjs",
-  "browserslist": ["> 0.5%", "maintained node versions", "last 2 versions", "not dead", "not ie > 0"],
-  "keywords": ["node-red", "ui", "gui", "dashboard", "spa", "web", "website", "data-driven", "webpage"],
+  "browserslist": [
+    "> 0.5%",
+    "maintained node versions",
+    "last 2 versions",
+    "not dead",
+    "not ie > 0"
+  ],
+  "keywords": [
+    "node-red",
+    "ui",
+    "gui",
+    "dashboard",
+    "spa",
+    "web",
+    "website",
+    "data-driven",
+    "webpage"
+  ],
   "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
   "author": {
     "name": "Julian Knight",
     "url": "https://github.com/TotallyInformation"
   },
-  "contributors": [{
-    "name": "Julian Knight",
-    "url": "https://github.com/TotallyInformation"
-  }, {
-    "name": "Colin Law",
-    "url": "https://github.com/colinl"
-  }, {
-    "name": "Steve Rickus",
-    "url": "https://github.com/shrickus"
-  }, {
-    "name": "Ellie Lee",
-    "url": "https://github.com/ellieejlee"
-  }, {
-    "name": "Thomas Wagner",
-    "url": "https://github.com/Thomseeen"
-  }, {
-    "name": "Arlena Derksen",
-    "url": "https://github.com/boisei0"
-  }, {
-    "name": "cflurin",
-    "url": "https://discourse.nodered.org/u/cflurin"
-  }, {
-    "name": "Scott Page - IndySoft",
-    "url": "https://github.com/scottpageindysoft"
-  }, {
-    "name": "Stephen McLaughlin - Steve-Mcl",
-    "url": "https://discourse.nodered.org/u/Steve-Mcl"
-  }, {
-    "name": "Sergio Rius",
-    "url": "https://github.com/SergioRius"
-  }, {
-    "name": "Thorsten von Eicken",
-    "url": "https://github.com/tve"
-  }, {
-    "name": "meeki007",
-    "url": "https://github.com/meeki007"
-  }, {
-    "name": "talltechdude",
-    "url": "https://github.com/talltechdude"
-  }],
+  "contributors": [
+    {
+      "name": "Julian Knight",
+      "url": "https://github.com/TotallyInformation"
+    },
+    {
+      "name": "Colin Law",
+      "url": "https://github.com/colinl"
+    },
+    {
+      "name": "Steve Rickus",
+      "url": "https://github.com/shrickus"
+    },
+    {
+      "name": "Ellie Lee",
+      "url": "https://github.com/ellieejlee"
+    },
+    {
+      "name": "Thomas Wagner",
+      "url": "https://github.com/Thomseeen"
+    },
+    {
+      "name": "Arlena Derksen",
+      "url": "https://github.com/boisei0"
+    },
+    {
+      "name": "cflurin",
+      "url": "https://discourse.nodered.org/u/cflurin"
+    },
+    {
+      "name": "Scott Page - IndySoft",
+      "url": "https://github.com/scottpageindysoft"
+    },
+    {
+      "name": "Stephen McLaughlin - Steve-Mcl",
+      "url": "https://discourse.nodered.org/u/Steve-Mcl"
+    },
+    {
+      "name": "Sergio Rius",
+      "url": "https://github.com/SergioRius"
+    },
+    {
+      "name": "Thorsten von Eicken",
+      "url": "https://github.com/tve"
+    },
+    {
+      "name": "meeki007",
+      "url": "https://github.com/meeki007"
+    },
+    {
+      "name": "talltechdude",
+      "url": "https://github.com/talltechdude"
+    }
+  ],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
