@@ -113,6 +113,7 @@ The general direction of uibuilder (or associated modules) is likely to include:
       - [2.4.1 Using VueJS](#241-using-vuejs)
   - [3. Features](#3-features)
   - [4. Known Issues](#4-known-issues)
+    - [Node-RED Flows Library Scorecard](#node-red-flows-library-scorecard)
   - [5. Discussions and suggestions](#5-discussions-and-suggestions)
   - [6. Contributing](#6-contributing)
   - [7. Developers/Contributors](#7-developerscontributors)
@@ -326,6 +327,14 @@ These are things to be aware of & that I'd like to tidy up at some point.
   You could also work around this by using a proxy such as NGINX or HAproxy to be the TLS endpoint. Just make sure you proxy the websocket traffic as well as the standard web traffic.
 
   See the security documentation for more information.
+
+### Node-RED Flows Library Scorecard
+
+The [scorecard for uibuilder](https://flows.nodered.org/node/node-red-contrib-uibuilder/scorecard#) shows a number of minus points. However, it should be noted that these are somewhat spurious.
+
+* **Node.js Version** - at the time of writing, Node-RED v2.2 states that Node.js v12.0 is the minimum version whereas uibuilder states v12.20. This is because there are some serious bugs and issues in versions of node.js less than v12.18 or so. Specifically, you cannot use dynamic imports on <12.20.0. Really, Node-RED v2.0 should have increased its minimum supported node.js version.
+* **Number of Dependencies** - Scorecard marks this as a warning. However, uibuilder does a LOT for you and so has a higher than average dependency on external modules. At 14, this is still less than some other Nodes. For example, node-red-dashboard shows as only 4 dependencies but really has 28! They don't show because they have been compiled in so only appear as dev dependencies.
+* **Dependencies use latest versions** - uibuilder has a single dependency that does not track current releases. This is `execa`. The latest releases of which only work as a node.js ECMA module. To use this would require significant rewrites of most of uibuilder which isn't feasible. As soon as Node-RED moves to a version of node.js that has a minimum support of node.js v12.20 or above, dynamic imports will work and at that point, execa can be updated because dynamic imports allow an ECMA Module to be called from a CommonJS module.
 
 _[back to top](#contents)_
 
