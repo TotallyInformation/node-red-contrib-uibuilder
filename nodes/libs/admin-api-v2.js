@@ -164,13 +164,16 @@ function chkParamFldr(params) {
 /** uibuilder detailed information page
  * @param {uibConfig} uib Reference to uibuilder's master uib object
  * @param {string} urlPrefix The URL href prefix
- * @param {express.Response} res ExpressJS response object
  * @returns {string} HTML string output
  */
-function detailsPage(uib, urlPrefix, res) {
+function detailsPage(uib, urlPrefix) {
     const RED = uib.RED
     const routes = web.dumpRoutes(false)
     const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
+
+    const uibSummary = JSON.parse(JSON.stringify(uib))
+    delete uibSummary.me
+    delete uibSummary.RED
 
     // Build the web page
     let page = `
@@ -308,16 +311,6 @@ function detailsPage(uib, urlPrefix, res) {
                 <td>Unique path given to Socket.IO to ensure isolation from other Nodes that might also use it</td>
             </tr>
             <tr>
-                <th>uib.masterPackageListFilename</th>
-                <td>${uib.masterPackageListFilename}</td>
-                <td>Holds a list of npm packages automatically recognised, uibuilder will add URL's for these</td>
-            </tr>
-            <tr>
-                <th>uib.packageListFilename</th>
-                <td>${uib.packageListFilename}</td>
-                <td>The list of npm packages actually being served</td>
-            </tr>
-            <tr>
                 <th>uib.masterTemplateFolder</th>
                 <td>${uib.masterTemplateFolder}</td>
                 <td>The built-in source templates, can be copied to any instance</td>
@@ -329,15 +322,17 @@ function detailsPage(uib, urlPrefix, res) {
         <p>All are kept in the master configuration folder: ${uib.configFolder}</p>
 
         <dl style="margin-left:1em;">
-            <dt>${uib.masterPackageListFilename}</dt>
-            <dd>Holds a list of npm packages automatically recognised, uibuilder will add URL's for these.</dd>
-            <dt>${uib.packageListFilename}</dt>
-            <dd>The list of npm packages actually installed and being served.</dd>
             <dt>${uib.sioUseMwName}</dt>
             <dd>Custom Socket.IO Middleware file, also uibMiddleware.js.</dd>
             <dt>uibMiddleware.js</dt>
             <dd>Custom ExpressJS Middleware file.</dd>
         </dl>
+
+        <h4>Dump of all uib master configuration settings</h4>
+        <pre>${tilib.syntaxHighlight( uibSummary )}</pre>
+
+        <h4>Dump of all uib settings.js entries</h4>
+        <pre>${tilib.syntaxHighlight( RED.settings.uibuilder ? RED.settings.uibuilder : 'NOT DEFINED' )}</pre>
 
         <h3>Node-RED</h3>
         <p>See the <code>&lt;userDir&gt;/settings.js</code> file and the 
@@ -354,8 +349,11 @@ function detailsPage(uib, urlPrefix, res) {
             <tr><th>Version</th><td>${uib.nodeVersion.join('.')}</td></tr>
             <tr><th>Min. version required by uibuilder</th><td>${uib.me.engines.node}</td></tr>
         </table>
-        
-        <h3>ExpressJS</h3>
+    `
+
+    /** ExpressJS Configuration info */
+    page += `
+        <h2>ExpressJS Configuration</h2>
         <p>
             See the <a href="https://expressjs.com/en/api.html#app.settings.table" target="_blank">ExpressJS documentation</a> for details.
             Note that ExpressJS Views are not current used by uibuilder
@@ -365,16 +363,15 @@ function detailsPage(uib, urlPrefix, res) {
             <tr><th>Views Engine</th><td>${web.app.get('view engine')}</td></tr>
             <tr><th>Views Cache</th><td>${web.app.get('view cache')}</td></tr>
         </table>
-        <h4>app.locals</h4>
+        <h3>app.locals</h3>
         <pre>${tilib.syntaxHighlight( web.app.locals )}</pre>
-        <h4>app.mountpath</h4>
+        <h3>app.mountpath</h3>
         <pre>${tilib.syntaxHighlight( web.app.mountpath )}</pre>
     `
 
     // Show the ExpressJS paths currently defined
     // web.routers contains descriptive info on routes, routes.user contains the ExpressJS route stack info.
     page += `
-        <hr>
         <h2>uibuilder ExpressJS Routes</h2>
         <p>These tables show all of the web URL routes for uibuilder.</p>
         <h3>User-Facing Routes</h3>
@@ -597,7 +594,7 @@ function adminRouterV2(uib, log) {
             }
             // default to 'html' output type
             default: {
-                let page = detailsPage(uib, urlPrefix, res)
+                let page = detailsPage(uib, urlPrefix)
                 res.send(page)
                 break
             }
