@@ -16,6 +16,20 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Nothing currently.
 
+## [v5.0.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.1...v5.0.2)
+
+### Fixed
+
+* Loading pages from sub-folders without adjusting the `uibuilder.start()` parameters was failing. Now fixed. See also [FAQ: uibuilder - multiple pages from 1 node](https://discourse.nodered.org/t/faq-uibuilder-multiple-pages-from-1-node/61031).
+* Accidentally made use of a node.js v14 feature (Optional Chaining) but base version is specified as v12. Changed code to v12 compatible until v14 becomes the base.
+
+### Changes
+
+* Tech Docs sidebar menu:
+  * Link to beginners walkthrough document added to Tech Docs sidebar.
+  * Add link icons to external pages
+  * Remove redundant link to GitHub project page
+
 ## [v5.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.0...v5.0.1)
 
 Bug fixes only.
