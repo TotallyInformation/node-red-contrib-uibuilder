@@ -35,19 +35,41 @@ const uiblib   = require('./uiblib')   // Utility library for uibuilder
 //const security = require('./sec-lib') // uibuilder security module
 const tiEventManager = require('@totallyinformation/ti-common-event-handler')
 
-//Get client real ip address
+/** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
+ * @param {socketio.Socket} socket Socket.IO socket object
+ * @returns {string} Best estimate of the client's real IP address
+ */
 function getClientRealIpAddress(socket) {
-    const clientRealIpAddress =
-        //get ip from behind a nginx proxy or proxy using nginx's 'x-real-ip header
-        socket.request?.headers['x-real-ip']
-        //get ip from behind a general proxy
-        || socket.request?.headers['x-forwarded-for']?.split(',').shift() //if more thatn one x-fowared-for the left-most is the original client. Others after are successive proxys that passed the request adding to the IP addres list all the way back to the first proxy.
-        //get ip from socket.request that returns the reference to the request that originated the underlying engine.io Client
-        || socket.request?.connection?.remoteAddress
-        // get ip from socket.handshake that is a object that contains handshake details
-        || socket.handshake?.address
+    let clientRealIpAddress
+    if ( 'headers' in socket.request && 'x-real-ip' in socket.request.headers) {
+        // get ip from behind a nginx proxy or proxy using nginx's 'x-real-ip header
+        clientRealIpAddress = socket.request.headers['x-real-ip']
+    } else if ( 'headers' in socket.request && 'x-forwarded-for' in socket.request.headers) {
+        // else get ip from behind a general proxy
+        clientRealIpAddress = socket.request.headers['x-forwarded-for'].split(',').shift()
+    } else if ( 'connection' in socket.request && 'remoteAddress' in socket.request.connection ) {
+        // else get ip from socket.request that returns the reference to the request that originated the underlying engine.io Client
+        clientRealIpAddress = socket.request.connection.remoteAddress
+    } else {
+        // else get ip from socket.handshake that is a object that contains handshake details
+        clientRealIpAddress = socket.handshake.address
+    }
+
+    // socket.client.conn.remoteAddress
+
+    // Switch to this code when node.js v14 becomes the baseline version
+    // const clientRealIpAddress =
+    //     //get ip from behind a nginx proxy or proxy using nginx's 'x-real-ip header
+    //     socket.request?.headers['x-real-ip']
+    //     //get ip from behind a general proxy
+    //     || socket.request?.headers['x-forwarded-for']?.split(',').shift() //if more thatn one x-fowared-for the left-most is the original client. Others after are successive proxys that passed the request adding to the IP addres list all the way back to the first proxy.
+    //     //get ip from socket.request that returns the reference to the request that originated the underlying engine.io Client
+    //     || socket.request?.connection?.remoteAddress
+    //     // get ip from socket.handshake that is a object that contains handshake details
+    //     || socket.handshake?.address
+
     return clientRealIpAddress
-}
+} // --- End of getClientRealIpAddress --- //
 
 class UibSockets {
     // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
