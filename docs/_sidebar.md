@@ -1,5 +1,6 @@
 * [Home](/)
 * Using uibuilder
+  * [A first-timers walkthough of using uibuilder](walkthrough1.md)
   * [Creating data-driven web apps](web-app-workflow.md)
   * [Configuring uibuilder](uib-configuration.md)
   * [Changing the root folder (uibRoot)](changing-uibroot.md)
@@ -32,10 +33,9 @@
 * Testing
   * [Regression tests](regression-tests.md)
 * [Glossary of terms](glossary.md)
-* [Changelog](changelog)
-* [What's next/in progress](https://github.com/TotallyInformation/node-red-contrib-uibuilder/projects/1)
+* [Changelog <sup>🔗</sup>](changelog)
 * [Roadmap](roadmap)
-* [Main readme](uibhome)
+* [Main readme <sup>🔗</sup>](uibhome)
 * Archives
   * [v3/4 changelog](archived/CHANGELOG-v3-v4)
   * [v2 breaking changes](archived/v2-breaking-changes)
@@ -43,7 +43,7 @@
   * [v1 changelog](archived/CHANGELOG-v1)
 
 - **Links**
-- [uibuilder license](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
-- [uibuilder WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
-- [Much Ado About IT (Blog)](https://it.knightnet.org.uk)
-- [Node-RED](https://nodered.org/)
+- [uibuilder license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
+- [uibuilder WIKI <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
+- [Much Ado About IT (Blog) <sup>🔗</sup>](https://it.knightnet.org.uk)
+- [Node-RED <sup>🔗</sup>](https://nodered.org/)
