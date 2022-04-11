@@ -85,6 +85,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
   Currently available by adding the appropriate ExpressJS option in settings.js.
 
+* Change ping response code to 204 (no content) from 201 (created)
+
 * Editor:Libraries: Change "URL to use:" to "Estimated link:". Add link to the estimated url - can use the same url prefix of the Core button+the relative url tacked onto the end. Look at how to add a link to the folder - maybe click to copy to clipboard 📋.
 
 * Add note to documentation for the library manager that you can install LOCAL folders.
@@ -92,6 +94,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Editor:
   * Creating new folder - new folder should be selected after create.
   * Add link to [Configuring uibuilder nodes](uib-node-configuration.md) page.
+  * Show installed uibuilder version.
 
 * Documentation
   * Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
@@ -135,6 +138,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add settings.js options to use different paths/names for middleware files.
 
 * Add socket.io instrumentation server. See https://socket.io/docs/v4/admin-ui/
+
+* Once Node-RED's baseline node.js version has moved passed v12.20, can update `execa` and use dynamic imports (and change README notes on scorecard). Once it has moved passed v14, can simplify the socket.js class by reinstating the optional chaining.
 
 ### Editor (`uibuilder.html`)
 
