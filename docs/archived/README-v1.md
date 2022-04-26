@@ -45,28 +45,28 @@ This is rather the opposite of Node-RED's Dashboard. Whereas that is designed to
 ## 1.1. Contents
 <!-- TOC -->
 
-* [1. node-red-contrib-uibuilder](#1-node-red-contrib-uibuilder)
-  * [1.1. Contents](#11-contents)
-  * [1.2. Additional Documentation](#12-additional-documentation)
-  * [1.3. Out of the box](#13-out-of-the-box)
-  * [1.4. Features](#14-features)
-  * [1.5. Known Issues](#15-known-issues)
-  * [1.6. Dependencies](#16-dependencies)
-  * [1.7. Install](#17-install)
-  * [1.8. Node Instance Settings](#18-node-instance-settings)
-    * [`name` (optional)](#name-optional)
-    * [`topic` (optional)](#topic-optional)
-    * [`url` (required, default = 'uibuilder')](#url-required-default--uibuilder)
-    * [Forward input to output? (default = false)](#forward-input-to-output-default--false)
-    * [`debug` (optional, default=false)](#debug-optional-defaultfalse)
-    * [Allow passing to the front-end](#allow-passing-to-the-front-end)
-  * [1.9. uibuilder settings.js configuration](#19-uibuilder-settingsjs-configuration)
-  * [1.10. Discussions and suggestions](#110-discussions-and-suggestions)
-  * [1.11. Contributing](#111-contributing)
-  * [1.12. Developers/Contributors](#112-developerscontributors)
-  * [1.13. Preference Tree](#113-preference-tree)
-    * [1.13.1. Front-end path summary](#1131-front-end-path-summary)
-    * [1.13.2. Physical file/folder location summary](#1132-physical-filefolder-location-summary)
+- [1. node-red-contrib-uibuilder](#1-node-red-contrib-uibuilder)
+  - [1.1. Contents](#11-contents)
+  - [1.2. Additional Documentation](#12-additional-documentation)
+  - [1.3. Out of the box](#13-out-of-the-box)
+  - [1.4. Features](#14-features)
+  - [1.5. Known Issues](#15-known-issues)
+  - [1.6. Dependencies](#16-dependencies)
+  - [1.7. Install](#17-install)
+  - [1.8. Node Instance Settings](#18-node-instance-settings)
+    - [`name` (optional)](#name-optional)
+    - [`topic` (optional)](#topic-optional)
+    - [`url` (required, default = 'uibuilder')](#url-required-default--uibuilder)
+    - [Forward input to output? (default = false)](#forward-input-to-output-default--false)
+    - [`debug` (optional, default=false)](#debug-optional-defaultfalse)
+    - [Allow passing to the front-end](#allow-passing-to-the-front-end)
+  - [1.9. uibuilder settings.js configuration](#19-uibuilder-settingsjs-configuration)
+  - [1.10. Discussions and suggestions](#110-discussions-and-suggestions)
+  - [1.11. Contributing](#111-contributing)
+  - [1.12. Developers/Contributors](#112-developerscontributors)
+  - [1.13. Preference Tree](#113-preference-tree)
+    - [1.13.1. Front-end path summary](#1131-front-end-path-summary)
+    - [1.13.2. Physical file/folder location summary](#1132-physical-filefolder-location-summary)
 
 <!-- /TOC -->
 
@@ -222,7 +222,7 @@ _[back to top](#contents)_
 
 ## 1.6. Dependencies
 
-See the [package.json](package.json) file, these should all be installed for you. Currently:
+See the `package.json` file, these should all be installed for you. Currently:
 
 - [JQuery](https://jquery.com/) - front-end only, remove from your index.HTML if not needed.
 - [normalize.css](https://necolas.github.io/normalize.css/) - front-end only. Not needed if using a CSS framework like Bootstrap or Picnic.CSS. Installed by uibuilder.

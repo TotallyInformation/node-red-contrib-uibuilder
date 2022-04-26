@@ -79,7 +79,7 @@ Current major version changelog can be found in the root of this package: `../CH
 ### Changed
 - CHANGELOG.md changed to use "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/)" recommended formatting which will facilitate the use of `gh-release` in the future. Also added link to list of commits between versions.
 - `package.json` 
-   - added `browser` property as per [this spec](https://github.com/defunctzombie/package-browser-field-spec) (also [here](https://github.com/stereobooster/package.json)) to give hints to bundlers. Changed `main` to point to the server-side js.
+   - added `browser` property as per [this spec](https://github.com/defunctzombie/package-browser-field-spec) (also https://github.com/stereobooster/package.json) to give hints to bundlers. Changed `main` to point to the server-side js.
    - Added `directories.doc`, `directories.lib`  & `directories.test`
 - Updated the detailed information page (`uibindex`). Improved layout and added some additional useful debugging information. Included the URL for the common resources.
 - Dependent packages updated to latest

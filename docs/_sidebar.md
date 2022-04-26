@@ -31,7 +31,7 @@
   * [`nodes/uiblib.js`](uiblib-js.md)
   * [`nodes/tilib.js`](tilib-js.md)
   * [`nodes/web.js`](web-js.md)
-  * [`nodes/sockets.js`](sockets-js.md)
+  * [`nodes/socket.js`](socket-js.md)
 * Testing
   * [Regression tests](regression-tests.md)
 * [Glossary of terms](glossary.md)
