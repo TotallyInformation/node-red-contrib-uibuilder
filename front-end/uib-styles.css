@@ -12,7 +12,7 @@
 
  /* :root applies to everything */
 :root {
-    --uib-color-light: 201, 209, 217;
+    --uib-color-light: 201, 209, 217; /* hsl(210, 17%, 82%) */
     --uib-color-light-30: 201, 209, 217, 0.3;
     --uib-color-dark:  36, 36, 36;
     --uib-color-medium-dark:  56, 56, 56;
@@ -32,9 +32,12 @@
     --uib-color-bg: var(--uib-color-light-30);
 }
 
-/* If the browser reports it, we can adjust for light/dark theme preferences */
+/* If the browser reports it, we can adjust for light/dark theme preferences
+ * See https://stackoverflow.com/a/57795495 for use with JavaScript
+ */
 @media (prefers-color-scheme: light) {
     :root {
+        --uib-color-scheme: light;
         --uib-color-fg: var(--uib-color-dark);
         --uib-color-fg-lighter: var(--uib-color-medium-dark);
         --uib-color-bg: var(--uib-color-light-30);
@@ -47,6 +50,7 @@
 }
 @media (prefers-color-scheme: dark) {
     :root {
+        --uib-color-scheme: dark;
         --uib-color-fg: var(--uib-color-light);
         --uib-color-fg-lighter: var(--uib-color-light);
         --uib-color-bg: var(--uib-color-dark);
@@ -88,6 +92,7 @@ img, picture, video, canvas, svg {
 }
 p, h1, h2, h3, h4, h5, h6, heading, li, dl, dt, blockquote {
     overflow-wrap: break-word;
+    -webkit-hyphens: auto;
     hyphens: auto;
     word-break: break-word;
 }
@@ -161,7 +166,8 @@ a:visited {
     position:absolute; 
     top:0; left:0; min-width:100vw; min-height:100vh; 
     background: rgb(var(--uib-color-bg), .3);
-    backdrop-filter: grayscale(60%) blur(10px); 
+    -webkit-backdrop-filter: grayscale(60%) blur(10px);
+    backdrop-filter: grayscale(60%) blur(10px);
     display:flex; flex-direction:column; justify-content:center; align-items:center;
     z-index:998;
 }
