@@ -91,6 +91,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Add note to documentation for the library manager that you can install LOCAL folders.
 
+* Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
+
 * Editor:
   * Creating new folder - new folder should be selected after create.
   * Add link to [Configuring uibuilder nodes](uib-node-configuration.md) page.
@@ -98,6 +100,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Documentation
   * Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
+  * Add some notes about Node-RED's projects feature. It doesn't seem to add a correct .gitignore which should contain `**/node_modules`. Also add notes about the fact that projects creates a disconnect between the flows and the userDir folder.
 
 ## Ideas based on v5/vNext development
 
@@ -161,6 +164,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add optional plugin displaying drop-down in Editors header bar - listing links to all deployed uib URLs. See example: https://github.com/kazuhitoyokoi/node-red-contrib-plugin-header
 * If instance folder doesn't exist - need to mark node as changed to force deploy.
 * Introduce standard events: url-change
+* Prevent removal of socket.io and uibuilder client modules in the libraries manager.
 
 ### Front-End Changes (`uibuilderfe.js`)
 
@@ -168,6 +172,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add mapper to map component id to originator & extend `eventSend` accordingly
 * Add `onMsg` convenience handler (maybe allow wildcard topics?)
 * Add a visual warning/alert if uib cannot connect over websockets. Use toast.
+* Move client libraries to separate package `@totallyinformation/node-red-uibuilder-client` - allowing a better package.json definition (see socket.io-client for reference). And more flexible use. Will need to be a dependency of the uibuilder package and needs some changes to load to the correct path. Also allows different versions to be built for different purposes. And map files for min versions.
 
 ### Package Manager Class
 
