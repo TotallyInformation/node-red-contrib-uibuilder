@@ -1,0 +1,526 @@
+/** Default Styles for uibuilder - Light & Dark options
+ *
+ * ! WARNING: THIS VERSION IS NON-NORMATIVE !
+ * ! THE LIVE VERSION WILL BE PART OF node-red-contrib-uibuilder v5.x !
+ *
+ * https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
+ * https://una.im/css-color-theming/ for more on color theory calculations
+ * https://web.dev/building-a-color-scheme/ is the basis for this style
+ * https://unifyned.com/colors.html extends the above
+ * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
+ *
+ * @version: 1.4 2022-05-04
+ * @author: Julian Knight (TotallyInformation)
+ * @license: Apache 2.0
+ * @created: 2022-05-02
+ *
+ * USAGE:
+ * - Reference directly or via import in own CSS
+ * - Will auto pick up browser preference for light/dark if set
+ * - Or manually set with `class="light"` or `class="dark` on the html tag
+ * - Or create a manual switcher feature - see css-test.html or brand-test.html for examples
+ * - A simple CSS reset is provided to get reasonably looking HTML in any browser
+ * - Some special classes are provided - see the "Recommended surfaces" section
+ * - Lots of css variables provided for use in your own CSS or in web components
+ * NOTES:
+ * - Watch out for the order of loading of style sheets!
+ * - uibuilder attempts to auto-load this sheet BUT you may need to do it manually to get the right order.
+ * - Include in your index.css file as `@import url("./uib-brand.css");`
+ */
+
+ /* :root applies to everything, :root.light is for manually selected light mode */
+:root, :root.light {
+    color-scheme: light dark;
+
+    /* Create a checkable var - helps web components know if this stylesheet is loaded
+     * Use this from general code: 
+     *    window.getComputedStyle(document.documentElement, null).getPropertyValue('--uib-css') === 'uib-brand'
+     * Or this from within the component code:
+     *    window.getComputedStyle(this, null).getPropertyValue('--uib-css') === 'uib-brand'
+     * NOTE: no space between : and text!
+     */
+    --uib-css:uib-brand;
+
+    --brand-hue: 200;
+    --accent-offset: 30; /* 30=Split complementary, 60=Triadic */
+
+    --saturation-bias: 0;
+    --light-saturation: .66;
+    --dark-saturation: calc(var(--light-saturation) * .6);
+    --saturation-value: var(--light-saturation);
+    --saturation: calc(var(--saturation-value) + var(--saturation-bias));
+
+    --lightness-bias: 0;
+    --light-lightness: .57;
+    --dark-lightness: calc(var(--light-lightness) * .75);
+    --lightness-value: var(--light-lightness);
+    --lightness: calc(var(--lightness-value) + var(--lightness-bias));
+
+    /*#region --- Brand --- */
+    --brand: hsl(
+        var(--brand-hue)
+        calc(100% * var(--saturation))
+        calc(100% * var(--lightness))
+    );
+    /*#endregion --- --- */
+
+    /*#region --- Shadows https://shadows.brumm.af/ --- */
+    --surface-shadow-light: var(--brand-hue) 10% 20%;
+    --shadow-strength-light: .02;
+
+    --surface-shadow-dark: var(--brand-hue) 30% 30%;
+    --shadow-strength-dark: .1;
+
+    --surface-shadow: var(--surface-shadow-light);
+    --shadow-strength: var(--shadow-strength-light);
+
+    --shadow1:
+        0 2.8px 2.2px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .03)),
+        0 6.7px 5.3px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .01)),
+        0 12.5px 10px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .02)),
+        0 22.3px 17.9px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .02)),
+        0 41.8px 33.4px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .03)),
+        0 100px 80px hsl(var(--surface-shadow) / var(--shadow-strength))
+    ;
+
+    --shadow2: 
+        0.2px 0.3px 0.3px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .031)),
+        0.5px 0.7px 0.7px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .053)),
+        1px 1.3px 1.3px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .07)),
+        1.8px 2.2px 2.2px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .087)),
+        3.3px 4.2px 4.2px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .109)),
+        8px 10px 10px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .16))
+    ;
+
+    --shadow: var(--shadow1);
+  
+    /*#endregion --- --- */
+
+    /*#region --- Text --- */
+    --text-saturation: .2;
+    --text-bias: 0;
+    --light-text-lightness: .1;
+    --light-text-factor: 1;
+    --dark-text-lightness: .9;
+    --dark-text-factor: -1;
+
+    --text-factor: var(--light-text-factor);
+    --text-lightness: var(--light-text-lightness);
+
+    --text1: hsl(
+        var(--brand-hue)
+        calc(100% * var(--text-saturation))
+        calc(
+            100% * (var(--text-lightness)
+            + (0 * var(--text-factor) * .2)
+            - (var(--text-factor) * var(--text-bias)))
+        )
+    );
+    --text2: hsl(
+        var(--brand-hue)
+        calc(100% * (var(--text-saturation) / 2))
+        calc(
+            100% * (var(--text-lightness)
+            + (1 * var(--text-factor) * .2)
+            - (var(--text-factor) * var(--text-bias)))
+        )
+    );
+    --text3: hsl(
+        var(--brand-hue)
+        calc(100% * (var(--text-saturation) / 2))
+        calc(
+            100% * (var(--text-lightness)
+            + (1 * var(--text-factor) * .4)
+            - (var(--text-factor) * var(--text-bias)))
+        )
+    );
+    --text4: hsl(
+        var(--brand-hue) 
+        10% 
+        calc(
+            50% 
+            - (100% * var(--text-factor) * var(--text-bias)))
+        / calc(25% + (100% * var(--text-bias)))
+    );
+    /*#endregion --- --- */
+
+    /*#region --- Surface --- */
+    --surfaces-saturation: .1;
+    --surfaces-bias: 0;
+    --light-surfaces-lightness: .95;
+    --light-surfaces-factor: 1;
+    --dark-surfaces-lightness: .1;
+    --dark-surfaces-factor: -1;
+
+    --surfaces-factor: var(--light-surfaces-factor);
+    --surfaces-lightness: var(--light-surfaces-lightness);
+    
+    --surface1: hsl(
+        var(--brand-hue)
+        calc(100% * var(--surfaces-saturation))
+        calc(
+            100% * (var(--surfaces-lightness)
+            - (var(--surfaces-factor) * .00)
+            + (var(--surfaces-factor) * var(--surfaces-bias)))
+        )
+    );
+    --surface2: hsl(
+        var(--brand-hue)
+        calc(100% * var(--surfaces-saturation))
+        calc(
+            100% * (var(--surfaces-lightness)
+            - (var(--surfaces-factor) * .05)
+            + (var(--surfaces-factor) * var(--surfaces-bias)))
+        )
+    );
+    --surface3: hsl(
+        var(--brand-hue)
+        calc(100% * var(--surfaces-saturation))
+        calc(
+            100% * (var(--surfaces-lightness)
+            - (var(--surfaces-factor) * .10)
+            + (var(--surfaces-factor) * var(--surfaces-bias)))
+        )
+    );
+    --surface4: hsl(
+        var(--brand-hue)
+        calc(100% * var(--surfaces-saturation))
+        calc(
+            100% * (var(--surfaces-lightness)
+            - (var(--surfaces-factor) * .15)
+            + (var(--surfaces-factor) * var(--surfaces-bias)))
+        )
+    );
+    /*#endregion --- --- */
+
+    /*#region === INFO === */
+    --info-hue: 203;
+    --info-saturation-bias: 0;
+    --info-lightness-bias: 0;
+    
+    --info-hsl: var(--info-hue)
+                calc(100% * (var(--saturation) + var(--info-saturation-bias)))
+                calc(100% * (var(--lightness) + var(--info-lightness-bias)));
+
+    --info: hsl( var(--info-hsl) );
+    /*#endregion --- --- */
+    
+    /*#region === SUCCESS === */
+    --success-hue: 120;
+    --success-saturation-bias: 0;
+    --success-lightness-bias: 0;
+    
+    --success: hsl(
+        var(--success-hue)
+        calc(100% * (var(--saturation) + var(--success-saturation-bias)))
+        calc(100% * (var(--lightness) + var(--success-lightness-bias)))
+    );
+    /*#endregion --- --- */
+    
+    /*#region === WARNING === */
+    --warning-hue: 40;
+    --warning-saturation-bias: 0;
+    --warning-lightness-bias: 0;
+    
+    --warning: hsl(
+        var(--warning-hue)
+        calc(100% * (var(--saturation) + var(--warning-saturation-bias)))
+        calc(100% * (var(--lightness) + var(--warning-lightness-bias)))
+    );
+    /*#endregion --- --- */
+    
+    /*#region === FAILURE === */
+    --failure-hue: 2;
+    --failure-saturation-bias: 0;
+    --failure-lightness-bias: 0;
+    
+    --failure: hsl(
+        var(--failure-hue)
+        calc(100% * (var(--saturation) + var(--failure-saturation-bias)))
+        calc(100% * (var(--lightness) + var(--failure-lightness-bias)))
+    );
+    --error: var(--failure);
+    /*#endregion --- --- */
+    
+    /*#region === Complementary ACCENT === */
+    --complementary-hue: calc(var(--brand-hue) + 180);
+
+    --complementary-fg: hsl(
+        var(--brand-hue)
+        calc(100% * var(--saturation))
+        calc(100% * var(--lightness))
+    );
+    --complementary-bg: hsl(
+        var(--complementary-hue)
+        calc(100% * var(--saturation))
+        calc(100% * var(--lightness))
+    );
+    --complementary: hsl(
+        calc(var(--complementary-hue))
+        calc(100% * var(--saturation))
+        calc(100% * var(--lightness))
+    );
+    /*#endregion --- --- */
+    
+    /*#region === PRIMARY ACCENT === */
+    --primary-hue: calc(var(--brand-hue) + 180 + var(--accent-offset));
+
+    --primary-fg: hsl(
+        calc(var(--primary-hue) + 180)
+        calc(100% * var(--saturation))
+        calc(100% * var(--lightness))
+    );
+    --primary-bg: hsl(
+        var(--primary-hue)
+        calc(100% * var(--saturation))
+        calc(100% * var(--lightness))
+    );
+    --primary: var(--primary-bg);
+    /*#endregion --- --- */
+    
+    /*#region === SECONDARY ACCENT === */
+    --secondary-hue: calc(var(--brand-hue) + 180 - var(--accent-offset));
+    
+    --secondary-fg: hsl(
+        calc(var(--secondary-hue) + 180)
+        calc(100% * var(--saturation))
+        calc(100% * var(--lightness))
+    );
+    --secondary-bg: hsl(
+        var(--secondary-hue)
+        calc(100% * var(--saturation))
+        calc(100% * var(--lightness))
+    );
+    --secondary: var(--secondary-bg);
+    /*#endregion --- --- */
+
+}
+
+/* If the browser reports it, we can adjust for light/dark theme preferences
+ * See https://stackoverflow.com/a/57795495 for use with JavaScript
+ */
+@media (prefers-color-scheme: light) {
+    :root {
+        color-scheme: light;
+    }
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* ---- Active Theme (Dark) ---- */
+        color-scheme: dark;
+        --saturation-value: var(--dark-saturation);
+        --lightness-value: var(--dark-lightness);
+        
+        --surface-shadow: var(--surface-shadow-dark);
+        --shadow-strength: var(--shadow-strength-dark);
+        
+        --text-factor: var(--dark-text-factor);
+        --text-lightness: var(--dark-text-lightness);
+
+        --surfaces-factor: var(--dark-surfaces-factor);
+        --surfaces-lightness: var(--dark-surfaces-lightness);
+    }
+}
+
+/* Or if the user requests a particular colour theme */
+[color-scheme="light"] {
+    color-scheme: light;
+}
+[color-scheme="dark"] {
+    color-scheme: dark;
+    --saturation-value: var(--dark-saturation);
+    --lightness-value: var(--dark-lightness);
+    
+    --surface-shadow: var(--surface-shadow-dark);
+    --shadow-strength: var(--shadow-strength-dark);
+
+    --text-factor: var(--dark-text-factor);
+    --text-lightness: var(--dark-text-lightness);
+
+    --surfaces-factor: var(--dark-surfaces-factor);
+    --surfaces-lightness: var(--dark-surfaces-lightness);
+}
+
+/* Or if the user manually requests a dark colour theme by setting class="dark" on html tag */
+:root.dark {
+    color-scheme: dark light;
+    --saturation-value: var(--dark-saturation);
+    --lightness-value: var(--dark-lightness);
+    
+    --surface-shadow: var(--surface-shadow-dark);
+    --shadow-strength: var(--shadow-strength-dark);
+
+    --text-factor: var(--dark-text-factor);
+    --text-lightness: var(--dark-text-lightness);
+
+    --surfaces-factor: var(--dark-surfaces-factor);
+    --surfaces-lightness: var(--dark-surfaces-lightness);
+}
+
+/*#region --- Recommended surfaces --- */
+
+.brand {
+    color: var(--text1);
+    background-color: var(--brand);
+}
+.complementary {
+    color: var(--text1);
+    background-color: var(--complementary);
+}
+.surface1 {
+    background-color: var(--surface1);
+    color: var(--text2);
+}
+.surface2 {
+    background-color: var(--surface2);
+    color: var(--text2);
+}
+.surface3 {
+    background-color: var(--surface3);
+    color: var(--text1);
+}
+.surface4 {
+    background-color: var(--surface4);
+    color: var(--text1);
+}
+.rad-shadow {
+    box-shadow: var(--shadow);
+}
+.info {
+    color: var(--text1);
+    background-color: var(--info);
+}
+.success {
+    color: var(--text1);
+    background-color: var(--success);
+}
+.warning {
+    color: var(--text1);
+    background-color: var(--warning);
+}
+.failure {
+    color: var(--text1);
+    background-color: var(--failure);
+}
+.primary {
+    color: var(--primary-fg);
+    background-color: var(--primary-bg);
+}
+.secondary {
+    color: var(--secondary-fg);
+    background-color: var(--secondary-bg);
+}
+
+/*#endregion --- --- --- --- */
+
+/*#region --- Basic reset --- */
+
+* {
+    box-sizing: border-box;
+    /* margin: 0; */
+}
+html {
+    line-height: 1.5;
+    font-size: 100%;
+    background-color: var(--surface2);
+    color: var(--text2);
+    accent-color: var(--brand);
+}
+body {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    /* padding: 0.3rem; */
+    font-family: sans-serif;
+}
+h1, h2, h3, h4, h5, h6, heading {
+    line-height: 1.3;
+}
+img, picture, video, canvas, svg {
+    /* display: block; */
+    object-fit: cover;
+    vertical-align: bottom;
+    max-width: 100%;
+    background-color: var(--surface4);
+}
+p, h1, h2, h3, h4, h5, h6, heading, li, dl, dt, blockquote {
+    overflow-wrap: break-word;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    word-break: break-word;
+}
+div > p {
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding: .5rem 1rem;
+    text-decoration: none;
+    background-color: var(--info);
+    color: var(--text1);
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.1;
+    cursor: pointer;
+    text-align: center;
+    transition: background 250ms ease-in-out, transform 150ms ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border-radius: 8px;
+    /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
+    box-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
+                inset -2px -2px 3px rgba(0,0,0, .3);
+}
+button:hover, input[type="button" i]:hover, input[type="reset" i]:hover, input[type="submit" i]:hover {
+    background-color: hsl(var(--info-hsl) / .5);
+}
+button:focus, input[type="button" i]:focus, input[type="reset" i]:focus, input[type="submit" i]:focus {
+    outline: 1px solid var(--text4);
+    outline-offset: -4px;
+}
+button:active, input[type="button" i]:active, input[type="reset" i]:active, input[type="submit" i]:active {
+    transform: scale(0.97);
+}
+input, button, textarea, select {
+    font: inherit;
+}
+table {
+    border-collapse: collapse;
+    border: 1px solid var(--text3);
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+thead th {
+    color: var(--text2);
+    background: var(--surface4);
+}
+tfoot th, tfoot td {
+    color: var(--text2);
+    background: var(--surface3);
+}
+th[scope=row] {
+    font-style: italic;
+    color: var(--text2);
+    background: var(--surface3);
+    background-blend-mode: lighten;
+}
+th, td {
+    padding: .5rem;
+    border: 1px solid var(--text4);
+}
+tbody tr:nth-child(even) {
+    color: var(--text2);
+    background: var(--surface2);
+    background-blend-mode: lighten;
+}
+blockquote {
+    border: 1px solid var(--text3);
+    padding: 0.3rem;
+    box-shadow: var(--shadow);
+}
+
+/*#endregion --- Basic reset --- */
+
