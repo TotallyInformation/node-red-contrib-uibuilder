@@ -82,8 +82,8 @@ class UibWeb {
         this.masterStatic = undefined
 
         /** Holder for node instance routers 
-         * @type {Object.<string, express.Router>}
-        */
+         * @type {Object<string, express.Router>}
+         */
         this.instanceRouters = {}
         /** ExpressJS Route Metadata */
         this.routers = { admin:[], user:[], instances:{}, config:{} }
@@ -333,9 +333,8 @@ class UibWeb {
             return
         }
 
-        // Add socket.io client (../uibuilder/vendor/socket.io-client/socket.io.js)
-        let sioPath = packageMgt.getPackagePath2('socket.io-client', this.RED.settings.userDir)
-        if ( sioPath === null ) sioPath = packageMgt.getPackagePath2('socket.io-client', path.join(__dirname, '..', '..') )
+        // Add socket.io client - look both in userDir and instanceRoot
+        let sioPath = packageMgt.getPackagePath2( 'socket.io-client', [this.RED.settings.userDir, path.join(__dirname, '..', '..')] )
         
         //let sioPath = packageMgt.getPackagePath2('socket.io', this.RED.settings.userDir)
         // If it can't be found the usual way - probably because Docker being used & socket.io not in usual place
@@ -421,6 +420,11 @@ class UibWeb {
      */
     servePing() {
         this.uibRouter.all('/ping', (err, res) => {
+            if (err) {
+                this.log.error(`[uibuilder:web.js:servePing] Router error. ${err}`)
+                res.status(501).end()
+                return
+            }
             res.status(201).end()
         })
         this.routers.user.push( {name: 'Ping', path:`${this.uib.httpRoot}/uibuilder/ping`, desc: 'Ping/keep-alive endpoint, returns 201', type:'Endpoint'} )        
@@ -630,6 +634,7 @@ class UibWeb {
                 .cookie('uibuilder-namespace', node.url, {
                     path: mypath, 
                     sameSite: true,
+                    // @ts-ignore
                     expires: 0, // session cookie only
                     secure: qSec,
                 })
@@ -637,6 +642,7 @@ class UibWeb {
                 .cookie('uibuilder-client-id', clientId, {
                     path: mypath, 
                     sameSite: true,
+                    // @ts-ignore
                     expires: 0, // session cookie only
                     secure: qSec,
                 })
@@ -644,6 +650,7 @@ class UibWeb {
                 .cookie('uibuilder-webRoot', uib.nodeRoot.replace(/\//g,''), {
                     path: mypath, 
                     sameSite: true,
+                    // @ts-ignore
                     expires: 0, // session cookie only
                     secure: qSec,
                 })
@@ -714,7 +721,7 @@ class UibWeb {
     } // --- End of setupInstanceStatic --- //
 
     /** Load & return an ExpressJS Router from file(s) in <uibRoot>/<node.url>/api/*.js
-     * @param {uibNode} node 
+     * @param {uibNode} node Reference to the uibuilder node instance
      * @returns {object|undefined} Valid instance router or undefined
      */
     addInstanceApiRouter(node) {
@@ -1177,16 +1184,17 @@ class UibWeb {
         }
         let html = '<div class="table-responsive"><table  class="uib-info-tb table table-sm"><thead><tr>'
 
-        const escapeHTML = str => 
+        const escapeHTML = str => {
             str.replace(/[&<>'"]/g, 
                 tag => ({
                     '&': '&amp;',
                     '<': '&lt;',
                     '>': '&gt;',
-                    "'": '&#39;',
+                    "'": '&#39;', // eslint-disable-line quotes
                     '"': '&quot;'
                 }[tag])
             )
+        }
 
         /** The HTML for a single cell
          * @param {*} col _

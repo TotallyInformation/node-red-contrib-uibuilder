@@ -10,11 +10,18 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 #### Fixes Needed
 
+* Add socket.io details to the vendor client libraries section of the uibindex page.
+
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.2...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### Fixed
+
+* Improved module path search to allow an array of locations. Removes spurious warning about socket.io client not being found.
+
 
 ## [v5.0.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.1...v5.0.2)
 
