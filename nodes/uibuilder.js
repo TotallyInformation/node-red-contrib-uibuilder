@@ -283,7 +283,11 @@ function runtimeSetup() {
      * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
      * since v3.3.0 2021-03-16 Allow independent ExpressJS server/app 
      */
-    web.setup(uib) // Singleton wrapper for ExpressJS
+    try {
+        web.setup(uib) // Singleton wrapper for ExpressJS
+    } catch (e) {
+        console.trace('[uibuilder:runtimeSetup] web.setup failed')
+    }
     
     /** Pass core objects to the Socket.IO handler module */
     sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
