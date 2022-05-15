@@ -232,7 +232,7 @@ class UibPackages {
         fs.writeJsonSync(fileName, json)
     }
     
-    /** Find install folder for a package
+    /** Find install folder for a package - allows an array of locations to be given
      * NOTE: require.resolve can be a little ODD! 
      *       When run from a linked package, it uses the link root not the linked location, 
      *       this throws out the tree search. That's why we have to try several different locations here.
@@ -240,7 +240,7 @@ class UibPackages {
      *       Also, it won't find ANYTHING if a `main` entry doesn't exist :(
      *       So we no longer use it, just search for folder names.
      * @param {string} packageName - Name of the package who's install folder we are looking for.
-     * @param {string} installRoot A uibuilder node instance - will search in node's root folder first
+     * @param {string|Array<string>} installRoot Location to search. Can be an array of locations.
      * @returns {null|string} Actual filing system path to the installed package
      */
     getPackagePath2(packageName, installRoot) {
@@ -249,13 +249,15 @@ class UibPackages {
             return
         }
 
-        //let loc = path.join(__dirname, '..', '..', 'node_modules', packageName)
-        let loc = path.join(installRoot, 'node_modules', packageName)
-        if (fs.existsSync( loc )) {
-            return loc
+        // If installRoot = string, make an array
+        if ( !Array.isArray(installRoot) ) installRoot = [installRoot]
+
+        for (let r of installRoot) {
+            let loc = path.join(r, 'node_modules', packageName)
+            if (fs.existsSync( loc )) return loc
         }
 
-        this.log.warn(`[uibuilder:package-mgt:getPackagePath2] PACKAGE NOT FOUND ${packageName} at ${loc}`)
+        this.log.warn(`[uibuilder:package-mgt:getPackagePath2] PACKAGE ${packageName} NOT FOUND`)
         return null
     } // ----  End of getPackagePath2 ---- //
 
