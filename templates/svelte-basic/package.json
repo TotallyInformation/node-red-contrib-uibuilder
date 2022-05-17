@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "build": "rollup -c --environment NODE_ENV:production",
-    "dev": "rollup -c -w --environment NODE_ENV:development"
+    "dev": "rollup -c -w --environment NODE_ENV:development",
+    "start": "sirv public --no-clear"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
