@@ -11,6 +11,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 #### Fixes Needed
 
 * Add socket.io details to the vendor client libraries section of the uibindex page.
+* Details page showing lots of "undefined"
+* `[uibuilder:web.js:servePing] Router error. [object Object]`
+
+* Create min version of css. Create min version of client module.js, add map files
 
 ----
 
@@ -21,6 +25,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Fixed
 
 * Improved module path search to allow an array of locations. Removes spurious warning about socket.io client not being found.
+* `/uibuilder/ping` now correctly returns 204 (no content) status not 201.
 
 
 ## [v5.0.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.1...v5.0.2)

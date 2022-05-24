@@ -333,10 +333,9 @@ class UibWeb {
             return
         }
 
-        // Add socket.io client - look both in userDir and instanceRoot
-        let sioPath = packageMgt.getPackagePath2( 'socket.io-client', [this.RED.settings.userDir, path.join(__dirname, '..', '..')] )
+        // Add socket.io client - look both in uibuilder master folder, then uibRoot, then userDir
+        let sioPath = packageMgt.getPackagePath2( 'socket.io-client', [path.join(__dirname, '..', '..'), this.uib.rootFolder, this.RED.settings.userDir] )
         
-        //let sioPath = packageMgt.getPackagePath2('socket.io', this.RED.settings.userDir)
         // If it can't be found the usual way - probably because Docker being used & socket.io not in usual place
         if ( sioPath === null ) {
             try {
@@ -415,17 +414,12 @@ class UibWeb {
 
     } // ---- End of serveVendorPackages ---- //
 
-    /** Add the ping endpoint
+    /** Add the ping endpoint to /uibuilder/ping
      * This just returns a 201 (No Content) response and can be used for a keepalive process from the client.
      */
     servePing() {
-        this.uibRouter.all('/ping', (err, res) => {
-            if (err) {
-                this.log.error(`[uibuilder:web.js:servePing] Router error. ${err}`)
-                res.status(501).end()
-                return
-            }
-            res.status(201).end()
+        this.uibRouter.get('/ping', (req, res) => {
+            res.status(204).end()
         })
         this.routers.user.push( {name: 'Ping', path:`${this.uib.httpRoot}/uibuilder/ping`, desc: 'Ping/keep-alive endpoint, returns 201', type:'Endpoint'} )        
     }
