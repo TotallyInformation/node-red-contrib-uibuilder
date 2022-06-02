@@ -1173,22 +1173,21 @@ class UibWeb {
      * @returns {string} HTML Table
      */
     htmlBuildTable(input, cols) { // eslint-disable-line class-methods-use-this
+        
         if (!cols) {
             cols = Object.keys(input[0])
         }
         let html = '<div class="table-responsive"><table  class="uib-info-tb table table-sm"><thead><tr>'
 
-        const escapeHTML = str => {
-            str.replace(/[&<>'"]/g, 
-                tag => ({
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    "'": '&#39;', // eslint-disable-line quotes
-                    '"': '&quot;'
-                }[tag])
-            )
-        }
+        const escapeHTML = str => str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;', // eslint-disable-line quotes
+                '"': '&quot;'
+            }[tag])
+        )
 
         /** The HTML for a single cell
          * @param {*} col _
@@ -1199,7 +1198,6 @@ class UibWeb {
             let html = '<td>'
             html += entry[col] ? escapeHTML(entry[col]) : ' '
             html += '</td>'
-
             return html
         }
 
