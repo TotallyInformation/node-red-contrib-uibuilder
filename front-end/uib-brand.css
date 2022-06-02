@@ -469,7 +469,7 @@ div > p {
     margin-right: 1rem;
 }
 button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
-    display: inline-flex;
+    /* display: inline-flex; */
     align-items: center;
     justify-content: center;
     border: none;
@@ -542,6 +542,18 @@ code {
 }
 
 /*#endregion --- Basic reset --- */
+
+.emoji { /* Nicer, cross-platform emoji's */
+    font-family: 
+        "Twemoji Mozilla",
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Segoe UI Symbol",
+        "Noto Color Emoji",
+        "EmojiOne Color",
+        "Android Emoji",
+        sans-serif;
+}
 
 /*#region -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
 
