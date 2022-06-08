@@ -8,11 +8,10 @@ typora-root-url: docs/images
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-#### Fixes Needed
+* Move new CSS and FE library
+* Use new CSS in details pages
 
-* Add socket.io details to the vendor client libraries section of the uibindex page.
-* Details page showing lots of "undefined"
-* `[uibuilder:web.js:servePing] Router error. [object Object]`
+#### Fixes Needed
 
 * Create min version of css. Create min version of client module.js, add map files
 
@@ -22,10 +21,34 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 <!-- Nothing currently. -->
 
+### In-flight
+
+* Add outdated markers to Editor Library tab.
+* Lint to "Standard JavaScript" with node.js v12 and front-end to ECMA2019.
+
 ### Fixed
 
 * Improved module path search to allow an array of locations. Removes spurious warning about socket.io client not being found.
 * `/uibuilder/ping` now correctly returns 204 (no content) status not 201.
+* `web.js`::`buildHtmlTable` - over-optimised regex broke the table cells, now fixed.
+
+### Changed
+
+* Package.json: Changed homepage to point to Tech Docs on github.io.
+* Editor:
+  * Added stylesheet containing a class of `emoji` which provides nicer, cross-platform, colour emojis.
+  * Libraries tab: 
+    * Change "URL to use:" to "Estimated link:" on the Libraries tab to make it clear that it might not be correct (down to the library author).
+    * Added info emoji to package name (links to package homepage).
+    * Added url link to estimated library to make it easier to find out if it actually exists and exactly where.
+* package-mgt.js:
+  * Rewrite root package.json and package details processing for more efficiency + prettify package.json output
+  * Add outdated (current/wanted/latest) to uibRoot/package.json>uibuilder.packages in prep for update display in Editor
+
+### New
+
+* `uib-brand.css` - will eventually be the new default uibuilder CSS. It is light/dark switchable both manually and by browser preference. Still under development.
+
 
 
 ## [v5.0.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.1...v5.0.2)

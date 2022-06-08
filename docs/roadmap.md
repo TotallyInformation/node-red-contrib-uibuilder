@@ -34,24 +34,22 @@ The core features of uibuilder:
 
 The general direction of uibuilder (or associated modules) that I would like to see includes:
 
-* A set of extension front-end components with well defined (reusable) data schemas for doing common UI tasks. The defined data schema's would cover both the component content and configuration data so that both could be sent from Node-RED via uibuilder and any return data structures would similarly be well defined.
-* A capability to have configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code.
+* _STARTED_, see [node-red-experimental-nodes](https://github.com/TotallyInformation/node-red-experimental-nodes). A set of extension front-end components with well defined (reusable) data schemas for doing common UI tasks. The defined data schema's would cover both the component content and configuration data so that both could be sent from Node-RED via uibuilder and any return data structures would similarly be well defined.
+* _STARTED_, see the new front-end library in the above module. A capability to have configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code.
 * A UI designer allowing users without HTML/CSS/JS skills to create reasonable web apps without code.
 
 Information also needs to be provided to enable people to build security, identity, authentication and authorisation. As at v5, the experimental security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication.
 
 ### Focus for the near future
 
-v5 is the next major release, currently shared as the `vNext` branch on GitHub. Check the [changelog file](changelog) in that branch to see what has already been achieved and what is likely to make it into the release.
-
 The following is the immediate direction. These are not likely to be incuded in v5.0.0 but are likely to be added to v5.1 or maybe a little later.
 
 Current focus (beyond what has already been developed) is on:
 
-* Ensuring code quality continues to improve - supported by the split of the code into multiple source components & ever improving code linting and structure.
-* Filling in some gaps and issues identified in various discussions.
+* _STARTED_. Creating a new front-end library. Simplified and more robust, using ES2019 and supporting configuration-driven web interfaces.
 * Continuing to improve the technical documentation. Updating details and changes, adding how-to's, moving some things from the WIKI. Improving language consistency.
-* Maturing the 2 new nodes.
+* Start moving towards ECMA Modules rather than CommonJS.
+* _STARTED_, see [node-red-experimental-nodes](https://github.com/TotallyInformation/node-red-experimental-nodes). Creating W3C web components to replace the VueJS ones - especially for the ones baked into the fe code. Noting that v5 already contains a non-Vue toast notification feature.
 
 Next immediate focus will be on:
 
@@ -66,7 +64,6 @@ If you would like to contribute to any of these future features, please get in t
 
 ### Longer term focus
 
-* Creating W3C web components to replace the VueJS ones - especially for the ones baked into the fe code. Noting that v5 already contains a non-Vue toast notification feature.
 * Creating usable components that have standardised data interfaces. So that other developers can produce similar outputs with different frameworks but the data that is exchanged with Node-RED remains the same. These components should make things easy that flow designers might typically want to do (notifications, forms, charts, tables, drag-and-drop, etc.)
 * Creating a visual layout generator to bridge the gap between uibuilder and Dashboard. Ideally this would be non-framework specific but this seems a very unlikely goal to hit. Would be happy for this to either use web components, Svelte or VueJS.
 * Possibly the addition of a `uib-dashboard` node that uses data-driven composition. As a half-way house between code-driven and visual-layout approaches.
@@ -84,8 +81,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 
   Currently available by adding the appropriate ExpressJS option in settings.js.
-
-* Change ping response code to 204 (no content) from 201 (created)
 
 * Editor:Libraries: Change "URL to use:" to "Estimated link:". Add link to the estimated url - can use the same url prefix of the Core button+the relative url tacked onto the end. Look at how to add a link to the folder - maybe click to copy to clipboard 📋.
 
@@ -121,6 +116,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add Web Reporting API endpoint(s). Set a header to tell the client where to report to. Reports are JSON and so could be directed out of port 2 as a new control msg type. See https://web.dev/reporting-api/ & https://developer.mozilla.org/en-US/docs/Web/API/Reporting_API.
 
 * Add Notifications API support. See https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API & https://developer.mozilla.org/en-US/docs/Web/API/notification.
+
+* Add option to log http(s) requests to control output port
 
 * See if typedefs.js can be migrated to index.d.ts.
 
@@ -193,6 +190,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * watcher
 * Add a new template and example to demonstrate the sender node.
 * Template - Docsify CMS
+* Allow templates to provide example flows via a uibuilder Node-RED library plugin ([ref1](https://discourse.nodered.org/t/red-library-without-red-editor/61247), [ref2](https://nodered.org/docs/api/library/), [ref3](https://github.com/node-red/node-red-library-file-store/blob/main/index.js))
 * Add uibuilder property to package.json - define
   * uibuilder version checker - https://github.com/npm/node-semver
   * required fe packages
