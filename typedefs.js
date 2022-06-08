@@ -1,6 +1,6 @@
 /* eslint-disable no-irregular-whitespace */
 /** Define typedefs for linting and JSDoc/ts checks - does not actually contain live code
- * 
+ *
  * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
@@ -21,12 +21,12 @@
 
 /** editorRED
  * typedef {object} editorRED The Node-RED core object available to a custom node's .html file
- * 
+ *
  */
 
 /** Node-RED runtimeSettings - See settings.js for static settings.
  * @typedef {object} runtimeSettings Static and Dynamic settings for Node-RED runtime
- * 
+ *
  * @property {string} uiPort The port used by Node-RED (default=1880)
  * @property {string} uiHost The host IP used by Node-RED (default=0.0.0.0)
  * @property {string} userDir The userDir folder
@@ -55,7 +55,7 @@
  * @property {Function} httpAdminAuth : [Getter/Setter],
  * @property {Function} httpNodeAuth : [Getter/Setter],
  * @property {object|Function} [https] If present, https will be used for ExpressJS servers.
- * 
+ *
  * @property {object} [uibuilder] Optional uibuilder specific Node-RED settings
  * @property {number} [uibuilder.port] Port number if uib is using its own ExpressJS instance
  * @property {string} [uibuilder.uibRoot] Folder name that will hold all uib runtime and instance folders
@@ -64,26 +64,26 @@
  * @property {object} [uibuilder.serverOptions] Optional ExpressJS server options for uib custom server
  * @property {object} [uibuilder.socketOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
  * @property {boolean} [uibuilder.instanceApiAllowed] Allow instance-level custom API's to be loaded. Could be a security issue so it is controlled in settings.js
- * 
+ *
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version
- * 
+ *
  * @property {object} logging Controls the type and amount of logging output
  * @property {object} logging.console Controls output levels and types to the console log
  * @property {string} logging.console.level What level of output? (fatal, error, warn, info, debug, trace)
  * @property {boolean} logging.console.metrics Should metrics also be shown?
  * @property {boolean} logging.console.audit Should audit also be shown?
- * 
+ *
  * @property {Function} get Get dynamic settings. NB: entries in settings.js are read-only and shouldn't be read using RED.settings.get, that is only for settings that can change in-flight.
  * @property {Function} set Set dynamic settings
  * @property {Function} delete .
  * @property {Function} available .
- * 
+ *
  * @property {Function} registerNodeSettings : [Function: registerNodeSettings],
  * @property {Function} exportNodeSettings : [Function: exportNodeSettings],
  * @property {Function} enableNodeSettings : [Function: enableNodeSettings],
  * @property {Function} disableNodeSettings : [Function: disableNodeSettings],
- * 
+ *
  * @property {Function} getUserSettings : [Function: getUserSettings],
  * @property {Function} setUserSettings : [Function: setUserSettings],
  */
@@ -121,25 +121,25 @@
  * @property {runtimeLogging} log Logging.
  * @property {runtimeNodes} nodes Gives access to other active nodes in the flows.
  * @property {runtimeSettings} settings Static and Dynamic settings for Node-RED runtime
- * 
+ *
  * @property {Function} version Get the Node-RED version
  * @property {Function} require : [Function: requireModule],
  * @property {Function} comms : { publish: [Function: publish] },
  * @property {Function} library : { register: [Function: register] },
  * @property {Function} auth : { needsPermission: [Function: needsPermission] },
- * 
+ *
  * @property {object} events Event handler object
  * @property {Function} events.on Event Listener Function. Types: 'nodes-started', 'nodes-stopped'
  * @property {Function} events.once .
  * @property {Function} events.addListener .
- * 
+ *
  * @property {object} hooks .
  * @property {Function} hooks.has .
  * @property {Function} hooks.clear .
  * @property {Function} hooks.add .
  * @property {Function} hooks.remove .
  * @property {Function} hooks.trigger .
- * 
+ *
  * @property {object} util .
  * @property {Function} util.encodeobject : [Function: encodeobject],
  * @property {Function} util.ensurestring : [Function: ensurestring],
@@ -195,7 +195,7 @@
  * @property {boolean} fwdInMessages Forward input msgs to output #1?
  * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
- * @property {boolean} copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist? 
+ * @property {boolean} copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist?
  * @property {string}  templateFolder Folder name for the source of the chosen template
  * @property {string}  extTemplate Degit url reference for an external template (e.g. from GitHub)
  * @property {boolean} showfolder Provide a folder index web page?
@@ -216,7 +216,7 @@
  * @typedef {object} uibNode Local copy of the node instance config + other info
  * @property {string} id Unique identifier for this instance
  * @property {string} type What type of node is this an instance of? (uibuilder)
- * 
+ *
  * @property {string} name Descriptive name, only used by Editor
  * @property {string} topic msg.topic overrides incoming msg.topic
  * @property {string} url The url path (and folder path) to be used by this instance
@@ -224,7 +224,7 @@
  * @property {boolean} fwdInMessages Forward input msgs to output #1?
  * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
- * @property {boolean} copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist? 
+ * @property {boolean} copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist?
  * @property {string}  templateFolder Folder name for the source of the chosen template
  * @property {string}  extTemplate Degit url reference for an external template (e.g. from GitHub)
  * @property {boolean} showfolder Provide a folder index web page?
@@ -239,7 +239,7 @@
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
- * 
+ *
  * @property {Function} send Send a Node-RED msg to an output port
  * @property {Function=} done Dummy done Function for pre-Node-RED 1.0 servers
  * @property {Function=} on Event handler
@@ -248,12 +248,12 @@
  * @property {object=} credentials Optional secured credentials
  * @property {object=} z Internal
  * @property {object=} wires Internal. The wires attached to this node instance (uid's)
- * 
+ *
  * @property {boolean} commonStaticLoaded Whether the common static folder has been added
  * @property {boolean} initCopyDone Has the initial template copy been done?
- * 
+ *
  * @property {Function} warn Output warn level info to node-red console and to editor debug
- * 
+ *
  * @property {object} statusDisplay Settings for the uibuilder node status
  * @property {string} statusDisplay.text Text to display
  * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
@@ -263,30 +263,30 @@
 /** uibConfig - THe module-level `uib` configuration variable
  * @typedef {object} uibConfig Local copy of the node master config + other module-level info
  * @property {object} me Contents of uibuilder's `package.json` file
- * @property {string} moduleName Module name must match this nodes html file. 
- * 
+ * @property {string} moduleName Module name must match this nodes html file.
+ *
  *  Default 'uibuilder'
- * @property {string} nodeRoot URL path prefix set in `settings.js` - prefixes all URL's - 
- *  equiv of httpNodeRoot from settings.js. 
- * 
+ * @property {string} nodeRoot URL path prefix set in `settings.js` - prefixes all URL's -
+ *  equiv of httpNodeRoot from settings.js.
+ *
  *  Default `empty string`.
  * @property {object} deployments Track across redeployments
- * @property {object} instances When nodeInstance is run, add the node.id as a key with the value being the 
- *  url then add processing to ensure that the URL's are unique. 
- * 
+ * @property {object} instances When nodeInstance is run, add the node.id as a key with the value being the
+ *  url then add processing to ensure that the URL's are unique.
+ *
  *  Schema: `{<node.id>: <url>}`
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
- * 
+ *
  *  Default `../template`
  * @property {string} masterStaticFeFolder Location of master FE folder (containing built core front-end code).
- * 
+ *
  *  Default `../front-end`
  * @property {string|null} rootFolder Folder on the server FS to hold common & custom files & folders for all instances of uibuilder.
- * 
- *  Cannot be set until we have the RED object and know if projects are being used. 
- * 
+ *
+ *  Cannot be set until we have the RED object and know if projects are being used.
+ *
  *  **Can be changed by `settings.js`**
- * 
+ *
  *  Default `<userDir>/<uib.moduleName>` or `<userDir>/projects/<currProject>/<uib.moduleName>`
  * @property {string|null} configFolder Location for uib config folder - set once rootFolder is finalised
  * @property {string} configFolderName Name of the config folder. Default `.config`
@@ -298,25 +298,25 @@
  * @property {string} ioChannels.control Channel for control messages. Default `uiBuilderControl`
  * @property {string} ioChannels.client Channel for messages to front-end clients. Default `uiBuilderClient`
  * @property {string} ioChannels.server Channel for messages from clients to server. Default `uiBuilder`
- * @property {Array<number|string>} nodeVersion What version of Node.JS are we running under? Impacts some file processing. 
+ * @property {Array<number|string>} nodeVersion What version of Node.JS are we running under? Impacts some file processing.
  * @property {object} staticOpts Options for serveStatic. See https://expressjs.com/en/resources/middleware/serve-static.html
- * @property {Object.<string,boolean>} deleteOnDelete Set of instances that have requested their local instance folders be 
+ * @property {Object<string,boolean>} deleteOnDelete Set of instances that have requested their local instance folders be
  *  deleted on deploy - see html file oneditdelete, updated by admin api
- * 
+ *
  *  Schema: `{ <url>: <boolean> }`
  * @property {object}           customServer Set in libs/web.js:_webSetup()
  *  Parameters for custom webserver if required. Port is undefined if using Node-RED's webserver.
- * @property {undefined|number} customServer.port TCP/IP port number. 
- * 
- *  If defined, uibuilder will use its own ExpressJS server/app. 
- * 
+ * @property {undefined|number} customServer.port TCP/IP port number.
+ *
+ *  If defined, uibuilder will use its own ExpressJS server/app.
+ *
  *  If undefined, uibuilder will use the Node-RED user-facing ExpressJS server
  * @property {('http'|'https'|'http2')} customServer.type Node.js server type. One of ['http', 'https', 'http2']
  * @property {undefined|string} customServer.host uibuilder Host. sub(domain) name or IP Address
  * @property {undefined|string} customServer.hostName The host name of the Node-RED server
  * @property {boolean}          customServer.isCustom Is uibuilder using a custom ExpressJS server?
  * @property {object}           customServer.serverOptions Optional ExpressJS server options
- * 
+ *
  * @property {undefined|object} degitEmitter Event emitter for degit, populated on 1st use. See POST admin API
  * @property {undefined|runtimeRED} RED Keep a reference to RED for convenience. Set at the start of Uib
  * @property {string=} version The deployed version of uibuilder (from `package.json`)
@@ -379,9 +379,52 @@
  * @property {Date} [userMetadata.subsExpiry] Date/time the users subscription expires.
  */
 
+/** uibPackageJsonPackage
+ * @typedef {{
+ *      estimatedEntryPoint?: string;
+ *      homepage?: string;
+ *      installedFrom?: string;
+ *      installedVersion?: string;
+ *      installFolder?: string;
+ *      latestVersion?: string;
+ *      missing?: boolean;
+ *      outdated?: object;
+ *      packageUrl?: string;
+ *      problems?: Array<string>;
+ *      scope?: string;
+ *      spec?: string;
+ *      url?: string;
+ * }} uibPackageJsonPackage
+ */
+
+/** uibPackageJson
+ * The package.json file in the uibRoot folder. Contains uibuilder extensions
+ * @typedef {{
+ *      name?: string;
+ *      version?: string;
+ *      description?: string;
+ *      scripts?: {} | {
+ *          [key: string]: string;
+ *      };
+ *      dependencies?: {} | {
+ *          [key: string]: string;
+ *      };
+ *      homepage?: string;
+ *      bugs?: string;
+ *      author?: string;
+ *      license?: string;
+ *      repository?: object;
+ *      uibuilder?: {
+ *          packages?: {} | {
+ *              [key: string]: uibPackageJsonPackage;
+ *          };
+ *      };
+ * }} uibPackageJson
+ */
+
 /** Props define attributes on a virtual node.
- * @typedef {Object.<string, any> | {}} Props
- * @property {Object} Props .
+ * @typedef {Object<string, any> | {}} Props
+ * @property {object} Props .
  * @property {Children} Props.children .
  */
 /** The vnode children of a virtual node.
@@ -391,8 +434,8 @@
  * @typedef {string | number | Function} Type
  */
 /** Define a custom type for virtual nodes:
- * @typedef {Object.<string, any>} VNode
- * @property {object.<string, any>} VNode .
+ * @typedef {Object<string, any>} VNode
+ * @property {Object<string, any>} VNode .
  * @property {Type} VNode.type .
  * @property {Props} VNode.props .
  * @property {Children} VNode.children .
@@ -445,7 +488,7 @@
  * @property {Function} head : [Function (anonymous)],
  * @property {Function} link : [Function (anonymous)],
  * @property {Function} lock : [Function (anonymous)],
- * @property {Function} 'm-search' : [Function (anonymous)],
+ * @property {Function} "m-search" : [Function (anonymous)],
  * @property {Function} merge : [Function (anonymous)],
  * @property {Function} mkactivity : [Function (anonymous)],
  * @property {Function} mkcalendar : [Function (anonymous)],
@@ -476,10 +519,10 @@
  * @property {Function} listen : [Function: listen],
  * @property {Function} request : IncomingMessage { app: [Circular *1] },
  * @property {Function} response : ServerResponse { app: [Circular *1] },
- * 
+ *
  * @property {object} cache : {},
  * @property {object} engines : {},
- * 
+ *
  * @property {{
  *   'x-powered-by': boolean,
  *   etag: string,
@@ -492,7 +535,7 @@
  *   views: string,
  *   'jsonp callback name' : string
  * }} settings ExpressJS App Settings
- * 
+ *
  * property {boolean}  settings.'x-powered-by' : true,
  * property {string}   settings.etag : 'weak',
  * property {Function} settings."etag fn" : [Function: generateETag],
@@ -503,10 +546,10 @@
  * property {Function} settings.view : [Function: View],
  * property {string}   settings.views : 'C:\\src\\nr2\\views',
  * property {string}   settings.'jsonp callback name' : 'callback'
- * 
+ *
  * @property {object} locals : [object: null prototype] { settings: [object] },
  * @property {string} mountpath : '/nr/',
- * 
+ *
  * @property {Function} parent : [Function: app] {
  * @property {Function}   parent._events : [object: null prototype],
  * @property {Function}   parent._eventsCount : 1,
@@ -553,9 +596,7 @@
  * @property {Function}   parent.'m-search' : [Function (anonymous)],
  * @property {Function}   parent.merge : [Function (anonymous)],
  * @property {Function}   parent.mkactivity : [Function (anonymous)],
- * 
- * @property {Function}   locals : [object: null prototype],
- * @property {Function}   mountpath : '/',
+ *
  * @property {Function}   _router :  [Function]
  */
 
@@ -640,7 +681,7 @@ module.exports = {}
 }
  */
 /* this
-{ 
+{
     name: ""
     topic: ""
     //... other vars ...//
@@ -652,14 +693,14 @@ module.exports = {}
     icon: undefined
     id: "b18a50dd.f7e5c"
     info: undefined
-    infoEditor: w { $toDestroy: Array(46), container: div.red - ui - editor - text - container.ace_editor.ace_hidpi.red - ui - editor - text - container - toolbar.ace - tomo…, renderer: y, id: "editor2", commands: o, … } 
+    infoEditor: w { $toDestroy: Array(46), container: div.red - ui - editor - text - container.ace_editor.ace_hidpi.red - ui - editor - text - container - toolbar.ace - tomo…, renderer: y, id: "editor2", commands: o, … }
     inputLabels: ""
     inputs: 1
     outputLabels: ['','']
     outputs: 2
     resize: false
     selected: true
-    status: { text: "Node Initialised", fill: "blue", shape: "dot" } 
+    status: { text: "Node Initialised", fill: "blue", shape: "dot" }
     type: "uibuilder"
     valid: true
     validationErrors: []
@@ -674,7 +715,7 @@ module.exports = {}
 
     _: ƒ()
     __outputs: 2
-    _config: { name: """", topic: """", url: ""vue - file"", fwdInMessages: "false", allowScripts: "false", … } 
+    _config: { name: """", topic: """", url: ""vue - file"", fwdInMessages: "false", allowScripts: "false", … }
     _def: { category: "uibuilder", color: "#E6E0F8", defaults: { … }, credentials: { … }, inputs: 1, … }
 }
  */
