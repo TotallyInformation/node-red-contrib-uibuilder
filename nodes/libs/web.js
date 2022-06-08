@@ -1,6 +1,6 @@
 /** Manage ExpressJS on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
- * 
+ *
  * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
@@ -22,7 +22,11 @@
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../../typedefs.js').uibPackageJsonPackage} uibPackageJsonPackage
  * @typedef {import('Express')} Express
+ * @typedef {import('Express').Request} ExpressRequest
+ * @typedef {import('Express').NextFunction} ExpressNextFunction
+ * @typedef {import('Express').Router} ExpressRouter
  */
 
 const path = require('path')
@@ -34,71 +38,66 @@ const tilib = require('./tilib')
 const uiblib = require('./uiblib')
 const packageMgt = require('./package-mgt.js')
 const socket = require('./socket.js')
-const { dumpReq, mylog } = require('./tilib')
-//const { isBuffer } = require('util')
-//const { type } = require('os')
+const { mylog } = require('./tilib') // dumpReq, mylog
+// const { isBuffer } = require('util')
+// const { type } = require('os')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
 
 class UibWeb {
-    // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
-    /** Flag to indicate whether setup() has been run
+    /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
      * @type {boolean}
-     * @protected 
      */
-    //_isConfigured
+    #isConfigured = false
+
+    //#region ---- References to core Node-RED & uibuilder objects ---- //
+
+    /** @type {runtimeRED} */
+    RED = undefined
+
+    /** @type {uibConfig} Reference link to uibuilder.js global configuration object */
+    uib = undefined
+
+    /** Reference to uibuilder's global log functions */
+    log = undefined
+
+    //#endregion ---- References to core Node-RED & uibuilder objects ---- //
+
+    /** Reference to ExpressJS app instance being used by uibuilder
+     * Used for all other interactions with Express
+     * @type {express.Application}
+     */
+    app = undefined
+
+    /** Reference to ExpressJS server instance being used by uibuilder
+     * Used to enable the Socket.IO client code to be served to the front-end
+     */
+    server = undefined
+
+    /** Set which folder to use for the central, static, front-end resources
+     *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
+     * @type {string}
+     */
+    masterStatic = undefined
+
+    /** Holder for node instance routers
+     * @type {Object<string, express.Router>}
+     */
+    instanceRouters = {}
+
+    /** ExpressJS Route Metadata */
+    routers = { admin: [], user: [], instances: {}, config: {} }
 
     /** Called when class is instantiated */
     constructor() {
-        //#region ---- References to core Node-RED & uibuilder objects ---- //
-
-        /** @type {runtimeRED} */
-        this.RED = undefined
-        /** @type {uibConfig} Reference link to uibuilder.js global configuration object */
-        this.uib = undefined
-        /** Reference to uibuilder's global log functions */
-        this.log = undefined
-
-        //#endregion ---- References to core Node-RED & uibuilder objects ---- //
-        
-        //#region ---- Common variables ---- //
-
-        /** Reference to ExpressJS app instance being used by uibuilder
-         * Used for all other interactions with Express
-         * @type {express.Application}
-         */
-        this.app = undefined
-        /** Reference to ExpressJS server instance being used by uibuilder
-         * Used to enable the Socket.IO client code to be served to the front-end
-         */
-        this.server = undefined
-
-        /** Which folder to use for the fall-back front-end code (in the uibuilder module folders) */
-        /** Set which folder to use for the central, static, front-end resources
-         *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
-         * @type {string}
-         */
-        this.masterStatic = undefined
-
-        /** Holder for node instance routers 
-         * @type {Object<string, express.Router>}
-         */
-        this.instanceRouters = {}
-        /** ExpressJS Route Metadata */
-        this.routers = { admin:[], user:[], instances:{}, config:{} }
-
-        //#endregion ---- ---- //
 
         /** Set up a dummy ExpressJS Middleware Function
          * @param {Express.Request} req x
          * @param {Express.Response} res x
-         * @param {Express.NextFunction} next x
+         * @param {ExpressNextFunction} next x
          */
         this.dummyMiddleware = function(req, res, next) { next() }
-
-        // setup() has not yet been run
-        this._isConfigured = false
 
         // setTimeout(() => {
         //     console.log(' \n >> web.js dump >> ', Object.keys(this))
@@ -115,12 +114,12 @@ class UibWeb {
      */
     setup( uib ) {
         // Prevent setup from being called more than once
-        if ( this._isConfigured === true ) {
+        if ( this.#isConfigured === true ) {
             uib.RED.log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
-        if ( ! uib ) {
+        if ( !uib ) {
             throw new Error('[uibuilder:web.js:setup] Called without required uib parameter')
         }
 
@@ -132,10 +131,10 @@ class UibWeb {
         if ( RED.settings.httpRoot === undefined ) this.uib.httpRoot = ''
         else this.uib.httpRoot = RED.settings.httpRoot
 
-        this.routers.config = {httpRoot: this.uib.httpRoot, httpAdminRoot: this.RED.settings.httpAdminRoot}
+        this.routers.config = { httpRoot: this.uib.httpRoot, httpAdminRoot: this.RED.settings.httpAdminRoot }
 
         // At this point we have the refs to uib and RED
-        this._isConfigured = true
+        this.#isConfigured = true
 
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
         this._adminApiSetup()
@@ -144,32 +143,32 @@ class UibWeb {
 
     } // --- End of setup() --- //
 
-    //#region ==== Setup - these are called AFTER _isConfigured=true ==== //
+    //#region ==== Setup - these are called AFTER #isConfigured=true ==== //
 
     /** Add routes for uibuilder's admin REST API's */
     _adminApiSetup() {
-        if ( this._isConfigured !== true ) {
+        if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:web.js:_adminApiSetup] Cannot run. Setup has not been called.')
             return
         }
 
-        this.adminRouter = express.Router({mergeParams:true}) // eslint-disable-line new-cap
+        this.adminRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
 
         /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
         this.adminRouterV3 = require('./admin-api-v3')(this.uib, this.log)
         this.adminRouter.use('/admin', this.adminRouterV3)
-        this.routers.admin.push( {name: 'Admin API v3', path:`${this.RED.settings.httpAdminRoot}uibuilder/admin`, desc: 'Consolidated admin APIs used by the uibuilder Editor panel', type:'Router'} )
-        
+        this.routers.admin.push( { name: 'Admin API v3', path: `${this.RED.settings.httpAdminRoot}uibuilder/admin`, desc: 'Consolidated admin APIs used by the uibuilder Editor panel', type: 'Router' } )
+
         /** Serve up the package docs folder on /<httpAdminRoot>/uibuilder/techdocs (uses docsify)
          * @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108
          */
-        let techDocsPath = path.join(__dirname, '..', '..', 'docs')
+        const techDocsPath = path.join(__dirname, '..', '..', 'docs')
         this.adminRouter.use('/techdocs', express.static( techDocsPath, this.uib.staticOpts ) )
-        this.routers.admin.push( {name: 'Tech Docs', path:`${this.RED.settings.httpAdminRoot}uibuilder/techdocs`, desc: 'Tech docs website powered by Docsify', type:'Static', folder: techDocsPath} )
+        this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/techdocs`, desc: 'Tech docs website powered by Docsify', type: 'Static', folder: techDocsPath } )
 
         // TODO: Move v2 API's to V3
         this.adminRouterV2 = require('./admin-api-v2')(this.uib, this.log)
-        this.routers.admin.push( {name: 'Admin API v2', path:`${this.RED.settings.httpAdminRoot}uibuilder/*`, desc: 'Various older admin APIs used by the uibuilder Editor panel', type:'Router'} )
+        this.routers.admin.push( { name: 'Admin API v2', path: `${this.RED.settings.httpAdminRoot}uibuilder/*`, desc: 'Various older admin APIs used by the uibuilder Editor panel', type: 'Router' } )
 
         /** Serve up the admin root for uibuilder on /<httpAdminRoot>/uibuilder/ */
         this.RED.httpAdmin.use('/uibuilder', this.adminRouter, this.adminRouterV2)
@@ -179,7 +178,7 @@ class UibWeb {
      * @protected
      */
     _webSetup() {
-        if ( this._isConfigured !== true ) {
+        if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:web.js:_webSetup] Cannot run. Setup has not been called.')
             return
         }
@@ -201,19 +200,19 @@ class UibWeb {
                 log.trace(`[uibuilder:web:webSetup] Using custom ExpressJS server at ${uib.customServer.type}://${add}:${uib.customServer.port}`)
             })
         } else {
-            log.trace(`[uibuilder:web:webSetup] Using Node-RED ExpressJS server at ${RED.settings.https?'https':'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${uib.nodeRoot === '' ? '/' : uib.nodeRoot}`)
+            log.trace(`[uibuilder:web:webSetup] Using Node-RED ExpressJS server at ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${uib.nodeRoot === '' ? '/' : uib.nodeRoot}`)
         }
 
         /** We need an http server to serve the page and vendor packages. The app is used to serve up the Socket.IO client.
-         * NB: uib.nodeRoot is the root URL path for http-in/out and uibuilder nodes 
+         * NB: uib.nodeRoot is the root URL path for http-in/out and uibuilder nodes
          * Always set to empty string if a dedicated ExpressJS app is required
-         * Otherwise it is set to RED.settings.httpNodeRoot 
+         * Otherwise it is set to RED.settings.httpNodeRoot
          */
 
         if ( uib.customServer.isCustom === true ) {
 
             // Port has been specified & is different to NR's port so create a new instance of express & app
-            const express = require('express') 
+            const express = require('express')
             this.app = express()
 
             // Use the Express server options from settings.js uibuilder.serverOptions (if any)
@@ -263,7 +262,7 @@ class UibWeb {
             })
 
             this.server.listen(uib.customServer.port, () => {
-                //uib.customServer.host = this.server.address().address // not very useful. Typically returns `::`
+                // uib.customServer.host = this.server.address().address // not very useful. Typically returns `::`
             })
 
         } else {
@@ -274,16 +273,17 @@ class UibWeb {
         }
 
         // Set views folder to uibRoot (but only if not overridden in settings)
-        if ( ! uib.customServer.serverOptions.views ) this.app.set('views', path.join(uib.rootFolder, 'views') )
+        if ( !uib.customServer.serverOptions.views ) this.app.set('views', path.join(uib.rootFolder, 'views') )
 
         // Note: Keep the router vars separate so that they can be used for reporting
 
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
-        this.uibRouter = express.Router({mergeParams:true}) // eslint-disable-line new-cap
+        this.uibRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
 
         // Add masterStatic to ../uibuilder - serves up front-end/... uib-styles.css, uibuilderfe...
-        if ( this.masterStatic !== undefined )
+        if ( this.masterStatic !== undefined ) {
             this.uibRouter.use( express.static( this.masterStatic, uib.staticOpts ) )
+        }
         // Add vendor paths for installed front-end libraries - from `<uibRoot>/package.json`
         this.serveVendorPackages()
         // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
@@ -291,11 +291,11 @@ class UibWeb {
         // Serve the ping endpoint (../uibuilder/ping)
         this.servePing()
 
-        //TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
+        // TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
         // Serve up the master common folder (e.g. <httpNodeRoute>/uibuilder/common/)
         this.uibRouter.use( tilib.urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
-        this.routers.user.push( {name: 'Central Common Resources', path:`${this.uib.httpRoot}/uibuilder/${uib.commonFolderName}/*`, desc: 'Common resource library', type:'Static', folder: uib.commonFolder} )
-        
+        this.routers.user.push( { name: 'Central Common Resources', path: `${this.uib.httpRoot}/uibuilder/${uib.commonFolderName}/*`, desc: 'Common resource library', type: 'Static', folder: uib.commonFolder } )
+
         // Assign the uibRouter to the ../uibuilder url path
         this.app.use( tilib.urlJoin(uib.moduleName), this.uibRouter )
 
@@ -305,16 +305,16 @@ class UibWeb {
      *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
      * @protected */
     _setMasterStaticFolder() {
-        if ( this._isConfigured !== true ) {
+        if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:web.js:_setMasterStaticFolder] Cannot run. Setup has not been called.')
             return
         }
 
         // Reference static vars
         const uib = this.uib
-        //const RED = this.RED
+        // const RED = this.RED
         const log = this.log
-        
+
         try {
             fs.accessSync( path.join(uib.masterStaticFeFolder, defaultPageName), fs.constants.R_OK )
             log.trace(`[uibuilder:web:setMasterStaticFolder] Using master production build folder. ${uib.masterStaticFeFolder}`)
@@ -328,18 +328,18 @@ class UibWeb {
      * The socket.io server supplies one to use with an html script tag
      */
     serveVendorSocketIo() {
-        if ( this._isConfigured !== true ) {
+        if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:web.js:serveVendorSocketIo] Cannot run. Setup has not been called.')
             return
         }
 
         // Add socket.io client - look both in uibuilder master folder, then uibRoot, then userDir
         let sioPath = packageMgt.getPackagePath2( 'socket.io-client', [path.join(__dirname, '..', '..'), this.uib.rootFolder, this.RED.settings.userDir] )
-        
+
         // If it can't be found the usual way - probably because Docker being used & socket.io not in usual place
         if ( sioPath === null ) {
             try {
-                sioPath = path.join(path.dirname(require.resolve('socket.io-client')),'..')
+                sioPath = path.join(path.dirname(require.resolve('socket.io-client')), '..')
             } catch (e) {
                 this.log.error(`[uibuilder:web:serveVendorSocketIo] Cannot find socket.io-client. ${e.message}`)
             }
@@ -349,9 +349,9 @@ class UibWeb {
             // console.log('>> this.uib.staticOpts >>', this.uib.staticOpts)
             sioPath += '/dist'
             this.vendorRouter.use( '/socket.io-client', express.static( sioPath, this.uib.staticOpts ) )
-            this.routers.user.push( {name: 'Socket.IO Client', path:`${this.uib.httpRoot}/uibuilder/vendor/socket.io-client/*`, desc: 'Socket.IO Clients', type:'Static', folder: sioPath} )
-            //! No! This never actually worked! :} - The socket.io SERVER actually creates the path for the client used in script tag but that doesn't work with import/build
-            //this.vendorRouter.use( '/socket.io', express.static( sioPath, opts ) )
+            this.routers.user.push( { name: 'Socket.IO Client', path: `${this.uib.httpRoot}/uibuilder/vendor/socket.io-client/*`, desc: 'Socket.IO Clients', type: 'Static', folder: sioPath } )
+            // ! No! This never actually worked! :} - The socket.io SERVER actually creates the path for the client used in script tag but that doesn't work with import/build
+            // this.vendorRouter.use( '/socket.io', express.static( sioPath, opts ) )
         } else {
             // Error: Can't find Socket.IO
             this.log.error(`[uibuilder:web.js:serveVendorSocketIo] Cannot find installation of Socket.IO Client. It should be in userDir (${this.RED.settings.userDir}) but is not. Check that uibuilder is installed correctly. Run 'npm ls socket.io-client'.`)
@@ -360,28 +360,30 @@ class UibWeb {
 
     /** Add ExpressJS Routes for all installed packages & ensure <uibRoot>/package.json is up-to-date. */
     serveVendorPackages() {
-        if ( this._isConfigured !== true ) {
+        if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:web.js:serveVendorPackages] Cannot run. Setup has not been called.')
             return
         }
 
         // TODO Add some trace messages
 
-        // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
-        this.vendorRouter = express.Router({mergeParams:true}) // eslint-disable-line new-cap
+        /** Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
+         * @type {ExpressRouter & {myname?: string}}
+         */
+        this.vendorRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
         this.vendorRouter.myname = 'uibVendorRouter'
 
         // Remove the vendor router if it already exists - we will recreate it. `some` stops once it has found a result
         this.uibRouter.stack.some((layer, i, aStack) => {
             if ( layer.regexp.toString() === '/^\\/vendor\\/?(?=\\/|$)/i' ) {
-                aStack.splice(i,1)
+                aStack.splice(i, 1)
                 return true
             }
             return false
         } )
         this.routers.user.some((entry, i, uRoutes) => {
             if ( entry.name === 'Vendor Routes' ) {
-                uRoutes.splice(i,1)
+                uRoutes.splice(i, 1)
                 return true
             }
             return false
@@ -389,24 +391,27 @@ class UibWeb {
 
         // Assign the vendorRouter to the ../uibuilder/vendor url path (via uibRouter)
         this.uibRouter.use( '/vendor', this.vendorRouter )
-        this.routers.user.push( {name: 'Vendor Routes', path:`${this.uib.httpRoot}/uibuilder/vendor/*`, desc: 'Front-end libraries are mounted under here', type:'Router'} )        
+        this.routers.user.push( { name: 'Vendor Routes', path: `${this.uib.httpRoot}/uibuilder/vendor/*`, desc: 'Front-end libraries are mounted under here', type: 'Router' } )
 
         // Get the installed packages from the `<uibRoot>/package.json` file
         // If it doesn't exist, this will create it.
-        const pj = packageMgt.getUibRootPackageJson()
+        // const pj = packageMgt.getUibRootPackageJson()
+        const pj = packageMgt.uibPackageJson
 
         Object.keys(pj.dependencies).forEach( packageName => {
+            /** @type {uibPackageJsonPackage} */
             const pkgDetails = pj.uibuilder.packages[packageName]
 
-            // Add a route for each package to this.vendorRouter
-            this.vendorRouter.use( 
-                pkgDetails.packageUrl,
-                express.static(
-                    pkgDetails.installFolder, 
-                    this.uib.staticOpts
-                ) 
-            )
-
+            if ( !pkgDetails.missing ) { // Only if the package is actually installed
+                // Add a route for each package to this.vendorRouter
+                this.vendorRouter.use(
+                    pkgDetails.packageUrl,
+                    express.static(
+                        pkgDetails.installFolder,
+                        this.uib.staticOpts
+                    )
+                )
+            }
         })
 
         // Update the <uibRoot>/package.json file with updated details
@@ -421,16 +426,16 @@ class UibWeb {
         this.uibRouter.get('/ping', (req, res) => {
             res.status(204).end()
         })
-        this.routers.user.push( {name: 'Ping', path:`${this.uib.httpRoot}/uibuilder/ping`, desc: 'Ping/keep-alive endpoint, returns 201', type:'Endpoint'} )        
+        this.routers.user.push( { name: 'Ping', path: `${this.uib.httpRoot}/uibuilder/ping`, desc: 'Ping/keep-alive endpoint, returns 201', type: 'Endpoint' } )
     }
 
     //#endregion ==== End of Setup ==== //
 
-    /** Allow the isConfigured flag to be read (not written) externally 
+    /** Allow the isConfigured flag to be read (not written) externally
      * @returns {boolean} True if this class as been configured
      */
     get isConfigured() {
-        return this._isConfigured
+        return this.#isConfigured
     }
 
     //#region ====== Per-node instance processing ====== //
@@ -454,7 +459,7 @@ class UibWeb {
 
         // Reference static vars
         const uib = this.uib
-        //const RED = this.RED
+        // const RED = this.RED
         const log = this.log
 
         // NOTE: When an instance is renamed or deleted, the routes are removed
@@ -468,8 +473,8 @@ class UibWeb {
         node.commonStaticLoaded = false
 
         // Create router for this node instance
-        this.instanceRouters[node.url] = express.Router({mergeParams:true}) // eslint-disable-line new-cap
-        this.routers.instances[node.url].push( {name: 'Instance Rooter', path:`${this.uib.httpRoot}/${node.url}/`, desc: 'Other routes hang off this', type:'Router', folder: '--'} )
+        this.instanceRouters[node.url] = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
+        this.routers.instances[node.url].push( { name: 'Instance Rooter', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Other routes hang off this', type: 'Router', folder: '--' } )
 
         /** We want to add services in the right order - first load takes preference:
          *   (1) Middleware: (a) common (for all instances), (b) internal (all instances), (c) (if allowed in settings) instance API middleware
@@ -489,7 +494,7 @@ class UibWeb {
         if (uib.instanceApiAllowed === true ) this.addInstanceApiRouter(node)
         else log.trace(`[uibuilder:webjs:instanceSetup] Instance API's not permitted. '${node.url}'`)
 
-        //! IN PROCRESS - Render views
+        // ! IN PROCRESS - Render views
         /** (2a) Render dynamic and explicit template files from views folder
          * ! NOTE: If you create a `views/index.html`, you will never reach your actual `src/index.html` (or dist)
          * TODO For render - prevent base outside instanceRoot/views/ - https://security.stackexchange.com/a/123723/20102
@@ -503,15 +508,15 @@ class UibWeb {
             const requestedView = path.parse(req.path)
             let filePath = path.join(pathRoot, requestedView.base)
 
-            //this.app.set('foo', 'bar') //! TODO - remove
+            // this.app.set('foo', 'bar') //! TODO - remove
 
             if (this.app.get('view engine')) {
                 filePath = path.join(pathRoot, `${requestedView.name}.ejs`)
                 if (fs.existsSync(filePath)) {
                     // console.log('>> render >>', requestedView.name, filePath) //! TODO - remove
                     try {
-                        //res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
-                        res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {_env: node.context().global.get('_env')} )
+                        // res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
+                        res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), { _env: node.context().global.get('_env') } )
                     } catch (e) {
                         res.sendFile( requestedView.base, { root: pathRoot } )
                     }
@@ -527,23 +532,23 @@ class UibWeb {
         // (3) Master Static - Add static route for uibuilder's built-in front-end code
         if ( this.masterStatic !== undefined ) {
             this.instanceRouters[node.url].use( express.static( this.masterStatic, uib.staticOpts ) )
-            this.routers.instances[node.url].push( {name: 'Master Code', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Built-in FE code, same for all instances', type:'Static', folder: this.masterStatic} )
+            this.routers.instances[node.url].push( { name: 'Master Code', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Built-in FE code, same for all instances', type: 'Static', folder: this.masterStatic } )
         }
 
         /** (4) If enabled, allow for directory listing of the custom instance folder */
         if ( node.showfolder === true ) {
-            this.instanceRouters[node.url].use( 
-                '/idx', 
-                serveIndex( node.customFolder, {'icons':true, 'view':'details'} ), 
+            this.instanceRouters[node.url].use(
+                '/idx',
+                serveIndex( node.customFolder, { 'icons': true, 'view': 'details' } ),
                 express.static( node.customFolder, uib.staticOpts ) // Needed to allow index view to show actual files
             )
-            this.routers.instances[node.url].push( {name: 'Index Lister', path:`${this.uib.httpRoot}/${node.url}/idx`, desc: 'Custom pages to list server files', type:'ServeIndex', folder: node.customFolder } )
-        } 
+            this.routers.instances[node.url].push( { name: 'Index Lister', path: `${this.uib.httpRoot}/${node.url}/idx`, desc: 'Custom pages to list server files', type: 'ServeIndex', folder: node.customFolder } )
+        }
 
         // (5) Serve up the uibuilder static common folder on `<httpNodeRoot>/<url>/<commonFolderName>` (it is already available on `<httpNodeRoot>/uibuilder/<commonFolderName>/`, see _webSetup()
         this.instanceRouters[node.url].use( tilib.urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
         // Track routes
-        this.routers.instances[node.url].push( {name: 'Common Code', path: `${this.uib.httpRoot}/${node.url}/common/`, desc: 'Shared FE code, same for all instances', type:'Static', folder: uib.commonFolder} )
+        this.routers.instances[node.url].push( { name: 'Common Code', path: `${this.uib.httpRoot}/${node.url}/common/`, desc: 'Shared FE code, same for all instances', type: 'Static', folder: uib.commonFolder } )
 
         // Apply this instances router to the url path on `<httpNodeRoot>/<url>/`
         this.app.use( tilib.urlJoin(node.url), this.instanceRouters[node.url])
@@ -558,7 +563,7 @@ class UibWeb {
     addMiddlewareFile(node) {
         // Reference static vars
         const uib = this.uib
-        //const RED = this.RED
+        // const RED = this.RED
         const log = this.log
 
         /** Provide the ability to have a ExpressJS middleware hook.
@@ -566,15 +571,15 @@ class UibWeb {
          */
 
         /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
-        let uibMwPath = path.join(uib.configFolder, 'uibMiddleware.js')
+        const uibMwPath = path.join(uib.configFolder, 'uibMiddleware.js')
         try {
             const uibMiddleware = require(uibMwPath)
             if ( typeof uibMiddleware === 'function' ) {
-                //! TODO: Add some more checks in here (e.g. does the function have a next()?)
+                // ! TODO: Add some more checks in here (e.g. does the function have a next()?)
                 // @ts-ignore
                 this.instanceRouters[node.url].use( uibMiddleware )
                 log.trace(`[uibuilder:web:addMiddlewareFile:${node.url}] uibuilder common Middleware file loaded. Path: ${uibMwPath}`)
-                this.routers.instances[node.url].push( {name: 'Common Middleware', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Optional middleware, same for all instances', type:'Handler', folder: uibMwPath} )
+                this.routers.instances[node.url].push( { name: 'Common Middleware', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Optional middleware, same for all instances', type: 'Handler', folder: uibMwPath } )
             } else {
                 log.trace(`[uibuilder:web:addMiddlewareFile:${node.url}] uibuilder common Middleware file not loaded, not a function. Type: ${typeof uibMiddleware}, Path: ${uibMwPath}`)
             }
@@ -593,9 +598,9 @@ class UibWeb {
         if ( uib.nodeRoot === '' || uib.nodeRoot === '/' )  mypath = `/${node.url}/`
         else mypath = `${uib.nodeRoot}${node.url}/`
 
-        const qSec = uib.customServer.type === 'http' ? false : true
+        const qSec = uib.customServer.type === 'https' // true if using https else false
 
-        let that = this
+        const that = this
 
         /**
          * Return a middleware handler
@@ -607,7 +612,7 @@ class UibWeb {
             // Check for client id from client - if it exists, reuse it otherwise create one
             const clientId = uiblib.getClientId(req)
 
-            //TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
+            // TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             res
                 .header({
                     // Help reduce risk of XSS and other attacks
@@ -620,13 +625,13 @@ class UibWeb {
                     // Tell the client what Socket.IO namespace to use,
                     'uibuilder-namespace': node.url, // only client accessible from xhr or web worker
                     'uibuilder-node': node.id,
-                    //'uibuilder-path': mypath,
+                    // 'uibuilder-path': mypath,
                 })
                 // .links({
                 //     help: '',
                 // })
                 .cookie('uibuilder-namespace', node.url, {
-                    path: mypath, 
+                    path: mypath,
                     sameSite: true,
                     // @ts-ignore
                     expires: 0, // session cookie only
@@ -634,30 +639,30 @@ class UibWeb {
                 })
                 // Give the client a fixed session id
                 .cookie('uibuilder-client-id', clientId, {
-                    path: mypath, 
+                    path: mypath,
                     sameSite: true,
                     // @ts-ignore
                     expires: 0, // session cookie only
                     secure: qSec,
                 })
                 // Tell clients what httpNodeRoot to use (affects Socket.io path)
-                .cookie('uibuilder-webRoot', uib.nodeRoot.replace(/\//g,''), {
-                    path: mypath, 
+                .cookie('uibuilder-webRoot', uib.nodeRoot.replace(/\//g, ''), {
+                    path: mypath,
                     sameSite: true,
                     // @ts-ignore
                     expires: 0, // session cookie only
                     secure: qSec,
                 })
 
-            //that.dumpExpressReqAppRes(req, res)
-            
+            // that.dumpExpressReqAppRes(req, res)
+
             next()
         }
 
         this.instanceRouters[node.url].use(masterMiddleware )
-        
+
         // Track routes
-        that.routers.instances[node.url].push( {name: 'uib Internal Middleware', path: `${that.uib.httpRoot}/${node.url}/`, desc: 'Master middleware, same for all instances', type:'Handler', folder: '(internal)'} )
+        that.routers.instances[node.url].push( { name: 'uib Internal Middleware', path: `${that.uib.httpRoot}/${node.url}/`, desc: 'Master middleware, same for all instances', type: 'Handler', folder: '(internal)' } )
 
     } // --- End of addMasterMiddleware --- //
 
@@ -669,7 +674,7 @@ class UibWeb {
     setupInstanceStatic(node) {
         // Reference static vars
         const uib = this.uib
-        //const RED = this.RED
+        // const RED = this.RED
         const log = this.log
 
         let customStatic = node.sourceFolder
@@ -702,12 +707,12 @@ class UibWeb {
         }
 
         // Does it contain an index.html file? If not, then issue a warn
-        if ( ! fs.existsSync( path.join(customFull, defaultPageName) ) ) {
+        if ( !fs.existsSync( path.join(customFull, defaultPageName) ) ) {
             node.warn(`[uibuilder:web:setupInstanceStatic:${node.url}] Cannot show default page, index.html does not exist in ${customFull}.`)
-        } 
+        }
 
         // Track the route
-        this.routers.instances[node.url].push( {name: 'Front-end user code', path:`${uib.httpRoot}/${node.url}/`, desc: 'Your own FE Code', type: 'Static', folder: customFull} )
+        this.routers.instances[node.url].push( { name: 'Front-end user code', path: `${uib.httpRoot}/${node.url}/`, desc: 'Your own FE Code', type: 'Static', folder: customFull } )
 
         // Return the serveStatic
         return express.static( customFull, uib.staticOpts )
@@ -721,12 +726,12 @@ class UibWeb {
     addInstanceApiRouter(node) {
         // Reference static vars
         const uib = this.uib
-        //const RED = this.RED
+        // const RED = this.RED
         const log = this.log
 
         // Allow all .js files in api folder to be loaded, always returns an array - NB: Fast Glob requires fwd slashes even on Windows
         const apiFiles = fg.sync(`${uib.rootFolder}/${node.url}/api/*.js`)
-        //console.log('>> apiFiles >>', `${uib.rootFolder}/${node.url}/api/*.js`, apiFiles)
+        // console.log('>> apiFiles >>', `${uib.rootFolder}/${node.url}/api/*.js`, apiFiles)
         apiFiles.forEach( instanceApiPath => {
             // console.log('>> api file >>', instanceApiPath)
 
@@ -744,7 +749,7 @@ class UibWeb {
                 log.trace(`[uibuilder:webjs:addInstanceApiRouter] ${node.url} function api added`)
                 this.instanceRouters[node.url].use( '/api', instanceApi )
                 return
-            } 
+            }
 
             // Make sure we can understand the contents
             let keys
@@ -775,14 +780,14 @@ class UibWeb {
                     this.instanceRouters[node.url][fnName]( apipath, instanceApi[fnName] )
                 }
             })
-    
+
         })
 
         return undefined
     } // ---- End of getInstanceApiRouter ---- //
 
     /** Create instance details web page
-     * @param {Express.Request} req ExpressJS Request object
+     * @param {ExpressRequest} req ExpressJS Request object
      * @param {uibNode} node configuration data for this instance
      * @returns {string} page html
      */
@@ -791,34 +796,35 @@ class UibWeb {
         const uib = this.uib
         const RED = this.RED
         const userDir = RED.settings.userDir
-        //const log = this.log
+        // const log = this.log
 
         let page = ''
 
         // If using own Express server, correct the URL's
         const url = new URL(req.headers.referer)
         url.pathname = ''
+        // @ts-ignore
         if (uib.customServer && uib.customServer.port && uib.customServer.port != RED.settings.uiPort ) { // eslint-disable-line eqeqeq
-            //http://127.0.0.1:3001/uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css
-            //customServer: { port: 3001, type: 'http', host: '::' }
+            // http://127.0.0.1:3001/uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css
+            // customServer: { port: 3001, type: 'http', host: '::' }
             url.port = uib.customServer.port.toString()
         }
-        const urlPrefix = url.href 
-        //let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
-        let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${node.url}`
+        const urlPrefix = url.href
+        // let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
+        const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}${node.url}`
 
         const nodeKeys = [
-            'id', 'type',  
-            'name', 'wires', '_wireCount', 'credentials', 'topic', 'url', 
-            'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder', 
-            //'useSecurity', 
-            'sessionLength', 'tokenAutoExtend', 'customFolder', 
+            'id', 'type',
+            'name', 'wires', '_wireCount', 'credentials', 'topic', 'url',
+            'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder',
+            // 'useSecurity',
+            'sessionLength', 'tokenAutoExtend', 'customFolder',
             'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
         ]
         // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]
         // Keep secret: ['jwtSecret', ]
 
-        let ns = socket.getNs(node.url)
+        const ns = socket.getNs(node.url)
 
         page += `
             <!doctype html><html lang="en"><head>
@@ -853,7 +859,7 @@ class UibWeb {
                         </tr>
                         <tr>
                             <th>URL for the front-end resources</th>
-                            <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, node.url).replace('/','')}" target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
+                            <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, node.url).replace('/', '')}" target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
                         </tr>
                         <tr>
                             <th>Node-RED userDir folder</th>
@@ -922,8 +928,9 @@ class UibWeb {
             try {
                 if ( info !== null && info.constructor.name === 'Object' ) info = JSON.stringify(info)
             } catch (e) {
-                if ( info !== undefined )
+                if ( info !== undefined ) {
                     RED.log.warn(`[uibuilder:webjs:showInstanceDetails] ${node.id}, ${url}: Item '${item}' failed to stringify. ${e.message}`)
+                }
             }
 
             page += `
@@ -940,13 +947,13 @@ class UibWeb {
                 <div></div>
         `
 
-        let iRoutes = Object.values(this.dumpInstanceRoutes(false, node.url))[0]
+        const iRoutes = Object.values(this.dumpInstanceRoutes(false, node.url))[0]
         page += `
             <h4>Instance Routes for ${node.url}</h4>
             ${this.htmlBuildTable( this.routers.instances[node.url], ['name', 'desc', 'path', 'type', 'folder'] )}
             <h5>ExpressJS technical route data for <code>${node.url}</code> (<code>../${node.url}/*</code>)</h5>
-            ${this.htmlBuildTable( iRoutes, ['name','path', 'folder', 'route'] )}
-            `                    
+            ${this.htmlBuildTable( iRoutes, ['name', 'path', 'folder', 'route'] )}
+            `
 
         page += `
             </body></html>
@@ -967,9 +974,9 @@ class UibWeb {
     summariseRoute(L, out) {
         if (L.name === 'query' || L.name === 'expressInit') return
 
-        let x = {
-            'name': L.name, 
-            'path': 
+        const x = {
+            'name': L.name,
+            'path':
                 L.regexp.toString()
                     .replace('/^\\', '')
                     .replace('\\/?(?=\\/|$)/i', '/')
@@ -992,7 +999,7 @@ class UibWeb {
             // x.folder = this.masterStatic
             // console.log('>>', L)
         }
-        
+
         // @ts-ignore
         out.push( x )
     }
@@ -1002,8 +1009,8 @@ class UibWeb {
      * @param {string|null} [url] Optional. If not null, only dump the given instance
      * @returns {any} Summary object
      */
-    dumpInstanceRoutes(print=true, url=null) {
-        let instances = {}
+    dumpInstanceRoutes(print = true, url = null) {
+        const instances = {}
 
         let urls = []
         if ( url === null ) {
@@ -1016,7 +1023,7 @@ class UibWeb {
         urls.forEach( url => {
             instances[url] = []
             for ( const layer of this.instanceRouters[url].stack) { this.summariseRoute(layer, instances[url]) }
-            if ( instances[url].length === 0 ) instances[url] = [{name: 'No routes'}]
+            if ( instances[url].length === 0 ) instances[url] = [{ name: 'No routes' }]
         })
 
         if (print) {
@@ -1037,8 +1044,8 @@ class UibWeb {
      * @param {boolean} print If true, output to console
      * @returns {any} Summary object
      */
-    dumpAdminRoutes(print=true) {
-        let routes = {'app':[], 'admin':[], 'v3':[], 'v2':[]}
+    dumpAdminRoutes(print = true) {
+        const routes = { 'app': [], 'admin': [], 'v3': [], 'v2': [] }
 
         // @ts-ignore
         for ( const layer of this.RED.httpAdmin._router.stack) { this.summariseRoute(layer, routes.app) }
@@ -1048,7 +1055,7 @@ class UibWeb {
 
         if (print) {
             console.log(' \n---- Admin Facing Routes ----')
-            let adminRoot = this.RED.settings.httpAdminRoot
+            const adminRoot = this.RED.settings.httpAdminRoot
 
             console.log(`>> App Admin Routes ${adminRoot}* >>`)
             console.table(routes.app)
@@ -1070,8 +1077,8 @@ class UibWeb {
      * @param {boolean} print If true, output to console
      * @returns {any} Summary object
      */
-    dumpUserRoutes(print=true) {
-        let routes = {'app':[], 'uibRouter':[], 'vendorRouter':[]}
+    dumpUserRoutes(print = true) {
+        const routes = { 'app': [], 'uibRouter': [], 'vendorRouter': [] }
 
         // Get the user-facing routes
         for ( const layer of this.app._router.stack) { this.summariseRoute(layer, routes.app) }
@@ -1098,10 +1105,10 @@ class UibWeb {
      * @param {boolean} print If true, output to console
      * @returns {any} Summary object
      */
-    dumpRoutes(print=true) {
-        let o = {
-            'user': {'app':[], 'uibRouter':[], 'vendorRouter':[]}, 
-            'admin': {'app':[], 'admin':[], 'v3':[], 'v2':[]},
+    dumpRoutes(print = true) {
+        const o = {
+            'user': { 'app': [], 'uibRouter': [], 'vendorRouter': [] },
+            'admin': { 'app': [], 'admin': [], 'v3': [], 'v2': [] },
             'instances': {}
         }
 
@@ -1142,14 +1149,14 @@ class UibWeb {
             method: r.method,
             orginalUrl: r.originalUrl,
             params: r.params,
-            path: r.path, 
+            path: r.path,
             protocol: r.protocol,
             query: r.query,
             route: r.route,
             secure: r.secure,
             stale: r.stale, // oposite of fresh
             subdomains: r.subdomains,
-            url: r.url, //from node.js url
+            url: r.url, // from node.js url
             xhr: r.xhr,
         })
         // console.log('>> app >>', {
@@ -1173,13 +1180,13 @@ class UibWeb {
      * @returns {string} HTML Table
      */
     htmlBuildTable(input, cols) { // eslint-disable-line class-methods-use-this
-        
+
         if (!cols) {
             cols = Object.keys(input[0])
         }
         let html = '<div class="table-responsive"><table  class="uib-info-tb table table-sm"><thead><tr>'
 
-        const escapeHTML = str => str.replace(/[&<>'"]/g, 
+        const escapeHTML = str => str.replace(/[&<>'"]/g,
             tag => ({
                 '&': '&amp;',
                 '<': '&lt;',
@@ -1191,7 +1198,7 @@ class UibWeb {
 
         /** The HTML for a single cell
          * @param {*} col _
-         * @param {*} entry _ 
+         * @param {*} entry _
          * @returns {string} HTML for a single cell
          */
         function cell(col, entry) { // eslint-disable-line require-jsdoc
@@ -1215,7 +1222,7 @@ class UibWeb {
             for (const col of cols) {
                 html += cell(col, entry)
             }
-            
+
             html += '</tr>'
         }
 
