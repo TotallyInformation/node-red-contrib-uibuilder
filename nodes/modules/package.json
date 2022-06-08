@@ -1,0 +1,7 @@
+{
+  "name": "uibuilder-modules",
+  "description": "ECMA modules for uibuilder. Part of the conversion project from commonjs to ECMA modules.",
+  "author": "Julian Knight (Totally Information)",
+  "type": "module",
+  "note": "When files in this folder are imported, node.js will treat them as ECMA modules automatically thanks to this file."
+}
