@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "5.0.2",
+  "version": "5.0.3-dev",
   "description": "Easily create data-driven web UI's for Node-RED using any (or no) front-end library.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -9,7 +9,8 @@
     "watch": "gulp watch",
     "listbin": "ls ./node_modules/bin",
     "docs": "docsify serve ./docs",
-    "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./"
+    "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
+    "buildSidebar": "node ./bin/docsify-auto-sidebar.js"
   },
   "dependencies": {
     "@totallyinformation/ti-common-event-handler": "^1.0.0",
@@ -30,12 +31,15 @@
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/jquery": "^3.5.8",
-    "@types/node": "^12.20.47",
+    "@types/node": "^12.20.55",
     "@types/node-red": "^1.1.1",
-    "eslint": "^8.2.0",
+    "eslint": "^8.17.0",
+    "eslint-config-standard": "^17.0.0",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^6.2.0",
+    "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsdoc": "^39.0.1",
+    "eslint-plugin-n": "^15.2.1",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-sonarjs": "^0.13.0",
     "gulp": "^4.0.2",
@@ -61,7 +65,7 @@
     }
   },
   "engines": {
-    "node": ">=12.20"
+    "node": ">=12.22"
   },
   "directories": {
     "example": "./examples",
