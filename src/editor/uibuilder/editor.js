@@ -1,33 +1,28 @@
-/* eslint-disable es/no-object-values, strict */
-/* globals JQuery */
+// @ts-nocheck
+/* eslint-disable sonarjs/no-duplicate-string, es/no-object-values, strict */
 
 // Isolate this code
-(function () {
+(function () { // eslint-disable-line sonarjs/cognitive-complexity
     'use strict'
 
     const uibDebug = location.hostname === '127.0.0.1'
     const mylog = uibDebug ? console.log : function() {}
     mylog('[uibuilder] DEBUG ON (because running on localhost)')
 
-    //mylog('>> GLOBALS >>', window)
-    //mylog('>> SETTINGS >>', RED.settings)
-
-    /** Typedefs
-     * typedef {import("node-red").EditorRED} Red
-     * typedef {import("node-red__editor-client").RED} RED
-     */
-
     //#region ------------------- Pollyfills --------------------- //
-    if (!Object.entries)
-        Object.entries = function( obj ){
-            var ownProps = Object.keys( obj ),
-                i = ownProps.length,
-                resArray = new Array(i) // preallocate the Array
-            while (i--)
+
+    if (!Object.entries) {
+        Object.entries = function( obj ) {
+            const ownProps = Object.keys( obj )
+            let i = ownProps.length
+            const resArray = new Array(i) // preallocate the Array
+            while (i--) {
                 resArray[i] = [ownProps[i], obj[ownProps[i]]]
+            }
 
             return resArray
         }
+    }
     if (!Object.values) {
         const reduce = Function.bind.call(Function.call, Array.prototype.reduce)
         const keys = Reflect.ownKeys // eslint-disable-line no-undef
@@ -50,9 +45,9 @@
     /** Node's background color @constant {string} paletteColor */
     const paletteColor  = '#E6E0F8'
     /** Default session length (in seconds) if security is active @type {Number} */
-    //const defaultSessionLength = 432000
+    // const defaultSessionLength = 432000
     /** Default JWT secret if security is active - to ensure it isn't blank @type {String} */
-    //const defaultJwtSecret = 'Replace This With A Real Secret'
+    // const defaultJwtSecret = 'Replace This With A Real Secret'
     /** Default template name */
     const defaultTemplate = 'blank'
     /** Track which urls have been used - required to handle copy/paste and import
@@ -61,9 +56,9 @@
     const editorInstances = {}
 
     /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
-    var packages = []
+    let packages = []
     /** List of the instances in use by id [{node_id: url}], updated in validateUrl() */
-    var uibuilderInstances = RED.settings.uibuilderInstances
+    let uibuilderInstances = RED.settings.uibuilderInstances
 
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
      * @typedef {object} uiace Options for the ACE/Monaco code editor
@@ -75,7 +70,7 @@
     const uiace = {
         'format': 'html',
         'folder': 'src',
-        'fname' : 'index.html',
+        'fname': 'index.html',
         'fullscreen': false
     }
 
@@ -93,14 +88,14 @@
             // may be different to the deployed list
             editorInstances[node.id] = node.url
             // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. --
-        } 
+        }
     })
     RED.events.on('nodes:change', function(node) {
         if ( node.type === 'uibuilder') {
             mylog('nodes:change:', node)
             editorInstances[node.id] = node.url
         }
-    }) 
+    })
     RED.events.on('nodes:remove', function(node) {
         if ( node.type === 'uibuilder') {
             mylog('>> nodes:remove >>', node)
@@ -130,7 +125,7 @@
      * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
      */
     function addPackageRow(node, element, index, data) {
-        let hRow = '', pkgSpec = null
+        let hRow = ''; let pkgSpec = null
 
         if (Object.entries(data).length === 0) {
             // Add button was pressed so we have no packageName, create an input form instead
@@ -162,14 +157,18 @@
                 npm install <folder>
                 */
             pkgSpec = packages[data]
+            // console.log('packages[data]', packages[data])
             // addItem method was called with a packageName passed
             hRow = `
                 <div id="packageList-row-${index}" class="packageList-row-data">
-                    <a href="${pkgSpec.homepage}" target="_blank" title="Click to open homepage in a new tab"><b>${data}</b></a>, <span title="${pkgSpec.spec}">${pkgSpec.installedVersion}</span>
-                    <br>
-                    URL to use: <code style="white-space:inherit;" title="NB: The actual resource is an estimate, check the package docs for the actual entry point">
-                        ${pkgSpec.url}
-                    </code>
+                    <a href="${pkgSpec.homepage}" target="_blank" title="Click to open package homepage in a new tab"><b>${data}</b> <span class="emoji">ℹ️</span></a>, <span title="npm version specification: ${pkgSpec.spec}">${pkgSpec.installedVersion}</span>
+                    
+                    <p title="NB: This link an estimate, check the package docs for the actual entry point" style="margin-bottom:0;">
+                        Est. link: 
+                        <code style="white-space:inherit;text-decoration: underline;"><a href="${node.urlPrefix}${pkgSpec.url}" target="_blank">
+                            ${pkgSpec.url}
+                        </code>
+                    </p>
                 </div>
             `
         }
@@ -189,19 +188,19 @@
         }
 
         // Create a button click listener for the install button for this row
-        $('#packageList-button-' + index).on('click', function(){
+        $('#packageList-button-' + index).on('click', function() {
             // show activity spinner
             $('i.spinner').show()
-            
+
             // Get the data from the input fields
-            var packageName = String($(`#packageList-input-${index}`).val())
-            var packageTag = String($(`#packageList-tag-${index}`).val())
+            const packageName = String($(`#packageList-input-${index}`).val())
+            const packageTag = String($(`#packageList-tag-${index}`).val())
 
             if ( packageName.length !== 0 ) {
                 RED.notify('Installing npm package ' + packageName)
 
                 // Call the npm installPackage API (it updates the package list)
-                $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&tag=${packageTag}`, function(data){
+                $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&tag=${packageTag}`, function(data) {
                     const npmOutput = data.result[0]
 
                     if ( data.success === true) {
@@ -254,7 +253,7 @@
         $('i.spinner').show()
 
         // Call the npm installPackage API (it updates the package list)
-        $.get( 'uibuilder/uibnpmmanage?cmd=remove&package=' + packageName, function(data){
+        $.get( 'uibuilder/uibnpmmanage?cmd=remove&package=' + packageName, function(data) {
 
             if ( data.success === true) {
                 console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
@@ -264,8 +263,7 @@
                 console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
                 RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
                 // Put the entry back again
-                // @ts-ignore
-                $('#node-input-packageList').editableList('addItem',packageName)
+                $('#node-input-packageList').editableList('addItem', packageName)
             }
 
             $('i.spinner').hide()
@@ -274,16 +272,16 @@
             .fail(function(_jqXHR, textStatus, errorThrown) {
                 console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
                 RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
-                
+
                 // Put the entry back again
                 // @ts-ignore
-                $('#node-input-packageList').editableList('addItem',packageName)
+                $('#node-input-packageList').editableList('addItem', packageName)
 
                 $('i.spinner').hide()
                 return 'removePackageRow failed'
                 // TODO otherwise highlight input
             })
-        
+
     } // ---- End of removePackageRow ---- //
 
     /** Get list of installed packages via API - save to master list */
@@ -295,11 +293,15 @@
             method: 'get',
             url: 'uibuilder/uibvendorpackages',
             async: false,
-            //data: { url: node.url},
-            
+            // data: { url: node.url},
+
             success: function(vendorPaths) {
                 packages = vendorPaths
-            }
+            },
+
+            error: function(err) {
+                console.log('ERROR', err)
+            },
 
         })
 
@@ -316,13 +318,13 @@
      */
     function fileType(fname) {
         let ftype = 'text'
-        let fparts = fname.split('.')
+        const fparts = fname.split('.')
         // Take off the first entry if the file name started with a dot
         if ( fparts[0] === '' ) fparts.shift()
         if (fparts.length > 1) {
             // Get the last element of the array
             // eslint-disable-next-line newline-per-chained-call
-            let fext = fparts.pop().toLowerCase().trim()
+            const fext = fparts.pop().toLowerCase().trim()
             switch (fext) {
                 case 'js':
                     ftype = 'javascript'
@@ -357,7 +359,7 @@
         $('#edit-save').prop('disabled', isClean)
         $('#edit-reset').prop('disabled', isClean)
         // If clean, enable the delete and edit buttons
-        //$('#edit-delete').prop('disabled', !isClean)
+        // $('#edit-delete').prop('disabled', !isClean)
         $('#edit-close').prop('disabled', !isClean)
         $('#node-edit-file').prop('disabled', !isClean)
         $('#node-input-filename').prop('disabled', !isClean)
@@ -365,7 +367,7 @@
         $('#node-dialog-ok').prop('disabled', !isClean)
         $('#node-dialog-cancel').prop('disabled', !isClean)
         // If not clean, Add a user hint
-        if ( ! isClean ) {
+        if ( !isClean ) {
             $('#file-action-message').text('Save Required')
             $('#node-dialog-ok').css( 'cursor', 'not-allowed' )
             $('#node-dialog-cancel').css( 'cursor', 'not-allowed' )
@@ -378,35 +380,37 @@
     /** Get the chosen file contents & set up the ACE editor */
     function getFileContents() {
         // Get the current url
-        var url = $('#node-input-url').val()
+        const url = $('#node-input-url').val()
 
-        /** Get the chosen folder name - use the default/last saved on first load 
-         * @type {string} */ 
-        // @ts-ignore
-        var folder = $('#node-input-folder').val()
-        if ( folder === null ) 
-            folder = localStorage.getItem('uibuilder.'+url+'.folder') || uiace.folder 
-        /** Get the chosen filename - use the default/last saved on first load 
+        /** Get the chosen folder name - use the default/last saved on first load
          * @type {string} */
         // @ts-ignore
-        var fname = $('#node-input-filename').val()
-        if ( fname === null ) 
-            fname = localStorage.getItem('uibuilder.'+url+'.selectedFile') || uiace.fname 
+        let folder = $('#node-input-folder').val()
+        if ( folder === null ) {
+            folder = localStorage.getItem('uibuilder.' + url + '.folder') || uiace.folder
+        }
+        /** Get the chosen filename - use the default/last saved on first load
+         * @type {string} */
+        // @ts-ignore
+        let fname = $('#node-input-filename').val()
+        if ( fname === null ) {
+            fname = localStorage.getItem('uibuilder.' + url + '.selectedFile') || uiace.fname
+        }
 
         // Save the file & folder names
         uiace.folder = folder
         uiace.fname = fname
 
         // Persist the folder & file name selection
-        localStorage.setItem('uibuilder.'+url+'.folder', uiace.folder)
-        localStorage.setItem('uibuilder.'+url+'.selectedFile', uiace.fname)
+        localStorage.setItem('uibuilder.' + url + '.folder', uiace.folder)
+        localStorage.setItem('uibuilder.' + url + '.selectedFile', uiace.fname)
 
         // Change mode to match file type
-        var filetype = uiace.format = fileType(fname)
+        const filetype = uiace.format = fileType(fname)
         $('#node-input-format').val(filetype)
 
         // Get the file contents via API defined in uibuilder.js
-        $.get( 'uibuilder/uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data){
+        $.get( 'uibuilder/uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data) {
             $('#node-input-template-editor').show()
             $('#node-input-template-editor-no-file').hide()
             // Add the fetched data to the editor
@@ -428,10 +432,10 @@
                 $('#node-input-template-editor-no-file').show()
 
             })
-            .always(function(){
+            .always(function() {
                 fileIsClean(true)
                 // Default the language selector in case it wasn't recognised
-                if(!$('#node-input-format option:selected').length) $('#node-input-format').val('text')
+                if (!$('#node-input-format option:selected').length) $('#node-input-format').val('text')
             })
     } // --- End of getFileContents --- //
 
@@ -440,21 +444,23 @@
      */
     function getFileList(selectedFile) {
         //#region --- Collect variables from Config UI ---
-        var url = /** @type {string} */ ($('#node-input-url').val())
-        var folder = /** @type {string} */ ($('#node-input-folder').val())
-        var f = /** @type {string} */ ($('#node-input-filename').val())
-        
+        const url = /** @type {string} */ ($('#node-input-url').val())
+        let folder = /** @type {string} */ ($('#node-input-folder').val())
+        const f = /** @type {string} */ ($('#node-input-filename').val())
+
         // Whether or not to force the index.(html|js|css) files to be copied over if missing
-        //var nodeInputCopyIndex = $('#node-input-copyIndex').is(':checked')
+        // var nodeInputCopyIndex = $('#node-input-copyIndex').is(':checked')
         //#endregion -------------------------------------
 
         // Collect the current filename from various places
         if ( selectedFile === undefined ) selectedFile = /** @type {string} */ (f)
-        if ( selectedFile === null ) 
-            selectedFile = localStorage.getItem('uibuilder.'+url+'.selectedFile') || undefined
+        if ( selectedFile === null ) {
+            selectedFile = localStorage.getItem('uibuilder.' + url + '.selectedFile') || undefined
+        }
 
-        if ( folder === null ) 
-            folder = localStorage.getItem('uibuilder.'+url+'.folder') || undefined
+        if ( folder === null ) {
+            folder = localStorage.getItem('uibuilder.' + url + '.folder') || undefined
+        }
 
         // Clear out drop-downs ready for rebuilding
         $('#node-input-filename option').remove()
@@ -471,7 +477,7 @@
         })
             // eslint-disable-next-line no-unused-vars
             .done(function(data, _textStatus, jqXHR) {
-                let firstFile = '', indexHtml = false, selected = false
+                let firstFile = ''; let indexHtml = false; let selected = false
 
                 // build folder list, pre-select src if no current folder selected #node-input-folder - Object.keys(res)
                 const folders = Object.keys(data).sort()
@@ -481,9 +487,9 @@
                     // For the root folder, use empty string for folders lookup but "root" for display
                     if ( fldrname === '' ) fldrname = 'root'
                     // Build the drop-down
-                    $('#node-input-folder').append($('<option>', { 
+                    $('#node-input-folder').append($('<option>', {
                         value: fldrname,
-                        text : fldrname, 
+                        text: fldrname,
                     }))
                 })
                 // if currently selected folder doesn't exist
@@ -496,16 +502,16 @@
                 $('#node-input-folder').val(folder)
                 uiace.folder = folder
                 // Persist the folder selection
-                localStorage.setItem('uibuilder.'+url+'.folder', folder)
+                localStorage.setItem('uibuilder.' + url + '.folder', folder)
 
                 let files = []
                 files = data[folder]
-                
+
                 $.each(files, function (i, filename) {
                     // Build the drop-down
-                    $('#node-input-filename').append($('<option>', { 
+                    $('#node-input-filename').append($('<option>', {
                         value: filename,
-                        text : filename, 
+                        text: filename,
                     }))
                     // Choose the default file. In order: selectedFile param, index.html, 1st returned
                     if ( i === 0 ) firstFile = filename
@@ -521,7 +527,7 @@
                 $('#node-input-filename').val(uiace.fname)
                 uiace.format = fileType(uiace.fname)
                 // Persist the file name selection
-                localStorage.setItem('uibuilder.'+url+'.selectedFile', uiace.fname)
+                localStorage.setItem('uibuilder.' + url + '.selectedFile', uiace.fname)
 
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
@@ -529,7 +535,7 @@
                 console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
                 uiace.fname = ''
                 uiace.format = 'text'
-                RED.notify(`uibuilder: Folder and file listing error.<br>${errorThrown}`, {type:'error'})
+                RED.notify(`uibuilder: Folder and file listing error.<br>${errorThrown}`, { type: 'error' })
 
             })
             .always(function() {
@@ -538,13 +544,13 @@
 
     } // --- End of getFileList --- //
 
-    /** Call v3 admin API to create a new folder 
+    /** Call v3 admin API to create a new folder
      * @param {string} folder Name of new folder to create (combines with current uibuilder url)
      * returns {string} Status message
      */
     function createNewFolder(folder) {
         // Also get the current url
-        var url = $('#node-input-url').val()
+        const url = $('#node-input-url').val()
 
         $.ajax({
             type: 'POST',
@@ -555,27 +561,27 @@
                 'cmd': 'newfolder',
             },
         })
-            .done(function() { //data, textStatus, jqXHR) {
-                RED.notify(`uibuilder: Folder <code>${folder}</code> Created.`, {type:'success'})
+            .done(function() { // data, textStatus, jqXHR) {
+                RED.notify(`uibuilder: Folder <code>${folder}</code> Created.`, { type: 'success' })
                 // Rebuild the file list
                 getFileList()
 
                 return 'Create folder succeeded'
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
-                RED.notify(`uibuilder: Create Folder Error.<br>${errorThrown}`, {type:'error'})
+                RED.notify(`uibuilder: Create Folder Error.<br>${errorThrown}`, { type: 'error' })
                 return 'Create folder failed'
             })
     } // --- End of createNewFile --- //
 
-    /** Call v3 admin API to create a new file 
+    /** Call v3 admin API to create a new file
      * @param {string} fname Name of new file to create (combines with current selected folder and the current uibuilder url)
      * returns {string} Status message
      */
     function createNewFile(fname) {
         // Also get the current folder & url
-        var folder = $('#node-input-folder').val() || uiace.folder
-        var url = $('#node-input-url').val()
+        const folder = $('#node-input-folder').val() || uiace.folder
+        const url = $('#node-input-url').val()
 
         $.ajax({
             type: 'POST',
@@ -587,8 +593,8 @@
                 'cmd': 'newfile',
             },
         })
-            .done(function() { //data, textStatus, jqXHR) {
-                RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Created.`, {type:'success'})
+            .done(function() { // data, textStatus, jqXHR) {
+                RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Created.`, { type: 'success' })
                 // Rebuild the file list
                 getFileList(fname)
 
@@ -596,18 +602,18 @@
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error( '[uibuilder:createNewFile:post] Error ' + textStatus, errorThrown )
-                RED.notify(`uibuilder: Create File Error.<br>${errorThrown}`, {type:'error'})
+                RED.notify(`uibuilder: Create File Error.<br>${errorThrown}`, { type: 'error' })
                 return 'Create file failed'
             })
     } // --- End of createNewFile --- //
 
-    /** Call v3 admin API to delete the currently selected folder 
+    /** Call v3 admin API to delete the currently selected folder
      * returns {string} Status message
      */
     function deleteFolder() {
         // Also get the current url & folder
-        var url = $('#node-input-url').val()
-        var folder = $('#node-input-folder').val()
+        const url = $('#node-input-url').val()
+        const folder = $('#node-input-folder').val()
 
         $.ajax({
             type: 'DELETE',
@@ -619,7 +625,7 @@
             },
         })
             .done(function() { // data, textStatus, jqXHR) {
-                RED.notify(`uibuilder: Folder <code>${folder}</code> deleted.`, {type:'success'})
+                RED.notify(`uibuilder: Folder <code>${folder}</code> deleted.`, { type: 'success' })
                 // Rebuild the file list
                 getFileList()
 
@@ -627,20 +633,20 @@
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error( '[uibuilder:deleteFolder:delete] Error ' + textStatus, errorThrown )
-                RED.notify(`uibuilder: Delete Folder Error.<br>${errorThrown}`, {type:'error'})
+                RED.notify(`uibuilder: Delete Folder Error.<br>${errorThrown}`, { type: 'error' })
                 return 'Delete folder failed'
             })
 
     } // --- End of deleteFolder --- //
 
-    /** Call v3 admin API to delete the currently selected file 
+    /** Call v3 admin API to delete the currently selected file
      * returns {string} Status message
      */
     function deleteFile() {
         // Get the current file, folder & url
-        var folder = /** @type {string} */ ($('#node-input-folder').val()) || uiace.folder
-        var url = /** @type {string} */ ($('#node-input-url').val())
-        var fname = /** @type {string} */ ($('#node-input-filename').val())
+        const folder = /** @type {string} */ ($('#node-input-folder').val()) || uiace.folder
+        const url = /** @type {string} */ ($('#node-input-url').val())
+        const fname = /** @type {string} */ ($('#node-input-filename').val())
 
         $.ajax({
             type: 'DELETE',
@@ -653,7 +659,7 @@
             },
         })
             .done(function() { // data, textStatus, jqXHR) {
-                RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Deleted.`, {type:'success'})
+                RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Deleted.`, { type: 'success' })
                 // Rebuild the file list
                 getFileList(fname)
 
@@ -661,7 +667,7 @@
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error( '[uibuilder:deleteFile:delete] Error ' + textStatus, errorThrown )
-                RED.notify(`uibuilder: Delete File Error.<br>${errorThrown}`, {type:'error'})
+                RED.notify(`uibuilder: Delete File Error.<br>${errorThrown}`, { type: 'error' })
                 return 'Delete file failed'
             })
 
@@ -675,15 +681,15 @@
             // If the editor is in full-screen ...
             if (document.fullscreenElement) {
                 // Force background color and add some padding to keep away from edge
-                $('#edit-props').css('background-color','#f6f6f6')
-                    .css('padding','1em')
+                $('#edit-props').css('background-color', '#f6f6f6')
+                    .css('padding', '1em')
 
                 // Start to calculate the available height and adjust the editor to fill the ht
                 height = parseInt($('#edit-props').css('height'), 10) // full available height
                 height -= 25
 
                 // Replace the expand icon with a compress icon
-                $('#node-function-expand-js').css('background-color','black')
+                $('#node-function-expand-js').css('background-color', 'black')
                     .html('<i class="fa fa-compress"></i>')
 
                 uiace.fullscreen = true
@@ -692,29 +698,29 @@
                 // Don't bother if the top of the editor is still auto
                 if ( $('#edit-outer').css('top') === 'auto' ) return
 
-                $('#edit-props').css('background-color','')
-                    .css('padding','')
+                $('#edit-props').css('background-color', '')
+                    .css('padding', '')
 
                 height = ($('.red-ui-tray-footer').position()).top - ($('#edit-outer').offset()).top - 35
-                
+
                 // Replace the compress icon with a expand icon
-                $('#node-function-expand-js').css('background-color','')
+                $('#node-function-expand-js').css('background-color', '')
                     .html('<i class="fa fa-expand"></i>')
 
                 uiace.fullscreen = false
-                
+
             }
-            
+
             // everything but the edit box
-            var rows = $('#edit-props > div:not(.node-text-editor-row)')
+            const rows = $('#edit-props > div:not(.node-text-editor-row)')
 
             // subtract height of each row from the total
-            for (var i=0; i<rows.length; i++) {
+            for (let i = 0; i < rows.length; i++) {
                 height -= $(rows[i]).outerHeight(true)
             }
 
             // Set the height of the edit box
-            $('#node-input-template-editor').css('height',height+'px')
+            $('#node-input-template-editor').css('height', height + 'px')
 
             // Get the content to match the edit box size
             uiace.editor.resize()
@@ -732,9 +738,9 @@
         // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
         // Clients will be reloaded if the reload checkbox is set.
         const request = new XMLHttpRequest()
-        const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() + 
-            '&url=' + $('#node-input-url').val() + 
-            '&reload=' + $('#node-input-reload').prop('checked') + 
+        const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() +
+            '&url=' + $('#node-input-url').val() +
+            '&reload=' + $('#node-input-reload').prop('checked') +
             '&data=' + encodeURIComponent(uiace.editorSession.getValue())
         request.open('POST', 'uibuilder/uibputfile', true)
         request.onreadystatechange = function() {
@@ -775,10 +781,10 @@
             dataType: 'json',
             url: './uibuilder/admin/_', // pass dummy url _ as not needed for this query
             data: {
-                'cmd': 'listinstances', //'checkurls',
+                'cmd': 'listinstances', // 'checkurls',
             },
             success: function(data) {
-                //console.log('>> update instances >>', value, data)
+                // console.log('>> update instances >>', value, data)
                 uibuilderInstances = data
             }
         })
@@ -792,7 +798,7 @@
      */
     function queryFolderExists(url) {
         if (url === undefined) return false
-        let check = false 
+        let check = false
         $.ajax({
             type: 'GET',
             async: false,
@@ -805,8 +811,9 @@
                 check = data
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                if (errorThrown !== 'Not Found')
+                if (errorThrown !== 'Not Found') {
                     console.error( '[uibuilder:queryFolderExists] Error ' + textStatus, errorThrown )
+                }
                 check = false
             },
         })
@@ -817,7 +824,7 @@
      * @param {object} urlErrors List of errors
      * @param {boolean} enable True=Enable config editing, false=disable
      */
-    function enableEdit(urlErrors, enable=true) {
+    function enableEdit(urlErrors, enable = true) {
         if (enable === true) {
             // $('#node-dialog-ok')
             //     .prop('disabled', false)
@@ -835,7 +842,7 @@
                     'cursor': 'pointer',
                 })
             $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
-                .prop('disabled', false)    
+                .prop('disabled', false)
                 .css({
                     'pointer-events': 'auto',
                     'cursor': 'pointer',
@@ -899,15 +906,15 @@
     } // ---- End of enableEdit ---- //
 
     /** Show key data for URL changes
-     * @param {*} node 
-     * @param {*} value 
+     * @param {*} node Reference to node definition
+     * @param {*} value Value
      */
-    function debugUrl(node, value) {
+    function debugUrl(node, value) { // eslint-disable-line no-unused-vars
         if (!uibDebug) return
 
         console.group(`>> validateUrl >> ${node.id}`)
         mylog('-- isDeployed --', node.isDeployed )
-        mylog('-- node.url --',node.url, '-- node.oldUrl --', node.oldUrl)
+        mylog('-- node.url --', node.url, '-- node.oldUrl --', node.oldUrl)
         mylog('-- value --', value)
         mylog('-- Editor URL Changed? --', node.urlChanged, '-- Valid? --', node.urlValid )
         mylog('-- Deployed URL Changed? --', node.urlDeployedChanged )
@@ -926,7 +933,7 @@
      * @this {*}
      **/
     function validateUrl(value) {
-        /** Notes: 
+        /** Notes:
          *  1) `this` is the node instance configuration as at last press of Done.
          *  2) Validation fns are run on every node instance when the Editor is loaded (e.g. panel not open) -
          *     value is populated but jQ val is undefined.
@@ -954,7 +961,7 @@
         // Update the deployed instances list (also updates this.isDeployed)
         updateDeployedInstances(this)
 
-        //this.urlValid = false
+        // this.urlValid = false
         this.urlErrors = {}
 
         this.urlDeployedChanged = uibuilderInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
@@ -972,7 +979,7 @@
             value = ''
             this.url = this.oldUrl = undefined
             $('#node-input-url').val('')
-            mylog('[uib] >> Copy/Paste >>', this.id, 'this.url:', this.url, ', value:', value, ', this.oldUrl:', this.oldUrl ) 
+            mylog('[uib] >> Copy/Paste >>', this.id, 'this.url:', this.url, ', value:', value, ', this.oldUrl:', this.oldUrl )
         }
 
         // If value is undefined, node hasn't been configured yet - we assume empty url which is invalid
@@ -981,34 +988,38 @@
         }
 
         // Must be >0 chars
-        if ( value === undefined || value === '' ) 
-            this.urlErrors.none = 'Must not be empty'
+        if ( value === undefined || value === '' ) {
+            this.urlErrors.none = 'Must not be empty' }
         else { // These will fail for empty value
             // Max 20 chars
-            if ( value.length > 20 ) 
+            if ( value.length > 20 ) {
                 this.urlErrors.len = 'Too long, must be <= 20 chars'
+            }
             // Cannot contain ..
-            if ( value.indexOf('..') !== -1 ) 
+            if ( value.indexOf('..') !== -1 ) {
                 this.urlErrors.dbldot = 'Cannot contain <code>..</code> (double-dot)'
+            }
             // Cannot contain / or \
-            if ( value.indexOf('/') !== -1 ) 
+            if ( value.indexOf('/') !== -1 ) {
                 this.urlErrors.fslash = 'Cannot contain <code>/</code>'
-            if ( value.indexOf('\\') !== -1 ) 
+            }
+            if ( value.indexOf('\\') !== -1 ) {
                 this.urlErrors.bslash = 'Cannot contain <code>\\</code>'
+            }
             // Cannot contain spaces
-            if ( value.indexOf(' ') !== -1 ) 
-                this.urlErrors.sp = 'Cannot contain spaces'
+            if ( value.indexOf(' ') !== -1 ) {
+                this.urlErrors.sp = 'Cannot contain spaces' }
             // Cannot start with _ or .
-            if ( value.substring(0,1) === '_' ) 
-                this.urlErrors.strtU = 'Cannot start with <code>_</code> (underscore)'
-            if ( value.substring(0,1) === '.' ) 
-                this.urlErrors.strtDot = 'Cannot start with <code>.</code> (dot)'
+            if ( value.substring(0, 1) === '_' ) {
+                this.urlErrors.strtU = 'Cannot start with <code>_</code> (underscore)' }
+            if ( value.substring(0, 1) === '.' ) {
+                this.urlErrors.strtDot = 'Cannot start with <code>.</code> (dot)' }
             // Cannot be 'templates' as this is a reserved value (for v2)
-            if ( value.toLowerCase().substring(0,9) === 'templates' ) 
-                this.urlErrors.templ = 'Cannot be "templates"'
+            if ( value.toLowerCase().substring(0, 9) === 'templates' ) {
+                this.urlErrors.templ = 'Cannot be "templates"' }
             // Must not be `uibuilder` (breaking change in v5)
-            if ( value.toLowerCase() === 'uibuilder' ) 
-                this.urlErrors.uibname = 'Cannot be "uibuilder" (since v5)'
+            if ( value.toLowerCase() === 'uibuilder' ) {
+                this.urlErrors.uibname = 'Cannot be "uibuilder" (since v5)' }
         }
 
         // TODO ?MAYBE? Notify's shouldn't be here - only needed if "Done" (or event change)
@@ -1032,7 +1043,7 @@
             /** If the folder already exists - lock out the editor panel. */
             if ( this.folderExists === true && this.urlChanged === true ) {
                 mylog('>> folder already exists >>', this.url, this.id)
-                RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, {type: 'warning'})
+                RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, { type: 'warning' })
             }
 
             if ( this.folderExists === false ) {
@@ -1044,7 +1055,7 @@
         if ( this.isDeployed && this.deployedUrlChanged === true ) {
             mylog('[uib] >> deployed url changed >> this.url:', this.url, ', this.oldUrl:', this.oldUrl, this.id)
             this.urlErrors.warnChange = `Renaming from ${this.url} to ${value}. <b>MUST</b> redeploy now`
-            RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, {type: 'warning'})
+            RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, { type: 'warning' })
         }
 
         // Process panel display for valid/invalid URL - NB repeated once in oneditprepare cause 1st time this is called, the panel doesn't yet exist
@@ -1056,9 +1067,9 @@
             // Changed URL valid: turn on other edits
             this.urlValid = true
             enableEdit(this.urlErrors, true)
-        } 
+        }
 
-        //debugUrl(this, value)
+        // debugUrl(this, value)
 
         // Add exception if the only error is that the fldr doesn't yet exist
         if ( Object.keys(this.urlErrors).length === 1 &&  this.urlErrors.fldNotExist ) {
@@ -1112,9 +1123,9 @@
      */
     function validateVersion() {
         if ( this.url !== undefined ) { // Undefined means that the node hasn't been configured at all yet
-            let deployedVersion = this.deployedVersion === undefined ? '0' : this.deployedVersion
+            const deployedVersion = this.deployedVersion === undefined ? '0' : this.deployedVersion
             if (deployedVersion < RED.settings.uibuilderRedeployNeeded && RED.settings.uibuilderCurrentVersion > RED.settings.uibuilderRedeployNeeded) {
-                RED.notify(`<i>uibuilder ${this.url}</i><br>uibuilder has been updated since you last deployed this instance. Please deploy now.`,{
+                RED.notify(`<i>uibuilder ${this.url}</i><br>uibuilder has been updated since you last deployed this instance. Please deploy now.`, {
                     modal: false,
                     fixed: false,
                     type: 'warning', // 'compact', 'success', 'warning', 'error'
@@ -1148,14 +1159,14 @@
         // Load each option - first entry will be the default
         Object.values(uibuilderTemplates).forEach( templ => { // eslint-disable-line es/no-object-values
             // Build the drop-down
-            $('#node-input-templateFolder').append($('<option>', { 
+            $('#node-input-templateFolder').append($('<option>', {
                 value: templ.folder,
-                text : templ.name, 
+                text: templ.name,
             }))
         })
 
         // Just in case name doesn't exist in template list, default to blank
-        if ( ! uibuilderTemplates[templateFolder] ) {
+        if ( !uibuilderTemplates[templateFolder] ) {
             templateFolder = defaultTemplate
         }
 
@@ -1174,7 +1185,7 @@
     function checkDependencies() {
         const folder = /** @type {string} */ ($('#node-input-templateFolder').val())
 
-        if ( ! RED.settings.uibuilderTemplates[folder] ) {
+        if ( !RED.settings.uibuilderTemplates[folder] ) {
             console.error(`[uibuilder:checkDependencies] Template name not found: ${folder}`)
             return
         }
@@ -1183,18 +1194,18 @@
         const missing = []
 
         deps.forEach( depName => {
-            if ( ! packages[depName] ) missing.push(depName)
+            if ( !packages[depName] ) missing.push(depName)
         })
 
         if ( missing.length > 0 ) {
-            var myNotification = RED.notify(`WARNING<br /><br />The selected uibuilder template (${folder}) is MISSING the following dependencies:<div> ${missing.join(', ')}</div><br />Please install them using the uibuilder Library Manager or select a different template.`,{
+            const myNotification = RED.notify(`WARNING<br /><br />The selected uibuilder template (${folder}) is MISSING the following dependencies:<div> ${missing.join(', ')}</div><br />Please install them using the uibuilder Library Manager or select a different template.`, {
                 type: 'warning',
                 modal: true,
                 fixed: true,
                 buttons: [
                     {
                         text: 'OK',
-                        class:'primary',
+                        class: 'primary',
                         click: function() { // (e) {
                             myNotification.close()
                         }
@@ -1208,9 +1219,9 @@
     /** Load a template */
     function loadTemplate() {
         // Get the current file, folder & url
-        var template = $('#node-input-templateFolder').val()
-        var extTemplate = $('#node-input-extTemplate').val()
-        var url = $('#node-input-url').val()
+        const template = $('#node-input-templateFolder').val()
+        const extTemplate = $('#node-input-extTemplate').val()
+        const url = $('#node-input-url').val()
 
         $.ajax({
             type: 'POST',
@@ -1223,12 +1234,12 @@
             },
         })
             .done(function(data, textStatus, jqXHR) {
-                RED.notify(`<b>uibuilder</b>:<br><br>${jqXHR.statusText}<br>`, {type:'success'})
+                RED.notify(`<b>uibuilder</b>:<br><br>${jqXHR.statusText}<br>`, { type: 'success' })
                 return 'Template load succeeded'
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error( '[uibuilder:loadTemplate] Error ' + textStatus, errorThrown )
-                RED.notify(`<b>uibuilder</b>:<br><br>Template Load Error.<br><br>${errorThrown}<br>`, {type:'error'})
+                RED.notify(`<b>uibuilder</b>:<br><br>Template Load Error.<br><br>${errorThrown}<br>`, { type: 'error' })
                 return 'Template load failed'
             })
     } // --- End of loadTemplate() --- //
@@ -1237,10 +1248,10 @@
     function btnTemplate() {
 
         // Check first
-        var myNotification = RED.notify(
+        const myNotification = RED.notify(
             `WARNING<br /><br />
             Are you <b>SURE</b> you want to overwrite your code
-            with the template <b><code>${ $('#node-input-templateFolder').val() }</code></b>?<br /><br />
+            with the template <b><code>${$('#node-input-templateFolder').val()}</code></b>?<br /><br />
             <b>THIS CANNOT BE UNDONE.</b>`,
             {
                 type: 'warning',
@@ -1249,14 +1260,14 @@
                 buttons: [
                     {
                         text: 'Cancel, don\'t overwrite',
-                        class:'primary',
+                        class: 'primary',
                         click: function() { // (e) {
                             myNotification.close()
                         }
                     },
                     {
                         text: 'OK, overwrite',
-                        //class:"primary",
+                        // class:"primary",
                         click: function() { // (e) {
                             loadTemplate()
                             myNotification.close()
@@ -1291,18 +1302,18 @@
         // Handle change of template
         $('#node-input-templateFolder').on('change', function() { // (e) {
             // update the help tip
-            if ( RED.settings.uibuilderTemplates[node.templateFolder] )
-                $('#node-templSel-info').text(RED.settings.uibuilderTemplates[node.templateFolder].description)
+            if ( RED.settings.uibuilderTemplates[node.templateFolder] ) {
+                $('#node-templSel-info').text(RED.settings.uibuilderTemplates[node.templateFolder].description) }
             // Check if the dependencies are installed, warn if not
             checkDependencies()
             // Unhide the external template name input if external selected
-            if ( $('#node-input-templateFolder').val() === 'external' )
-                $('#et-input').show()
-            else
-                $('#et-input').hide()
+            if ( $('#node-input-templateFolder').val() === 'external' ) {
+                $('#et-input').show() }
+            else {
+                $('#et-input').hide() }
         })
         // Button press for loading new template
-        $('#btn-load-template').on('click', function(e){
+        $('#btn-load-template').on('click', function(e) {
             e.preventDefault() // don't trigger normal click event
             btnTemplate()
         })
@@ -1328,14 +1339,14 @@
     }
 
     /** Show what server is in use
-     * @param {object} node A reference to the panel's `this` object 
+     * @param {object} node A reference to the panel's `this` object
      */
     function showServerInUse(node) {
         let svrType
 
         const eUrlSplit = window.origin.split(':')
-        //var nrPort = Number(eUrlSplit[2])
-        
+        // var nrPort = Number(eUrlSplit[2])
+
         node.nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
 
         $('#info-webserver').empty()
@@ -1343,7 +1354,7 @@
         // Is uibuilder using a custom server?
         if (RED.settings.uibuilderCustomServer.isCustom === true) {
             // Use the correct protocol (http or https)
-            eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2','https')
+            eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2', 'https')
             // Use the correct port
             eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
             // When using custom server, no base path is used
@@ -1365,8 +1376,8 @@
      * @this {Element} the selected jQuery object $('#node-input-url')
      */
     function urlChange(node) {
-        const thisurl = /** @type {string} */ ($(this).val()) 
-        
+        const thisurl = /** @type {string} */ ($(this).val())
+
         // Show the root URL
         $('#uibuilderurl').prop('href', `${node.urlPrefix}${thisurl}`)
             .text(`Open ${node.nodeRoot}${thisurl}`)
@@ -1410,7 +1421,7 @@
 
     //         // security is requested, enable other settings and add warnings if needed
     //         // @since v4.1.1 disable lockout of security for non-http in production
-    //         /* 
+    //         /*
     //             if ( this.checked ) {
     //                 // If in production, cannot turn on security without https, in dev, give a warning
     //                 if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
@@ -1427,7 +1438,7 @@
     //         // Yes, we do need this.checked twice :-)
     //         if ( $(this).is(':checked') ) {
 
-    //             $('#node-input-allowUnauth').prop('disabled', false)        
+    //             $('#node-input-allowUnauth').prop('disabled', false)
     //             $('#node-input-sessionLength').prop('disabled', false)
     //             $('#node-input-jwtSecret').prop('disabled', false)
     //             $('#node-input-tokenAutoExtend').prop('disabled', false)
@@ -1444,7 +1455,7 @@
 
     //         } else { // security not requested, disable other settings
 
-    //             $('#node-input-allowUnauth').prop('disabled', true)        
+    //             $('#node-input-allowUnauth').prop('disabled', true)
     //             $('#node-input-sessionLength').prop('disabled', true)
     //             $('#node-input-jwtSecret').prop('disabled', true)
     //             $('#node-input-tokenAutoExtend').prop('disabled', true)
@@ -1455,7 +1466,7 @@
 
     //     // What mode is Node-RED running in? development or something else?
     //     $('#nrMode').text(RED.settings.uibuilderNodeEnv)
-        
+
     // } // ---- end of securitySettings ---- //
 
     /** Run when switching to the Files tab
@@ -1479,14 +1490,14 @@
             // Keep a reference to the current editor session
             uiace.editorSession = uiace.editor.getSession()
             /** If the editor has changes, enable the save & reset buttons
-             * using input event instead of change since it's called with some timeout 
+             * using input event instead of change since it's called with some timeout
              * which is needed by the undo (which takes some time to update)
              **/
             uiace.editor.on('input', function() {
                 // Is the editor clean?
                 fileIsClean(uiace.editorSession.getUndoManager().isClean())
             })
-            /*uiace.editorSession.on('change', function(delta) {
+            /* uiace.editorSession.on('change', function(delta) {
                 // delta.start, delta.end, delta.lines, delta.action
                 console.log('ACE Editor CHANGE Event', delta)
             }) */
@@ -1504,7 +1515,7 @@
 
             // Resize to max available height
             setACEheight()
-            
+
             // Be friendly and auto-load the initial file via the admin API
             getFileContents()
             fileIsClean(true)
@@ -1523,15 +1534,15 @@
      */
     function tabLibraries(node) {
 
-        //! TODO Improve feedback
+        // ! TODO Improve feedback
 
         // Setup the package list https://nodered.org/docs/api/ui/editableList/
         $('#node-input-packageList').editableList({
-            addItem: function addItem(element,index,data) {
-                addPackageRow(node, element,index, data)
+            addItem: function addItem(element, index, data) {
+                addPackageRow(node, element, index, data)
             },
             removeItem: removePackageRow, // function(data){},
-            //resizeItem: function() {}, // function(_row,_index) {},
+            // resizeItem: function() {}, // function(_row,_index) {},
             header: $('<div>').append('<b>Installed Packages (Install again to update)</b>'),
             height: getLibrariesListHeight(),
             addButton: true,
@@ -1548,7 +1559,7 @@
         // spinner
         $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
         $('i.spinner').hide()
-        
+
     } // ---- End of tabLibraries() ---- //
 
     /** Prep tabs
@@ -1564,19 +1575,19 @@
                 $('#tabs-content').children().hide() // eslint-disable-line newline-per-chained-call
                 $('#' + tab.id).show()
 
-                //? Could move these to their own show event. Might even unload some stuff on hide?
+                // ? Could move these to their own show event. Might even unload some stuff on hide?
 
                 switch (tab.id) {
                     case 'tab-files': {
                         tabFiles(node)
                         break
                     }
-                
+
                     case 'tab-libraries': {
                         tabLibraries(node)
                         break
                     }
-                
+
                     default: {
                         break
                     }
@@ -1587,9 +1598,9 @@
         tabs.addTab({ id: 'tab-core',      label: 'Core'      })
         tabs.addTab({ id: 'tab-files',     label: 'Files'     })
         tabs.addTab({ id: 'tab-libraries', label: 'Libraries' })
-        //tabs.addTab({ id: 'tab-security',  label: 'Security'  })
+        // tabs.addTab({ id: 'tab-security',  label: 'Security'  })
         tabs.addTab({ id: 'tab-advanced',  label: 'Advanced'  })
-        
+
     } // ---- End of preTabs ---- //
 
     /** Prep for edit
@@ -1599,7 +1610,7 @@
 
         packageList()
 
-        // console.log('>> ONEDITPREPARE: NODE >>', node) 
+        // console.log('>> ONEDITPREPARE: NODE >>', node)
 
         // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
         if ( node.templateFolder === undefined || node.templateFolder === '' ) node.templateFolder = defaultTemplate
@@ -1633,8 +1644,8 @@
             urlChange.call(this, node)
         })
         // Show url errors for 1 time when panel 1st opens (after that, the verify fn takes over)
-        if ( node.url === undefined || node.url === '' )
-            enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1)
+        if ( node.url === undefined || node.url === '' ) {
+            enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1) }
 
         // TODO Move to separate function
         //#region ---- File Editor ---- //
@@ -1654,22 +1665,22 @@
 
         // Handle the folder new button
         $('#fldr-new-dialog_new').addClass('input-error')
-            .prop('disabled',true)
+            .prop('disabled', true)
         $('#fldr-input-newname').addClass('input-error')
-            .on('input', function(){
+            .on('input', function() {
                 if ( /** @type {string} */ ($('#fldr-input-newname').val()).length === 0) {
                     $('#fldr-input-newname').addClass('input-error')
                     $('#fldr').addClass('input-error')
-                        .prop('disabled',true)
+                        .prop('disabled', true)
                 } else {
                     $('#fldr-input-newname').removeClass('input-error')
                     $('#fldr-new-dialog_new').removeClass('input-error')
-                        .prop('disabled',false)
+                        .prop('disabled', false)
                 }
             })
         // @ts-ignore
         $('#fldr-new-dialog').dialog({ // define the dialog box
-            autoOpen:false, modal:true, closeOnEscape:true,
+            autoOpen: false, modal: true, closeOnEscape: true, // eslint-disable-line object-property-newline
             buttons: [
                 {
                     text: 'Create',
@@ -1681,17 +1692,17 @@
                         $('#fldr-input-newname').val(null)
                             .addClass('input-error')
                         $('#fldr-new-dialog_new').addClass('input-error')
-                            .prop('disabled',true)
+                            .prop('disabled', true)
                         // @ts-ignore
                         $( this ).dialog( 'close' )
                     }
-                },{
+                }, {
                     text: 'Cancel',
                     click: function() {
                         $('#fldr-input-newname').val(null)
                             .addClass('input-error')
                         $('#fldr-new-dialog_new').addClass('input-error')
-                            .prop('disabled',true)
+                            .prop('disabled', true)
                         // @ts-ignore
                         $( this ).dialog( 'close' )
                     }
@@ -1700,18 +1711,18 @@
         })
             .keyup(function(e) { // make enter key fire the create
                 // @ts-ignore
-                if (e.keyCode == $.ui.keyCode.ENTER) // eslint-disable-line eqeqeq
-                    $('#fldr_new_dialog_new').trigger('click')
+                if (e.keyCode == $.ui.keyCode.ENTER) { // eslint-disable-line eqeqeq
+                    $('#fldr_new_dialog_new').trigger('click') }
             })
         $('#btn-fldr-new').on('click', function() { // (e) {
             $('#fldr_url').html( /** @type {string} */ ($('#node-input-url').val()) )
             // @ts-ignore
-            $('#fldr-new-dialog').dialog('open')  
+            $('#fldr-new-dialog').dialog('open')
         })
         // Handle the folder delete button
         // @ts-ignore
         $('#fldr-del-dialog').dialog({
-            autoOpen:false, modal:true, closeOnEscape:true,
+            autoOpen: false, modal: true, closeOnEscape: true, // eslint-disable-line object-property-newline
             buttons: [
                 {
                     text: 'Delete',
@@ -1722,7 +1733,7 @@
                         // @ts-ignore
                         $( this ).dialog( 'close' )
                     }
-                },{
+                }, {
                     text: 'Cancel',
                     click: function() {
                         // @ts-ignore
@@ -1733,22 +1744,22 @@
         })
         $('#btn-fldr-del').on('click', function() { // (e) {
             $('#fldr-del-dialog_del').addClass('input-error')
-                .css('color','brown')
+                .css('color', 'brown')
             $('#fldr-del-name').text( /** @type {string} */ ($('#node-input-folder').val()) )
             if ( $('#node-input-folder').val() === 'src' ) {
                 if ( $('#node-input-copyIndex').is(':checked') ) {
-                    $('#fldr-del-recopy').css('color','')
+                    $('#fldr-del-recopy').css('color', '')
                         .text('Copy flag is set so the src folder will be recreated and the index.(html|js|css) files will be recopied from the master template.')
                 } else {
-                    $('#fldr-del-recopy').css('color','brown')
+                    $('#fldr-del-recopy').css('color', 'brown')
                         .text('Copy flag is NOT set so the src folder will NOT be recopied from the master template.')
-                }    
+                }
             } else {
-                $('#fldr-del-recopy').css('color','')
+                $('#fldr-del-recopy').css('color', '')
                     .text('')
             }
             // @ts-ignore
-            $('#fldr-del-dialog').dialog('open')                  
+            $('#fldr-del-dialog').dialog('open')
         })
 
         // Handle the file editor reset button (reload the file)
@@ -1770,7 +1781,7 @@
         //#region Handle the Delete file button
         // @ts-ignore
         $('#edit_delete_dialog').dialog({
-            autoOpen:false, modal:true, closeOnEscape:true,
+            autoOpen: false, modal: true, closeOnEscape: true, // eslint-disable-line object-property-newline
             buttons: [
                 {
                     text: 'Delete',
@@ -1781,7 +1792,7 @@
                         // @ts-ignore
                         $( this ).dialog( 'close' )
                     }
-                },{
+                }, {
                     text: 'Cancel',
                     click: function() {
                         // @ts-ignore
@@ -1792,43 +1803,43 @@
         })
         $('#edit-delete').on('click', function() { // (e) {
             $('#edit_del_dialog_del').addClass('input-error')
-                .css('color','brown')
+                .css('color', 'brown')
             $('#edit-delete-name').text($('#node-input-folder').val() + '/' + $('#node-input-filename').val())
             if ( $('#node-input-folder').val() === 'src' ) {
                 if ( $('#node-input-copyIndex').is(':checked') ) {
-                    $('#edit-delete-recopy').css('color','')
+                    $('#edit-delete-recopy').css('color', '')
                         .text('Copy flag is set so index.(html|js|css) files will be recopied from master template.')
                 } else {
-                    $('#edit-delete-recopy').css('color','brown')
+                    $('#edit-delete-recopy').css('color', 'brown')
                         .text('Copy flag is NOT set so index.(html|js|css) files will NOT be recopied from master template.')
-                }    
+                }
             } else {
-                $('#edit-delete-recopy').css('color','')
+                $('#edit-delete-recopy').css('color', '')
                     .text('')
             }
             // @ts-ignore
-            $('#edit_delete_dialog').dialog('open')  
+            $('#edit_delete_dialog').dialog('open')
         })
         //#endregion
 
         //#region Handle the New file button
         $('#edit_new_dialog_new').addClass('input-error')
-            .prop('disabled',true)
+            .prop('disabled', true)
         $('#edit-input-newname').addClass('input-error')
-            .on('input', function(){
+            .on('input', function() {
                 if ( /** @type {string} */ ($('#edit-input-newname').val()).length === 0) {
                     $('#edit-input-newname').addClass('input-error')
                     $('#edit_new_dialog_new').addClass('input-error')
-                        .prop('disabled',true)
+                        .prop('disabled', true)
                 } else {
                     $('#edit-input-newname').removeClass('input-error')
                     $('#edit_new_dialog_new').removeClass('input-error')
-                        .prop('disabled',false)
+                        .prop('disabled', false)
                 }
             })
         // @ts-ignore
         $('#edit_new_dialog').dialog({
-            autoOpen:false, modal:true, closeOnEscape:true,
+            autoOpen: false, modal: true, closeOnEscape: true, // eslint-disable-line object-property-newline
             buttons: [
                 {
                     text: 'Create',
@@ -1840,17 +1851,17 @@
                         $('#edit-input-newname').val(null)
                             .addClass('input-error')
                         $('#edit_new_dialog_new').addClass('input-error')
-                            .prop('disabled',true)
+                            .prop('disabled', true)
                         // @ts-ignore
                         $( this ).dialog( 'close' )
                     }
-                },{
+                }, {
                     text: 'Cancel',
                     click: function() {
                         $('#edit-input-newname').val(null)
                             .addClass('input-error')
                         $('#edit_new_dialog_new').addClass('input-error')
-                            .prop('disabled',true)
+                            .prop('disabled', true)
                         // @ts-ignore
                         $( this ).dialog( 'close' )
                     }
@@ -1859,14 +1870,14 @@
         })
             .keyup(function(e) { // make enter key fire the create
                 // @ts-ignore
-                if (e.keyCode == $.ui.keyCode.ENTER) // eslint-disable-line eqeqeq
-                    $('#edit_new_dialog_new').click()
+                if (e.keyCode == $.ui.keyCode.ENTER) { // eslint-disable-line eqeqeq
+                    $('#edit_new_dialog_new').click() }
             })
         $('#edit-new').on('click', function() { // (e) {
             $('#file_url').html( /** @type {string} */ ($('#node-input-url').val()) )
             $('#file_fldr').html( /** @type {string} */ ($('#node-input-folder').val()) )
             // @ts-ignore
-            $('#edit_new_dialog').dialog('open')  
+            $('#edit_new_dialog').dialog('open')
         })
         //#endregion
 
@@ -1875,23 +1886,23 @@
             e.preventDefault()
 
             // Creates another edit session with max width
-            var value = uiace.editor.getValue()
+            const value = uiace.editor.getValue()
             RED.editor.editText({
-                mode: $('#node-input-format').val(), //mode: $("#node-input-format").val(),
+                mode: $('#node-input-format').val(), // mode: $("#node-input-format").val(),
                 value: value,
                 width: 'Infinity',
                 cursor: uiace.editor.getCursorPosition(),
-                complete: function(v,cursor) {
+                complete: function(v, cursor) {
                     // v contains the returned text
                     uiace.editor.setValue(v, -1)
-                    uiace.editor.gotoLine(cursor.row+1,cursor.column,false)
+                    uiace.editor.gotoLine(cursor.row + 1, cursor.column, false)
                     setTimeout(function() {
                         uiace.editor.focus()
                         // Check if anything changed
                         if ( v !== value ) {
                             fileIsClean(false)
                         }
-                    },300)
+                    }, 300)
                 }
             })
 
@@ -1901,7 +1912,7 @@
             //     var viewer = $('#edit-props')[0]
             //     var rFS = viewer.requestFullscreen || viewer.mozRequestFullScreen || viewer.webkitRequestFullscreen || viewer.msRequestFullScreen
             //     if (rFS) rFS.call(viewer)
-                
+
             //     // TODO: Add popup if no method is available
             // } else {
             //     // Already in fullscreen so lets exit, triggers oneditresize()
@@ -1916,7 +1927,7 @@
 
     //#endregion ------------------------------------------------- //
 
-    // Register the node type, defaults and set up the edit fns 
+    // Register the node type, defaults and set up the edit fns
     RED.nodes.registerType(moduleName, {
         //#region --- options --- //
         category: paletteCategory,
@@ -1932,19 +1943,19 @@
             templateFolder: { value: defaultTemplate },  // Folder for selected template
             extTemplate: { value: '' }, // Only if templateFolder=external, degit name
             showfolder: { value: false },      // Should a web index view of all source files be made available?
-            //useSecurity: { value: false },
-            //allowUnauth: { value: false },
-            //allowAuthAnon: { value: false },
-            //sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
-            //tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
+            // useSecurity: { value: false },
+            // allowUnauth: { value: false },
+            // allowAuthAnon: { value: false },
+            // sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
+            // tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
             oldUrl: { value: undefined },      // If the url has been changed, this is the previous url
             reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
             sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)
-            deployedVersion: { validate: validateVersion }, 
-            //jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
+            deployedVersion: { validate: validateVersion },
+            // jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
         },
         credentials: {
-            jwtSecret: { type:'password' },  // text or password
+            jwtSecret: { type: 'password' },  // text or password
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
@@ -1955,11 +1966,11 @@
         label: function () {
             const url = this.url ? `<${this.url}>` : '<no url>'
             const name = this.name ? `${this.name} ` : ''
-            return `${name}${url}` 
+            return `${name}${url}`
         },
         //#endregion --- options --- //
 
-        /** Available methods: 
+        /** Available methods:
          * oneditprepare: (function) called when the edit dialog is being built.
          * oneditsave:   (function) called when the edit dialog is okayed.
          * oneditcancel: (function) called when the edit dialog is canceled.
@@ -1989,22 +2000,22 @@
             let url
             if ( $('#node-input-url').val() !== '' ) url = $('#node-input-url').val()
             if ( url !== this.url ) {
-                this.oldUrl = this.url 
+                this.oldUrl = this.url
                 mylog(`>> oneditsave URL CHANGED >> New=${$('#node-input-url').val()}, Old=${this.url}` )
             } else if ( this.oldUrl !== undefined ) {
                 this.oldUrl = undefined
             }
 
             // If something has changed or if something must change, update the deployed version
-            if ( this.changed || this.mustChange )
-                this.deployedVersion = RED.settings.uibuilderCurrentVersion
+            if ( this.changed || this.mustChange ) {
+                this.deployedVersion = RED.settings.uibuilderCurrentVersion }
 
         }, // ---- End of oneditsave ---- //
 
         /** Runs before cancel */
         oneditcancel: function() {
             // Reset the url in editorInstances[this.id] if cancelled
-            //editorInstances[this.id] = this.url
+            // editorInstances[this.id] = this.url
 
             // Get rid of the editor
             if ( uiace.editorLoaded === true ) {
@@ -2024,7 +2035,6 @@
                 $('#node-input-packageList').editableList('height', getLibrariesListHeight())
             } catch (e) {}
 
-
         }, // ---- End of oneditcancel ---- //
 
         /** Show notification warning before allowing delete */
@@ -2033,13 +2043,13 @@
             updateDeployedInstances(this)
 
             // Remove the recorded instance
-            //delete editorInstances[this.id]
+            // delete editorInstances[this.id]
             mylog('[uib] >> deleting >> isDeployed? ', this.isDeployed, uibuilderInstances[this.id] !== undefined)
 
             // Only warn if the node has been deployed
             if ( this.isDeployed ) {
                 const that = this
-                let myNotify = RED.notify(`<b>DELETE</b>: <p>You are deleting a uibuilder instance with url <i>${this.url}</i>.<br>Would you like to also delete the folder?<br><b>WARNING</b>: This cannot be undone.</p>`, {
+                const myNotify = RED.notify(`<b>DELETE</b>: <p>You are deleting a uibuilder instance with url <i>${this.url}</i>.<br>Would you like to also delete the folder?<br><b>WARNING</b>: This cannot be undone.</p>`, {
                     modal: true,
                     fixed: true,
                     type: 'warning', // 'compact', 'success', 'warning', 'error'
@@ -2058,16 +2068,16 @@
                                 })
                                     .fail(function(jqXHR, textStatus, errorThrown) {
                                         console.error( '[uibuilder:oneditdelete:PUT] Error ' + textStatus, errorThrown )
-                                        RED.notify(`uibuilder: Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, {type:'error'})
+                                        RED.notify(`uibuilder: Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, { type: 'error' })
                                     })
 
                                 myNotify.close()
-                                RED.notify(`The folder <i>${that.url}</i> will be deleted when you redeploy.`, {type:'compact'})
+                                RED.notify(`The folder <i>${that.url}</i> will be deleted when you redeploy.`, { type: 'compact' })
                             }
                         },
                         {
                             text: 'NO',
-                            class:'primary',
+                            class: 'primary',
                             click: function() { // (e) {
                                 myNotify.close()
                             }
