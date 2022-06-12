@@ -1,4 +1,5 @@
 /* eslint-env node commonjs */
+/* global module */
 /** JavaScript Versions
  *  5 is minimum -> Last IE11
  *  6 = 2015 -> Node >8.10, iOS12+
@@ -17,26 +18,13 @@ module.exports = {
         node: false,
         'shared-node-browser': false
     },
+    // We use ES2020 because we use esbuild to down-convert to ES2019, allows us to use private class vars
     parserOptions: {
-        ecmaVersion: 2015,
-        sourceType: 'script'
+        // Because we are using esbuild to restrict actual library to 2019
+        ecmaVersion: 2022,
+        sourceType: 'module'
     },
-    globals: {
-        RED: true,
-    },
-    overrides: [
-        {
-            files: ['*.module.js', '*.mod.js', '*.mjs'],
-            parserOptions: { ecmaVersion: 2019, sourceType: 'module' },
-            extends: [
-                'standard',
-                'plugin:es/restrict-to-es2019',
-                'plugin:jsdoc/recommended',
-                'plugin:promise/recommended',
-                'plugin:sonarjs/recommended',
-            ]
-        }
-    ],
+    root: true,
     plugins: [
         'html',     // Check scripts in HTML. https://www.npmjs.com/package/eslint-plugin-html
         'es',       // Help avoid js that is too new. https://eslint-plugin-es.mysticatea.dev/
@@ -46,20 +34,22 @@ module.exports = {
     ],
     extends: [
         'standard',
-        'plugin:es/restrict-to-es2015',
+        'plugin:es/no-new-in-esnext',
         'plugin:jsdoc/recommended',
         'plugin:promise/recommended',
         'plugin:sonarjs/recommended',
     ],
     rules: {
-        // 'sonarjs/no-duplicate-string': 0,
-        // 'sonarjs/cognitive-complexity': 0,
+        'sonarjs/no-duplicate-string': ['error', 6], // Default is 3
+        // 'sonarjs/cognitive-complexity': ['error', 15], // Default is 15
+        'sonarjs/no-nested-template-literals': 0,
 
         // Tidy up some jsdoc oddities
         'jsdoc/multiline-blocks': 0,
         'jsdoc/newline-after-description': 0,
         'jsdoc/no-multi-asterisks': 0,
         'jsdoc/tag-lines': 0,
+        'jsdoc/check-tag-names': 0, // Seriously poor quality check
         'jsdoc/valid-types': 0, // Rubbish, fails on common type configs
         'jsdoc/no-undefined-types': 0, // ['error'|'warn', {'definedTypes':['Promise']}],
 

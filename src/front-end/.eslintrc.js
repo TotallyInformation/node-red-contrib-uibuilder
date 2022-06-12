@@ -21,6 +21,7 @@ module.exports = {
         ecmaVersion: 2015,
         sourceType: 'script'
     },
+    root: true,
     globals: {
         RED: true,
     },

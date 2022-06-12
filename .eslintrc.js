@@ -45,7 +45,7 @@ module.exports = {
     },
     overrides: [
         {
-            files: ['*.mod.js', '*.mjs'],
+            files: ['*.module.js', '*.mod.js', '*.mjs'],
             parserOptions: { sourceType: 'module' },
         }
     ],
