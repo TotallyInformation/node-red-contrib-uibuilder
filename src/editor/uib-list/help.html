@@ -1,0 +1,45 @@
+
+<p>
+    <b>EXPERIMENTAL</b> Node demonstrating a way of building a ui element from a node.
+</p>
+
+<h3>Inputs</h3>
+<dl class="message-properties">
+    <dt class="optional">payload <span class="property-type">string | object | buffer</span></dt>
+    <dd> Message payload </dd>
+
+    <dt class="optional">topic <span class="property-type">string</span></dt>
+    <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+</dl>
+
+<h3>Outputs</h3>
+<ol class="node-ports">
+
+    <li>Standard output
+        <dl class="message-properties">
+            <dt>payload <span class="property-type">string | buffer</span></dt>
+            <dd>
+                ...
+            </dd>
+
+            <dt>topic <span class="property-type">string</span></dt>
+            <dd>
+                ...
+            </dd>
+    </li>
+
+</ol>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt>Name <span class="property-type">string</span></dt>
+    <dd>A short description shown in the admin interface</dd>
+
+    <dt>Topic <span class="property-type">string</span></dt>
+    <dd>A topic name to use if the incoming msg does not contain one.</dd>
+</dl>
+
+<h3>Details</h3>
+<p>
+    ...
+</p>

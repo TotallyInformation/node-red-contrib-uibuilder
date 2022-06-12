@@ -1,0 +1,135 @@
+<!--
+    Copyright (c) 2017-2022 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<script type="text/html" data-template-name="uib-list">
+
+<div aria-label="Node Name" class="form-row" title="Node Name (descriptive only)">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+</div>
+
+<div aria-label="Topic" class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+    <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+    <input type="text" id="node-input-topic">
+</div>
+
+</script>
+
+<script type="text/html" data-help-name="uib-list">
+
+<p>
+    <b>EXPERIMENTAL</b> Node demonstrating a way of building a ui element from a node.
+</p>
+
+<h3>Inputs</h3>
+<dl class="message-properties">
+    <dt class="optional">payload <span class="property-type">string | object | buffer</span></dt>
+    <dd> Message payload </dd>
+
+    <dt class="optional">topic <span class="property-type">string</span></dt>
+    <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+</dl>
+
+<h3>Outputs</h3>
+<ol class="node-ports">
+
+    <li>Standard output
+        <dl class="message-properties">
+            <dt>payload <span class="property-type">string | buffer</span></dt>
+            <dd>
+                ...
+            </dd>
+
+            <dt>topic <span class="property-type">string</span></dt>
+            <dd>
+                ...
+            </dd>
+    </li>
+
+</ol>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt>Name <span class="property-type">string</span></dt>
+    <dd>A short description shown in the admin interface</dd>
+
+    <dt>Topic <span class="property-type">string</span></dt>
+    <dd>A topic name to use if the incoming msg does not contain one.</dd>
+</dl>
+
+<h3>Details</h3>
+<p>
+    ...
+</p>
+
+</script>
+
+<script type="text/javascript">
+    /* eslint-disable strict */
+    
+    // Isolate this code
+    (function () {
+        'use strict'
+    
+        console.log('>>>> uib-list >>>>')
+    
+        /** Module name must match this nodes html file @constant {string} moduleName */
+        const moduleName  = 'uib-list'
+        /** Node's label @constant {string} paletteCategory */
+        const nodeLabel  = moduleName
+        /** Node's palette category @constant {string} paletteCategory */
+        const paletteCategory  = 'uibuilder'
+        /** Node's background color @constant {string} paletteColor */
+        const paletteColor  = '#F6E0F8' // '#E6E0F8'
+    
+        /** Prep for edit
+         * @param {*} node A node instance as seen from the Node-RED Editor
+         */
+        function onEditPrepare(node) {
+    
+        } // ----- end of onEditPrepare() ----- //
+    
+        // @ts-ignore
+        RED.nodes.registerType(moduleName, {
+            category: paletteCategory,
+            color: paletteColor,
+            defaults: {
+                name: { value: '' },
+            },
+            // align:'right',
+            inputs: 1,
+            inputLabels: '',
+            outputs: 1,
+            outputLabels: [''],
+            icon: 'parser-json.svg',
+            paletteLabel: nodeLabel,
+            label: function () {
+                return this.name || moduleName
+            },
+    
+            /** Prepares the Editor panel */
+            oneditprepare: function() { onEditPrepare(this) },
+    
+            /** Runs before save (Actually when Done button pressed) - oneditsave */
+            /** Runs before cancel - oneditcancel */
+            /** Handle window resizing for the editor - oneditresize */
+            /** Show notification warning before allowing delete - oneditdelete */
+    
+        }) // ---- End of registerType() ---- //
+    
+    }())
+    
+</script>
