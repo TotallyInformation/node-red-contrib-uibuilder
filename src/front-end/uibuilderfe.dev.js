@@ -1,5 +1,4 @@
-/* eslint-disable array-bracket-newline */
-/* eslint-disable sonarjs/cognitive-complexity, sonarjs/no-duplicate-string */
+/* eslint-disable no-var, sonarjs/cognitive-complexity, array-bracket-newline, sonarjs/no-duplicate-string */
 /*
   Copyright (c) 2017-2022 Julian Knight (Totally Information)
 
@@ -19,7 +18,7 @@
  * This is the Front-End JavaScript for uibuilder
  * It provides a number of global objects that can be used in your own javascript.
  * @see the docs folder `./docs/uibuilderfe-js.md` for details of how to use this fully.
- * 
+ *
  * Please use the default index.js file for your own code and leave this as-is.
  */
 
@@ -32,7 +31,6 @@
  * !       that you will end up with an incompatible version. You gain little to nothing anyway.
  */
 if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-disable-line block-scoped-var, no-use-before-define
-    // @ts-expect-error ts(2307)
     const io = require('socket.io-client') // eslint-disable-line no-unused-vars
 }
 
@@ -80,9 +78,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             property = 'payload'
         }
         var out = {}
-        if (typeof thing === 'object') { 
+        if (typeof thing === 'object') {
             out = thing
-        } else if (thing !== null) { 
+        } else if (thing !== null) {
             out[property] = thing
         }
         return out
@@ -96,10 +94,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
      */
     function urlJoin() {
         var paths = Array.prototype.slice.call(arguments)
-        var url = '/'+paths.map(function(e){
+        var url = '/' + paths.map(function(e) {
             return e.replace(/^\/|\/$/g,'')
         })
-            .filter(function(e){
+            .filter(function(e) {
                 return e
             })
             .join('/')
@@ -107,10 +105,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
     } // ---- End of urlJoin ---- //
 
     //#endregion ----- Utility Functions ----- //
-    
+
     // Create a function with specific "this" context - this is the main code
     // @since 2017-10-14 Replaced "new (function(){})" with "(function(){}).call(root)"
-    var uibuilder = (function uibuilder() {
+    var uibuilder = (function uibuilder() { // eslint-disable-line no-extra-parens
         // Remember that things have to be defined *before* they are referenced
 
         // Define polyfill for endsWith for IE
@@ -128,7 +126,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         self.version = '5.0.2'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
-        // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified 
+        // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
         self.debug = self.isUnminified === true ? true : false // do not change directly - use .debug() method
         /** Default originator node id */
@@ -155,8 +153,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         } // --- End of debug function --- //
 
         self.cookies = {}
-        document.cookie.split(';').forEach( function(c){
-            let splitC = c.split('=')
+        document.cookie.split(';').forEach( function(c) {
+            const splitC = c.split('=')
             self.cookies[splitC[0].trim()] = splitC[1]
         })
         /** Client ID set by uibuilder */
@@ -241,13 +239,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         /** Flag to know whether `uibuilder.start()` has been run */
         self.started = false
         //#endregion ---- ---- ---- ----
-        
+
         /** Writable (via custom method. read via .get method) */
         /** Automatically send a "ready for content" control message on window.load
          * Set to false if you want to send this yourself (e.g. when Riot/Moon/etc mounted event triggered)
          * see .autoSendReady method
          */
-        self.autoSendReady= true
+        self.autoSendReady = true
 
         //#region ---- Externally Writable (via .set method, read via .get method) ---- //
         self.allowScript  = true   // Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
@@ -276,7 +274,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         //#region - Try to make sure client uses Socket.IO version from the uibuilder module (using path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
         /** httpNodeRoot (to set path) */
         if ( 'uibuilder-webRoot' in self.cookies ) {
-            self.httpNodeRoot = self.cookies['uibuilder-webRoot'] 
+            self.httpNodeRoot = self.cookies['uibuilder-webRoot']
         } else {
             // split current url path, eliminate any blank elements and trailing or double slashes
             var fullPath = window.location.pathname.split('/').filter(function(t) { return t.trim() !== '' })
@@ -315,7 +313,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 console.error('[uibuilder:setStore] Cannot write to localStorage. ', e)
                 return false
             }
-        } 
+        }
 
         /** Function to set uibuilder properties to a new value - works on any property - see uiReturn.set also for external use
          * Also triggers any event listeners.
@@ -339,7 +337,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @param {number} factor Multiplication factor for subsequent checks (delay*factor)
          * @param {number} [depth] Recursion depth
          */
-        self.checkConnect = function checkConnect(delay, factor, depth=1) {
+        self.checkConnect = function checkConnect(delay, factor, depth = 1) {
             //var depth = depth++ || 1 // eslint-disable-line no-use-before-define
 
             //self.uiDebug('debug', `uibuilderfe:checkConnect. Reconnect - Depth: ${depth}, Delay: ${delay}, Factor: ${factor}`)
@@ -353,7 +351,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 //self.uiDebug('debug', `uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ${delay}, depth: ${depth}`)
                 self.uiDebug('debug', 'uibuilderfe:checkConnect timeout. SIO reconnect attempt, timeout: ' + delay + ', depth: ' + depth, self.ioNamespace, self.ioPath)
                 console.info('[uibuilderfe:checkConnect:setTimeout] Socket.IO reconnection attempt. Current delay: ' + delay)
-                
+
                 // this is necessary sometimes when the socket fails to connect on startup
                 self.socket.close()
 
@@ -392,9 +390,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
             self.uiDebug('debug', '[uibuilderfe:ioSetup] About to create IO. Namespace: ' + self.ioNamespace + ', Path: ' + self.ioPath + ', Transport: [' + self.ioTransport.join(', ') + ']')
-            self.socketOptions = { 
-                path: self.ioPath, 
-                transports: self.ioTransport, 
+            self.socketOptions = {
+                path: self.ioPath,
+                transports: self.ioTransport,
                 auth: {
                     clientId: self.clientId,
                 },
@@ -470,7 +468,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     receivedCtrlMsg = {}
                 } else if (typeof receivedCtrlMsg !== 'object') {
                     var msg = {}
-                    msg['uibuilderCtrl:'+self.ioChannels.control] = receivedCtrlMsg
+                    msg['uibuilderCtrl:' + self.ioChannels.control] = receivedCtrlMsg
                     receivedCtrlMsg = msg
                 }
 
@@ -587,7 +585,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             self.socket.on('connect_error', function onConnectErr(err) {
                 console.error( `[uibuilderfe:ioSetup:connect_error] SOCKET CONNECT ERROR - Namespace: ${self.ioNamespace}, ioPath: ${self.ioPath}, Reason: ${err.message}`, err)
             }) // --- End of socket connect error processing ---
-            
+
             // Socket.io error - from the server (socket.use middleware triggered an error response)
             self.socket.on('error', function onSocErr(err) {
                 console.error( '[uibuilderfe:ioSetup:error] SOCKET ERROR from server - MESSAGE: ', err)
@@ -641,7 +639,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 }) // --- End of socket pong processing ---
              */
         } // ---- End of ioSetup ---- //
-        
+
         //#region ==== Security Functions ==== //
 
         /** Mark client as logged off & delete local auth data
@@ -671,7 +669,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         //     self.set('_auth', _auth)
         //     // Save updated _auth to localStorage
         //     self.setStore('auth', _auth)
-            
+
         //     //delete self.socketOptions.transportOptions.polling.extraHeaders.Authorization
         // } // ---- End of markLoggedOut ---- //
 
@@ -792,7 +790,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         // self.updateAuth = function updateAuth(_auth, control) {
         //     // If security is off, don't bother
         //     if (!self.security) return
-            
+
         //     // If _auth undefined then ignore
         //     if (self._auth === undefined && _auth === undefined) return
 
@@ -846,11 +844,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //     // If anything goes wrong, don't send _auth to server
         //     try {
-                
+
         //         if ( self._auth === undefined ) return undefined
 
         //         // TODO: Remove extra metadata from _auth before sending (info, userValidated, sessionExpiry)
-        //         if ( self.isAuthorised ) {                
+        //         if ( self.isAuthorised ) {
 
         //             if ( new Date(self._auth.sessionExpiry) > (new Date()) ) {
         //                 return self._auth
@@ -874,7 +872,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         /** Set the default originator. Set to '' to ignore. Used with uib-sender.
          * @param {string} [originator] A Node-RED node ID to return the message to
          */
-        self.setOriginator = function setOriginator(originator='') {
+        self.setOriginator = function setOriginator(originator = '') {
             self.originator = originator
         } // ---- End of setOriginator ---- //
 
@@ -884,7 +882,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @param {string} [channel=uiBuilderClient] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored
          * @param {string} [originator] A Node-RED node ID to return the message to
          */
-        self.send = function send(msgToSend, channel, originator='') {
+        self.send = function send(msgToSend, channel, originator = '') {
             if ( channel === null || channel === undefined ) channel = self.ioChannels.client
 
             //! Disabled for now. Because we now have a server-side flag that allows msg flows
@@ -892,7 +890,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             /*
             // If security is on but client not authenticated only allow logon control msg to be sent
             // Just a local convenience, the server will block anyway
-            if ( self.security && !self.isAuthorised ) { 
+            if ( self.security && !self.isAuthorised ) {
                 let block = true
                 if ( channel === self.ioChannels.control) { // eslint-disable-line sonarjs/no-collapsible-if
                     if ( msgToSend.uibuilderCtrl === 'logon' || msgToSend.uibuilderCtrl === 'ready for content') {
@@ -937,7 +935,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             }
 
             // Add the originator metadata if required
-            if ( originator === '' && self.originator !== '' ) originator = self.originator 
+            if ( originator === '' && self.originator !== '' ) originator = self.originator
             if ( originator !== '' ) Object.assign(msgToSend, {'_uib': {'originator': originator}})
 
             self.socket.emit(channel, msgToSend)
@@ -993,11 +991,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             // @ts-ignore
             const uibStyles = /** @type {CSSStyleSheet} */ (uibStyle.sheet)
 
-            for (let styleDef of styleDefs) {
+            for (const styleDef of styleDefs) {
                 self.uiDebug('log', `[uibuilderfe:addCSSClass] Adding style ${styleDef}`)
                 uibStyles.insertRule(styleDef)
             }
-            
+
         } // ---- End of addCSSClass ---- //
 
         /** Ping/Keep-alive - makes a call back to uibuilder's ExpressJS server and receives a 201 response
@@ -1009,7 +1007,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          *   })
          * @param {number} ms Repeat interval in ms
          */
-        self.setPing = function setPing(ms=0) {
+        self.setPing = function setPing(ms = 0) {
             const oReq = new XMLHttpRequest()
             oReq.addEventListener('load', function() {
                 const headers = (oReq.getAllResponseHeaders()).split('\r\n')
@@ -1100,10 +1098,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         /** Simple function to create a overlay toast notification from an incoming msg
          * Called if bootstrap-vue is not available
-         * Place inside the uibuilder.on('msg', ...) function 
+         * Place inside the uibuilder.on('msg', ...) function
          * param {object} msg A msg from Node-RED with appropriate formatting
          * @param {string} content toast content (may be HMTL string)
-         * @param {object} toastOptions Various options that control the display 
+         * @param {object} toastOptions Various options that control the display
          */
         self.showToastVanilla = function showToastVanilla(content, toastOptions) {
 
@@ -1114,7 +1112,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 toaster.id = 'toaster'
                 toaster.title = 'Click to clear all notifcations'
                 toaster.setAttribute('class', 'uib-toaster')
-                toaster.onclick = function(){
+                toaster.onclick = function() {
                     toaster.remove()
                 }
                 document.body.insertAdjacentElement('afterbegin', toaster)
@@ -1128,7 +1126,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 content = `<p class="uib-toast-head">${toastOptions.title}</p><p>${content}</p>`
             }
             toast.innerHTML = content
-            toast.onclick = function(evt){
+            toast.onclick = function(evt) {
                 evt.stopPropagation()
                 toast.remove()
                 if ( toaster.childElementCount < 1 ) toaster.remove()
@@ -1165,11 +1163,11 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
              * @type {string} //|VNode|VNode[]}
              */
             let content = ''
-            
+
             // Main body content
             if ( msg.payload ) content += msg.payload
             if ( toastOptions.content ) content += toastOptions.content
-            
+
             // Do we want new toasts to be shown at the bottom of the list (true) instead of the top (false - default)?
             if ( toastOptions.append ) toastOptions.appendToast = toastOptions.append
 
@@ -1215,9 +1213,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * @see https://bootstrap-vue.org/docs/components/toast
          * param {object} msg A msg from Node-RED with appropriate formatting
          * @param {string} content toast content (may be HMTL string)
-         * @param {object} toastOptions Various options that control the display 
+         * @param {object} toastOptions Various options that control the display
          */
-        self.showToastBVue = function showToastBVue(content, toastOptions) {                
+        self.showToastBVue = function showToastBVue(content, toastOptions) {
 
             // We need self.vueApp to be set
             if ( ! self.vueApp ) {
@@ -1280,7 +1278,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             if ( ! self.vueApp.$refs[componentRef] ) return
 
-            let ref = self.vueApp.$refs[componentRef]
+            const ref = self.vueApp.$refs[componentRef]
 
             let msg = {}
 
@@ -1296,7 +1294,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     },
                 }
             } else {
-                let warning = `[uibuilderfe:showComponentDetails] ref="${componentRef}" is not a Vue Component. Details cannot be returned.`
+                const warning = `[uibuilderfe:showComponentDetails] ref="${componentRef}" is not a Vue Component. Details cannot be returned.`
                 self.uiDebug('warn', warning )
                 msg = {
                     'uibuilderCtrl': 'vue component details',
@@ -1329,7 +1327,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             // Do nothing if the msg doesn't have a component ref
             if ( !msg._uib.componentRef ) return
 
-            let componentRef = msg._uib.componentRef
+            const componentRef = msg._uib.componentRef
 
             // Deal with toast requests (notifications)
             if (componentRef === 'globalNotification') {
@@ -1338,7 +1336,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 self.showToast(msg)
                 return
             }
-            
+
             // Deal with alert requests
             if (componentRef === 'globalAlert') {
                 // This dynamically inserts an alert into the DOM
@@ -1350,18 +1348,18 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             // Only if Vue is in use and a reference to the Vue master app is available ...
             if ( !self.vueApp ) return
-            let vueApp = self.vueApp
+            const vueApp = self.vueApp
 
             // 1) Return ctrl msg containing component instance details
             if ( msg._uib.requestDetails ) {
-                let m = self.showComponentDetails(componentRef)
+                const m = self.showComponentDetails(componentRef)
                 if (m) {
                     if (msg.topic) m.topic = msg.topic
                     self.send(m, self.ioChannels.control)
                 }
                 return
             }
-            
+
             // 4) Does the component ref exist? Remember to include a ref="xxxx" on each component instance in your html - note: this doesn't always work, depends on component
             if ( componentRef in vueApp.$refs ) {
 
@@ -1391,13 +1389,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     try {
                         vueApp.$refs[componentRef].$props.config.value = msg.payload
                     } catch (e) { /** */ }
-                    
+
                 }
-            
+
             } else {
-                let warning = `[uibuilderfe:internal:onChange] ref="${componentRef}" is not a Vue Component. Cannot set props.`
+                const warning = `[uibuilderfe:internal:onChange] ref="${componentRef}" is not a Vue Component. Cannot set props.`
                 self.uiDebug('warn', warning )
-                let m = {
+                const m = {
                     'uibuilderCtrl': 'vue component details',
                     'componentDetails': {
                         'warning': warning,
@@ -1434,29 +1432,29 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                  */
                 var excluded = [
                     'autoSendReady',
-                    'clientId', 'cookies', 'ctrlMsg', 
-                    'debug', 
-                    'events', 
+                    'clientId', 'cookies', 'ctrlMsg',
+                    'debug',
+                    'events',
                     'httpNodeRoot',
-                    'ioChannels', 'ioConnected', 'ioNamespace', 'ioPath', 'ioTransport', 
+                    'ioChannels', 'ioConnected', 'ioNamespace', 'ioPath', 'ioTransport',
                     'isAuthorised', 'isUnminified',
                     'loaded',
                     'msgsCtrl', 'msgsReceived', 'msgsSent', 'msgsSentCtrl', 'moduleName',
                     'retryFactor', 'retryMs',
                     'sentMsg', 'sentCtrlMsg', 'serverTimeOffset', 'socket',
-                    'timerid', 
+                    'timerid',
                     'url',
-                    'version', 
+                    'version',
                     // Ensure no clashes with internal and external method names
                     'checkConnect', 'checkTimestamp',
-                    'emit', 
-                    'get', 
+                    'emit',
+                    'get',
                     'ioSetup',
                     'logon', 'logoff',
-                    'markLoggedOut', 'me', 
-                    'newScript', 'newStyle', 
-                    'onChange', 
-                    'self', 'set', 'send', 'sendAuth', 'sendCtrl', 'setIOnamespace', 'showComponentDetails', 'showToast', 'socket', 
+                    'markLoggedOut', 'me',
+                    'newScript', 'newStyle',
+                    'onChange',
+                    'self', 'set', 'send', 'sendAuth', 'sendCtrl', 'setIOnamespace', 'showComponentDetails', 'showToast', 'socket',
                     'uiDebug', 'updateAuth',
                     'uiReturn',
                 ]
@@ -1492,14 +1490,14 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 var excluded = [
                     // Exclude internal methods
                     'checkConnect', 'checkTimestamp',
-                    'emit', 
-                    'get', 
+                    'emit',
+                    'get',
                     'ioSetup',
                     'logon', 'logoff',
-                    'markLoggedOut', 'me', 
-                    'newScript', 'newStyle', 
-                    'onChange', 
-                    'self', 'set', 'send', 'sendAuth', 'sendCtrl', 'setIOnamespace', 'showComponentDetails', 'showToast', 'socket', 
+                    'markLoggedOut', 'me',
+                    'newScript', 'newStyle',
+                    'onChange',
+                    'self', 'set', 'send', 'sendAuth', 'sendCtrl', 'setIOnamespace', 'showComponentDetails', 'showToast', 'socket',
                     'uiDebug', 'updateAuth',
                     'uiReturn',
                 ]
@@ -1515,7 +1513,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 return self[prop]
             },
 
-            /** Register on-change event listeners 
+            /** Register on-change event listeners
              * Example: uibuilder.onChange('msg', function(msg){ console.log(msg) })
              */
             onChange: self.onChange,
@@ -1538,7 +1536,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
              * @param {object} msg Message to send
              * @param {string} [originator] A Node-RED node ID to return the message to
              */
-            send: function send(msg, originator=''){
+            send: function send(msg, originator = '') {
                 self.send(msg, self.ioChannels.client, originator)
             },
 
@@ -1582,7 +1580,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
              **/
             me: self.me,
 
-            /** Startup socket.io comms - must be done manually by user to allow for changes to namespace/path 
+            /** Startup socket.io comms - must be done manually by user to allow for changes to namespace/path
              * @param {object|string} [namespace] Optional. Object containing ref to vueApp, Object containing settings, or IO Namespace override. changes self.ioNamespace from the default.
              * @param {string=} ioPath Optional. changes self.ioPath from the default
              * @param {object=} vueApp Optional. reference to the VueJS instance
@@ -1624,7 +1622,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 }
 
                 self.uiDebug('log', '[uibuilderfe:start] Calling params - namespace', namespace, 'ioPath', ioPath, 'vueApp', vueApp)
-                
+
                 // Save the parameters
                 if (namespace !== undefined && namespace !== null) self.ioNamespace = namespace
                 if (ioPath !== undefined && ioPath !== null) self.ioPath = ioPath
@@ -1662,8 +1660,8 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
              * @param {string} [ref] Optional. If provided, positions the notification next to the referenced component instance
              * @param {object} [options] Optional. Additional toast options
              */
-            // @ts-ignore ts(1005), ts(8010) 
-            showToast: function(text, ref='globalNotification', options={}) {
+            // @ts-ignore ts(1005), ts(8010)
+            showToast: function(text, ref = 'globalNotification', options = {}) {
                 const msg = {
                     '_uib': {
                         'componentRef': ref,
@@ -1677,12 +1675,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
             /** Easily send a msg back to Node-RED on a DOM event
              * In HTML: `<b-button id="myButton1" @click="doEvent" data-something="hello"></b-button>`
              * In JS methods: `doEvent: uibuilder.eventSend,`
-             * All `data-` attributes will be passed back to Node-RED, 
+             * All `data-` attributes will be passed back to Node-RED,
              *    use them instead of arguments in the click function
              * @param {MouseEvent|any} domevent DOM Event object
              * @param {string} [originator] A Node-RED node ID to return the message to
              */
-            eventSend: function eventSend(domevent, originator='') {
+            eventSend: function eventSend(domevent, originator = '') {
                 // The argument must be a DOM event
                 if ( (! domevent.constructor.name.endsWith('Event')) || (! domevent.currentTarget) ) {
                     self.uiDebug('log', '[uibuilderfe:eventSend] ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data')
@@ -1726,7 +1724,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
          * DOMContentLoaded: DOM is ready but external resources may not be loaded yet
          * load: All resources are loaded
          */
-        window.addEventListener('load', function(){
+        window.addEventListener('load', function() {
             self.uiDebug('debug', 'uibuilderfe:load: All resources loaded')
             self.loaded = true
         })

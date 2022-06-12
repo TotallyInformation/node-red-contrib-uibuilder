@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable strict */
 
 // Isolate this code
@@ -24,15 +25,15 @@
                 'cmd': 'listinstances',
             },
             success: function(instances) {
-                //console.log('>>>>', instances)
+                // console.log('>>>>', instances)
 
-                Object.keys(instances).forEach( (val, i, arr) =>{
-                    $('#node-input-url').append($('<option>', { 
+                Object.keys(instances).forEach( (val, i, arr) => {
+                    $('#node-input-url').append($('<option>', {
                         value: instances[val],
-                        text : instances[val],
-                    }))    
+                        text: instances[val],
+                    }))
                 })
-        
+
             }
         })
 
@@ -69,7 +70,7 @@
                     node.outputs = 0
                 }
             })
-            
+
         // Deal with the url
         getUrls()
         // $('#node-input-url')
@@ -83,6 +84,7 @@
 
     } // ----- end of onEditPrepare() ----- //
 
+    // @ts-ignore
     RED.nodes.registerType(moduleName, {
         category: paletteCategory,
         color: paletteColor,
@@ -94,7 +96,7 @@
             return: { value: false },
             outputs: { value: 0 },
         },
-        align:'right',
+        align: 'right',
         inputs: 1,
         inputLabels: 'Msg with topic property',
         outputs: 0,
@@ -104,7 +106,7 @@
         label: function () { return this.url || this.name || nodeLabel },
 
         oneditprepare: function() { onEditPrepare(this) },
-        
+
     }) // ---- End of registerType() ---- //
 
 }())
