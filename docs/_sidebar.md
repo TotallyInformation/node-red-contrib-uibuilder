@@ -9,6 +9,7 @@
   * [How & why to use the sender node](sender-node.md)
   * [How to use the cache node](cache-node.md)
   * [How to use instance API's](instance-apis.md)
+  * [Using the new ECMA Module front-end client](uibuilder.module.md)
 * Developing UI's
   * [The uibuilderfe library](front-end-library.md)
   * [Creating Templates](creating-templates)
