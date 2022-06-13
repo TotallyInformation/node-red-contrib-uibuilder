@@ -2,7 +2,7 @@
 /* eslint-env node es2017 */
 /**
  * Utility library for uibuilder
- * 
+ *
  * Copyright (c) 2017-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
@@ -24,7 +24,7 @@
  * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
- * typedef {import('../typedefs.js')} 
+ * typedef {import('../typedefs.js')}
  * @typedef {import('node-red')} Red
  * @typedef {import('Express')} Express
  * typedef {import('socket.io').Namespace} socketio.Namespace
@@ -33,8 +33,8 @@
 
 const path = require('path')
 const fs = require('fs-extra')
-//const tilib = require('./tilib')
-const {nanoid} = require('nanoid')
+// const tilib = require('./tilib')
+const { nanoid } = require('nanoid')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 module.exports = {
@@ -48,7 +48,7 @@ module.exports = {
      */
     instanceClose: function(node, uib, sockets, web, done = null) {
 
-        //const RED = /** @type {runtimeRED} */ uib.RED
+        // const RED = /** @type {runtimeRED} */ uib.RED
         const log = uib.RED.log
 
         log.trace(`[uibuilder:uiblib:instanceClose:${node.url}] Running instance close.`)
@@ -61,10 +61,10 @@ module.exports = {
             // Remove url folder if requested
             if ( uib.deleteOnDelete[node.url] === true ) {
                 log.trace(`[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
-                
+
                 // Remove the flag in case someone recreates the same url!
                 delete uib.deleteOnDelete[node.url]
-                
+
                 fs.remove(path.join(uib.rootFolder, node.url))
                     .catch(err => {
                         log.error(`[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
@@ -73,7 +73,7 @@ module.exports = {
 
             // Keep a log of the active instances @since 2019-02-02
             delete instances[node.id] // = undefined
-            
+
             node.statusDisplay.text = 'CLOSED'
             this.setNodeStatus(node)
 
@@ -113,22 +113,22 @@ module.exports = {
      * @param {any} defaultAnswer - if the prop can't be found, this is returned
      * @returns {any} The first found property value or the default answer
      */
-    getProps: function(RED,myObj,props,defaultAnswer = []) {
+    getProps: function(RED, myObj, props, defaultAnswer = []) {
         if ( (typeof props) === 'string' ) {
             // @ts-ignore
             props = [props]
         }
-        if ( ! Array.isArray(props) ) {
+        if ( !Array.isArray(props) ) {
             return undefined
         }
         let ans
-        for (var i = 0; i < props.length; i++) {
+        for (let i = 0; i < props.length; i++) {
             try { // errors if an intermediate property doesn't exist
                 ans = RED.util.getMessageProperty(myObj, props[i])
                 if ( typeof ans !== 'undefined' ) {
                     break
                 }
-            } catch(e) {
+            } catch (e) {
                 // do nothing
             }
         }
@@ -163,16 +163,17 @@ module.exports = {
 
         // Load a new template (params url, template, extTemplate)
         if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
-            let statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
+            const statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
             log.error(`[uibuilder:uiblib:replaceTemplate]. ${statusMsg}`)
             res.statusMessage = statusMsg
             res.status = 500
             return res
         }
 
-        let fullname = path.join(uib.rootFolder, url)
+        const fullname = path.join(uib.rootFolder, url)
 
         if ( extTemplate ) extTemplate = extTemplate.trim()
+        if ( extTemplate === undefined ) throw new Error('extTemplate is undefined')
 
         // If template="external" & extTemplate not blank - use degit to load
         if ( template === 'external' ) {
@@ -183,46 +184,47 @@ module.exports = {
                 force: true,
                 verbose: false,
             })
-            
+
             uib.degitEmitter.on('info', info => {
                 log.trace(`[uibuilder:uiblib:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
             })
-            
+
             await uib.degitEmitter.clone(fullname)
 
-            //console.log({myclone})
-            let statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
+            // console.log({myclone})
+            const statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
             log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
             res.statusMessage = statusMsg
             res.status = 200
-            res.json = {
+
+            res.json = /** @type {*} */ ({
                 'url': url,
                 'template': template,
                 'extTemplate': extTemplate,
                 'cmd': cmd,
-            }
+            })
             return res
 
         } else if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
 
             // Otherwise, use internal template
-            const fsOpts = {'overwrite': true, 'preserveTimestamps':true}
+            const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
             const srcTemplate = path.join( uib.masterTemplateFolder, template )
             try {
                 fs.copySync( srcTemplate, fullname, fsOpts )
-                let statusMsg = `Successfully copied template ${template} to ${url}.`
+                const statusMsg = `Successfully copied template ${template} to ${url}.`
                 log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
                 res.statusMessage = statusMsg
                 res.status = 200
-                res.json = {
+                res.json = /** @type {*} */ ({
                     'url': url,
                     'template': template,
                     'extTemplate': extTemplate,
                     'cmd': cmd,
-                }
+                })
                 return res
             } catch (err) {
-                let statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
+                const statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
                 log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`, err)
                 res.statusMessage = statusMsg
                 res.status = 500
@@ -232,7 +234,7 @@ module.exports = {
         } else {
 
             // Shouldn't ever be able to occur - but still :-)
-            let statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
+            const statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
             log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`)
             res.statusMessage = statusMsg
             res.status = 500
@@ -248,7 +250,7 @@ module.exports = {
     getClientId: function getClientId(req) {
         let clientId
         if ( req.headers.cookie ) {
-            let matches = req.headers.cookie.match(/uibuilder-client-id=(?<id>.{21})/)
+            const matches = req.headers.cookie.match(/uibuilder-client-id=(?<id>.{21})/)
             if ( !matches || !matches.groups.id ) clientId = nanoid()
             else clientId = matches.groups.id
         } else {
@@ -256,7 +258,7 @@ module.exports = {
         }
         return clientId
     }
-  
+
 } // ---- End of module.exports ---- //
 
-//EOF
+// EOF

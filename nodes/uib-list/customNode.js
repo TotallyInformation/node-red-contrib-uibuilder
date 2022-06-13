@@ -20,7 +20,7 @@
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
- * @typedef {import('../../typedefs').thisNode} thisNode <= Change this to be specific to this node
+ * @typedef {import('../../typedefs').uibListNode} uibListNode <= Change this to be specific to this node
  */
 
 //#region ----- Module level variables ---- //
@@ -106,8 +106,8 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
 
 /** 2) This is run when an actual instance of our node is committed to a flow
  * type {function(this:runtimeNode&senderNode, runtimeNodeConfig & senderNode):void}
- * @param {runtimeNodeConfig & thisNode} config The Node-RED node instance config object
- * @this {runtimeNode & thisNode}
+ * @param {runtimeNodeConfig & uibListNode} config The Node-RED node instance config object
+ * @this {runtimeNode & uibListNode}
  */
 function nodeInstance(config) {
     // As a module-level named function, it will inherit `mod` and other module-level variables

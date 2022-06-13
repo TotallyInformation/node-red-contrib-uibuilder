@@ -1,7 +1,7 @@
 /* eslint-disable prefer-named-capture-group */
 /**
  * General utility library for Node.JS
- * 
+ *
  * Copyright (c) 2019-2022 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
@@ -20,7 +20,7 @@
 'use strict'
 
 const path = require('path')
-//const fs = require('fs-extra')
+// const fs = require('fs-extra')
 
 const mylog = (process.env.TI_ENV === 'debug') ? console.log : function() {}
 
@@ -38,19 +38,20 @@ module.exports = {
 
     /** Joins all arguments as a URL string
      * @see http://stackoverflow.com/a/28592528/3016654
-     * @param {...string} [path] URL fragments (picked up via the arguments var)
+     * param {...string} [path] URL fragments (picked up via the arguments var)
      * @returns {string} Joined path
      */
     urlJoin: function() {
+        /** @type {Array<string>} */
         const paths = Array.prototype.slice.call(arguments)
-        const url = '/'+paths.map(function(e){
-            return e !== undefined ? e.replace(/^\/|\/$/g,'') : ''
+        const url = '/' + paths.map(function(e) {
+            return e !== undefined ? e.replace(/^\/|\/$/g, '') : ''
         })
-            .filter(function(e){
+            .filter(function(e) {
                 return e
             })
             .join('/')
-        return  url.replace('//','/')
+        return  url.replace('//', '/')
     }, // ---- End of urlJoin ---- //
 
     /** Escape a user input string to use in a regular expression
@@ -69,7 +70,7 @@ module.exports = {
      * @param {string} chkScript - OPTIONAL. If present return the script text if present
      * @returns {object|string|undefined|null} undefined if file not found or list of script names/commands. If chkScript, null if not found or script text.
      */
-    getNpmRunScripts: function(chkPath, chkScript='') {
+    getNpmRunScripts: function(chkPath, chkScript = '') {
         let pj
         try {
             pj = require( path.join( chkPath, this.packageJson ) ).scripts
@@ -93,7 +94,7 @@ module.exports = {
     }, // ----  ---- //
 
     /** Utility function to html pretty-print JSON
-     * @param {json} json JSON to pretty-print
+     * @param {*} json JSON to pretty-print
      * @returns {string} HTML
      */
     syntaxHighlight: function(json) {
@@ -109,9 +110,9 @@ module.exports = {
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-        json = '<pre class="syntax-highlight" style="color:white;background-color:black;overflow:auto;">' + 
+        json = '<pre class="syntax-highlight" style="color:white;background-color:black;overflow:auto;">' +
             json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
-                var cls = 'number', style = 'style="color:white"'
+                let cls = 'number'; let style = 'style="color:white"'
                 if ((/^"/).test(match)) {
                     if ((/:$/).test(match)) {
                         cls = 'key'
@@ -128,27 +129,27 @@ module.exports = {
                     style = 'style="color:magenta"'
                 }
                 return `<span class="${cls}" ${style}>${match}</span>`
-            }) + 
+            }) +
             '</pre>'
         return json
     }, // ----  ---- //
-  
+
     /** Compare 2 simple arrays, return array of arrays - additions and deletions
      * @param {Array} a1 First array
      * @param {Array} a2 Second array
      * @returns {[string[],string[]]} Array of 2 arrays. Inner array 1: Additions, 2: Deletions
      */
     compareArrays: function(a1, a2) {
-        let temp = [ [], [] ]
+        const temp = [[], []]
 
         // for each a1 entry, if not in a2 then push to temp[0]
         for (let i = 0, len = a1.length; i < len; ++i) {
-            if(a2.indexOf(a1[i]) === -1) temp[0].push(a1[i])
+            if (a2.indexOf(a1[i]) === -1) temp[0].push(a1[i])
         }
 
         // for each a2 entry, if not in a1 then push to temp[1]
         for (let i = 0, len = a2.length; i < len; ++i) {
-            if(a1.indexOf(a2[i]) === -1) temp[1].push(a2[i])
+            if (a1.indexOf(a2[i]) === -1) temp[1].push(a2[i])
         }
 
         // @ts-ignore
@@ -163,17 +164,17 @@ module.exports = {
     quickCompareArrays: function(a1, a2) {
         // for each a1 entry, if not in a2 then push to temp[0]
         for (let i = 0, len = a1.length; i < len; ++i) {
-            if(a2.indexOf(a1[i]) === -1) return false
+            if (a2.indexOf(a1[i]) === -1) return false
         }
 
         // for each a2 entry, if not in a1 then push to temp[1]
         for (let i = 0, len = a2.length; i < len; ++i) {
-            if(a1.indexOf(a2[i]) === -1) return false
+            if (a1.indexOf(a2[i]) === -1) return false
         }
 
         return true
     }, // ----  ---- //
-    
+
     /** Return only the most important parts of an ExpressJS `req` object
      * @param {object} req express.Request
      * @returns {object} importantReq
@@ -186,12 +187,12 @@ module.exports = {
             },
             'url': req.url,
             'method': req.method,
-            'baseUrl':req.baseUrl, 
-            'hostname': req.hostname, 
-            'originalUrl': req.originalUrl, 
-            'path': req.path, 
-            'protocol': req.protocol, 
-            'secure': req.secure, 
+            'baseUrl': req.baseUrl,
+            'hostname': req.hostname,
+            'originalUrl': req.originalUrl,
+            'path': req.path,
+            'protocol': req.protocol,
+            'secure': req.secure,
             'subdomains': req.subdomains,
         }
     }, // ----  ---- //
@@ -203,11 +204,11 @@ module.exports = {
      * @param {string} prefix Text to output before the memory info
      */
     dumpMem: (prefix) => {
-        let mem = process.memoryUsage()
-        const formatMem = (m) => ( m/1048576 ).toFixed(2)
+        const mem = process.memoryUsage()
+        const formatMem = (m) => ( m / 1048576 ).toFixed(2)
         mylog(`${prefix} Memory Use (MB): RSS=${formatMem(mem.rss)}. Heap: Used=${formatMem(mem.heapUsed)}, Tot=${formatMem(mem.heapTotal)}. Ext C++=${formatMem(mem.external)}`)
     },
 
 } // ---- End of module.exports ---- //
 
-//EOF
+// EOF

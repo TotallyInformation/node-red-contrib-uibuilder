@@ -32,12 +32,12 @@ const fs = require('fs-extra')
 const socketio = require('socket.io')
 const tilib    = require('./tilib')    // General purpose library (by Totally Information)
 const uiblib   = require('./uiblib')   // Utility library for uibuilder
-//const security = require('./sec-lib') // uibuilder security module
+// const security = require('./sec-lib') // uibuilder security module
 const tiEventManager = require('@totallyinformation/ti-common-event-handler')
 
 /** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
  * @param {socketio.Socket} socket Socket.IO socket object
- * @returns {string} Best estimate of the client's real IP address
+ * @returns {string | string[] | undefined} Best estimate of the client's real IP address
  */
 function getClientRealIpAddress(socket) {
     let clientRealIpAddress
@@ -46,7 +46,9 @@ function getClientRealIpAddress(socket) {
         clientRealIpAddress = socket.request.headers['x-real-ip']
     } else if ( 'headers' in socket.request && 'x-forwarded-for' in socket.request.headers) {
         // else get ip from behind a general proxy
-        clientRealIpAddress = socket.request.headers['x-forwarded-for'].split(',').shift()
+        if (socket.request.headers['x-forwarded-for'] === undefined) throw new Error('socket.request.headers["x-forwarded-for"] is undefined')
+        if (!Array.isArray(socket.request.headers['x-forwarded-for'])) socket.request.headers['x-forwarded-for'] = [socket.request.headers['x-forwarded-for']]
+        clientRealIpAddress = socket.request.headers['x-forwarded-for'][0].split(',').shift()
     } else if ( 'connection' in socket.request && 'remoteAddress' in socket.request.connection ) {
         // else get ip from socket.request that returns the reference to the request that originated the underlying engine.io Client
         clientRealIpAddress = socket.request.connection.remoteAddress
@@ -77,7 +79,7 @@ class UibSockets {
      * @type {boolean}
      * @protected
      */
-    //_isConfigured = false
+    // _isConfigured = false
 
     /** Called when class is instantiated */
     constructor() {
@@ -85,9 +87,9 @@ class UibSockets {
         this._isConfigured = false
 
         //#region ---- References to core Node-RED & uibuilder objects ---- //
-        /** @type {runtimeRED} */
+        /** @type {runtimeRED|undefined} */
         this.RED = undefined
-        /** @type {uibConfig} Reference link to uibuilder.js global configuration object */
+        /** @type {uibConfig|undefined} Reference link to uibuilder.js global configuration object */
         this.uib = undefined
         /** Reference to uibuilder's global log functions */
         this.log = undefined
@@ -112,7 +114,7 @@ class UibSockets {
          * Because this is a Singleton object, any reference to this module can access all of the namespaces (by url).
          * The namespace has some uib extensions that track the originating node id (searchable in Node-RED), the number of connected clients
          *   and the number of messages recieved.
-         * @type {!Object.<string, socketio.Namespace>}
+         * @type {!Object<string, socketio.Namespace>}
          */
         this.ioNamespaces = {}
 
@@ -128,6 +130,7 @@ class UibSockets {
      * @param {Express} server reference to ExpressJS server being used by uibuilder
      */
     setup( uib, server ) {
+        if (uib.RED === null) throw new Error('uib.RED is null')
 
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
@@ -135,11 +138,11 @@ class UibSockets {
             return
         }
 
-        if ( ! uib || ! server ) {
+        if ( !uib || !server ) {
             throw new Error(`[uibuilder:socket.js:setup] Called without required parameters. uib=${uib}, server=${server}`)
         }
 
-        /** @type {runtimeRED} reference to Core Node-RED runtime object */
+        /** reference to Core Node-RED runtime object */
         this.RED = uib.RED
 
         this.uib = uib
@@ -149,8 +152,10 @@ class UibSockets {
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
         this._socketIoSetup()
 
+        if (uib.configFolder === null) throw new Error('uib.configFolder is null')
+
         // If available, set up optional outbound msg middleware
-        this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null; }
+        this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null }
         // Try to load the sioMsgOut middleware function - sioMsgOut applies to all outgoing msgs
         const mwfile = path.join(uib.configFolder, uib.sioMsgOutMwName)
         if ( fs.existsSync(mwfile) ) { // not interested if the file doesn't exist
@@ -158,11 +163,11 @@ class UibSockets {
                 const sioMsgOut = require( mwfile )
                 if ( typeof sioMsgOut === 'function' ) { // if exported, has to be a function
                     this.outboundMsgMiddleware = sioMsgOut
-                    this.log.trace(`[uibuilder:socket:setup] sioMsgOut Middleware loaded successfully.`)
+                    this.log.trace('[uibuilder:socket:setup] sioMsgOut Middleware loaded successfully.')
                 } else {
-                    this.log.warn(`[uibuilder:socket:setup] sioMsgOut Middleware failed to load - check that uibRoot/.config/sioMsgOut.js has a valid exported fn.`)
+                    this.log.warn('[uibuilder:socket:setup] sioMsgOut Middleware failed to load - check that uibRoot/.config/sioMsgOut.js has a valid exported fn.')
                 }
-            } catch(e) {
+            } catch (e) {
                 this.log.warn(`[uibuilder:socket:setup] sioMsgOut middleware Failed to load. Reason: ${e.message}`)
             }
         }
@@ -184,17 +189,22 @@ class UibSockets {
         const RED = this.RED
         const log = this.log
         const server = this.server
-        const uib_socketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
-        log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uib_socketPath}, CORS Origin=*` )
+        if (uib === undefined) throw new Error('uib is undefined')
+        if (RED === undefined) throw new Error('RED is undefined')
+        if (log === undefined) throw new Error('log is undefined')
+
+        const uibSocketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
+
+        log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uibSocketPath}, CORS Origin=*` )
         // Socket.Io server options, see https://socket.io/docs/v4/server-options/
         let ioOptions = {
-            'path': uib_socketPath,
+            'path': uibSocketPath,
             serveClient: true, // Needed for backwards compatibility
             // https://github.com/expressjs/cors#configuration-options, https://socket.io/docs/v3/handling-cors/
             cors: {
                 origin: '*',
-                //allowedHeaders: ['x-clientid'],
+                // allowedHeaders: ['x-clientid'],
             }
             /* // Socket.Io 3+ CORS is disabled by default, also options have changed.
             // for CORS need to handle preflight request explicitly 'cause there's an
@@ -227,31 +237,34 @@ class UibSockets {
         return this._isConfigured
     }
 
-    //? Consider adding isConfigered checks on each method?
+    // ? Consider adding isConfigered checks on each method?
 
     /** Output a msg to the front-end.
      * @param {object} msg The message to output, include msg._socketId to send to a single client
      * @param {string} url THe uibuilder id
      * @param {string=} channel Optional. Which channel to send to (see uib.ioChannels) - defaults to client
      */
-    sendToFe( msg, url, channel ) { 
+    sendToFe( msg, url, channel ) {
         const uib = this.uib
         const log = this.log
+
+        if (uib === undefined) throw new Error('uib is undefined')
+        if (log === undefined) throw new Error('log is undefined')
 
         if ( channel === undefined ) channel = uib.ioChannels.client
 
         const ioNs = this.ioNamespaces[url]
 
-        let socketId = msg._socketId || undefined
+        const socketId = msg._socketId || undefined
 
         // Control msgs should say where they came from
         if ( channel === uib.ioChannels.control ) msg.from = 'server'
 
         // Process outbound middleware (middleware is loaded in this.setup)
         try {
-            this.outboundMsgMiddleware( msg, url, channel, ioNs ) 
+            this.outboundMsgMiddleware( msg, url, channel, ioNs )
         } catch (e) {
-            this.log.warn(`[uibuilder:socket:sendToFe] outboundMsgMiddleware middleware failed to run. Reason: ${e.message}`)
+            log.warn(`[uibuilder:socket:sendToFe] outboundMsgMiddleware middleware failed to run. Reason: ${e.message}`)
         }
 
         // TODO: Sending should have some safety validation on it. Is msg an object? Is channel valid?
@@ -276,6 +289,9 @@ class UibSockets {
     sendToFe2(msg, url, socketId) { // eslint-disable-line class-methods-use-this
         const uib = this.uib
         const ioNs = this.ioNamespaces[url]
+
+        if (uib === undefined) throw new Error('uib is undefined')
+        if (this.log === undefined) throw new Error('this.log is undefined')
 
         if (socketId) msg._socketId = socketId
 
@@ -316,7 +332,7 @@ class UibSockets {
             clientId: socket.request.headers['x-clientid'],
             /** THe referring webpage, should be the full URL of the uibuilder page */
             referer: socket.request.headers.referer,
-            //url: socket.handshake.url
+            // url: socket.handshake.url
         }
     }
 
@@ -334,7 +350,7 @@ class UibSockets {
      */
     sendIt(msg, node) {
         if ( msg._uib && msg._uib.originator ) {
-            //const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
+            // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
             tiEventManager.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
@@ -348,6 +364,7 @@ class UibSockets {
      */
     listenFromClient(msg, socket, node) {
         const log = this.log
+        if (log === undefined) throw new Error('log is undefined')
 
         node.rcvMsgCount++
         log.trace(`[uibuilder:socket:${node.url}] Data received from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
@@ -357,11 +374,11 @@ class UibSockets {
             case 'string':
             case 'number':
             case 'boolean':
-                msg = { 'topic': node.topic, 'payload': msg}
+                msg = { 'topic': node.topic, 'payload': msg }
         }
 
         // If the sender hasn't added msg._socketId, add the Socket.id now
-        if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
+        if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
         // Send out the message for downstream flows
         // TODO: This should probably have safety validations!
@@ -406,6 +423,10 @@ class UibSockets {
         const log = this.log
         const uib = this.uib
 
+        if (log === undefined) throw new Error('log is undefined')
+        if (uib === undefined) throw new Error('uib is undefined')
+        if (this.io === undefined) throw new Error('this.io is undefined')
+
         const ioNs = this.ioNamespaces[node.url] = this.io.of(node.url)
 
         // Add some additional metadata to NS
@@ -414,12 +435,15 @@ class UibSockets {
         // ioNs.useSecurity = node.useSecurity // Is security on for this node instance?
         ioNs.rcvMsgCount = 0
         ioNs.log = log // Make Node-RED's log available to middleware via custom ns property
+        // ioNs.clientLog = {}
+
+        if (uib.configFolder === null) throw new Error('uib.configFolder is undefined')
 
         /** Check for <uibRoot>/.config/sioMiddleware.js, use it if present.
          * Applies ONCE on a new client connection.
          * Had to move to addNS since MW no longer globally loadable since sio v3
          */
-        let sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
+        const sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
         if ( fs.existsSync(sioMwPath) ) { // not interested if the file doesn't exist
             try {
                 const sioMiddleware = require(sioMwPath)
@@ -443,6 +467,8 @@ class UibSockets {
             // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
             socket.on('disconnect', function(reason) {
 
+                // ioNs.clientLog[socket.handshake.auth.clientId].connected = false
+
                 node.ioClientsCount = ioNs.sockets.size
                 log.trace(
                     `[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
@@ -463,7 +489,10 @@ class UibSockets {
                 // Copy to port#2 for reference
                 ctrlMsg.ip = getClientRealIpAddress(socket)
                 ctrlMsg.clientId = socket.handshake.auth.clientId
-                node.send([null,ctrlMsg])
+                node.send([null, ctrlMsg])
+
+                // event
+                tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientDisconnect`, ctrlMsg)
 
             }) // --- End of on-connection::on-disconnect() --- //
 
@@ -486,12 +515,12 @@ class UibSockets {
                 }
 
                 // If the sender hasn't added Socket.id, add it now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
+                if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
                 // @since 2017-11-05 v0.4.9 If the sender hasn't added msg.from, add it now
-                if ( ! Object.prototype.hasOwnProperty.call(msg, 'from') ) msg.from = 'client'
+                if ( !Object.prototype.hasOwnProperty.call(msg, 'from') ) msg.from = 'client'
 
-                if ( ! msg.topic ) msg.topic = node.topic
+                if ( !msg.topic ) msg.topic = node.topic
 
                 /** If an auth/logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
                 // if ( msg.uibuilderCtrl === 'logon') {
@@ -575,6 +604,8 @@ class UibSockets {
 
             socket.on('error', function(err) {
 
+                // ioNs.clientLog[socket.handshake.auth.clientId].connected = false
+
                 log.error(`[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
 
                 // Let the control output port know there has been an error
@@ -588,7 +619,7 @@ class UibSockets {
                 // Copy to port#2 for reference
                 ctrlMsg.ip = getClientRealIpAddress(socket)
                 ctrlMsg.clientId = socket.handshake.auth.clientId
-                node.send([null,ctrlMsg])
+                node.send([null, ctrlMsg])
 
             }) // --- End of on-connection::on-error() --- //
 
@@ -599,6 +630,8 @@ class UibSockets {
             log.trace(
                 `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
             )
+
+            if (uib.configFolder === null) throw new Error('uib.configFolder is undefined')
 
             // Try to load the sioUse middleware function - sioUse applies to all incoming msgs
             const mwfile = path.join(uib.configFolder, uib.sioUseMwName)
@@ -611,7 +644,7 @@ class UibSockets {
                     } else {
                         log.warn(`[uibuilder:socket:onConnect:${url}] sioUse middleware failed to load for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
                     }
-                } catch(e) {
+                } catch (e) {
                     log.warn(`[uibuilder:socket:addNS:${url}] sioUse failed to load Use middleware. Reason: ${e.message}`)
                 }
             }
@@ -624,18 +657,27 @@ class UibSockets {
                 'uibuilderCtrl': 'client connect',
                 'serverTimestamp': (new Date()),
                 'topic': node.topic || undefined,
-                //'security': node.useSecurity,   // Let the client know whether to use security or not
+                // 'security': node.useSecurity,   // Let the client know whether to use security or not
                 'version': uib.version,         // Let the front-end know what v of uib is in use
                 '_socketId': socket.id,
             }
 
-            // Let the clients (and output #2) know we are connecting
-            that.sendToFe(msg, node.url, uib.ioChannels.control)
-
-            // Copy to port#2 for reference
             msg.ip = getClientRealIpAddress(socket)
             msg.clientId = socket.handshake.auth.clientId
-            node.send([null,msg])
+            msg.connections = socket.handshake.auth.connectedNum
+
+            // ioNs.clientLog[msg.clientId] = {
+            //     ip: msg.ip,
+            //     connections: msg.connections,
+            //     connected: true,
+            // }
+
+            // Let the clients (and output #2) know we are connecting
+            that.sendToFe(msg, node.url, uib.ioChannels.control)
+            tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientConnect`, msg)
+
+            // Copy to port#2 for reference
+            node.send([null, msg])
 
         }) // --- End of on-connection() --- //
 
@@ -667,11 +709,10 @@ class UibSockets {
  */
 
 try { // Wrap in a try in case any errors creep into the class
-    let uibsockets = new UibSockets()
+    const uibsockets = new UibSockets()
     module.exports = uibsockets
 } catch (e) {
     console.error(`[uibuilder:socket.js] Unable to create class instance. Error: ${e.message}`)
 }
-
 
 // EOF

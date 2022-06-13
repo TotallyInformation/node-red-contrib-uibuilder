@@ -1,15 +1,15 @@
 /** Takes a msg input and caches it then passes it through.
  *  If it receives a cache-replay control msg, it dumps the cache.
  *  If it receives a caech-empty control msg, it empties the cache.
- * 
+ *
  * Copyright (c) 2022 Julian Knight (Totally Information)
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,8 +33,8 @@
  *  that can easily be passed around.
  */
 const mod = {
-    /** @type {runtimeRED} Reference to the master RED instance */
-    RED: undefined,
+    /** @type {runtimeRED|null} Reference to the master RED instance */
+    RED: null,
     /** @type {string} Custom Node Name - has to match with html file and package.json `red` section */
     nodeName: 'uib-cache',
 }
@@ -59,7 +59,7 @@ function setNodeStatus(node) {
 function trimCacheAll(node) {
 
     Object.keys(node.cache).forEach( key => {
-        let msgs = node.cache[key]
+        const msgs = node.cache[key]
         // See if the array is now too long - if so, slice it down to size
         if ( msgs.length > node.num ) {
             node.cache[key] = msgs.slice( msgs.length - node.num )
@@ -76,15 +76,17 @@ function trimCacheAll(node) {
  * @param {runtimeNode & cacheNode} node Reference to node instance
  */
 function addToCache(msg, node) {
+    if (mod.RED === null) return
+    if (node.cacheKey === undefined) return
 
     // If this is a new property value, create empty array
-    if ( ! node.cache[msg[node.cacheKey]] ) node.cache[msg[node.cacheKey]] = []
+    if ( !node.cache[msg[node.cacheKey]] ) node.cache[msg[node.cacheKey]] = []
 
     // HAS to be a CLONE to avoid downstream changes impacting cache
     const clone = mod.RED.util.cloneMessage(msg)
     delete clone._msgid
 
-    // Add a new entry to the array - 
+    // Add a new entry to the array -
     node.cache[clone[node.cacheKey]].push(clone)
 
     // See if the array is now too long - if so, slice it down to size
@@ -125,6 +127,8 @@ function sendCache(send, node, msg) {
         // toSend.push(...cachedMsgs)
 
         cachedMsgs.forEach( cachedMsg => {
+            if (mod.RED === null) return
+
             // Has to be a clone to prevent changes from downstream nodes
             const clone =  mod.RED.util.cloneMessage(cachedMsg)
 
@@ -137,8 +141,8 @@ function sendCache(send, node, msg) {
             if (msg.uibuilderCtrl && msg._socketId) {
                 clone._socketId = msg._socketId
             }
-    
-            //send( clone )
+
+            // send( clone )
             toSend.push( clone )
         })
 
@@ -156,7 +160,7 @@ function sendCache(send, node, msg) {
 
 /** 3) Run whenever a node instance receives a new input msg
  * NOTE: `this` context is still the parent (nodeInstance).
- * See https://nodered.org/blog/2019/09/20/node-done 
+ * See https://nodered.org/blog/2019/09/20/node-done
  * @param {object} msg The msg object received.
  * @param {Function} send Per msg send function, node-red v1+
  * @param {Function} done Per msg finish function, node-red v1+
@@ -166,7 +170,7 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     // As a module-level named function, it will inherit `mod` and other module-level variables
 
     // If you need it - or just use mod.RED if you prefer:
-    //const RED = mod.RED
+    // const RED = mod.RED
 
     // Is this a control msg?
     if ( msg.uibuilderCtrl ) {
@@ -187,7 +191,7 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     }
 
     // We are done
-    //done()
+    // done()
 
 } // ----- end of inputMsgHandler ----- //
 
@@ -201,6 +205,7 @@ function nodeInstance(config) {
 
     // If you need it - which you will here - or just use mod.RED if you prefer:
     const RED = mod.RED
+    if (RED === null) return
 
     // Create the node instance - `this` can only be referenced AFTER here
     RED.nodes.createNode(this, config)
@@ -233,14 +238,13 @@ function nodeInstance(config) {
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
 
-
     /** Put things here if you need to do anything when a node instance is removed
      * Or if Node-RED is shutting down.
      * Note the use of an arrow function, ensures that the function keeps the
      * same `this` context and so has access to all of the node instance properties.
      */
-    this.on('close', (removed, done) => { 
-        //console.log('>>>=[IN 4]=>>> [nodeInstance:close] Closing. Removed?: ', removed)
+    this.on('close', (removed, done) => {
+        // console.log('>>>=[IN 4]=>>> [nodeInstance:close] Closing. Removed?: ', removed)
 
         done()
     })
@@ -251,7 +255,7 @@ function nodeInstance(config) {
      * Other: credentials, id, type, z, wires, x, y
      * + any props added manually from config, typically at least name and topic
      */
-    //console.log('>>>> TI GLOBAL <<<<', global.totallyInformationShared)
+    // console.log('>>>> TI GLOBAL <<<<', global.totallyInformationShared)
 }
 
 //#endregion ----- Module-level support functions ----- //
@@ -266,7 +270,7 @@ function UibCache(RED) {
     mod.RED = RED
 
     /** Register a new instance of the specified node type (2)
-     * 
+     *
      */
     RED.nodes.registerType(mod.nodeName, nodeInstance)
 }
@@ -274,4 +278,4 @@ function UibCache(RED) {
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = UibCache
 
-//EOF
+// EOF

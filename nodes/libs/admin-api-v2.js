@@ -32,6 +32,8 @@ const sockets = require('./socket')
 const packageMgt                    = require('./package-mgt')
 const tilib  = require('./tilib')   // General purpose library (by Totally Information)
 
+const errUibRootFldr = new Error('uib.rootFolder is null')
+
 const v2AdminRouter = express.Router() // eslint-disable-line new-cap
 
 //#region === REST API Validation functions === //
@@ -167,13 +169,23 @@ function chkParamFldr(params) {
  * @returns {string} HTML string output
  */
 function detailsPage(uib, urlPrefix) {
+    if (uib.rootFolder === null) throw errUibRootFldr
+    const rootFolder = uib.rootFolder
+
     const RED = uib.RED
+    const log = RED.log
     const routes = web.dumpRoutes(false)
     const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}${uib.moduleName}`
 
-    const uibSummary = JSON.parse(JSON.stringify(uib))
-    delete uibSummary.me
-    delete uibSummary.RED
+    // Fix for one person who had a failure on JSON parse with win32 circular ref - weird
+    let uibSummary = {}
+    try {
+        uibSummary = Object.assign({}, uib) // JSON.parse(JSON.stringify(uib))
+        delete uibSummary.me
+        delete uibSummary.RED
+    } catch (e) {
+        log.warn(`[uibuilder:apiv2:detailsPage] Could not parse uib object, some info will be missing. ${e.message}`)
+    }
 
     // Build the web page
     let page = `
@@ -208,7 +220,7 @@ function detailsPage(uib, urlPrefix) {
             <tr>
                 <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, uib.instances[key]).replace('/', '')}" target="_blank">${uib.instances[key]}</a></td>
                 <td>${key}</td>
-                <td>${path.join(uib.rootFolder, uib.instances[key])}</td>
+                <td>${path.join(rootFolder, uib.instances[key])}</td>
             </tr>
         `
     })
@@ -287,7 +299,7 @@ function detailsPage(uib, urlPrefix) {
             </tr>
             <tr>
                 <th>uib.rootFolder</th>
-                <td>${uib.rootFolder}</td>
+                <td>${rootFolder}</td>
                 <td>All uibuilder data lives here</td>
             </tr>
             <tr>
@@ -446,7 +458,7 @@ function adminRouterV2(uib, log) {
         // @ts-ignore
         const chkUrl = chkParamUrl(params)
         if ( chkUrl.status !== 0 ) {
-            log.error(`[uibuilder:uibgetfile] Admin API. ${chkUrl.statusMessage}`)
+            log.error(`[uibuilder:apiv2:uibgetfile] Admin API. ${chkUrl.statusMessage}`)
             res.statusMessage = chkUrl.statusMessage
             res.status(chkUrl.status).end()
             return
@@ -455,7 +467,7 @@ function adminRouterV2(uib, log) {
         // @ts-ignore
         const chkFname = chkParamFname(params)
         if ( chkFname.status !== 0 ) {
-            log.error(`[uibuilder:uibgetfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+            log.error(`[uibuilder:apiv2:uibgetfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
             res.statusMessage = chkFname.statusMessage
             res.status(chkFname.status).end()
             return
@@ -464,14 +476,14 @@ function adminRouterV2(uib, log) {
         // @ts-ignore
         const chkFldr = chkParamFldr(params)
         if ( chkFldr.status !== 0 ) {
-            log.error(`[uibuilder:uibgetfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+            log.error(`[uibuilder:apiv2:uibgetfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
             res.statusMessage = chkFldr.statusMessage
             res.status(chkFldr.status).end()
             return
         }
         //#endregion ---- ----
 
-        log.trace(`[uibuilder:uibgetfile] Admin API. File get requested. url=${params.url}, file=${params.folder}/${params.fname}`)
+        log.trace(`[uibuilder:apiv2:uibgetfile] Admin API. File get requested. url=${params.url}, file=${params.folder}/${params.fname}`)
 
         // if fldr = root, no folder
         if ( params.folder === 'root' ) params.folder = ''
@@ -497,7 +509,7 @@ function adminRouterV2(uib, log) {
                 }
             )
         } else {
-            log.error(`[uibuilder:uibgetfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
+            log.error(`[uibuilder:apiv2:uibgetfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
             res.statusMessage = 'File does not exist'
             res.status(500).end()
         }
@@ -514,7 +526,7 @@ function adminRouterV2(uib, log) {
 
         const chkUrl = chkParamUrl(params)
         if ( chkUrl.status !== 0 ) {
-            log.error(`[uibuilder:uibputfile] Admin API v2. ${chkUrl.statusMessage}`)
+            log.error(`[uibuilder:apiv2:uibputfile] Admin API v2. ${chkUrl.statusMessage}`)
             res.statusMessage = chkUrl.statusMessage
             res.status(chkUrl.status).end()
             return
@@ -522,7 +534,7 @@ function adminRouterV2(uib, log) {
 
         const chkFname = chkParamFname(params)
         if ( chkFname.status !== 0 ) {
-            log.error(`[uibuilder:uibputfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+            log.error(`[uibuilder:apiv2:uibputfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
             res.statusMessage = chkFname.statusMessage
             res.status(chkFname.status).end()
             return
@@ -530,14 +542,14 @@ function adminRouterV2(uib, log) {
 
         const chkFldr = chkParamFldr(params)
         if ( chkFldr.status !== 0 ) {
-            log.error(`[uibuilder:uibputfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+            log.error(`[uibuilder:apiv2:uibputfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
             res.statusMessage = chkFldr.statusMessage
             res.status(chkFldr.status).end()
             return
         }
         //#endregion ====== ====== //
 
-        log.trace(`[uibuilder:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
+        log.trace(`[uibuilder:apiv2:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
 
         // Fix for Issue #155 - if fldr = root, no folder
         if ( params.folder === 'root' ) params.folder = '.'
@@ -548,12 +560,12 @@ function adminRouterV2(uib, log) {
         fs.writeFile(fullname, req.body.data, function (err, data) {
             if (err) {
                 // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-                log.error(`[uibuilder:uibputfile] Admin API. File write FAIL. url=${params.url}, file=${params.folder}/${params.fname}`, err)
+                log.error(`[uibuilder:apiv2:uibputfile] Admin API. File write FAIL. url=${params.url}, file=${params.folder}/${params.fname}`, err)
                 res.statusMessage = err
                 res.status(500).end()
             } else {
                 // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-                log.trace(`[uibuilder:uibputfile] Admin API. File write SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+                log.trace(`[uibuilder:apiv2:uibputfile] Admin API. File write SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
                 res.statusMessage = 'File written successfully'
                 res.status(200).end()
                 // Reload connected clients if required by sending them a reload msg
@@ -627,7 +639,7 @@ function adminRouterV2(uib, log) {
 
         // Validate the npm command to be used.
         if ( params.cmd === undefined ) {
-            log.error('[uibuilder:API:uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
+            log.error('[uibuilder:apiv2:uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
             res.statusMessage = 'npm command parameter not provided'
             res.status(500).end()
             return
@@ -639,7 +651,7 @@ function adminRouterV2(uib, log) {
                 break
 
             default:
-                log.error('[uibuilder:API:uibnpmmanage] Admin API. Invalid command provided for npm management.')
+                log.error('[uibuilder:apiv2:uibnpmmanage] Admin API. Invalid command provided for npm management.')
                 res.statusMessage = 'npm command parameter is invalid'
                 res.status(500).end()
                 return
@@ -648,13 +660,13 @@ function adminRouterV2(uib, log) {
         // package name must not exceed 255 characters
         // we have to have a package name
         if ( params.package === undefined ) {
-            log.error('[uibuilder:API:uibnpmmanage] Admin API. package parameter not provided')
+            log.error('[uibuilder:apiv2:uibnpmmanage] Admin API. package parameter not provided')
             res.statusMessage = 'package parameter not provided'
             res.status(500).end()
             return
         }
         if ( params.package.length > 255 ) {
-            log.error('[uibuilder:API:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
+            log.error('[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
             res.statusMessage = 'package name parameter is too long. Max 255 characters'
             res.status(500).end()
             return
@@ -665,7 +677,7 @@ function adminRouterV2(uib, log) {
             // @ts-ignore
             const chkUrl = chkParamUrl(params)
             if ( chkUrl.status !== 0 ) {
-                log.error(`[uibuilder:API:uibnpmmanage] Admin API. ${chkUrl.statusMessage}`)
+                log.error(`[uibuilder:apiv2:uibnpmmanage] Admin API. ${chkUrl.statusMessage}`)
                 res.statusMessage = chkUrl.statusMessage
                 res.status(chkUrl.status).end()
                 return
@@ -676,7 +688,7 @@ function adminRouterV2(uib, log) {
 
         const folder = RED.settings.userDir
 
-        log.info(`[uibuilder:API:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag}'`)
+        log.info(`[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag}'`)
 
         // delete package lock file as it seems to mess up sometimes - no error if it fails
         fs.removeSync(path.join(folder, 'package-lock.json'))
@@ -699,9 +711,9 @@ function adminRouterV2(uib, log) {
                         return true
                     })
                     .catch((err) => {
-                        // log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
+                        // log.warn(`[uibuilder:apiv2:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
                         console.dir(err)
-                        log.warn(`[uibuilder:API:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        log.warn(`[uibuilder:apiv2:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({ 'success': false, 'result': err.all })
                         return false
                     })
@@ -721,15 +733,15 @@ function adminRouterV2(uib, log) {
                         return true
                     })
                     .catch((err) => {
-                        // log.warn(`[uibuilder:API:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
-                        log.warn(`[uibuilder:API:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        // log.warn(`[uibuilder:apiv2:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
+                        log.warn(`[uibuilder:apiv2:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({ 'success': false, 'result': err.all })
                         return false
                     })
                 break
             }
             default: {
-                log.error(`[uibuilder:API:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
+                log.error(`[uibuilder:apiv2:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
                 res.statusMessage = 'No valid npm command available'
                 res.status(500).end()
                 break

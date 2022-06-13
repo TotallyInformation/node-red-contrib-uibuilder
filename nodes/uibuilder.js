@@ -29,9 +29,9 @@
 //#region ------ Require packages ------ //
 // uibuilder custom
 const uiblib = require('./libs/uiblib')  // Utility library for uibuilder
-const tilib  = require('./libs/tilib')   // General purpose library (by Totally Information)
-const packageMgt                    = require('./libs/package-mgt')
-const tiEvents                      = require('@totallyinformation/ti-common-event-handler')
+const tilib = require('./libs/tilib')   // General purpose library (by Totally Information)
+const packageMgt  = require('./libs/package-mgt')
+const tiEvents  = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {
     // Template configuration metadata
@@ -96,7 +96,7 @@ const uib = {
     },
     reDeployNeeded: '4.1.2',
     degitEmitter: undefined,
-    RED: undefined,
+    RED: null,
     instanceApiAllowed: false,
 }
 
@@ -126,6 +126,7 @@ let userDir = ''
  * This is only run once no matter how many uib node instances are added to a flow
  */
 function runtimeSetup() {
+    if ( uib.RED === null ) return
     const RED = uib.RED
 
     // When uibuilder enters runtime state, show the details in the log
@@ -145,6 +146,7 @@ function runtimeSetup() {
                 RED.log.info(`|   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
             }
             RED.log.info('| Installed packages:')
+            // @ts-ignore
             const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
             for (let i = 0; i < pkgs.length; i += 4) {
                 const k = []
@@ -293,6 +295,7 @@ function runtimeSetup() {
     }
 
     /** Pass core objects to the Socket.IO handler module */
+    // @ts-ignore
     sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
 
 } // --- end of runtimeSetup --- //
@@ -408,6 +411,7 @@ function inputMsgHandler (msg, send, done) {
  * @this {uibNode}
  */
 function nodeInstance(config) {
+    if ( uib.RED === null ) return
     const RED = uib.RED
 
     /** Create the node instance - `this` can only be referenced AFTER here
@@ -480,13 +484,13 @@ function nodeInstance(config) {
      *   Files in this folder are also served to URL but take preference
      *   over those in the nodes folders (which act as defaults) @type {string}
      */
-    this.customFolder = path.join(uib.rootFolder, this.url)
+    this.customFolder = path.join(/** @type {string} */ (uib.rootFolder), this.url)
 
     // Check whether the url has been changed. If so, rename the folder
     if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl ) {
         // rename (move) folder if possible - but don't overwrite
         try {
-            fs.moveSync(path.join(uib.rootFolder, this.oldUrl), this.customFolder, { overwrite: false })
+            fs.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.customFolder, { overwrite: false })
             log.trace(`[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
         } catch (e) {
             log.trace(`[uibuilder:nodeInstance:${this.url}] Could not rename folder. ${e.message}`)
@@ -582,6 +586,7 @@ function nodeInstance(config) {
     uiblib.setNodeStatus( this )
 
     // 3) Add event handler to process inbound messages
+    // @ts-ignore
     this.on('input', inputMsgHandler)
 
     // 3rd-party node (non-flow) Event handlers (e.g. uib-sender)
@@ -590,9 +595,11 @@ function nodeInstance(config) {
     /** Do something when Node-RED is closing down which includes when this node instance is redeployed
      * Note use of arrow function so as to retain the correct `this` context
      */
+    // @ts-ignore
     this.on('close', (removed, done) => {
         log.trace(`[uibuilder:nodeInstance:close:${this.url}] nodeInstance:on-close: ${removed ? 'Node Removed' : 'Node (re)deployed'}`)
 
+        // @ts-ignore
         this.removeListener('input', inputMsgHandler)
 
         // Cancel any event listeners for this node
@@ -615,11 +622,13 @@ function nodeInstance(config) {
         res.status(200).send( web.showInstanceDetails(req, this) )
     })
 
+    tiEvents.emit(`node-red-contrib-uibuilder/${this.url}/instanceSetupComplete`, this)
+
     // // TODO: Remove this debug info
-    // setTimeout(function(){
-    //     tilib.dumpMem('Instance')
-    //     web.dumpRoutes(true)
-    // }, 2000)
+    // setTimeout(function() {
+    //     tiEvents.emit(`node-red-contrib-uibuilder/components-html/BOO`, 1, 2)
+    //     tiEvents.emit(`node-red-contrib-uibuilder/components-html`, 3, 4)
+    // }, 8000)
 
 } // ----- end of nodeInstance ----- //
 

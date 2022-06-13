@@ -1,14 +1,14 @@
 /** Takes a msg input and sends it to the chosen uibuilder instance
  *  Destructured to make for easier and more consistent logic.
- * 
- * Copyright (c) 2021 Julian Knight (Totally Information)
- * 
+ *
+ * Copyright (c) 2021-2022 Julian Knight (Totally Information)
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,8 +33,8 @@ const tiEvents = require('@totallyinformation/ti-common-event-handler')
  *  that can easily be passed around.
  */
 const mod = {
-    /** @type {runtimeRED} Reference to the master RED instance */
-    RED: undefined,
+    /** @type {runtimeRED|null} Reference to the master RED instance */
+    RED: null,
     /** @type {string} Custom Node Name - has to match with html file and package.json `red` section */
     nodeName: 'uib-sender',
     /** */
@@ -47,7 +47,7 @@ const mod = {
 
 /** 3) Run whenever a node instance receives a new input msg
  * NOTE: `this` context is still the parent (nodeInstance).
- * See https://nodered.org/blog/2019/09/20/node-done 
+ * See https://nodered.org/blog/2019/09/20/node-done
  * @param {object} msg The msg object received.
  * @param {Function} send Per msg send function, node-red v1+
  * @param {Function} done Per msg finish function, node-red v1+
@@ -56,27 +56,25 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     // As a module-level named function, it will inherit `mod` and other module-level variables
 
     // If you need it - or just use mod.RED if you prefer:
-    //const RED = mod.RED
+    // const RED = mod.RED
 
-    // NOTE: Several ways to do this. 
+    // NOTE: Several ways to do this.
     //  1) Most direct would be to directly ref the uibuilder node via RED.nodes - but this is tight coupling
     //  2) 2nd most direct would be to use global uibsockets ref - but this is also fairly tight coupling
     //  3) Least coupling is to use the TI events module
 
-    if ( mod.useEvents === false ) {
+    if ( mod.useEvents === false && global['totallyInformationShared'] ) {
         // TODO send the msg to the front-end
-        const sockets = global.totallyInformationShared.uibsockets
+        const sockets = global['totallyInformationShared'].uibsockets
         msg._fromSender = true
-        if ( global.totallyInformationShared.uibsockets ) {
+        if ( global['totallyInformationShared'].uibsockets ) {
             sockets.sendToFe(msg, this.url, sockets.uib.ioChannels.server)
         }
     } else {
-        // Use events to send msg to uibuilder front-end. 
+        // Use events to send msg to uibuilder front-end.
         const eventName = `node-red-contrib-uibuilder/${this.url}`
-        //console.log('[uib-sender] ', eventName, { ...msg, ...{_uib: { originator: this.id } } } )
-        tiEvents.emit( eventName, { ...msg, ...{_uib: { originator: this.id } } } )
+        tiEvents.emit( eventName, { ...msg, ...{ _uib: { originator: this.id } } } )
     }
-    
 
     // If passthrough is enabled, send the msg
     if ( this.passthrough === true ) send(msg)
@@ -97,6 +95,7 @@ function nodeInstance(config) {
     const RED = mod.RED
 
     // Create the node instance - `this` can only be referenced AFTER here
+    // @ts-ignore
     RED.nodes.createNode(this, config)
 
     /** Transfer config items from the Editor panel to the runtime */
@@ -122,9 +121,7 @@ function nodeInstance(config) {
      * Note the use of an arrow function, ensures that the function keeps the
      * same `this` context and so has access to all of the node instance properties.
      */
-    this.on('close', (removed, done) => { 
-        //console.log('>>>=[IN 4]=>>> [nodeInstance:close] Closing. Removed?: ', removed)
-
+    this.on('close', (removed, done) => {
         // Cancel any event listeners for this node
         tiEvents.removeAllListeners(`node-red-contrib-uibuilder/return/${this.id}`)
 
@@ -137,7 +134,6 @@ function nodeInstance(config) {
      * Other: credentials, id, type, z, wires, x, y
      * + any props added manually from config, typically at least name and topic
      */
-    //console.log('>>>> TI GLOBAL <<<<', global.totallyInformationShared)
 }
 
 //#endregion ----- Module-level support functions ----- //
@@ -152,7 +148,7 @@ function EventOut(RED) {
     mod.RED = RED
 
     /** Register a new instance of the specified node type (2)
-     * 
+     *
      */
     RED.nodes.registerType(mod.nodeName, nodeInstance)
 }
@@ -160,4 +156,4 @@ function EventOut(RED) {
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = EventOut
 
-//EOF
+// EOF

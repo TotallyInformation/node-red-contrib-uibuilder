@@ -37,13 +37,17 @@ class UibPackages {
      */
     #isConfigured = false
 
+    #logUndefinedError = new Error('this.log is undefined')
+    #uibUndefinedError = new Error('this.uib is undefined')
+    #rootFldrNullError = new Error('this.uib.rootFolder is null')
+
     /** @type {Array<string>} Updated by updateMergedPackageList which is called first in setup and then in various updates */
     mergedPkgMasterList = []
 
     /** @type {string} The name of the package.json file 'package.json' */
     packageJson = 'package.json'
 
-    /** @type {uibPackageJson} The uibRoot package.json contents */
+    /** @type {uibPackageJson|null} The uibRoot package.json contents */
     uibPackageJson
 
     /** @type {string} Get npm's global install location */
@@ -86,6 +90,8 @@ class UibPackages {
      * @param {uibConfig} uib uibuilder module-level configuration
      */
     setup( uib ) {
+        if ( uib.RED === null ) throw new Error('uib.RED is null')
+
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
             uib.RED.log.warn('[uibuilder:UibPackages:setup] Setup has already been called, it cannot be called again.')
@@ -126,6 +132,8 @@ class UibPackages {
      * @returns {object|null} Object representation of JSON if found otherwise null
      */
     readPackageJson(folder) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+
         // Does not need setup to have finished running
 
         let file = null
@@ -156,9 +164,14 @@ class UibPackages {
      * @returns {object} uibRoot/package.json contents or a minimal version as an object
      */
     getUibRootPJ() {
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.log === undefined ) throw this.#logUndefinedError
+
         // Does not need setup to have finished running
 
+        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
         const uibRoot = this.uib.rootFolder
+
         const fileName = path.join( uibRoot, this.packageJson )
 
         // Get it to class var or create minimal class var
@@ -188,7 +201,10 @@ class UibPackages {
     }
 
     async updIndividualPkgDetails(pkgName, lsParsed) {
+        if ( this.uibPackageJson === null ) throw new Error('this.uibPackageJson is null')
         const pj = this.uibPackageJson
+
+        if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined || pj.dependencies === undefined ) throw new Error('pj.uibuilder, pj.uibuilder.packages or pj.dependencies is undefined')
         const packages =  pj.uibuilder.packages
 
         packages[pkgName] = {}
@@ -236,7 +252,7 @@ class UibPackages {
             }
         }
 
-        if ( pj.dependencies[pkgName].includes(':') ) {
+        if ( pj.dependencies[pkgName] && pj.dependencies[pkgName].includes(':') ) {
             // Must be installed from somewhere other than npmjs so don't try to find latest version
             pkg.latestVersion = null
             pkg.installedFrom = pj.dependencies[pkgName].split(':')[0]
@@ -264,9 +280,13 @@ class UibPackages {
         console.log(`${(new Date()).toISOString()} >>> STARTED packages >>>`)
         const pj = this.uibPackageJson
 
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+        const rootFolder = this.uib.rootFolder
+
         let ls = ''
         try {
-            ls = await this.npmListInstalled(this.uib.rootFolder)
+            ls = await this.npmListInstalled(rootFolder)
         } catch {}
 
         let lsParsed = { dependencies: {} }
@@ -281,16 +301,20 @@ class UibPackages {
 
         // TODO filter pj.uibuilder.packages against pj.dependencies and remove any that no longer exist
 
-        console.log(`${(new Date()).toISOString()} >>> packages >>>`, pj.uibuilder.packages)
+        // console.log(`${(new Date()).toISOString()} >>> packages >>>`, pj.uibuilder.packages)
 
         // (re)Write package.json
-        this.writePackageJson(this.uib.rootFolder, pj)
+        this.writePackageJson(rootFolder, pj)
     }
 
     /** !DEPRECATED! Create/Update, record & return <uibRoot>/package.json (create it if it doesn't exist)
      * @returns {object|null} Parsed version of <uibRoot>/package.json with uibuilder specific updates
      */
     getUibRootPackageJson() {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:getUibRootPackageJson] Cannot run. Setup has not been called.')
             return
@@ -343,14 +367,14 @@ class UibPackages {
         // Make sure we have package details for all installed packages
         Object.keys(pj.dependencies).forEach( packageName => {
             // Get/Update package details
-            pj.uibuilder.packages[packageName] = this.getPackageDetails2(packageName, this.uib.rootFolder)
+            pj.uibuilder.packages[packageName] = this.getPackageDetails2(packageName, uibRoot)
             // And save the version/location spec from the dependencies prop so everything is together
             pj.uibuilder.packages[packageName].spec = pj.dependencies[packageName]
 
             // Frig to pick up the version of Bootstrap installed with bootstrap-vue
             if (packageName === 'bootstrap-vue' && !pj.dependencies.bootstrap ) {
                 pj.dependencies.bootstrap = pj.uibuilder.packages[packageName].bootstrap
-                pj.uibuilder.packages.bootstrap = this.getPackageDetails2('bootstrap', this.uib.rootFolder)
+                pj.uibuilder.packages.bootstrap = this.getPackageDetails2('bootstrap', uibRoot)
                 pj.uibuilder.packages.bootstrap.spec = pj.dependencies.bootstrap
             }
         })
@@ -369,6 +393,10 @@ class UibPackages {
      * @param {object} json The Object data to write to the file
      */
     setUibRootPackageJson(json) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:setUibRootPackageJson] Cannot run. Setup has not been called.')
             return
@@ -396,9 +424,11 @@ class UibPackages {
      * @returns {null|string} Actual filing system path to the installed package
      */
     getPackagePath2(packageName, installRoot) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:getPackagePath] Cannot run. Setup has not been called.')
-            return
+            return null
         }
 
         // If installRoot = string, make an array
@@ -419,6 +449,8 @@ class UibPackages {
      * @returns {object} Details object for an installed package
      */
     getPackageDetails2(packageName, installRoot) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:getPackagePath] Cannot run. Setup has not been called.')
             return
@@ -428,9 +460,11 @@ class UibPackages {
         packageName = packageName.trim()
 
         const folder = this.getPackagePath2(packageName, installRoot)
+        if ( folder === null ) throw new Error('folder is null')
         const pkgJson = this.readPackageJson(folder)
 
         const pkgDetails = { 'installFolder': folder }
+        // if ( pkgDetails === undefined ) throw new Error('pkgDetails is undefined')
         if (pkgJson.version) pkgDetails.installedVersion = pkgJson.version
 
         /** If we can, lets work out what resource is actually needed
@@ -528,11 +562,17 @@ class UibPackages {
      * @param {string} [toLocation] Where to install to. Defaults to uibRoot
      * @returns {Promise<string>} [Combined stdout/stderr, updated list of package details]
      */
-    async npmInstallPackage(url, pkgName, tag = '', toLocation = this.uib.rootFolder) {
+    async npmInstallPackage(url, pkgName, tag = '', toLocation = '') {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:npmInstallPackage] Cannot run. Setup has not been called.')
-            return
+            return ''
         }
+
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
+        if ( toLocation === '' ) toLocation = this.uib.rootFolder
 
         // https://github.com/sindresorhus/execa#options
         const opts = {
@@ -555,7 +595,7 @@ class UibPackages {
         const { all } = await execa('npm', args, opts)
         this.log.info(`[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${all}\n `)
 
-        return all
+        return /** @type {string} */ (all)
 
     } // ---- End of installPackage ---- //
 
@@ -565,9 +605,13 @@ class UibPackages {
      * @returns {Promise<string>} Combined stdout/stderr
      */
     async npmRemovePackage(pkgName) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:npmRemovePackage] Cannot run. Setup has not been called.')
-            return
+            return ''
         }
 
         // https://github.com/sindresorhus/execa#options
@@ -575,7 +619,7 @@ class UibPackages {
             'cwd': this.uib.rootFolder,
             'all': true,
         }
-        const args = [ // `npm remove --no-audit --no-update-notifier --color=false --json ${params.package}` //  --save-prefix="~"
+        const args = [
             'uninstall',
             '--save',
             '--color=false',
@@ -590,7 +634,7 @@ class UibPackages {
         const { all } = await execa('npm', args, opts)
         this.log.info(`[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${all}\n `)
 
-        return all
+        return /** @type {string} */ (all)
 
     } // ---- End of removePackage ---- //
 
@@ -634,6 +678,10 @@ class UibPackages {
      * @returns {Promise<any>} Combined stdout/stderr
      */
     async npmOutdated(pkgName) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:npmLatestVersion] Cannot run. Setup has not been called.')
             return
