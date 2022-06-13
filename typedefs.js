@@ -319,7 +319,7 @@
  * @property {object}           customServer.serverOptions Optional ExpressJS server options
  *
  * @property {undefined|object} degitEmitter Event emitter for degit, populated on 1st use. See POST admin API
- * @property {undefined|runtimeRED} RED Keep a reference to RED for convenience. Set at the start of Uib
+ * @property {runtimeRED|null} RED Keep a reference to RED for convenience. Set at the start of Uib
  * @property {string=} version The deployed version of uibuilder (from `package.json`)
  * @property {string=} httpRoot Copy of RED.settings.httpRoot for ease of use
  * @property {string=} reDeployNeeded If the last deployed version is this version or earlier and the current version is greater than this, tell the Editor that a redeploy is needed
@@ -339,13 +339,21 @@
 /** cacheNode1
  * @typedef {object} cacheNode1 Local copy of the node instance config + other info
  * @property {boolean} cacheall Flag indicating each individual msg is cached
- * @property {string}  cacheKey msg property to use to group cached msgs
+ * @property {string|undefined}  cacheKey msg property to use to group cached msgs
  * @property {number}  num number of cached msgs to retain
  * @property {string}  storeName Which store to use for the context variable
  * @property {string}  name only used for labelling the node in the flow
  * @property {object}  cache A reference to the actual cache for this node instance
  * @property {Function} getC A reference to the context get function for this node instance
  * @property {Function} setC A reference to the context set function for this node instance
+ */
+
+/** uibListNode
+ * @typedef {{
+ *   name: string;
+ *   topic: string;
+ *   url: string;
+ * }} uibListNode
  */
 
 /** MsgAuth

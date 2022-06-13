@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "checkJs": true,
+        "strictNullChecks": false,
+        "strict": false,
+        "lib": ["ES2022"],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "es2022",
+        "noEmit": true,
+      }
+      
+}
