@@ -656,21 +656,24 @@ class UibWeb {
                 .cookie('uibuilder-namespace', node.url, {
                     path: mypath,
                     sameSite: true,
-                    maxAge: 0, // session cookie only - expires/maxAge
+                    // @ts-expect-error
+                    expires: 0, // session cookie only - expires/maxAge
                     secure: qSec,
                 })
                 // Give the client a fixed session id
                 .cookie('uibuilder-client-id', clientId, {
                     path: mypath,
                     sameSite: true,
-                    maxAge: 0, // session cookie only - expires/maxAge
+                    // @ts-expect-error
+                    expires: 0, // session cookie only - expires/maxAge
                     secure: qSec,
                 })
                 // Tell clients what httpNodeRoot to use (affects Socket.io path)
                 .cookie('uibuilder-webRoot', uib.nodeRoot.replace(/\//g, ''), {
                     path: mypath,
                     sameSite: true,
-                    maxAge: 0, // session cookie only - expires/maxAge
+                    // @ts-expect-error
+                    expires: 0, // session cookie only - expires/maxAge
                     secure: qSec,
                 })
 
