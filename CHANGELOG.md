@@ -8,12 +8,24 @@ typora-root-url: docs/images
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-* Move new CSS and FE library
+* Experimental list node
+  * Allow msg.mode = "remove"
+  * Allow additional attributes
+  * Updates should update the original add which should be saved for replay but should instantly output an update
+
+* Add outdated markers to Editor Library tab.
+
 * Use new CSS in details pages
 
-#### Fixes Needed
+* New FE Library
+  * Add `uibuilder.ui({...})` function that allows passing the same data as `msg._ui`
+  * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
+  * Option for a pop-over notification to manually reconnect the websocket.
+  * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
 
-* Create min version of css. Create min version of client module.js, add map files
+* Create min version of css.
+
+* Add api to query if a specific uib library is installed (and return version)
 
 ----
 
@@ -21,19 +33,17 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 <!-- Nothing currently. -->
 
-### In-flight
-
-* Add outdated markers to Editor Library tab.
-* Lint to "Standard JavaScript" with node.js v12 and front-end to ECMA2019.
-
 ### Fixed
 
 * Improved module path search to allow an array of locations. Removes spurious warning about socket.io client not being found.
 * `/uibuilder/ping` now correctly returns 204 (no content) status not 201.
 * `web.js`::`buildHtmlTable` - over-optimised regex broke the table cells, now fixed.
+* Connected control message now correctly contains the client id and client IP address. The client id does not change as much as the _socketId, it is saved in browser local storage so will be the same across sessions and multiple windows/tabs.
 
 ### Changed
 
+* `clientId` is now session stable. That means that it does not change unless the client browser is restarted. It is now also included in more messages. For control messages, it will be found as a msg property. For `_ui` related messages, it will be a property under `msg._ui`. Any other uses will appear under `msg._uib`.
+* All code now Linted to "Standard JavaScript" with node.js v12 and front-end to ECMA2019. Null/undefined guards put in place.
 * Package.json: Changed homepage to point to Tech Docs on github.io.
 * Editor:
   * Added stylesheet containing a class of `emoji` which provides nicer, cross-platform, colour emojis.
@@ -41,14 +51,56 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
     * Change "URL to use:" to "Estimated link:" on the Libraries tab to make it clear that it might not be correct (down to the library author).
     * Added info emoji to package name (links to package homepage).
     * Added url link to estimated library to make it easier to find out if it actually exists and exactly where.
-* package-mgt.js:
+* `uib-cache`: Add option to not replay the cache if the client connection isn't actually new (e.g. if the client is a reconnection after restarting Node-RED).If the control msg recieved contains `msg.connected` and it is >0, that means that the client is reconnecting and this isn't a client page load. _Note that currently, only the new ES module client library populates the `msg.connected` value_. This option is selected by default.
+* `package-mgt.js`:
   * Rewrite root package.json and package details processing for more efficiency + prettify package.json output
   * Add outdated (current/wanted/latest) to uibRoot/package.json>uibuilder.packages in prep for update display in Editor
 
+
 ### New
 
-* `uib-brand.css` - will eventually be the new default uibuilder CSS. It is light/dark switchable both manually and by browser preference. Still under development.
+* `uib-brand.css` - will eventually be the new default uibuilder CSS. It is light/dark switchable both manually and by browser preference. Still under development, this **WILL CHANGE**, probably quite a bit. There are still some variables that are needed in order to be able to sensible control things like spacing and sizing.
 
+* New ECMA Module front-end client library (`uibuilder.module.js`)
+
+  The new library will only work with web browsers from early 2019 or later (only really impacts if you are stuck on IE11 or on an Apple device that doesn't support iOS 12 or later). It uses the new brand CSS by default.
+
+  Key differences from the old library:
+  
+  * Supports the new configuration/message-driven features that let you both build and modify web pages dynamically.
+  * Can load an entire UI from a JSON file (or JSON response from a web server). Can also do incremental loads and dynamic changes.
+  * Incorporates the socket.io client library so you don't need to worry about it ever again!
+  * Requires a modern(ish) browser.
+  * Has to be loaded as an ES Module.
+  * No built-in VueJS features, use the new msg._ui features instead.
+  * No need for `uibuilder.start()` in your code any more (nearly always). Often no code needed at all in fact! (Other than loading the library of course).
+  * `uibuilder.eventSend()` now has a lot more information attached. It also now uses the `msg._ui` property to hold all of the information (except for the payload which is as-before). This brings it into line with the other _ui handling. Attributes, classes, clientId and custom properties are all now included.
+
+  See the `uibuilder.module.md` page in the tech docs for all of the features and details for the new library.
+
+  * Clients now report how many times they have connected since last page load. This lets uibuilder know whether the client is reconnecting or connecting for the first time.
+
+* **New Node** - `uib-list`
+  
+  Consider this to be the first *experimental* node in what will hopefully be a series. It can be sent a message who's payload is an array of strings or an array of an array of strings.
+
+  The node creates a new `<ul>`, `<ol>`, or `<dl>` HTML list according to the settings. In the case of it being sent an array of arrays, the outer array creates a new list entry and the inner array is joined as a comma-separated list. A `<dl>` list however must be given an array of arrays and the first entry in the inner array becomes the `<dt>` entry with the 2nd becoming the `<dd>` entry.
+
+  The node also requires you specify the uibuilder URL that the node links to along with a required HTML element id that is used to identify the element. Optionally, you can also set a parent element by specifying a CSS selector, the list will be attached ot the end of that parent as a new child. Note that if the selector is not unique, only the first found element will be used.
+
+  Instead of outputting to the uibuilder node, you can instead output a message that contains the appropriate `msg._ui` configuration used by the new front-end ES Module library. You can use this to help you build larger and more complex UI's and to help learn about how the configuration-driven UI features work. Such a message could be further processed and then sent to an appropriate uibuilder node.
+
+  One additional feature is that the configuration is retained in the node (until Node-RED is restarted or you re-deploy the node/flow) and whenever a new client connects to the matching uibuilder instance, it will send the complete configuration to the new client. This ensures that client browsers connecting after you have created the configuration will all receive it and so will have matching UI's.
+
+* Runtime
+  
+  * Each uibuilder node instance issues a tiEvent when:
+  
+    * Instance setup is completed (`node-red-contrib-uibuilder/${url}/instanceSetupComplete`). The node object is passed as data.
+    * A client (re)connects (`node-red-contrib-uibuilder/${url}/clientConnect`). The control msg is passed as data.
+    * When a client disconnects (`node-red-contrib-uibuilder/${url}/clientDisconnect`). The control msg is passed as data.
+    
+    These can be used by any other node that uses the `@totallyinformation/ti-common-events` module. Such as the experimental `uib-list` node.
 
 
 ## [v5.0.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.1...v5.0.2)

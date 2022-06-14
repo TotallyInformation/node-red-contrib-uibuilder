@@ -141,6 +141,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Once Node-RED's baseline node.js version has moved passed v12.20, can update `execa` and use dynamic imports (and change README notes on scorecard). Once it has moved passed v14, can simplify the socket.js class by reinstating the optional chaining.
 
+* Move socket.io client to dev deps and remove serve from web.js (new library builds it in) - can't do until uibuilderfe is deprecated? Or updated to include (breaking chg)
+
 ### Editor (`uibuilder.html`)
 
 * Add all local package.json script entries as links/buttons so they can be run from the editor panel.
