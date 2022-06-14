@@ -167,7 +167,11 @@
  * @property {Function} context get/set context data. Also .flow and .global contexts
  * @property {Function} on Event listeners for the node instance ('input', 'close')
  * @property {Function} removeListener Event handling
+ * @property {Function} log General log output, Does not show in the Editor's debug panel
+ * @property {Function} warn Warning log output, also logs to the Editor's debug panel
  * @property {Function} error Error log output, also logs to the Editor's debug panel
+ * @property {Function} trace Trace level log output
+ * @property {Function} debug Debug level log output
  * @property {Function} status Show a status message under the node in the Editor
  * @property {object=} credentials Optional secured credentials
  * @property {object=} name Internal.
@@ -340,6 +344,7 @@
  * @typedef {object} cacheNode1 Local copy of the node instance config + other info
  * @property {boolean} cacheall Flag indicating each individual msg is cached
  * @property {string|undefined}  cacheKey msg property to use to group cached msgs
+ * @property {boolean}  newcache Only replay cache if client is actually new, not a reconnection
  * @property {number}  num number of cached msgs to retain
  * @property {string}  storeName Which store to use for the context variable
  * @property {string}  name only used for labelling the node in the flow
@@ -350,9 +355,14 @@
 
 /** uibListNode
  * @typedef {{
+ *   url: string;
+ *   elementid: string;
+ *   elementtype: string;
+ *   parent: string;
+ *   passthrough: boolean;
  *   name: string;
  *   topic: string;
- *   url: string;
+ *   _ui: any;
  * }} uibListNode
  */
 
