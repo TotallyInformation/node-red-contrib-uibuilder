@@ -172,16 +172,22 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     // If you need it - or just use mod.RED if you prefer:
     // const RED = mod.RED
 
+    // Only send if connection is really new (connections=0) - if newcache is selected
+    let sendit = true
+    if ( this.newcache === true && msg.connections && msg.connections > 0 ) sendit = false
+
     // Is this a control msg?
     if ( msg.uibuilderCtrl ) {
         if ( msg.cacheControl ) {
-            if ( msg.cacheControl === 'REPLAY' ) {
+            if ( msg.cacheControl === 'REPLAY' && sendit === true ) {
                 // Send the cache
                 sendCache(send, this, msg)
             } else if ( msg.cacheControl === 'CLEAR' ) {
                 // Clear the cache
                 clearCache(this)
             }
+        } else if ( msg.uibuilderCtrl === 'client connect' && sendit === true ) {
+            sendCache(send, this, msg)
         }
     } else {
         // Forward
@@ -213,6 +219,7 @@ function nodeInstance(config) {
     /** Transfer config items from the Editor panel to the runtime */
     this.cacheall = config.cacheall
     this.cacheKey = config.cacheKey || 'topic'
+    this.newcache = config.newcache === undefined ? true : config.newcache
     this.num = config.num || 1 // zero is unlimited cache
     this.storeName = config.storeName || 'default'
     this.name = config.name
