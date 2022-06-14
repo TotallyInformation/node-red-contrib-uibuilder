@@ -26,6 +26,7 @@
 //#region ----- Module level variables ---- //
 
 const tiEvents = require('@totallyinformation/ti-common-event-handler')
+const uibPackages = require('../libs/package-mgt')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -41,12 +42,152 @@ const mod = {
 
 //#region ----- Module-level support functions ----- //
 
+/** Deal with a new client connection: send the last msg
+ * @param {*} msg The msg data in the custom event
+ * @this {runtimeNode & uibListNode}
+ */
+function handleConnectionEvent(msg) {
+    // Send the cached data - but only if connections=0 (e.g. fresh page load)
+    if ( msg.connections === 0 && this._ui ) {
+        // Don't forget to include the _socketId
+        emitMsg(msg, this)
+    }
+}
+
+/** Create/update the _ui object and retain for replay
+ * @param {*} msg incoming msg
+ * @param {runtimeNode & uibListNode} node reference to node instance
+ */
+function buildUi(msg, node) {
+    // If an object, turn into an array
+    if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+        // Turn into an array
+        msg.payload = Object.entries(msg.payload)
+    } else if ( typeof msg.payload === 'string' || typeof msg.payload === 'number' || typeof msg.payload === 'boolean' ) {
+        msg.payload = [msg.payload]
+    } else if ( !Array.isArray(msg.payload) ) {
+        node.warn('[uib-list:buildUi] msg.payload must be an array of strings or an array containing an array of strings. Cannot procede.')
+        return
+    }
+
+    if ( !node._ui ) {
+        // Create template
+        node._ui = [
+            {}, // placeholder in case a remove is needed
+            {
+                'method': '',
+                'components': [
+                    {
+                        'type': '',
+                        'id': '',
+                        // 'parent': '',
+                        'attributes': {},
+                        'components': [],
+                    },
+                ],
+            }
+        ]
+    }
+
+    // Assume the data replaces. If msg.mode = 'update' then add rather than replace
+    if ( msg.mode && msg.mode !== 'update' ) {
+        node._ui[0] = {}
+        node._ui[1].components[0].components = []
+    } else {
+        node._ui[0].method = 'remove'
+        node._ui[0].components = [node.elementid]
+        node._ui[1].components[0].components = []
+    }
+
+    const ui = node._ui[1]
+
+    ui.method = 'add'
+    ui.components[0].type = node.elementtype
+    ui.components[0].id = node.elementid
+    if ( node.parent !== '' ) ui.components[0].parent = node.parent
+
+    // if ( this.topic === '' && msg.topic ) this.topic = msg.topic
+
+    // Convert the input data array to _ui list entries
+
+    msg.payload.forEach( (el, i) => {
+        // List of objects
+        if ( el !== null && el.constructor.name === 'Object' ) {
+            el = Object.entries(el)
+        }
+        // Flatten nested objects/arrays
+        if ( Array.isArray(el) ) {
+            el.forEach( (el2, i) => {
+                if ( el2 !== null && el2.constructor.name === 'Object' ) {
+                    // Turn into an array
+                    el.splice(i, 1, ...Object.entries(el2))
+                } else if ( Array.isArray(el2) ) {
+                    el.splice(i, 1, ...el2)
+                }
+            })
+        }
+
+        if ( node.elementtype !== 'dl' ) {
+            // ul/ol
+            ui.components[0].components.push({
+                type: 'li',
+                slot: el,
+            })
+        } else {
+            // dl - needs a list of lists where the inner has 2 entries
+            if (el.length > 0) {
+                ui.components[0].components.push({
+                    type: 'dt',
+                    slot: el[0],
+                })
+            }
+            if (el.length > 1) {
+                ui.components[0].components.push({
+                    type: 'dd',
+                    slot: el[1],
+                })
+            }
+        }
+
+    } )
+
+    node.status({ fill: 'green', shape: 'dot', text: 'Data registered' })
+
+}
+
+/** Build the output and send the msg via an event emitter
+ * @param {*} msg The input or custom event msg data
+ * @param {runtimeNode & uibListNode} node reference to node instance
+ */
+function emitMsg(msg, node) {
+    if ( node._ui === undefined ) return
+
+    // Use event to send msg to uibuilder front-end.
+    const msg2 = {
+        ...msg,
+        ...{
+            _uib: {
+                originator: node.id
+            },
+            _ui: node._ui,
+        }
+    }
+    delete msg2.payload
+
+    if ( node.passthrough === true ) {
+        node.send(msg2)
+    } else {
+        tiEvents.emit( `node-red-contrib-uibuilder/${node.url}`, msg2)
+    }
+}
+
 /** 3) Run whenever a node instance receives a new input msg
  * NOTE: `this` context is still the parent (nodeInstance).
  * See https://nodered.org/blog/2019/09/20/node-done
  * @param {object} msg The msg object received.
  * @param {Function} send Per msg send function, node-red v1+
  * @param {Function} done Per msg finish function, node-red v1+
+ * @this {runtimeNode & uibListNode}
  */
 function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
     // As a module-level named function, it will inherit `mod` and other module-level variables
@@ -54,50 +195,11 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     // If you need it - or just use mod.RED if you prefer:
     // const RED = mod.RED
 
-    // TODO Check if payload is an object
-    // TODO Check if method is add, update or remove
-    // TODO Allow parent selector to be set
-    // TODO Allow ol/ul/dl
-    // TODO Allow ID to be set
-    // TODO Allow additional attributes
-    // TODO Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
-    // ? What is the best way to retain? Per-node or per-uib node? If per uib-node, retain in Node-RED? As part of instanceRoot?
+    // Save the last input msg for replay to new client connections, creates/update this._ui
+    buildUi(msg, this)
 
-    const out = []
-    if ( msg.payload.isArray ) {
-        msg.payload.array.forEach( el => {
-            out.push({
-                type: 'li',
-                slot: el,
-            })
-        } )
-    }
-
-    // Use events to send msg to uibuilder front-end.
-    tiEvents.emit( `node-red-contrib-uibuilder/${this.url}`, {
-        ...msg,
-        ...{
-            _uib: {
-                originator: this.id
-            },
-            _ui: {
-                // TODO Allow override from msg
-                'method': 'add',
-                // TODO Allow override from msg
-                'parent': '#start',
-                'components': [
-                    {
-                        'type': 'ol',
-                        'parent': '#card4',
-                        'attributes': {
-                            'id': 'ol-01',
-                        },
-                        'components': out,
-                    },
-                ],
-            },
-        },
-    } )
+    // Emit the list (sends to the matching uibuilder instance) or fwd to output depending on settings
+    emitMsg(msg, this)
 
     // We are done
     done()
@@ -119,24 +221,27 @@ function nodeInstance(config) {
     RED.nodes.createNode(this, config)
 
     /** Transfer config items from the Editor panel to the runtime */
+    this.elementid = config.elementid || ''
+    this.elementtype = config.elementtype || ''
+    this.parent = config.parent || ''
+    this.passthrough = config.passthrough
     this.name = config.name || ''
-    this.topic = config.topic || ''
-    const url = this.url = 'components-html' || config.url || '' // ! TODO
+    // this.topic = config.topic || ''
+    const url = this.url = config.url || ''
 
-    tiEvents.on(`node-red-contrib-uibuilder/${url}/**`, function(data) {
-        console.log(`>> list >> node-red-contrib-uibuilder/${url}/** >> `, this.event, data)
-    })
+    this.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
 
     // When a client (re)connects
-    tiEvents.on(`node-red-contrib-uibuilder/${url}/clientConnect`, function(data) {
-        console.log(`>> list >> node-red-contrib-uibuilder/${url}/clientConnect >> `, data)
-        // TODO Send the cached data
-    })
+    tiEvents.on(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent.bind(this))
 
     // When a client disconnects
-    tiEvents.on(`node-red-contrib-uibuilder/${url}/clientDisconnect`, function(data) {
-        console.log(`>> list >> node-red-contrib-uibuilder/${url}/clientDisconnect >> `, data)
-    })
+    // tiEvents.on(`node-red-contrib-uibuilder/${url}/clientDisconnect`, function(data) {
+    //     console.log(`>> list >> node-red-contrib-uibuilder/${url}/clientDisconnect >> `, data)
+    // })
+
+    // tiEvents.on(`node-red-contrib-uibuilder/${url}/**`, function(data) {
+    //     console.log(`>> list >> node-red-contrib-uibuilder/${url}/** >> `, this.event, data)
+    // })
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
@@ -147,11 +252,7 @@ function nodeInstance(config) {
      * same `this` context and so has access to all of the node instance properties.
      */
     this.on('close', (removed, done) => {
-        // console.log('>>>=[IN 4]=>>> [nodeInstance:close] Closing. Removed?: ', removed)
-
-        // Cancel any event listeners for this node
-        tiEvents.removeAllListeners(`node-red-contrib-uibuilder/return/${this.id}`)
-
+        tiEvents.removeEventListener(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent)
         done()
     })
 

@@ -15,15 +15,62 @@
 -->
 
 <script type="text/html" data-template-name="uib-list">
+<div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
+    <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+    <select id="node-input-url">
+        <option value="">--choose a uibuilder instance--</option>
+    </select>
+</div>
+
+<div aria-label="List element id" class="form-row" title="The HMTL element id to apply to the created list">
+    <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> List ID</label>
+    <input type="text" id="node-input-elementid" placeholder="Must be a valid HTML element id">
+</div>
+
+<div aria-label="List type" class="form-row" title="The type of list to create (OL/UL/DL) or set from input msg">
+    <label for="node-input-elementtype"><i class="fa fa-list"></i> Type</label>
+    <select id="node-input-elementtype">
+        <!-- <option value="passthrough">Set from input msg</option> -->
+        <option value="ul">Unordered (ul)</option>
+        <option value="ol">Ordered (ol)</option>
+        <option value="dl">Definition (dl)</option>
+    </select>
+</div>
+
+<div aria-label="Parent CSS Selector" class="form-row" title="A CSS selector that uniquely identifies the HTML parent element to attach the new list to">
+    <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
+    <input type="text" id="node-input-parent" placeholder="Optional. CSS Selector">
+</div>
+
+<div aria-label="Outout definition object instead of sending" class="form-row" title="Outputs the configuration instead of sending it to the front-end">
+    <input type="checkbox" id="node-input-passthrough" style="display:inline-block; width:15px; vertical-align:baseline;">
+    <label for="node-input-passthrough" style="width: 90%;">Output instead of send?</label>
+</div>
+
+<hr>
 
 <div aria-label="Node Name" class="form-row" title="Node Name (descriptive only)">
     <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
     <input type="text" id="node-input-name">
 </div>
 
-<div aria-label="Topic" class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+<!-- <div aria-label="Topic" class="form-row" title="Adds a msg.topic to input msgs if not already provided">
     <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
     <input type="text" id="node-input-topic">
+</div> -->
+
+<hr>
+
+<div aria-label="Information" class="form-row" style="max-width: 450px">
+    <p>
+        In order to update an existing list rather than replacing it,
+        make sure to set <code>msg.mode</code> to "update".
+    </p>
+    <p>
+        If node status is "Data Registered", when a new client connects to uibuilder,
+        it will immediately be sent a copy of the data so that all connected clients
+        have the same display.
+    </p>
 </div>
 
 </script>
@@ -84,8 +131,6 @@
     (function () {
         'use strict'
     
-        console.log('>>>> uib-list >>>>')
-    
         /** Module name must match this nodes html file @constant {string} moduleName */
         const moduleName  = 'uib-list'
         /** Node's label @constant {string} paletteCategory */
@@ -95,10 +140,53 @@
         /** Node's background color @constant {string} paletteColor */
         const paletteColor  = '#F6E0F8' // '#E6E0F8'
     
+        /** Get all of the current uibuilder URL's */
+        function getUrls() {
+            $.ajax({
+                type: 'GET',
+                async: false,
+                dataType: 'json',
+                url: './uibuilder/admin/dummy',
+                data: {
+                    'cmd': 'listinstances',
+                },
+                success: function(instances) {
+                    Object.keys(instances).forEach( (val, i, arr) => {
+                        $('#node-input-url').append($('<option>', {
+                            value: instances[val],
+                            text: instances[val],
+                        }))
+                    })
+    
+                }
+            })
+    
+        } // ---- end of getUrls ---- //
+    
         /** Prep for edit
          * @param {*} node A node instance as seen from the Node-RED Editor
          */
         function onEditPrepare(node) {
+            // initial checkbox states
+            if (!node.passthrough) node.passthrough = false
+            $('#node-input-passthrough')
+                // Initial setting
+                .prop('checked', node.passthrough)
+                // If the setting changes, change the number of output ports
+                .on('change', function passthroughChange() {
+                    if ( $(this).prop('checked') === true ) {
+                        node.outputs = 1
+                    } else {
+                        node.outputs = 0
+                    }
+                })
+    
+            // Deal with the url
+            getUrls()
+            if ( node.url && node.url.length > 0 ) {
+                $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
+                $('#node-input-url').val(node.url)
+            }
     
         } // ----- end of onEditPrepare() ----- //
     
@@ -107,17 +195,24 @@
             category: paletteCategory,
             color: paletteColor,
             defaults: {
+                url: { value: '', required: true },
+                elementid: { value: '', required: true },
+                elementtype: { value: '', required: true },
+                parent: { value: '' },
+                passthrough: { value: false },
+                outputs: { value: 0 },
                 name: { value: '' },
+                // topic: { value: '' },
             },
-            // align:'right',
+            align: 'right',
             inputs: 1,
             inputLabels: '',
-            outputs: 1,
-            outputLabels: [''],
-            icon: 'parser-json.svg',
+            outputs: 0,
+            outputLabels: ['List configuration'],
+            icon: 'font-awesome/fa-list',
             paletteLabel: nodeLabel,
             label: function () {
-                return this.name || moduleName
+                return `${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName} [${this.elementtype}]`
             },
     
             /** Prepares the Editor panel */
