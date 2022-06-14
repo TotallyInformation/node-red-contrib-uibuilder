@@ -880,6 +880,8 @@ export const Uib = class Uib {
     _uiAdd(ui) {
         log('trace', 'Uib:_uiManager:add', 'Starting _uiAdd')()
 
+        // console.log('>> ui >> ', ui)
+
         ui.components.forEach((compToAdd) => {
             // Create the new component
             const newEl = document.createElement(compToAdd.type)
@@ -890,6 +892,9 @@ export const Uib = class Uib {
                     newEl.setAttribute(attrib, compToAdd.attributes[attrib])
                 })
             }
+
+            // ID if set
+            if (compToAdd.id) newEl.setAttribute('id', compToAdd.id)
 
             // Add event handlers
             if (compToAdd.events) {
@@ -998,8 +1003,10 @@ export const Uib = class Uib {
     _uiRemove(ui) {
         ui.components.forEach((compToRemove) => {
             try {
-                document.querySelector(compToRemove).remove()
-            } catch (err) { }
+                document.querySelector(`#${compToRemove}`).remove()
+            } catch (err) {
+                // log('error', 'Uib:_uiRemove', `Could not remove. ${err.message}`)()
+            }
         })
     } // --- end of _uiRemove ---
 

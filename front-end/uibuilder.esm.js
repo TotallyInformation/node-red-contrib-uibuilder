@@ -2726,6 +2726,8 @@ var Uib = (_a = class {
           newEl.setAttribute(attrib, compToAdd.attributes[attrib]);
         });
       }
+      if (compToAdd.id)
+        newEl.setAttribute("id", compToAdd.id);
       if (compToAdd.events) {
         Object.keys(compToAdd.events).forEach((type) => {
           if (type.toLowerCase === "onclick")
@@ -2807,7 +2809,7 @@ var Uib = (_a = class {
   _uiRemove(ui) {
     ui.components.forEach((compToRemove) => {
       try {
-        document.querySelector(compToRemove).remove();
+        document.querySelector(`#${compToRemove}`).remove();
       } catch (err) {
       }
     });
