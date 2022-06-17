@@ -59,6 +59,14 @@ function handleConnectionEvent(msg) {
  * @param {runtimeNode & uibListNode} node reference to node instance
  */
 function buildUi(msg, node) {
+    if ( msg.mode && msg.mode === 'remove' ) {
+        node._ui = [{
+            mode: 'remove',
+            components: [node.elementid]
+        }]
+        return
+    }
+
     // If an object, turn into an array
     if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
         // Turn into an array
@@ -178,6 +186,12 @@ function emitMsg(msg, node) {
         node.send(msg2)
     } else {
         tiEvents.emit( `node-red-contrib-uibuilder/${node.url}`, msg2)
+    }
+
+    if ( msg.mode && msg.mode === 'remove' ) {
+        node._ui = undefined
+        this.status({ fill: 'blue', shape: 'dot', text: 'Data cleared' })
+        // return
     }
 }
 
