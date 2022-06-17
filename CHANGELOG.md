@@ -12,13 +12,15 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Allow msg.mode = "remove"
   * Allow additional attributes
   * Updates should update the original add which should be saved for replay but should instantly output an update
+  * Add return msg handling like uib-sender.
+  * Move retained data to same mechanism as uib-cache
+  * Add help panel
 
 * Add outdated markers to Editor Library tab.
 
 * Use new CSS in details pages
 
 * New FE Library
-  * Add `uibuilder.ui({...})` function that allows passing the same data as `msg._ui`
   * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
   * Option for a pop-over notification to manually reconnect the websocket.
   * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
@@ -75,6 +77,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * No built-in VueJS features, use the new msg._ui features instead.
   * No need for `uibuilder.start()` in your code any more (nearly always). Often no code needed at all in fact! (Other than loading the library of course).
   * `uibuilder.eventSend()` now has a lot more information attached. It also now uses the `msg._ui` property to hold all of the information (except for the payload which is as-before). This brings it into line with the other _ui handling. Attributes, classes, clientId and custom properties are all now included.
+  * New function `uibuilder.ui({...})` allows passing the same data as `msg._ui` from front-end code.
 
   See the `uibuilder.module.md` page in the tech docs for all of the features and details for the new library.
 
