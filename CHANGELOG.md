@@ -9,14 +9,16 @@ typora-root-url: docs/images
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Experimental list node
-  * Allow msg.mode = "remove"
   * Allow additional attributes
-  * Updates should update the original add which should be saved for replay but should instantly output an update
   * Add return msg handling like uib-sender.
   * Move retained data to same mechanism as uib-cache
   * Add help panel
+  * Updates should update the original add which should be saved for replay but should instantly output an update
 
 * Add outdated markers to Editor Library tab.
+
+
+### Probably will be deferred to a future release
 
 * Use new CSS in details pages
 
