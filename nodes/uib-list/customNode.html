@@ -15,6 +15,11 @@
 -->
 
 <script type="text/html" data-template-name="uib-list">
+<div aria-label="Note: only works with new library" class="form-row" style="max-width: 450px">
+    <b>NOTE:</b> This node only works if you are using the new <i>ES Module</i> version of the uibuilder front-end
+    client library. It does not work with the previous <code>uibuilderfe</code> library.
+</div>
+
 <div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
     <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
     <select id="node-input-url">
@@ -63,13 +68,27 @@
 
 <div aria-label="Information" class="form-row" style="max-width: 450px">
     <p>
-        In order to update an existing list rather than replacing it,
-        make sure to set <code>msg.mode</code> to "update".
+        With no <code>msg.mode</code> set, sending another message will 
+        automatically remove and replace the list.
+    </p>
+    <p>
+        In order to <b>update</b> an existing list rather than replacing it,
+        make sure to set <code>msg.mode</code> to "update". In that case,
+        Whatever you send will be added to the list instead of replacing it.
+    </p>
+    <p>
+        To <b>remove</b> an existing list, set <code>msg.mode</code> to "remove".
+        This will also clear the cache.
     </p>
     <p>
         If node status is "Data Registered", when a new client connects to uibuilder,
         it will immediately be sent a copy of the data so that all connected clients
         have the same display.
+    </p>
+    <p>
+        If you need to do more complex tasks such as update specific entries in the list,
+        set the node to just output the configuration and then use the documentation to
+        tweak it accordingly.
     </p>
 </div>
 
