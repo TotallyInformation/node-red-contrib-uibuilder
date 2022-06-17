@@ -35,6 +35,7 @@ This is the next-generation front-end client for uibuilder. It has some nice new
   - [Auto-loading of the uibuilder default stylesheet](#auto-loading-of-the-uibuilder-default-stylesheet)
   - [Initial connection message now shows whether the page is newly loaded or not](#initial-connection-message-now-shows-whether-the-page-is-newly-loaded-or-not)
   - [Stable client identifier](#stable-client-identifier)
+  - [ui function](#ui-function)
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content-1)
   - [Dynamic content details](#dynamic-content-details)
   - [Initial load from JSON URL](#initial-load-from-json-url)
@@ -610,6 +611,12 @@ When a new browser connects to a uibuilder endpoint for the first time in a brow
 
 Because the client id is stable, it can be used for things like session management and security checks on the server.
 
+### ui function
+
+This new function allows passing the same data as `msg._ui` from within your front-end code. It allows front-end scripts to be able to dynamically generate and update UI's using simple configuration JSON.
+
+See the next section for details.
+
 ---
 
 ## Dynamic, data-driven HTML content
@@ -821,6 +828,12 @@ Each component can:
             {
                 // REQUIRED. The reference name of the component (TBD: May need to be Class name rather than the element name. e.g. SyntaxHighlight rather than syntax-highlight)
                 "type": "...",
+
+                // Supplying this will make further updates or removals easier. 
+                // MUST be unique for the page. MUST be a valid HTML element id.
+                // The uibuilder FE library will attempt to create an id if not provided but it will be difficult
+                // to do updates if you do not set this.
+                "id": "uniqueid",
                 
                 // Optional. Overrides master parent. If no parent given here or in outer, will be added to <body> element
                 "parent": "html selector",
@@ -831,13 +844,12 @@ Each component can:
                 "slot": "HTML to <i>add</i> to <sup>slot</sup> instead of <code>msg.payload</code>",
 
                 // Optional. Markdown to add to the slot. Converted Markdown is added after the standard slot.
-                "slotMarkdown": "## A heading 2\n\nRendered by **marked** <sub>if loaded</sub>.\n\n```javascript\nvar x = alert('Hey Jim')\n```\n"
+                "slotMarkdown": "## A heading 2\n\nRendered by **marked** <sub>if loaded</sub>.\n\n```javascript\nvar x = alert('Hey Jim')\n```\n",
                 
                 // Optional. Each property will be applied to the element attributes
                 "attributes": {
-                    // Supplying this will make further updates or removals easier. MUST be unique for the page.
-                    "id": "uniqueid"
-                    // ... not recommended to include `onClick or similar event handlers, specify those in the events property below ...
+                    // Most attributes can be set however not recommended to include `onClick or similar event handlers, 
+                    // specify those in the events property below ...
                 },
 
                 // Optional. properties to be added to the element. Unlike attributes, these can contain any data.

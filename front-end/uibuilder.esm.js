@@ -2603,6 +2603,48 @@ var Uib = (_a = class {
   log() {
     log(...arguments)();
   }
+  ui(json) {
+    let msg = {};
+    if (json._ui)
+      msg = json;
+    else
+      msg._ui = json;
+    this._uiManager(msg);
+  }
+  replaceSlot(ui, el, component) {
+    if (window["DOMPurify"])
+      component.slot = window["DOMPurify"].sanitize(component.slot);
+    if (component.slot !== void 0 && component.slot !== null && component.slot !== "") {
+      el.innerHTML = component.slot ? component.slot : ui.payload;
+    }
+  }
+  replaceSlotMarkdown(ui, el, component) {
+    if (!window["markdownit"])
+      return;
+    const opts = {
+      html: true,
+      linkify: true,
+      _highlight: true,
+      langPrefix: "language-",
+      highlight(str, lang) {
+        if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
+          try {
+            return `<pre class="highlight" data-language="${lang.toUpperCase()}">
+                                <code class="language-${lang}">${window["hljs"].highlightAuto(str).value}</code></pre>`;
+          } finally {
+          }
+        }
+        return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+      }
+    };
+    const md = window["markdownit"](opts);
+    component.slotMarkdown = md.render(component.slotMarkdown);
+    if (window["DOMPurify"])
+      component.slotMarkdown = window["DOMPurify"].sanitize(component.slotMarkdown);
+    if (component.slotMarkdown !== void 0 && component.slotMarkdown !== null && component.slotMarkdown !== "") {
+      el.innerHTML += component.slotMarkdown ? component.slotMarkdown : ui.payload;
+    }
+  }
   loadScriptSrc(url2) {
     const newScript = document.createElement("script");
     newScript.src = url2;
@@ -2749,36 +2791,10 @@ var Uib = (_a = class {
       if (!compToAdd.slot)
         compToAdd.slot = ui.payload;
       if (compToAdd.slot) {
-        if (window["DOMPurify"])
-          compToAdd.slot = window["DOMPurify"].sanitize(compToAdd.slot);
-        if (compToAdd.slot !== void 0 && compToAdd.slot !== null && compToAdd.slot !== "") {
-          newEl.innerHTML = compToAdd.slot ? compToAdd.slot : ui.payload;
-        }
+        this.replaceSlot(ui, newEl, compToAdd);
       }
-      if (window["markdownit"] && compToAdd.slotMarkdown) {
-        const opts = {
-          html: true,
-          linkify: true,
-          _highlight: true,
-          langPrefix: "language-",
-          highlight(str, lang) {
-            if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
-              try {
-                return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                        <code class="language-${lang}">${window["hljs"].highlightAuto(str).value}</code></pre>`;
-              } finally {
-              }
-            }
-            return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-          }
-        };
-        const md = window["markdownit"](opts);
-        compToAdd.slotMarkdown = md.render(compToAdd.slotMarkdown);
-        if (window["DOMPurify"])
-          compToAdd.slotMarkdown = window["DOMPurify"].sanitize(compToAdd.slotMarkdown);
-        if (compToAdd.slotMarkdown !== void 0 && compToAdd.slotMarkdown !== null && compToAdd.slotMarkdown !== "") {
-          newEl.innerHTML += compToAdd.slotMarkdown ? compToAdd.slotMarkdown : ui.payload;
-        }
+      if (compToAdd.slotMarkdown) {
+        this.replaceSlotMarkdown(ui, newEl, compToAdd);
       }
       let elParent;
       if (compToAdd.parentEl) {
@@ -2831,7 +2847,6 @@ var Uib = (_a = class {
         log("error", "Uib:_uiManager:update", "Cannot find the DOM element", compToUpd)();
         return;
       }
-      console.log("trace", "Uib:_uiManager:update", ": ", elToUpd, compToUpd);
       if (compToUpd.events) {
         Object.keys(compToUpd.events).forEach((type) => {
           if (type.toLowerCase === "onclick")
@@ -2865,7 +2880,12 @@ var Uib = (_a = class {
         compToUpd.slot = compToUpd.payload;
       if (compToUpd.slot) {
         elToUpd.forEach((el) => {
-          el.innerHTML = compToUpd.slot;
+          this.replaceSlot(ui, el, compToUpd);
+        });
+      }
+      if (compToUpd.slotMarkdown) {
+        elToUpd.forEach((el) => {
+          this.replaceSlotMarkdown(ui, el, compToUpd);
         });
       }
     });

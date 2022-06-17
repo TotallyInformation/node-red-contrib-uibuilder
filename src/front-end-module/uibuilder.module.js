@@ -687,9 +687,71 @@ export const Uib = class Uib {
         log(...arguments)()
     }
 
+    /** Directly manage UI via JSON
+     * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
+     */
+    ui(json) {
+        // Simulate a msg and process
+        let msg = {}
+        if ( json._ui ) msg = json
+        else msg._ui = json
+
+        this._uiManager(msg)
+    }
+
     //#endregion -------- -------- -------- //
 
     //#region ------- UI handlers --------- //
+
+    /** Replace or add an HTML element's slot from text or an HTML string
+     * Will use DOMPurify if that library has been loaded to window.
+     * @param {*} ui Single entry from the msg._ui property
+     * @param {Element} el Reference to the element that we want to update
+     * @param {*} component The component we are trying to add/replace
+     */
+    replaceSlot(ui, el, component) {
+        // If DOMPurify is loaded, apply it now
+        if (window['DOMPurify']) component.slot = window['DOMPurify'].sanitize(component.slot)
+        // Set the component content to the msg.payload or the slot property
+        if (component.slot !== undefined && component.slot !== null && component.slot !== '') {
+            el.innerHTML = component.slot ? component.slot : ui.payload
+        }
+    }
+
+    /** Replace or add an HTML element's slot from a Markdown string
+     * Only does something if the markdownit library has been loaded to window.
+     * Will use DOMPurify if that library has been loaded to window.
+     * @param {*} ui Single entry from the msg._ui property
+     * @param {Element} el Reference to the element that we want to update
+     * @param {*} component The component we are trying to add/replace
+     */
+    replaceSlotMarkdown(ui, el, component) {
+        if (!window['markdownit']) return
+
+        const opts = { // eslint-disable-line object-shorthand
+            html: true,
+            linkify: true,
+            _highlight: true,
+            langPrefix: 'language-',
+            highlight(str, lang) {
+                if (lang && window['hljs'] && window['hljs'].getLanguage(lang)) {
+                    try {
+                        return `<pre class="highlight" data-language="${lang.toUpperCase()}">
+                                <code class="language-${lang}">${window['hljs'].highlightAuto(str).value}</code></pre>`
+                    } finally { } // eslint-disable-line no-empty
+                }
+                return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`
+            },
+        }
+        const md = window['markdownit'](opts)
+        component.slotMarkdown = md.render(component.slotMarkdown)
+        // If DOMPurify is loaded, apply it now
+        if (window['DOMPurify']) component.slotMarkdown = window['DOMPurify'].sanitize(component.slotMarkdown)
+        // Set the component content to the msg.payload or the slot property
+        if (component.slotMarkdown !== undefined && component.slotMarkdown !== null && component.slotMarkdown !== '') {
+            el.innerHTML += component.slotMarkdown ? component.slotMarkdown : ui.payload
+        }
+    }
 
     /** Attach a new remote script to the end of HEAD synchronously
      * NOTE: It takes too long for most scripts to finish loading
@@ -925,42 +987,15 @@ export const Uib = class Uib {
             //#region Add Slot content to innerHTML
             if (!compToAdd.slot) compToAdd.slot = ui.payload
             if (compToAdd.slot) {
-                // If DOMPurify is loaded, apply it now
-                if (window['DOMPurify']) compToAdd.slot = window['DOMPurify'].sanitize(compToAdd.slot)
-                // Set the component content to the msg.payload or the slot property
-                if (compToAdd.slot !== undefined && compToAdd.slot !== null && compToAdd.slot !== '') {
-                    newEl.innerHTML = compToAdd.slot ? compToAdd.slot : ui.payload
-                }
+                this.replaceSlot(ui, newEl, compToAdd)
             }
             //#endregion
 
             // TODO Add multi-slot capability
 
             //#region Add Slot Markdown content to innerHTML IF marked library is available
-            if (window['markdownit'] && compToAdd.slotMarkdown) {
-                const opts = { // eslint-disable-line object-shorthand
-                    html: true,
-                    linkify: true,
-                    _highlight: true,
-                    langPrefix: 'language-',
-                    highlight(str, lang) {
-                        if (lang && window['hljs'] && window['hljs'].getLanguage(lang)) {
-                            try {
-                                return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                        <code class="language-${lang}">${window['hljs'].highlightAuto(str).value}</code></pre>`
-                            } finally { } // eslint-disable-line no-empty
-                        }
-                        return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`
-                    },
-                }
-                const md = window['markdownit'](opts)
-                compToAdd.slotMarkdown = md.render(compToAdd.slotMarkdown)
-                // If DOMPurify is loaded, apply it now
-                if (window['DOMPurify']) compToAdd.slotMarkdown = window['DOMPurify'].sanitize(compToAdd.slotMarkdown)
-                // Set the component content to the msg.payload or the slot property
-                if (compToAdd.slotMarkdown !== undefined && compToAdd.slotMarkdown !== null && compToAdd.slotMarkdown !== '') {
-                    newEl.innerHTML += compToAdd.slotMarkdown ? compToAdd.slotMarkdown : ui.payload
-                }
+            if (compToAdd.slotMarkdown) {
+                this.replaceSlotMarkdown(ui, newEl, compToAdd)
             }
             //#endregion
 
@@ -1039,8 +1074,6 @@ export const Uib = class Uib {
                 return
             }
 
-            console.log('trace', 'Uib:_uiManager:update', ': ', elToUpd, compToUpd)
-
             // Add event handlers
             if (compToUpd.events) {
                 Object.keys(compToUpd.events).forEach((type) => {
@@ -1079,7 +1112,13 @@ export const Uib = class Uib {
             if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload
             if (compToUpd.slot) {
                 elToUpd.forEach( el => {
-                    el.innerHTML = compToUpd.slot
+                    this.replaceSlot(ui, el, compToUpd)
+                })
+            }
+
+            if (compToUpd.slotMarkdown) {
+                elToUpd.forEach( el => {
+                    this.replaceSlotMarkdown(ui, el, compToUpd)
                 })
             }
 
