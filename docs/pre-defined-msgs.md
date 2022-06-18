@@ -3,44 +3,61 @@ title: Pre-defined uibuilder messages
 description: >
    Documents the different types of uibuilder messages between a Node-RED uibuilder node and a uibuilder front-end.
 created: 2020-09-24 18:14:00
-lastUpdated: 2022-01-30 21:20:29
+lastUpdated: 2022-06-18 17:17:42
 ---
 
 - [Standard msg properties used by uibuilder](#standard-msg-properties-used-by-uibuilder)
-  - [msg._auth `{Object}` (uibuilder v3+)](#msg_auth-object-uibuilder-v3)
-  - [msg.script `{String}`](#msgscript-string)
-  - [msg.style `{String}`](#msgstyle-string)
+  - [msg._ui `{Object}` (uibuilder v5.1+)](#msg_ui-object-uibuilder-v51)
   - [msg._uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
-  - [msg.uibDomEvent `{Object}` (uibuilder v3.2+)](#msguibdomevent-object-uibuilder-v32)
-- [From Node-RED uibuilder node to the front-end (browser)](#from-node-red-uibuilder-node-to-the-front-end-browser)
+  - [msg.uibDomEvent `{Object}` (uibuilder v3.2+, PARTIALLY REPLACED WITH msg._ui in v5.1)](#msguibdomevent-object-uibuilder-v32-partially-replaced-with-msg_ui-in-v51)
+  - [msg.script `{String}` (PARTIALLY DEPRECATED IN v5.1)](#msgscript-string-partially-deprecated-in-v51)
+  - [msg.style `{String}` (PARTIALLY DEPRECATED IN v5.1)](#msgstyle-string-partially-deprecated-in-v51)
+  - [msg._auth `{Object}` (~~uibuilder v3+~~ DEPRECATED IN v5.0)](#msg_auth-object-uibuilder-v3-deprecated-in-v50)
+- [Messages out of uibuilder's 2nd output port](#messages-out-of-uibuilders-2nd-output-port)
+  - [On client (re)connection](#on-client-reconnection)
+  - [On client disconnection](#on-client-disconnection)
+- [Messages from Node-RED uibuilder node to the front-end (browser)](#messages-from-node-red-uibuilder-node-to-the-front-end-browser)
   - [Client (re)Connection (Control Message)](#client-reconnection-control-message)
   - [Errors](#errors)
-  - [UI Notification [Toast] (Control Message)](#ui-notification-toast-control-message)
+  - [UI Notification [Toast] (Control Message, PARTIALLY DEPRECATED in v5.1)](#ui-notification-toast-control-message-partially-deprecated-in-v51)
     - [Simple version](#simple-version)
     - [More complex example](#more-complex-example)
   - [Browser client reload page](#browser-client-reload-page)
     - [Msg Schema](#msg-schema)
-- [From the front-end (browser) to the Node-RED uibuilder node](#from-the-front-end-browser-to-the-node-red-uibuilder-node)
+- [Messages From the front-end (browser) to the Node-RED uibuilder node](#messages-from-the-front-end-browser-to-the-node-red-uibuilder-node)
   - [Client Ready for Content (Control Message)](#client-ready-for-content-control-message)
-  - [DOM Event (standard message from eventSend function)](#dom-event-standard-message-from-eventsend-function)
-- [From either Node-RED or the client](#from-either-node-red-or-the-client)
+  - [DOM Event (standard message from eventSend function. PARTIALLY DEPRECATED IN v5.1)](#dom-event-standard-message-from-eventsend-function-partially-deprecated-in-v51)
+- [Messages From either Node-RED or the client](#messages-from-either-node-red-or-the-client)
   - [Clear Cache (Control Message)](#clear-cache-control-message)
 
 
 ## Standard msg properties used by uibuilder
 
-### msg._auth `{Object}` (uibuilder v3+)
+### msg._ui `{Object}` (uibuilder v5.1+)
 
-May be attached to any msg (control or standard) in either direction.
+The contents of this property are used by the uibuilder front-end client library (only by the new ES Module version `uibuiler.esm.js` at the time of writing) to dynamically create or change a web page UI.
 
-Contains authentication and authorisation information and/or user meta-data.
-May also contain messages such as success or error messages on login.
+The property name `_ui` was deliberately chosen because it does not need to be uibuilder specific, other nodes might also use the same feature as might other front-end libraries.
 
-See the [Security doc](./security.md) for details.
+The dynamic ui features are very powerful but extremely simple to use and they work (via the uibuilder client library) with _any_ or no framework in the standard uibuilder style.
 
-Ignored if the "Use uibuilder's security?" flag is not set.
+You can use the feature with standard HTML tags or tags from any other framework and from web components.
 
-### msg.script `{String}`
+Please see the [documentation for the new client library](uibuilder.module.md) for details.
+
+### msg._uib `{Object}` (uibuilder v3+)
+
+Used by the [Browser client reload page](#browser-client-reload-page), [showToast](#vuejs-ui-notification-toast-control-message) and [showComponentDetails](./vue-component-handling?id=discover-a-vue-components-capabilities) functions and their equivalent messages from Node-RED.
+
+Should be used in the future for any other standardised uibuilder-specific interactions with the client libraries.
+
+### msg.uibDomEvent `{Object}` (uibuilder v3.2+, PARTIALLY REPLACED WITH msg._ui in v5.1)
+
+Used by the [eventSend](front-end-library?id=eventsend-helper-fn-to-send-event-data) function.
+
+Replaced with the new `msg._ui` features in v5.1 with the ESM client library. The new version provides much more information back from the client browser. It is also standardised with the rest of the config-driven UI features.
+
+### msg.script `{String}` (PARTIALLY DEPRECATED IN v5.1)
 
 Only used if the "Scripts?" flag is set in uibuilder's Advanced Settings.
 
@@ -48,7 +65,9 @@ Text must be valid JavaScript and will be dynamically added to the client page D
 
 **WARNING** No checking is done and this could be quite dangerous.
 
-### msg.style `{String}`
+From v5.1, if using the new ESM client library, this property is no longer respected. Please use the new `msg._ui` features with the `load` mode.
+
+### msg.style `{String}` (PARTIALLY DEPRECATED IN v5.1)
 
 Only used if the "Styles?" flag is set in uibuilder's Advanced Settings.
 
@@ -56,18 +75,61 @@ Text must be valid CSS and will be dynamically added to the client page DOM.
 
 **WARNING** No checking is done and this could be quite dangerous.
 
-### msg._uib `{Object}` (uibuilder v3+)
+From v5.1, if using the new ESM client library, this property is no longer respected. Please use the new `msg._ui` features with the `load` mode.
 
-Used by the [Browser client reload page](#browser-client-reload-page), [showToast](#vuejs-ui-notification-toast-control-message) and [showComponentDetails](./vue-component-handling?id=discover-a-vue-components-capabilities) functions and their equivalent messages from Node-RED.
+### msg._auth `{Object}` (~~uibuilder v3+~~ DEPRECATED IN v5.0)
 
-Should be used in the future for any other standardised interactions with uibuilderfe.
+The intent of this property is to have a unified data exchange between Node-RED and the client browser. It should facilitate authentication and authorisation activities.
 
-### msg.uibDomEvent `{Object}` (uibuilder v3.2+)
+The built-in uibuilder security features were removed in v5 since they were seriously hampering development without resolving to a stable, workable solution.
 
-Used by the [eventSend](front-end-library?id=eventsend-helper-fn-to-send-event-data) function.
+It is possible and even likely that this will re-appear in a future release.
 
 
-## From Node-RED uibuilder node to the front-end (browser)
+## Messages out of uibuilder's 2nd output port
+
+These messages are all control messages. They let your flows know whether a client as (re)connected, disconnected, had an error, etc. They are used to control cache replays and clears.
+
+### On client (re)connection
+
+Note that a similar version of this same msg goes to the client as the initial connection from the server
+
+```jsonc
+{
+    "uibuilderCtrl": "client connect",  // control message type
+    "from": "server",                   // NR->Client
+    "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB", // Socket.IO client id (changes on reconnection)
+    "_msgid": "8d4307ce.d5e428",        // Node-RED internal msg id
+    
+    // These are new as of v5.1
+    "clientId":"nqfzLy4SXju3hPRVD3UMq", // The stable client ID
+    "ip":"::ffff:127.0.0.1",            // The client IP address
+    "connections":0,                    // How many times the client connected since the last page load
+
+    // DEPRECATED properties
+    //"cacheControl": "REPLAY",         // Redundant - REMOVED as of v5.1
+}
+```
+
+### On client disconnection
+
+May be from the client reloading the page or some other reason.
+
+Note that the disconnction message may be output AFTER the reconnection message. This is down to Socket.io and not under our control.
+
+```jsonc
+{
+    "uibuilderCtrl":"client disconnect",
+    "reason":"transport close",
+    "_socketId":"__AhN_nRVgxMSdeHAAAC",
+    "from":"server",
+    "ip":"::ffff:127.0.0.1",
+    "clientId":"nqfzLy4SXju3hPRVD3UMq",
+    "_msgid":"d97ca68d19541dac"
+}
+```
+
+## Messages from Node-RED uibuilder node to the front-end (browser)
 
 In addition to these messages, see also the [VueJS component handling page](./vue-component-handling).
 
@@ -76,15 +138,24 @@ In addition to these messages, see also the [VueJS component handling page](./vu
 Is sent from Node-RED by uibuilder to the client whenever a new client connects or
 when an existing client re-connects (by reloading their page).
 
-```json
+Note that, as of uibuilder v5.1, the REPLAY cacheControl is no longer included in the "client connect" message. The `uib-cache` node has been updated accordingly. The replay message still works but is removed from this since other properties needed to be added.
+
+Note also that this is very similar to the message that is output from uibuider's output port #2 on connection. This is the version that goes to the client though and so has slightly different properties.
+
+```jsonc
 {
     "uibuilderCtrl": "client connect",  // control message type
-    "cacheControl": "REPLAY",           // Cache control request type: REPLAY or CLEAR
     "serverTimestamp": "2020-09-24T12:56:13.125Z",  // Can be used in client to work out their timezone or at least time offset from the server
-    "security": false,                  // Tell the client whether security is turned on or not
     "from": "server",                   // NR->Client
     "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",    // ID of client (from Socket.IO)
-    "_msgid": "8d4307ce.d5e428"         // Node-RED internal msg id
+    "_msgid": "8d4307ce.d5e428",        // Node-RED internal msg id
+    
+    // These are new as of v5.1
+    "version":"5.0.3-dev",              // The Server version
+
+    // DEPRECATED properties
+    //"cacheControl": "REPLAY",         // Redundant - REMOVED as of v5.1
+    //"security": false,                // No longer in use - REMOVED as of v5.0
 }
 ```
 
@@ -107,13 +178,15 @@ If an error is raised in `<uibRoot>/.config/sioUse.js` for example, this kind of
 See the [Developer documentation for `socket.js`](socket-js.md) for more information.
 
 
-### UI Notification [Toast] (Control Message)
+### UI Notification [Toast] (Control Message, PARTIALLY DEPRECATED in v5.1)
 
 Sending this message (uibuilder v3+) to the client will pop-over a dynamic message to the user in the browser. No code is required at the front-end.
 
 Prior to v5, this required VueJS and bootstrap-vue. If these are available, then bootstrap-vue's toast component will be used.
 
 From v5, this works without VueJS as well. Just make sure that you include the default uibuilder stylesheet by putting `@import url("./uib-styles.css");` at the start of your `index.css` file. The toast will appear overlaid on all other content. Clicking on a notification will clear that one. Clicking on the background will clear all notifications.
+
+!> From v5.1 but only if using the new ESM version of the client library, this is replaced by the standardised `msg._ui` features detailed elsewhere.
 
 #### Simple version
 
@@ -188,9 +261,11 @@ Sending this message (uibuilder v3.3+) to the client will cause the client to re
 }
 ```
 
-## From the front-end (browser) to the Node-RED uibuilder node
+Note that, as of v5.1 with the ESM client library, this can also be achieved using the standardised `msg._ui` features.
 
-Note that, if responding to a control msg, you **must** remove the `uibuilderCtrl` property otherwise, uibuilder will refuse to send the msg (to prevent msg loops).
+## Messages From the front-end (browser) to the Node-RED uibuilder node
+
+Note that, if responding to a control msg (sending back to uibuilder's input), you **must** remove the `uibuilderCtrl` property otherwise, uibuilder will refuse to send the msg (to prevent msg loops).
 
 ### Client Ready for Content (Control Message)
 
@@ -203,12 +278,14 @@ to the uibuilder node. Make sure you include the `_socketId` if you want that re
 {
     "uibuilderCtrl": "ready for content",   // control message type
     "cacheControl": "REPLAY",               // Cache control request type: REPLAY or CLEAR
-    "from": "client",                       // NR->Client
-    "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB",    // ID of client (from Socket.IO)
+    "from": "client",                       // Client->NR
+    "_socketId": "/extras#sct0MeMrdeS5lwc0AAAB", // Socket.IO ID of client (changes on reconnect)
 }
 ```
 
-### DOM Event (standard message from eventSend function)
+### DOM Event (standard message from eventSend function. PARTIALLY DEPRECATED IN v5.1)
+
+!> Note that from v5.1 with the ESM client library, this is replaced by the standardised `msg._ui` features.
 
 Is sent whenever the eventSend function is called.
 
@@ -233,7 +310,7 @@ Example output:
 }
 ```
 
-## From either Node-RED or the client
+## Messages From either Node-RED or the client
 
 ### Clear Cache (Control Message)
 
