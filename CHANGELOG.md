@@ -8,34 +8,20 @@ typora-root-url: docs/images
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-* Experimental list node
-  * Allow additional attributes
-  * Add return msg handling like uib-sender.
-  * Move retained data to same mechanism as uib-cache
-  * Add help panel
-  * Updates should update the original add which should be saved for replay but should instantly output an update
+Also note that v5.1.0 has a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new ESM client library (`uibuilder.esm.js` or `uibuilder.esm.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
 
-* Add outdated markers to Editor Library tab.
-
-
-### Probably will be deferred to a future release
-
-* Use new CSS in details pages
-
-* New FE Library
-  * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
-  * Option for a pop-over notification to manually reconnect the websocket.
-  * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
-
-* Create min version of css.
-
-* Add api to query if a specific uib library is installed (and return version)
+* Removeme example didn't work
+* upd card3 (hdr) didn't work
+* upd card3 (variant) didn't work
+* Alert/notify doesn't display fixed in centre of viewpane
 
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.2...main)
 
-<!-- Nothing currently. -->
+Nothing currently.
+
+## [v5.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.2...v5.1.0)
 
 ### Fixed
 
@@ -49,17 +35,23 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * `clientId` is now session stable. That means that it does not change unless the client browser is restarted. It is now also included in more messages. For control messages, it will be found as a msg property. For `_ui` related messages, it will be a property under `msg._ui`. Any other uses will appear under `msg._uib`.
 * All code now Linted to "Standard JavaScript" with node.js v12 and front-end to ECMA2019. Null/undefined guards put in place.
 * Package.json: Changed homepage to point to Tech Docs on github.io.
+* Client libraries and css available on `../uibuilder/` path as well as on `./` path for consistency with other server paths.
+
 * Editor:
   * Added stylesheet containing a class of `emoji` which provides nicer, cross-platform, colour emojis.
   * Libraries tab: 
     * Change "URL to use:" to "Estimated link:" on the Libraries tab to make it clear that it might not be correct (down to the library author).
     * Added info emoji to package name (links to package homepage).
     * Added url link to estimated library to make it easier to find out if it actually exists and exactly where.
-* `uib-cache`: Add option to not replay the cache if the client connection isn't actually new (e.g. if the client is a reconnection after restarting Node-RED).If the control msg recieved contains `msg.connected` and it is >0, that means that the client is reconnecting and this isn't a client page load. _Note that currently, only the new ES module client library populates the `msg.connected` value_. This option is selected by default.
+
+* `uib-cache` node
+  * Added option to not replay the cache if the client connection isn't actually new (e.g. if the client is a reconnection after restarting Node-RED).If the control msg recieved contains `msg.connected` and it is >0, that means that the client is reconnecting and this isn't a client page load. _Note that currently, only the new ES module client library populates the `msg.connected` value_. This option is selected by default.
+  * The context store type (node, flow, global) can now be selected (only node was previously used).
+  * The variable name can now be changed. May be needed if using flow/global stores with multiple cache nodes.
+
 * `package-mgt.js`:
   * Rewrite root package.json and package details processing for more efficiency + prettify package.json output
   * Add outdated (current/wanted/latest) to uibRoot/package.json>uibuilder.packages in prep for update display in Editor
-
 
 ### New
 
@@ -80,6 +72,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * No need for `uibuilder.start()` in your code any more (nearly always). Often no code needed at all in fact! (Other than loading the library of course).
   * `uibuilder.eventSend()` now has a lot more information attached. It also now uses the `msg._ui` property to hold all of the information (except for the payload which is as-before). This brings it into line with the other _ui handling. Attributes, classes, clientId and custom properties are all now included.
   * New function `uibuilder.ui({...})` allows passing the same data as `msg._ui` from front-end code.
+  * The "client connect" uibuilder control msg that is output on port #2 when a client (re)connects, now has additional details from the client: client `version`, `clientId`, client `ip`, number of `connections` since the client last (re)loaded the page. Use to work out whether the client is new or a reconnection. Used by the updated `uib-cache` node.
 
   See the `uibuilder.module.md` page in the tech docs for all of the features and details for the new library.
 
