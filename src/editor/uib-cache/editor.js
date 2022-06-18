@@ -13,11 +13,22 @@
     /** Node's background color @constant {string} paletteColor */
     const paletteColor  = '#F6E0F8' // '#E6E0F8'
 
-    /** Populate the store dropdown
-     * @param {string} item Context store name
-     */
-    function addStoreSelect(item) {
-        $('#node-input-storeName').append(`<option value="${item}">${item}</option>`)
+    /** Populate the store dropdown */
+    function populateUseStoreDropdown() {
+        const storeNames = []
+
+        RED.settings.context.stores.forEach( store => {
+            storeNames.push({ value: store, label: store })
+        })
+
+        $('#node-input-storeName').typedInput({
+            types: [
+                {
+                    value: 'storeNames',
+                    options: storeNames,
+                }
+            ]
+        })
     }
 
     /**
@@ -53,10 +64,39 @@
         if (!node.cacheall) node.persistence = false
 
         // Make sure that the key always as a value - default to msg.topic
-        if (!node.cacheKey || node.cacheKey === '' ) node.cacheKey = 'topic'
+        if ( !node.cacheKey || node.cacheKey === '' ) node.cacheKey = 'topic'
+
+        if ( !node.varName || node.varName === '' ) {
+            node.varName = 'uib_cache'
+            $('#node-input-varName').val('uib_cache')
+        }
+
+        // One-day maybe, request put in, doesn't currently work since context isn't an option
+        // $('#node-input-store').typedInput({
+        //     type: 'str',
+        //     default: 'node',
+        //     types: ['context', 'flow', 'global'],
+        //     typeField: '#node-input-store-type'
+        // })
+        $('#node-input-storeContext').typedInput({
+            type: 'contextType',
+            types: [
+                {
+                    value: 'contextType',
+                    options: [
+                        // @ts-expect-error
+                        { value: 'context', label: 'Node' },
+                        // @ts-expect-error
+                        { value: 'flow', label: 'Flow' },
+                        // @ts-expect-error
+                        { value: 'global', label: 'Global' },
+                    ]
+                }
+            ]
+        })
 
         // Set up context store select drop-down
-        RED.settings.context.stores.forEach(addStoreSelect)
+        populateUseStoreDropdown()
 
         // Update help text if Cache By value changes
         $('#node-input-cacheKey').on('change', function() {
@@ -67,10 +107,6 @@
         $('#node-input-cacheall').on('change', function() {
             keyVisibility(!$(this).is(':checked'))
         })
-
-        // Set storeName dropdown
-        $(`#node-input-storeName option[value="${node.storeName || 'default'}"]`).prop('selected', true)
-        $('#node-input-storeName').val(node.storeName || 'default')
 
     } // ----- end of onEditPrepare() ----- //
 
@@ -85,6 +121,10 @@
             // persistence: { value: false },
             storeName: { value: 'default', required: true },
             name: { value: '' },
+            // store: { },
+            // store-type: {},
+            storeContext: { value: 'context' },
+            varName: { value: 'uib_cache', required: true }
         },
         // align:'right',
         inputs: 1,

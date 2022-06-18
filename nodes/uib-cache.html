@@ -13,11 +13,22 @@
     /** Node's background color @constant {string} paletteColor */
     const paletteColor  = '#F6E0F8' // '#E6E0F8'
 
-    /** Populate the store dropdown
-     * @param {string} item Context store name
-     */
-    function addStoreSelect(item) {
-        $('#node-input-storeName').append(`<option value="${item}">${item}</option>`)
+    /** Populate the store dropdown */
+    function populateUseStoreDropdown() {
+        const storeNames = []
+
+        RED.settings.context.stores.forEach( store => {
+            storeNames.push({ value: store, label: store })
+        })
+
+        $('#node-input-storeName').typedInput({
+            types: [
+                {
+                    value: 'storeNames',
+                    options: storeNames,
+                }
+            ]
+        })
     }
 
     /**
@@ -53,10 +64,39 @@
         if (!node.cacheall) node.persistence = false
 
         // Make sure that the key always as a value - default to msg.topic
-        if (!node.cacheKey || node.cacheKey === '' ) node.cacheKey = 'topic'
+        if ( !node.cacheKey || node.cacheKey === '' ) node.cacheKey = 'topic'
+
+        if ( !node.varName || node.varName === '' ) {
+            node.varName = 'uib_cache'
+            $('#node-input-varName').val('uib_cache')
+        }
+
+        // One-day maybe, request put in, doesn't currently work since context isn't an option
+        // $('#node-input-store').typedInput({
+        //     type: 'str',
+        //     default: 'node',
+        //     types: ['context', 'flow', 'global'],
+        //     typeField: '#node-input-store-type'
+        // })
+        $('#node-input-storeContext').typedInput({
+            type: 'contextType',
+            types: [
+                {
+                    value: 'contextType',
+                    options: [
+                        // @ts-expect-error
+                        { value: 'context', label: 'Node' },
+                        // @ts-expect-error
+                        { value: 'flow', label: 'Flow' },
+                        // @ts-expect-error
+                        { value: 'global', label: 'Global' },
+                    ]
+                }
+            ]
+        })
 
         // Set up context store select drop-down
-        RED.settings.context.stores.forEach(addStoreSelect)
+        populateUseStoreDropdown()
 
         // Update help text if Cache By value changes
         $('#node-input-cacheKey').on('change', function() {
@@ -67,10 +107,6 @@
         $('#node-input-cacheall').on('change', function() {
             keyVisibility(!$(this).is(':checked'))
         })
-
-        // Set storeName dropdown
-        $(`#node-input-storeName option[value="${node.storeName || 'default'}"]`).prop('selected', true)
-        $('#node-input-storeName').val(node.storeName || 'default')
 
     } // ----- end of onEditPrepare() ----- //
 
@@ -85,6 +121,10 @@
             // persistence: { value: false },
             storeName: { value: 'default', required: true },
             name: { value: '' },
+            // store: { },
+            // store-type: {},
+            storeContext: { value: 'context' },
+            varName: { value: 'uib_cache', required: true }
         },
         // align:'right',
         inputs: 1,
@@ -124,14 +164,35 @@
     Use 0 for unlimited but take care not to run out of memory.
 </div>
 
+<!-- <div aria-label="Select which context store to use" class="form-row">
+    <label for="node-input-store"><i class="fa fa-database"></i> Use Store</label>
+    <input type="text" id="node-input-store">
+    <input type="hidden" id="node-input-store-type">
+</div> -->
 <div aria-label="Select which context store to use" class="form-row">
     <label for="node-input-storeName"><i class="fa fa-database"></i> Use Store</label>
-    <select id="node-input-storeName"></select>
+    <!-- <select id="node-input-storeName"></select> -->
+    <input type="text" id="node-input-storeName"></input>
 </div>
 <div aria-label="Info for context store" class="form-row form-tips node-help">
     Select a context store to use if you have more than one set up.<br>
     Use a persistent store if you want the cache to survive a system reset.<br>
     If you change the store, you will have to manually delete the old one.
+</div>
+
+<div aria-label="Select which type of store to use" class="form-row">
+    <label for="node-input-storeContext"><i class="fa fa-database"></i> Store Type</label>
+    <input type="text" id="node-input-storeContext"></input>
+</div>
+<div aria-label="Info for store type" class="form-row form-tips node-help">
+    Select which type of store to use. The default is "Node".<br>
+    Node = This node's store, only accessible to this node.<br>
+    Flow/Global = These are accessible to other nodes. Use with caution.
+</div>
+
+<div aria-label="Variable name" title="The name of the store variable that will be used" class="form-row">
+    <label for="node-input-varName"><i class="fa fa-tag"></i> Variable</label>
+    <input type="text" id="node-input-varName" value="uib_cache" placeholder="REQUIRED: Context variable name">
 </div>
 
 <div aria-label="Name label" title="Only used for labelling in the flow" class="form-row">
@@ -159,7 +220,7 @@
     Any non-uibuilder-control message is passed to the output.
 </p>
 <p>
-    If the node receives a REPLAY control message, all of the cached messages are sent to the output.
+    If the node receives a REPLAY or "client connect" (where the connections count is zero) control message, all of the cached messages are sent to the output.
 </p>
 <p>
     Upon replay, the output messages will have the socket id of the control message (if present) added
@@ -190,6 +251,14 @@
         cached as a single group.
     </dd>
 
+    <dt>Only replay cache when client is really new <span class="property-type">boolean</span></dt>
+    <dd>
+        If selected, when a "client connect" control message is received, the cache will only
+        be sent if <code>msg.connections</code> is zero. That indicates that the client connection
+        is actually a new one and node a reconnection. This is now the default as it reduces the number
+        of times the cache is sent and does not send if the client is simply waking up (when it doesn't need the cache.)
+    </dd>
+
     <dt># messages <span class="property-type">integer</span></dt>
     <dd>
         The maximum number of messages <b>per group</b> that will be cached.<br>
@@ -203,12 +272,25 @@
         will be replayed which is generally the expected result.
     </dd>
 
-    <dt>Use Store <span class="property-type">string (drop-down)</span></dt>
+    <dt>Use Store <span class="property-type">Drop-down</span></dt>
     <dd>
         The drop-down is pre-populated with the <code>contextStorage</code> modules you define in <code>settings.js</code>.
         You can use this to choose a persistent context store if desired so that the cache survives system restarts.<br>
         If you change this value, you may need to manually delete the old version of the node context variable to avoid confusion.
         Select the node, view the Context Data side-panel, refresh the entries and delete the appropriate <code>uib_cache</code> entry.
+    </dd>
+
+    <dt>Store Type <span class="property-type">Drop-down</span></dt>
+    <dd>
+        One of "Node", "Flow", or "Global".<br>
+        Take care if using "Flow" or "Global" since other nodes and flow might make changes to the cache.<br>
+        "Node" is the default and should usually be used since there can be no name clashes or external influence.
+    </dd>
+
+    <dt>Variable <span class="property-type">string</span></dt>
+    <dd>
+        Default: "uib_cache". This is the store variable name that will be used.<br>
+        Take care if using flow/global stores and multiple cache nodes since a name clash will result in the same cache being used.
     </dd>
 
     <dt>Name <span class="property-type">string</span></dt>

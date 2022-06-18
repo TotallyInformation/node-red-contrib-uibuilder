@@ -223,12 +223,16 @@ function nodeInstance(config) {
     this.num = config.num || 1 // zero is unlimited cache
     this.storeName = config.storeName || 'default'
     this.name = config.name
+    this.storeContext = config.storeContext || 'context'
 
     // Show if anythink in the cache
     setNodeStatus(this)
 
     // Get ref to this node's context store
-    const context = this.context()
+    let context = this.context()
+    if ( this.storeContext !== 'context') {
+        context = context[this.storeContext]
+    }
     this.getC = context.get
     this.setC = context.set
 

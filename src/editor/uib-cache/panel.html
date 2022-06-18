@@ -20,14 +20,35 @@
     Use 0 for unlimited but take care not to run out of memory.
 </div>
 
+<!-- <div aria-label="Select which context store to use" class="form-row">
+    <label for="node-input-store"><i class="fa fa-database"></i> Use Store</label>
+    <input type="text" id="node-input-store">
+    <input type="hidden" id="node-input-store-type">
+</div> -->
 <div aria-label="Select which context store to use" class="form-row">
     <label for="node-input-storeName"><i class="fa fa-database"></i> Use Store</label>
-    <select id="node-input-storeName"></select>
+    <!-- <select id="node-input-storeName"></select> -->
+    <input type="text" id="node-input-storeName"></input>
 </div>
 <div aria-label="Info for context store" class="form-row form-tips node-help">
     Select a context store to use if you have more than one set up.<br>
     Use a persistent store if you want the cache to survive a system reset.<br>
     If you change the store, you will have to manually delete the old one.
+</div>
+
+<div aria-label="Select which type of store to use" class="form-row">
+    <label for="node-input-storeContext"><i class="fa fa-database"></i> Store Type</label>
+    <input type="text" id="node-input-storeContext"></input>
+</div>
+<div aria-label="Info for store type" class="form-row form-tips node-help">
+    Select which type of store to use. The default is "Node".<br>
+    Node = This node's store, only accessible to this node.<br>
+    Flow/Global = These are accessible to other nodes. Use with caution.
+</div>
+
+<div aria-label="Variable name" title="The name of the store variable that will be used" class="form-row">
+    <label for="node-input-varName"><i class="fa fa-tag"></i> Variable</label>
+    <input type="text" id="node-input-varName" value="uib_cache" placeholder="REQUIRED: Context variable name">
 </div>
 
 <div aria-label="Name label" title="Only used for labelling in the flow" class="form-row">

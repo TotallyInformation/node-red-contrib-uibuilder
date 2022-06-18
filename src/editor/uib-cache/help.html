@@ -20,7 +20,7 @@
     Any non-uibuilder-control message is passed to the output.
 </p>
 <p>
-    If the node receives a REPLAY control message, all of the cached messages are sent to the output.
+    If the node receives a REPLAY or "client connect" (where the connections count is zero) control message, all of the cached messages are sent to the output.
 </p>
 <p>
     Upon replay, the output messages will have the socket id of the control message (if present) added
@@ -51,6 +51,14 @@
         cached as a single group.
     </dd>
 
+    <dt>Only replay cache when client is really new <span class="property-type">boolean</span></dt>
+    <dd>
+        If selected, when a "client connect" control message is received, the cache will only
+        be sent if <code>msg.connections</code> is zero. That indicates that the client connection
+        is actually a new one and node a reconnection. This is now the default as it reduces the number
+        of times the cache is sent and does not send if the client is simply waking up (when it doesn't need the cache.)
+    </dd>
+
     <dt># messages <span class="property-type">integer</span></dt>
     <dd>
         The maximum number of messages <b>per group</b> that will be cached.<br>
@@ -64,12 +72,25 @@
         will be replayed which is generally the expected result.
     </dd>
 
-    <dt>Use Store <span class="property-type">string (drop-down)</span></dt>
+    <dt>Use Store <span class="property-type">Drop-down</span></dt>
     <dd>
         The drop-down is pre-populated with the <code>contextStorage</code> modules you define in <code>settings.js</code>.
         You can use this to choose a persistent context store if desired so that the cache survives system restarts.<br>
         If you change this value, you may need to manually delete the old version of the node context variable to avoid confusion.
         Select the node, view the Context Data side-panel, refresh the entries and delete the appropriate <code>uib_cache</code> entry.
+    </dd>
+
+    <dt>Store Type <span class="property-type">Drop-down</span></dt>
+    <dd>
+        One of "Node", "Flow", or "Global".<br>
+        Take care if using "Flow" or "Global" since other nodes and flow might make changes to the cache.<br>
+        "Node" is the default and should usually be used since there can be no name clashes or external influence.
+    </dd>
+
+    <dt>Variable <span class="property-type">string</span></dt>
+    <dd>
+        Default: "uib_cache". This is the store variable name that will be used.<br>
+        Take care if using flow/global stores and multiple cache nodes since a name clash will result in the same cache being used.
     </dd>
 
     <dt>Name <span class="property-type">string</span></dt>

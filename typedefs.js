@@ -347,6 +347,7 @@
  * @property {boolean}  newcache Only replay cache if client is actually new, not a reconnection
  * @property {number}  num number of cached msgs to retain
  * @property {string}  storeName Which store to use for the context variable
+ * @property {'context'|'flow'|'node'}  storeContext Which store to use for the context variable
  * @property {string}  name only used for labelling the node in the flow
  * @property {object}  cache A reference to the actual cache for this node instance
  * @property {Function} getC A reference to the context get function for this node instance
