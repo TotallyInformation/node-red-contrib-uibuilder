@@ -3,7 +3,7 @@ title: Documentation for the ECMA module front-end client `uibuilder.esm.js`
 description: >
    This is the new uibuilder front-end library initially introduced in v5.1. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions. It also allows data-/configuration-driven interfaces to be created from JSON or Node-RED messages.
 created: 2022-06-11 14:15:26
-lastUpdated: 2022-06-11 14:15:32
+lastUpdated: 2022-06-18 17:04:36
 ---
 
 This is the next-generation front-end client for uibuilder. It has some nice new features but at the expense of only working with modern(ish) browsers since early 2019.
@@ -14,6 +14,7 @@ This is the next-generation front-end client for uibuilder. It has some nice new
   - [Where is it?](#where-is-it)
   - [More information](#more-information)
 - [What has been removed compared to the non-module version?](#what-has-been-removed-compared-to-the-non-module-version)
+- [Limitations](#limitations)
 - [Features](#features)
   - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
   - [Exposes global uibuilder and $](#exposes-global-uibuilder-and-)
@@ -35,6 +36,8 @@ This is the next-generation front-end client for uibuilder. It has some nice new
   - [Auto-loading of the uibuilder default stylesheet](#auto-loading-of-the-uibuilder-default-stylesheet)
   - [Initial connection message now shows whether the page is newly loaded or not](#initial-connection-message-now-shows-whether-the-page-is-newly-loaded-or-not)
   - [Stable client identifier](#stable-client-identifier)
+  - [Number of connections is tracked and sent to server on (re)connect](#number-of-connections-is-tracked-and-sent-to-server-on-reconnect)
+    - [Example client connect control msg](#example-client-connect-control-msg)
   - [ui function](#ui-function)
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content-1)
   - [Dynamic content details](#dynamic-content-details)
@@ -103,26 +106,7 @@ This is the next-generation front-end client for uibuilder. It has some nice new
 
 ## To Do
 
-* [ ] Allow add/change to use a.b prop names
-* [ ] Document `loadScriptSrc` and `loadScriptTxt`
-* [ ] Add markdown render function
-* [ ] UI
-  * [ ] Add prop validation
-  * [ ] keep track of added ids?
-  * [ ] Handle script and style types
-  * [ ] Swap from marked to markdown-it
-* [ ] Add minimised, non-ES2019 and non-ECMA-module versions
-  
-  A minimised version will certainly be made available for you to use in production environments.
-
-  Other versions may be made available if I can work out how to deliver them.
-
-* [ ] ?? Maybe:
-  * [ ] Add msg # to outgoing messages to act as a sequence number
-  * [ ] Option to allow log msgs to be returned to Node-RED as uibuilder control messages
-  * [ ] Option to allow custom events to be returned to Node-RED as uibuilder control messages
-  * [ ] Do we need a confirmation (ctrl?) msg back to node-red?
-
+Please see the main [roadmap](roadmap.md).
 
 ## How to use
 
@@ -230,6 +214,10 @@ In addition, you could do just `import {Uib} from './uibuilder.esm.js'` and then
   Obviously care must always be taken with a feature like this since it may open your UI to security issues.
 
   See [Dynamic Load](#method-load) below.
+
+## Limitations
+
+The main limitation of this new, ESM version of the library is that it can only be used as an ESM module. I've investigated whether it is possible to do a translation to an ES6, IIFE version to more closely match the older `uibuilderfe` library, this does not appear to be possible at this time because there are no tools that will allow it.
 
 ---
 
@@ -610,6 +598,31 @@ As can be seen from the example message above, the client IP address and client 
 When a new browser connects to a uibuilder endpoint for the first time in a browser session, uibuilder will attempt to provide a new clientID. The uibuilder front-end library stores that ID in session cookie so any future connections from that browser profile to the same server address will reuse the same client id until the browser is restarted. The ID is a random UUID and so should always be unique.
 
 Because the client id is stable, it can be used for things like session management and security checks on the server.
+
+### Number of connections is tracked and sent to server on (re)connect
+
+When the client connects to the Node-RED server over Socket.IO, it sends a message out of port #2 that looks like the following. This has always been the case but now some additional information is included in the msg. The client IP address (`msg.ip`) is added by the server on receipt. The stable client identifier (`msg.clientId`), client version (`msg.version`), and the number of connections (`msg.connections`) are added by the client.
+
+The client increments the `connections` value each time it has to connect or re-connect to the server.
+
+This is useful because the server now knows that if `msg.connections` is zero, this is a new connection not a reconnection. A new connection is when the page is loaded or re-loaded.
+
+This information is also built into the `uib-cache` node from v5.1 to reduce unnecessary sending of the cache.
+
+#### Example client connect control msg
+
+```jsonc
+{
+    "uibuilderCtrl":"client connect",
+    "_socketId":"TL6xrKrQtmyHsEKEAAAD",
+    "from":"server",
+    "_msgid":"3fc0e6b9ce82a95d",
+    // These are new as of v5.1
+    "clientId":"nqfzLy4SXju3hPRVD3UMq",
+    "ip":"::ffff:127.0.0.1",
+    "connections":0,
+}
+```
 
 ### ui function
 
