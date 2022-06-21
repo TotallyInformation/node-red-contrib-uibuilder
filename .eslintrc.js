@@ -19,7 +19,7 @@
  * v12 - Promise.allSettled, globalThis, numeric separators, Object.fromEntries
  * v13 - import (modules), dynamic import(), export
  * v14 - optional chaining, Nullish Coalescing operators, String.prototype.matchAll,
- *         Intl.DisplayNames, Intl.DateTimeFormat, Async Local Storage, Top-Level Await, Diagnostic report,
+ *         Intl.DisplayNames, Intl.DateTimeFormat, (Experimental: Async Local Storage, Top-Level Await, Diagnostic report),
  *         WeakReferences, private class methods
  * v15 - logical assignment operators, String.prototype.replaceAll, Promise.any, AggregateError, AbortController,
  *        Promisified setTimeout/setImmediate
