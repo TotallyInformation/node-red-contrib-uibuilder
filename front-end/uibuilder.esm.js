@@ -2246,6 +2246,7 @@ Object.assign(lookup2, {
 });
 
 // src/front-end-module/uibuilder.module.js
+var version = "5.1.0-esm";
 var logLevel = 1;
 var LOG_STYLES = {
   error: {
@@ -2379,12 +2380,12 @@ function urlJoin() {
   }).join("/");
   return url2.replace("//", "/");
 }
-var _connectedNum, _events, _ioChannels, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _isMinified, _MsgHandler, _a;
+var _connectedNum, _events, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _isMinified, _MsgHandler, _a;
 var Uib = (_a = class {
   constructor() {
     __privateAdd(this, _connectedNum, 0);
     __privateAdd(this, _events, {});
-    __privateAdd(this, _ioChannels, { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
+    __publicField(this, "_ioChannels", { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
     __privateAdd(this, _pingInterval, void 0);
     __privateAdd(this, _propChangeCallbacks, {});
     __privateAdd(this, _msgRecvdByTopicCallbacks, {});
@@ -2423,7 +2424,9 @@ var Uib = (_a = class {
       path: this.ioPath,
       transports: ["polling", "websocket"],
       auth: {
-        clientId: this.clientId
+        clientVersion: version,
+        clientId: this.clientId,
+        pageName: window.location.pathname
       },
       transportOptions: {
         polling: {
@@ -2484,6 +2487,12 @@ var Uib = (_a = class {
       log("warn", "Uib:get", `Cannot use get() on protected property "${prop}"`)();
       return;
     }
+    if (prop === "version")
+      return _a._meta.version;
+    if (prop === "msgsCtrl")
+      return this.msgsCtrlReceived;
+    if (prop === "reconnections")
+      return __privateGet(this, _connectedNum);
     if (this[prop] === void 0) {
       log("warn", "Uib:get", `get() - property "${prop}" does not exist`)();
     }
@@ -2536,7 +2545,7 @@ var Uib = (_a = class {
       const serverTimestamp = new Date(receivedMsg.serverTimestamp);
       const offset = Math.round((new Date() - serverTimestamp) / 36e5);
       if (offset !== this.serverTimeOffset) {
-        log("trace", `Uib:checkTimestamp:${__privateGet(this, _ioChannels).server} (server)`, `Offset changed to: ${offset} from: ${this.serverTimeOffset}`)();
+        log("trace", `Uib:checkTimestamp:${this._ioChannels.server} (server)`, `Offset changed to: ${offset} from: ${this.serverTimeOffset}`)();
         this.set("serverTimeOffset", offset);
       }
     }
@@ -2825,8 +2834,9 @@ var Uib = (_a = class {
   _uiRemove(ui) {
     ui.components.forEach((compToRemove) => {
       try {
-        document.querySelector(`#${compToRemove}`).remove();
+        document.querySelector(compToRemove).remove();
       } catch (err) {
+        log("trace", "Uib:_uiRemove", `Could not remove. ${err.message}`)();
       }
     });
   }
@@ -2836,7 +2846,10 @@ var Uib = (_a = class {
       ui.components = [ui];
     ui.components.forEach((compToUpd) => {
       let elToUpd;
-      if (compToUpd.id) {
+      if (compToUpd.parentEl) {
+        console.log(">> parentEl >>", compToUpd.parentEl, ui);
+        elToUpd = compToUpd.parentEl[0];
+      } else if (compToUpd.id) {
         elToUpd = document.querySelectorAll(`#${compToUpd.id}`);
       } else if (compToUpd.name) {
         elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`);
@@ -2846,6 +2859,13 @@ var Uib = (_a = class {
       if (elToUpd === void 0 || elToUpd.length < 1) {
         log("error", "Uib:_uiManager:update", "Cannot find the DOM element", compToUpd)();
         return;
+      }
+      if (compToUpd.properties) {
+        Object.keys(compToUpd.properties).forEach((prop) => {
+          elToUpd.forEach((el) => {
+            el[prop] = compToUpd.properties[prop];
+          });
+        });
       }
       if (compToUpd.events) {
         Object.keys(compToUpd.events).forEach((type) => {
@@ -2869,13 +2889,6 @@ var Uib = (_a = class {
           });
         });
       }
-      if (compToUpd.properties) {
-        Object.keys(compToUpd.properties).forEach((prop) => {
-          elToUpd.forEach((el) => {
-            el[prop] = compToUpd.properties[prop];
-          });
-        });
-      }
       if (!compToUpd.slot && compToUpd.payload)
         compToUpd.slot = compToUpd.payload;
       if (compToUpd.slot) {
@@ -2886,6 +2899,15 @@ var Uib = (_a = class {
       if (compToUpd.slotMarkdown) {
         elToUpd.forEach((el) => {
           this.replaceSlotMarkdown(ui, el, compToUpd);
+        });
+      }
+      if (compToUpd.components) {
+        elToUpd.forEach((el) => {
+          this._uiUpdate({
+            method: ui.method,
+            parentEl: el,
+            components: compToUpd.components
+          });
         });
       }
     });
@@ -2978,10 +3000,10 @@ var Uib = (_a = class {
   }
   _send(msgToSend, channel, originator = "") {
     if (channel === null || channel === void 0)
-      channel = __privateGet(this, _ioChannels).client;
-    if (channel === __privateGet(this, _ioChannels).client) {
+      channel = this._ioChannels.client;
+    if (channel === this._ioChannels.client) {
       msgToSend = makeMeAnObject(msgToSend, "payload");
-    } else if (channel === __privateGet(this, _ioChannels).control) {
+    } else if (channel === this._ioChannels.control) {
       msgToSend = makeMeAnObject(msgToSend, "uibuilderCtrl");
       if (!Object.prototype.hasOwnProperty.call(msgToSend, "uibuilderCtrl")) {
         msgToSend.uibuilderCtrl = "manual send";
@@ -2990,10 +3012,10 @@ var Uib = (_a = class {
     }
     msgToSend._socketId = this._socket.id;
     let numMsgs;
-    if (channel === __privateGet(this, _ioChannels).client) {
+    if (channel === this._ioChannels.client) {
       this.set("sentMsg", msgToSend);
       numMsgs = this.set("msgsSent", ++this.msgsSent);
-    } else if (channel === __privateGet(this, _ioChannels).control) {
+    } else if (channel === this._ioChannels.control) {
       this.set("sentCtrlMsg", msgToSend);
       numMsgs = this.set("msgsSentCtrl", ++this.msgsSentCtrl);
     }
@@ -3005,12 +3027,16 @@ var Uib = (_a = class {
     this._socket.emit(channel, msgToSend);
   }
   send(msg, originator = "") {
-    this._send(msg, __privateGet(this, _ioChannels).client, originator);
+    this._send(msg, this._ioChannels.client, originator);
   }
   sendCtrl(msg) {
-    this._send(msg, __privateGet(this, _ioChannels).control);
+    this._send(msg, this._ioChannels.control);
   }
   eventSend(domevent, originator = "") {
+    if (this.$attrs) {
+      log("error", "Uib:eventSend", "`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`")();
+      return;
+    }
     if (!domevent || !domevent.constructor)
       domevent = event;
     if (!domevent.constructor.name.endsWith("Event") || !domevent.currentTarget) {
@@ -3029,8 +3055,15 @@ var Uib = (_a = class {
       }
       return void 0;
     }));
+    let thisMsg;
+    if (!Object.prototype.hasOwnProperty.call(this, "msg"))
+      thisMsg = { topic: void 0 };
+    else
+      thisMsg = this.msg;
+    if (!Object.prototype.hasOwnProperty.call(thisMsg, "topic"))
+      thisMsg.topic = void 0;
     const msg = {
-      topic: this.msg.topic,
+      topic: thisMsg.topic,
       payload: target.dataset,
       _ui: {
         id: target.id !== "" ? target.id : void 0,
@@ -3052,7 +3085,7 @@ var Uib = (_a = class {
     log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
     if (target.dataset.length === 0)
       log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();
-    this._send(msg, __privateGet(this, _ioChannels).client, originator);
+    this._send(msg, this._ioChannels.client, originator);
   }
   _msgRcvdEvents(msg) {
     this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
@@ -3081,44 +3114,44 @@ var Uib = (_a = class {
     this.set("msg", receivedMsg);
     this.set("msgsReceived", ++this.msgsReceived);
     this._msgRcvdEvents(receivedMsg);
-    log("info", "Uib:ioSetup:stdMsgFromServer", `Channel '${__privateGet(this, _ioChannels).server}'. Received msg #${this.msgsReceived}.`, receivedMsg)();
+    log("info", "Uib:ioSetup:stdMsgFromServer", `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)();
   }
   _ctrlMsgFromServer(receivedCtrlMsg) {
     if (receivedCtrlMsg === null) {
       receivedCtrlMsg = {};
     } else if (typeof receivedCtrlMsg !== "object") {
       const msg = {};
-      msg["uibuilderCtrl:" + __privateGet(this, _ioChannels).control] = receivedCtrlMsg;
+      msg["uibuilderCtrl:" + this._ioChannels.control] = receivedCtrlMsg;
       receivedCtrlMsg = msg;
     }
     this._checkTimestamp(receivedCtrlMsg);
     this.set("ctrlMsg", receivedCtrlMsg);
-    this.set("msgsCtrl", ++this.msgsCtrlReceived);
-    log("trace", "Uib:ioSetup:_ctrlMsgFromServer", `Channel '${__privateGet(this, _ioChannels).control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)();
+    this.set("msgsCtrlReceived", ++this.msgsCtrlReceived);
+    log("trace", "Uib:ioSetup:_ctrlMsgFromServer", `Channel '${this._ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)();
     switch (receivedCtrlMsg.uibuilderCtrl) {
       case "shutdown": {
-        log("info", `Uib:ioSetup:${__privateGet(this, _ioChannels).control}`, '\u274C Received "shutdown" from server')();
+        log("info", `Uib:ioSetup:${this._ioChannels.control}`, '\u274C Received "shutdown" from server')();
         this.set("serverShutdown", void 0);
         break;
       }
       case "client connect": {
-        log("trace", `Uib:ioSetup:${__privateGet(this, _ioChannels).control}`, 'Received "client connect" from server')();
-        log("info", `Uib:ioSetup:${__privateGet(this, _ioChannels).control}`, `\u2705 Server connected. Version: ${receivedCtrlMsg.version}
+        log("trace", `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')();
+        log("info", `Uib:ioSetup:${this._ioChannels.control}`, `\u2705 Server connected. Version: ${receivedCtrlMsg.version}
 Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)();
         if (!_a._meta.version.startsWith(receivedCtrlMsg.version.split("-")[0])) {
-          log("warn", `Uib:ioSetup:${__privateGet(this, _ioChannels).control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${_a._meta.version})`)();
+          log("warn", `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${_a._meta.version})`)();
         }
         if (this.autoSendReady === true) {
-          log("trace", `Uib:ioSetup:${__privateGet(this, _ioChannels).control}/client connect`, "Auto-sending ready-for-content/replay msg to server");
+          log("trace", `Uib:ioSetup:${this._ioChannels.control}/client connect`, "Auto-sending ready-for-content/replay msg to server");
           this._send({
             "uibuilderCtrl": "ready for content",
             "cacheControl": "REPLAY"
-          }, __privateGet(this, _ioChannels).control);
+          }, this._ioChannels.control);
         }
         break;
       }
       default: {
-        log("trace", `uibuilderfe:ioSetup:${__privateGet(this, _ioChannels).control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`);
+        log("trace", `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`);
       }
     }
   }
@@ -3196,8 +3229,8 @@ Namespace: ${this.ioNamespace}`)();
       this._dispatchCustomEvent("uibuilder:socket:connected", __privateGet(this, _connectedNum));
       this._checkConnect();
     });
-    this._socket.on(__privateGet(this, _ioChannels).server, this._stdMsgFromServer.bind(this));
-    this._socket.on(__privateGet(this, _ioChannels).control, this._ctrlMsgFromServer.bind(this));
+    this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this));
+    this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this));
     this._socket.on("disconnect", (reason) => {
       log("info", "Uib:ioSetup:socket-disconnect", `\u26D4 Socket Disconnected. Reason: ${reason}`)();
       this._dispatchCustomEvent("uibuilder:socket:disconnected", reason);
@@ -3248,8 +3281,8 @@ ioPath: ${this.ioPath}`)();
       log("error", "Uib:start", "Start completed. ERROR: Socket.IO client library NOT LOADED.")();
     }
   }
-}, _connectedNum = new WeakMap(), _events = new WeakMap(), _ioChannels = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _isMinified = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
-  version: "5.0.3-mod",
+}, _connectedNum = new WeakMap(), _events = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _isMinified = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
+  version,
   type: "module",
   displayName: "uibuilder"
 }), _a);

@@ -61,6 +61,8 @@ import io from 'socket.io-client' // Note: Only works when using esbuild to bund
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
+const version = '5.1.0-mod'
+
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
 
@@ -285,7 +287,7 @@ export const Uib = class Uib {
     // event listener callbacks by property name
     #events = {}
     // Socket.IO channel names
-    #ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
+    _ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
     /** setInterval holder for pings @type {function|undefined} */
     #pingInterval
     // onChange event callbacks
@@ -361,7 +363,9 @@ export const Uib = class Uib {
         path: this.ioPath,
         transports: ['polling', 'websocket'],
         auth: {
+            clientVersion: version,
             clientId: this.clientId,
+            pageName: window.location.pathname,
         },
         transportOptions: {
             // Can only set headers when polling
@@ -379,7 +383,7 @@ export const Uib = class Uib {
 
     //#region ------- Static metadata ------- //
     static _meta = {
-        version: '5.0.3-mod',
+        version: version,
         type: 'module',
         displayName: 'uibuilder',
     }
@@ -432,6 +436,9 @@ export const Uib = class Uib {
             log('warn', 'Uib:get', `Cannot use get() on protected property "${prop}"`)()
             return
         }
+        if (prop === 'version') return Uib._meta.version
+        if (prop === 'msgsCtrl') return this.msgsCtrlReceived
+        if (prop === 'reconnections') return this.#connectedNum
         if (this[prop] === undefined) {
             log('warn', 'Uib:get', `get() - property "${prop}" does not exist`)()
         }
@@ -586,7 +593,7 @@ export const Uib = class Uib {
             // @ts-ignore
             const offset = Math.round(((new Date()) - serverTimestamp) / 3600000) // in ms / 3.6m to get hours
             if (offset !== this.serverTimeOffset) {
-                log('trace', `Uib:checkTimestamp:${this.#ioChannels.server} (server)`, `Offset changed to: ${offset} from: ${this.serverTimeOffset}`)()
+                log('trace', `Uib:checkTimestamp:${this._ioChannels.server} (server)`, `Offset changed to: ${offset} from: ${this.serverTimeOffset}`)()
                 this.set('serverTimeOffset', offset)
             }
         }
@@ -1032,20 +1039,24 @@ export const Uib = class Uib {
 
     } // --- end of _uiAdd ---
 
+    // TODO Add better tests for failures (see comments)
     /** Handle incoming _ui remove requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiRemove(ui) {
         ui.components.forEach((compToRemove) => {
             try {
-                document.querySelector(`#${compToRemove}`).remove()
+                document.querySelector(compToRemove).remove()
             } catch (err) {
-                // log('error', 'Uib:_uiRemove', `Could not remove. ${err.message}`)()
+                // Could not remove. Cannot read properties of null <= no need to report this one
+                // Could not remove. Failed to execute 'querySelector' on 'Document': '##testbutton1' is not a valid selector
+                log('trace', 'Uib:_uiRemove', `Could not remove. ${err.message}`)()
             }
         })
     } // --- end of _uiRemove ---
 
     // TODO Allow single add without using components array
+    // TODO Allow sub-components
     /** Handle incoming _ui update requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
@@ -1060,7 +1071,11 @@ export const Uib = class Uib {
             let elToUpd
 
             // Either the id, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
-            if ( compToUpd.id ) {
+            if ( compToUpd.parentEl ) { // Handles nested components
+                // ! NOT WORKING
+                console.log('>> parentEl >>', compToUpd.parentEl, ui)
+                elToUpd = compToUpd.parentEl[0]
+            } else if ( compToUpd.id ) {
                 elToUpd = document.querySelectorAll(`#${compToUpd.id}`)
             } else if ( compToUpd.name ) {
                 elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`)
@@ -1072,6 +1087,15 @@ export const Uib = class Uib {
             if ( elToUpd === undefined || elToUpd.length < 1 ) {
                 log('error', 'Uib:_uiManager:update', 'Cannot find the DOM element', compToUpd)()
                 return
+            }
+
+            // Process slot first to allow for named slots
+            if (compToUpd.properties) {
+                Object.keys(compToUpd.properties).forEach((prop) => {
+                    elToUpd.forEach( el => {
+                        el[prop] = compToUpd.properties[prop]
+                    })
+                })
             }
 
             // Add event handlers
@@ -1101,14 +1125,6 @@ export const Uib = class Uib {
                 })
             }
 
-            if (compToUpd.properties) {
-                Object.keys(compToUpd.properties).forEach((prop) => {
-                    elToUpd.forEach( el => {
-                        el[prop] = compToUpd.properties[prop]
-                    })
-                })
-            }
-
             if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload
             if (compToUpd.slot) {
                 elToUpd.forEach( el => {
@@ -1122,6 +1138,16 @@ export const Uib = class Uib {
                 })
             }
 
+            // If nested components, go again - but don't pass payload to sub-components
+            if (compToUpd.components) {
+                elToUpd.forEach( el => {
+                    this._uiUpdate({
+                        method: ui.method,
+                        parentEl: el,
+                        components: compToUpd.components,
+                    })
+                })
+            }
             // TODO Add multi-slot capability (default slot must always be processed first as innerHTML is replaced)
             // ? Do we want to allow nested component lists?
 
@@ -1259,12 +1285,12 @@ export const Uib = class Uib {
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
     _send(msgToSend, channel, originator = '') {
-        if (channel === null || channel === undefined) channel = this.#ioChannels.client
+        if (channel === null || channel === undefined) channel = this._ioChannels.client
 
         // Make sure msgToSend is an object
-        if (channel === this.#ioChannels.client) {
+        if (channel === this._ioChannels.client) {
             msgToSend = makeMeAnObject(msgToSend, 'payload')
-        } else if (channel === this.#ioChannels.control) {
+        } else if (channel === this._ioChannels.control) {
             msgToSend = makeMeAnObject(msgToSend, 'uibuilderCtrl')
             if (!Object.prototype.hasOwnProperty.call(msgToSend, 'uibuilderCtrl')) {
                 msgToSend.uibuilderCtrl = 'manual send'
@@ -1278,10 +1304,10 @@ export const Uib = class Uib {
 
         // Track how many messages have been sent & last msg sent
         let numMsgs
-        if (channel === this.#ioChannels.client) {
+        if (channel === this._ioChannels.client) {
             this.set('sentMsg', msgToSend)
             numMsgs = this.set('msgsSent', ++this.msgsSent)
-        } else if (channel === this.#ioChannels.control) {
+        } else if (channel === this._ioChannels.control) {
             this.set('sentCtrlMsg', msgToSend)
             numMsgs = this.set('msgsSentCtrl', ++this.msgsSentCtrl)
         }
@@ -1301,14 +1327,14 @@ export const Uib = class Uib {
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
     send(msg, originator = '') {
-        this._send(msg, this.#ioChannels.client, originator)
+        this._send(msg, this._ioChannels.client, originator)
     }
 
     /** Send a control msg to NR
      * @param {object} msg Message to send
      */
     sendCtrl(msg) {
-        this._send(msg, this.#ioChannels.control)
+        this._send(msg, this._ioChannels.control)
     }
 
     /** Easily send a msg back to Node-RED on a DOM event
@@ -1329,6 +1355,11 @@ export const Uib = class Uib {
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
     eventSend(domevent, originator = '') {
+        // @ts-ignore Handle case where vue messes up `this`
+        if ( this.$attrs ) {
+            log('error', 'Uib:eventSend', '`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`' )()
+            return
+        }
         // Handle no argument, e.g. <button onClick="uibuilder.eventSend()"> - event is a hidden variable when fn used in addEventListener
         if (!domevent || !domevent.constructor) domevent = event
         // The argument must be a DOM event
@@ -1356,8 +1387,12 @@ export const Uib = class Uib {
             )
         )
 
+        let thisMsg
+        if ( !Object.prototype.hasOwnProperty.call(this, 'msg') ) thisMsg = { topic: undefined }
+        else thisMsg = this.msg
+        if ( !Object.prototype.hasOwnProperty.call(thisMsg, 'topic') ) thisMsg.topic = undefined
         const msg = {
-            topic: this.msg.topic,  // repeats the topic from the last inbound msg if it exists
+            topic: thisMsg.topic,  // repeats the topic from the last inbound msg if it exists
 
             // Each `data-xxxx` attribute is added as a property
             // - this may be an empty Object if no data attributes defined
@@ -1388,7 +1423,7 @@ export const Uib = class Uib {
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
         if (target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
 
-        this._send(msg, this.#ioChannels.client, originator)
+        this._send(msg, this._ioChannels.client, originator)
     }
 
     // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
@@ -1448,7 +1483,7 @@ export const Uib = class Uib {
         // Emit specific document events on msg receipt that make it easy for coders to use
         this._msgRcvdEvents(receivedMsg)
 
-        log('info', 'Uib:ioSetup:stdMsgFromServer', `Channel '${this.#ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)()
+        log('info', 'Uib:ioSetup:stdMsgFromServer', `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)()
 
         // ! NOTE: Don't try to handle specialist messages here. See _msgRcvdEvents.
 
@@ -1461,7 +1496,7 @@ export const Uib = class Uib {
             receivedCtrlMsg = {}
         } else if (typeof receivedCtrlMsg !== 'object') {
             const msg = {}
-            msg['uibuilderCtrl:' + this.#ioChannels.control] = receivedCtrlMsg
+            msg['uibuilderCtrl:' + this._ioChannels.control] = receivedCtrlMsg
             receivedCtrlMsg = msg
         }
 
@@ -1469,42 +1504,42 @@ export const Uib = class Uib {
         this._checkTimestamp(receivedCtrlMsg)
 
         this.set('ctrlMsg', receivedCtrlMsg)
-        this.set('msgsCtrl', ++this.msgsCtrlReceived)
+        this.set('msgsCtrlReceived', ++this.msgsCtrlReceived)
 
-        log('trace', 'Uib:ioSetup:_ctrlMsgFromServer', `Channel '${this.#ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)()
+        log('trace', 'Uib:ioSetup:_ctrlMsgFromServer', `Channel '${this._ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)()
 
         /** Process control msg types */
         switch (receivedCtrlMsg.uibuilderCtrl) {
             // Node-RED is shutting down
             case 'shutdown': {
-                log('info', `Uib:ioSetup:${this.#ioChannels.control}`, '❌ Received "shutdown" from server')()
+                log('info', `Uib:ioSetup:${this._ioChannels.control}`, '❌ Received "shutdown" from server')()
                 this.set('serverShutdown', undefined)
                 break
             }
 
             /** We are connected to the server - 1st msg from server */
             case 'client connect': {
-                log('trace', `Uib:ioSetup:${this.#ioChannels.control}`, 'Received "client connect" from server')()
-                log('info', `Uib:ioSetup:${this.#ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)()
+                log('trace', `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')()
+                log('info', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)()
 
                 if ( !Uib._meta.version.startsWith(receivedCtrlMsg.version.split('-')[0]) ) {
-                    log('warn', `Uib:ioSetup:${this.#ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${Uib._meta.version})`)()
+                    log('warn', `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${Uib._meta.version})`)()
                 }
 
                 if (this.autoSendReady === true) { // eslint-disable-line no-lonely-if
-                    log('trace', `Uib:ioSetup:${this.#ioChannels.control}/client connect`, 'Auto-sending ready-for-content/replay msg to server')
+                    log('trace', `Uib:ioSetup:${this._ioChannels.control}/client connect`, 'Auto-sending ready-for-content/replay msg to server')
                     // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
                     this._send({
                         'uibuilderCtrl': 'ready for content',
                         'cacheControl': 'REPLAY',
-                    }, this.#ioChannels.control)
+                    }, this._ioChannels.control)
                 }
 
                 break
             }
 
             default: {
-                log('trace', `uibuilderfe:ioSetup:${this.#ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
+                log('trace', `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
                 // Anything else to do for other control msgs?
             }
 
@@ -1656,10 +1691,10 @@ export const Uib = class Uib {
         }) // --- End of socket connection processing ---
 
         // RECEIVE a STANDARD, non-control msg from Node-RED server
-        this._socket.on(this.#ioChannels.server, this._stdMsgFromServer.bind(this))
+        this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this))
 
         // RECEIVE a CONTROL msg from Node-RED server - see also sendCtrl()
-        this._socket.on(this.#ioChannels.control, this._ctrlMsgFromServer.bind(this))
+        this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this))
 
         // When the socket is disconnected ..............
         this._socket.on('disconnect', (reason) => {
