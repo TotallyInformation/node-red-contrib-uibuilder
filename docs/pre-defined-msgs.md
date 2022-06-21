@@ -105,6 +105,7 @@ Note that a similar version of this same msg goes to the client as the initial c
     "clientId":"nqfzLy4SXju3hPRVD3UMq", // The stable client ID
     "ip":"::ffff:127.0.0.1",            // The client IP address
     "connections":0,                    // How many times the client connected since the last page load
+    "srcPage": "pagename",              // To allow page-specific cache and processing
 
     // DEPRECATED properties
     //"cacheControl": "REPLAY",         // Redundant - REMOVED as of v5.1

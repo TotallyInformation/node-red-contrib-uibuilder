@@ -10,10 +10,19 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Also note that v5.1.0 has a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new ESM client library (`uibuilder.esm.js` or `uibuilder.esm.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
 
-* Removeme example didn't work
-* upd card3 (hdr) didn't work
-* upd card3 (variant) didn't work
-* Alert/notify doesn't display fixed in centre of viewpane
+* ~~upd card3 (hdr) didn't work - due to not yet supporting nested components with update~~
+* Check: `uib-sender` not sending topic?
+* Add page-name to client connection msg
+
+* Move fe library versions to 5.1.0
+* Document how to make sure that a ui element only appears on a specific page in a multi-page ui
+* Add an example for `uib-list`
+* Test new client with Vue
+
+* Alert/notify doesn't display fixed in centre of viewpane - need to change to fixed position
+* Node.js v14
+* Are express-session and jsonwebtoken deps still needed?
+
 
 ----
 
@@ -36,6 +45,8 @@ Nothing currently.
 * All code now Linted to "Standard JavaScript" with node.js v12 and front-end to ECMA2019. Null/undefined guards put in place.
 * Package.json: Changed homepage to point to Tech Docs on github.io.
 * Client libraries and css available on `../uibuilder/` path as well as on `./` path for consistency with other server paths.
+* Client connect, disconnect and error control messages (uibulder node output port #2) now contain more information. Includes: client version, clientId, Client IP address, page name, number of (re)connections.
+* The old `uibuilderfe.js` client library is now "functionally stable". It will no longer be updated. Please consider moving to the new library (see below). When v6 is released, the old client library will be deprecated.
 
 * Editor:
   * Added stylesheet containing a class of `emoji` which provides nicer, cross-platform, colour emojis.
@@ -57,7 +68,7 @@ Nothing currently.
 
 * `uib-brand.css` - will eventually be the new default uibuilder CSS. It is light/dark switchable both manually and by browser preference. Still under development, this **WILL CHANGE**, probably quite a bit. There are still some variables that are needed in order to be able to sensible control things like spacing and sizing.
 
-* New ECMA Module front-end client library (`uibuilder.module.js`)
+* **New ES Module front-end client library** (`uibuilder.esm.min.js`)
 
   The new library will only work with web browsers from early 2019 or later (only really impacts if you are stuck on IE11 or on an Apple device that doesn't support iOS 12 or later). It uses the new brand CSS by default.
 
@@ -77,6 +88,16 @@ Nothing currently.
   See the `uibuilder.module.md` page in the tech docs for all of the features and details for the new library.
 
   * Clients now report how many times they have connected since last page load. This lets uibuilder know whether the client is reconnecting or connecting for the first time.
+
+  Please use the `uibuilder.esm.min.js` in preference to the `uibuilder.esm.js` version which is only for people needing to do their own bundling. The `min` version includes a `map` so that debugging is as good as (actually better than) using the non-min version.
+
+* **New IIFE Module front-end client library** (`uibuilder.iife.min.js`)
+
+  This is the same as the ES Module client version above but is wrapped as as a standard JavaScript IIFE function which means that it can simply be loaded as a script link (as per the orgiginal `uibuilderfe.js` client library). You should not attempt to load this version of the new library as an ES Module.
+
+  As with the module version above, when using this version, you should no longer manually load the Socket.IO client library and should hardly ever need to call `uibuilder.start`.
+
+  All of the features of the ESM version should work as expected but please note that testing on this client has been limited so far. Please report any errors so that they can be corrected.
 
 * **New Node** - `uib-list`
   

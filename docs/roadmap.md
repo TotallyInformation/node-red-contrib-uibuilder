@@ -77,6 +77,33 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ## Next - these are things that need to be done
 
+* Node.js v14 features - code updates to leverage the latest features
+  * https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
+  * [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+  * [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)
+  * [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
+  * [calendar & numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
+  * Private Class methods (v14.5.1+)
+  * WeakReferences (v14.5.1+)
+  * Array flat and flat map
+  * Optional catch binding
+  * Object.fromEntries (helps make an object either from Map or from a key/value array)
+  * **ESM IS STILL EXPERIMENTAL**
+  * Corepack https://nodejs.org/dist/latest-v14.x/docs/api/corepack.html
+  * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
+  * Future changes to watch:
+    * Top-level await (experimental in v14 - behind flag, full in v18)
+    * Diagnostic channels (experimental in v14)
+    * AbortController and AbortSignal (experimental in v14)
+    * JSON Modules (experimental in v14, full in 16.15.0)
+    * Fetch (Experimental 16.15.0, 18.0.0)
+    * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
+    * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
+    * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
+    * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
+    * Test Runner module (experimental 18.0.0)
+    * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
+
 * Experimental `uib-list` node
   * Allow additional attributes
   * Add return msg handling like uib-sender.
@@ -165,7 +192,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Add socket.io instrumentation server. See https://socket.io/docs/v4/admin-ui/
 
-* Once Node-RED's baseline node.js version has moved passed v12.20, can update `execa` and use dynamic imports (and change README notes on scorecard). Once it has moved passed v14, can simplify the socket.js class by reinstating the optional chaining.
+* Once Node-RED's baseline node.js version has moved passed v12.20, can update `execa` and use dynamic imports (and change README notes on scorecard). Once it has moved into v14, can simplify the socket.js class by reinstating the optional chaining.
 
 * Move socket.io client to dev deps and remove serve from web.js (new library builds it in) - can't do until uibuilderfe is deprecated? Or updated to include (breaking chg)
 
@@ -295,6 +322,7 @@ These are some thoughts about possible future direction. They need further thoug
   [fxos-components/serviceworkerware](https://github.com/fxos-components/serviceworkerware#serviceworkerware): An Express-like layer on top of Service Workers to provide a way to easily plug functionality.
 
 * Add support for HTTP/2 with auto-push. See [http2-express-autopush - npm](https://www.npmjs.com/package/http2-express-autopush)
+* Add support for HTTP/3 and QUIC (available in Node.js v14, in preview with NGINX as at June 2022, websockets over http/3 is defined in RFC9220 in draft at June 2022). https://www.f5.com/company/blog/quic-will-eat-the-internet
 * _[Implemented in the new ESM client library]_ ~~Consider changing my custom event handler in uibuilderfe.js to use the `document` DOM element. This then inherits the JS event hander capabilities.~~
 * Allow transfer of files via Socket.IO. https://stackoverflow.com/a/59224495/1309986
 * Allow switch of log.trace to log.info for advanced debugging (would need new switch in Editor or setting in settings.js:uibuilder)
@@ -336,6 +364,7 @@ These are some thoughts about possible future direction. They need further thoug
 * Add option to keep backups for edited files + button to reset to backup + hide backup files
 * Add npm package delete confirmation - probably via std NR notifications
 * When adding a package, make sure that the input field gets focus & add <keyb>Enter</keyb> & <keyb>Esc</keyb> key processing.
+* If `uibRoot` and the browser are on the same client, add an "Edit with VSCode" link to the Files tab
 * Add GIT processing? Or maybe just handle via npm scripts?
    * Is git command available?
    * is front-end src folder a git repository?

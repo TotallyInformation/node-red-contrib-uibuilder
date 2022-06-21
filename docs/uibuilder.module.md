@@ -40,6 +40,9 @@ This is the next-generation front-end client for uibuilder. It has some nice new
     - [Example client connect control msg](#example-client-connect-control-msg)
   - [ui function](#ui-function)
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content-1)
+  - [Dynamic content limitations](#dynamic-content-limitations)
+    - [Positioning new elements before existing ones rather than after](#positioning-new-elements-before-existing-ones-rather-than-after)
+    - [Updates and sub-components](#updates-and-sub-components)
   - [Dynamic content details](#dynamic-content-details)
   - [Initial load from JSON URL](#initial-load-from-json-url)
   - [Dynamic changes via messages from Node-RED (or local set)](#dynamic-changes-via-messages-from-node-red-or-local-set)
@@ -218,6 +221,8 @@ In addition, you could do just `import {Uib} from './uibuilder.esm.js'` and then
 ## Limitations
 
 The main limitation of this new, ESM version of the library is that it can only be used as an ESM module. I've investigated whether it is possible to do a translation to an ES6, IIFE version to more closely match the older `uibuilderfe` library, this does not appear to be possible at this time because there are no tools that will allow it.
+
+Please also refer to the section on dynamic content for its specific limitations.
 
 ---
 
@@ -637,6 +642,21 @@ See the next section for details.
 This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a uibuilder node where the messages contain a `msg._ui` property.
 
 Please see the next section for details.
+
+### Dynamic content limitations
+
+There are currently a small number of limitations of this approach that you should be aware of.
+
+#### Positioning new elements before existing ones rather than after
+
+If you want to add something new before siblings rather than at the end, this is not yet handled.
+
+For example, if you wanted to add a new list entry at the start of the list, you would need to `remove` then `add` the whole list.
+
+#### Updates and sub-components
+
+If you want to `update` an existing element and update a sub-component (such as a specific list entry), the sub-components MUST already exist (because this is an update action). If that is not the case and instead you want to add a new sub-component, you must have a separate `add` action and select the parent component.
+
 
 ### Dynamic content details
 
