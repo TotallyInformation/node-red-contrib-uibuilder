@@ -35,7 +35,7 @@ const rename = require('gulp-rename')
 const include = require('gulp-include')
 const once = require('gulp-once')
 // const prompt = require('gulp-prompt')
-const replace = require('gulp-replace')
+const greplace = require('gulp-replace')
 const debug = require('gulp-debug')
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
@@ -184,6 +184,7 @@ function packfeModule(cb) {
                     // 'safari15',  // Sep 20, 2021
                 ]
             }))
+            .pipe(greplace(/="(.*)-mod"/, '="$1-esm.min"'))
             .pipe(dest(feDest))
 
         src(`${feModuleSrc}/uibuilder.module.js`)
@@ -198,11 +199,73 @@ function packfeModule(cb) {
                     'es2020',
                 ]
             }))
+            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-esm"'))
             .pipe(dest(feDest))
 
         // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
     } catch (e) {
-        console.error('Could not pack uibuilder.module.js', e)
+        console.error('Could not pack uibuilder.module.js for esm', e)
+    }
+    cb()
+}
+
+/** Pack (Uglify) front-end IIFE task
+ * @param {Function} cb Callback
+ */
+function packfeIIFE(cb) {
+    try {
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.iife.min.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: true,
+                sourcemap: true,
+                target: [
+                    // 'es2019',
+                    // Start of 2019
+                    'chrome72',
+                    'safari12.1',
+                    'firefox65',
+                    'opera58',
+
+                    // For private class fields:
+                    // 'chrome74',   // Apr 23, 2019
+                    // 'opera62',    // Jun 27, 2019
+                    // 'edge79',     // Jan 15, 2020
+                    // 'safari14.1', // Apr 26, 2021
+                    // 'firefox90',  // Jul 13, 2021
+
+                    // If we need top-level await
+                    // 'chrome89',  // March 1, 2021
+                    // 'edge89',
+                    // 'opera75',   // Mar 24, 2021
+                    // 'firefox89', // Jun 1, 2021
+                    // 'safari15',  // Sep 20, 2021
+                ]
+            }))
+            .pipe(greplace(/="(.*)-mod"/, '="$1-iife.min"'))
+            .pipe(dest(feDest))
+
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.iife.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: false,
+                sourcemap: false,
+                target: [
+                    'es2020',
+                ]
+            }))
+            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-iife"'))
+            .pipe(dest(feDest))
+
+        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
+    } catch (e) {
+        console.error('Could not pack uibuilder.module.js for iife', e)
     }
     cb()
 }
@@ -291,7 +354,7 @@ const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSende
 function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('src/front-end/uibuilderfe.dev.js', packfe)
-    watch('src/front-end-module/uibuilder.module.js', packfeModule)
+    watch('src/front-end-module/uibuilder.module.js', parallel(packfeModule, packfeIIFE))
     watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
     watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
@@ -309,7 +372,7 @@ function setFeVersionDev(cb) {
         // Replace the version in uibuilderfe.js
         src(`${feSrc}/uibuilderfe.dev.js`)
             // eslint-disable-next-line prefer-named-capture-group
-            .pipe(replace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
+            .pipe(greplace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
 
                 if ( match !== release) {
                     console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
@@ -332,7 +395,7 @@ function setFeVersion(cb) {
         // Replace the version in uibuilderfe.js
         src(`${feDest}/uibuilderfe.js`)
             // eslint-disable-next-line prefer-named-capture-group
-            .pipe(replace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
+            .pipe(greplace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
 
                 if ( match !== release) {
                     console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
@@ -354,7 +417,7 @@ function setFeVersionMin(cb) {
         // Replace the version in uibuilderfe.min.js
         src(`${feDest}/uibuilderfe.min.js`)
             // eslint-disable-next-line prefer-named-capture-group
-            .pipe(replace(/.version="(.*?)",/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
+            .pipe(greplace(/.version="(.*?)",/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
                 if ( match !== release) {
                     console.log(`setFeVersionMin: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
                     return `.version="${release}",`
