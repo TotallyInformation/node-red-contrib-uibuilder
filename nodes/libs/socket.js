@@ -462,6 +462,13 @@ class UibSockets {
 
         ioNs.on('connection', function(socket) {
 
+            let pageName
+            if ( socket.handshake.auth.pageName ) {
+                pageName = socket.handshake.auth.pageName.replace(`/${node.url}/`, '')
+                if ( pageName.endsWith('/') ) pageName += 'index.html'
+                if ( pageName === '' ) pageName = 'index.html'
+            }
+
             //#region ----- Event Handlers ----- //
 
             // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
@@ -482,13 +489,16 @@ class UibSockets {
                     'reason': reason,
                     'topic': node.topic || undefined,
                     '_socketId': socket.id,
+                    'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
+                    'ip': getClientRealIpAddress(socket),
+                    'clientId': socket.handshake.auth.clientId,
+                    'pageName': pageName,
+                    'connections': socket.handshake.auth.connectedNum
                 }
 
                 that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
 
                 // Copy to port#2 for reference
-                ctrlMsg.ip = getClientRealIpAddress(socket)
-                ctrlMsg.clientId = socket.handshake.auth.clientId
                 node.send([null, ctrlMsg])
 
                 // event
@@ -614,11 +624,14 @@ class UibSockets {
                     'error': err.message,
                     'topic': node.topic || undefined,
                     '_socketId': socket.id,
+                    'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
+                    'ip': getClientRealIpAddress(socket),
+                    'clientId': socket.handshake.auth.clientId,
+                    'pageName': pageName,
+                    'connections': socket.handshake.auth.connectedNum
                 }
                 that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
                 // Copy to port#2 for reference
-                ctrlMsg.ip = getClientRealIpAddress(socket)
-                ctrlMsg.clientId = socket.handshake.auth.clientId
                 node.send([null, ctrlMsg])
 
             }) // --- End of on-connection::on-error() --- //
@@ -652,19 +665,32 @@ class UibSockets {
             node.statusDisplay.text = `connected ${ioNs.sockets.size}`
             uiblib.setNodeStatus( node )
 
-            // Initial client connect message
-            const msg = {
+            // Initial connect message to client
+            const msgClient = {
                 'uibuilderCtrl': 'client connect',
                 'serverTimestamp': (new Date()),
                 'topic': node.topic || undefined,
-                // 'security': node.useSecurity,   // Let the client know whether to use security or not
-                'version': uib.version,         // Let the front-end know what v of uib is in use
+                'version': uib.version,  // Let the front-end know what v of uib is in use
                 '_socketId': socket.id,
             }
 
-            msg.ip = getClientRealIpAddress(socket)
-            msg.clientId = socket.handshake.auth.clientId
-            msg.connections = socket.handshake.auth.connectedNum
+            // Flow client connect msg (port #2 msg)
+            const msgFlow = {
+                'uibuilderCtrl': 'client connect',
+                'topic': node.topic || undefined,
+                'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
+                '_socketId': socket.id,
+                'ip': getClientRealIpAddress(socket),
+                'clientId': socket.handshake.auth.clientId,
+                'pageName': pageName,
+                'connections': socket.handshake.auth.connectedNum
+                // ? client time offset ?
+            }
+
+            // msgClient.ip = getClientRealIpAddress(socket)
+            // msgClient.clientId = socket.handshake.auth.clientId
+            // msgClient.connections = socket.handshake.auth.connectedNum
+            // msgClient.pageName = socket.handshake.auth.pageName
 
             // ioNs.clientLog[msg.clientId] = {
             //     ip: msg.ip,
@@ -672,12 +698,14 @@ class UibSockets {
             //     connected: true,
             // }
 
-            // Let the clients (and output #2) know we are connecting
-            that.sendToFe(msg, node.url, uib.ioChannels.control)
-            tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientConnect`, msg)
+            // Let the clients know we are connecting
+            that.sendToFe(msgClient, node.url, uib.ioChannels.control)
 
-            // Copy to port#2 for reference
-            node.send([null, msg])
+            // Let the flows (via port#2) a client is connecting
+            node.send([null, msgFlow])
+
+            // Let other nodes know a client is connecting (via custom event manager)
+            tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientConnect`, msgFlow)
 
         }) // --- End of on-connection() --- //
 
