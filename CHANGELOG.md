@@ -8,16 +8,17 @@ typora-root-url: docs/images
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-Also note that v5.1.0 has a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new ESM client library (`uibuilder.esm.js` or `uibuilder.esm.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
+Also note that v5.1.0 has a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
 
 * ~~upd card3 (hdr) didn't work - due to not yet supporting nested components with update~~
-* Check: `uib-sender` not sending topic?
-* Add page-name to client connection msg
+* ~~Add page-name to client connection msg~~
+* ~~Test new client with Vue~~
 
-* Move fe library versions to 5.1.0
+* Check: `uib-sender` not sending topic?
+* Move old fe library version to 5.1.0
 * Document how to make sure that a ui element only appears on a specific page in a multi-page ui
 * Add an example for `uib-list`
-* Test new client with Vue
+* ? Add optional page filter to _ui ?
 
 * Alert/notify doesn't display fixed in centre of viewpane - need to change to fixed position
 * Node.js v14
