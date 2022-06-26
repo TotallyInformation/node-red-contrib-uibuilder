@@ -1372,6 +1372,7 @@ export const Uib = class Uib {
         // Get target properties - only shows custom props not element default ones
         const props = {}
         Object.keys(target).forEach( key => {
+            if (key.startsWith('_')) return // Exclude private
             props[key] = target[key]
         })
 
@@ -1399,6 +1400,7 @@ export const Uib = class Uib {
             payload: target.dataset,
 
             _ui: {
+                type: 'eventSend',
                 id: target.id !== '' ? target.id : undefined,
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent !== '' ? target.textContent.substring(0, 255) : undefined,
