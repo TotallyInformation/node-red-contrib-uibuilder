@@ -104,7 +104,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Test Runner module (experimental 18.0.0)
     * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
 
-* Experimental `uib-list` node
+* Extensions to experimental `uib-list` node
   * Allow additional attributes
   * Add return msg handling like uib-sender.
   * Move retained data to same mechanism as uib-cache
@@ -116,19 +116,19 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
   * Create min version of css.
 
-* New FE Library
+* Extensions to new FE Library
   * Add client ID, client version & connections # to initial "ready for content" msg from client->NR
   * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
   * Option for a pop-over notification to manually reconnect the websocket.
   * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
   * Add HTML loader capability to _ui handling (see html-loader web component)
 
-* Old FE library
+* Updates to old FE library
   * Add client ID, client version & connections # to initial "ready for content" msg from client->NR
   * Add `msg._ui` processing if possible.
   * Build in socket.io client (as for new fe)
 
-* uibuilder node
+* Updates to uibuilder node
   * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
   * Client connect msg: on port#2 doesn't need server version. Should have client version. Also remove server timestamp.
   * Client connect msg to client doesnt need ip, clientid, connections
@@ -144,7 +144,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Show installed uibuilder version.
     * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
 
-* Documentation
+* Updates to Documentation
   * Split the new client library, move _ui features to separate page.
   * Add message interaction diagram to "pre-defined-msgs.md"
   * Add note to documentation for the library manager that you can install LOCAL folders.

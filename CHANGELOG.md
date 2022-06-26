@@ -13,16 +13,25 @@ Also note that v5.1.0 has a number of new features that are not complete. They a
 * ~~upd card3 (hdr) didn't work - due to not yet supporting nested components with update~~
 * ~~Add page-name to client connection msg~~
 * ~~Test new client with Vue~~
+* ~~Check: `uib-sender` not sending topic?~~
+* ~~FE: Add msg._ui.type = "eventSend"~~
+* ~~Check: Adding @microsoft/fast-element didn't add to uibRoot/package.json~~
+* ~~uibRoot/package.json not properly formatted - after adding a package~~
+* ~~Move old fe library version to 5.1.0~~
 
-* Check: `uib-sender` not sending topic?
-* Move old fe library version to 5.1.0
+* Check: Rename not working as expected?
 * Document how to make sure that a ui element only appears on a specific page in a multi-page ui
 * Add an example for `uib-list`
-* ? Add optional page filter to _ui ?
+* socket.js: `TRACE| [uibuilder:socket:addNS:iife:connect]` - Add client version
+* FE: Add msg._uib.clientId|ip (?optional?)
 
+
+* Add optional page filter to _ui
 * Alert/notify doesn't display fixed in centre of viewpane - need to change to fixed position
 * Node.js v14
 * Are express-session and jsonwebtoken deps still needed?
+* Add optional pageName filter to `uib-cache`
+* Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
 
 
 ----
@@ -39,6 +48,8 @@ Nothing currently.
 * `/uibuilder/ping` now correctly returns 204 (no content) status not 201.
 * `web.js`::`buildHtmlTable` - over-optimised regex broke the table cells, now fixed.
 * Connected control message now correctly contains the client id and client IP address. The client id does not change as much as the _socketId, it is saved in browser local storage so will be the same across sessions and multiple windows/tabs.
+* `uib-sender` was not using topic defined in settings. If present, that overrides msg.topic.
+* `uibuilder` node - Editor: Add library had been over-optimised and wasn't working in the right order. Now fixed.
 
 ### Changed
 
@@ -47,7 +58,6 @@ Nothing currently.
 * Package.json: Changed homepage to point to Tech Docs on github.io.
 * Client libraries and css available on `../uibuilder/` path as well as on `./` path for consistency with other server paths.
 * Client connect, disconnect and error control messages (uibulder node output port #2) now contain more information. Includes: client version, clientId, Client IP address, page name, number of (re)connections.
-* The old `uibuilderfe.js` client library is now "functionally stable". It will no longer be updated. Please consider moving to the new library (see below). When v6 is released, the old client library will be deprecated.
 
 * Editor:
   * Added stylesheet containing a class of `emoji` which provides nicer, cross-platform, colour emojis.
@@ -64,6 +74,10 @@ Nothing currently.
 * `package-mgt.js`:
   * Rewrite root package.json and package details processing for more efficiency + prettify package.json output
   * Add outdated (current/wanted/latest) to uibRoot/package.json>uibuilder.packages in prep for update display in Editor
+
+* Old client library `uibuilderfe.js`
+  * Connection count, and page name added to initial "client connect" message in line with the new client.
+  * The old `uibuilderfe.js` client library is now "functionally stable". It will no longer be updated. Please consider moving to the new library (see below). When v6 is released, the old client library will be deprecated.
 
 ### New
 
