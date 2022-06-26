@@ -1,4 +1,4 @@
-/* eslint-disable no-var, sonarjs/cognitive-complexity, array-bracket-newline, sonarjs/no-duplicate-string */
+/* eslint-disable no-var, array-bracket-newline */
 /*
   Copyright (c) 2017-2022 Julian Knight (Totally Information)
 
@@ -124,7 +124,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '5.0.2'
+        self.version = '5.1.0-prerelease'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
@@ -268,6 +268,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.isAuthorised = false    // Set to true if receive 'authorised' msg from server
         self.authTokenExpiry  = null // Set on successful logon. Timestamp.
         self.authData     = {}       // Additional data returned from logon/logoff requests
+        self.connectedNum = 0        // How many times have we reconnected since page load?
         // self.security     = false    // Does uibuilder have security turned on? (Set by early incoming control message)
         //#endregion ---- ---- ---- ---- //
 
@@ -395,6 +396,9 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 transports: self.ioTransport,
                 auth: {
                     clientId: self.clientId,
+                    connectedNum: self.connectedNum,
+                    pageName: window.location.pathname,
+                    clientVersion: self.version,
                 },
                 transportOptions: {
                     // Can only set headers when polling
@@ -410,8 +414,12 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             /** When the socket is connected - set ioConnected flag and reset connect timer  */
             self.socket.on('connect', function ioconnect() {
-                self.uiDebug('info', '[uibuilderfe:ioSetup] SOCKET CONNECTED - Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
 
+                self.connectedNum++
+                self.socketOptions.auth.connectedNum = self.connectedNum
+
+                self.uiDebug('info', '[uibuilderfe:ioSetup] SOCKET CONNECTED - # connections: ' + self.connectedNum + ' Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
+                
                 self.set('ioConnected', true)
 
                 // Reset any reconnect timers
@@ -885,26 +893,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self.send = function send(msgToSend, channel, originator = '') {
             if ( channel === null || channel === undefined ) channel = self.ioChannels.client
 
-            //! Disabled for now. Because we now have a server-side flag that allows msg flows
-            //! even when not logged in. Might put this back in the future. But would then need to handle the allowUnauth flag
-            /*
-            // If security is on but client not authenticated only allow logon control msg to be sent
-            // Just a local convenience, the server will block anyway
-            if ( self.security && !self.isAuthorised ) {
-                let block = true
-                if ( channel === self.ioChannels.control) { // eslint-disable-line sonarjs/no-collapsible-if
-                    if ( msgToSend.uibuilderCtrl === 'logon' || msgToSend.uibuilderCtrl === 'ready for content') {
-                        block = false
-                    }
-                }
-                if ( block === true ) {
-                    console.error('[uibuilder:send] Message not sent. Security is on but client not authorised - can only send a logon control msg', msgToSend, channel)
-                    //! Comment this out if you want to allow messages to be send when not logged in
-                    //return  // TODO COMMENTED OUT FOR TESTING ONLY
-                }
-            }
-            */
-
             self.uiDebug('log', '[uibuilderfe:send] Sending msg - Namespace: ' + self.ioNamespace + ', Channel: ' + channel, msgToSend)
 
             // Make sure msgToSend is an object
@@ -921,9 +909,6 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
             /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
             msgToSend._socketId = self.socket.id
-
-            /** If security is on, add `_auth` to output msg */
-            //msgToSend._auth = self.sendAuth()
 
             // Track how many messages have been sent & last msg sent
             if (channel === self.ioChannels.client) {
