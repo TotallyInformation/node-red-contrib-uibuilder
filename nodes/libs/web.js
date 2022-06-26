@@ -373,6 +373,12 @@ class UibWeb {
 
         if (this.uibRouter === undefined) throw new Error('this.uibRouter is undefined')
 
+        // Update the <uibRoot>/package.json file & packageMgt.uibPackageJson in case a package was manually installed then node-red restarted
+        // Get the installed packages from the `<uibRoot>/package.json` file. If it doesn't exist, this will create it.
+        const pj = packageMgt.getUibRootPackageJson()
+        if (pj === null) throw new Error('pj is null')
+        if ( pj.dependencies === undefined ) throw new Error('pj.dependencies is undefined')
+
         // TODO Add some trace messages
 
         /** Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
@@ -401,13 +407,6 @@ class UibWeb {
         this.uibRouter.use( '/vendor', this.vendorRouter )
         this.routers.user.push( { name: 'Vendor Routes', path: `${this.uib.httpRoot}/uibuilder/vendor/*`, desc: 'Front-end libraries are mounted under here', type: 'Router' } )
 
-        // Get the installed packages from the `<uibRoot>/package.json` file
-        // If it doesn't exist, this will create it.
-        // const pj = packageMgt.getUibRootPackageJson()
-        const pj = packageMgt.uibPackageJson
-        if (pj === null) throw new Error('pj is null')
-
-        if ( pj.dependencies === undefined ) throw new Error('pj.dependencies is undefined')
         Object.keys(pj.dependencies).forEach( packageName => {
             if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined ) throw new Error('pj.uibuilder or pj.uibuilder.packages is undefined')
 
@@ -427,9 +426,6 @@ class UibWeb {
                 )
             }
         })
-
-        // Update the <uibRoot>/package.json file with updated details
-        packageMgt.setUibRootPackageJson(pj)
 
     } // ---- End of serveVendorPackages ---- //
 

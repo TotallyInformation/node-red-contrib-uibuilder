@@ -277,7 +277,6 @@ class UibPackages {
     }
 
     async updateInstalledPackageDetails() {
-        console.log(`${(new Date()).toISOString()} >>> STARTED packages >>>`)
         const pj = this.uibPackageJson
 
         if ( this.uib === undefined ) throw this.#uibUndefinedError
@@ -409,10 +408,10 @@ class UibPackages {
         this.uibPackageJson = json
 
         // TODO Add try & error message
-        fs.writeJsonSync(fileName, json)
+        fs.writeJsonSync(fileName, json, { spaces: 2 })
     }
 
-    /** !DEPRECATED! Find install folder for a package - allows an array of locations to be given
+    /** Find install folder for a package - allows an array of locations to be given
      * NOTE: require.resolve can be a little ODD!
      *       When run from a linked package, it uses the link root not the linked location,
      *       this throws out the tree search. That's why we have to try several different locations here.
@@ -443,7 +442,7 @@ class UibPackages {
         return null
     } // ----  End of getPackagePath2 ---- //
 
-    /** !DEPRECATED! Get the details for an installed package & update uibuilder specific details before returning it
+    /** Get the details for an installed package & update uibuilder specific details before returning it
      * @param {string} packageName - Name of the package who's install folder we are looking for.
      * @param {string} installRoot A uibuilder node instance - will search in node's root folder first
      * @returns {object} Details object for an installed package
@@ -528,27 +527,36 @@ class UibPackages {
         return pkgDetails
     } // ----  End of getPackageDetails2 ---- //
 
-    // ----
+    //#region --- DEPRECATED ---
 
-    /** !DEPRECATED!  Update all of the installed packages
+    /** Update all of the installed packages
      */
     updateInstalledPackages() {
+        this.log.error('[uibuilder:UibPackages:updateInstalledPackages] FUNCTION IS DEPRECATED.')
+        console.trace()
+
         console.trace('package-mgt.js:updateInstalledPackages')
     } // ---- End of updateInstalledPackages ---- //
 
     /** !DEPRECATED!  Find install folder for a package
      */
     getPackagePath() {
+        this.log.error('[uibuilder:UibPackages:getPackagePath] FUNCTION IS DEPRECATED.')
+        console.trace()
+
         console.trace('package-mgt.js:getPackagePath')
     } // ----  End of getPackagePath ---- //
 
-    /** !DEPRECATED!  Update the master name list of possible packages that could be served to the front-end
+    /** Update the master name list of possible packages that could be served to the front-end
      */
     updateMergedPackageList() {
+        this.log.error('[uibuilder:UibPackages:updateMergedPackageList] FUNCTION IS DEPRECATED.')
+        console.trace()
+
         console.trace('package-mgt.js:updateMergedPackageList')
     } // ---- End of updateMergedPackageList ---- //
 
-    // ------
+    //#endregion --- DEPRECATED ---
 
     /** Install an npm package
      * NOTE: This fn does not update the list of packages
@@ -698,7 +706,6 @@ class UibPackages {
             pkgName,
         ]
 
-        // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
         let res
         try {
             const { stdout } = await execa('npm', args, opts)
