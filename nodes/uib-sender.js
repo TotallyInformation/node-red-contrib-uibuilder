@@ -58,6 +58,8 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     // If you need it - or just use mod.RED if you prefer:
     // const RED = mod.RED
 
+    if (this.topic !== '') msg.topic = this.topic
+
     // NOTE: Several ways to do this.
     //  1) Most direct would be to directly ref the uibuilder node via RED.nodes - but this is tight coupling
     //  2) 2nd most direct would be to use global uibsockets ref - but this is also fairly tight coupling
