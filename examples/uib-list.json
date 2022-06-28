@@ -1,0 +1,1042 @@
+[
+    {
+        "id": "9830b8f095944f6e",
+        "type": "tab",
+        "label": "uib-list examples",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "56360f968da094c2",
+        "type": "group",
+        "z": "9830b8f095944f6e",
+        "name": "ESM Version. \\n Must use \"module\" in script tags, can use import statement \\n Make sure that the \"No framework, modern ESM client\" template is used",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.52",
+            "label": true,
+            "label-position": "n",
+            "color": "#000000"
+        },
+        "nodes": [
+            "b7ae728308e13998",
+            "9a50ea929eb5cbb9",
+            "d2a39d698abe0fb9",
+            "bcdd0c4f6f3e87e4",
+            "c2713e759d101352"
+        ],
+        "x": 578,
+        "y": 87,
+        "w": 494,
+        "h": 720
+    },
+    {
+        "id": "e9d3c216b6d73374",
+        "type": "group",
+        "z": "9830b8f095944f6e",
+        "name": "Standard IIFE Version. \\n Just load the library using a script tag \\n Make sure that the \"No framework, modern IIFE client\" template is used",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.5",
+            "label": true,
+            "color": "#000000",
+            "label-position": "n"
+        },
+        "nodes": [
+            "bb491158956fcae9",
+            "ee38039276e446bb",
+            "a8c441b764b25ce4",
+            "49952c42a7ad8c49",
+            "e50f0d84b6aad16a",
+            "27f0524e1895230c",
+            "ed943c4571535c87",
+            "177c0a40723d9aa8"
+        ],
+        "x": 28,
+        "y": 87,
+        "w": 514,
+        "h": 774
+    },
+    {
+        "id": "c2713e759d101352",
+        "type": "group",
+        "z": "9830b8f095944f6e",
+        "g": "56360f968da094c2",
+        "name": "Ensure that each node is set to use the correct uibuilder instance \\n ",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.25",
+            "label": true,
+            "label-position": "n",
+            "color": "#000000"
+        },
+        "nodes": [
+            "adb40f6f2c2ec8be",
+            "26072b064b996a5b",
+            "bfc5042ba2b727fd",
+            "b0c8808c0c3f818e",
+            "b9fb0135a8a05cf4",
+            "26f1f0858364451a",
+            "61f6230ff235a029",
+            "a57beee718fdb5ec",
+            "b6d9d0b9e16757a2",
+            "73dc9b904e5d3570",
+            "d8436be0ce16e9c3",
+            "72f9b6373a389f79"
+        ],
+        "x": 604,
+        "y": 283,
+        "w": 442,
+        "h": 498
+    },
+    {
+        "id": "177c0a40723d9aa8",
+        "type": "group",
+        "z": "9830b8f095944f6e",
+        "g": "e9d3c216b6d73374",
+        "name": "Ensure that each node is set to use the correct uibuilder instance \\n ",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.25",
+            "label": true,
+            "label-position": "n",
+            "color": "#000000"
+        },
+        "nodes": [
+            "24bfc84239e645cb",
+            "9ec9e15454423008",
+            "cbcf1d095e39c214",
+            "569d71b02ea2ad4b",
+            "9e9a113d23b3639b",
+            "407ad1743c7734c4",
+            "84bdce80a323ef9b",
+            "6403581c2c56b41d",
+            "3878a119c5f9d8ac",
+            "906efda1ab899996",
+            "a3322e7a02c2f045",
+            "3a3664ad9df13625",
+            "3857bd61d2d42862"
+        ],
+        "x": 54,
+        "y": 283,
+        "w": 462,
+        "h": 498
+    },
+    {
+        "id": "49952c42a7ad8c49",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "e9d3c216b6d73374",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 155,
+        "y": 200,
+        "wires": [
+            [
+                "ed943c4571535c87"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "e50f0d84b6aad16a",
+        "type": "debug",
+        "z": "9830b8f095944f6e",
+        "g": "e9d3c216b6d73374",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 445,
+        "y": 160,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "27f0524e1895230c",
+        "type": "debug",
+        "z": "9830b8f095944f6e",
+        "g": "e9d3c216b6d73374",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 445,
+        "y": 240,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "ed943c4571535c87",
+        "type": "uibuilder",
+        "z": "9830b8f095944f6e",
+        "g": "e9d3c216b6d73374",
+        "name": "",
+        "topic": "",
+        "url": "test-uib-list-iife",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank-iife-client",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "5.1.0-prerelease",
+        "x": 300,
+        "y": 200,
+        "wires": [
+            [
+                "e50f0d84b6aad16a"
+            ],
+            [
+                "27f0524e1895230c"
+            ]
+        ]
+    },
+    {
+        "id": "9ec9e15454423008",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "url": "test-uib-list-iife",
+        "elementid": "li01b",
+        "elementtype": "ol",
+        "parent": "#container",
+        "passthrough": false,
+        "outputs": 0,
+        "name": "",
+        "x": 400,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "24bfc84239e645cb",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "Plain List",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "[\"LI One\",\"LI Two\",\"LI Three\",\"LI Four\"]",
+        "payloadType": "json",
+        "x": 190,
+        "y": 340,
+        "wires": [
+            [
+                "9ec9e15454423008"
+            ]
+        ]
+    },
+    {
+        "id": "cbcf1d095e39c214",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "Definition List",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create DL",
+        "payload": "[[\"Entry 1\",\"Definition 1\"],[\"Entry 2\",\"Definition 2\"],[\"Entry 3\",\"Definition 3\"],[\"Entry 4\",\"Definition 4\"]]",
+        "payloadType": "json",
+        "x": 180,
+        "y": 440,
+        "wires": [
+            [
+                "569d71b02ea2ad4b"
+            ]
+        ]
+    },
+    {
+        "id": "569d71b02ea2ad4b",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "url": "test-uib-list-iife",
+        "elementid": "li02",
+        "elementtype": "dl",
+        "parent": "#container",
+        "passthrough": false,
+        "outputs": 0,
+        "name": "",
+        "x": 400,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "9e9a113d23b3639b",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "addme",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create DL",
+        "payload": "[[\"Entry A\",\"Definition A\"],[\"Entry B\",\"Definition B\"]]",
+        "payloadType": "json",
+        "x": 235,
+        "y": 480,
+        "wires": [
+            [
+                "569d71b02ea2ad4b"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "3878a119c5f9d8ac",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "url": "test-uib-list-iife",
+        "elementid": "li03",
+        "elementtype": "ul",
+        "parent": "#container",
+        "passthrough": false,
+        "outputs": 0,
+        "name": "",
+        "x": 400,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "6403581c2c56b41d",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "List of Lists",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "[[\"LI One A\",\"LI One B\"],\"LI Two\",\"LI Three\",\"LI Four\"]",
+        "payloadType": "json",
+        "x": 190,
+        "y": 620,
+        "wires": [
+            [
+                "3878a119c5f9d8ac"
+            ]
+        ]
+    },
+    {
+        "id": "3a3664ad9df13625",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "url": "test-uib-list-iife",
+        "elementid": "li04",
+        "elementtype": "ul",
+        "parent": "#container",
+        "passthrough": false,
+        "outputs": 0,
+        "name": "",
+        "x": 400,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "906efda1ab899996",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "Plain Object",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "{\"ONE\":\"LI One\",\"TWO\":\"LI Two\",\"THREE\":\"LI Three\"}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 700,
+        "wires": [
+            [
+                "3a3664ad9df13625"
+            ]
+        ]
+    },
+    {
+        "id": "a3322e7a02c2f045",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "Nested Obj",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "{\"ONE\":{\"A\":\"LI One A\"},\"TWO\":{\"B\":[\"LI Two B1\",\"LI Two B2\"]},\"THREE\":{\"C\":{\"C1\":\"LI Three C1\",\"C2\":\"LI Three C2\"}}}",
+        "payloadType": "json",
+        "x": 190,
+        "y": 740,
+        "wires": [
+            [
+                "3a3664ad9df13625"
+            ]
+        ]
+    },
+    {
+        "id": "84bdce80a323ef9b",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "Nested Obj",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "{\"ONE\":{\"A\":\"LI One A\"},\"TWO\":{\"B\":[\"LI Two B1\",\"LI Two B2\"]},\"THREE\":{\"C\":{\"C1\":\"LI Three C1\",\"C2\":\"LI Three C2\"}}}",
+        "payloadType": "json",
+        "x": 190,
+        "y": 560,
+        "wires": [
+            [
+                "569d71b02ea2ad4b"
+            ]
+        ]
+    },
+    {
+        "id": "407ad1743c7734c4",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "List of obj",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create DL",
+        "payload": "[{\"Entry 1\":\"Definition 1\"},{\"Entry 2\":\"Definition 2\"},{\"Entry 3\":\"Definition 3\"},{\"Entry 4\":\"Definition 4\"}]",
+        "payloadType": "json",
+        "x": 190,
+        "y": 520,
+        "wires": [
+            [
+                "569d71b02ea2ad4b"
+            ]
+        ]
+    },
+    {
+        "id": "b7ae728308e13998",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "56360f968da094c2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 695,
+        "y": 200,
+        "wires": [
+            [
+                "bcdd0c4f6f3e87e4"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "9a50ea929eb5cbb9",
+        "type": "debug",
+        "z": "9830b8f095944f6e",
+        "g": "56360f968da094c2",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 985,
+        "y": 160,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "d2a39d698abe0fb9",
+        "type": "debug",
+        "z": "9830b8f095944f6e",
+        "g": "56360f968da094c2",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 985,
+        "y": 240,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "bcdd0c4f6f3e87e4",
+        "type": "uibuilder",
+        "z": "9830b8f095944f6e",
+        "g": "56360f968da094c2",
+        "name": "",
+        "topic": "",
+        "url": "test-uib-list-esm",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank-esm-client",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "5.1.0-prerelease",
+        "x": 840,
+        "y": 200,
+        "wires": [
+            [
+                "9a50ea929eb5cbb9"
+            ],
+            [
+                "d2a39d698abe0fb9"
+            ]
+        ]
+    },
+    {
+        "id": "26072b064b996a5b",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "url": "test-uib-list-esm",
+        "elementid": "li01b",
+        "elementtype": "ol",
+        "parent": "#container",
+        "passthrough": false,
+        "outputs": 0,
+        "name": "",
+        "x": 930,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "adb40f6f2c2ec8be",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "name": "Plain List",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "[\"LI One\",\"LI Two\",\"LI Three\",\"LI Four\"]",
+        "payloadType": "json",
+        "x": 730,
+        "y": 340,
+        "wires": [
+            [
+                "26072b064b996a5b"
+            ]
+        ]
+    },
+    {
+        "id": "bfc5042ba2b727fd",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "name": "Definition List",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create DL",
+        "payload": "[[\"Entry 1\",\"Definition 1\"],[\"Entry 2\",\"Definition 2\"],[\"Entry 3\",\"Definition 3\"],[\"Entry 4\",\"Definition 4\"]]",
+        "payloadType": "json",
+        "x": 720,
+        "y": 440,
+        "wires": [
+            [
+                "b0c8808c0c3f818e"
+            ]
+        ]
+    },
+    {
+        "id": "b0c8808c0c3f818e",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "url": "test-uib-list-esm",
+        "elementid": "li02",
+        "elementtype": "dl",
+        "parent": "#container",
+        "passthrough": false,
+        "outputs": 0,
+        "name": "",
+        "x": 930,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "b9fb0135a8a05cf4",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "name": "addme",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create DL",
+        "payload": "[[\"Entry A\",\"Definition A\"],[\"Entry B\",\"Definition B\"]]",
+        "payloadType": "json",
+        "x": 775,
+        "y": 480,
+        "wires": [
+            [
+                "b0c8808c0c3f818e"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "b6d9d0b9e16757a2",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "url": "test-uib-list-esm",
+        "elementid": "li03",
+        "elementtype": "ul",
+        "parent": "#container",
+        "passthrough": false,
+        "outputs": 0,
+        "name": "",
+        "x": 930,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "a57beee718fdb5ec",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "name": "List of Lists",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "[[\"LI One A\",\"LI One B\"],\"LI Two\",\"LI Three\",\"LI Four\"]",
+        "payloadType": "json",
+        "x": 730,
+        "y": 620,
+        "wires": [
+            [
+                "b6d9d0b9e16757a2"
+            ]
+        ]
+    },
+    {
+        "id": "72f9b6373a389f79",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "url": "test-uib-list-esm",
+        "elementid": "li04",
+        "elementtype": "ul",
+        "parent": "#container",
+        "passthrough": false,
+        "outputs": 0,
+        "name": "",
+        "x": 930,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "73dc9b904e5d3570",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "name": "Plain Object",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "{\"ONE\":\"LI One\",\"TWO\":\"LI Two\",\"THREE\":\"LI Three\"}",
+        "payloadType": "json",
+        "x": 720,
+        "y": 700,
+        "wires": [
+            [
+                "72f9b6373a389f79"
+            ]
+        ]
+    },
+    {
+        "id": "d8436be0ce16e9c3",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "name": "Nested Obj",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "{\"ONE\":{\"A\":\"LI One A\"},\"TWO\":{\"B\":[\"LI Two B1\",\"LI Two B2\"]},\"THREE\":{\"C\":{\"C1\":\"LI Three C1\",\"C2\":\"LI Three C2\"}}}",
+        "payloadType": "json",
+        "x": 730,
+        "y": 740,
+        "wires": [
+            [
+                "72f9b6373a389f79"
+            ]
+        ]
+    },
+    {
+        "id": "61f6230ff235a029",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "name": "Nested Obj",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "{\"ONE\":{\"A\":\"LI One A\"},\"TWO\":{\"B\":[\"LI Two B1\",\"LI Two B2\"]},\"THREE\":{\"C\":{\"C1\":\"LI Three C1\",\"C2\":\"LI Three C2\"}}}",
+        "payloadType": "json",
+        "x": 730,
+        "y": 560,
+        "wires": [
+            [
+                "b0c8808c0c3f818e"
+            ]
+        ]
+    },
+    {
+        "id": "26f1f0858364451a",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "c2713e759d101352",
+        "name": "List of obj",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create DL",
+        "payload": "[{\"Entry 1\":\"Definition 1\"},{\"Entry 2\":\"Definition 2\"},{\"Entry 3\":\"Definition 3\"},{\"Entry 4\":\"Definition 4\"}]",
+        "payloadType": "json",
+        "x": 730,
+        "y": 520,
+        "wires": [
+            [
+                "b0c8808c0c3f818e"
+            ]
+        ]
+    },
+    {
+        "id": "316783dfe13eee4b",
+        "type": "comment",
+        "z": "9830b8f095944f6e",
+        "name": "Test the new uib-list node which uses the new modern client. Requires a modern browser (2019+) \\n Send simple array or object data to create a list on the web page.",
+        "info": "",
+        "x": 570,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "3857bd61d2d42862",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "177c0a40723d9aa8",
+        "name": "Remove Mode",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "remove-list",
+        "x": 180,
+        "y": 380,
+        "wires": [
+            [
+                "9ec9e15454423008"
+            ]
+        ]
+    },
+    {
+        "id": "bb491158956fcae9",
+        "type": "inject",
+        "z": "9830b8f095944f6e",
+        "g": "e9d3c216b6d73374",
+        "name": "Plain List",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "[\"LI One\",\"LI Two\",\"LI Three\",\"LI Four\"]",
+        "payloadType": "json",
+        "x": 115,
+        "y": 820,
+        "wires": [
+            [
+                "ee38039276e446bb"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "ee38039276e446bb",
+        "type": "uib-list",
+        "z": "9830b8f095944f6e",
+        "g": "e9d3c216b6d73374",
+        "url": "test-uib-list-iife",
+        "elementid": "li1",
+        "elementtype": "ol",
+        "parent": "#aparent",
+        "passthrough": true,
+        "outputs": 1,
+        "name": "",
+        "x": 280,
+        "y": 820,
+        "wires": [
+            [
+                "a8c441b764b25ce4"
+            ]
+        ]
+    },
+    {
+        "id": "a8c441b764b25ce4",
+        "type": "debug",
+        "z": "9830b8f095944f6e",
+        "g": "e9d3c216b6d73374",
+        "name": "debug 16",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 455,
+        "y": 820,
+        "wires": [],
+        "l": false
+    }
+]
