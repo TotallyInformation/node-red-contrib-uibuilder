@@ -462,9 +462,11 @@ class UibSockets {
 
         ioNs.on('connection', function(socket) {
 
+            // Add page name meta to allow caches and other flows to send back to specific page
+            // Note, could use socket.handshake.auth.pageName instead
             let pageName
-            if ( socket.handshake.auth.pageName ) {
-                pageName = socket.handshake.auth.pageName.replace(`/${node.url}/`, '')
+            if ( socket.handshake.auth.pathName ) {
+                pageName = socket.handshake.auth.pathName.replace(`/${node.url}/`, '')
                 if ( pageName.endsWith('/') ) pageName += 'index.html'
                 if ( pageName === '' ) pageName = 'index.html'
             }
@@ -641,7 +643,7 @@ class UibSockets {
             node.ioClientsCount = ioNs.sockets.size
 
             log.trace(
-                `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
+                `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}, Client Version: ${socket.handshake.auth.clientVersion}. For node ${node.id}`
             )
 
             if (uib.configFolder === null) throw new Error('uib.configFolder is undefined')
