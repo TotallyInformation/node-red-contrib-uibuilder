@@ -18,20 +18,38 @@ Also note that v5.1.0 has a number of new features that are not complete. They a
 * ~~Check: Adding @microsoft/fast-element didn't add to uibRoot/package.json~~
 * ~~uibRoot/package.json not properly formatted - after adding a package~~
 * ~~Move old fe library version to 5.1.0~~
+* ~~Check: Rename not working as expected?~~
+* ~~Are express-session and jsonwebtoken deps still needed?~~
 
-* Check: Rename not working as expected?
+* `uib-list`
+  * FIX: When re-deploying uib-list, delete saved content
+  * ~~FIX: The remove needs a css-selector rather than just the raw id~~
+  * Update help panel
+  * How to empty the cache? Send empty list? Eventually use same as cache node
+  * How to delete the list from the page? Send empty list?
+  * STARTED: Add an example for `uib-list`
 * Document how to make sure that a ui element only appears on a specific page in a multi-page ui
-* Add an example for `uib-list`
 * socket.js: `TRACE| [uibuilder:socket:addNS:iife:connect]` - Add client version
 * FE: Add msg._uib.clientId|ip (?optional?)
+* Update new client docs
 
 
 * Add optional page filter to _ui
-* Alert/notify doesn't display fixed in centre of viewpane - need to change to fixed position
-* Node.js v14
-* Are express-session and jsonwebtoken deps still needed?
-* Add optional pageName filter to `uib-cache`
+* `uib-cache`
+  * Add optional page filter
+* `uib-list`
+  * Add optional page filter
+  * Optional cache switch
+  * Cope with parent uibuilder node renaming url
+  * Use same caching methods as `uib-cache`
 * Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
+* New node: `uib-table`
+  * Add example
+  * Optional page filter
+  * Optional cache switch
+* Can node page filters use wildcards? Should allow at least a list
+* Node.js v14
+* Alert/notify doesn't display fixed in centre of viewpane - need to change to fixed position
 
 
 ----
@@ -49,7 +67,7 @@ Nothing currently.
 * `web.js`::`buildHtmlTable` - over-optimised regex broke the table cells, now fixed.
 * Connected control message now correctly contains the client id and client IP address. The client id does not change as much as the _socketId, it is saved in browser local storage so will be the same across sessions and multiple windows/tabs.
 * `uib-sender` was not using topic defined in settings. If present, that overrides msg.topic.
-* `uibuilder` node - Editor: Add library had been over-optimised and wasn't working in the right order. Now fixed.
+* `uibuilder` node - Editor: Add library had been over-optimised and wasn't working in the right order. Now fixed. This also fixed a problem with url rename.
 
 ### Changed
 
@@ -58,6 +76,7 @@ Nothing currently.
 * Package.json: Changed homepage to point to Tech Docs on github.io.
 * Client libraries and css available on `../uibuilder/` path as well as on `./` path for consistency with other server paths.
 * Client connect, disconnect and error control messages (uibulder node output port #2) now contain more information. Includes: client version, clientId, Client IP address, page name, number of (re)connections.
+* `express-session` and `jsonwebtoken` dependencies removed as no longer in use.
 
 * Editor:
   * Added stylesheet containing a class of `emoji` which provides nicer, cross-platform, colour emojis.
