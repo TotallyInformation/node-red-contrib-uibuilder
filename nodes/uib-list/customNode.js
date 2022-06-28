@@ -60,9 +60,10 @@ function handleConnectionEvent(msg) {
  */
 function buildUi(msg, node) {
     if ( msg.mode && msg.mode === 'remove' ) {
+        node.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
         node._ui = [{
-            mode: 'remove',
-            components: [node.elementid]
+            method: 'remove',
+            components: [`#${node.elementid}`] // remove uses css selector, not raw id
         }]
         return
     }
@@ -103,7 +104,7 @@ function buildUi(msg, node) {
         node._ui[1].components[0].components = []
     } else {
         node._ui[0].method = 'remove'
-        node._ui[0].components = [node.elementid]
+        node._ui[0].components = [`#${node.elementid}`] // remove uses css selector, not raw id
         node._ui[1].components[0].components = []
     }
 
@@ -111,7 +112,7 @@ function buildUi(msg, node) {
 
     ui.method = 'add'
     ui.components[0].type = node.elementtype
-    ui.components[0].id = node.elementid
+    ui.components[0].id = node.elementid // `add` method allows raw id
     if ( node.parent !== '' ) ui.components[0].parent = node.parent
 
     // if ( this.topic === '' && msg.topic ) this.topic = msg.topic
@@ -190,7 +191,7 @@ function emitMsg(msg, node) {
 
     if ( msg.mode && msg.mode === 'remove' ) {
         node._ui = undefined
-        this.status({ fill: 'blue', shape: 'dot', text: 'Data cleared' })
+        node.status({ fill: 'blue', shape: 'dot', text: 'Data cleared' })
         // return
     }
 }
@@ -242,6 +243,7 @@ function nodeInstance(config) {
     this.name = config.name || ''
     // this.topic = config.topic || ''
     const url = this.url = config.url || ''
+    this._ui = undefined
 
     this.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
 
@@ -266,6 +268,7 @@ function nodeInstance(config) {
      * same `this` context and so has access to all of the node instance properties.
      */
     this.on('close', (removed, done) => {
+        this._ui = undefined
         tiEvents.removeEventListener(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent)
         done()
     })
