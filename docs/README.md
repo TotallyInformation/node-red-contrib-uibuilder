@@ -34,6 +34,7 @@ WIKI, code (PR's), documentation, and examples are all welcome contributions and
 * [Changing the root folder (uibRoot)](changing-uibroot.md)
 * [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
 * [How & why to use the sender node](sender-node.md)
+* [How & why to use the list node](list-node.md)
 * [How to use the cache node](cache-node.md)
 * [How to define and use Instance API's](instance-apis.md)
 * [Using the new ECMA Module front-end client](uibuilder.module.md)
