@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2022-04-02 14:36:14
+lastUpdated: 2022-06-28 21:01:54
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -77,34 +77,43 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ## Next - these are things that need to be done
 
-* Node.js v14 features - code updates to leverage the latest features
-  * https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
-  * [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
-  * [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)
-  * [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
-  * [calendar & numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
-  * Private Class methods (v14.5.1+)
-  * WeakReferences (v14.5.1+)
-  * Array flat and flat map
-  * Optional catch binding
-  * Object.fromEntries (helps make an object either from Map or from a key/value array)
-  * **ESM IS STILL EXPERIMENTAL**
-  * Corepack https://nodejs.org/dist/latest-v14.x/docs/api/corepack.html
-  * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
-  * Future changes to watch:
-    * Top-level await (experimental in v14 - behind flag, full in v18)
-    * Diagnostic channels (experimental in v14)
-    * AbortController and AbortSignal (experimental in v14)
-    * JSON Modules (experimental in v14, full in 16.15.0)
-    * Fetch (Experimental 16.15.0, 18.0.0)
-    * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
-    * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
-    * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
-    * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
-    * Test Runner module (experimental 18.0.0)
-    * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
+* Change min node.js version to v14 LTS (in line with Node-RED v3)
+  * Node.js v14 features - code updates to leverage the latest features
+    * https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
+    * [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+    * [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)
+    * [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
+    * [calendar & numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
+    * Private Class methods (v14.5.1+)
+    * WeakReferences (v14.5.1+)
+    * Array flat and flat map
+    * Optional catch binding
+    * Object.fromEntries (helps make an object either from Map or from a key/value array)
+    * **ESM IS STILL EXPERIMENTAL**
+    * Corepack https://nodejs.org/dist/latest-v14.x/docs/api/corepack.html
+    * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
+    * Future changes to watch:
+      * Top-level await (experimental in v14 - behind flag, full in v18)
+      * Diagnostic channels (experimental in v14)
+      * AbortController and AbortSignal (experimental in v14)
+      * JSON Modules (experimental in v14, full in 16.15.0)
+      * Fetch (Experimental 16.15.0, 18.0.0)
+      * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
+      * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
+      * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
+      * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
+      * Test Runner module (experimental 18.0.0)
+      * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
+
+* Improvements to `uib-cache` node
+  * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
 
 * Extensions to experimental `uib-list` node
+  * Add optional page filter
+  * Optional cache switch
+  * Cope with parent uibuilder node renaming url
+  * Switch to use same caching methods as `uib-cache`
+  * Removing node sends remove to clients
   * Allow additional attributes
   * Add return msg handling like uib-sender.
   * Move retained data to same mechanism as uib-cache
@@ -115,13 +124,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
   * Create min version of css.
+  * Add syntax highlight properties
 
 * Extensions to new FE Library
-  * Add client ID, client version & connections # to initial "ready for content" msg from client->NR
+  * Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process - probably needs list and wildcard though.
   * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
   * Option for a pop-over notification to manually reconnect the websocket.
   * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
   * Add HTML loader capability to _ui handling (see html-loader web component)
+  * Allow adding to more locations: 1st child rather than last, next/previous sibling
 
 * Updates to old FE library
   * Add client ID, client version & connections # to initial "ready for content" msg from client->NR
@@ -136,6 +147,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add api to query if a specific uib library is installed (and return version)
   * Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
   * Editor:
+    * New editor option: Add _uib.clientId|ip to standard messages (off by default)
     * Change drop-downs to typed input
     * Add outdated markers to Editor Library tab. 
       (??Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates??)
@@ -145,11 +157,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
 
 * Updates to Documentation
+  * Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
   * Split the new client library, move _ui features to separate page.
   * Add message interaction diagram to "pre-defined-msgs.md"
   * Add note to documentation for the library manager that you can install LOCAL folders.
   * Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
   * Add some notes about Node-RED's projects feature. It doesn't seem to add a correct .gitignore which should contain `**/node_modules`. Also add notes about the fact that projects creates a disconnect between the flows and the userDir folder.
+
+* New nodes: 
+  * `uib-table` - using same template as `uib-list`
 
 * **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 

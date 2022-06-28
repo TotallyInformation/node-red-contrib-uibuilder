@@ -10,48 +10,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Also note that v5.1.0 has a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
 
-* ~~upd card3 (hdr) didn't work - due to not yet supporting nested components with update~~
-* ~~Add page-name to client connection msg~~
-* ~~Test new client with Vue~~
-* ~~Check: `uib-sender` not sending topic?~~
-* ~~FE: Add msg._ui.type = "eventSend"~~
-* ~~Check: Adding @microsoft/fast-element didn't add to uibRoot/package.json~~
-* ~~uibRoot/package.json not properly formatted - after adding a package~~
-* ~~Move old fe library version to 5.1.0~~
-* ~~Check: Rename not working as expected?~~
-* ~~Are express-session and jsonwebtoken deps still needed?~~
-
-* `uib-list`
-  * FIX: When re-deploying uib-list, delete saved content
-  * ~~FIX: The remove needs a css-selector rather than just the raw id~~
-  * Update help panel
-  * How to empty the cache? Send empty list? Eventually use same as cache node
-  * How to delete the list from the page? Send empty list?
-  * STARTED: Add an example for `uib-list`
-* Document how to make sure that a ui element only appears on a specific page in a multi-page ui
-* socket.js: `TRACE| [uibuilder:socket:addNS:iife:connect]` - Add client version
-* FE: Add msg._uib.clientId|ip (?optional?)
-* Update new client docs
-
-
-* Add optional page filter to _ui
-* `uib-cache`
-  * Add optional page filter
-* `uib-list`
-  * Add optional page filter
-  * Optional cache switch
-  * Cope with parent uibuilder node renaming url
-  * Use same caching methods as `uib-cache`
-* Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
-* New node: `uib-table`
-  * Add example
-  * Optional page filter
-  * Optional cache switch
-* Can node page filters use wildcards? Should allow at least a list
-* Node.js v14
-* Alert/notify doesn't display fixed in centre of viewpane - need to change to fixed position
-
-
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.2...main)
