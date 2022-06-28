@@ -26,6 +26,7 @@
   * [Securing Data](securing-data.md "How to use flows and uibiulder middleware to secure your data")
   * [Securing apps using NGINX](uib-security-nginx.md "How to use NGINX as a reverse proxy with TLS and identity authentication")
 * [Developer documentation](/?id=developer-documentation)
+  * [Processes](processes/README.md)
   * [`front-end/src/uibuilderfe.js`](uibuilderfe-js.md)
   * [`nodes/uibuilder.js`](uibuilder-js.md)
   * [`nodes/uibuilder.html`](uibuilder-html.md)

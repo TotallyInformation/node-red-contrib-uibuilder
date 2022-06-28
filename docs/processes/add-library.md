@@ -1,4 +1,10 @@
-# Add new library process
+---
+title: Add new library process
+description: >
+  The process to add a new library package.
+created: 2022-06-26
+lastUpdated: 2022-06-27 10:28:19
+---
 
 ## Editor (`nodes/uibuilder.html`, `src/editor/uibuilder/editor.js`)
 
