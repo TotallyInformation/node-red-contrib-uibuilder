@@ -365,7 +365,8 @@ export const Uib = class Uib {
         auth: {
             clientVersion: version,
             clientId: this.clientId,
-            pageName: window.location.pathname,
+            pathName: window.location.pathname,
+            pageName: undefined,
         },
         transportOptions: {
             // Can only set headers when polling
@@ -1419,6 +1420,7 @@ export const Uib = class Uib {
                 nodeName: target.nodeName,
 
                 clientId: this.clientId,
+                pageName: this.pageName,
             }
         }
 
@@ -1673,8 +1675,14 @@ export const Uib = class Uib {
         // Update the URL path to make sure we have the right one
         this.socketOptions.path = this.ioPath
 
+        //#region --- custom meta-data ---
+        // Add the pageName
+        this.socketOptions.auth.pageName = this.pageName
+        // Add stable client id (static unless browser closed)
         this.socketOptions.auth.clientId = this.clientId
+        // How many times has the client (re)connected since page load
         this.socketOptions.auth.connectedNum = this.#connectedNum
+        //#endregion --- ---- ---
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         log('trace', 'Uib:ioSetup', `About to create IO object. Transports: [${this.socketOptions.transports.join(', ')}]`)()
@@ -1810,6 +1818,11 @@ export const Uib = class Uib {
         log('trace', 'Uib:constructor', `ioPath: "${this.ioPath}"`)()
 
         //#endregion
+
+        // Work out pageName
+        this.pageName = window.location.pathname.replace(`${this.ioNamespace}/`, '')
+        if ( this.pageName.endsWith('/') ) this.pageName += 'index.html'
+        if ( this.pageName === '' ) this.pageName = 'index.html'
 
         log('trace', 'Uib:constructor', 'Ending')()
     }

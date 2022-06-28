@@ -2426,7 +2426,8 @@ var Uib = (_a = class {
       auth: {
         clientVersion: version,
         clientId: this.clientId,
-        pageName: window.location.pathname
+        pathName: window.location.pathname,
+        pageName: void 0
       },
       transportOptions: {
         polling: {
@@ -2460,6 +2461,11 @@ var Uib = (_a = class {
     }
     this.ioPath = urlJoin(this.httpNodeRoot, _a._meta.displayName, "vendor", "socket.io");
     log("trace", "Uib:constructor", `ioPath: "${this.ioPath}"`)();
+    this.pageName = window.location.pathname.replace(`${this.ioNamespace}/`, "");
+    if (this.pageName.endsWith("/"))
+      this.pageName += "index.html";
+    if (this.pageName === "")
+      this.pageName = "index.html";
     log("trace", "Uib:constructor", "Ending")();
   }
   get meta() {
@@ -3082,7 +3088,8 @@ var Uib = (_a = class {
         metaKey: domevent.metaKey,
         pointerType: domevent.pointerType,
         nodeName: target.nodeName,
-        clientId: this.clientId
+        clientId: this.clientId,
+        pageName: this.pageName
       }
     };
     log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
@@ -3220,6 +3227,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       this.set("ioConnected", false);
     }
     this.socketOptions.path = this.ioPath;
+    this.socketOptions.auth.pageName = this.pageName;
     this.socketOptions.auth.clientId = this.clientId;
     this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
     log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
