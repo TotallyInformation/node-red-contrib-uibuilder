@@ -1,18 +1,21 @@
 ---
-title: Documentation for the ECMA module front-end client `uibuilder.esm.js`
+title: Documentation for the modern, modular front-end client `uibuilder.esm.js` and `uibuilder.iife.js`
 description: >
-   This is the new uibuilder front-end library initially introduced in v5.1. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions. It also allows data-/configuration-driven interfaces to be created from JSON or Node-RED messages.
+   This is the new uibuilder front-end library initially introduced in v5.1. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions. It also allows data-/configuration-driven interfaces to be created from JSON or Node-RED messages. IIFE (UMD) and ESM versions of the client are provided.
 created: 2022-06-11 14:15:26
-lastUpdated: 2022-06-18 17:04:36
+lastUpdated: 2022-06-28 20:11:26
 ---
 
 This is the next-generation front-end client for uibuilder. It has some nice new features but at the expense of only working with modern(ish) browsers since early 2019.
 
-- [To Do](#to-do)
+- [Not yet completed](#not-yet-completed)
 - [How to use](#how-to-use)
   - [The quick guide](#the-quick-guide)
+    - [IIFE version](#iife-version)
+    - [ESM version](#esm-version)
   - [Where is it?](#where-is-it)
   - [More information](#more-information)
+  - [More information on the ESM version](#more-information-on-the-esm-version)
 - [What has been removed compared to the non-module version?](#what-has-been-removed-compared-to-the-non-module-version)
 - [Limitations](#limitations)
 - [Features](#features)
@@ -38,6 +41,10 @@ This is the next-generation front-end client for uibuilder. It has some nice new
   - [Stable client identifier](#stable-client-identifier)
   - [Number of connections is tracked and sent to server on (re)connect](#number-of-connections-is-tracked-and-sent-to-server-on-reconnect)
     - [Example client connect control msg](#example-client-connect-control-msg)
+  - [Client connection/disconnection control messages](#client-connectiondisconnection-control-messages)
+    - [Client Connect message](#client-connect-message)
+    - [Client Disconnect (and error) message](#client-disconnect-and-error-message)
+    - [Message from server to client](#message-from-server-to-client)
   - [ui function](#ui-function)
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content-1)
   - [Dynamic content limitations](#dynamic-content-limitations)
@@ -107,15 +114,63 @@ This is the next-generation front-end client for uibuilder. It has some nice new
     - [`uibuilder:socket:connected` - when Socket.IO successfully connects to the matching uibuilder node in Node-RED](#uibuildersocketconnected---when-socketio-successfully-connects-to-the-matching-uibuilder-node-in-node-red)
     - [`uibuilder:socket:disconnected` - when Socket.IO disconnects from the matching uibuilder node in Node-RED](#uibuildersocketdisconnected---when-socketio-disconnects-from-the-matching-uibuilder-node-in-node-red)
 
-## To Do
+## Not yet completed
 
 Please see the main [roadmap](roadmap.md).
 
 ## How to use
 
-This version of the library _has_ to be used as an ES Module.
+This version of the library can either be used in the same style as the old `uibuilderfe.js` client (loading in a script link in the HTML) or as an ES Module.
 
 ### The quick guide
+
+Note that you no longer need to load the socket.io client library separately since that is embedded in the client library.
+
+There are two templates that you can use the will provide minimal, pre-configured front-end code. "No framework, modern IIFE client", "No framework, modern ESM client".
+
+In addition, there is an example that you can access by doing an import in Node-RED and navigating to the uibuilder examples and selecting "uib-list". Importing that example will add a new "uib-list examples" tab in Node-RED with both IIFE and ESM examples.
+
+#### IIFE version
+
+In `index.html`:
+
+```html
+<!doctype html>
+<html lang="en"><head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>TotallyInformation - Node-RED uibuilder</title>
+    <meta name="description" content="Node-RED uibuilder - TotallyInformation">
+    <link rel="icon" href="./images/node-blue.ico"> 
+
+    <link type="text/css" rel="stylesheet" href="./uib-brand.css" media="all">
+
+    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+    <script defer src="./index.js"></script>
+
+</head><body class="uib">
+    
+    <!-- Your custom HTML -->
+    
+</body></html>
+```
+
+In `index.js`
+
+```javascript
+// ... your custom code, the uibuilder global object is available ...
+// note that we almost certainly don't need the uibuilder.start() line any more
+
+window.onload = (evt) => {
+    // Put code in here if you need to delay it until everything is really loaded and ready.
+    // You probably won't need this most of the time.
+}
+
+```
+
+#### ESM version
 
 In `index.html`:
 
@@ -144,7 +199,7 @@ In `index.html`:
 In `index.js`
 
 ```javascript
-import './uibuilder.esm.min.js'
+import '../uibuilder/uibuilder.esm.min.js'
 
 // ... your custom code, the uibuilder global object is available ...
 // note that we almost certainly don't need the uibuilder.start() line any more
@@ -177,32 +232,38 @@ Or, if you only need a few lines of JavaScript.
 
 You can access the client module from two different URL's. Which one you use depends on your coding needs.
 
-The main location is given as `./uibuilder.esm.js` which will be on the same URL path as your UI code. 
+The main location is `../uibuilder/uibuilder.esm.min.js`. This assumes that you are using the recommended relative URLs.
 
-Alternatively, you can use `/uibuilder/uibuilder.esm.js` although if you are using Node-RED's ExpressJS web server (normally on port 1880) you will need to take note whether Node-RED's `httpNode` setting has been changed. If it has, you will need to add that to the beggining of the URL. For example, if `httpNod` = `nr`, you would need to use `/nr/uibuilder/uibuilder.esm.js`. So the first form is generally easier to use.
+Alternatively, you can use the more "traditional" `./uibuilder.esm.min.js` which will be on the same URL path as your UI code. However, for consistency, the above location is preferred.
 
-In addition to the main, uncompressed, file, a more compact minified version is available called `uibuilder.esm.min.js`. This also has a `.map` file which can be useful for debugging, you don't need to load that manually.
+If, for some reason, you cannot use relative URLs, you need to take account of a number of Node-RED and uibuilder settings that can change the URLs. If you are using Node-RED's ExpressJS web server (normally on port 1880) you will need to take note whether Node-RED's `httpNode` setting has been changed. If it has, you will need to add that to the beggining of the URL. For example, if `httpNode` = `nr`, you would need to use `/nr/uibuilder/uibuilder.esm.min.js`. So the relative form is generally easier to use.
+
+In addition to the main, compressed, file, uncompressed versions are available as `uibuilder.esm.js` and `uibuilder.iife.js`. It is not recommended to use these in normal use, even for development. The compressed versions have matching `.map` files that your browser will automatically used for debugging. Only use the uncompressed versions if you have your own build step and want to incorporate the library in your output bundle.
 
 ### More information
 
-Because the library has to be loaded as a module, it no longer needs an IIFE wrapper. Modules are already isolated. This has greatly simplified the code.
-
-The library consists of a new class `Uib`. That class is auto-instanciated on load. If loading via a script tag, the `window.uibuilder` global is set. However, it is best to load from your own module code. In doing so, you have the option to load both the raw class as well as the `uibuilder` instance. `import {Uib, uibuilder} from './uibuilder.esm.js'`
+The library consists of a new class `Uib`. That class is auto-instanciated on load.
 
 It also adds `window.$` as long as it doesn't already exist (e.g. if you already loaded jQuery). `$` is bound to `document.querySelector` which means that you can use it as a shortcut to easily reference HTML entities in a similar way to a very simplistic jQuery. e.g. `$('#button1').innerHTML = 'boo!'`.
 
 !> Please note that this version requires a browser since early 2019. This is probably only an issue if you are stuck on Internet Explorer or on a version of Apple Safari <12.1.
 
-Because you should ideally be loading uibuilder in your own module code. For example `<script type="module" async src="./index.js"></script>` in your `index.html` `head` section and then `import {Uib, uibuilder} from './uibuilder.esm.js'` in your `index.js` file. You can now choose to use a different name for the uibuilder library if you wish. For example `import {uibuilder as uib} from './uibuilder.esm.js'` will give you a `uib` object instead. Use as `uib.start()`, etc. However, you should note that, at present, the global `uibuilder` object is actually still loaded so make sure that you only use one or the other copy. This is because it does not appear to be possible to detect whether a module has been loaded from a script tag in HTML or from an import statement in JavaScript. Really, only in the former case should the global be set and while `window.uibuilder` is checked for to ensure that it isn't loaded again, when using an `import`, you are in a different module context.
+### More information on the ESM version
 
-In addition, you could do just `import {Uib} from './uibuilder.esm.js'` and then do `const uibuilder = new Uib()`. Not sure why you might want to do that but it is possible anyway.
+Because the ESM version of the library has to be loaded as a module, it no longer needs an IIFE wrapper. Modules are already isolated. This has greatly simplified the code.
+
+If loading via a script tag, the `window.uibuilder` global is set. However, it is best to load from your own module code using an import statement. In doing so, you have the option to load both the raw class as well as the `uibuilder` instance. `import {Uib, uibuilder} from '../uibuilder/uibuilder.esm.min.js'`
+
+Because you should ideally be loading uibuilder in your own module code. For example `<script type="module" async src="./index.js"></script>` in your `index.html` `head` section and then `import {Uib, uibuilder} from '../uibuilder/uibuilder.esm.min.js'` in your `index.js` file. You can now choose to use a different name for the uibuilder library if you wish. For example `import {uibuilder as uib} from '../uibuilder/uibuilder.esm.min.js'` will give you a `uib` object instead. Use as `uib.start()`, etc. However, you should note that, at present, the global `uibuilder` object is actually still loaded so make sure that you only use one or the other copy. This is because it does not appear to be possible to detect whether a module has been loaded from a script tag in HTML or from an import statement in JavaScript. Really, only in the former case should the global be set and while `window.uibuilder` is checked for to ensure that it isn't loaded again, when using an `import`, you are in a different module context.
+
+In addition, you could do just `import {Uib} from '../uibuilder/uibuilder.esm.min.js'` and then do `const uibuilder = new Uib()`. Not sure why you might want to do that but it is possible anyway.
 
 
 ## What has been removed compared to the non-module version?
 
 * VueJS specific features.
   
-  This new ECMA Module version is completely framework agnostic. The UI automation features don't rely on any framework or external library. Please switch to using those features along with suitable web or framework components.
+  This new modern version is completely framework agnostic. The UI automation features don't rely on any framework or external library. Please switch to using those features along with suitable web or framework components.
 
   These features were only ever a convenience and should hopefully no longer be needed in the future.
 
@@ -220,7 +281,7 @@ In addition, you could do just `import {Uib} from './uibuilder.esm.js'` and then
 
 ## Limitations
 
-The main limitation of this new, ESM version of the library is that it can only be used as an ESM module. I've investigated whether it is possible to do a translation to an ES6, IIFE version to more closely match the older `uibuilderfe` library, this does not appear to be possible at this time because there are no tools that will allow it.
+None at this time.
 
 Please also refer to the section on dynamic content for its specific limitations.
 
@@ -257,7 +318,7 @@ It:
 
 Normally, you will not have to pass any options to this function (unlike the equivalent function in the older `uibuilderfe.js` library before uibuilder v5). However, see the troubleshooting section if you are having problems connecting correctly.
 
-If you do need the options, there is now only a single argument with only two possible properties:
+If you do need the options, there is now only a single object argument with only two possible properties:
 
 ```javascript
 uibuilder.start({
@@ -353,13 +414,13 @@ The log function is also available to your own code as `uibuilder.log(level, pre
 
 ### document-level events
 
-In previous versions of the library, a custom event feature was used. In this version, we make use of custom DOM events on the `document` global object.
+In previous versions of the library, a custom event feature was used. In this version, we make use of custom DOM events on the `document` global object. DOM events are especially useful when working with ESM modules since module code isolation can prohibit some other forms of cross-module sharing.
 
 Each event name starts with `uibuilder:` to avoid name clashes.
 
 See the [Custom Events](#custom-events) below for details.
 
-The current events are (other events may be added later):
+The main current events are (other events may be added later):
 
 * `uibuilder:stdMsgReceived` - triggered when a non-control msg arrives from Node-RED
 * `uibuilder:propertyChanged` - triggered when any uibuilder managed property is changed
@@ -427,7 +488,7 @@ the `uibuilder.set()` function is now more flexible than in `uibuilderfe.js`. Yo
 
 !> Please note that there may be some rough edges still in regard to what should and shouldn't be `set`. Please try to avoid setting an internal variable or function or bad things may happen 😲
 
-This means that you can simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})`.
+This means that you can simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})` in your front-end JavaScript.
 
 One interesting possibility is getting your page to auto-reload using `uibuilder.set('msg', {_uib:{reload:true}})`. Perhaps even more useful is the ability to very easily alter your UI on the page by using the dynamic UI feature (detailed below) `uibuilder.set('msg', {_ui:[{method:'add', ...}, {method:'remove', ....}]})`.
 
@@ -500,14 +561,15 @@ msg._ui contains:
 * `id`: The element id if it exists.
 * `name`: The element's name attribute if it exists.
 * `slotText`: The text of the slot if there is any. Max 255 characters.
-* `props`: An object of property name/value pairs. Only contains custom properties which can be set when using this library to add/change elements or might be set when using web or other framework component tags.
-* `attribs`: List of attributes on the target element (without id, name, class attributes).
+* `props`: An object of property name/value pairs. Only contains custom properties which can be set when using this library to add/change elements or might be set when using web or other framework component tags. Element properties who's name starts with `_` are excluded since these are assumed to be private.
+* `attribs`: List of attributes on the target element (without id, name, class attributes). Excludes id, name and class attributes.
 * `classes`: Array of class names applied to the target element when the event fired.
 * `event`: The type of event (e.g. "click").
 * Key modifiers: `altKey`, `ctrlKey`, `shiftKey`, `metaKey`. Any keyboard modifiers that were present when the event fired.
 * `pointerType`: The type of pointer that triggered the event (e.g. "mouse" or "touch")
-* `nodeName`: The name of the tag that triggered the event (e.g. "BUTTON")
+* `nodeName`: The name of the tag that triggered the event (e.g. "BUTTON"). Note that this may not be the same as the tag in your HTML - for example when using `<b-button>` from bootstrap-vue, the node is still called "BUTTON".
 * `clientId`: The uibuilder client ID. This is set in a session cookie for the client browser profile/URL combination for that browser's current session (e.g. changes if the browser closes and reopens but otherwise stays the same).
+* `pageName`: The url fragment of the page that contained the event (for multi-page apps).
 
 This function is especially useful for config driven UI's since you can simply send a message with something like:
 
@@ -518,7 +580,8 @@ _ui: {
     "components": [
         {
             "type": "button",
-            "xparent": "#start",
+            "parent": "div#container",
+            "slot": "Press Me!",
             "attributes": {
                 "id": "fred",
                 "style": "margin:1em;",
@@ -556,6 +619,12 @@ In index.js
 $('#button1').onclick = (evt) => { uibuilder.eventSend(evt) }
 ```
 
+Or, using HTML only (note the need to add the event argument):
+
+```html
+<button id="button2" onClick="uibuilder.eventSend(event)" data-life="42"></button>
+```
+
 #### VueJS/bootstrap-vue example
 
 In index.html
@@ -574,13 +643,19 @@ In index.js VueJS app `methods` section
     // ...
 ```
 
+Alternatively, you can use the simpler form (noting the use of the `event` argument):
+
+```html
+<b-button id="myButton1" @click="uibuilder.eventSend(event)" data-something="hello"></b-button>
+```
+
 ### Auto-loading of the uibuilder default stylesheet
 
 In previous versions of the front-end library, you had to provide your own CSS code and had to make sure that you imported (or loaded) the uibuilder default stylesheet (`uib-styles.css`).
 
 In this version, if you haven't loaded any other stylesheets, the library will automatically load the new default stylesheet (`uib-brand.css`).
 
-!> Note that using this auto-load feature will result in a flash of an unformated page before the styles are loaded and applied. So it is still recommended to load the stylesheet manually in the head section of your HTML. That will avoid the unstyled flash.
+!> Note that using this auto-load feature may result in a flash of an unformatted page before the styles are loaded and applied. So it is still recommended to load the stylesheet manually in the head section of your HTML. That will avoid the unstyled flash.
 
 If you are trying to load the default CSS and can't find the correct URL, try removing the style link from your HTML and check what the client loads in the browsers dev tools network tab.
 
@@ -593,10 +668,22 @@ Now, the initial control message that is sent out of port #2 of a uibuilder node
 This is particularly useful as if the number is >0, you don't need to resend any cached data.
 
 ```json
-{"uibuilderCtrl":"client connect","serverTimestamp":"2022-06-11T20:17:09.112Z","version":"5.0.3-dev","_socketId":"UVYHvYXgdtXvAglvAAA2","ip":"::ffff:127.0.0.1","clientId":"Gc8RjdGfq92TurmEXC6G3","connections":1,"from":"server","_msgid":"c8d90727e3b93299"}
+{
+    "uibuilderCtrl": "client connect",
+    "_msgid": "5b76892838dd47e3",
+    "_socketId": "k2hSBp3GPzviHfcQAAAk",
+
+    "version": "5.1.0-iife.min",
+    "ip": "::ffff:127.0.0.1",
+    "clientId": "xeXBgHDfAEdqwy13P6gJY",
+    "pageName": "index.html",
+    "connections": 0
+    }
 ```
 
-As can be seen from the example message above, the client IP address and client id (see below) are also added to the connection message.
+As can be seen from the example message above, the source page, client version, client IP address and client id (see below) are also added to the connection message.
+
+This feature is already used in the `uib-cache` node and will be added to other nodes that do caching.
 
 ### Stable client identifier
 
@@ -618,16 +705,80 @@ This information is also built into the `uib-cache` node from v5.1 to reduce unn
 
 ```jsonc
 {
-    "uibuilderCtrl":"client connect",
-    "_socketId":"TL6xrKrQtmyHsEKEAAAD",
-    "from":"server",
-    "_msgid":"3fc0e6b9ce82a95d",
+    "uibuilderCtrl": "client connect",
+    "_msgid": "5b76892838dd47e3",
+    "_socketId": "k2hSBp3GPzviHfcQAAAk",
+
     // These are new as of v5.1
-    "clientId":"nqfzLy4SXju3hPRVD3UMq",
-    "ip":"::ffff:127.0.0.1",
-    "connections":0,
+    "version": "5.1.0-iife.min",
+    "ip": "::ffff:127.0.0.1",
+    "clientId": "xeXBgHDfAEdqwy13P6gJY",
+    "pageName": "index.html",
+    "connections": 0
+    }
+```
+
+### Client connection/disconnection control messages
+
+When a client (a browser tab) connects or disconnects, the uibuilder node outputs a control message from the 2nd output port.
+
+These messages can be used for cache control and for user session management.
+
+The client also receives an initial message from the server
+
+#### Client Connect message
+
+```jsonc
+{
+    "uibuilderCtrl": "client connect",
+    "_msgid": "5b76892838dd47e3",
+    "_socketId": "k2hSBp3GPzviHfcQAAAk",
+
+    // These are new as of v5.1
+    "version": "5.1.0-iife.min",
+    "ip": "::ffff:127.0.0.1",
+    "clientId": "xeXBgHDfAEdqwy13P6gJY",
+    "pageName": "index.html",
+    "connections": 0
+    }
+```
+
+#### Client Disconnect (and error) message
+
+Unfortunately, due to the asynchronous nature of the Socket.IO client and server, the disconnect message may be output **AFTER** the connection message if the disconnection is momentary such as with a page reload initiated by a user.
+
+```jsonc
+{
+    "uibuilderCtrl": "client disconnect",
+    "reason": "transport close",
+    "_socketId": "iKGQBLc3ruVKANUPAAAC",
+    "from": "server",
+    "_msgid": "3866378eb12bf981",
+
+    // These are new as of v5.1
+    "version": "5.1.0-iife.min",
+    "ip": "::ffff:127.0.0.1",
+    "clientId": "xeXBgHDfAEdqwy13P6gJY",
+    "pageName": "index.html",
+    "connections": 18
+    }
+```
+
+#### Message from server to client
+
+```jsonc
+{
+    "uibuilderCtrl": "client connect",
+    "_socketId": "RV1Zo5NKm2vNOSdsAAA2",
+    "from": "server",
+    "serverTimestamp": "2022-06-28T17:04:34.491Z",
+
+    // New for v5.1 - the server uibuilder version
+    "version": "5.1.0-prerelease"
 }
 ```
+
+Once the client receives this message, it replies with a "ready for content" control message with `msg.cacheControl` set to "REPLAY" so that cache replay can be triggered if required.
 
 ### ui function
 
@@ -1133,15 +1284,13 @@ Alternatively, you can, of course, use absolute URLs such as `<script type="modu
 
 ### Socket.IO refuses to connect
 
-Assuming that the Socket.IO client library has actually loaded (check your browser's dev tools networks tab and make sure it isn't returning a 404 error), this is usually because the library cannot work out the correct path or namespace to use.
+This version of the uibuilder client library is much more robust than previous versions at working out the socket.io namespace, etc. However, it does rely on your browser allowing first-party cookies. If you are having issues with socket.io, first thing to check is the cookies for your page. Make sure they are correct.
 
-This version of the library is much better than previous versions. However, it does rely on your browser allowing first-party cookies.
-
-This version of the library uses a simplified `options` object passed to `uibuilder.start()` should you need to pass either of these settings.
+This version of the library uses a simplified `options` object passed to `uibuilder.start()` should you need to pass the socket.io settings.
 
 ### Socket.IO repeatedly disconnects
 
-This is usually due to you trying to pass too large a message. Socket.IO, by default, only allows messages up to 1Mb. If this is insufficient, you can change the default in `settings.js` using the `uibuilder` property:
+This is usually due to you trying to pass too large a message. Socket.IO, by default, only allows messages up to 1Mb. If this is insufficient, you can change the default in Node-RED's `settings.js` file using the `uibuilder` property:
 
 ```javascript
     // ...
@@ -1166,13 +1315,13 @@ Other similar issues may occur when using a slow network or one with excessive l
 
 Because a lot of things happen asynchronously in JavaScript, it is possible that occasionally an event handler isn't fully registed by the time that an event fires (for example on an incoming msg or a `uibuilder.set`). In these cases, you may need to put your change code into `window.onload = (evt) => { ... }`. That ensures that everything is fully loaded before your code will run.
 
-An alternative way to work would be to load the uibuilder library using a dynamic import as in `import('./uibuilder.esm.js').then( ... )` and do all of your custom processing from within the `then` callback. If your browser supports top-level async/await, you could also do `const uibuilder = await import('./uibuilder.esm.js')` which will pause until uibuilder is completely loaded and ready.
+An alternative way to work would be to load the uibuilder library using a dynamic import as in `import('./uibuilder.esm.js').then( ... )` and do all of your custom processing from within the `then` callback. If your browser supports top-level async/await, you could also do `const uibuilder = await import('./uibuilder.esm.js')` which will pause until uibuilder is completely loaded and ready (top-level await wasn't ratified until 2022 however so not much browser support yet).
 
 ### The `uibuilder` JavaScript object does not seem to be loaded
 
 Firstly check in your browser's dev tools, network tab, whether the library is actually loaded. See [Where is it?](#where-is-it) for more information.
 
-If it is loaded, you have probably forgotten that, when using ECMA JavaScript Modules, each module script is _isolated_. That means that you need to `include` the uibuilder client in the module script you want to work in.
+If it is loaded, you may have forgotten that, when using ESM Modules, each module script is _isolated_. That means that you need to `include` the uibuilder client in the module script you want to work in.
 
 Alternatively, you may no longer need to work directly with uibuilder client object at all! That is because the client now issues custom messages on the DOM `document` object for all important actions. So if you don't need to send anything back to Node-RED, you can just use those. They will work in other modules and scripts. as in:
 
