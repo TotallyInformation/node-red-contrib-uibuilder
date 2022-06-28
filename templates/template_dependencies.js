@@ -23,6 +23,18 @@ module.exports = {
         'dependencies': [ ],
         'description': 'Simple Svelte template. Requires Svelte installation, see README.md'
     },
+    'blank-iife-client': {
+        'name': 'No framework, modern IIFE client',
+        'folder': 'blank-iife-client',
+        'dependencies': [ ],
+        'description': 'Minimal template using the modern IIFE client library.'
+    },
+    'blank-esm-client': {
+        'name': 'No framework, modern ESM client',
+        'folder': 'blank-esm-client',
+        'dependencies': [ ],
+        'description': 'Minimal template using the modern ESM client library.'
+    },
     // DO NOT EVER REMOVE EITHER OF THESE
     blank: {
         'name': 'Blank template, no framework',
