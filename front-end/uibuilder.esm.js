@@ -2246,7 +2246,7 @@ Object.assign(lookup2, {
 });
 
 // src/front-end-module/uibuilder.module.js
-var version = "5.1.0-esm";
+var version = "5.1.1-esm";
 var logLevel = 1;
 var LOG_STYLES = {
   error: {

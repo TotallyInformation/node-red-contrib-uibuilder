@@ -10,11 +10,21 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Also note that v5.1.0 has a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
 
+* Check deepscan
+
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.2...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.1.1...main)
 
 Nothing currently.
+
+## [v5.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.1.0...v5.1.1)
+
+
+### Fixed
+
+* Fixed bug in package management. Thanks to Steve & Andy for reporting. Fixes [#181](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/181)
+
 
 ## [v5.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.0.2...v5.1.0)
 

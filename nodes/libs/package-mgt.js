@@ -294,7 +294,7 @@ class UibPackages {
         } catch {}
 
         // Make sure we have package details for all installed packages
-        await Object.keys(lsParsed.dependencies).forEach( async pkgName => {
+        await Object.keys(lsParsed.dependencies || {}).forEach( async pkgName => {
             await this.updIndividualPkgDetails(pkgName, lsParsed)
         })
 

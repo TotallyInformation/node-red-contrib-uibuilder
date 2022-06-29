@@ -2247,7 +2247,7 @@
   });
 
   // src/front-end-module/uibuilder.module.js
-  var version = "5.1.0-iife";
+  var version = "5.1.1-iife";
   var logLevel = 1;
   var LOG_STYLES = {
     error: {
