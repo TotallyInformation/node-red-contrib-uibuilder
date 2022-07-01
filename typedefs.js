@@ -342,27 +342,35 @@
 
 /** cacheNode1
  * @typedef {object} cacheNode1 Local copy of the node instance config + other info
+ * @property {string}  name only used for labelling the node in the flow
  * @property {boolean} cacheall Flag indicating each individual msg is cached
  * @property {string|undefined}  cacheKey msg property to use to group cached msgs
  * @property {boolean}  newcache Only replay cache if client is actually new, not a reconnection
  * @property {number}  num number of cached msgs to retain
  * @property {string}  storeName Which store to use for the context variable
  * @property {'context'|'flow'|'node'}  storeContext Which store to use for the context variable
- * @property {string}  name only used for labelling the node in the flow
  * @property {object}  cache A reference to the actual cache for this node instance
+ * @property {string} varName The variable name in use in the store
  * @property {Function} getC A reference to the context get function for this node instance
  * @property {Function} setC A reference to the context set function for this node instance
  */
 
 /** uibListNode
  * @typedef {{
+ *   name: string;
  *   url: string;
  *   elementid: string;
  *   elementtype: string;
  *   parent: string;
  *   passthrough: boolean;
- *   name: string;
- *   topic: string;
+ *   cacheOn: boolean;
+ *   storeName: string;
+ *   storeContext: 'context'|'flow'|'node';
+ *   varName: string;
+ *   newcache: boolean;
+ *   cache: object;
+ *   getC: Function;
+ *   setC: Function;
  *   _ui: any;
  * }} uibListNode
  */
