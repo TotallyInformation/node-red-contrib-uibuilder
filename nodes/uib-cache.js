@@ -67,7 +67,7 @@ function trimCacheAll(node) {
     })
 
     // Save the cache
-    node.setC('uib_cache', node.cache, node.storeName)
+    node.setC(node.varName, node.cache, node.storeName)
 
 } // ---- end of trimCache ---- //
 
@@ -95,7 +95,7 @@ function addToCache(msg, node) {
     }
 
     // Save the cache
-    node.setC('uib_cache', node.cache, node.storeName)
+    node.setC(node.varName, node.cache, node.storeName)
 
     setNodeStatus(node)
 
@@ -107,7 +107,7 @@ function addToCache(msg, node) {
 function clearCache(node) {
 
     // Save the cache or initialise it if new
-    node.setC('uib_cache', {}, node.storeName)
+    node.setC(node.varName, {}, node.storeName)
     node.cache = {}
 
     setNodeStatus(node)
@@ -217,18 +217,19 @@ function nodeInstance(config) {
     RED.nodes.createNode(this, config)
 
     /** Transfer config items from the Editor panel to the runtime */
+    this.name = config.name
     this.cacheall = config.cacheall
     this.cacheKey = config.cacheKey || 'topic'
     this.newcache = config.newcache === undefined ? true : config.newcache
     this.num = config.num || 1 // zero is unlimited cache
     this.storeName = config.storeName || 'default'
-    this.name = config.name
     this.storeContext = config.storeContext || 'context'
+    this.varName = config.varName || 'uib_cache'
 
     // Show if anythink in the cache
     setNodeStatus(this)
 
-    // Get ref to this node's context store
+    // Get ref to this node's context store or the flow/global stores as needed
     let context = this.context()
     if ( this.storeContext !== 'context') {
         context = context[this.storeContext]
@@ -237,7 +238,7 @@ function nodeInstance(config) {
     this.setC = context.set
 
     // Get the cache or initialise it if new
-    this.cache = this.getC('uib_cache', this.storeName) || {}
+    this.cache = this.getC(this.varName, this.storeName) || {}
     // Note that the cache is written back in addToCache and clearCache
 
     if (this.cacheall === true) {
