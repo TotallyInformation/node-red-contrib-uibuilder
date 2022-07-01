@@ -108,6 +108,14 @@
             keyVisibility(!$(this).is(':checked'))
         })
 
+        $('#node-input-storeContext').on('change',  function() {
+            if ( $(this).val() === 'context' ) {
+                $('#node-input-varName').val('uib_cache').prop( 'disabled', true )
+            } else {
+                $('#node-input-varName').val(`uib_cache_${node.id}`).prop( 'disabled', false )
+            }
+        })
+
     } // ----- end of onEditPrepare() ----- //
 
     RED.nodes.registerType(moduleName, {

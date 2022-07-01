@@ -108,6 +108,14 @@
             keyVisibility(!$(this).is(':checked'))
         })
 
+        $('#node-input-storeContext').on('change',  function() {
+            if ( $(this).val() === 'context' ) {
+                $('#node-input-varName').val('uib_cache').prop( 'disabled', true )
+            } else {
+                $('#node-input-varName').val(`uib_cache_${node.id}`).prop( 'disabled', false )
+            }
+        })
+
     } // ----- end of onEditPrepare() ----- //
 
     RED.nodes.registerType(moduleName, {
@@ -144,7 +152,7 @@
 
 }())</script><script type="text/html" data-template-name="uib-cache"><div aria-label="Choose what msg property to group cache by" id="cacheKey-row" class="form-row">
     <label for="node-input-cacheKey"><i class="fa fa-tag"></i> Cache by</label>
-    msg.<input type="text" id="node-input-cacheKey" placeholder="Enter a msg property. ">
+    msg.<input type="text" id="node-input-cacheKey" placeholder="Enter a msg property. " style="width:64%">
 </div>
 <div aria-label="Cache all or group by" title="Turn off cache by and record all msgs up to #" class="form-row">
     <input type="checkbox" id="node-input-cacheall" style="display: inline-block; width: auto; vertical-align: top;">
@@ -158,7 +166,7 @@
     <label for="node-input-num"><i class="fa fa-tag"></i> # msgs</label>
     <input type="number" id="node-input-num">
 </div>
-<div aria-label="Info for cache settings" class="form-row form-tips node-help">
+<div aria-label="Info for cache settings" class="form-row form-tips node-help" style="width:89%">
     Number of msgs to cache<span id="help-per"> per topic</span>.<br>
     Messages are dropped off front of queue once limit is reached.<br>
     Use 0 for unlimited but take care not to run out of memory.
@@ -169,32 +177,28 @@
     <input type="text" id="node-input-store">
     <input type="hidden" id="node-input-store-type">
 </div> -->
-<div aria-label="Select which context store to use" class="form-row">
-    <label for="node-input-storeName"><i class="fa fa-database"></i> Use Store</label>
-    <!-- <select id="node-input-storeName"></select> -->
-    <input type="text" id="node-input-storeName"></input>
-</div>
-<div aria-label="Info for context store" class="form-row form-tips node-help">
-    Select a context store to use if you have more than one set up.<br>
-    Use a persistent store if you want the cache to survive a system reset.<br>
-    If you change the store, you will have to manually delete the old one.
+<div aria-label="Select which context store and variable to use" class="form-row">
+    <label for="node-input-storeName" style="width:25%"><i class="fa fa-database"></i> Store</label>
+    <label for="node-input-storeContext" style="width:25%"><i class="fa fa-database"></i> Type</label>
+    <label for="node-input-varName" style="width:41%"><i class="fa fa-tag"></i> Variable Name</label><br>
+    <input type="text" id="node-input-storeName" style="width:25%"></input>
+    <input type="text" id="node-input-storeContext" style="width:25%"></input>
+    <input type="text" id="node-input-varName" value="uib_cache" title="Can only change if Type is not 'Node'" placeholder="REQD: Context variable name" style="width:41%">
 </div>
 
-<div aria-label="Select which type of store to use" class="form-row">
-    <label for="node-input-storeContext"><i class="fa fa-database"></i> Store Type</label>
-    <input type="text" id="node-input-storeContext"></input>
+<div aria-label="Info for context store" class="form-row form-tips node-help" style="width:89%">
+    Select a context <b>store</b> to use if you have more than one set up.<br>
+    Use persistent store if you want cache to survive a system reset.<br>
+    If store changed, old one must be manually deleted.
 </div>
-<div aria-label="Info for store type" class="form-row form-tips node-help">
-    Select which type of store to use. The default is "Node".<br>
+
+<div aria-label="Info for store type" class="form-row form-tips node-help" style="width:89%">
+    Select which <b>type</b> of store to use. The default is "Node".<br>
     Node = This node's store, only accessible to this node.<br>
-    Flow/Global = These are accessible to other nodes. Use with caution.
+    Flow/Global = Accessible to other nodes. Use with caution.
 </div>
 
-<div aria-label="Variable name" title="The name of the store variable that will be used" class="form-row">
-    <label for="node-input-varName"><i class="fa fa-tag"></i> Variable</label>
-    <input type="text" id="node-input-varName" value="uib_cache" placeholder="REQUIRED: Context variable name">
-</div>
-
+<hr>
 <div aria-label="Name label" title="Only used for labelling in the flow" class="form-row">
     <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
     <input type="text" id="node-input-name">
