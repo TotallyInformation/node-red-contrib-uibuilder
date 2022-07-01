@@ -108,6 +108,7 @@ class UibPackages {
 
         // Get the uibuilder root folder's package.json file and save to class var or create minimal version if one doesn't exist
         const pj = this.uibPackageJson = this.getUibRootPJ()
+
         // Update the version string to match uibuilder version
         pj.version = this.uib.version
         // Make sure there is a dependencies prop
@@ -204,6 +205,9 @@ class UibPackages {
         if ( this.uibPackageJson === null ) throw new Error('this.uibPackageJson is null')
         const pj = this.uibPackageJson
 
+        // Make sure only packages in uibRoot/package.json dependencies are processed
+        if ( !pj.dependencies[pkgName] ) return
+
         if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined || pj.dependencies === undefined ) throw new Error('pj.uibuilder, pj.uibuilder.packages or pj.dependencies is undefined')
         const packages =  pj.uibuilder.packages
 
@@ -297,10 +301,6 @@ class UibPackages {
         await Object.keys(lsParsed.dependencies || {}).forEach( async pkgName => {
             await this.updIndividualPkgDetails(pkgName, lsParsed)
         })
-
-        // TODO filter pj.uibuilder.packages against pj.dependencies and remove any that no longer exist
-
-        // console.log(`${(new Date()).toISOString()} >>> packages >>>`, pj.uibuilder.packages)
 
         // (re)Write package.json
         this.writePackageJson(rootFolder, pj)
