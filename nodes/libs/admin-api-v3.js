@@ -169,7 +169,9 @@ function chkParamFldr(params) {
  */
 function adminRouterV3(uib, log) {
 
-    /** uibuilder v3 unified Admin API router - new API commands should be added here */
+    /** uibuilder v3 unified Admin API router - new API commands should be added here
+     * Typical URL is: http://127.0.0.1:1880/red/uibuilder/admin/nodeurl?cmd=listfolders
+     */
     v3AdminRouter.route('/:url')
         // For all routes (this function is called before more specific ones)
         .all(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
@@ -258,6 +260,52 @@ function adminRouterV3(uib, log) {
 
                     break
                 } // -- end of listall -- //
+
+                // List all folders and files for this uibuilder instance
+                case 'listfolders': {
+                    log.trace(`[uibuilder:admin-router:GET] Admin API. List all folders. url=${params.url}, root fldr=${uib.rootFolder}`)
+
+                    // get list of all (sub)folders (follow symlinks as well)
+                    //const out = { 'root': [] }
+                    const out = []
+                    const root2 = uib.rootFolder.replace(/\\/g, '/')
+                    fg.stream(
+                        [
+                            // '**',
+                            // '!node_modules',
+                            // '!.git',
+                            // '!.vscode',
+                            // '!_*',
+                            // '!/**/_*/',
+                            `${root2}/${params.url}/**`,
+                            `!${root2}/${params.url}/node_modules`,
+                            `!${root2}/${params.url}/.git`,
+                            `!${root2}/${params.url}/.vscode`,
+                            `!${root2}/${params.url}/_*`,
+                            `!${root2}/${params.url}/**/[_]*`,
+
+                        ],
+                        {
+                            // cwd: `${root2}/${params.url}/`,
+                            dot: true,
+                            onlyFiles: false,
+                            onlyDirectories: true,
+                            deep: 10,
+                            followSymbolicLinks: true,
+                            markDirectories: false,
+                        }
+                    )
+                        .on('data', entry => {
+                            entry = entry.replace(`${root2}/${params.url}/`, '')
+                            out.push(entry)
+                        })
+                        .on('end', () => {
+                            res.statusMessage = 'Folders listed successfully'
+                            res.status(200).json(out)
+                        })
+
+                    break
+                } // -- end of listfolders -- //
 
                 // Check if URL is already in use
                 case 'checkurls': {
