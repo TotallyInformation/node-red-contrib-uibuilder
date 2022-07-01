@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "5.1.1",
+  "version": "6.0.0-dev",
   "description": "Easily create data-driven web UI's for Node-RED using any (or no) front-end library.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -53,7 +53,7 @@
     "gulp-uglify": "^3.0.2"
   },
   "node-red": {
-    "version": ">=1.3.0",
+    "version": ">=2",
     "nodes": {
       "uibuilder": "nodes/uibuilder.js",
       "uib-sender": "nodes/uib-sender.js",
@@ -65,7 +65,7 @@
     }
   },
   "engines": {
-    "node": ">=12.22"
+    "node": ">=14.19"
   },
   "directories": {
     "example": "./examples",
