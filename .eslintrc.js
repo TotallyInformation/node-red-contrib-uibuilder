@@ -61,7 +61,7 @@ module.exports = {
     extends: [
         'standard',
         // 'eslint:recommended',
-        'plugin:es/restrict-to-es2019',
+        'plugin:es/restrict-to-es2020',
         'plugin:jsdoc/recommended',
         'plugin:promise/recommended',
         'plugin:sonarjs/recommended',
@@ -78,9 +78,10 @@ module.exports = {
         'n/no-process-exit': 'error',
 
         // remove once min engines moves to node.js v14+
-        'es/no-optional-chaining': 'error',
-        'es/no-dynamic-import': 'error',
-        'es/no-nullish-coalescing-operators': 'error',
+        // 'es/no-optional-chaining': 'error',
+        // 'es/no-dynamic-import': 'error',
+        // 'es/no-nullish-coalescing-operators': 'error',
+
         // remove once min engines moves to node.js v15+
         'es/no-logical-assignment-operators': 'error',
         'es/no-promise-any': 'error',
