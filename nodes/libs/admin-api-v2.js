@@ -697,7 +697,7 @@ function adminRouterV2(uib, log) {
         switch (params.cmd) {
             case 'update':
             case 'install': {
-                // @ts-ignore
+                // @ts-expect-error
                 packageMgt.npmInstallPackage(params.url, params.package, params.tag)
                     .then((npmOutput) => {
                         // let success = false
