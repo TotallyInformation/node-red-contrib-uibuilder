@@ -306,7 +306,7 @@ class UibPackages {
         this.writePackageJson(rootFolder, pj)
     }
 
-    /** !DEPRECATED! Create/Update, record & return <uibRoot>/package.json (create it if it doesn't exist)
+    /** Create/Update, record & return <uibRoot>/package.json (create it if it doesn't exist)
      * @returns {object|null} Parsed version of <uibRoot>/package.json with uibuilder specific updates
      */
     getUibRootPackageJson() {
@@ -388,7 +388,7 @@ class UibPackages {
         return pj
     } // ----- End of getUibRootPackageJson() ----- //
 
-    /** !DEPRECATED! Write updated <uibRoot>/package.json
+    /** Write updated <uibRoot>/package.json
      * @param {object} json The Object data to write to the file
      */
     setUibRootPackageJson(json) {
@@ -601,7 +601,7 @@ class UibPackages {
 
         // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
         const { all } = await execa('npm', args, opts)
-        this.log.info(`[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${all}\n `)
+        this.log.info(`[uibuilder:UibPackages:npmInstallPackage] npm output: \n ${all}\n `)
 
         return /** @type {string} */ (all)
 
@@ -691,7 +691,7 @@ class UibPackages {
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
 
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:npmLatestVersion] Cannot run. Setup has not been called.')
+            this.log.warn('[uibuilder:UibPackages:npmOutdated] Cannot run. Setup has not been called.')
             return
         }
 
@@ -715,11 +715,53 @@ class UibPackages {
             res = err.stdout
         }
 
-        this.log.trace(`[uibuilder:UibPackages:npmLatestVersion] npm output: \n ${res}\n `)
+        this.log.trace(`[uibuilder:UibPackages:npmOutdated] npm output: \n ${res}\n `)
 
         return res
 
     } // ---- End of npmOutdated ---- //
+
+    /** Update an npm package (Not yet in use)
+     * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
+     * @returns {Promise<string>} Combined stdout/stderr
+     */
+     async npmUpdate(pkgName) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+
+        if ( this.#isConfigured !== true ) {
+            this.log.warn('[uibuilder:UibPackages:npmUpdate] Cannot run. Setup has not been called.')
+            return ''
+        }
+
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
+        // if ( toLocation === '' ) toLocation = this.uib.rootFolder
+        const toLocation = this.uib.rootFolder
+
+        // https://github.com/sindresorhus/execa#options
+        const opts = {
+            'cwd': toLocation,
+            'all': true,
+        }
+        const args = [
+            'update',
+            '--no-fund',
+            '--no-audit',
+            '--no-update-notifier',
+            '--save',
+            '--production',
+            '--color=false',
+            // '--json',
+            pkgName,
+        ]
+
+        // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
+        const { all } = await execa('npm', args, opts)
+        this.log.info(`[uibuilder:UibPackages:npmUpdate] npm output: \n ${all}\n `)
+
+        return /** @type {string} */ (all)
+
+     }
 
 } // ----- End of UibPackages ----- //
 
