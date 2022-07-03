@@ -3,10 +3,12 @@
 
 'use strict'
 
-//console.log(process.env)
+;(function() {
+    // console.log(process.env)
+}())
 
 /** */
-;(function () {
+function old() {
     //cd .. && npm install mime vue bootstrap-vue
     console.log('========================= [UIBUILDER POSTINSTALL] =========================')
     console.log('Post-installing vue & bootstrap-vue')
@@ -36,6 +38,6 @@
         console.log(stdout)
         console.log('Post-install completed\n===========================================================================\n')
     })
-}())
+}
 
 //EOF
