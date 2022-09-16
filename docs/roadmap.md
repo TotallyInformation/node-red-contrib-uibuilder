@@ -77,7 +77,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ## Next - these are things that need to be done
 
-* Change min node.js version to v14 LTS (in line with Node-RED v3)
+* STARTED: Change min node.js version to v14 LTS (in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features
     * https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
     * [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
@@ -109,17 +109,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
 
 * Extensions to experimental `uib-list` node
-  * Add optional page filter
-  * Optional cache switch
   * Cope with parent uibuilder node renaming url
-  * Switch to use same caching methods as `uib-cache`
   * Removing node sends remove to clients
   * Allow additional attributes
+  * Add optional page filter
   * Add return msg handling like uib-sender.
-  * Move retained data to same mechanism as uib-cache
-  * Add help panel
   * Updates should update the original add which should be saved for replay but should instantly output an update
-  * Change drop-downs to typed input
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
@@ -127,34 +122,29 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add syntax highlight properties
 
 * Extensions to new FE Library
-  * Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process - probably needs list and wildcard though.
-  * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
   * Option for a pop-over notification to manually reconnect the websocket.
-  * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
-  * Add HTML loader capability to _ui handling (see html-loader web component)
-  * Allow adding to more locations: 1st child rather than last, next/previous sibling
+  * _UI
+    * Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process
+       - probably needs list and wildcard though.
+    * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special 
+       name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
+    * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
+    * Add HTML loader capability to _ui handling (see html-loader web component)
+    * Allow adding to more locations: 1st child rather than last, next/previous sibling
+    * Add click coordinates to return msgs where appropriate. See https://discourse.nodered.org/t/contextmenu-location/22780/51
 
 * Updates to old FE library
   * Add client ID, client version & connections # to initial "ready for content" msg from client->NR
   * Add `msg._ui` processing if possible.
-  * Build in socket.io client (as for new fe)
 
 * Updates to uibuilder node
   * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
-  * Client connect msg: on port#2 doesn't need server version. Should have client version. Also remove server timestamp.
-  * Client connect msg to client doesnt need ip, clientid, connections
   * Use new `uib-brand.css` style library on details pages.
   * Add api to query if a specific uib library is installed (and return version)
   * Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
   * Editor:
-    * New editor option: Add _uib.clientId|ip to standard messages (off by default)
-    * Change drop-downs to typed input
-    * Add outdated markers to Editor Library tab. 
-      (??Use `https://api.npms.io/v2/package/<packageName>` to highlight installed modules that have updates??)
-    * Creating new folder - new folder should be selected after create.
-    * Add link to [Configuring uibuilder nodes](uib-node-configuration.md) page.
-    * Show installed uibuilder version.
     * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
+    * Change getFileList to only return files, use the separate folder list for folders. No need to run it multiple times then.
 
 * Updates to Documentation
   * Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
@@ -211,6 +201,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Once Node-RED's baseline node.js version has moved passed v12.20, can update `execa` and use dynamic imports (and change README notes on scorecard). Once it has moved into v14, can simplify the socket.js class by reinstating the optional chaining.
 
 * Move socket.io client to dev deps and remove serve from web.js (new library builds it in) - can't do until uibuilderfe is deprecated? Or updated to include (breaking chg)
+
+* Consider the use of `RED.comms.publish('uibuilder:some-event-name', data, retainFlag)` to push data to the editor
+
+* Consider allowing addition of HTTP request headers to control msgs
+
+* Consider allowing control msg for each request
 
 ### Editor (`uibuilder.html`)
 
