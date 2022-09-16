@@ -35,6 +35,12 @@ module.exports = {
         'dependencies': [ ],
         'description': 'Minimal template using the modern ESM client library.'
     },
+    'iife-vue3-nobuild': {
+        'name': 'Vue3 no build step, modern IIFE client',
+        'folder': 'iife-vue3-nobuild',
+        'dependencies': [ 'vue' ],
+        'description': 'Very simple Vue v3+ template that does not require a build step. Uses the modern IIFE uib client library.'
+    },
     // DO NOT EVER REMOVE EITHER OF THESE
     blank: {
         'name': 'Blank template, no framework',

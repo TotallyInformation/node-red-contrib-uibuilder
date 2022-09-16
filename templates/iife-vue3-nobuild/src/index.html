@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Simple Vue3 with new uib client - Node-RED uibuilder</title>
+    <meta name="description" content="Node-RED uibuilder - Simple Vue3 with new uib client">
+    <link rel="icon" href="./images/node-blue.ico">
+
+    <!-- Your own CSS -->
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+
+</head><body class="uib">
+
+    <div id="app">
+        <h1>Simple Vue v3 App Using New uibuilder Client</h1>
+
+        <p>{{ message }}</p>
+
+        <p>
+            <button @click="count++">
+                Count is: {{ count }}
+            </button>
+        </p>
+        
+        <p>
+            <button @click="doEvent" data-mything="This is a thing">
+                Click to send msg to Node-RED
+            </button>
+        </p>
+        
+        <p>
+            <label for="input1">This is sent to Node-RED when you exit it: </label>
+            <input v-model="input1" @change="doInputChange" id="input1" type="text" placeholder="Type text then exit field">
+        </p>
+        
+        <pre id="msg" v-html="formatLastRcvd" class="syntax-highlight">Waiting for a message from Node-RED</pre>
+    </div>
+    
+
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@latest/dist/vue.global.prod.js">/* replace with ../uibuilder/vendor/vue/dist/vue.global.prod.js */</script>
+    <script src="../uibuilder/uibuilder.iife.min.js">/* REQUIRED. NB: socket.io not needed */</script>
+    <script src="./index.js">/* OPTIONAL: Put your custom code here */</script>
+    <!-- #endregion -->
+
+</body></html>

@@ -54,12 +54,18 @@ function handleConnectionEvent(msg) {
     }
 }
 
+function emptyCache() {
+
+}
+
 /** Create/update the _ui object and retain for replay
  * @param {*} msg incoming msg
  * @param {runtimeNode & uibListNode} node reference to node instance
  */
 function buildUi(msg, node) {
     if ( msg.mode && msg.mode === 'remove' ) {
+        emptyCache()
+
         node.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
         node._ui = [{
             method: 'remove',
@@ -236,19 +242,37 @@ function nodeInstance(config) {
     RED.nodes.createNode(this, config)
 
     /** Transfer config items from the Editor panel to the runtime */
+    this.name = config.name || ''
     this.elementid = config.elementid || ''
     this.elementtype = config.elementtype || ''
     this.parent = config.parent || ''
-    this.passthrough = config.passthrough
-    this.name = config.name || ''
-    // this.topic = config.topic || ''
-    const url = this.url = config.url || ''
+    this.passthrough = config.passthrough === undefined ? false : config.passthrough
+
+    this.cacheOn = config.cacheOn === undefined ? false : config.cacheOn
+    this.storeName = config.storeName || 'default'
+    this.storeContext = config.storeContext || 'context'
+    this.varName = config.varName || 'uib_list'
+    this.newcache = config.newcache === undefined ? true : config.newcache
+
     this._ui = undefined
+    const url = this.url = config.url || ''
 
     this.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
 
+    // Get ref to this node's context store or the flow/global stores as needed
+    let context = this.context()
+    if ( this.storeContext !== 'context') {
+        context = context[this.storeContext]
+    }
+    this.getC = context.get
+    this.setC = context.set
+
+    // Get the cache or initialise it if new
+    this.cache = this.getC(this.varName, this.storeName) || {}
+    // Note that the cache is written back in addToCache and clearCache
+
     // When a client (re)connects
-    tiEvents.on(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent.bind(this))
+    if ( this.cacheOn ) tiEvents.on(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent.bind(this))
 
     // When a client disconnects
     // tiEvents.on(`node-red-contrib-uibuilder/${url}/clientDisconnect`, function(data) {

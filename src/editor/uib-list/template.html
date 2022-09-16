@@ -5,9 +5,7 @@
 
 <div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
     <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-    <select id="node-input-url">
-        <option value="">--choose a uibuilder instance--</option>
-    </select>
+    <input type="text" id="node-input-url" style="width:70%;"></input>
 </div>
 
 <div aria-label="List element id" class="form-row" title="The HMTL element id to apply to the created list">
@@ -15,14 +13,9 @@
     <input type="text" id="node-input-elementid" placeholder="Must be a valid HTML element id">
 </div>
 
-<div aria-label="List type" class="form-row" title="The type of list to create (OL/UL/DL) or set from input msg">
+<div aria-label="List type" class="form-row" title="The type of list to create">
     <label for="node-input-elementtype"><i class="fa fa-list"></i> Type</label>
-    <select id="node-input-elementtype">
-        <!-- <option value="passthrough">Set from input msg</option> -->
-        <option value="ul">Unordered (ul)</option>
-        <option value="ol">Ordered (ol)</option>
-        <option value="dl">Definition (dl)</option>
-    </select>
+    <input type="text" id="node-input-elementtype" style="width:70%;"></input>
 </div>
 
 <div aria-label="Parent CSS Selector" class="form-row" title="A CSS selector that uniquely identifies the HTML parent element to attach the new list to">
@@ -35,6 +28,23 @@
     <label for="node-input-passthrough" style="width: 90%;">Output instead of send?</label>
 </div>
 
+<div aria-label="Only replay cache if client as actually new" title="A new client comes from a page-load, not a reconnection" class="form-row">
+    <input type="checkbox" id="node-input-cacheOn" style="display: inline-block; width: auto; vertical-align: top;" checked>
+    <label for="node-input-cacheOn" style="width: 90%;">Use the cache?</label>
+</div>
+<div aria-label="Select which context store and variable to use" class="form-row">
+    <label for="node-input-storeName" style="width:25%"><i class="fa fa-database"></i> Store</label>
+    <label for="node-input-storeContext" style="width:25%"><i class="fa fa-database"></i> Type</label>
+    <label for="node-input-varName" style="width:41%"><i class="fa fa-tag"></i> Variable Name</label><br>
+    <input type="text" id="node-input-storeName" style="width:25%"></input>
+    <input type="text" id="node-input-storeContext" style="width:25%"></input>
+    <input type="text" id="node-input-varName" value="uib_cache" title="Can only change if Type is not 'Node'" placeholder="REQD: Context variable name" style="width:41%">
+</div>
+<div aria-label="Only replay cache if client as actually new" title="A new client comes from a page-load, not a reconnection" class="form-row">
+    <input type="checkbox" id="node-input-newcache" style="display: inline-block; width: auto; vertical-align: top;" checked>
+    <label for="node-input-newcache" style="width: 90%;">Only replay cache when client is really new</label>
+</div>
+
 <hr>
 
 <div aria-label="Node Name" class="form-row" title="Node Name (descriptive only)">
@@ -42,14 +52,7 @@
     <input type="text" id="node-input-name">
 </div>
 
-<!-- <div aria-label="Topic" class="form-row" title="Adds a msg.topic to input msgs if not already provided">
-    <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
-    <input type="text" id="node-input-topic">
-</div> -->
-
-<hr>
-
-<div aria-label="Information" class="form-row" style="max-width: 450px">
+<div aria-label="Information" class="form-row form-tips node-help" style="width:89%">
     <p>
         With no <code>msg.mode</code> set, sending another message will 
         automatically remove and replace the list.

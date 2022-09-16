@@ -48,14 +48,14 @@
         
         <div aria-label="How to use the template selector" class="form-row" style="max-width: 450px">
             <p>
-                By default, uibuilder creates a template folder with a minimal template.
+                By default, uibuilder creates an instance root folder with the "Blank" template.
                 If you wish to use a different template, select and load it here.
             </p>
             <p>
                 Selecting a Template from the drop-down <b>does not</b> load the template
             </p>
             <p>
-                Loading a Template <b>will overwrite</b> existing files.
+                Loading a Template <b><u>will</u> overwrite</b> existing same-named files.
             </p>
         </div>
 
@@ -168,65 +168,21 @@
     <div id="tab-libraries">
         <p>
             Install, remove or update npm packages that provide front-end libraries such as
-            VueJS, jQuery, MoonJS, etc.
-        <br>
+            VueJS, jQuery, MoonJS, etc.<br>
             Search for packages on <a href="https://www.npmjs.com/" target="_blank" style="color:var(--red-ui-text-color-link);text-decoration:underline;">official npm site</a> 
             or <a href="https://npms.io/" target="_blank" style="color:var(--red-ui-text-color-link);text-decoration:underline;">npms.io</a>.
         </p>
 
         <div aria-label="Package List Container" class="form-row" id="package-list-container">
-            <!-- <div class="red-ui-editableList-border red-ui-editableList-container" id="node-input-option-container-div"> -->
             <ol id="node-input-packageList"></ol>
         </div>
     </div>
 
-    <!-- <div id="tab-security" title="NOT READY FOR USE!">
-        <div aria-label="Security Checkbox" class="form-row">
-            <input type="checkbox" id="node-input-useSecurity" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-useSecurity" style="width: 90%;">Use uibuilder's security?</label>
-        </div>
-
-        <div aria-label="Allow unauthorised msg traffic?" class="form-row">
-            <input type="checkbox" id="node-input-allowUnauth" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-allowUnauth" style="width: 90%;">Allow unauthorised msg traffic?</label>
-        </div>
-
-        <div aria-label="Session Length" class="form-row" title="Required. Session length. If client doesn't send a msg in this time, it is logged out.">
-            <label for="node-input-sessionLength"><i class="fa fa-clock-o"></i> Sess Length</label>
-            <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-sessionLength" style="width: 10em;"> Seconds
-        </div>
-
-        <div aria-label="JWT Secret (credential" class="form-row" title="Required. A string to be used to sign&sol;validate JWT's. Stored as a credential so not copied when exporting a flow.">
-            <label for="node-input-jwtSecret"><i class="fa fa-user-secret"></i> JWT Secret</label>
-            <input type="text" id="node-input-jwtSecret">
-        </div>
-        
-        <div aria-label="Auto-extend token?" class="form-row" title="While the client continues to send ping queries (~30sec), the expiry will be moved fwd 30 sec">
-            <input type="checkbox" id="node-input-tokenAutoExtend" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-tokenAutoExtend" style="width: 90%;">Auto-extend the token expiry?</label>
-        </div>
-
-        <div aria-label="Are we running in dev or prod mode?" class="form-row">
-            Node-RED is running in <i><b><span id="nrMode"></span></b></i> mode.
-        </div>
-
-        <div aria-label="Security guidance" class="form-tips node-help" title="">
-            <p>
-                Warning: To safely deploy security, you really need to be using TLS.
-                If you deploy without TLS, you will get warnings. Ignore them if providing TLS via reverse-proxy.
-            </p>
-            <p>
-                A simplistic template <code>security.js</code> file is copied to <code>&lt;uibRoot>/.config/security.js</code>.
-                This must be adapted for your own needs and contains the code to validate users and handle sessions.
-            </p>
-            <p>
-                <i>Allow unauthorised msg traffic</i> will let through messages in both directions even if the client is not
-                authenticated. This lets you handle security in your flows. See the tech docs for details of the <code>msg._auth</code> data.
-            </p>
-        </div>
-    </div> -->
-
     <div id="tab-advanced">
+        <div aria-label="Information" class="form-row form-tips node-help">
+            uibuilder version: <b id="uib_version">--</b>
+        </div>
+
         <!-- How long do we want resources to be cached for? *** NOT READY *** 
         <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
             <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
@@ -234,39 +190,35 @@
         </div> -->
         
         <div aria-label="Select source folder" class="form-row" title="Select the folder to serve files from">
-            <label for="node-input-sourceFolder" style="width:7em;"><i class="fa fa-folder"></i> Serve:</label>
-            <select id="node-input-sourceFolder" style="width:73%;">
-                <option value="src">src</option>
-                <option value="dist">dist</option>
-            </select>
+            <label for="node-input-sourceFolder"><i class="fa fa-folder"></i> Serve:</label>
+            <input type="text" id="node-input-sourceFolder" style="width:75%;">
+        </div>
+        <div aria-label="Source folder information" class="form-row form-tips node-help">
+            Selects the folder that will be served as the root folder of your web app.<br>
+            The folder <b>must</b> contain an <code>index.html</code> file as a minimum.<br>
+            If it doesn't, you will get an error.
         </div>
 
-        <!-- Provide a searchable file index view? -->
-        <div class="form-row" 
-             title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
+        <div aria-label="Provide a searchable file index view?" class="form-row" 
+                title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
             <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
             <label for="node-input-showfolder" style="width: 90%;">Show web view of source files (deploy before you can use it)</label>
             <span id="show-src-folder-idx-url">_</span>.
         </div>
 
-        <!-- Allow scripts/styles to be passed to front-end? -->
-        <div class="form-row" title="Add msg.script&sol;msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
-            Allow passing to the front-end: <br>
+        <div aria-label="For old client library only. Allow scripts/styles to be passed to front-end?" class="form-row"
+                title="Add msg.script&sol;msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
+            Allow passing to the front-end<br>(old client library only, use _ui for new libraries): <br>
             <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
             <label for="node-input-allowScripts">Scripts? (JS)</label>
             <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
             <label for="node-input-allowStyles">Styles? (CSS)</label>
         </div>
 
-        <div class="form-tips node-help" title="">
-            Warning: Most people will not need the following.
-        </div>
-
         <div aria-label="Forward flag" class="form-row" title="forward inbound msg's direct to the output">
-            <!-- Forward input msgs to output -->
             <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-fwdInMessages" style="width: 40%;">
-                Forward input to output?
+            <label for="node-input-fwdInMessages" style="width: 90%;">
+                Forward input msgs to output?
             </label>
         </div>
     </div>
