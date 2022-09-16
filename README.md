@@ -371,6 +371,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [meeki007](https://github.com/meeki007) - thanks for supplying various documentation improvements and code fixes.
 - [Scott - talltechdude](https://github.com/talltechdude) - thanks for supplying PR #170.
 - [Calum Knott](https://github.com/calumk) - Thanks for the tidied up node-blue logo.
+- [Harold Peters Inskipp](https://github.com/HaroldPetersInskipp) - Thanks for the logging examples.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 
