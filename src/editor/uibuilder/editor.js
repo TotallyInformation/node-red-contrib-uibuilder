@@ -73,6 +73,9 @@
         'fname': 'index.html',
         'fullscreen': false
     }
+    /** placeholder for instance folder list
+     * @type {Array<string>} */
+    let folders = []
 
     //#endregion ------------------------------------------------- //
 
@@ -118,6 +121,73 @@
 
     //#region ==== Package Management Functions ==== //
 
+    /** Perform a call to the package update v3 API
+     * @param {JQuery.ClickEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} evt jQuery Click Event
+     */
+    function doPkgUpd(evt) {
+        // ! TODO
+        console.log('>>>> do update', evt.data.pkgName)
+
+        const packageName = evt.data.pkgName
+        const node = evt.data.node
+
+        RED.notify('Installing npm package ' + packageName)
+
+        // Call the npm installPackage v2 API (it updates the package list)
+        // $.get( `uibuilder/uibnpmmanage?cmd=update&package=${packageName}&url=${node.url}&tag=${packageTag}`, function(data) {
+        $.get( `uibuilder/uibnpmmanage?cmd=update&package=${packageName}&url=${node.url}`, function(data) {
+            const npmOutput = data.result[0]
+
+            if ( data.success === true) {
+                packages = data.result[1]
+
+                console.log('[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ')
+                RED.notify(`Successful update of npm package ${packageName}`, 'success')
+
+                // reset and populate the list
+                $('#node-input-packageList').editableList('empty')
+                $('#node-input-packageList').editableList('addItems', Object.keys(packages))
+
+            } else {
+                console.log('[uibuilder:doPkgUpd:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
+                RED.notify(`FAILED update of npm package ${packageName}`, 'error')
+            }
+
+            // Hide the progress spinner
+            $('i.spinner').hide()
+
+        })
+            .fail(function(_jqXHR, textStatus, errorThrown) {
+                console.error( '[uibuilder:doPkgUpd:get] Error ' + textStatus, errorThrown )
+                RED.notify(`FAILED update of npm package ${packageName}`, 'error')
+
+                $('i.spinner').hide()
+                return 'addPackageRow failed'
+                // TODO otherwise highlight input
+            })
+
+        $.ajax({
+            type: 'PUT',
+            dataType: 'json',
+            url: './uibuilder/admin/' + evt.data.node.url,  // v3 api
+            data: {
+                'cmd': 'updatepackage',
+                'pkgName': evt.data.pkgName,
+            },
+        })
+            .done(function(data, _textStatus, jqXHR) {
+
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error( '[uibuilder:doPkgUpd:PUT] Error ' + textStatus, errorThrown )
+                RED.notify(`uibuilder: Package update for '${evt.data.pkgName}' failed.<br>${errorThrown}`, { type: 'error' })
+            })
+
+        // Assuming update worked, hide the button - And update version string
+        $(`#upd_${evt.data.pkgName}`).hide()
+            .next().text('XXX')
+    }
+
     /** AddItem function for package list
      * @param {object} node A reference to the panel's `this` object
      * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
@@ -127,8 +197,8 @@
     function addPackageRow(node, element, index, data) {
         let hRow = ''; let pkgSpec = null
 
-        if (Object.entries(data).length === 0) {
-            // Add button was pressed so we have no packageName, create an input form instead
+        if (Object.entries(data).length === 0) { // Add button was pressed so we have no packageName, create an input form instead
+
             hRow  = `
                 <div>
                     <label for="packageList-input-${index}" style="width:3em;">Name:</label>
@@ -143,7 +213,7 @@
                     <button id="packageList-button-${index}" style="width:5em;">Install</button>
                 </div>
             `
-        } else {
+        } else { // existing line
             /*
                 npm install [<@scope>/]<name>
                 npm install [<@scope>/]<name>@<tag>
@@ -157,18 +227,34 @@
                 npm install <folder>
                 */
             pkgSpec = packages[data]
-            // console.log('packages[data]', packages[data])
+
+            // if wanted !== installed, show update
+            let upd = ''
+            if ( pkgSpec.outdated && pkgSpec.outdated.wanted && pkgSpec.installedVersion !== pkgSpec.outdated.wanted ) {
+                upd = `<button id="upd_${data}" style="color:orange;background-color:black;" title="Click to update (or install again to get a non-standard version)">UPDATE: ${pkgSpec.outdated.wanted}</button>`
+                $('#node-input-packageList').on('click', `#upd_${data}`, { pkgName: data, node: node }, doPkgUpd)
+            }
+
             // addItem method was called with a packageName passed
             hRow = `
                 <div id="packageList-row-${index}" class="packageList-row-data">
-                    <a href="${pkgSpec.homepage}" target="_blank" title="Click to open package homepage in a new tab"><b>${data}</b> <span class="emoji">ℹ️</span></a>, <span title="npm version specification: ${pkgSpec.spec}">${pkgSpec.installedVersion}</span>
-                    
-                    <p title="NB: This link an estimate, check the package docs for the actual entry point" style="margin-bottom:0;">
-                        Est. link: 
-                        <code style="white-space:inherit;text-decoration: underline;"><a href="${node.urlPrefix}${pkgSpec.url}" target="_blank">
+                    <div style="display:flex;justify-content:space-between;">
+                        <div>
+                            <a href="${pkgSpec.homepage}" target="_blank" title="Click to open package homepage in a new tab">
+                                <b>${data}</b> <span class="emoji">ℹ️</span>
+                            </a>
+                        </div>
+                        <div style="margin-left:auto;text-align:right;">
+                            ${upd}
+                            <span title="npm version specification: ${pkgSpec.spec}">${pkgSpec.installedVersion}</span>
+                        </div>
+                    </div>
+                    <div title="NB: This link is an estimate, check the package docs for the actual entry point" style="display:flex;justify-content:space-between;">
+                        <div>Est.&nbsp;link:</div>
+                        <div style="margin-left:auto;text-align:right;"><code style="white-space:inherit;text-decoration: underline;"><a href="${node.urlPrefix}${pkgSpec.url}" target="_blank">
                             ${pkgSpec.url}
-                        </code>
-                    </p>
+                        </code></div>
+                    </div>
                 </div>
             `
         }
@@ -199,7 +285,7 @@
             if ( packageName.length !== 0 ) {
                 RED.notify('Installing npm package ' + packageName)
 
-                // Call the npm installPackage API (it updates the package list)
+                // Call the npm installPackage v2 API (it updates the package list)
                 $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&tag=${packageTag}`, function(data) {
                     const npmOutput = data.result[0]
 
@@ -284,7 +370,7 @@
 
     } // ---- End of removePackageRow ---- //
 
-    /** Get list of installed packages via API - save to master list */
+    /** Get list of installed packages via v2 API - save to master list */
     function packageList() {
 
         $.ajax({
@@ -544,6 +630,32 @@
 
     } // --- End of getFileList --- //
 
+    /** Get a full list of instance folders (minus protected ones). Updates folders global var. */
+    function getFolders() {
+        const url = /** @type {string} */ ($('#node-input-url').val())
+
+        const data = $.ajax({
+            async: false,
+            type: 'GET',
+            dataType: 'json',
+            url: './uibuilder/admin/' + url,
+            data: {
+                'cmd': 'listfolders',
+            },
+        })
+
+        folders = data.responseJSON
+
+        $('#node-input-sourceFolder').typedInput({
+            types: [
+                {
+                    value: 'sourceFolders',
+                    options: folders,
+                }
+            ]
+        })
+    } // --- End of getFolders --- //
+
     /** Call v3 admin API to create a new folder
      * @param {string} folder Name of new folder to create (combines with current uibuilder url)
      * returns {string} Status message
@@ -565,6 +677,8 @@
                 RED.notify(`uibuilder: Folder <code>${folder}</code> Created.`, { type: 'success' })
                 // Rebuild the file list
                 getFileList()
+                // Rebuild the folder list
+                getFolders()
 
                 return 'Create folder succeeded'
             })
@@ -1322,6 +1436,34 @@
 
     //#endregion ==== Template Management Functions ==== //
 
+    /** If debug, dump out key information to console */
+    function dumpUibSettings() {
+        if (!uibDebug) return
+
+        mylog('[uibuilder] Settings:\n',
+            // The server's NODE_ENV environment var (e.g. PRODUCTION or DEVELOPMENT)
+            '\nNodeEnv: ', RED.settings.uibuilderNodeEnv,
+            // Current version of uibuilder
+            '\nCurrentVersion: ', RED.settings.uibuilderCurrentVersion,
+            // Should the editor tell the user that a redeploy is needed (based on uib versions)
+            '\nRedeployNeeded: ', RED.settings.uibuilderRedeployNeeded,
+            // uibRoot folder
+            '\nRootFolder: ', RED.settings.uibuilderRootFolder,
+
+            // Available templates and details
+            '\n\nTemplates: ', RED.settings.uibuilderTemplates,
+            // Custom server details
+            '\n\nCustomServer: ', RED.settings.uibuilderCustomServer,
+
+            // List of the deployed uib instances [{node_id: url}]
+            `\n\nInstances (${Object.keys(RED.settings.uibuilderInstances).length}): `, RED.settings.uibuilderInstances,
+
+            `\n\neditorInstances (${Object.keys(editorInstances).length}): `, editorInstances,
+
+            `\n\npackages (${Object.keys(packages).length}): `, packages
+        )
+    }
+
     /** Set initial hidden & checkbox states (called from onEditPrepare)
      * @param {object} node A reference to the panel's `this` object
      */
@@ -1367,7 +1509,7 @@
         node.urlPrefix = `${eUrlSplit.join(':')}/${node.nodeRoot}`
 
         $('#info-webserver')
-            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at ${node.urlPrefix} </div>`)
+            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank">${node.urlPrefix}</a><br>Server folder: <b>${RED.settings.uibuilderRootFolder}/${node.url}</b> </div>`)
 
     } // ---- end of showServerInUse ---- //
 
@@ -1394,80 +1536,6 @@
             )
 
     } // ---- end of urlChange ---- //
-
-    /** Setup for security settings (called from onEditPrepare) */
-    // function securitySettings() {
-    //     // Show/Hide the security settings
-    //     $('#show-security-props').css( 'cursor', 'pointer' )
-    //     $('#show-security-props').on('click', function() { // (e) {
-    //         $('#sec-props').toggle()
-    //         if ( $('#sec-props').is(':visible') ) {
-    //             $('#show-security-props').html('<i class="fa fa-caret-down"></i> Security Settings')
-    //         } else {
-    //             $('#show-security-props').html('<i class="fa fa-caret-right"></i> Security Settings')
-    //         }
-    //     })
-
-    //     // One-off check for default settings
-    //     if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
-    //         $('#node-input-jwtSecret').val(defaultJwtSecret)
-    //     }
-    //     if ( $('#node-input-useSecurity').is(':checked') && /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
-    //         $('#node-input-sessionLength').val(defaultSessionLength)
-    //     }
-
-    //     // Security turning on/off
-    //     $('#node-input-useSecurity').on('change', function() {
-
-    //         // security is requested, enable other settings and add warnings if needed
-    //         // @since v4.1.1 disable lockout of security for non-http in production
-    //         /*
-    //             if ( this.checked ) {
-    //                 // If in production, cannot turn on security without https, in dev, give a warning
-    //                 if (window.location.protocol !== 'https' && window.location.protocol !== 'https:') {
-    //                     if (RED.settings.uibuilderNodeEnv !== 'development') {
-    //                         console.error('HTTPS NOT IN USE BUT SECURITY REQUESTED AND Node environment is NOT "development"')
-    //                         $('#node-input-useSecurity').prop('checked', false); this.checked = false
-    //                     } else {
-    //                         console.warn('HTTPS NOT IN USE BUT SECURITY REQUESTED - Node environment is "development" so this is allowed but not recommended')
-    //                     }
-    //                     // TODO: Add user warnings
-    //                 }
-    //             }
-    //         */
-    //         // Yes, we do need this.checked twice :-)
-    //         if ( $(this).is(':checked') ) {
-
-    //             $('#node-input-allowUnauth').prop('disabled', false)
-    //             $('#node-input-sessionLength').prop('disabled', false)
-    //             $('#node-input-jwtSecret').prop('disabled', false)
-    //             $('#node-input-tokenAutoExtend').prop('disabled', false)
-    //             // Add defaults if fields are empty
-    //             if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
-    //                 $('#node-input-jwtSecret').addClass('input-error')
-    //             }
-    //             if ( /** @type {string} */ ($('#node-input-sessionLength').val()).length === 0 ) {
-    //                 $('#node-input-sessionLength').val(defaultSessionLength)
-    //             }
-    //             if ( /** @type {string} */ ($('#node-input-jwtSecret').val()).length === 0 ) {
-    //                 $('#node-input-jwtSecret').val(defaultJwtSecret)
-    //             }
-
-    //         } else { // security not requested, disable other settings
-
-    //             $('#node-input-allowUnauth').prop('disabled', true)
-    //             $('#node-input-sessionLength').prop('disabled', true)
-    //             $('#node-input-jwtSecret').prop('disabled', true)
-    //             $('#node-input-tokenAutoExtend').prop('disabled', true)
-
-    //         }
-
-    //     }) // -- end of security change -- //
-
-    //     // What mode is Node-RED running in? development or something else?
-    //     $('#nrMode').text(RED.settings.uibuilderNodeEnv)
-
-    // } // ---- end of securitySettings ---- //
 
     /** Run when switching to the Files tab
      * @param {object} node A reference to the panel's `this` object
@@ -1553,7 +1621,6 @@
 
         // reset and populate the list
         $('#node-input-packageList').editableList('empty')
-        // @ts-ignore
         $('#node-input-packageList').editableList('addItems', Object.keys(packages))
 
         // spinner
@@ -1608,9 +1675,14 @@
      */
     function onEditPrepare(node) {
 
+        getFolders()
+
         packageList()
 
         // console.log('>> ONEDITPREPARE: NODE >>', node)
+
+        // Show uibuilder version
+        $('#uib_version').text(RED.settings.uibuilderCurrentVersion)
 
         // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
         if ( node.templateFolder === undefined || node.templateFolder === '' ) node.templateFolder = defaultTemplate
@@ -1923,6 +1995,8 @@
 
         //#endregion ---- File Editor ---- //
 
+        dumpUibSettings()
+
     } // ---- End of oneditprepare ---- //
 
     //#endregion ------------------------------------------------- //
@@ -2061,7 +2135,7 @@
                                 $.ajax({
                                     type: 'PUT',
                                     dataType: 'json',
-                                    url: './uibuilder/admin/' + that.url,
+                                    url: './uibuilder/admin/' + that.url,  // v3 api
                                     data: {
                                         'cmd': 'deleteondelete',
                                     },
