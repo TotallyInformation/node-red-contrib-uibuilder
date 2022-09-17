@@ -16,8 +16,8 @@
 
 **Please Note** that:
 
-* v5.0.0 is a very large change and has breaking changes from v4.1.4, please see the [CHANGELOG](CHANGELOG.md) for details. 
-* Node.js v12.20 and Node-RED v1.3+ are required.
+* The minimum Node-RED version is now v3. The minimum Node.js version is now v14 LTS (in line with Node-RED v3) - note that the minimum minor version changes to the latest v14 LTS version whenever uibuilder is updated.
+* v5.0.0 was a very large change and had breaking changes from v4.1.4, please see the [CHANGELOG](CHANGELOG.md) for details. 
 * uibuilder follows [semantic version numbering](https://docs.npmjs.com/about-semantic-versioning) - as such, each major number change indicates breaking changes and you should review them carefully before installation.
 
 Older changes can be found in the previous change documents: [CHANGELOG-V3/V4](/docs/CHANGELOG-v3-v4.md), [CHANGELOG-v2](/docs/CHANGELOG-v2.md), and [CHANGELOG-v2](/docs/CHANGELOG-v1.md)
