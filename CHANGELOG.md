@@ -4,11 +4,18 @@ typora-root-url: docs/images
 
 # Changelog
 
+## Known Issues
+
+* uibuilder - Editor
+  * "Server folder: undefined/xxxxxx" - should show full folder path.
+  * Advanced/Serve - folder name not updated immediately when a new folder added. Have to exit and re-open the panel.
+  * Deleting an Editor tab containing uibuilder nodes, the folder delete process is not called.
+
 ## To do/In-progress
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-Also note that v5.1.0 has a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
+Note that v5.1.1 had a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
 
 * Check deepscan
 * `uib-list` node
@@ -18,12 +25,21 @@ Also note that v5.1.0 has a number of new features that are not complete. They a
   * [Name is not showing in flow](https://discourse.nodered.org/t/uib-sender-node/64636).
 * Updates to uibuilder node
   * Editor:
+    * Add visual error when changing advanced/Serve to a folder with no index.html
     * Option for project folder storage
-    * [ ] Add button to outdated markers to update install
     * New editor option: Add _uib.clientId|ip to standard messages (off by default)
     * Creating new folder - new folder should be selected after create.
     * Add link to [Configuring uibuilder nodes](uib-node-configuration.md) page.
     * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48
+    * Add update indicator to Libraries tab
+* uib-cache node
+  * Editor:
+    * Switch to compact display of cache selectors as used in uib-list
+    * Add node-id to cache variable name
+    * Actually cache the data!
+* uib-cache node
+  * Editor:
+    * Add node-id to cache variable name
 * Old client library
   * Fix page name processing.
   * Check connections count https://discourse.nodered.org/t/uibuilder-amazing/40460/55.
@@ -41,12 +57,14 @@ Also note that v5.1.0 has a number of new features that are not complete. They a
 
 ### Breaking Changes
 
-* Change min node.js version to v14 LTS (in line with Node-RED v3)
+* Minimum Node-RED version is now v3
+* Minimum Node.js version is now v14 LTS (in line with Node-RED v3) - note that the minimum minor version changes to the latest v14 LTS version whenever uibuilder is updated.
 
 ### Fixed
 
 * `uib-cache`: Custom variable name was being ignored
 * `uibuilder`: Library tab might occasionally list a package that wasn't a direct installed dependency. Now resolved. Only packages listed in `<uibRoot>/package.json` dependencies property will be listed.
+* `nodes/libs/package-msg.js` `updateInstalledPackageDetails()`: Installations with a large number of installed libraries not correctly reporting their details. Resolved (hopefully) async issue. Was using `async` with `.forEach()` which doesn't work. Changed to use `Promise.all` with a map. Thanks to [dczysz](https://github.com/dczysz) for reporting.
 
 ### New
 
@@ -69,7 +87,7 @@ Also note that v5.1.0 has a number of new features that are not complete. They a
 
 * `uib-cache` node
   * More compact context variable settings in Editor panel.
-  * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously much be unique.
+  * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously must be unique.
 
 * `uib-list` node
   * Use same context variable settins as `uib-cache` for greater flexibility.
