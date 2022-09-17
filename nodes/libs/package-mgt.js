@@ -297,11 +297,20 @@ class UibPackages {
             lsParsed = JSON.parse(ls)
         } catch {}
 
-        // Make sure we have package details for all installed packages
-        await Object.keys(lsParsed.dependencies || {}).forEach( async pkgName => {
+        // Make sure we have package details for all installed packages - NB: don't use await with forEach!
+        let depPkgNames = Object.keys(lsParsed.dependencies || {})
+        // await depPkgNames.forEach( async pkgName => {
+        //     await this.updIndividualPkgDetails(pkgName, lsParsed)
+        // })
+        //! EITHER (serial)
+        // for ( const pkgName of depPkgNames ) {
+        //     await this.updIndividualPkgDetails(pkgName, lsParsed)
+        // }
+        //! OR (parallel)
+        await Promise.all( depPkgNames.map(async (pkgName) => {
             await this.updIndividualPkgDetails(pkgName, lsParsed)
-        })
-
+        }))
+        
         // (re)Write package.json
         this.writePackageJson(rootFolder, pj)
     }
