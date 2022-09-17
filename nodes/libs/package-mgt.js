@@ -37,9 +37,9 @@ class UibPackages {
      */
     #isConfigured = false
 
-    #logUndefinedError = new Error('this.log is undefined')
-    #uibUndefinedError = new Error('this.uib is undefined')
-    #rootFldrNullError = new Error('this.uib.rootFolder is null')
+    #logUndefinedError = new Error('pkgMgt: this.log is undefined')
+    #uibUndefinedError = new Error('pkgMgt: this.uib is undefined')
+    #rootFldrNullError = new Error('pkgMgt: this.uib.rootFolder is null')
 
     /** @type {Array<string>} Updated by updateMergedPackageList which is called first in setup and then in various updates */
     mergedPkgMasterList = []
@@ -104,7 +104,9 @@ class UibPackages {
 
         this.RED = uib.RED
         this.uib = uib
-        this.log = uib.RED.log
+        const log = this.log = uib.RED.log
+
+        log.trace('[uibuilder:package-mgt:setup] Package Management setup started')
 
         // Get the uibuilder root folder's package.json file and save to class var or create minimal version if one doesn't exist
         const pj = this.uibPackageJson = this.getUibRootPJ()
@@ -117,15 +119,35 @@ class UibPackages {
         if ( !pj.uibuilder ) pj.uibuilder = {}
         // Make sure there is a uibuilder.packagedetails prop
         if ( !pj.uibuilder.packages ) pj.uibuilder.packages = {}
-        // (Re)build package.json uibuilder.packages & rewrite file [after 3sec] (async)
-        this.updateInstalledPackageDetails()
-
-        // TODO Remove all the old update fns
-        // TODO Update package list and latest package vers when editor library tab opens (async)
+        // Make sure no extra package details
+        for (const pkgName in pj.uibuilder.packages) {
+            if ( !pj.dependencies[pkgName] ) delete pj.uibuilder.packages[pkgName]
+        }
+        // Make sure all dependencies are reflected in uibuilder.packagedetails
+        for (const depName in pj.dependencies) {
+            if ( !pj.uibuilder.packages[depName] ) {
+                pj.uibuilder.packages[depName] = {installedVersion: pj.dependencies[depName]}
+            }
+        }
+        // Get folders for web:startup:serveVendorPackages()
+        for (const pkgName in pj.uibuilder.packages) {
+            let pkg = pj.uibuilder.packages[pkgName]
+            if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+            // The actual location of the package folder
+            pkg.installFolder = path.join(this.uib.rootFolder, pkgName)
+            // The base url used by uib - note this is changed if this is a scoped package
+            pkg.packageUrl = '/' + pkgName
+        }
 
         // At this point we have the refs to uib and RED
         this.#isConfigured = true
 
+        this.setUibRootPackageJson(pj)
+
+        // Re-build package.json uibuilder.packages with details & rewrite file [after 3sec] (async)
+        this.updateInstalledPackageDetails()
+
+        log.trace('[uibuilder:package-mgt:setup] Package Management setup completed')
     } // ---- End of setup ---- //
 
     /** Read the contents of a package.json file
@@ -179,7 +201,7 @@ class UibPackages {
         let res = this.readPackageJson(uibRoot)
 
         if (res === null) {
-            this.log.warn(`[uibuilder:package-mgt:getUibRootPackageJson] Could not read ${fileName}. Creating minimal version.`)
+            this.log.warn(`[uibuilder:package-mgt:getUibRootPJ] Could not read ${fileName}. Creating minimal version.`)
             // Create a minimal pj
             res = {
                 'name': 'uib_root',
@@ -208,7 +230,7 @@ class UibPackages {
         // Make sure only packages in uibRoot/package.json dependencies are processed
         if ( !pj.dependencies[pkgName] ) return
 
-        if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined || pj.dependencies === undefined ) throw new Error('pj.uibuilder, pj.uibuilder.packages or pj.dependencies is undefined')
+        if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined || pj.dependencies === undefined ) throw new Error('pgkMgt:updIndividualPkgDetails: pj.uibuilder, pj.uibuilder.packages or pj.dependencies is undefined')
         const packages =  pj.uibuilder.packages
 
         packages[pkgName] = {}
@@ -302,11 +324,11 @@ class UibPackages {
         // await depPkgNames.forEach( async pkgName => {
         //     await this.updIndividualPkgDetails(pkgName, lsParsed)
         // })
-        //! EITHER (serial)
+        // EITHER (serial)
         // for ( const pkgName of depPkgNames ) {
         //     await this.updIndividualPkgDetails(pkgName, lsParsed)
         // }
-        //! OR (parallel)
+        // OR (parallel)
         await Promise.all( depPkgNames.map(async (pkgName) => {
             await this.updIndividualPkgDetails(pkgName, lsParsed)
         }))
@@ -460,7 +482,7 @@ class UibPackages {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:getPackagePath] Cannot run. Setup has not been called.')
+            this.log.warn('[uibuilder:UibPackages:getPackagePath2] Cannot run. Setup has not been called.')
             return
         }
 
@@ -660,6 +682,8 @@ class UibPackages {
      * @returns {Promise<string>} Command output
      */
     async npmListInstalled(folder) {
+        this.log.info('[uibuilder:package-mgt:npmListInstalled] npm list installed started')
+
         // if ( this._isConfigured !== true ) {
         //     this.log.warn('[uibuilder:UibPackages:npmListInstalled] Cannot run. Setup has not been called.')
         //     return
@@ -687,6 +711,7 @@ class UibPackages {
             res = e.stdout
         }
 
+        this.log.info('[uibuilder:package-mgt:npmListInstalled] npm list installed completed')
         return res
     } // ---- End of npmListInstalled ---- //
 

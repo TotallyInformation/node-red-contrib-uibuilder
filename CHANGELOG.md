@@ -32,6 +32,9 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
     * Add link to [Configuring uibuilder nodes](uib-node-configuration.md) page.
     * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48
     * Add update indicator to Libraries tab
+    * Add indicator to Libraries to show if new major version available
+  * uibindex page
+    * Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`)
 * uib-cache node
   * Editor:
     * Switch to compact display of cache selectors as used in uib-list

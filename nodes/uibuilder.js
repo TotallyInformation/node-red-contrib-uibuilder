@@ -461,6 +461,12 @@ function nodeInstance(config) {
     if ( uib.RED === null ) return
     const RED = uib.RED
 
+    //#region ----- back-end debugging ----- //
+    log = RED.log
+    log.trace('[uibuilder:runtimeSetup] ----------------- uibuilder - module started -----------------')
+    //#endregion ----- back-end debugging ----- //
+
+    
     // When uibuilder enters runtime state, show the details in the log
     let initialised = false
     RED.events.on('runtime-event', function(event) {
@@ -544,11 +550,6 @@ function nodeInstance(config) {
 
     //#endregion -------- Constants -------- //
 
-    //#region ----- back-end debugging ----- //
-    log = RED.log
-    log.trace('[uibuilder:runtimeSetup] ----------------- uibuilder - module started -----------------')
-    //#endregion ----- back-end debugging ----- //
-
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable? */
@@ -625,11 +626,7 @@ function nodeInstance(config) {
      * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
      * since v3.3.0 2021-03-16 Allow independent ExpressJS server/app
      */
-    try {
-        web.setup(uib) // Singleton wrapper for ExpressJS
-    } catch (e) {
-        console.trace('[uibuilder:runtimeSetup] web.setup failed')
-    }
+    web.setup(uib) // Singleton wrapper for ExpressJS
 
     /** Pass core objects to the Socket.IO handler module */
     // @ts-ignore

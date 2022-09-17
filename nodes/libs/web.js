@@ -127,7 +127,9 @@ class UibWeb {
 
         const RED = this.RED = uib.RED
         this.uib = uib
-        this.log = uib.RED.log
+        const log = this.log = uib.RED.log
+
+        log.trace('[uibuilder:web:setup] Web setup started')
 
         // Get the actual httpRoot
         if ( RED.settings.httpRoot === undefined ) this.uib.httpRoot = ''
@@ -142,6 +144,8 @@ class UibWeb {
         this._adminApiSetup()
         this._setMasterStaticFolder()
         this._webSetup()
+
+        log.trace('[uibuilder:web:setup] Web setup completed')
 
     } // --- End of setup() --- //
 
@@ -371,13 +375,18 @@ class UibWeb {
             return
         }
 
+        const log = this.log
+
         if (this.uibRouter === undefined) throw new Error('this.uibRouter is undefined')
+
+        log.trace('[uibuilder:web:serveVendorPackages] Serve Vendor Packages started')
 
         // Update the <uibRoot>/package.json file & packageMgt.uibPackageJson in case a package was manually installed then node-red restarted
         // Get the installed packages from the `<uibRoot>/package.json` file. If it doesn't exist, this will create it.
-        const pj = packageMgt.getUibRootPackageJson()
-        if (pj === null) throw new Error('pj is null')
-        if ( pj.dependencies === undefined ) throw new Error('pj.dependencies is undefined')
+        // const pj = packageMgt.getUibRootPackageJson()
+        const pj = packageMgt.uibPackageJson
+        if (pj === null) throw new Error('web.js:serveVendorPackages: pj is null')
+        if ( pj.dependencies === undefined ) throw new Error('web.js:serveVendorPackages: pj.dependencies is undefined')
 
         // TODO Add some trace messages
 
@@ -408,12 +417,13 @@ class UibWeb {
         this.routers.user.push( { name: 'Vendor Routes', path: `${this.uib.httpRoot}/uibuilder/vendor/*`, desc: 'Front-end libraries are mounted under here', type: 'Router' } )
 
         Object.keys(pj.dependencies).forEach( packageName => {
-            if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined ) throw new Error('pj.uibuilder or pj.uibuilder.packages is undefined')
+            if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined ) throw new Error('web.js:serveVendorPackages: pj.uibuilder or pj.uibuilder.packages is undefined')
 
             /** @type {uibPackageJsonPackage} */
             const pkgDetails = pj.uibuilder.packages[packageName]
 
-            if ( this.vendorRouter === undefined || pkgDetails.installFolder === undefined || pkgDetails.packageUrl === undefined ) throw new Error('this.vendorRouter, pkgDetails.installFolder or pkgDetails.packageUrl is undefined')
+            if ( this.vendorRouter === undefined ) throw new Error('web.js:serveVendorPackages: this.vendorRouter is undefined')
+            if ( pkgDetails.installFolder === undefined || pkgDetails.packageUrl === undefined ) throw new Error('web.js:serveVendorPackages: pkgDetails.installFolder or pkgDetails.packageUrl is undefined')
 
             if ( !pkgDetails.missing ) { // Only if the package is actually installed
                 // Add a route for each package to this.vendorRouter
@@ -427,6 +437,7 @@ class UibWeb {
             }
         })
 
+        log.trace('[uibuilder:web:serveVendorPackages] Serve Vendor Packages completed')
     } // ---- End of serveVendorPackages ---- //
 
     /** Add the ping endpoint to /uibuilder/ping
