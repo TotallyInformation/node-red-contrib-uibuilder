@@ -8,8 +8,6 @@ typora-root-url: docs/images
 
 * uibuilder - Editor
   * Library management
-    * When adding libraries, new packages not showing unless uib restarted.
-    * When removing libraries, package.json:uibuilder.packages not updated correctly. (the packages are actually removed)
     * Vue showing an "update" for v2 when v3 is installed. Only when bootstrap-vue installed.
   * Advanced/Serve - folder name not updated immediately when a new folder added. Have to exit and re-open the panel.
   * Deleting an Editor tab containing uibuilder nodes, the folder delete process is not called?
