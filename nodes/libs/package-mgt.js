@@ -119,6 +119,25 @@ class UibPackages {
         if ( !pj.uibuilder ) pj.uibuilder = {}
         // Make sure there is a uibuilder.packagedetails prop
         if ( !pj.uibuilder.packages ) pj.uibuilder.packages = {}
+        
+        this.pkgsQuickUpd()
+
+        // At this point we have the refs to uib and RED
+        this.#isConfigured = true
+
+        // Re-build package.json uibuilder.packages with details & rewrite file [after 3sec] (async)
+        this.updateInstalledPackageDetails()
+
+        log.trace('[uibuilder:package-mgt:setup] Package Management setup completed')
+    } // ---- End of setup ---- //
+
+    /** Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages() - re-saves the package.json file */
+    pkgsQuickUpd() {
+        if ( this.uib === undefined ) throw this.#uibUndefinedError
+        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+        
+        const pj = this.uibPackageJson
+
         // Make sure no extra package details
         for (const pkgName in pj.uibuilder.packages) {
             if ( !pj.dependencies[pkgName] ) delete pj.uibuilder.packages[pkgName]
@@ -139,16 +158,10 @@ class UibPackages {
             pkg.packageUrl = '/' + pkgName
         }
 
-        // At this point we have the refs to uib and RED
-        this.#isConfigured = true
-
-        this.setUibRootPackageJson(pj)
-
-        // Re-build package.json uibuilder.packages with details & rewrite file [after 3sec] (async)
-        this.updateInstalledPackageDetails()
-
-        log.trace('[uibuilder:package-mgt:setup] Package Management setup completed')
-    } // ---- End of setup ---- //
+        // Re-save the updated file
+        //this.setUibRootPackageJson(pj)
+        this.writePackageJson(this.uib.rootFolder, pj)
+    }
 
     /** Read the contents of a package.json file
      * @param {string} folder The folder containing a package.json file
@@ -302,6 +315,7 @@ class UibPackages {
         }
     }
 
+    /** Use npm to get detailed pkg info (slow, async) to pj.uibuilder.packages & rewrite the pj file */
     async updateInstalledPackageDetails() {
         const pj = this.uibPackageJson
 
@@ -682,7 +696,7 @@ class UibPackages {
      * @returns {Promise<string>} Command output
      */
     async npmListInstalled(folder) {
-        this.log.info('[uibuilder:package-mgt:npmListInstalled] npm list installed started')
+        this.log.trace('[uibuilder:package-mgt:npmListInstalled] npm list installed started')
 
         // if ( this._isConfigured !== true ) {
         //     this.log.warn('[uibuilder:UibPackages:npmListInstalled] Cannot run. Setup has not been called.')
@@ -711,7 +725,7 @@ class UibPackages {
             res = e.stdout
         }
 
-        this.log.info('[uibuilder:package-mgt:npmListInstalled] npm list installed completed')
+        this.log.trace('[uibuilder:package-mgt:npmListInstalled] npm list installed completed')
         return res
     } // ---- End of npmListInstalled ---- //
 

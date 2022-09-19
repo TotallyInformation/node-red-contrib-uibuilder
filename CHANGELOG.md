@@ -7,9 +7,13 @@ typora-root-url: docs/images
 ## Known Issues
 
 * uibuilder - Editor
-  * "Server folder: undefined/xxxxxx" - should show full folder path.
+  * Library management
+    * When adding libraries, new packages not showing unless uib restarted.
+    * When removing libraries, package.json:uibuilder.packages not updated correctly. (the packages are actually removed)
+    * Vue showing an "update" for v2 when v3 is installed. Only when bootstrap-vue installed.
   * Advanced/Serve - folder name not updated immediately when a new folder added. Have to exit and re-open the panel.
-  * Deleting an Editor tab containing uibuilder nodes, the folder delete process is not called.
+  * Deleting an Editor tab containing uibuilder nodes, the folder delete process is not called?
+  * Issue [#184](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/184)
 
 ## To do/In-progress
 
@@ -31,8 +35,9 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
     * Creating new folder - new folder should be selected after create.
     * Add link to [Configuring uibuilder nodes](uib-node-configuration.md) page.
     * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48
-    * Add update indicator to Libraries tab
-    * Add indicator to Libraries to show if new major version available
+    * Libraries tab
+      * Add update indicator to Libraries tab
+      * Trigger indicator to Libraries to show if new major version available when switching to the tab
   * uibindex page
     * Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`)
 * uib-cache node
@@ -67,7 +72,7 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 
 * `uib-cache`: Custom variable name was being ignored
 * `uibuilder`: Library tab might occasionally list a package that wasn't a direct installed dependency. Now resolved. Only packages listed in `<uibRoot>/package.json` dependencies property will be listed.
-* `nodes/libs/package-msg.js` `updateInstalledPackageDetails()`: Installations with a large number of installed libraries not correctly reporting their details. Resolved (hopefully) async issue. Was using `async` with `.forEach()` which doesn't work. Changed to use `Promise.all` with a map. Thanks to [dczysz](https://github.com/dczysz) for reporting.
+* `nodes/libs/package-msg.js` `updateInstalledPackageDetails()`: Installations with a large number of installed libraries not correctly reporting their details. Resolved (hopefully) async issue. Was using `async` with `.forEach()` which doesn't work. Changed to use `Promise.all` with a map. Thanks to [dczysz](https://github.com/dczysz) for reporting. Issue [#186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186). Issue more complex than originally thought. Ended up doing a 2-stage update of the installed libraries data. First stage is quick and synchronous to allow the appropriate vendor folders to be added to the ExpressJS vendor routes. 2nd stage uses npm to get additional library information.
 
 ### New
 
@@ -84,8 +89,9 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
   * The currently installed uibuilder version is now shown on the Advanced tab.
   * The server's `instanceRoot` filing system folder is shown on the Core tab. This is the configuration and front-end code for this instance of uibuilder.
   * The info showing the current web server is now a link to the instance page (same as the Open button above it).
-  * Package outdated markers added to Editor Library tab. 
-  * Package outdated markers are buttons that will update the installation of the package.
+  * Library tab
+    * Package outdated markers added to Editor Library tab. (_Currently only on Node-RED startup_. Will be improved later.)
+    * Package outdated markers are buttons that will update the installation of the package.
 
 
 * `uib-cache` node

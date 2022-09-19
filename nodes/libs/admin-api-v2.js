@@ -700,7 +700,11 @@ function adminRouterV2(uib, log) {
                 // @ts-expect-error
                 packageMgt.npmInstallPackage(params.url, params.package, params.tag)
                     .then((npmOutput) => {
-                        // let success = false
+                        // Get the updated package.json file into packageMgt.uibPackageJson
+                        packageMgt.getUibRootPackageJson()
+
+                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages() - re-saves the package.json file
+                        packageMgt.pkgsQuickUpd()
 
                         // Update the packageList
                         web.serveVendorPackages()
@@ -723,6 +727,11 @@ function adminRouterV2(uib, log) {
                 // @ts-ignore
                 packageMgt.npmRemovePackage(params.package)
                     .then((npmOutput) => {
+                        // Get the updated package.json file into packageMgt.uibPackageJson
+                        packageMgt.getUibRootPackageJson()
+
+                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages() - re-saves the package.json file
+                        packageMgt.pkgsQuickUpd()
 
                         // TODO remove - just send back success
 
