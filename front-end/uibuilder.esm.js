@@ -2410,7 +2410,6 @@ var Uib = (_a = class {
     __privateAdd(this, _isMinified, !/param/.test(function(param) {
     }));
     __privateAdd(this, _MsgHandler, void 0);
-    __publicField(this, "lastNavType");
     __publicField(this, "_socket");
     __publicField(this, "clientId", "");
     __publicField(this, "cookies", {});
@@ -2426,10 +2425,7 @@ var Uib = (_a = class {
     __publicField(this, "serverTimeOffset", null);
     __publicField(this, "socketError", null);
     __publicField(this, "online", null);
-    __publicField(this, "allowScript", true);
-    __publicField(this, "allowStyle", true);
-    __publicField(this, "removeScript", true);
-    __publicField(this, "removeStyle", true);
+    __publicField(this, "lastNavType", null);
     __publicField(this, "originator", "");
     __publicField(this, "autoSendReady", true);
     __publicField(this, "httpNodeRoot", "");
@@ -2460,6 +2456,7 @@ var Uib = (_a = class {
     log("trace", "Uib:constructor", "Starting")();
     window.addEventListener("offline", (e) => {
       this.set("online", false);
+      this.set("ioConnected", false);
       log("warn", "Browser", "DISCONNECTED from network")();
     });
     window.addEventListener("online", (e) => {
@@ -2585,7 +2582,7 @@ var Uib = (_a = class {
     }
   }
   setOriginator(originator = "") {
-    this.originator = originator;
+    this.set("originator", originator);
   }
   setStore(id, value2) {
     if (typeof value2 === "object") {
@@ -3327,7 +3324,7 @@ ioPath: ${this.ioPath}`)();
       this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`);
     }
     const [entry] = performance.getEntriesByType("navigation");
-    this.lastNavType = entry.type;
+    this.set("lastNavType", entry.type);
     this.started = this._ioSetup();
     if (this.started === true) {
       log("trace", "Uib:start", "Start completed. Socket.IO client library loaded.")();

@@ -302,8 +302,6 @@ export const Uib = class Uib {
     #isMinified = !(/param/).test(function (param) { }) // eslint-disable-line no-unused-vars
     // Holds the reference ID for the internal msg change event handler so that it can be cancelled
     #MsgHandler
-    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
-    lastNavType
     // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
     _socket
 
@@ -342,14 +340,12 @@ export const Uib = class Uib {
     socketError = null
     /** Is the client online or offline? */
     online = null
+    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
+    lastNavType = null
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
     //#region ---- Externally Writable (via .set method, read via .get method) ---- //
-    allowScript = true   // Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
-    allowStyle = true   // Allow incoming msg to contain msg.style with CSS that will be automatically executed
-    removeScript = true   // Delete msg.code after inserting to DOM if it exists on incoming msg
-    removeStyle = true   // Delete msg.style after inserting to DOM if it exists on incoming msg
     originator = ''     // Default originator node id
     //#endregion ---- ---- ---- ---- //
 
@@ -610,7 +606,7 @@ export const Uib = class Uib {
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
     setOriginator(originator = '') {
-        this.originator = originator
+        this.set('originator', originator)
     } // ---- End of setOriginator ---- //
 
     /** Write to localStorage if possible. console error output if can't write
@@ -1797,6 +1793,7 @@ export const Uib = class Uib {
         // Track whether the client is online or offline
         window.addEventListener('offline', (e) => {
             this.set('online', false)
+            this.set('ioConnected', false)
             log('warn', 'Browser', 'DISCONNECTED from network')()
         })
         window.addEventListener('online', (e) => {
@@ -1883,7 +1880,7 @@ export const Uib = class Uib {
 
         // Track last browser navigation type: navigate, reload, back_forward, prerender
         const [entry] = performance.getEntriesByType('navigation')
-        this.lastNavType = entry.type
+        this.set('lastNavType', entry.type)
 
         // Start up (or restart) Socket.IO connections and listeners. Returns false if io not found
         this.started = this._ioSetup()
