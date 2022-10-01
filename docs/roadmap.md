@@ -132,6 +132,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Add HTML loader capability to _ui handling (see html-loader web component)
     * Allow adding to more locations: 1st child rather than last, next/previous sibling
     * Add click coordinates to return msgs where appropriate. See https://discourse.nodered.org/t/contextmenu-location/22780/51
+    * Allow for PWA use:
+      * Check for OFFLINE use and supress transport errors
+      * Add check for online/offline - make available to user code
+      * Auto-generate manifest and sw.js - need icon and to set names/urls/etc
+      * https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/web-app-manifests
+      * Allow push API interface as well as websocket. https://developer.mozilla.org/en-US/docs/Web/API/Push_API
 
 * Updates to old FE library
   * Add client ID, client version & connections # to initial "ready for content" msg from client->NR

@@ -38,12 +38,14 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
       * Trigger indicator to Libraries to show if new major version available when switching to the tab
   * uibindex page
     * Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`)
+  * package-mgt.js
+    * Rationalise the various functions - several of them have similar tasks
 * uib-cache node
   * Editor:
     * Switch to compact display of cache selectors as used in uib-list
     * Add node-id to cache variable name
     * Actually cache the data!
-* uib-cache node
+* uib-list node
   * Editor:
     * Add node-id to cache variable name
 * Old client library
@@ -79,36 +81,44 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 
 ### Changed
 
-* uibuilder can now select any existing folder to serve as the root of your web app. The selector on the advanced tab is now populated with all folders. The folder must, however, contain at least an `index.html` page otherwise an error is logged and no web page will be shown unless you manually include the page name in your browser address bar.
+* New client (`uibuilder.iife.js` or `uibuilder.esm.js`) improvements
 
-* uibuilder node will now create the required `<uibRoot>/package.json` file if it does not exist. Removes some unnecessary warning messages.
+  * Client now knows whether the browser is online or offline. If offline, it no longer keeps outputing socket.io error messages or warnings. A console warn is given whenever the browser goes online or offline. Going online reconnects the socket.io connection to Node-RED.
 
-* uibuilder Editor panel improvements:
-  * The currently installed uibuilder version is now shown on the Advanced tab.
-  * The server's `instanceRoot` filing system folder is shown on the Core tab. This is the configuration and front-end code for this instance of uibuilder.
-  * The info showing the current web server is now a link to the instance page (same as the Open button above it).
-  * Library tab
-    * Package outdated markers added to Editor Library tab. (_Currently only on Node-RED startup_. Will be improved later.)
-    * Package outdated markers are buttons that will update the installation of the package.
+
+* `uibuilder` node
+  
+  * uibuilder can now select any existing folder to serve as the root of your web app. The selector on the advanced tab is now populated with all folders. The folder must, however, contain at least an `index.html` page otherwise an error is logged and no web page will be shown unless you manually include the page name in your browser address bar.
+  * The uibuilder node will now create the required `<uibRoot>/package.json` file if it does not exist. Removes some unnecessary warning messages.
+  * uibRoot added to settings passed to Editor so that the editor can display and link to server folders (links only work when server is local of course).
+  * If running in debug mode, key settings dumped to Editor console.
+  * Editor panel improvements:
+  
+    * The currently installed uibuilder version is now shown on the Advanced tab.
+    * The server's `instanceRoot` filing system folder is shown on the Core tab. This is the configuration and front-end code for this instance of uibuilder.
+    * The info showing the current web server is now a link to the instance page (same as the Open button above it).
+    * Library tab
+  
+      * Package outdated markers added to Editor Library tab. (_Currently only on Node-RED startup_. Will be improved later.)
+      * Package outdated markers are buttons that will update the installation of the package.
 
 
 * `uib-cache` node
+
   * More compact context variable settings in Editor panel.
   * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously must be unique.
 
+
 * `uib-list` node
+
   * Use same context variable settins as `uib-cache` for greater flexibility.
   * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously much be unique.
   * Change drop-downs to typed input
 
-* `uibuilder` node
-  * uibRoot added to settings passed to Editor so that the editor can display and link to server folders (links only work when server is local of course).
-  * If running in debug mode, key settings dumped to Editor console.
-
 * Various library improvements including some trace and info log msg improvements.
 
-## [v5.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.1.0...v5.1.1)
 
+## [v5.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.1.0...v5.1.1)
 
 ### Fixed
 
