@@ -61,7 +61,7 @@ import io from 'socket.io-client' // Note: Only works when using esbuild to bund
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '5.1.1-mod'
+const version = '6.0.0-mod'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -302,7 +302,8 @@ export const Uib = class Uib {
     #isMinified = !(/param/).test(function (param) { }) // eslint-disable-line no-unused-vars
     // Holds the reference ID for the internal msg change event handler so that it can be cancelled
     #MsgHandler
-
+    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
+    lastNavType
     // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
     _socket
 
@@ -339,6 +340,8 @@ export const Uib = class Uib {
     serverTimeOffset = null
     /** placeholder for a socket error message */
     socketError = null
+    /** Is the client online or offline? */
+    online = null
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -1602,6 +1605,8 @@ export const Uib = class Uib {
      * @returns {boolean} Whether or not Socket.IO is connected to uibuilder in Node-RED
      */
     _checkConnect(delay, factor, depth = 1) {
+        if ( navigator.onLine === false ) return // Don't bother if we know we are offline
+
         if (!delay) delay = this.retryMs
         if (!factor) factor = this.retryFactor
 
@@ -1719,8 +1724,9 @@ export const Uib = class Uib {
             this._checkConnect()
         }) // --- End of socket disconnect processing ---
 
-        // Socket.io connection error - probably the wrong ioPath
+        // Socket.io connection error - probably the wrong ioPath - or client is offline
         this._socket.on('connect_error', (err) => {
+            if ( navigator.onLine === false ) return // Don't bother with an error if we know we are offline
             log('error', 'Uib:ioSetup:connect_error', `❌ Socket.IO Connect Error. Reason: ${err.message}`, err)()
             this.set('ioConnected', false)
             this.set('socketError', err)
@@ -1787,6 +1793,17 @@ export const Uib = class Uib {
 
     constructor() {
         log('trace', 'Uib:constructor', 'Starting')()
+
+        // Track whether the client is online or offline
+        window.addEventListener('offline', (e) => {
+            this.set('online', false)
+            log('warn', 'Browser', 'DISCONNECTED from network')()
+        })
+        window.addEventListener('online', (e) => {
+            this.set('online', true)
+            log('warn', 'Browser', 'Reconnected to network')()
+            this._checkConnect()
+        })
 
         document.cookie.split(';').forEach((c) => {
             const splitC = c.split('=')
@@ -1864,6 +1881,10 @@ export const Uib = class Uib {
 
         // Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents
 
+        // Track last browser navigation type: navigate, reload, back_forward, prerender
+        const [entry] = performance.getEntriesByType('navigation')
+        this.lastNavType = entry.type
+
         // Start up (or restart) Socket.IO connections and listeners. Returns false if io not found
         this.started = this._ioSetup()
 
@@ -1872,6 +1893,7 @@ export const Uib = class Uib {
         } else {
             log('error', 'Uib:start', 'Start completed. ERROR: Socket.IO client library NOT LOADED.')()
         }
+
     }
 
     //#endregion -------- ------------ -------- //
