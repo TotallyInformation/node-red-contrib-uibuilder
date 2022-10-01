@@ -3,7 +3,7 @@ title: Working with the uibuilderfe Front-End Library
 description: >
    How to work with uibuilder's front-end library in your own UI code.
 created: 2021-02-17 14:28:00
-lastUpdated: 2022-08-31 08:40:23
+lastUpdated: 2022-10-01 20:27:02
 ---
 
 !> This page refers to the "old" original front-end library for uibuilder. There is now a new library that will eventually replace this one. Please see [this page](uibuilder.module.md).
@@ -41,7 +41,7 @@ The detailed documentation for the library is in the [uibuildefe developer docum
   - [`setOriginator` Sets an originating node ID](#setoriginator-sets-an-originating-node-id)
   - [`setPing` Check if Node-RED/uibuilder server is alive, may be used to trigger session extensions](#setping-check-if-node-reduibuilder-server-is-alive-may-be-used-to-trigger-session-extensions)
   - [`showComponentDetails` (VueJS only) Return a control msg contining details of a Vue component](#showcomponentdetails-vuejs-only-return-a-control-msg-contining-details-of-a-vue-component)
-  - [`showToast` (VueJS only) Shows a popup message in the UI](#showtoast-vuejs-only-shows-a-popup-message-in-the-ui)
+  - [`showToast` Shows a popup message in the UI](#showtoast-shows-a-popup-message-in-the-ui)
   - [`start` Start up the front-end library](#start-start-up-the-front-end-library)
   - [`uiDebug` Conditional debug output (controlled by debug setting)](#uidebug-conditional-debug-output-controlled-by-debug-setting)
 
@@ -379,7 +379,7 @@ The returned control message to Node-RED looks like:
 }
 ```
 
-### `showToast` (VueJS only) Shows a popup message in the UI
+### `showToast` Shows a popup message in the UI
 
 Creates a popup message (a "Toast") that overlays your web UI.
 
