@@ -1344,23 +1344,31 @@ See [Custom Events](#custom-events) for details.
 
 #### Read/write
 
+Always use `uibuilder.set('varname', value)` to change these.
+
 * `logLevel` - Sets the current logging level. The default is `2` ('error' and 'warn'). Increase to see more detailed logging.
+* `originator` - Set to the node ID of a `uib-sender` node if you want any sent messages (back to Node-RED) to only go to that node. Normally, you would not set this manually but rather rely on the library to set it for you when it recieves a msg from a sender node. However, you might want to save and reconstitue it if you need to send general messages before returning a message to the sender node.
 
 #### Read only
+
+Always use `uibuilder.get('varname', value)` to obtain the value of these. You can also use `uibuilder.onChange('varname', (val)=>{})` to watch for changes to them. Or you can also use the custom event `uibuilder:propertyChanged` if you really want to.
 
 * `meta` - module metadata (version, type, displayName)
 * `clientId` - Client ID set by uibuilder on connect
 * `cookies` - The collection of cookies provided by uibuilder
 * `ctrlMsg` - Copy of last control msg object received from sever
 * `ioConnected` - Is Socket.IO client connected to the server?
+* `lastNavType` - Remember the last page (re)load/navigation type (navigate, reload, back_forward, prerender)
 * `msg` - Last std msg received from Node-RED
 * `msgsSent` - The number of messages sent to server since page load
 * `msgsReceived` - The number of messages received from server since page load
 * `msgsSentCtrl` - The number of control messages sent to server since page load
 * `msgsCtrlReceived` - The number of control messages received from server since page load
+* `online` - Is the client browser online (true) or offline (false)?
 * `sentCtrlMsg` - The last control msg object sent via uibuilder.send()
 * `sentMsg` - The last std msg object sent via uibuilder.send()
 * `serverTimeOffset` - Time offset between browser clock and server clock
+* `socketError` - Holds the details of the last socket error
 
 ### Functions
 

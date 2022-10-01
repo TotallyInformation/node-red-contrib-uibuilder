@@ -20,12 +20,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 Note that v5.1.1 had a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
 
 * Check deepscan
-* `uib-list` node
-  * [ ] Switch to use cache context vars
-  * [ ] Optional cache switch
-* `uib-sender` node
-  * [Name is not showing in flow](https://discourse.nodered.org/t/uib-sender-node/64636).
-* Updates to uibuilder node
+
+* `uibuilder` node
   * Editor:
     * Add visual error when changing advanced/Serve to a folder with no index.html
     * Option for project folder storage
@@ -40,17 +36,26 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
     * Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`)
   * package-mgt.js
     * Rationalise the various functions - several of them have similar tasks
-* uib-cache node
+
+* `uib-cache` node
   * Editor:
     * Switch to compact display of cache selectors as used in uib-list
     * Add node-id to cache variable name
     * Actually cache the data!
-* uib-list node
+
+* `uib-list` node
+  * [ ] Switch to use cache context vars
+  * [ ] Optional cache switch
   * Editor:
     * Add node-id to cache variable name
+
+* `uib-sender` node
+  * [Name is not showing in flow](https://discourse.nodered.org/t/uib-sender-node/64636).
+
 * Old client library
   * Fix page name processing.
   * Check connections count https://discourse.nodered.org/t/uibuilder-amazing/40460/55.
+
 * Client library
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
@@ -84,6 +89,7 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 * New client (`uibuilder.iife.js` or `uibuilder.esm.js`) improvements
 
   * Client now knows whether the browser is online or offline. If offline, it no longer keeps outputing socket.io error messages or warnings. A console warn is given whenever the browser goes online or offline. Going online reconnects the socket.io connection to Node-RED.
+  * Client now tracks what the last navigation type was (navigate, reload, back_forward, prerender). Enables the client to know whether the page was a new navigation or simply reloaded. Can be accessed in the client using `uibuilder.lastNavType`.
 
 
 * `uibuilder` node
