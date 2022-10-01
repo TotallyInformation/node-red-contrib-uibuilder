@@ -3143,8 +3143,10 @@
           return;
         }
         if (msg._uib.componentRef === "globalNotification") {
+          this.showDialog("notify", msg._uib.options, msg);
         }
         if (msg._uib.componentRef === "globalAlert") {
+          this.showDialog("alert", msg._uib.options, msg);
         }
       }
       if (msg._ui) {

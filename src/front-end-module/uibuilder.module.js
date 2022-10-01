@@ -1448,9 +1448,13 @@ export const Uib = class Uib {
                 return
             }
 
-            // TODO Process toast and alert requests - can also be requested via msg._ui
-            if ( msg._uib.componentRef === 'globalNotification' ) { }
-            if ( msg._uib.componentRef === 'globalAlert' ) { }
+            // Better to request via msg._ui - these are for backwards compatibility
+            if ( msg._uib.componentRef === 'globalNotification' ) {
+                this.showDialog('notify', msg._uib.options, msg)
+            }
+            if ( msg._uib.componentRef === 'globalAlert' ) {
+                this.showDialog('alert', msg._uib.options, msg)
+            }
         }
 
         // Handle msg._ui requests
@@ -1880,6 +1884,7 @@ export const Uib = class Uib {
 
         // Track last browser navigation type: navigate, reload, back_forward, prerender
         const [entry] = performance.getEntriesByType('navigation')
+        // @ts-ignore
         this.set('lastNavType', entry.type)
 
         // Start up (or restart) Socket.IO connections and listeners. Returns false if io not found
