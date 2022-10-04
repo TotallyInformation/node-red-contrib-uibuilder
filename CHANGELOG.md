@@ -11,7 +11,7 @@ typora-root-url: docs/images
     * Vue showing an "update" for v2 when v3 is installed. Only when bootstrap-vue installed.
   * Advanced/Serve - folder name not updated immediately when a new folder added. Have to exit and re-open the panel.
   * Deleting an Editor tab containing uibuilder nodes, the folder delete process is not called?
-  * Issue [#184](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/184)
+* Manual package installs not filling in all metadata? https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186#issuecomment-1252744933
 
 ## To do/In-progress
 
@@ -78,6 +78,8 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 * `uib-cache`: Custom variable name was being ignored
 * `uibuilder`: Library tab might occasionally list a package that wasn't a direct installed dependency. Now resolved. Only packages listed in `<uibRoot>/package.json` dependencies property will be listed.
 * `nodes/libs/package-msg.js` `updateInstalledPackageDetails()`: Installations with a large number of installed libraries not correctly reporting their details. Resolved (hopefully) async issue. Was using `async` with `.forEach()` which doesn't work. Changed to use `Promise.all` with a map. Thanks to [dczysz](https://github.com/dczysz) for reporting. Issue [#186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186). Issue more complex than originally thought. Ended up doing a 2-stage update of the installed libraries data. First stage is quick and synchronous to allow the appropriate vendor folders to be added to the ExpressJS vendor routes. 2nd stage uses npm to get additional library information.
+* Can now stop auto-loading of uibuilder default stylesheet using `uibuilder.start({loadStylesheet: false})`. Issue [#184](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/184).
+
 
 ### New
 

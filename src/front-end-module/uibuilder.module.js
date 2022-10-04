@@ -1845,7 +1845,6 @@ export const Uib = class Uib {
         log('trace', 'Uib:constructor', 'Ending')()
     }
 
-    // TODO Add option to override auto-loading of stylesheet
     /** Start up Socket.IO comms and listeners
      * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
      * necessarily work out the correct ioPath to use.
@@ -1870,14 +1869,18 @@ export const Uib = class Uib {
         if (options) {
             if (options.ioNamespace !== undefined && options.ioNamespace !== null && options.ioNamespace !== '') this.ioNamespace = options.ioNamespace
             if (options.ioPath !== undefined && options.ioPath !== null && options.ioPath !== '') this.ioPath = options.ioPath
+            // See below for handling of options.loadStylesheet
         }
 
         // Do we need to load styles?
         if ( document.styleSheets.length > 1 || (document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) ) {
             log('info', 'Uib:start', 'Styles already loaded so not loading uibuilder default styles.')()
         } else {
-            log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
-            this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`)
+            if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
+            else {
+                log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
+                this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`)
+            }
         }
 
         // Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents
