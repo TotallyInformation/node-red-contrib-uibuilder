@@ -153,9 +153,10 @@ class UibPackages {
             let pkg = pj.uibuilder.packages[pkgName]
             if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
             // The actual location of the package folder
-            pkg.installFolder = path.join(this.uib.rootFolder, pkgName)
+            pkg.installFolder = path.join(this.uib.rootFolder, 'node_modules', pkgName)
             // The base url used by uib - note this is changed if this is a scoped package
             pkg.packageUrl = '/' + pkgName
+            //this.log.debug(`[uibuilder:package-mgt:pkgsQuickUpd] Updating '${pkgName}'. Fldr: '${pkg.installFolder}', URL: '${pkg.packageUrl}'.`)
         }
 
         // Re-save the updated file
