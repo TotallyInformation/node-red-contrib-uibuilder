@@ -7,8 +7,6 @@ typora-root-url: docs/images
 ## Known Issues
 
 * uibuilder - Editor
-  * Library management
-    * Vue showing an "update" for v2 when v3 is installed. Only when bootstrap-vue installed.
   * Advanced/Serve - folder name not updated immediately when a new folder added. Have to exit and re-open the panel.
   * Deleting an Editor tab containing uibuilder nodes, the folder delete process is not called?
 * Manual package installs not filling in all metadata? https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186#issuecomment-1252744933

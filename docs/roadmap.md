@@ -148,9 +148,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Use new `uib-brand.css` style library on details pages.
   * Add api to query if a specific uib library is installed (and return version)
   * Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
+  * Allow instance npm installs to be served (would allow both vue 2 and vue 3 for example). Instance serves to take preference. Would need extension to editor libraries tab to differentiate the locations.
   * Editor:
     * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
     * Change getFileList to only return files, use the separate folder list for folders. No need to run it multiple times then.
+  * Details index page
+    * Make sure that the ExpressJS `views` folder is show.
 
 * Updates to Documentation
   * Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
