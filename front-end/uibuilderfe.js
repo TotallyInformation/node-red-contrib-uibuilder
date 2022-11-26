@@ -72,13 +72,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
      * @returns {!object} _
      */
     function makeMeAnObject(thing, property) {
-        if (property === null || property === undefined) property = 'payload'
+        if (!property) property = 'payload'
         if ( typeof property !== 'string' ) {
             console.warn('[uibuilderfe:makeMeAnObject] WARNING: property parameter must be a string and not: ' + typeof property)
             property = 'payload'
         }
         var out = {}
-        if (typeof thing === 'object') {
+        if ( thing !== null && thing.constructor.name === 'Object' ) {
             out = thing
         } else if (thing !== null) {
             out[property] = thing
