@@ -16,33 +16,22 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Note that v5.1.1 had a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
 
-* Check deepscan
+* Check [deepscan](https://deepscan.io/)
 
 * `uibuilder` node
   * Editor:
     
+    * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
+    * Creating new folder - new folder should be selected after create.
+    * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
+    * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
     * Add visual error when changing advanced/Serve to a folder with no index.html.
     * Option for project folder storage.
-    * Creating new folder - new folder should be selected after create.
-    * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
-    * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
-    * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
     * Libraries tab
       * Add update indicator to Libraries tab.
       * Trigger indicator to Libraries to show if new major version available when switching to the tab.
   * uibindex page
     * Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`).
-  * package-mgt.js
-    * Rationalise the various functions - several of them have similar tasks.
-
-* `uib-list` node
-  * [ ] Switch to use cache context vars
-  * [ ] Optional cache switch
-  * Editor:
-    * Add node-id to cache variable name
-
-* `uib-sender` node
-  * [Name is not showing in flow](https://discourse.nodered.org/t/uib-sender-node/64636).
 
 * Old client library
   * Fix page name processing.
@@ -51,8 +40,6 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 * Client library
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
-  * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
-  * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
 
 ----
 
@@ -71,6 +58,7 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 * `uibuilder`: Library tab might occasionally list a package that wasn't a direct installed dependency. Now resolved. Only packages listed in `<uibRoot>/package.json` dependencies property will be listed.
 * `nodes/libs/package-msg.js` `updateInstalledPackageDetails()`: Installations with a large number of installed libraries not correctly reporting their details. Resolved (hopefully) async issue. Was using `async` with `.forEach()` which doesn't work. Changed to use `Promise.all` with a map. Thanks to [dczysz](https://github.com/dczysz) for reporting. Issue [#186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186). Issue more complex than originally thought. Ended up doing a 2-stage update of the installed libraries data. First stage is quick and synchronous to allow the appropriate vendor folders to be added to the ExpressJS vendor routes. 2nd stage uses npm to get additional library information.
 * Can now stop auto-loading of uibuilder default stylesheet using `uibuilder.start({loadStylesheet: false})`. Issue [#184](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/184).
+* Fixed deepscan issues.
 
 
 ### New
