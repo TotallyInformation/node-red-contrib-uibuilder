@@ -26,7 +26,7 @@
 //#region ----- Module level variables ---- //
 
 const tiEvents = require('@totallyinformation/ti-common-event-handler')
-const uibPackages = require('../libs/package-mgt')
+//const uibPackages = require('../libs/package-mgt')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
