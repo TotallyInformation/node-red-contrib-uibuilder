@@ -1,4 +1,5 @@
-<script type="text/javascript">/* eslint-disable strict */
+<script type="text/javascript">/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable strict */
 
 // Isolate this code
 (function () {
@@ -63,10 +64,10 @@
         // if (!node.persistence) node.persistence = false
         if (!node.cacheall) node.persistence = false
 
-        // Make sure that the key always as a value - default to msg.topic
-        if ( !node.cacheKey || node.cacheKey === '' ) node.cacheKey = 'topic'
+        // Make sure that the key always has a value (and is not '') - default to msg.topic
+        if ( !node.cacheKey ) node.cacheKey = 'topic'
 
-        if ( !node.varName || node.varName === '' ) {
+        if ( !node.varName ) {
             node.varName = 'uib_cache'
             $('#node-input-varName').val('uib_cache')
         }
