@@ -66,9 +66,13 @@ const version = '6.0.0-mod'
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
 
+// @ts-ignore Detect whether the loaded library is minified or not
+const isMinified = !(/param/).test(function (param) { }) // eslint-disable-line no-unused-vars
+
 //#region --- print/console - debugging output functions --- //
+
 /** Default log level - Error & Warn */
-let logLevel = 1
+let logLevel = isMinified ? 0 : 1  // When using minified lib, assume production and only log errors otherwise also log warn
 // function changeLogLevel(level) {
 //     logLevel = level
 //     console.trace = logLevel < 4 ? function(){} : console.trace
@@ -243,13 +247,13 @@ function log() {
  * @returns {!object} _
  */
 function makeMeAnObject(thing, property) {
-    if (property === null || property === undefined) property = 'payload'
+    if (!property) property = 'payload'
     if (typeof property !== 'string') {
         log('warn', 'uibuilderfe:makeMeAnObject', `WARNING: property parameter must be a string and not: ${typeof property}`)()
         property = 'payload'
     }
     let out = {}
-    if (typeof thing === 'object') {
+    if ( thing !== null && thing.constructor.name === 'Object' ) {
         out = thing
     } else if (thing !== null) {
         out[property] = thing
@@ -285,7 +289,7 @@ export const Uib = class Uib {
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
     #connectedNum = 0
     // event listener callbacks by property name
-    #events = {}
+    // #events = {}
     // Socket.IO channel names
     _ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
     /** setInterval holder for pings @type {function|undefined} */
@@ -298,8 +302,6 @@ export const Uib = class Uib {
      * @type {number|null}
      */
     #timerid = null
-    // @ts-ignore Detect whether the loaded library is minified or not
-    #isMinified = !(/param/).test(function (param) { }) // eslint-disable-line no-unused-vars
     // Holds the reference ID for the internal msg change event handler so that it can be cancelled
     #MsgHandler
     // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers

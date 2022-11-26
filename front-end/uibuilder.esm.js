@@ -2261,7 +2261,9 @@ Object.assign(lookup2, {
 
 // src/front-end-module/uibuilder.module.js
 var version = "6.0.0-esm";
-var logLevel = 1;
+var isMinified = !/param/.test(function(param) {
+});
+var logLevel = isMinified ? 0 : 1;
 var LOG_STYLES = {
   error: {
     css: "background: red; color: black;",
@@ -2378,14 +2380,14 @@ function log() {
   );
 }
 function makeMeAnObject(thing, property) {
-  if (property === null || property === void 0)
+  if (!property)
     property = "payload";
   if (typeof property !== "string") {
     log("warn", "uibuilderfe:makeMeAnObject", `WARNING: property parameter must be a string and not: ${typeof property}`)();
     property = "payload";
   }
   let out = {};
-  if (typeof thing === "object") {
+  if (thing !== null && thing.constructor.name === "Object") {
     out = thing;
   } else if (thing !== null) {
     out[property] = thing;
@@ -2401,18 +2403,15 @@ function urlJoin() {
   }).join("/");
   return url2.replace("//", "/");
 }
-var _connectedNum, _events, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _isMinified, _MsgHandler, _a;
+var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _a;
 var Uib = (_a = class {
   constructor() {
     __privateAdd(this, _connectedNum, 0);
-    __privateAdd(this, _events, {});
     __publicField(this, "_ioChannels", { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
     __privateAdd(this, _pingInterval, void 0);
     __privateAdd(this, _propChangeCallbacks, {});
     __privateAdd(this, _msgRecvdByTopicCallbacks, {});
     __privateAdd(this, _timerid, null);
-    __privateAdd(this, _isMinified, !/param/.test(function(param) {
-    }));
     __privateAdd(this, _MsgHandler, void 0);
     __publicField(this, "_socket");
     __publicField(this, "clientId", "");
@@ -3343,7 +3342,7 @@ ioPath: ${this.ioPath}`)();
       log("error", "Uib:start", "Start completed. ERROR: Socket.IO client library NOT LOADED.")();
     }
   }
-}, _connectedNum = new WeakMap(), _events = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _isMinified = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
+}, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
   version,
   type: "module",
   displayName: "uibuilder"
