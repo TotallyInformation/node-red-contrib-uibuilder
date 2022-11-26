@@ -380,35 +380,17 @@ class UibSockets {
         // If the sender hasn't added msg._socketId, add the Socket.id now
         if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
+        // If required, add the clientId and real IP to the msg
+        if (node.showClientId) {
+            if (!msg._uib) msg._uib = {}
+            msg._uib.clientId = socket.handshake.auth.clientId
+            msg._uib.remoteAddress = getClientRealIpAddress(socket)
+        }
+
         // Send out the message for downstream flows
         // TODO: This should probably have safety validations!
         this.sendIt(msg, node)
 
-        // // If security is active...
-        // if (node.useSecurity === true) {
-
-        //     /** Check for valid auth and session - JWT is removed if not authorised
-        //      * @type {MsgAuth} */
-        //     msg._auth = security.authCheck2( msg, node, this.getClientDetails(socket) )
-        //     //msg._auth = security.authCheck(msg, node, socket.id)
-        //     //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
-
-        //     //console.log('[UIBUILDER:addNs:on-client-msg] _auth: ', msg._auth)
-
-        //     // Only send the msg onward if the user is validated or if unauth traffic permitted
-        //     if ( node.allowUnauth === true || msg._auth.jwt !== undefined ) {
-        //         this.sendIt(msg, node)
-        //         tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
-        //     } else
-        //         log.info(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. Ignoring.`)
-
-        // } else {
-
-        //     // Send out the message for downstream flows
-        //     // TODO: This should probably have safety validations!
-        //     this.sendIt(msg, node)
-
-        // }
     } // ---- End of listenFromClient ---- //
 
     /** Add a new Socket.IO NAMESPACE
