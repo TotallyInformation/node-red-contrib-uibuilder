@@ -193,6 +193,7 @@
 
 /** uibuilderEditorVars
  * @typedef {object} uibuilderEditorVars The node instance variables accessible from the Editor config panel
+ * 
  * @property {string} name Descriptive name, only used by Editor
  * @property {string} topic msg.topic overrides incoming msg.topic
  * @property {string} url The url path (and folder path) to be used by this instance
@@ -206,6 +207,9 @@
  * @property {boolean} showfolder Provide a folder index web page?
  * @property {boolean} reload If true, notify all clients to reload on a change to any source file
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
+ * @property {string} deployedVersion The version of uibuilder when this node was last deployed
+ * @property {boolean} showClientId Whether to include msg._ui.clientId & real IP in std output msgs
+ * 
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -214,7 +218,6 @@
  * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  */
 
 /** uibNode
@@ -235,6 +238,9 @@
  * @property {boolean} showfolder Provide a folder index web page?
  * @property {boolean} reload If true, notify all clients to reload on a change to any source file
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
+ * @property {string} deployedVersion The version of uibuilder when this node was last deployed
+ * @property {boolean} showClientId Whether to include msg._ui.clientId & real IP in std output msgs
+ * 
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -243,7 +249,6 @@
  * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  *
  * @property {Function} send Send a Node-RED msg to an output port
  * @property {Function=} done Dummy done Function for pre-Node-RED 1.0 servers
