@@ -189,37 +189,16 @@ function inputMsgHandler (msg, send, done) {
     if ( this.allowScripts !== true && Object.prototype.hasOwnProperty.call(msg, 'script') ) delete msg.script
     if ( this.allowStyles !== true && Object.prototype.hasOwnProperty.call(msg, 'style') ) delete msg.style
 
-    let sendme = false
+    // pass the complete msg object to the uibuilder client
+    if ( (!Object.prototype.hasOwnProperty.call(msg, 'topic')) && (this.topic !== '') ) msg.topic = this.topic
+    sockets.sendToFe( msg, this.url, uib.ioChannels.server )
 
-    // If security is active...
-    // TODO need to add client tracking for this to work
-    sendme = true
-    /*
-    if (this.useSecurity === true) {
-        // Check for valid auth and session
-        //  @type MsgAuth
-        msg._auth = security.authCheck2(msg, this)
-        tilib.mylog('[UIBUILDER:inputMsgHandler] _auth: ', msg._auth)
-        // Only send the msg onward if the user is validated OR if unauth is allowed
-        if (msg._auth.jwt !== undefined || this.allowUnauth === true ) sendme = true
-        sendme = true
-    } else sendme = true
-    */
-
-    if (sendme) {
-
-        // pass the complete msg object to the uibuilder client
-        if ( (!Object.prototype.hasOwnProperty.call(msg, 'topic')) && (this.topic !== '') ) msg.topic = this.topic
-        sockets.sendToFe( msg, this.url, uib.ioChannels.server )
-
-        // Pass on to output port 1 if wanted
-        if (this.fwdInMessages) {
-            // Send on the input msg to output
-            send(msg)
-            done()
-            log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg passed downstream to next node. ${JSON.stringify(msg)}`)
-        }
-
+    // Pass on to output port 1 if wanted
+    if (this.fwdInMessages) {
+        // Send on the input msg to output
+        send(msg)
+        done()
+        log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg passed downstream to next node. ${JSON.stringify(msg)}`)
     }
 
     // tilib.dumpMem('On Msg')
@@ -255,14 +234,10 @@ function nodeInstance(config) {
     this.templateFolder  = config.templateFolder || templateConf.blank.folder
     this.extTemplate     = config.extTemplate
     this.showfolder      = config.showfolder === undefined ? false : config.showfolder
-    // this.useSecurity     = config.useSecurity
-    // this.allowUnauth     = config.allowUnauth === undefined ? false : config.allowUnauth
-    // this.sessionLength   = Number(config.sessionLength) || 120  // in seconds
-    // this.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
-    // this.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
     this.reload          = config.reload === undefined ? false : config.reload
     this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:setupInstanceStatic
     this.deployedVersion = config.deployedVersion
+    this.showClientId    = config.showClientId
     //#endregion ====== Local node config copy ====== //
 
     log.trace(`[uibuilder:nodeInstance:${this.url}] ================ instance registered ================`)
@@ -611,13 +586,6 @@ function nodeInstance(config) {
     }
 
     //#endregion ----- root folder ----- //
-
-    /** Set up the basics for security in case we need them for any uib instance */
-    // try {
-    //     security.setup(uib)
-    // } catch (e) {
-    //     console.error('[uibuilder:runtimeSetup] Security setup error ', e)
-    // }
 
     /** Do this before doing the web setup so that the packages can be served */
     packageMgt.setup(uib)
