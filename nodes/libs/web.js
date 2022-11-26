@@ -113,16 +113,13 @@ class UibWeb {
      * param {Object} server reference to ExpressJS server being used by uibuilder
      */
     setup( uib ) {
-        if ( uib.RED === null ) throw new Error('uib.RED is null')
+        if ( !uib ) throw new Error('[uibuilder:web.js:setup] Called without required uib parameter or uib is undefined.')
+        if ( uib.RED === null ) throw new Error('[uibuilder:web.js:setup] uib.RED is null')
 
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
             uib.RED.log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
-        }
-
-        if ( !uib ) {
-            throw new Error('[uibuilder:web.js:setup] Called without required uib parameter')
         }
 
         const RED = this.RED = uib.RED
@@ -541,8 +538,6 @@ class UibWeb {
             const pathRoot = path.join(rootFolder, node.url, 'views')
             const requestedView = path.parse(req.path)
             let filePath = path.join(pathRoot, requestedView.base)
-
-            // this.app.set('foo', 'bar') //! TODO - remove
 
             if (this.app.get('view engine')) {
                 filePath = path.join(pathRoot, `${requestedView.name}.ejs`)

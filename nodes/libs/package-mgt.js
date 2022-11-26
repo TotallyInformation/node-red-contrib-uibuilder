@@ -90,16 +90,13 @@ class UibPackages {
      * @param {uibConfig} uib uibuilder module-level configuration
      */
     setup( uib ) {
-        if ( uib.RED === null ) throw new Error('uib.RED is null')
+        if ( !uib ) throw new Error('[uibuilder:UibPackages.js:setup] Called without required uib parameter or uib is undefined.')
+        if ( uib.RED === null ) throw new Error('[uibuilder:UibPackages.js:setup] uib.RED is null')
 
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
             uib.RED.log.warn('[uibuilder:UibPackages:setup] Setup has already been called, it cannot be called again.')
             return
-        }
-
-        if ( !uib ) {
-            throw new Error('[uibuilder:UibPackages.js:setup] Called without required uib parameter')
         }
 
         this.RED = uib.RED
@@ -238,13 +235,14 @@ class UibPackages {
     }
 
     async updIndividualPkgDetails(pkgName, lsParsed) {
-        if ( this.uibPackageJson === null ) throw new Error('this.uibPackageJson is null')
+        if ( this.uibPackageJson === null ) throw new Error('[uibuilder:UibPackages.js:updIndividualPkgDetails] this.uibPackageJson is null')
         const pj = this.uibPackageJson
+
+        if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined || pj.dependencies === undefined ) throw new Error('pgkMgt:updIndividualPkgDetails: pj.uibuilder, pj.uibuilder.packages or pj.dependencies is undefined')
 
         // Make sure only packages in uibRoot/package.json dependencies are processed
         if ( !pj.dependencies[pkgName] ) return
 
-        if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined || pj.dependencies === undefined ) throw new Error('pgkMgt:updIndividualPkgDetails: pj.uibuilder, pj.uibuilder.packages or pj.dependencies is undefined')
         const packages =  pj.uibuilder.packages
 
         packages[pkgName] = {}

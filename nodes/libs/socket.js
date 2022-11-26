@@ -130,7 +130,8 @@ class UibSockets {
      * @param {Express} server reference to ExpressJS server being used by uibuilder
      */
     setup( uib, server ) {
-        if (uib.RED === null) throw new Error('uib.RED is null')
+        if ( !uib || !server ) throw new Error(`[uibuilder:socket.js:setup] Called without required parameters or uib and/or server are undefined.`)
+        if (uib.RED === null) throw new Error('[uibuilder:socket.js:setup] uib.RED is null')
 
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
@@ -138,9 +139,6 @@ class UibSockets {
             return
         }
 
-        if ( !uib || !server ) {
-            throw new Error(`[uibuilder:socket.js:setup] Called without required parameters. uib=${uib}, server=${server}`)
-        }
 
         /** reference to Core Node-RED runtime object */
         this.RED = uib.RED
@@ -152,7 +150,7 @@ class UibSockets {
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
         this._socketIoSetup()
 
-        if (uib.configFolder === null) throw new Error('uib.configFolder is null')
+        if (uib.configFolder === null) throw new Error('[uibuilder:socket.js:setup] uib.configFolder is null')
 
         // If available, set up optional outbound msg middleware
         this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null }
