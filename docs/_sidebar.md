@@ -10,9 +10,9 @@
   * [How & why to use the list node](list-node.md)
   * [How to use the cache node](cache-node.md)
   * [How to use instance API's](instance-apis.md)
-  * [Using the modern front-end client](uibuilder.module.md)
 * Developing UI's
-  * [The uibuilderfe library](front-end-library.md)
+  * [The modern front-end client](uibuilder.module.md)
+  * [Old uibuilderfe client library](front-end-library.md)
   * [Creating Templates](creating-templates)
   * [Browser auto-refresh](browser-refresh.md)
   * [Avoiding a build step](front-end-no-build.md)

@@ -3,7 +3,7 @@ title: uibuilder Technical Documentation
 description: >
    uibuilder is a low-code solution for easily building data-driven web sites and web apps in conjunction with Node-RED.
 created: 2019-06-16 16:16:00
-lastUpdated: 2022-10-01 20:28:59
+lastUpdated: 2022-11-26 17:45:41
 ---
 
 ?> These are the docs for uibuilder v6. If you need the v5 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate uibuilder version: `npm install node-red-contrib-uibuilder@5` then use the tech docs links from a uibuilder node.
@@ -37,13 +37,13 @@ WIKI, code (PR's), documentation, and examples are all welcome contributions and
 * [How & why to use the list node](list-node.md)
 * [How to use the cache node](cache-node.md)
 * [How to define and use Instance API's](instance-apis.md)
-* [Using the new ECMA Module front-end client](uibuilder.module.md)
 
 ## Developing UI's
 
-Information on using the front-end uibuilderfe library in your own code. Information on using build processes if you need them.
+Information on using the front-end client libraries in your own code, creating templates, using build processes if you need them.
 
-* [The uibuilderfe Library](front-end-library.md)
+* [Using the new ECMA Module front-end client](uibuilder.module.md)
+* [Old uibuilderfe Library](front-end-library.md)
 * [Creating Templates](creating-templates)
 * [Browser auto-refresh](browser-refresh.md)
 * [Avoiding a build step](front-end-no-build.md)

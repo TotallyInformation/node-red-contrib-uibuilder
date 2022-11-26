@@ -14,6 +14,23 @@ However, there are a number of supporting features in uibuilder that let you con
 
 ?> Having said that, if you or anyone else discovers flaws in the programming, I will work with you/them as well as I can in order to fix things. But this is not a paid-for development and I don't always have much time. I'm also open to Pull Requests to fix specific issues.
 
+- [Terminology](#terminology)
+- [How do I secure my uibuilder app?](#how-do-i-secure-my-uibuilder-app)
+  - [Step #1: TLS (HTTPS)](#step-1-tls-https)
+  - [Step #2: Sanitising Inputs](#step-2-sanitising-inputs)
+  - [Step #3: Identity and authentication](#step-3-identity-and-authentication)
+  - [Step #4: Authorisation](#step-4-authorisation)
+  - [Step #5: Restricting access to data](#step-5-restricting-access-to-data)
+  - [Step #6: Security Testing](#step-6-security-testing)
+  - [Step #7: Logging \& Monitoring](#step-7-logging--monitoring)
+  - [Securing the Infrastructure](#securing-the-infrastructure)
+- [Configuring Node-RED for TLS](#configuring-node-red-for-tls)
+- [Configuring the uibuilder custom server for TLS](#configuring-the-uibuilder-custom-server-for-tls)
+- [Standard Schema for `msg._auth`](#standard-schema-for-msg_auth)
+- [Additional Information](#additional-information)
+- [Ideas for custom authentication schemes using uibuilder](#ideas-for-custom-authentication-schemes-using-uibuilder)
+
+
 ## Terminology
 
 IT Security in general is a complex and specialist area. As such it comes with its own terms, a few of which are particularly relavent here.
@@ -259,7 +276,9 @@ The same msg property is also used when sending information from the Node-RED se
 
 ## Ideas for custom authentication schemes using uibuilder
 
-Because uibuilder lets you create custom middleware for both Express and Socket.IO, it is still possible to implement custom security just using uibuilder and Node-RED.
+Because uibuilder lets you create custom middleware for both Express and Socket.IO, it is still possible to implement custom security just using uibuilder and Node-RED. Middleware can be added for ExpressJS (https) connections, Socket.IO connections, and for each sent and recieved Socket.IO message (only the message itself can be changed for these). Note that full security and client information for Socket.IO is only available on a (re)connection, it is not available with each message. So if you need to do any session management and want to protect from credential hijack attacks, you will need to add custom information to every message.
+
+The uibuilder front-end clients also create a stable clientId that is stored in a session cookie which lasts until the browser is restarted. That id along with the real IP of the client is sent in control messages and optionally in standard messages. These can also help with custom authentication, authorisation and session management.
 
 ?> **NOTE**: When managing sessions, do not forget that your users will rarely load a web page. Most communication happens via websockets, not http(s). Because of this, full, secure session management is actually quite hard.<br><br> To help with this, uibuilder now implements a new HTTP(S) `ping` URL along with a `setPing` function in the front-end library. By passing an integer number of milliseconds argument to setPing, the client will access the ping endpoint every n ms. This could be used to keep a client session alive.
 
