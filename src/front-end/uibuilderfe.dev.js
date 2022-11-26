@@ -404,8 +404,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     // Can only set headers when polling
                     polling: {
                         extraHeaders: {
-                            'x-clientid': `uibuilderfe; ${self.clientId}`,
-                            //Authorization: 'test', //TODO: Replace with self.jwt variable? // Authorization: `Bearer ${your_jwt}`
+                            'x-clientid': `${self.moduleName}; old-client; ${self.version}; ${this.clientId}`
                         }
                     },
                 },

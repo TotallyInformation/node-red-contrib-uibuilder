@@ -868,10 +868,10 @@
   }
   function pathNames(obj, path) {
     const regx = /\/{2,9}/g, names = path.replace(regx, "/").split("/");
-    if (path.substr(0, 1) == "/" || path.length === 0) {
+    if (path.slice(0, 1) == "/" || path.length === 0) {
       names.splice(0, 1);
     }
-    if (path.substr(path.length - 1, 1) == "/") {
+    if (path.slice(-1) == "/") {
       names.splice(names.length - 1, 1);
     }
     return names;
@@ -940,12 +940,13 @@
       this.pingTimeoutTimer = null;
       if (typeof addEventListener === "function") {
         if (this.opts.closeOnBeforeunload) {
-          addEventListener("beforeunload", () => {
+          this.beforeunloadEventListener = () => {
             if (this.transport) {
               this.transport.removeAllListeners();
               this.transport.close();
             }
-          }, false);
+          };
+          addEventListener("beforeunload", this.beforeunloadEventListener, false);
         }
         if (this.hostname !== "localhost") {
           this.offlineEventListener = () => {
@@ -1253,6 +1254,7 @@
         this.transport.close();
         this.transport.removeAllListeners();
         if (typeof removeEventListener === "function") {
+          removeEventListener("beforeunload", this.beforeunloadEventListener, false);
           removeEventListener("offline", this.offlineEventListener, false);
         }
         this.readyState = "closed";
@@ -2121,11 +2123,13 @@
       try {
         this.decoder.add(data);
       } catch (e) {
-        this.onclose("parse error");
+        this.onclose("parse error", e);
       }
     }
     ondecoded(packet) {
-      this.emitReserved("packet", packet);
+      nextTick(() => {
+        this.emitReserved("packet", packet);
+      }, this.setTimeoutFn);
     }
     onerror(err) {
       this.emitReserved("error", err);
@@ -2448,7 +2452,7 @@
         transportOptions: {
           polling: {
             extraHeaders: {
-              "x-clientid": `uibuilderfe; ${this.clientId}`
+              "x-clientid": `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`
             }
           }
         }
@@ -3268,6 +3272,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       this.socketOptions.path = this.ioPath;
       this.socketOptions.auth.pageName = this.pageName;
       this.socketOptions.auth.clientId = this.clientId;
+      this.socketOptions.transportOptions.polling.extraHeaders["x-clientid"] = `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`;
       this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
       log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
       this._socket = lookup2(this.ioNamespace, this.socketOptions);

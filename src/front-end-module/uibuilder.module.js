@@ -371,8 +371,7 @@ export const Uib = class Uib {
             // Can only set headers when polling
             polling: {
                 extraHeaders: {
-                    'x-clientid': `uibuilderfe; ${this.clientId}`,
-                    // Authorization: 'test', //TODO: Replace with self.jwt variable? // Authorization: `Bearer ${your_jwt}`
+                    'x-clientid': `${Uib._meta.displayName}; ${Uib._meta.type}; ${Uib._meta.version}; ${this.clientId}`,
                 }
             },
         },
@@ -1685,6 +1684,7 @@ export const Uib = class Uib {
         this.socketOptions.auth.pageName = this.pageName
         // Add stable client id (static unless browser closed)
         this.socketOptions.auth.clientId = this.clientId
+        this.socketOptions.transportOptions.polling.extraHeaders['x-clientid'] = `${Uib._meta.displayName}; ${Uib._meta.type}; ${Uib._meta.version}; ${this.clientId}`
         // How many times has the client (re)connected since page load
         this.socketOptions.auth.connectedNum = this.#connectedNum
         //#endregion --- ---- ---
