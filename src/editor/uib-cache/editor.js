@@ -32,8 +32,7 @@
         })
     }
 
-    /**
-     *
+    /** Return a text string showing if caching by a key
      * @returns {string} Text to show if "Cache By" is set
      */
     function helpTextNumMsgsCacheBy() {
@@ -72,13 +71,7 @@
             $('#node-input-varName').val('uib_cache')
         }
 
-        // One-day maybe, request put in, doesn't currently work since context isn't an option
-        // $('#node-input-store').typedInput({
-        //     type: 'str',
-        //     default: 'node',
-        //     types: ['context', 'flow', 'global'],
-        //     typeField: '#node-input-store-type'
-        // })
+        // Populate Type dropdown: node, flow, global
         $('#node-input-storeContext').typedInput({
             type: 'contextType',
             types: [

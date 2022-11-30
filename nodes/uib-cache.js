@@ -79,7 +79,10 @@ function addToCache(msg, node) {
     if (mod.RED === null) return
     if (node.cacheKey === undefined) return
 
-    // If this is a new property value, create empty array
+    // If msg[<cacheKey>] doesn't exist (or is an empty string), do not process
+    if ( !msg[node.cacheKey] ) return
+
+    // If this is a new property value in the stored variable, create empty array
     if ( !node.cache[msg[node.cacheKey]] ) node.cache[msg[node.cacheKey]] = []
 
     // HAS to be a CLONE to avoid downstream changes impacting cache

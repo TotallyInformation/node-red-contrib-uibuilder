@@ -41,6 +41,10 @@ This is also the case if you choose the option to cache each message individuall
 If you set the number of messages to be cached to zero, the node will not remove any old messages from the cache, 
 you will have to periodically empty the cache using a control message. See below regarding using flow/global contexts for an alternative.
 
+#### Caveats
+
+When grouping by a msg property, note that the property **must** contain a string. Other data types may behave inconsistently. In addition, the string should not be an empty string as that is ignored by the cache.
+
 ### Context Stores
 
 The node uses Node-RED's built-in context storage library to retain the data.
@@ -61,3 +65,9 @@ If using the flow or global stores, you can change the name of the variable that
 
 Memory is the biggest limitation, trying to cache too many entries **will** eventually crash Node-RED. This can 
 be hard to predict as it depends on a lot of variables. Caution is advised.
+
+The "Cache by" (group-by) `msg` property must contain string values, other data types will be handled inconsistently if at all. The string value cannot be an empty string because that is ignored.
+
+Using `flow` or `global` cache types exposes the data to other nodes which could change the entries. This might be useful in some cases since it provides alternatives to simply sending the data into the cache node. These could be used for much more complex processing if needed. However, obviously this must be treated with caution. 
+
+Also, when using `flow` or `global` types, you are able to change the name of the variable. Make sure that the name does not clash with other use.
