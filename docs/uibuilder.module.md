@@ -8,9 +8,11 @@ lastUpdated: 2022-11-26 17:46:19
 
 This is the next-generation front-end client for uibuilder. It has some nice new features but at the expense of only working with modern(ish) browsers since early 2019.
 
-!> Note that this page refers only to the "new" front-end library for uibuilder, this is now the preferred library. If you are using the original library, please refer to [this page](front-end-library.md). The original library is now functionally stable (no further updates after uibuilder v5) and will eventually be deprecated.
+> [!attention|label:Custom Title] Custom Title
+> Note that this page refers only to the "new" front-end library for uibuilder, this is now the preferred library. If you are using the original library, please refer to [this page](front-end-library.md). The original library is now functionally stable (no further updates after uibuilder v5) and will eventually be deprecated.
 
-?> It is recommended NOT to compile/build the uibuilder client library into your own front-end build code. There are few, if any advantages on modern browsers. However, if you really want to do that, you may prefer to use the source-code version of the library which will be found at `~/.node-red/node_modules/node-red-contrib-uibuilder/src/front-end-module/uibuilder.module.js`.
+> [!note]
+> It is recommended NOT to compile/build the uibuilder client library into your own front-end build code. There are few, if any advantages on modern browsers. However, if you really want to do that, you may prefer to use the source-code version of the library which will be found at `~/.node-red/node_modules/node-red-contrib-uibuilder/src/front-end-module/uibuilder.module.js`.
 
 - [Introduction](#introduction)
 - [How to use](#how-to-use)
