@@ -24,7 +24,7 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
     * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
     * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
     * uibindex page
-      * Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`).
+      * **Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`)**.
 
     * Creating new folder - new folder should be selected after create.
     * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
