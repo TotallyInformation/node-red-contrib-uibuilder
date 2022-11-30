@@ -22,7 +22,14 @@
  *         Intl.DisplayNames, Intl.DateTimeFormat, (Experimental: Async Local Storage, Top-Level Await, Diagnostic report),
  *         WeakReferences, private class methods
  * v15 - logical assignment operators, String.prototype.replaceAll, Promise.any, AggregateError, AbortController,
- *        Promisified setTimeout/setImmediate
+ *        (Experimental Promisified setTimeout/setImmediate)
+ * v16 - Promisified setTimeout/setImmediate, RegExp match indices. npm v7 (peer deps now installed again).
+ *       fs.rmdir no longer supports recursive (use new fs.rm)
+ * v17 - OpenSSL 3 (incl QUIC), Readline Promise API
+ * v18 - (Experimental: Fetch API, Web Streams API, Test Runner), HTTP Timeouts, findLast/findLastIndex array methods, 
+ *       Improvements to the Intl.Locale API [calendars, collations, hourCycles, numberingSystems, timeZones, textInfo, weekInfo], 
+ *       Intl.supportedValuesOf function
+ * v19 - (Experimental: node --watch), HTTP(S)/1.1 KeepAlive by default, Stable WebCrypto API, Intl.NumberFormat
  */
 module.exports = {
     env: {
