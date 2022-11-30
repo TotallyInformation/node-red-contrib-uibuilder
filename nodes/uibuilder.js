@@ -237,7 +237,7 @@ function nodeInstance(config) {
     this.reload          = config.reload === undefined ? false : config.reload
     this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:setupInstanceStatic
     this.deployedVersion = config.deployedVersion
-    this.showClientId    = config.showClientId
+    this.showMsgUib    = config.showMsgUib // Show additional client id in standard msgs (see socket.js)
     //#endregion ====== Local node config copy ====== //
 
     log.trace(`[uibuilder:nodeInstance:${this.url}] ================ instance registered ================`)

@@ -73,6 +73,20 @@ function getClientRealIpAddress(socket) {
     return clientRealIpAddress
 } // --- End of getClientRealIpAddress --- //
 
+/** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
+ * @param {socketio.Socket} socket Socket.IO socket object
+ * @returns {string | string[] | undefined} Best estimate of the client's real IP address
+ */
+ function getClientPageName(socket, node) {
+    let pageName = socket.handshake.auth.pathName.replace(`/${node.url}/`, '')
+    if ( pageName.endsWith('/') ) pageName += 'index.html'
+    if ( pageName === '' ) pageName = 'index.html'
+
+    return pageName
+} // --- End of getClientPageName --- //
+
+
+
 class UibSockets {
     // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
     /** Flag to indicate whether setup() has been run
@@ -378,11 +392,12 @@ class UibSockets {
         // If the sender hasn't added msg._socketId, add the Socket.id now
         if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
-        // If required, add the clientId and real IP to the msg
-        if (node.showClientId) {
+        // If required, add the clientId, page name and real IP to the msg using msg._uib
+        if (node.showMsgUib) {
             if (!msg._uib) msg._uib = {}
             msg._uib.clientId = socket.handshake.auth.clientId
             msg._uib.remoteAddress = getClientRealIpAddress(socket)
+            msg._uib.pageName = getClientPageName(socket, node)
         }
 
         // Send out the message for downstream flows
@@ -446,9 +461,7 @@ class UibSockets {
             // Note, could use socket.handshake.auth.pageName instead
             let pageName
             if ( socket.handshake.auth.pathName ) {
-                pageName = socket.handshake.auth.pathName.replace(`/${node.url}/`, '')
-                if ( pageName.endsWith('/') ) pageName += 'index.html'
-                if ( pageName === '' ) pageName = 'index.html'
+                pageName = getClientPageName(socket, node)
             }
 
             //#region ----- Event Handlers ----- //

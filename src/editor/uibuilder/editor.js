@@ -1478,7 +1478,7 @@
         $('#node-input-allowUnauth').prop('checked', node.allowUnauth)
         $('#node-input-tokenAutoExtend').prop('checked', node.tokenAutoExtend)
         $('#node-input-reload').prop('checked', node.reload)
-        $('#node-input-showClientId').prop('checked', node.showClientId)
+        $('#node-input-showMsgUib').prop('checked', node.showMsgUib)
     }
 
     /** Show what server is in use
@@ -2027,7 +2027,7 @@
             reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
             sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)
             deployedVersion: { validate: validateVersion },
-            showClientId: { value: false },    // Show msg._uib.clientId & real IP in standard msgs
+            showMsgUib: { value: false },    // Show msg._uib in standard msgs (client id, ip, page name)
         },
         credentials: {
             jwtSecret: { type: 'password' },  // text or password

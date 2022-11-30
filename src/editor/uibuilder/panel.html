@@ -200,12 +200,13 @@
             Need to re-deploy for the folder to change.
         </div>
 
-        <div aria-label="Pass the client id and ip to standard message output?" class="form-row" 
-                title="If turned on, msg._uib.clientId and real ip addr is included in standard msgs. (msg.clientId and IP are always included in control messages)">
-            <input type="checkbox" id="node-input-showClientId" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-showClientId" style="width: 90%;">Include <code>msg._uib.clientId|remoteAddress</code> in standard msg output.</label>
+        <div aria-label="Pass the msg._uib to standard message output?" class="form-row" 
+                title="If turned on, msg._uib included in standard msgs">
+            <input type="checkbox" id="node-input-showMsgUib" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-showMsgUib" style="width: 90%;">Include <code>msg._uib</code> in standard msg output.</label>
         </div>
-        <div aria-label="clientId information" class="form-row form-tips node-help">
+        <div aria-label="msg._uib information" class="form-row form-tips node-help">
+            This includes the <code>clientId</code>, <code>remoteAddress</code> and <code>pageName</code> properties from the client in the output<br>
             The <code>clientId</code> is generated in the browser and remains stable while the browser is open.
             It is reset when the browser restarts. Control msgs always include <code>msg.clientId</code>.
         </div>
