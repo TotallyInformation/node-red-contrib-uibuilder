@@ -6,9 +6,7 @@ typora-root-url: docs/images
 
 ## Known Issues
 
-* `uib-cache` node: Sending to global with no topic does not work. Works for node and flow. Same for list node. List node doesn't store even for flow or node but cache node does.
-  
-  Work-around but giving a default "topic" name of `[null]`?
+None
 
 ## To do/In-progress
 
@@ -18,26 +16,30 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 
 * Check [deepscan](https://deepscan.io/)
 
+* `uib-list` node
+  * **Add cache processing to .js file**
+  
 * `uibuilder` node
-  * Editor:
-    
+  * Editor:    
     * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
-    * Creating new folder - new folder should be selected after create.
     * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
+    * uibindex page
+      * Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`).
+
+    * Creating new folder - new folder should be selected after create.
     * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
     * Add visual error when changing advanced/Serve to a folder with no index.html.
     * Option for project folder storage.
     * Libraries tab
       * Add update indicator to Libraries tab.
       * Trigger indicator to Libraries to show if new major version available when switching to the tab.
-  * uibindex page
-    * Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`).
 
 * Old client library
-  * Fix page name processing.
+  * **Fix page name processing**.
   * Check connections count https://discourse.nodered.org/t/uibuilder-amazing/40460/55.
 
 * Client library
+  * Consider adding a default `msg.topic` option.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
 
@@ -51,6 +53,7 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 
 * Minimum Node-RED version is now v3
 * Minimum Node.js version is now v14 LTS (in line with Node-RED v3) - note that the minimum minor version changes to the latest v14 LTS version whenever uibuilder is updated.
+* Not sure if this is really breaking. However, `uib-cache` nodes were not properly handling cases where, when processing incoming msgs, the chosen "Cache by" msg property was an empty string in the input msg. Previously handling of that case was dependent on the store and type being used. It is now ignored. The common case is where the setting is `msg.topic` and using the default trigger node which has `msg.topic` set to an empty string. Previously that was _sometimes_ recorded and sometimes not. Now it is never recorded.
 
 ### Fixed
 
@@ -65,7 +68,7 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 
 * New example: Demonstrating logging methods of messages passed both into and from a uibulder node, to both the Node-RED debug panel and the Web Dev console. Many thanks to [Harold Peters Inskipp](https://github.com/HaroldPetersInskipp) for the contribution.
 * New Template: Basic Vue v3 example with no build step required.
-* New editor option: Add `msg._uib.clientId` & `msg._uib.remoteIp` to standard messages (off by default). Can be used to help with authentication/authorisation & session management within Node-RED flows.
+* New editor option: Add `msg._uib` to standard messages (off by default). Can be used to help with authentication/authorisation & session management within Node-RED flows. Contains `clientId` & `remoteAddress` and `pageName` properties.
 
 
 ### Changed

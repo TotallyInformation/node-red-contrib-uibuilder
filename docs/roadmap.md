@@ -107,6 +107,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Improvements to `uib-cache` node
   * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
+  * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
+  * Add checks to prevent non-string cach by property values.
 
 * Extensions to experimental `uib-list` node
   * Cope with parent uibuilder node renaming url
@@ -115,6 +117,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add optional page filter
   * Add return msg handling like uib-sender.
   * Updates should update the original add which should be saved for replay but should instantly output an update
+  * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
@@ -159,7 +162,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Details index page
     * Make sure that the ExpressJS `views` folder is show.
 
-* package-mgt.js
+* `package-mgt.js`
   * Rationalise the various functions - several of them have similar tasks.
 
 * Updates to Documentation
