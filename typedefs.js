@@ -208,7 +208,7 @@
  * @property {boolean} reload If true, notify all clients to reload on a change to any source file
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
- * @property {boolean} showClientId Whether to include msg._ui.clientId & real IP in std output msgs
+ * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
  * 
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
@@ -239,7 +239,7 @@
  * @property {boolean} reload If true, notify all clients to reload on a change to any source file
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
- * @property {boolean} showClientId Whether to include msg._ui.clientId & real IP in std output msgs
+ * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
  * 
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
