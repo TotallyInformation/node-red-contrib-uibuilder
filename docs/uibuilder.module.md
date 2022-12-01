@@ -3,7 +3,7 @@ title: Documentation for the modern, modular front-end client `uibuilder.esm.js`
 description: >
    This is the new uibuilder front-end library initially introduced in v5.1. It provides socket.io message connectivity to and from Node-RED, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions. It also allows data-/configuration-driven interfaces to be created from JSON or Node-RED messages. IIFE (UMD) and ESM versions of the client are provided.
 created: 2022-06-11 14:15:26
-lastUpdated: 2022-11-26 17:46:19
+lastUpdated: 2022-12-01 19:48:05
 ---
 
 This is the next-generation front-end client for uibuilder. It has some nice new features but at the expense of only working with modern(ish) browsers since early 2019.
