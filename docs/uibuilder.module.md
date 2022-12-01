@@ -8,7 +8,7 @@ lastUpdated: 2022-11-26 17:46:19
 
 This is the next-generation front-end client for uibuilder. It has some nice new features but at the expense of only working with modern(ish) browsers since early 2019.
 
-> [!attention|label:Custom Title] Custom Title
+> [!attention]
 > Note that this page refers only to the "new" front-end library for uibuilder, this is now the preferred library. If you are using the original library, please refer to [this page](front-end-library.md). The original library is now functionally stable (no further updates after uibuilder v5) and will eventually be deprecated.
 
 > [!note]
@@ -170,7 +170,11 @@ In `index.js`
 
 ```javascript
 // ... your custom code, the uibuilder global object is available ...
-// note that we almost certainly don't need the uibuilder.start() line any more
+// note that we almost certainly don't need the uibuilder.start() line any more.
+// The only exception being if you are serving your html/js files from a different
+// server to the one serving Node-RED/uibuilder. This might be the case if you
+// are running the dev server of a framework or build process. In that case:
+// uibuilder.start({ioNamespace: 'https://remote.server/uib-instance-url'})
 
 window.onload = (evt) => {
     // Put code in here if you need to delay it until everything is really loaded and ready.
@@ -211,7 +215,11 @@ In `index.js`
 import '../uibuilder/uibuilder.esm.min.js'
 
 // ... your custom code, the uibuilder global object is available ...
-// note that we almost certainly don't need the uibuilder.start() line any more
+// note that we almost certainly don't need the uibuilder.start() line any more.
+// The only exception being if you are serving your html/js files from a different
+// server to the one serving Node-RED/uibuilder. This might be the case if you
+// are running the dev server of a framework or build process. In that case:
+// uibuilder.start({ioNamespace: 'https://remote.server/uib-instance-url'})
 
 window.onload = (evt) => {
     // Put code in here if you need to delay it until everything is really loaded and ready.
@@ -338,6 +346,8 @@ uibuilder.start({
     ioPath: '/uibuilder/vendor/socket.io', // Actual path may be altered if httpNodeRoot is set in Node-RED settings
 })
 ```
+
+Note that if the Node-RED/uibuilder server is different to the one serving up your html and/or js files (as when using a framework dev server for example), you will need to pass the remote server and uibuilder URL as the ioNamespace: `uibuilder.start({ioNamespace: 'https://remote.server/uib-instance-url'})`
 
 ### $ function
 
@@ -1299,6 +1309,8 @@ Alternatively, you can, of course, use absolute URLs such as `<script type="modu
 This version of the uibuilder client library is much more robust than previous versions at working out the socket.io namespace, etc. However, it does rely on your browser allowing first-party cookies. If you are having issues with socket.io, first thing to check is the cookies for your page. Make sure they are correct.
 
 This version of the library uses a simplified `options` object passed to `uibuilder.start()` should you need to pass the socket.io settings.
+
+If Node-RED and uibuilder are on a different server to what is serving up your html and/or js code (e.g. if using a framework dev server), you need to pass the remote server as the ioNamespace parameter to the start function: `uibuilder.start({ioNamespace: 'https://remote.server/uib-instance-url'})`.
 
 ### Socket.IO repeatedly disconnects
 
