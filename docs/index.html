@@ -123,7 +123,7 @@
                         '<hr/>',
                         '<footer>',
                         '<span>',
-                        'Copyright &copy; 2022', // per-page - (c) and date
+                        `Copyright &copy; ${(new Date()).getFullYear()}`, // per-page - (c) and date
                         ` <a href="${orgUrl}">${orgName}</a>.`,
                         '', // updated date
                         '</span> ',
@@ -152,13 +152,22 @@
                             //#endregion ---  ---
 
                             //#region --- Add page specific (c) and last updated date to each page if available from YAML front-matter ---
-                            if ( vm.frontmatter.created ) {
+                            if ( vm.frontmatter.created ) { // uib docs/Obsidian
+                                mydate = new Date(vm.frontmatter.created)
+                                yearFrom = mydate.getFullYear()
+                            } else if ( vm.frontmatter.date ) { // Hugo
                                 mydate = new Date(vm.frontmatter.created)
                                 yearFrom = mydate.getFullYear()
                             }
 
-                            if ( vm.frontmatter.lastUpdated ) {
+                            if ( vm.frontmatter.lastUpdated ) { // uib docs
                                 mydate = new Date(vm.frontmatter.lastUpdated)
+                                yearTo = mydate.getFullYear()
+                            } else if ( vm.frontmatter.updated ) { // Obsidian
+                                mydate = new Date(vm.frontmatter.updated)
+                                yearTo = mydate.getFullYear()
+                            } else if ( vm.frontmatter.Lastmod ) { // Hugo IT blog
+                                mydate = new Date(vm.frontmatter.Lastmod)
                                 yearTo = mydate.getFullYear()
                             }
 
