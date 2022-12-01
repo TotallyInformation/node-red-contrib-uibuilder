@@ -3,7 +3,7 @@ title: Front-End Build Steps and Tools
 description: >
    Describes how to use a build step to transpile and optimise your front-end code.
 created: 2021-04-22 09:53:00
-lastUpdated: 2022-02-15 16:25:14
+lastUpdated: 2022-12-01 19:51:39
 ---
 
 A build step is simply a way to take things that your browser wont understand directly (like .vue, .jsx files)
