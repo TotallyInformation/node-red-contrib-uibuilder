@@ -6,15 +6,11 @@ typora-root-url: docs/images
 
 ## Known Issues
 
-None
+Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) to current and the old client library (`uibuilderfe.js`) to functionally stabilised and on the road to being deprecated. The experimental `uib-list` node has some improvements but is still feature incomplete. The new `uib-brand.css` style library still needs quite a bit of additional work.
 
 ## To do/In-progress
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
-
-Note that v5.1.1 had a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
-
-* Check [deepscan](https://deepscan.io/)
 
 * `uib-list` node
   * **Add cache processing to .js file**
@@ -33,10 +29,6 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
     * Libraries tab
       * Add update indicator to Libraries tab.
       * Trigger indicator to Libraries to show if new major version available when switching to the tab.
-
-* Old client library
-  * **Fix page name processing**.
-  * Check connections count https://discourse.nodered.org/t/uibuilder-amazing/40460/55.
 
 * Client library
   * Consider adding a default `msg.topic` option.
@@ -62,6 +54,8 @@ Note that v5.1.1 had a number of new features that are not complete. They are in
 * `nodes/libs/package-msg.js` `updateInstalledPackageDetails()`: Installations with a large number of installed libraries not correctly reporting their details. Resolved (hopefully) async issue. Was using `async` with `.forEach()` which doesn't work. Changed to use `Promise.all` with a map. Thanks to [dczysz](https://github.com/dczysz) for reporting. Issue [#186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186). Issue more complex than originally thought. Ended up doing a 2-stage update of the installed libraries data. First stage is quick and synchronous to allow the appropriate vendor folders to be added to the ExpressJS vendor routes. 2nd stage uses npm to get additional library information.
 * Can now stop auto-loading of uibuilder default stylesheet using `uibuilder.start({loadStylesheet: false})`. Issue [#184](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/184).
 * Fixed deepscan issues.
+* Old client library was reporting mismatch client version unnecessarily
+* Old client library was not reporting client `pageName` correctly
 
 
 ### New
