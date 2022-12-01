@@ -1025,12 +1025,16 @@ class UibWeb {
             else x.route = `${L.route.stack[0].method}:${L.route.stack[0].regexp}`
         }
 
+        const pkgs = packageMgt.uibPackageJson.uibuilder.packages
+
         if ( x.path && x.path === '/common/' ) x.folder = this.uib.commonFolder
         else if ( x.path && x.path === '/?(?=/|$)/i' ) {
             x.path = '/'
             x.folder = '(route applied direct)'
             // x.folder = this.masterStatic
             // console.log('>>', L)
+        } else if ( pkgs[x.path.slice(1, -1)] ) {
+            x.folder = pkgs[x.path.slice(1, -1)].installFolder
         }
 
         out.push( x )
@@ -1112,7 +1116,7 @@ class UibWeb {
     dumpUserRoutes(print = true) {
         const routes = { 'app': [], 'uibRouter': [], 'vendorRouter': [] }
 
-        // Get the user-facing routes
+        // Get the user-facing routes  
         for ( const layer of this.app._router.stack) { this.summariseRoute(layer, routes.app) }
         if (this.uibRouter) for ( const layer of this.uibRouter.stack) { this.summariseRoute(layer, routes.uibRouter) }
         if (this.vendorRouter) for ( const layer of this.vendorRouter.stack) { this.summariseRoute(layer, routes.vendorRouter) }
