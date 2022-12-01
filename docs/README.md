@@ -3,7 +3,7 @@ title: uibuilder Technical Documentation
 description: >
    uibuilder is a low-code solution for easily building data-driven web sites and web apps in conjunction with Node-RED.
 created: 2019-06-16 16:16:00
-lastUpdated: 2022-11-26 17:45:41
+lastUpdated: 2022-11-30 17:50:23
 ---
 
 ?> These are the docs for uibuilder v6. If you need the v5 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate uibuilder version: `npm install node-red-contrib-uibuilder@5` then use the tech docs links from a uibuilder node.
@@ -27,12 +27,14 @@ WIKI, code (PR's), documentation, and examples are all welcome contributions and
 
 ## Using uibuilder
 
-* [A first-timers walkthough of using uibuilder](walkthrough1.md)
+* [A first-timers walkthough of using uibuilder](walkthrough1.md) - Let's get started!
+
+* [Did you know?](did-you-know.md) - Things you might not know about uibuilder
 * [Creating data-driven web apps with uibuilder and Node-RED](web-app-workflow.md)
 * [Configuring uibuilder nodes](uib-node-configuration.md)
 * [How to configure uibuilder](uib-configuration.md)
 * [Changing the root folder (uibRoot)](changing-uibroot.md)
-* [uibuilder messages](pre-defined-msgs.md "Catalogue of messages and properties")
+* [uibuilder messages](pre-defined-msgs.md) - A catalogue of messages and properties
 * [How & why to use the sender node](sender-node.md)
 * [How & why to use the list node](list-node.md)
 * [How to use the cache node](cache-node.md)
@@ -42,10 +44,11 @@ WIKI, code (PR's), documentation, and examples are all welcome contributions and
 
 Information on using the front-end client libraries in your own code, creating templates, using build processes if you need them.
 
-* [Using the new ECMA Module front-end client](uibuilder.module.md)
-* [Old uibuilderfe Library](front-end-library.md)
-* [Creating Templates](creating-templates)
-* [Browser auto-refresh](browser-refresh.md)
+* [Using the new front-end client library](uibuilder.module.md) - `uibuilder.iife.js` and `uibuilder.esm.js`
+
+* [Old client library](front-end-library.md) - `uibuilderfe.js`
+* [Creating Templates](creating-templates) - Pre-defined and reusable front-end code, dependencies, and optional build steps
+* [Browser auto-refresh](browser-refresh.md) - Automatically reload your page after a change
 * [Avoiding a build step](front-end-no-build.md)
 * [Optimise & transpile (build)](front-end-builds.md)
 * [Snowpack as build tool](front-end-build-snowpack.md)
@@ -56,6 +59,7 @@ Information on using the front-end client libraries in your own code, creating t
 Working with uibuilder and specific front-end frameworks.
 
 * [VueJS complexities](vue-complexities.md)
+
 * [VueJS Components](vue-component-handling.md)
 * [Svelte](svelte.md)
 * W3C Web Components - TBC
@@ -63,6 +67,7 @@ Working with uibuilder and specific front-end frameworks.
 ## Security
 
 * [Securing uib web apps](security.md "Overview of general web app security with some specifics for Node-RED and uibuilder")
+
 * [Securing Data](securing-data.md "How to use flows and uibiulder middleware to secure your data")
 * [Securing apps using NGINX](uib-security-nginx.md "How to use NGINX as a reverse proxy with TLS and identity authentication")
 
@@ -103,6 +108,7 @@ Some information on testing uibuilder. Unfortunately, I have no real clue about 
 ## Other
 
 * [Glossary of Terms](glossary.md)
+
 * [Changelog](changelog) - What has changed between releases. What is currently in-progress/outstanding (the "unreleased" section)
 * [Roadmap](roadmap) - All about where uibuilder is going in general, what I think needs doing next and some speculation about longer-term change.
 * [Main Readme](uibhome) - This is what appears in [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder), [npm](https://www.npmjs.com/package/node-red-contrib-uibuilder]) and the [Node-RED flows page](https://flows.nodered.org/node/node-red-contrib-uibuilder).

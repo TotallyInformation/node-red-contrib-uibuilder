@@ -1,6 +1,7 @@
 * [Home](/)
 * Using uibuilder
-  * [A first-timers walkthough](walkthrough1.md)
+  * [A first-timers walkthough](walkthrough1.md "Let's get started!")
+  * [Did you know?](did-you-know.md "Things you might not know about uibuilder")
   * [Creating data-driven web apps](web-app-workflow.md)
   * [Configuring uibuilder nodes](uib-node-configuration.md)
   * [Configuring uibuilder](uib-configuration.md)
