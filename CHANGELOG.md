@@ -15,11 +15,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Now that node.js v14 is default, start to simplify code with:
   * Replace `||` default value tests with `??` .
   * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
-  
-* `uib-list` node
-  * In editor grey-out cache settings if cache turned off
-  * Add uib url to name display
-  
+    
 * `uibuilder` node  
   * Editor:
     * Add option 
@@ -108,6 +104,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Now uses same context variable settins as `uib-cache` for greater flexibility.
   * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously much be unique.
   * Change drop-downs to typed input
+  * In editor, disable cache settings if cache turned off
+  * Add uib url to name display
 
 * Various library improvements including some trace and info log msg improvements.
 * Tech docs - updated to indicate the the old client library is now functionally stabilised and will eventually be deprecated.

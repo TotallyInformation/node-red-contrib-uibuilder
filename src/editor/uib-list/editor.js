@@ -140,6 +140,22 @@
             $('#node-input-url').val(node.url)
         }
 
+        // If caching turned off, grey out settings
+        $('#node-input-cacheOn').on('change',  function() {
+            if (this.checked === true) {
+                $('#node-input-storeName').typedInput('enable')
+                $('#node-input-storeContext').typedInput('enable')
+                if ($('#node-input-storeContext').val() !== 'context')
+                    $('#node-input-varName').prop('disabled', false)
+                $('#node-input-newcache').prop('disabled', false)
+            } else {
+                $('#node-input-storeName').typedInput('disable')
+                $('#node-input-storeContext').typedInput('disable')
+                $('#node-input-varName').prop('disabled', true)
+                $('#node-input-newcache').prop('disabled', true)
+            }
+        })
+
     } // ----- end of onEditPrepare() ----- //
 
     // @ts-ignore
@@ -169,7 +185,7 @@
         icon: 'font-awesome/fa-list',
         paletteLabel: nodeLabel,
         label: function () {
-            return `${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName} [${this.elementtype}]`
+            return `<${this.url}>${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName} [${this.elementtype}]`
         },
 
         /** Prepares the Editor panel */
