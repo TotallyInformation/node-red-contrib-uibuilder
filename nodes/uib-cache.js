@@ -223,13 +223,13 @@ function nodeInstance(config) {
     this.name = config.name
     this.cacheall = config.cacheall
     this.cacheKey = config.cacheKey || 'topic'
-    this.newcache = config.newcache === undefined ? true : config.newcache
-    this.num = config.num || 1 // zero is unlimited cache
+    this.newcache = config.newcache ?? true
+    this.num = config.num ?? 1 // zero is unlimited cache
     this.storeName = config.storeName || 'default'
     this.storeContext = config.storeContext || 'context'
     this.varName = config.varName || 'uib_cache'
 
-    // Show if anythink in the cache
+    // Show if anything in the cache
     setNodeStatus(this)
 
     // Get ref to this node's context store or the flow/global stores as needed
