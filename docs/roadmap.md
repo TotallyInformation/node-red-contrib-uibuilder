@@ -151,16 +151,22 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add `msg._ui` processing if possible.
 
 * Updates to uibuilder node
+  * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
+    * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
+    * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
+
   * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
   * Use new `uib-brand.css` style library on details pages.
   * Add api to query if a specific uib library is installed (and return version)
+  * Add API test harness using VScode restbook.
   * Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
   * Allow instance npm installs to be served (would allow both vue 2 and vue 3 for example). Instance serves to take preference. Would need extension to editor libraries tab to differentiate the locations.
   * Editor:
     * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
     * Change getFileList to only return files, use the separate folder list for folders. No need to run it multiple times then.
+    * NEW TAB: For running build (and other scripts) and local (instance) npm installs.
   * Details index page
-    * Make sure that the ExpressJS `views` folder is show.
+    * Make sure that the ExpressJS `views` folder is shown.
 
 * `package-mgt.js`
   * Rationalise the various functions - several of them have similar tasks.

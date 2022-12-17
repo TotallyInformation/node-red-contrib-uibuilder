@@ -12,15 +12,19 @@ Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uib
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-* `uib-list` node
-  * **Add cache processing to .js file**
+* Now that node.js v14 is default, start to simplify code with:
+  * Replace `||` default value tests with `??` .
+  * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
   
-* `uibuilder` node
-  * Editor:    
+* `uib-list` node
+  * In editor grey-out cache settings if cache turned off
+  * Add uib url to name display
+  
+* `uibuilder` node  
+  * Editor:
+    * Add option 
     * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
     * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
-    * uibindex page
-      * **Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`)**.
 
     * Creating new folder - new folder should be selected after create.
     * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
@@ -49,7 +53,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Fixed
 
-* `uib-cache`: Custom variable name was being ignored
+* `uib-cache`: Custom variable name was being ignored - cache processing rewritten
 * `uibuilder`: Library tab might occasionally list a package that wasn't a direct installed dependency. Now resolved. Only packages listed in `<uibRoot>/package.json` dependencies property will be listed.
 * `nodes/libs/package-msg.js` `updateInstalledPackageDetails()`: Installations with a large number of installed libraries not correctly reporting their details. Resolved (hopefully) async issue. Was using `async` with `.forEach()` which doesn't work. Changed to use `Promise.all` with a map. Thanks to [dczysz](https://github.com/dczysz) for reporting. Issue [#186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186). Issue more complex than originally thought. Ended up doing a 2-stage update of the installed libraries data. First stage is quick and synchronous to allow the appropriate vendor folders to be added to the ExpressJS vendor routes. 2nd stage uses npm to get additional library information.
 * Can now stop auto-loading of uibuilder default stylesheet using `uibuilder.start({loadStylesheet: false})`. Issue [#184](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/184).
@@ -89,8 +93,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
     * The "Server folder" information now shows the currently used serve folder (e.g. src or dist).
     * The `Advanced > Serve` dropdown now shows ALL top-level folders. Note that you have to close and re-open the panel to pick up the new folder.
     * In the help panel: Added a link to the [Configuring uibuilder nodes](uib-node-configuration.md) page. Added link to the new client library page and a note about deprecation of the old client library.
-    * Library tab
-  
+    * Library tab  
       * Package outdated markers added to Editor Library tab. (_Currently only on Node-RED startup_. Will be improved later.)
       * Package outdated markers are buttons that will update the installation of the package.
 
@@ -108,7 +111,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Various library improvements including some trace and info log msg improvements.
 * Tech docs - updated to indicate the the old client library is now functionally stabilised and will eventually be deprecated.
-
+* uibindex page (adminapiv2.js) - Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`).
 
 ## [v5.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.1.0...v5.1.1)
 
