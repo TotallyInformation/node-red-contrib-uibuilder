@@ -42,21 +42,67 @@ const mod = {
 
 //#region ----- Module-level support functions ----- //
 
+/** Set status msg in Editor
+ * @param {runtimeNode & uibListNode} node Reference to node instance
+ */
+function setNodeStatus(node) {
+    let txt = 'Not caching'
+    let shape = 'ring'
+
+    if (node.cacheOn === true) {
+        if ( !node.cache || Object.keys(node.cache).length === 0 ) txt = 'No list cached'
+        else txt = 'Cached list'
+    }
+
+    node.status({ fill: 'blue', shape: shape, text: txt })
+} // ---- end of setStatus ---- //
+
 /** Deal with a new client connection: send the last msg
  * @param {*} msg The msg data in the custom event
  * @this {runtimeNode & uibListNode}
  */
 function handleConnectionEvent(msg) {
-    // Send the cached data - but only if connections=0 (e.g. fresh page load)
-    if ( msg.connections === 0 && this._ui ) {
+    if (this.cacheOn === false) return
+    // If no _ui elements object to send, don't bother
+    if ( !this._ui ) return
+
+    // Send the cached data - but only if connections=0 (e.g. fresh page load) if flag is set
+    if ( (this.newcache === true && msg.connections === 0) || this.newcache === false ) {
         // Don't forget to include the _socketId
         emitMsg(msg, this)
     }
 }
 
-function emptyCache() {
+/** Clear the cache
+ * @param {runtimeNode & uibListNode} node Reference to node instance
+ */
+function clearCache(node) {
+    if (node.cacheOn === false) return
 
+    // Save the cache or initialise it if new
+    node.cache = {}
+    node.setC(node.varName, node.cache, node.storeName)
 }
+
+/** Replace the cached list with the latest msg
+ * @param {*} msg The recieved message to add
+ * @param {runtimeNode & uibListNode} node Reference to node instance
+ */
+function replaceCache(msg, node) {
+    if (mod.RED === null) return
+    if (node.cacheOn === false) return
+
+    // HAS to be a CLONE to avoid downstream changes impacting cache
+    const clone = mod.RED.util.cloneMessage(msg)
+    delete clone._msgid
+
+    // Replace the cache
+    node.cache = clone
+
+    // Save the cache
+    node.setC(node.varName, node.cache, node.storeName)
+
+} // ---- end of addToCache ---- //
 
 /** Create/update the _ui object and retain for replay
  * @param {*} msg incoming msg
@@ -64,9 +110,9 @@ function emptyCache() {
  */
 function buildUi(msg, node) {
     if ( msg.mode && msg.mode === 'remove' ) {
-        emptyCache()
+        clearCache(node)
+        setNodeStatus(node)
 
-        node.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
         node._ui = [{
             method: 'remove',
             components: [`#${node.elementid}`] // remove uses css selector, not raw id
@@ -166,9 +212,11 @@ function buildUi(msg, node) {
 
     } )
 
-    node.status({ fill: 'green', shape: 'dot', text: 'Data registered' })
+    // Replace the cache if caching turned on
+    replaceCache(msg, node)
 
-}
+    setNodeStatus(node)
+} // -- end of buildUI -- //
 
 /** Build the output and send the msg via an event emitter
  * @param {*} msg The input or custom event msg data
@@ -211,10 +259,13 @@ function emitMsg(msg, node) {
  * @this {runtimeNode & uibListNode}
  */
 function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
-    // As a module-level named function, it will inherit `mod` and other module-level variables
-
-    // If you need it - or just use mod.RED if you prefer:
-    // const RED = mod.RED
+    // TODO: Accept cache-replay and cache-clear
+    // Is this a uib control msg? If so, ignore it since this is connected to uib via event handler
+    if ( msg.uibuilderCtrl ) {
+        this.warn('Received a uibuilder control msg, ignoring')
+        done()
+        return
+    }
 
     // Save the last input msg for replay to new client connections, creates/update this._ui
     buildUi(msg, this)
@@ -237,27 +288,31 @@ function nodeInstance(config) {
 
     // If you need it - which you will here - or just use mod.RED if you prefer:
     const RED = mod.RED
+    if (RED === null) return
 
     // @ts-ignore Create the node instance - `this` can only be referenced AFTER here
     RED.nodes.createNode(this, config)
 
     /** Transfer config items from the Editor panel to the runtime */
-    this.name = config.name || ''
-    this.elementid = config.elementid || ''
-    this.elementtype = config.elementtype || ''
-    this.parent = config.parent || ''
-    this.passthrough = config.passthrough === undefined ? false : config.passthrough
+    this.name = config.name ?? ''
+    this.elementid = config.elementid ?? ''
+    this.elementtype = config.elementtype ?? ''
+    this.parent = config.parent ?? ''
+    this.passthrough = config.passthrough ?? false
 
-    this.cacheOn = config.cacheOn === undefined ? false : config.cacheOn
-    this.storeName = config.storeName || 'default'
-    this.storeContext = config.storeContext || 'context'
-    this.varName = config.varName || 'uib_list'
-    this.newcache = config.newcache === undefined ? true : config.newcache
+    this.cacheOn = config.cacheOn ?? false
+    this.storeName = config.storeName ?? 'default'
+    this.storeContext = config.storeContext ?? 'context'
+    this.varName = config.varName ?? 'uib_list'
+    this.newcache = config.newcache ?? true
 
-    this._ui = undefined
-    const url = this.url = config.url || ''
+    this._ui = undefined // set in buildUI()
+    const url = this.url = config.url ?? ''
+    this.cache = {} // make sure it exists but is empty until set
 
-    this.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
+    // Show if anything in the cache
+    setNodeStatus(this)
+    //this.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
 
     // Get ref to this node's context store or the flow/global stores as needed
     let context = this.context()
@@ -266,13 +321,22 @@ function nodeInstance(config) {
     }
     this.getC = context.get
     this.setC = context.set
+    
+    if (this.cacheOn === true) {
+        // Get the cache or initialise it if new
+        this.cache = this.getC(this.varName, this.storeName) ?? {}
+        // Note that the cache is written back in addToCache and clearCache
 
-    // Get the cache or initialise it if new
-    this.cache = this.getC(this.varName, this.storeName) || {}
-    // Note that the cache is written back in addToCache and clearCache
-
-    // When a client (re)connects
-    if ( this.cacheOn ) tiEvents.on(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent.bind(this))
+        // When a client (re)connects
+        tiEvents.on(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent.bind(this))
+    } else {
+        // See if we can clear the cache
+        try {
+            this.cache = {}
+            this.setC(this.varName, this.cache, this.storeName)
+            setNodeStatus(this)
+        } catch(e) { }
+    }
 
     // When a client disconnects
     // tiEvents.on(`node-red-contrib-uibuilder/${url}/clientDisconnect`, function(data) {
