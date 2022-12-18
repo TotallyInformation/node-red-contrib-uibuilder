@@ -6,34 +6,13 @@ typora-root-url: docs/images
 
 ## Known Issues
 
-Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) to current and the old client library (`uibuilderfe.js`) to functionally stabilised and on the road to being deprecated. The experimental `uib-list` node has some improvements but is still feature incomplete. The new `uib-brand.css` style library still needs quite a bit of additional work.
+Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) to current and the old client library (`uibuilderfe.js`) to functionally stabilised and on the road to being deprecated. The experimental `uib-list` node has some improvements but is still feature incomplete. The new `uib-brand.css` style library still needs quite a bit of additional work. The new `uib-list` node is still a little rough but should work fine for most things.
 
 ## To do/In-progress
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-* Now that node.js v14 is default, start to simplify code with:
-  * Replace `||` default value tests with `??` .
-  * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
-    
-* `uibuilder` node  
-  * Editor:
-    * Add option 
-    * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
-    * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
-
-    * Creating new folder - new folder should be selected after create.
-    * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
-    * Add visual error when changing advanced/Serve to a folder with no index.html.
-    * Option for project folder storage.
-    * Libraries tab
-      * Add update indicator to Libraries tab.
-      * Trigger indicator to Libraries to show if new major version available when switching to the tab.
-
-* Client library
-  * Consider adding a default `msg.topic` option.
-  * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
-  * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
+* Update examples and templates to use new FE libraries
 
 ----
 
