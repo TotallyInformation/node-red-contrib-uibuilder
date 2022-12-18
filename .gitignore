@@ -125,3 +125,11 @@ _node_modules
 
 # We shouldn't commit files with names starting with _
 _*
+docs/.obsidian/app.json
+docs/.obsidian/appearance.json
+docs/.obsidian/core-plugins.json
+docs/.obsidian/hotkeys.json
+docs/.obsidian/workspace.json
+docs/.obsidian/snippets/attention-callout.css
+docs/.obsidian/themes/Minimal/manifest.json
+docs/.obsidian/themes/Minimal/theme.css

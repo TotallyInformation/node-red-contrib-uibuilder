@@ -26,16 +26,14 @@ var __privateSet = (obj, member, value2, setter) => {
   setter ? setter.call(obj, value2) : member.set(obj, value2);
   return value2;
 };
-var __privateWrapper = (obj, member, setter, getter) => {
-  return {
-    set _(value2) {
-      __privateSet(obj, member, value2, setter);
-    },
-    get _() {
-      return __privateGet(obj, member, getter);
-    }
-  };
-};
+var __privateWrapper = (obj, member, setter, getter) => ({
+  set _(value2) {
+    __privateSet(obj, member, value2, setter);
+  },
+  get _() {
+    return __privateGet(obj, member, getter);
+  }
+});
 
 // node_modules/engine.io-parser/build/esm/commons.js
 var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -213,14 +211,14 @@ Emitter.prototype.once = function(event2, fn) {
 };
 Emitter.prototype.off = Emitter.prototype.removeListener = Emitter.prototype.removeAllListeners = Emitter.prototype.removeEventListener = function(event2, fn) {
   this._callbacks = this._callbacks || {};
-  if (arguments.length == 0) {
+  if (0 == arguments.length) {
     this._callbacks = {};
     return this;
   }
   var callbacks = this._callbacks["$" + event2];
   if (!callbacks)
     return this;
-  if (arguments.length == 1) {
+  if (1 == arguments.length) {
     delete this._callbacks["$" + event2];
     return this;
   }
@@ -340,21 +338,21 @@ var Transport = class extends Emitter {
     return this;
   }
   open() {
-    if (this.readyState === "closed" || this.readyState === "") {
+    if ("closed" === this.readyState || "" === this.readyState) {
       this.readyState = "opening";
       this.doOpen();
     }
     return this;
   }
   close() {
-    if (this.readyState === "opening" || this.readyState === "open") {
+    if ("opening" === this.readyState || "open" === this.readyState) {
       this.doClose();
       this.onClose();
     }
     return this;
   }
   send(packets) {
-    if (this.readyState === "open") {
+    if ("open" === this.readyState) {
       this.write(packets);
     } else {
     }
@@ -435,7 +433,7 @@ var hasCORS = value;
 function XHR(opts) {
   const xdomain = opts.xdomain;
   try {
-    if (typeof XMLHttpRequest !== "undefined" && (!xdomain || hasCORS)) {
+    if ("undefined" !== typeof XMLHttpRequest && (!xdomain || hasCORS)) {
       return new XMLHttpRequest();
     }
   } catch (e) {
@@ -455,14 +453,14 @@ var hasXHR2 = function() {
   const xhr = new XHR({
     xdomain: false
   });
-  return xhr.responseType != null;
+  return null != xhr.responseType;
 }();
 var Polling = class extends Transport {
   constructor(opts) {
     super(opts);
     this.polling = false;
     if (typeof location !== "undefined") {
-      const isSSL = location.protocol === "https:";
+      const isSSL = "https:" === location.protocol;
       let port = location.port;
       if (!port) {
         port = isSSL ? "443" : "80";
@@ -510,20 +508,20 @@ var Polling = class extends Transport {
   }
   onData(data) {
     const callback = (packet) => {
-      if (this.readyState === "opening" && packet.type === "open") {
+      if ("opening" === this.readyState && packet.type === "open") {
         this.onOpen();
       }
-      if (packet.type === "close") {
+      if ("close" === packet.type) {
         this.onClose({ description: "transport closed by the server" });
         return false;
       }
       this.onPacket(packet);
     };
     decodePayload(data, this.socket.binaryType).forEach(callback);
-    if (this.readyState !== "closed") {
+    if ("closed" !== this.readyState) {
       this.polling = false;
       this.emitReserved("pollComplete");
-      if (this.readyState === "open") {
+      if ("open" === this.readyState) {
         this.poll();
       } else {
       }
@@ -533,7 +531,7 @@ var Polling = class extends Transport {
     const close = () => {
       this.write([{ type: "close" }]);
     };
-    if (this.readyState === "open") {
+    if ("open" === this.readyState) {
       close();
     } else {
       this.once("open", close);
@@ -552,13 +550,13 @@ var Polling = class extends Transport {
     let query = this.query || {};
     const schema = this.opts.secure ? "https" : "http";
     let port = "";
-    if (this.opts.timestampRequests !== false) {
+    if (false !== this.opts.timestampRequests) {
       query[this.opts.timestampParam] = yeast();
     }
     if (!this.supportsBinary && !query.sid) {
       query.b64 = 1;
     }
-    if (this.opts.port && (schema === "https" && Number(this.opts.port) !== 443 || schema === "http" && Number(this.opts.port) !== 80)) {
+    if (this.opts.port && ("https" === schema && Number(this.opts.port) !== 443 || "http" === schema && Number(this.opts.port) !== 80)) {
       port = ":" + this.opts.port;
     }
     const encodedQuery = encode2(query);
@@ -595,8 +593,8 @@ var Request = class extends Emitter {
     this.opts = opts;
     this.method = opts.method || "GET";
     this.uri = uri;
-    this.async = opts.async !== false;
-    this.data = opts.data !== void 0 ? opts.data : null;
+    this.async = false !== opts.async;
+    this.data = void 0 !== opts.data ? opts.data : null;
     this.create();
   }
   create() {
@@ -617,7 +615,7 @@ var Request = class extends Emitter {
         }
       } catch (e) {
       }
-      if (this.method === "POST") {
+      if ("POST" === this.method) {
         try {
           xhr.setRequestHeader("Content-type", "text/plain;charset=UTF-8");
         } catch (e) {
@@ -634,9 +632,9 @@ var Request = class extends Emitter {
         xhr.timeout = this.opts.requestTimeout;
       }
       xhr.onreadystatechange = () => {
-        if (xhr.readyState !== 4)
+        if (4 !== xhr.readyState)
           return;
-        if (xhr.status === 200 || xhr.status === 1223) {
+        if (200 === xhr.status || 1223 === xhr.status) {
           this.onLoad();
         } else {
           this.setTimeoutFn(() => {
@@ -661,7 +659,7 @@ var Request = class extends Emitter {
     this.cleanup(true);
   }
   cleanup(fromError) {
-    if (typeof this.xhr === "undefined" || this.xhr === null) {
+    if ("undefined" === typeof this.xhr || null === this.xhr) {
       return;
     }
     this.xhr.onreadystatechange = empty;
@@ -773,7 +771,7 @@ var WS = class extends Transport {
             opts.compress = packet.options.compress;
           }
           if (this.opts.perMessageDeflate) {
-            const len = typeof data === "string" ? Buffer.byteLength(data) : data.length;
+            const len = "string" === typeof data ? Buffer.byteLength(data) : data.length;
             if (len < this.opts.perMessageDeflate.threshold) {
               opts.compress = false;
             }
@@ -806,7 +804,7 @@ var WS = class extends Transport {
     let query = this.query || {};
     const schema = this.opts.secure ? "wss" : "ws";
     let port = "";
-    if (this.opts.port && (schema === "wss" && Number(this.opts.port) !== 443 || schema === "ws" && Number(this.opts.port) !== 80)) {
+    if (this.opts.port && ("wss" === schema && Number(this.opts.port) !== 443 || "ws" === schema && Number(this.opts.port) !== 80)) {
       port = ":" + this.opts.port;
     }
     if (this.opts.timestampRequests) {
@@ -869,10 +867,10 @@ function parse(str) {
 }
 function pathNames(obj, path) {
   const regx = /\/{2,9}/g, names = path.replace(regx, "/").split("/");
-  if (path.substr(0, 1) == "/" || path.length === 0) {
+  if (path.slice(0, 1) == "/" || path.length === 0) {
     names.splice(0, 1);
   }
-  if (path.substr(path.length - 1, 1) == "/") {
+  if (path.slice(-1) == "/") {
     names.splice(names.length - 1, 1);
   }
   return names;
@@ -891,7 +889,7 @@ function queryKey(uri, query) {
 var Socket = class extends Emitter {
   constructor(uri, opts = {}) {
     super();
-    if (uri && typeof uri === "object") {
+    if (uri && "object" === typeof uri) {
       opts = uri;
       uri = null;
     }
@@ -906,7 +904,7 @@ var Socket = class extends Emitter {
       opts.hostname = parse(opts.host).host;
     }
     installTimerFunctions(this, opts);
-    this.secure = opts.secure != null ? opts.secure : typeof location !== "undefined" && location.protocol === "https:";
+    this.secure = null != opts.secure ? opts.secure : typeof location !== "undefined" && "https:" === location.protocol;
     if (opts.hostname && !opts.port) {
       opts.port = this.secure ? "443" : "80";
     }
@@ -941,12 +939,13 @@ var Socket = class extends Emitter {
     this.pingTimeoutTimer = null;
     if (typeof addEventListener === "function") {
       if (this.opts.closeOnBeforeunload) {
-        addEventListener("beforeunload", () => {
+        this.beforeunloadEventListener = () => {
           if (this.transport) {
             this.transport.removeAllListeners();
             this.transport.close();
           }
-        }, false);
+        };
+        addEventListener("beforeunload", this.beforeunloadEventListener, false);
       }
       if (this.hostname !== "localhost") {
         this.offlineEventListener = () => {
@@ -978,7 +977,7 @@ var Socket = class extends Emitter {
     let transport;
     if (this.opts.rememberUpgrade && Socket.priorWebsocketSuccess && this.transports.indexOf("websocket") !== -1) {
       transport = "websocket";
-    } else if (this.transports.length === 0) {
+    } else if (0 === this.transports.length) {
       this.setTimeoutFn(() => {
         this.emitReserved("error", "No transports available");
       }, 0);
@@ -1015,16 +1014,16 @@ var Socket = class extends Emitter {
       transport.once("packet", (msg) => {
         if (failed)
           return;
-        if (msg.type === "pong" && msg.data === "probe") {
+        if ("pong" === msg.type && "probe" === msg.data) {
           this.upgrading = true;
           this.emitReserved("upgrading", transport);
           if (!transport)
             return;
-          Socket.priorWebsocketSuccess = transport.name === "websocket";
+          Socket.priorWebsocketSuccess = "websocket" === transport.name;
           this.transport.pause(() => {
             if (failed)
               return;
-            if (this.readyState === "closed")
+            if ("closed" === this.readyState)
               return;
             cleanup();
             this.setTransport(transport);
@@ -1082,10 +1081,10 @@ var Socket = class extends Emitter {
   }
   onOpen() {
     this.readyState = "open";
-    Socket.priorWebsocketSuccess = this.transport.name === "websocket";
+    Socket.priorWebsocketSuccess = "websocket" === this.transport.name;
     this.emitReserved("open");
     this.flush();
-    if (this.readyState === "open" && this.opts.upgrade && this.transport.pause) {
+    if ("open" === this.readyState && this.opts.upgrade && this.transport.pause) {
       let i2 = 0;
       const l = this.upgrades.length;
       for (; i2 < l; i2++) {
@@ -1094,7 +1093,7 @@ var Socket = class extends Emitter {
     }
   }
   onPacket(packet) {
-    if (this.readyState === "opening" || this.readyState === "open" || this.readyState === "closing") {
+    if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
       this.emitReserved("packet", packet);
       this.emitReserved("heartbeat");
       switch (packet.type) {
@@ -1129,7 +1128,7 @@ var Socket = class extends Emitter {
     this.pingTimeout = data.pingTimeout;
     this.maxPayload = data.maxPayload;
     this.onOpen();
-    if (this.readyState === "closed")
+    if ("closed" === this.readyState)
       return;
     this.resetPingTimeout();
   }
@@ -1145,14 +1144,14 @@ var Socket = class extends Emitter {
   onDrain() {
     this.writeBuffer.splice(0, this.prevBufferLen);
     this.prevBufferLen = 0;
-    if (this.writeBuffer.length === 0) {
+    if (0 === this.writeBuffer.length) {
       this.emitReserved("drain");
     } else {
       this.flush();
     }
   }
   flush() {
-    if (this.readyState !== "closed" && this.transport.writable && !this.upgrading && this.writeBuffer.length) {
+    if ("closed" !== this.readyState && this.transport.writable && !this.upgrading && this.writeBuffer.length) {
       const packets = this.getWritablePackets();
       this.transport.send(packets);
       this.prevBufferLen = packets.length;
@@ -1186,19 +1185,19 @@ var Socket = class extends Emitter {
     return this;
   }
   sendPacket(type, data, options, fn) {
-    if (typeof data === "function") {
+    if ("function" === typeof data) {
       fn = data;
       data = void 0;
     }
-    if (typeof options === "function") {
+    if ("function" === typeof options) {
       fn = options;
       options = null;
     }
-    if (this.readyState === "closing" || this.readyState === "closed") {
+    if ("closing" === this.readyState || "closed" === this.readyState) {
       return;
     }
     options = options || {};
-    options.compress = options.compress !== false;
+    options.compress = false !== options.compress;
     const packet = {
       type,
       data,
@@ -1224,7 +1223,7 @@ var Socket = class extends Emitter {
       this.once("upgrade", cleanupAndClose);
       this.once("upgradeError", cleanupAndClose);
     };
-    if (this.readyState === "opening" || this.readyState === "open") {
+    if ("opening" === this.readyState || "open" === this.readyState) {
       this.readyState = "closing";
       if (this.writeBuffer.length) {
         this.once("drain", () => {
@@ -1248,12 +1247,13 @@ var Socket = class extends Emitter {
     this.onClose("transport error", err);
   }
   onClose(reason, description) {
-    if (this.readyState === "opening" || this.readyState === "open" || this.readyState === "closing") {
+    if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
       this.clearTimeoutFn(this.pingTimeoutTimer);
       this.transport.removeAllListeners("close");
       this.transport.close();
       this.transport.removeAllListeners();
       if (typeof removeEventListener === "function") {
+        removeEventListener("beforeunload", this.beforeunloadEventListener, false);
         removeEventListener("offline", this.offlineEventListener, false);
       }
       this.readyState = "closed";
@@ -1283,18 +1283,18 @@ var protocol2 = Socket.protocol;
 function url(uri, path = "", loc) {
   let obj = uri;
   loc = loc || typeof location !== "undefined" && location;
-  if (uri == null)
+  if (null == uri)
     uri = loc.protocol + "//" + loc.host;
   if (typeof uri === "string") {
-    if (uri.charAt(0) === "/") {
-      if (uri.charAt(1) === "/") {
+    if ("/" === uri.charAt(0)) {
+      if ("/" === uri.charAt(1)) {
         uri = loc.protocol + uri;
       } else {
         uri = loc.host + uri;
       }
     }
     if (!/^(https?|wss?):\/\//.test(uri)) {
-      if (typeof loc !== "undefined") {
+      if ("undefined" !== typeof loc) {
         uri = loc.protocol + "//" + uri;
       } else {
         uri = "https://" + uri;
@@ -1317,7 +1317,7 @@ function url(uri, path = "", loc) {
   return obj;
 }
 
-// node_modules/socket.io-client/node_modules/socket.io-parser/build/esm/index.js
+// node_modules/socket.io-parser/build/esm/index.js
 var esm_exports = {};
 __export(esm_exports, {
   Decoder: () => Decoder,
@@ -1326,7 +1326,7 @@ __export(esm_exports, {
   protocol: () => protocol3
 });
 
-// node_modules/socket.io-client/node_modules/socket.io-parser/build/esm/is-binary.js
+// node_modules/socket.io-parser/build/esm/is-binary.js
 var withNativeArrayBuffer3 = typeof ArrayBuffer === "function";
 var isView2 = (obj) => {
   return typeof ArrayBuffer.isView === "function" ? ArrayBuffer.isView(obj) : obj.buffer instanceof ArrayBuffer;
@@ -1363,7 +1363,7 @@ function hasBinary(obj, toJSON) {
   return false;
 }
 
-// node_modules/socket.io-client/node_modules/socket.io-parser/build/esm/binary.js
+// node_modules/socket.io-parser/build/esm/binary.js
 function deconstructPacket(packet) {
   const buffers = [];
   const packetData = packet.data;
@@ -1404,8 +1404,13 @@ function reconstructPacket(packet, buffers) {
 function _reconstructPacket(data, buffers) {
   if (!data)
     return data;
-  if (data && data._placeholder) {
-    return buffers[data.num];
+  if (data && data._placeholder === true) {
+    const isIndexValid = typeof data.num === "number" && data.num >= 0 && data.num < buffers.length;
+    if (isIndexValid) {
+      return buffers[data.num];
+    } else {
+      throw new Error("illegal attachments");
+    }
   } else if (Array.isArray(data)) {
     for (let i2 = 0; i2 < data.length; i2++) {
       data[i2] = _reconstructPacket(data[i2], buffers);
@@ -1420,7 +1425,7 @@ function _reconstructPacket(data, buffers) {
   return data;
 }
 
-// node_modules/socket.io-client/node_modules/socket.io-parser/build/esm/index.js
+// node_modules/socket.io-parser/build/esm/index.js
 var protocol3 = 5;
 var PacketType;
 (function(PacketType2) {
@@ -1450,13 +1455,13 @@ var Encoder = class {
     if (obj.type === PacketType.BINARY_EVENT || obj.type === PacketType.BINARY_ACK) {
       str += obj.attachments + "-";
     }
-    if (obj.nsp && obj.nsp !== "/") {
+    if (obj.nsp && "/" !== obj.nsp) {
       str += obj.nsp + ",";
     }
-    if (obj.id != null) {
+    if (null != obj.id) {
       str += obj.id;
     }
-    if (obj.data != null) {
+    if (null != obj.data) {
       str += JSON.stringify(obj.data, this.replacer);
     }
     return str;
@@ -1477,6 +1482,9 @@ var Decoder = class extends Emitter {
   add(obj) {
     let packet;
     if (typeof obj === "string") {
+      if (this.reconstructor) {
+        throw new Error("got plaintext data when reconstructing a packet");
+      }
       packet = this.decodeString(obj);
       if (packet.type === PacketType.BINARY_EVENT || packet.type === PacketType.BINARY_ACK) {
         this.reconstructor = new BinaryReconstructor(packet);
@@ -1518,11 +1526,11 @@ var Decoder = class extends Emitter {
       }
       p.attachments = Number(buf);
     }
-    if (str.charAt(i2 + 1) === "/") {
+    if ("/" === str.charAt(i2 + 1)) {
       const start = i2 + 1;
       while (++i2) {
         const c = str.charAt(i2);
-        if (c === ",")
+        if ("," === c)
           break;
         if (i2 === str.length)
           break;
@@ -1532,11 +1540,11 @@ var Decoder = class extends Emitter {
       p.nsp = "/";
     }
     const next = str.charAt(i2 + 1);
-    if (next !== "" && Number(next) == next) {
+    if ("" !== next && Number(next) == next) {
       const start = i2 + 1;
       while (++i2) {
         const c = str.charAt(i2);
-        if (c == null || Number(c) != c) {
+        if (null == c || Number(c) != c) {
           --i2;
           break;
         }
@@ -1662,7 +1670,7 @@ var Socket2 = class extends Emitter {
     this.subEvents();
     if (!this.io["_reconnecting"])
       this.io.open();
-    if (this.io._readyState === "open")
+    if ("open" === this.io._readyState)
       this.onopen();
     return this;
   }
@@ -1676,7 +1684,7 @@ var Socket2 = class extends Emitter {
   }
   emit(ev, ...args) {
     if (RESERVED_EVENTS.hasOwnProperty(ev)) {
-      throw new Error('"' + ev + '" is a reserved event name');
+      throw new Error('"' + ev.toString() + '" is a reserved event name');
     }
     args.unshift(ev);
     const packet = {
@@ -1685,7 +1693,7 @@ var Socket2 = class extends Emitter {
     };
     packet.options = {};
     packet.options.compress = this.flags.compress !== false;
-    if (typeof args[args.length - 1] === "function") {
+    if ("function" === typeof args[args.length - 1]) {
       const id = this.ids++;
       const ack = args.pop();
       this._registerAckCallback(id, ack);
@@ -1780,7 +1788,7 @@ var Socket2 = class extends Emitter {
   }
   onevent(packet) {
     const args = packet.data || [];
-    if (packet.id != null) {
+    if (null != packet.id) {
       args.push(this.ack(packet.id));
     }
     if (this.connected) {
@@ -1814,7 +1822,7 @@ var Socket2 = class extends Emitter {
   }
   onack(packet) {
     const ack = this.acks[packet.id];
-    if (typeof ack === "function") {
+    if ("function" === typeof ack) {
       ack.apply(this, packet.data);
       delete this.acks[packet.id];
     } else {
@@ -1979,7 +1987,7 @@ var Manager = class extends Emitter {
     super();
     this.nsps = {};
     this.subs = [];
-    if (uri && typeof uri === "object") {
+    if (uri && "object" === typeof uri) {
       opts = uri;
       uri = void 0;
     }
@@ -1997,7 +2005,7 @@ var Manager = class extends Emitter {
       max: this.reconnectionDelayMax(),
       jitter: this.randomizationFactor()
     });
-    this.timeout(opts.timeout == null ? 2e4 : opts.timeout);
+    this.timeout(null == opts.timeout ? 2e4 : opts.timeout);
     this._readyState = "closed";
     this.uri = uri;
     const _parser = opts.parser || esm_exports;
@@ -2076,7 +2084,7 @@ var Manager = class extends Emitter {
         self2.maybeReconnectOnOpen();
       }
     });
-    if (this._timeout !== false) {
+    if (false !== this._timeout) {
       const timeout = this._timeout;
       if (timeout === 0) {
         openSubDestroy();
@@ -2111,10 +2119,16 @@ var Manager = class extends Emitter {
     this.emitReserved("ping");
   }
   ondata(data) {
-    this.decoder.add(data);
+    try {
+      this.decoder.add(data);
+    } catch (e) {
+      this.onclose("parse error", e);
+    }
   }
   ondecoded(packet) {
-    this.emitReserved("packet", packet);
+    nextTick(() => {
+      this.emitReserved("packet", packet);
+    }, this.setTimeoutFn);
   }
   onerror(err) {
     this.emitReserved("error", err);
@@ -2223,7 +2237,7 @@ function lookup2(uri, opts) {
   const id = parsed.id;
   const path = parsed.path;
   const sameNamespace = cache[id] && path in cache[id]["nsps"];
-  const newConnection = opts.forceNew || opts["force new connection"] || opts.multiplex === false || sameNamespace;
+  const newConnection = opts.forceNew || opts["force new connection"] || false === opts.multiplex || sameNamespace;
   let io;
   if (newConnection) {
     io = new Manager(source, opts);
@@ -2246,8 +2260,10 @@ Object.assign(lookup2, {
 });
 
 // src/front-end-module/uibuilder.module.js
-var version = "5.1.1-esm";
-var logLevel = 1;
+var version = "6.0.0-esm";
+var isMinified = !/param/.test(function(param) {
+});
+var logLevel = isMinified ? 0 : 1;
 var LOG_STYLES = {
   error: {
     css: "background: red; color: black;",
@@ -2354,17 +2370,24 @@ function log() {
     return function() {
     };
   const head = args.shift();
-  return Function.prototype.bind.call(console[LOG_STYLES[strLevel].console], console, `%c${LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`, `${LOG_STYLES.level} ${LOG_STYLES[strLevel].css}`, `${LOG_STYLES.head} ${LOG_STYLES[strLevel].txtCss}`, ...args);
+  return Function.prototype.bind.call(
+    console[LOG_STYLES[strLevel].console],
+    console,
+    `%c${LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`,
+    `${LOG_STYLES.level} ${LOG_STYLES[strLevel].css}`,
+    `${LOG_STYLES.head} ${LOG_STYLES[strLevel].txtCss}`,
+    ...args
+  );
 }
 function makeMeAnObject(thing, property) {
-  if (property === null || property === void 0)
+  if (!property)
     property = "payload";
   if (typeof property !== "string") {
     log("warn", "uibuilderfe:makeMeAnObject", `WARNING: property parameter must be a string and not: ${typeof property}`)();
     property = "payload";
   }
   let out = {};
-  if (typeof thing === "object") {
+  if (thing !== null && thing.constructor.name === "Object") {
     out = thing;
   } else if (thing !== null) {
     out[property] = thing;
@@ -2380,18 +2403,15 @@ function urlJoin() {
   }).join("/");
   return url2.replace("//", "/");
 }
-var _connectedNum, _events, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _isMinified, _MsgHandler, _a;
+var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _a;
 var Uib = (_a = class {
   constructor() {
     __privateAdd(this, _connectedNum, 0);
-    __privateAdd(this, _events, {});
     __publicField(this, "_ioChannels", { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
     __privateAdd(this, _pingInterval, void 0);
     __privateAdd(this, _propChangeCallbacks, {});
     __privateAdd(this, _msgRecvdByTopicCallbacks, {});
     __privateAdd(this, _timerid, null);
-    __privateAdd(this, _isMinified, !/param/.test(function(param) {
-    }));
     __privateAdd(this, _MsgHandler, void 0);
     __publicField(this, "_socket");
     __publicField(this, "clientId", "");
@@ -2407,10 +2427,8 @@ var Uib = (_a = class {
     __publicField(this, "sentMsg", {});
     __publicField(this, "serverTimeOffset", null);
     __publicField(this, "socketError", null);
-    __publicField(this, "allowScript", true);
-    __publicField(this, "allowStyle", true);
-    __publicField(this, "removeScript", true);
-    __publicField(this, "removeStyle", true);
+    __publicField(this, "online", null);
+    __publicField(this, "lastNavType", null);
     __publicField(this, "originator", "");
     __publicField(this, "autoSendReady", true);
     __publicField(this, "httpNodeRoot", "");
@@ -2432,13 +2450,23 @@ var Uib = (_a = class {
       transportOptions: {
         polling: {
           extraHeaders: {
-            "x-clientid": `uibuilderfe; ${this.clientId}`
+            "x-clientid": `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`
           }
         }
       }
     });
     __publicField(this, "$", document.querySelector.bind(document));
     log("trace", "Uib:constructor", "Starting")();
+    window.addEventListener("offline", (e) => {
+      this.set("online", false);
+      this.set("ioConnected", false);
+      log("warn", "Browser", "DISCONNECTED from network")();
+    });
+    window.addEventListener("online", (e) => {
+      this.set("online", true);
+      log("warn", "Browser", "Reconnected to network")();
+      this._checkConnect();
+    });
     document.cookie.split(";").forEach((c) => {
       const splitC = c.split("=");
       this.cookies[splitC[0].trim()] = splitC[1];
@@ -2557,7 +2585,7 @@ var Uib = (_a = class {
     }
   }
   setOriginator(originator = "") {
-    this.originator = originator;
+    this.set("originator", originator);
   }
   setStore(id, value2) {
     if (typeof value2 === "object") {
@@ -2967,7 +2995,10 @@ var Uib = (_a = class {
       }
       ui.payload = msg.payload;
       ui.topic = msg.topic;
-      this._dispatchCustomEvent(`uibuilder:msg:_ui:${ui.method}${ui.id ? `:${ui.id}` : ""}`, ui);
+      this._dispatchCustomEvent(
+        `uibuilder:msg:_ui:${ui.method}${ui.id ? `:${ui.id}` : ""}`,
+        ui
+      );
       switch (ui.method) {
         case "add": {
           this._uiAdd(ui);
@@ -3057,12 +3088,18 @@ var Uib = (_a = class {
       props[key] = target[key];
     });
     const ignoreAttribs = ["class", "id", "name"];
-    const attribs = Object.assign({}, ...Array.from(target.attributes, ({ name, value: value2 }) => {
-      if (!ignoreAttribs.includes(name)) {
-        return { [name]: value2 };
-      }
-      return void 0;
-    }));
+    const attribs = Object.assign(
+      {},
+      ...Array.from(
+        target.attributes,
+        ({ name, value: value2 }) => {
+          if (!ignoreAttribs.includes(name)) {
+            return { [name]: value2 };
+          }
+          return void 0;
+        }
+      )
+    );
     let thisMsg;
     if (!Object.prototype.hasOwnProperty.call(this, "msg"))
       thisMsg = { topic: void 0 };
@@ -3108,8 +3145,10 @@ var Uib = (_a = class {
         return;
       }
       if (msg._uib.componentRef === "globalNotification") {
+        this.showDialog("notify", msg._uib.options, msg);
       }
       if (msg._uib.componentRef === "globalAlert") {
+        this.showDialog("alert", msg._uib.options, msg);
       }
     }
     if (msg._ui) {
@@ -3184,6 +3223,8 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     return ioNamespace;
   }
   _checkConnect(delay, factor, depth = 1) {
+    if (navigator.onLine === false)
+      return;
     if (!delay)
       delay = this.retryMs;
     if (!factor)
@@ -3229,6 +3270,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     this.socketOptions.path = this.ioPath;
     this.socketOptions.auth.pageName = this.pageName;
     this.socketOptions.auth.clientId = this.clientId;
+    this.socketOptions.transportOptions.polling.extraHeaders["x-clientid"] = `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`;
     this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
     log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
     this._socket = lookup2(this.ioNamespace, this.socketOptions);
@@ -3248,6 +3290,8 @@ Namespace: ${this.ioNamespace}`)();
       this._checkConnect();
     });
     this._socket.on("connect_error", (err) => {
+      if (navigator.onLine === false)
+        return;
       log("error", "Uib:ioSetup:connect_error", `\u274C Socket.IO Connect Error. Reason: ${err.message}`, err)();
       this.set("ioConnected", false);
       this.set("socketError", err);
@@ -3282,9 +3326,15 @@ ioPath: ${this.ioPath}`)();
     if (document.styleSheets.length > 1 || document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) {
       log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
     } else {
-      log("info", "Uib:start", "No styles loaded, loading uibuilder default styles.")();
-      this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`);
+      if (options && options.loadStylesheet === false)
+        log("info", "Uib:start", "No styles loaded & options.loadStylesheet === false.")();
+      else {
+        log("info", "Uib:start", "No styles loaded, loading uibuilder default styles.")();
+        this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`);
+      }
     }
+    const [entry] = performance.getEntriesByType("navigation");
+    this.set("lastNavType", entry.type);
     this.started = this._ioSetup();
     if (this.started === true) {
       log("trace", "Uib:start", "Start completed. Socket.IO client library loaded.")();
@@ -3292,7 +3342,7 @@ ioPath: ${this.ioPath}`)();
       log("error", "Uib:start", "Start completed. ERROR: Socket.IO client library NOT LOADED.")();
     }
   }
-}, _connectedNum = new WeakMap(), _events = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _isMinified = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
+}, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
   version,
   type: "module",
   displayName: "uibuilder"

@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2022-06-28 21:01:54
+lastUpdated: 2022-10-15 18:36:52
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -79,6 +79,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * STARTED: Change min node.js version to v14 LTS (in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features
+    * Replace `||` default value tests with `??` .
+    * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+
     * https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
     * [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
     * [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)
@@ -105,8 +108,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * Test Runner module (experimental 18.0.0)
       * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
 
+* Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
+
 * Improvements to `uib-cache` node
   * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
+  * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
+  * Add checks to prevent non-string cach by property values.
 
 * Extensions to experimental `uib-list` node
   * Cope with parent uibuilder node renaming url
@@ -115,6 +122,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add optional page filter
   * Add return msg handling like uib-sender.
   * Updates should update the original add which should be saved for replay but should instantly output an update
+  * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
+* uib-list (and similar nodes)
+  * Consider allowing pass-through which automatically nests nodes (e.g. makes the 2nd node in the flow a child of the first)?
+  * Otherwise, maybe have a composite node that defines a tree?
+  * Consider having a general `element` node that can select between different element types.
+    * List
+    * Para (with a section title and multiple paragraphs, optional html in text)
+    * Card
+    * Table
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
@@ -122,8 +138,14 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add syntax highlight properties
 
 * Extensions to new FE Library
+  * Consider adding a default `msg.topic` option.
+  * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
-  * _UI
+  * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
+  * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
+  * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
+
+  * _UI - improvements to the config-/data-driven UI creation features
     * Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process
        - probably needs list and wildcard though.
     * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special 
@@ -132,19 +154,48 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Add HTML loader capability to _ui handling (see html-loader web component)
     * Allow adding to more locations: 1st child rather than last, next/previous sibling
     * Add click coordinates to return msgs where appropriate. See https://discourse.nodered.org/t/contextmenu-location/22780/51
+  
+  * Allow for PWA use:
+    * Check for OFFLINE use and supress transport errors
+    * Add check for online/offline - make available to user code
+    * Auto-generate manifest and sw.js - need icon and to set names/urls/etc
+    * https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/web-app-manifests
+    * Allow push API interface as well as websocket. https://developer.mozilla.org/en-US/docs/Web/API/Push_API
 
 * Updates to old FE library
   * Add client ID, client version & connections # to initial "ready for content" msg from client->NR
   * Add `msg._ui` processing if possible.
 
 * Updates to uibuilder node
+  * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
+    * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
+    * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
+
   * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
   * Use new `uib-brand.css` style library on details pages.
   * Add api to query if a specific uib library is installed (and return version)
+  * Add API test harness using VScode restbook.
   * Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
+  * Allow instance npm installs to be served (would allow both vue 2 and vue 3 for example). Instance serves to take preference. Would need extension to editor libraries tab to differentiate the locations.
+  
   * Editor:
     * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
     * Change getFileList to only return files, use the separate folder list for folders. No need to run it multiple times then.
+    * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
+    * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
+    * Creating new folder - new folder should be selected after create.
+    * NEW TAB: `Build` - run npm scripts, install instance libraries (for dev or dependencies - just dev initially)
+    * Add visual error when changing advanced/Serve to a folder with no index.html.
+    * Option for project folder storage.
+    * Libraries tab
+      * Add update indicator to Libraries tab.
+      * Trigger indicator to Libraries to show if new major version available when switching to the tab.
+
+  * Details index page
+    * Make sure that the ExpressJS `views` folder is shown.
+
+* `package-mgt.js`
+  * Rationalise the various functions - several of them have similar tasks.
 
 * Updates to Documentation
   * Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
@@ -154,8 +205,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
   * Add some notes about Node-RED's projects feature. It doesn't seem to add a correct .gitignore which should contain `**/node_modules`. Also add notes about the fact that projects creates a disconnect between the flows and the userDir folder.
 
-* New nodes: 
-  * `uib-table` - using same template as `uib-list`
 
 * **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 

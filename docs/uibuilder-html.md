@@ -3,17 +3,18 @@ title: Developer documentation for `uibuilder.html`
 description: >
    Documents the processing of the html file that defines the Node-RED admin UI panel for uibuilder. Shown when double-clicking on a uibuilder node in a flow.
 created: 2019-06-15 14:26:00
-lastUpdated: 2021-06-27 21:19:47
+lastUpdated: 2022-11-26 16:26:48
 ---
 
-* [Variables](#variables)
-  * [Properties](#properties)
-  * [Credentials](#credentials)
-  * [Pseudo Settings](#pseudo-settings)
-* [Package List](#package-list)
-  * [packageList Function](#packagelist-function)
-  * [Add button](#add-button)
-  * [addPackageRow(element,index,data) Function](#addpackagerowelementindexdata-function)
+!> This document needs updating, it is incomplete.
+
+- [Variables](#variables)
+  - [Properties](#properties)
+  - [Pseudo Settings](#pseudo-settings)
+- [Package List](#package-list)
+  - [packageList Function](#packagelist-function)
+  - [Add button](#add-button)
+  - [addPackageRow(element,index,data) Function](#addpackagerowelementindexdata-function)
 
 ## Variables
 
@@ -21,18 +22,24 @@ lastUpdated: 2021-06-27 21:19:47
 
 See the `node.` variables in [uibuilder-js](uibuilder-js.md).
 
-### Credentials
-
-These are NOT copied when exporting a flow.
-
-* `jwtSecret` {String}
-
 ### Pseudo Settings
 
 These are passed as `settings` from `uibuilder.js` when `RED.nodes.registerType` is called. Access as `RED.settings.<varName>` from within the editor.
 
-* `RED.settings.node_env` {String} - a copy of process.env.NODE_ENV environment variable from node.js.
+* `RED.settings.uibuilderNodeEnv` {String} - a copy of process.env.NODE_ENV environment variable from node.js. E.g. PRODUCTION or DEVELOPMENT.
   Used to show different warnings for security processing depending on whether mode is "development" or something else.
+
+* `RED.settings.uibuilderTemplates` {Array} - List of available templates and details.
+
+* `RED.settings.uibuilderCustomServer` {Object} - Custom server details.
+
+* `RED.settings.uibuilderCurrentVersion` {String} - Current version of uibuilder.
+
+* `RED.settings.uibuilderRedeployNeeded` {Boolean} - Should the editor tell the user that a redeploy is needed (based on uib versions)?
+
+* `RED.settings.uibuilderInstances` {Array} - List of the deployed uib instances [{node_id: url}].
+
+* `RED.settings.uibuilderRootFolder` {String} - uibRoot, the root folder used for uibuilder data.
 
 ## Package List
 

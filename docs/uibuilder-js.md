@@ -3,10 +3,10 @@ title: Developer documentation for `uibuilder.js`
 description: >
    `uibuilder.js` is the main file that defines the uibuilder node. It is this that is _required_ into Node-RED when it starts.
 created: 2019-05-18 18:25:00
-lastUpdated: 2021-06-27 21:18:53
+lastUpdated: 2022-11-26 16:28:09
 ---
 
-Note that uibuilder [URI paths are documented in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths).
+!> This document needs updating, it is incomplete.
 
 - [Key processing elements](#key-processing-elements)
   - [Installation](#installation)
@@ -16,7 +16,7 @@ Note that uibuilder [URI paths are documented in the WIKI](https://github.com/To
   - [Client Connection](#client-connection)
   - [Client Disconnection](#client-disconnection)
 - [Global/Module Variables](#globalmodule-variables)
-  - [`uib` {Object} [Module global]](#uib-object-module-global)
+  - [`uib` {Object} \[Module global\]](#uib-object-module-global)
   - [Other variables](#other-variables)
 - [uibuilder Node Instance Variables](#uibuilder-node-instance-variables)
   - [From the admin Editor ui](#from-the-admin-editor-ui)
@@ -24,7 +24,7 @@ Note that uibuilder [URI paths are documented in the WIKI](https://github.com/To
     - [Security Related](#security-related)
     - [Credentials](#credentials)
   - [Locally configured (not set in Editor)](#locally-configured-not-set-in-editor)
-  - [Internals & Typedef](#internals--typedef)
+  - [Internals \& Typedef](#internals--typedef)
 - [Functions/Methods](#functionsmethods)
   - [Module level](#module-level)
   - [Instance level](#instance-level)

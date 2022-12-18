@@ -4,34 +4,15 @@ typora-root-url: docs/images
 
 # Changelog
 
+## Known Issues
+
+Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) to current and the old client library (`uibuilderfe.js`) to functionally stabilised and on the road to being deprecated. The experimental `uib-list` node has some improvements but is still feature incomplete. The new `uib-brand.css` style library still needs quite a bit of additional work. The new `uib-list` node is still a little rough but should work fine for most things.
+
 ## To do/In-progress
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-Also note that v5.1.0 has a number of new features that are not complete. They are included to allow people to start to experiment with them and provide feedback. Notably the new client library (`uibuilder.esm.min.js` or `uibuilder.iife.min.js`), the experimental `uib-list` node which is certainly not feature complete and the new `uib-brand.css` style library which needs quite a bit of additional work.
-
-* Check deepscan
-* `uib-list` node
-  * [ ] Switch to use cache context vars
-  * [ ] Optional cache switch
-* `uib-sender` node
-  * [Name is not showing in flow](https://discourse.nodered.org/t/uib-sender-node/64636).
-* Updates to uibuilder node
-  * Editor:
-    * Option for project folder storage
-    * [ ] Add button to outdated markers to update install
-    * New editor option: Add _uib.clientId|ip to standard messages (off by default)
-    * Creating new folder - new folder should be selected after create.
-    * Add link to [Configuring uibuilder nodes](uib-node-configuration.md) page.
-    * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48
-* Old client library
-  * Fix page name processing.
-  * Check connections count https://discourse.nodered.org/t/uibuilder-amazing/40460/55.
-* Client library
-  * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
-  * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
-  * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
-  * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
+* Update examples and templates to use new FE libraries
 
 ----
 
@@ -41,49 +22,75 @@ Also note that v5.1.0 has a number of new features that are not complete. They a
 
 ### Breaking Changes
 
-* Change min node.js version to v14 LTS (in line with Node-RED v3)
+* Minimum Node-RED version is now v3
+* Minimum Node.js version is now v14 LTS (in line with Node-RED v3) - note that the minimum minor version changes to the latest v14 LTS version whenever uibuilder is updated.
+* Not sure if this is really breaking. However, `uib-cache` nodes were not properly handling cases where, when processing incoming msgs, the chosen "Cache by" msg property was an empty string in the input msg. Previously handling of that case was dependent on the store and type being used. It is now ignored. The common case is where the setting is `msg.topic` and using the default trigger node which has `msg.topic` set to an empty string. Previously that was _sometimes_ recorded and sometimes not. Now it is never recorded.
 
 ### Fixed
 
-* `uib-cache`: Custom variable name was being ignored
+* `uib-cache`: Custom variable name was being ignored - cache processing rewritten
 * `uibuilder`: Library tab might occasionally list a package that wasn't a direct installed dependency. Now resolved. Only packages listed in `<uibRoot>/package.json` dependencies property will be listed.
+* `nodes/libs/package-msg.js` `updateInstalledPackageDetails()`: Installations with a large number of installed libraries not correctly reporting their details. Resolved (hopefully) async issue. Was using `async` with `.forEach()` which doesn't work. Changed to use `Promise.all` with a map. Thanks to [dczysz](https://github.com/dczysz) for reporting. Issue [#186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186). Issue more complex than originally thought. Ended up doing a 2-stage update of the installed libraries data. First stage is quick and synchronous to allow the appropriate vendor folders to be added to the ExpressJS vendor routes. 2nd stage uses npm to get additional library information.
+* Can now stop auto-loading of uibuilder default stylesheet using `uibuilder.start({loadStylesheet: false})`. Issue [#184](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/184).
+* Fixed deepscan issues.
+* Old client library was reporting mismatch client version unnecessarily
+* Old client library was not reporting client `pageName` correctly
+
 
 ### New
 
 * New example: Demonstrating logging methods of messages passed both into and from a uibulder node, to both the Node-RED debug panel and the Web Dev console. Many thanks to [Harold Peters Inskipp](https://github.com/HaroldPetersInskipp) for the contribution.
 * New Template: Basic Vue v3 example with no build step required.
+* New editor option: Add `msg._uib` to standard messages (off by default). Can be used to help with authentication/authorisation & session management within Node-RED flows. Contains `clientId` & `remoteAddress` and `pageName` properties.
+
 
 ### Changed
 
-* uibuilder can now select any existing folder to serve as the root of your web app. The selector on the advanced tab is now populated with all folders. The folder must, however, contain at least an `index.html` page otherwise an error is logged and no web page will be shown unless you manually include the page name in your browser address bar.
+* New client (`uibuilder.iife.js` and `uibuilder.esm.js`) improvements
+  
+  Note that the new clients are now the preferred client libraries. It is best to use one of these rather than the older `uibuilderfe.js` client library. Please note that a couple of features were dropped, namely the VueJS versions of the Toast and alert functions. The same input msgs still work to allow for backward compatibility but they will not trigger bootstrap-vue even if that is installed. Use the [new Dynamic, data-driven content features](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/uibuilder.module?id=dynamic-data-driven-html-content-1) instead.
 
-* uibuilder node will now create the required `<uibRoot>/package.json` file if it does not exist. Removes some unnecessary warning messages.
+  * Client now knows whether the browser is online or offline. If offline, it no longer keeps outputing socket.io error messages or warnings. A console warn is given whenever the browser goes online or offline. Going online reconnects the socket.io connection to Node-RED.
+  * Client now tracks what the last navigation type was (navigate, reload, back_forward, prerender). Enables the client to know whether the page was a new navigation or simply reloaded. Can be accessed in the client using `uibuilder.lastNavType`.
 
-* uibuilder Editor panel improvements:
-  * The currently installed uibuilder version is now shown on the Advanced tab.
-  * The server's `instanceRoot` filing system folder is shown on the Core tab. This is the configuration and front-end code for this instance of uibuilder.
-  * The info showing the current web server is now a link to the instance page (same as the Open button above it).
-  * Package outdated markers added to Editor Library tab. 
-  * Package outdated markers are buttons that will update the installation of the package.
-
-
-* `uib-cache` node
-  * More compact context variable settings in Editor panel.
-  * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously much be unique.
-
-* `uib-list` node
-  * Use same context variable settins as `uib-cache` for greater flexibility.
-  * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously much be unique.
-  * Change drop-downs to typed input
 
 * `uibuilder` node
+  
+  * uibuilder can now select any existing folder to serve as the root of your web app. The selector on the advanced tab is now populated with all folders. The folder must, however, contain at least an `index.html` page otherwise an error is logged and no web page will be shown unless you manually include the page name in your browser address bar.
+  * The uibuilder node will now create the required `<uibRoot>/package.json` file if it does not exist. Removes some unnecessary warning messages.
   * uibRoot added to settings passed to Editor so that the editor can display and link to server folders (links only work when server is local of course).
   * If running in debug mode, key settings dumped to Editor console.
+  * Editor panel improvements:
+  
+    * The currently installed uibuilder version is now shown on the Advanced tab.
+    * The server's `instanceRoot` filing system folder is shown on the Core tab. This is the configuration and front-end code for this instance of uibuilder.
+    * The info showing the current web server is now a link to the instance page (same as the Open button above it).
+    * The "Server folder" information now shows the currently used serve folder (e.g. src or dist).
+    * The `Advanced > Serve` dropdown now shows ALL top-level folders. Note that you have to close and re-open the panel to pick up the new folder.
+    * In the help panel: Added a link to the [Configuring uibuilder nodes](uib-node-configuration.md) page. Added link to the new client library page and a note about deprecation of the old client library.
+    * Library tab  
+      * Package outdated markers added to Editor Library tab. (_Currently only on Node-RED startup_. Will be improved later.)
+      * Package outdated markers are buttons that will update the installation of the package.
+
+* `uib-cache` node
+
+  * More compact context variable settings in Editor panel.
+  * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously must be unique.
+
+
+* `uib-list` node
+
+  * Now uses same context variable settins as `uib-cache` for greater flexibility.
+  * Flow/global cache context has node id appended to variable name for safety, can be changed but obviously much be unique.
+  * Change drop-downs to typed input
+  * In editor, disable cache settings if cache turned off
+  * Add uib url to name display
 
 * Various library improvements including some trace and info log msg improvements.
+* Tech docs - updated to indicate the the old client library is now functionally stabilised and will eventually be deprecated.
+* uibindex page (adminapiv2.js) - Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`).
 
 ## [v5.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.1.0...v5.1.1)
-
 
 ### Fixed
 

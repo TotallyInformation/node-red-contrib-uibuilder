@@ -10,7 +10,13 @@
     </p>
 
     <p>
-        Specific information on how to use the front-end library: <a href="./uibuilder/techdocs/#/front-end-library" target="_blank">uibuilderfe</a>
+        More information on how to configure this node: <a href="./uibuilder/techdocs/#/uib-node-configuration" target="_blank">uibuilder node configuration</a>.
+    </p>
+
+    <p>
+        Specific information on how to use the new front-end library: <a href="./uibuilder/techdocs/#/uibuilder.module" target="_blank">Client Library</a>. 
+        And the old library: <a href="./uibuilder/techdocs/#/front-end-library" target="_blank">uibuilderfe</a>. 
+        Note that the new library is preferred, the old one will not be updated and will eventually be deprecated.
     </p>
 
     <p>
@@ -218,6 +224,11 @@
                 This can now be changed simply by redeploying your flow, you don't need to restart Node-RED.
             </dd>
 
+            <dt>Include <code>msg._uib</code> in standard msg output <span class="property-type">check box</span></dt>
+            <dd>
+                If selected, will show the browser clientId, page name and real IP address in standard output (it is always shown in control msgs).
+            </dd>
+
             <dt>Show web view of source files <span class="property-type">check box</span></dt>
             <dd>
                 If on, an extra web page is dynamically created at the indicated URL. That page shows an index listing
@@ -225,7 +236,6 @@
                 <code>USE WITH EXTREME CAUTION</code><br>
                 A button is exposed if this flag is on. Clicking the button will take you to the index view in a separate tab.
             </dd>
-
             <dt>Allow scripts to be passed to front-end? <span class="property-type">check box</span></dt>
             <dd>
                 If on, any string(s) in <code>msg.script</code> will be dynamically added to the scripts of the web page.

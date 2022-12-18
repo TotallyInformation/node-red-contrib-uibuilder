@@ -196,7 +196,19 @@
         <div aria-label="Source folder information" class="form-row form-tips node-help">
             Selects the folder that will be served as the root folder of your web app.<br>
             The folder <b>must</b> contain an <code>index.html</code> file as a minimum.<br>
-            If it doesn't, you will get an error.
+            If it doesn't, you will get an error.<br>
+            Need to re-deploy for the folder to change.
+        </div>
+
+        <div aria-label="Pass the msg._uib to standard message output?" class="form-row" 
+                title="If turned on, msg._uib included in standard msgs">
+            <input type="checkbox" id="node-input-showMsgUib" style="display: inline-block; width: auto; vertical-align: top;">
+            <label for="node-input-showMsgUib" style="width: 90%;">Include <code>msg._uib</code> in standard msg output.</label>
+        </div>
+        <div aria-label="msg._uib information" class="form-row form-tips node-help">
+            This includes the <code>clientId</code>, <code>remoteAddress</code> and <code>pageName</code> properties from the client in the output<br>
+            The <code>clientId</code> is generated in the browser and remains stable while the browser is open.
+            It is reset when the browser restarts. Control msgs always include <code>msg.clientId</code>.
         </div>
 
         <div aria-label="Provide a searchable file index view?" class="form-row" 
@@ -208,7 +220,7 @@
 
         <div aria-label="For old client library only. Allow scripts/styles to be passed to front-end?" class="form-row"
                 title="Add msg.script&sol;msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
-            Allow passing to the front-end<br>(old client library only, use _ui for new libraries): <br>
+            Allow passing to the front-end<br>(old client library only, use msg._ui for new libraries): <br>
             <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
             <label for="node-input-allowScripts">Scripts? (JS)</label>
             <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">

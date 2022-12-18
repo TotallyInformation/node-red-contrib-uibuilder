@@ -73,6 +73,20 @@ function getClientRealIpAddress(socket) {
     return clientRealIpAddress
 } // --- End of getClientRealIpAddress --- //
 
+/** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
+ * @param {socketio.Socket} socket Socket.IO socket object
+ * @returns {string | string[] | undefined} Best estimate of the client's real IP address
+ */
+ function getClientPageName(socket, node) {
+    let pageName = socket.handshake.auth.pathName.replace(`/${node.url}/`, '')
+    if ( pageName.endsWith('/') ) pageName += 'index.html'
+    if ( pageName === '' ) pageName = 'index.html'
+
+    return pageName
+} // --- End of getClientPageName --- //
+
+
+
 class UibSockets {
     // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
     /** Flag to indicate whether setup() has been run
@@ -130,7 +144,8 @@ class UibSockets {
      * @param {Express} server reference to ExpressJS server being used by uibuilder
      */
     setup( uib, server ) {
-        if (uib.RED === null) throw new Error('uib.RED is null')
+        if ( !uib || !server ) throw new Error(`[uibuilder:socket.js:setup] Called without required parameters or uib and/or server are undefined.`)
+        if (uib.RED === null) throw new Error('[uibuilder:socket.js:setup] uib.RED is null')
 
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
@@ -138,9 +153,6 @@ class UibSockets {
             return
         }
 
-        if ( !uib || !server ) {
-            throw new Error(`[uibuilder:socket.js:setup] Called without required parameters. uib=${uib}, server=${server}`)
-        }
 
         /** reference to Core Node-RED runtime object */
         this.RED = uib.RED
@@ -152,7 +164,7 @@ class UibSockets {
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
         this._socketIoSetup()
 
-        if (uib.configFolder === null) throw new Error('uib.configFolder is null')
+        if (uib.configFolder === null) throw new Error('[uibuilder:socket.js:setup] uib.configFolder is null')
 
         // If available, set up optional outbound msg middleware
         this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null }
@@ -380,35 +392,18 @@ class UibSockets {
         // If the sender hasn't added msg._socketId, add the Socket.id now
         if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
+        // If required, add the clientId, page name and real IP to the msg using msg._uib
+        if (node.showMsgUib) {
+            if (!msg._uib) msg._uib = {}
+            msg._uib.clientId = socket.handshake.auth.clientId
+            msg._uib.remoteAddress = getClientRealIpAddress(socket)
+            msg._uib.pageName = getClientPageName(socket, node)
+        }
+
         // Send out the message for downstream flows
         // TODO: This should probably have safety validations!
         this.sendIt(msg, node)
 
-        // // If security is active...
-        // if (node.useSecurity === true) {
-
-        //     /** Check for valid auth and session - JWT is removed if not authorised
-        //      * @type {MsgAuth} */
-        //     msg._auth = security.authCheck2( msg, node, this.getClientDetails(socket) )
-        //     //msg._auth = security.authCheck(msg, node, socket.id)
-        //     //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
-
-        //     //console.log('[UIBUILDER:addNs:on-client-msg] _auth: ', msg._auth)
-
-        //     // Only send the msg onward if the user is validated or if unauth traffic permitted
-        //     if ( node.allowUnauth === true || msg._auth.jwt !== undefined ) {
-        //         this.sendIt(msg, node)
-        //         tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
-        //     } else
-        //         log.info(`[uibuilder:socket.js:addNs:connection:on:client] Msg received from ${node.url} client but they are not authorised. Ignoring.`)
-
-        // } else {
-
-        //     // Send out the message for downstream flows
-        //     // TODO: This should probably have safety validations!
-        //     this.sendIt(msg, node)
-
-        // }
     } // ---- End of listenFromClient ---- //
 
     /** Add a new Socket.IO NAMESPACE
@@ -466,9 +461,7 @@ class UibSockets {
             // Note, could use socket.handshake.auth.pageName instead
             let pageName
             if ( socket.handshake.auth.pathName ) {
-                pageName = socket.handshake.auth.pathName.replace(`/${node.url}/`, '')
-                if ( pageName.endsWith('/') ) pageName += 'index.html'
-                if ( pageName === '' ) pageName = 'index.html'
+                pageName = getClientPageName(socket, node)
             }
 
             //#region ----- Event Handlers ----- //

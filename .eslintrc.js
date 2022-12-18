@@ -22,7 +22,14 @@
  *         Intl.DisplayNames, Intl.DateTimeFormat, (Experimental: Async Local Storage, Top-Level Await, Diagnostic report),
  *         WeakReferences, private class methods
  * v15 - logical assignment operators, String.prototype.replaceAll, Promise.any, AggregateError, AbortController,
- *        Promisified setTimeout/setImmediate
+ *        (Experimental Promisified setTimeout/setImmediate)
+ * v16 - Promisified setTimeout/setImmediate, RegExp match indices. npm v7 (peer deps now installed again).
+ *       fs.rmdir no longer supports recursive (use new fs.rm)
+ * v17 - OpenSSL 3 (incl QUIC), Readline Promise API
+ * v18 - (Experimental: Fetch API, Web Streams API, Test Runner), HTTP Timeouts, findLast/findLastIndex array methods, 
+ *       Improvements to the Intl.Locale API [calendars, collations, hourCycles, numberingSystems, timeZones, textInfo, weekInfo], 
+ *       Intl.supportedValuesOf function
+ * v19 - (Experimental: node --watch), HTTP(S)/1.1 KeepAlive by default, Stable WebCrypto API, Intl.NumberFormat
  */
 module.exports = {
     env: {
@@ -61,7 +68,7 @@ module.exports = {
     extends: [
         'standard',
         // 'eslint:recommended',
-        'plugin:es/restrict-to-es2019',
+        'plugin:es/restrict-to-es2020',
         'plugin:jsdoc/recommended',
         'plugin:promise/recommended',
         'plugin:sonarjs/recommended',
@@ -78,9 +85,10 @@ module.exports = {
         'n/no-process-exit': 'error',
 
         // remove once min engines moves to node.js v14+
-        'es/no-optional-chaining': 'error',
-        'es/no-dynamic-import': 'error',
-        'es/no-nullish-coalescing-operators': 'error',
+        // 'es/no-optional-chaining': 'error',
+        // 'es/no-dynamic-import': 'error',
+        // 'es/no-nullish-coalescing-operators': 'error',
+
         // remove once min engines moves to node.js v15+
         'es/no-logical-assignment-operators': 'error',
         'es/no-promise-any': 'error',

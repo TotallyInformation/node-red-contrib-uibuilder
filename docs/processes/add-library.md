@@ -19,7 +19,7 @@ lastUpdated: 2022-06-27 10:28:19
 * `uibnpmmanage`:install
   * `packageMgt.npmInstallPackage(params.url, params.package, params.tag)`
 
-## Package Management (`nodes/libs/packageMgt.js`)
+## Package Management (`nodes/libs/package-mgt.js`)
 
 * `npmInstallPackage` => npm install (returns install log text)
 

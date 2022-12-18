@@ -113,7 +113,8 @@ class UibWeb {
      * param {Object} server reference to ExpressJS server being used by uibuilder
      */
     setup( uib ) {
-        if ( uib.RED === null ) throw new Error('uib.RED is null')
+        if ( !uib ) throw new Error('[uibuilder:web.js:setup] Called without required uib parameter or uib is undefined.')
+        if ( uib.RED === null ) throw new Error('[uibuilder:web.js:setup] uib.RED is null')
 
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
@@ -121,13 +122,11 @@ class UibWeb {
             return
         }
 
-        if ( !uib ) {
-            throw new Error('[uibuilder:web.js:setup] Called without required uib parameter')
-        }
-
         const RED = this.RED = uib.RED
         this.uib = uib
-        this.log = uib.RED.log
+        const log = this.log = uib.RED.log
+
+        log.trace('[uibuilder:web:setup] Web setup start')
 
         // Get the actual httpRoot
         if ( RED.settings.httpRoot === undefined ) this.uib.httpRoot = ''
@@ -142,6 +141,8 @@ class UibWeb {
         this._adminApiSetup()
         this._setMasterStaticFolder()
         this._webSetup()
+
+        log.trace('[uibuilder:web:setup] Web setup end')
 
     } // --- End of setup() --- //
 
@@ -190,21 +191,9 @@ class UibWeb {
         const RED = this.RED
         const log = this.log
 
-        // For custom server only, Try to find the external LAN IP address of the server
-        if ( uib.customServer.isCustom === true ) {
-            require('dns').lookup(/** @type {string} */ (uib.customServer.hostName), 4, function (err, add) {
-                if ( err ) {
-                    log.error('[uibuilder:web.js:_websetup] DNS lookup failed.', err)
-                }
+        log.trace('[uibuilder:web:_webSetup] Configuring ExpressJS')
 
-                uib.customServer.host = add
-
-                log.trace(`[uibuilder:web:webSetup] Using custom ExpressJS server at ${uib.customServer.type}://${add}:${uib.customServer.port}`)
-            })
-        } else {
-            log.trace(`[uibuilder:web:webSetup] Using Node-RED ExpressJS server at ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${uib.nodeRoot === '' ? '/' : uib.nodeRoot}`)
-        }
-
+        
         /** We need an http server to serve the page and vendor packages. The app is used to serve up the Socket.IO client.
          * NB: uib.nodeRoot is the root URL path for http-in/out and uibuilder nodes
          * Always set to empty string if a dedicated ExpressJS app is required
@@ -212,6 +201,17 @@ class UibWeb {
          */
 
         if ( uib.customServer.isCustom === true ) {
+
+            // For custom server only, Try to find the external LAN IP address of the server
+            require('dns').lookup(/** @type {string} */ (uib.customServer.hostName), 4, function (err, add) {
+                if ( err ) {
+                    log.error('[uibuilder:web.js:_websetup] DNS lookup failed.', err)
+                }
+
+                uib.customServer.host = add
+
+                log.trace(`[uibuilder:web:_webSetup] Using custom ExpressJS server at ${uib.customServer.type}://${add}:${uib.customServer.port}`)
+            })
 
             // Port has been specified & is different to NR's port so create a new instance of express & app
             const express = require('express')
@@ -252,11 +252,11 @@ class UibWeb {
             this.server.on('error', (err) => {
                 if (err.code === 'EADDRINUSE') {
                     this.server.close()
-                    RED.log.error(
+                    log.error(
                         `[uibuilder:web:webSetup:CreateServer] ERROR: Port ${uib.customServer.port} is already in use. Cannot create uibuilder server, use a different port number and restart Node-RED`
                     )
                 } else {
-                    RED.log.error(
+                    log.error(
                         `[uibuilder:web:webSetup:CreateServer] ERROR: ExpressJS error. Cannot create uibuilder server. ${err.message}`,
                         err
                     )
@@ -268,6 +268,8 @@ class UibWeb {
             })
 
         } else {
+            log.trace(`[uibuilder:web:_webSetup] Using Node-RED ExpressJS server at ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${uib.nodeRoot === '' ? '/' : uib.nodeRoot}`)
+
             // Port not specified (default) so reuse Node-RED's ExpressJS server and app
             // @ts-expect-error
             this.app = /** @type {express.Application} */ (RED.httpNode) // || RED.httpAdmin
@@ -276,7 +278,12 @@ class UibWeb {
 
         if (uib.rootFolder === null) throw new Error('uib.rootFolder is null')
         // Set views folder to uibRoot (but only if not overridden in settings)
-        if ( !uib.customServer.serverOptions.views ) this.app.set('views', path.join(uib.rootFolder, 'views') )
+        if ( !uib.customServer.serverOptions.views ) {
+            this.app.set('views', path.join(uib.rootFolder, 'views') )
+            log.trace(`[uibuilder:web:_webSetup] ExpressJS Views folder set to '${path.join(uib.rootFolder, 'views')}'`)
+        } else {
+            log.trace(`[uibuilder:web:_webSetup] ExpressJS Views folder is '${uib.customServer.serverOptions.views}'`)
+        }
 
         // Note: Keep the router vars separate so that they can be used for reporting
 
@@ -286,6 +293,7 @@ class UibWeb {
         // Add masterStatic to ../uibuilder - serves up front-end/... uib-styles.css, uibuilderfe...
         if ( this.masterStatic !== undefined ) {
             this.uibRouter.use( express.static( this.masterStatic, uib.staticOpts ) )
+            log.trace(`[uibuilder:web:_webSetup] Master Static Folder '${this.masterStatic}' added to uib router ('_httpNodeRoot_/uibuilder/')`)
         }
         // Add vendor paths for installed front-end libraries - from `<uibRoot>/package.json`
         this.serveVendorPackages()
@@ -371,15 +379,18 @@ class UibWeb {
             return
         }
 
+        const log = this.log
+
         if (this.uibRouter === undefined) throw new Error('this.uibRouter is undefined')
+
+        log.trace('[uibuilder:web:serveVendorPackages] Serve Vendor Packages started')
 
         // Update the <uibRoot>/package.json file & packageMgt.uibPackageJson in case a package was manually installed then node-red restarted
         // Get the installed packages from the `<uibRoot>/package.json` file. If it doesn't exist, this will create it.
-        const pj = packageMgt.getUibRootPackageJson()
-        if (pj === null) throw new Error('pj is null')
-        if ( pj.dependencies === undefined ) throw new Error('pj.dependencies is undefined')
-
-        // TODO Add some trace messages
+        // const pj = packageMgt.getUibRootPackageJson()
+        const pj = packageMgt.uibPackageJson
+        if (pj === null) throw new Error('web.js:serveVendorPackages: pj is null')
+        if ( pj.dependencies === undefined ) throw new Error('web.js:serveVendorPackages: pj.dependencies is undefined')
 
         /** Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
          * @type {ExpressRouter & {myname?: string}}
@@ -406,14 +417,16 @@ class UibWeb {
         // Assign the vendorRouter to the ../uibuilder/vendor url path (via uibRouter)
         this.uibRouter.use( '/vendor', this.vendorRouter )
         this.routers.user.push( { name: 'Vendor Routes', path: `${this.uib.httpRoot}/uibuilder/vendor/*`, desc: 'Front-end libraries are mounted under here', type: 'Router' } )
+        log.trace(`[uibuilder:web:serveVendorPackages] Vendor Router created at '${this.uib.httpRoot}/uibuilder/vendor/*.`)
 
         Object.keys(pj.dependencies).forEach( packageName => {
-            if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined ) throw new Error('pj.uibuilder or pj.uibuilder.packages is undefined')
+            if ( pj.uibuilder === undefined || pj.uibuilder.packages === undefined ) throw new Error('web.js:serveVendorPackages: pj.uibuilder or pj.uibuilder.packages is undefined')
 
             /** @type {uibPackageJsonPackage} */
             const pkgDetails = pj.uibuilder.packages[packageName]
 
-            if ( this.vendorRouter === undefined || pkgDetails.installFolder === undefined || pkgDetails.packageUrl === undefined ) throw new Error('this.vendorRouter, pkgDetails.installFolder or pkgDetails.packageUrl is undefined')
+            if ( this.vendorRouter === undefined ) throw new Error('web.js:serveVendorPackages: this.vendorRouter is undefined')
+            if ( pkgDetails.installFolder === undefined || pkgDetails.packageUrl === undefined ) throw new Error('web.js:serveVendorPackages: pkgDetails.installFolder or pkgDetails.packageUrl is undefined')
 
             if ( !pkgDetails.missing ) { // Only if the package is actually installed
                 // Add a route for each package to this.vendorRouter
@@ -424,9 +437,11 @@ class UibWeb {
                         this.uib.staticOpts
                     )
                 )
+                log.trace(`[uibuilder:web:serveVendorPackages] Vendor Route added for '${packageName}'. Fldr: '${pkgDetails.installFolder}', URL: '${this.uib.httpRoot}/uibuilder/vendor/${pkgDetails.packageUrl}/'. `)
             }
         })
 
+        log.trace('[uibuilder:web:serveVendorPackages] Serve Vendor Packages end')
     } // ---- End of serveVendorPackages ---- //
 
     /** Add the ping endpoint to /uibuilder/ping
@@ -523,8 +538,6 @@ class UibWeb {
             const pathRoot = path.join(rootFolder, node.url, 'views')
             const requestedView = path.parse(req.path)
             let filePath = path.join(pathRoot, requestedView.base)
-
-            // this.app.set('foo', 'bar') //! TODO - remove
 
             if (this.app.get('view engine')) {
                 filePath = path.join(pathRoot, `${requestedView.name}.ejs`)
@@ -1012,12 +1025,16 @@ class UibWeb {
             else x.route = `${L.route.stack[0].method}:${L.route.stack[0].regexp}`
         }
 
+        const pkgs = packageMgt.uibPackageJson.uibuilder.packages
+
         if ( x.path && x.path === '/common/' ) x.folder = this.uib.commonFolder
         else if ( x.path && x.path === '/?(?=/|$)/i' ) {
             x.path = '/'
             x.folder = '(route applied direct)'
             // x.folder = this.masterStatic
             // console.log('>>', L)
+        } else if ( pkgs[x.path.slice(1, -1)] ) {
+            x.folder = pkgs[x.path.slice(1, -1)].installFolder
         }
 
         out.push( x )
@@ -1099,7 +1116,7 @@ class UibWeb {
     dumpUserRoutes(print = true) {
         const routes = { 'app': [], 'uibRouter': [], 'vendorRouter': [] }
 
-        // Get the user-facing routes
+        // Get the user-facing routes  
         for ( const layer of this.app._router.stack) { this.summariseRoute(layer, routes.app) }
         if (this.uibRouter) for ( const layer of this.uibRouter.stack) { this.summariseRoute(layer, routes.uibRouter) }
         if (this.vendorRouter) for ( const layer of this.vendorRouter.stack) { this.summariseRoute(layer, routes.vendorRouter) }

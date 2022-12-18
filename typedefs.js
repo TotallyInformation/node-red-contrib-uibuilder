@@ -193,6 +193,7 @@
 
 /** uibuilderEditorVars
  * @typedef {object} uibuilderEditorVars The node instance variables accessible from the Editor config panel
+ * 
  * @property {string} name Descriptive name, only used by Editor
  * @property {string} topic msg.topic overrides incoming msg.topic
  * @property {string} url The url path (and folder path) to be used by this instance
@@ -206,6 +207,9 @@
  * @property {boolean} showfolder Provide a folder index web page?
  * @property {boolean} reload If true, notify all clients to reload on a change to any source file
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
+ * @property {string} deployedVersion The version of uibuilder when this node was last deployed
+ * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
+ * 
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -214,7 +218,6 @@
  * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  */
 
 /** uibNode
@@ -235,6 +238,9 @@
  * @property {boolean} showfolder Provide a folder index web page?
  * @property {boolean} reload If true, notify all clients to reload on a change to any source file
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
+ * @property {string} deployedVersion The version of uibuilder when this node was last deployed
+ * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
+ * 
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -243,7 +249,6 @@
  * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  *
  * @property {Function} send Send a Node-RED msg to an output port
  * @property {Function=} done Dummy done Function for pre-Node-RED 1.0 servers
@@ -342,27 +347,35 @@
 
 /** cacheNode1
  * @typedef {object} cacheNode1 Local copy of the node instance config + other info
+ * @property {string}  name only used for labelling the node in the flow
  * @property {boolean} cacheall Flag indicating each individual msg is cached
  * @property {string|undefined}  cacheKey msg property to use to group cached msgs
  * @property {boolean}  newcache Only replay cache if client is actually new, not a reconnection
  * @property {number}  num number of cached msgs to retain
  * @property {string}  storeName Which store to use for the context variable
  * @property {'context'|'flow'|'node'}  storeContext Which store to use for the context variable
- * @property {string}  name only used for labelling the node in the flow
  * @property {object}  cache A reference to the actual cache for this node instance
+ * @property {string} varName The variable name in use in the store
  * @property {Function} getC A reference to the context get function for this node instance
  * @property {Function} setC A reference to the context set function for this node instance
  */
 
 /** uibListNode
  * @typedef {{
+ *   name: string;
  *   url: string;
  *   elementid: string;
  *   elementtype: string;
  *   parent: string;
  *   passthrough: boolean;
- *   name: string;
- *   topic: string;
+ *   cacheOn: boolean;
+ *   storeName: string;
+ *   storeContext: 'context'|'flow'|'node';
+ *   varName: string;
+ *   newcache: boolean;
+ *   cache: object;
+ *   getC: Function;
+ *   setC: Function;
  *   _ui: any;
  * }} uibListNode
  */

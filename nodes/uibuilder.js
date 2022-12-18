@@ -66,6 +66,7 @@ const fs            = require('fs-extra')  // https://github.com/jprichardson/no
 //#endregion ----- Require packages ----- //
 
 //#region ------ uibuilder module-level globals ------ //
+
 /** @type {uibConfig} */
 const uib = {
     me: fs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
@@ -121,184 +122,6 @@ let userDir = ''
 //#endregion ----- uibuilder module-level globals ----- //
 
 //#region ------ module-level functions ------ //
-
-/** 1a) All of the initialisation of the Node
- * This is only run once no matter how many uib node instances are added to a flow
- */
-function runtimeSetup() {
-    if ( uib.RED === null ) return
-    const RED = uib.RED
-
-    // When uibuilder enters runtime state, show the details in the log
-    let initialised = false
-    RED.events.on('runtime-event', function(event) {
-        if (event.id === 'runtime-state' && initialised === false ) {
-            initialised = true
-            const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
-            RED.log.info('+-----------------------------------------------------')
-            RED.log.info(`| ${uib.moduleName} v${uib.version} initialised`)
-            RED.log.info(`| root folder: ${uib.rootFolder}`)
-            if ( uib.customServer.isCustom === true ) {
-                RED.log.info('| Using custom ExpressJS webserver at:')
-                RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
-            } else {
-                RED.log.info('| Using Node-RED\'s webserver at:')
-                RED.log.info(`|   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
-            }
-            RED.log.info('| Installed packages:')
-            // @ts-ignore
-            const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
-            for (let i = 0; i < pkgs.length; i += 4) {
-                const k = []
-                for (let j = 0; j <= 3; j++) {
-                    if ( pkgs[i + j] ) k.push(pkgs[i + j])
-                }
-                RED.log.info(`|   ${k.join(', ')}`)
-            }
-            RED.log.info('+-----------------------------------------------------')
-        }
-    })
-
-    //#region ----- Constants for standard setup ----- //
-
-    /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
-    userDir = RED.settings.userDir
-
-    uib.rootFolder = path.join(userDir, uib.moduleName)
-    // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
-    if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
-        const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
-        if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName)
-    }
-
-    // Record the httpNodeRoot for later use
-    uib.nodeRoot = RED.settings.httpNodeRoot
-
-    // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uib
-    if ( RED.settings.uibuilder ) {
-        const settings = RED.settings.uibuilder
-
-        // Change the root folder
-        if ( settings.uibRoot && typeof settings.uibRoot === 'string') {
-            uib.rootFolder = settings.uibRoot
-        }
-
-        // Get web-relavent uibuilder settings from settings.js
-        uib.customServer.port = Number(RED.settings.uiPort)
-        // Note the system host name
-        uib.customServer.hostName = require('os').hostname()
-        /** HTTP(s) port. If set & different to node-red, uibuilder will use its own ExpressJS server */
-        // @ts-ignore - deliberately allowing string/number comparison
-        if ( settings.port && settings.port != RED.settings.uiPort) { // eslint-disable-line eqeqeq
-            uib.customServer.isCustom = true
-            uib.customServer.port = Number(settings.port)
-            // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change instead if needed.
-            uib.nodeRoot = ''
-        }
-        // http, https or http2 (default=http)
-        if ( RED.settings.https ) uib.customServer.type = 'https'
-        if ( settings.customType ) uib.customServer.type = settings.customType
-
-        // Allow instance-level api's to be loaded (default=false)
-        if ( settings.instanceApiAllowed === true ) uib.instanceApiAllowed = true
-
-        if ( settings.serverOptions ) uib.customServer.serverOptions = settings.serverOptions
-
-    } // --- end of settings.js --- //
-
-    /** Locations for uib config can common folders */
-    uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
-    uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
-
-    //#endregion -------- Constants -------- //
-
-    //#region ----- back-end debugging ----- //
-    log = RED.log
-    log.trace('[uibuilder:runtimeSetup] ----------------- uibuilder - module started -----------------')
-    //#endregion ----- back-end debugging ----- //
-
-    //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
-
-    /** Check uib root folder: create if needed, writable? */
-    let uibRootFolderOK = true
-    // Try to create root and root/.config - ignore error if it already exists
-    try {
-        fs.ensureDirSync(uib.configFolder) // creates both folders
-        log.trace(`[uibuilder:runtimeSetup] uibRoot folder exists. ${uib.rootFolder}` )
-    } catch (e) {
-        if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-            RED.log.error(`[uibuilder:runtimeSetup] Custom folder ERROR, path: ${uib.rootFolder}. ${e.message}`)
-            uibRootFolderOK = false
-        }
-    }
-    // Try to access the root folder (read/write) - if we can, create and serve the common resource folder
-    try {
-        fs.accessSync( uib.rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
-        log.trace(`[uibuilder:runtimeSetup] uibRoot folder is read/write accessible. ${uib.rootFolder}` )
-    } catch (e) {
-        RED.log.error(`[uibuilder:runtimeSetup] Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
-        uibRootFolderOK = false
-    }
-    // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
-    if (uibRootFolderOK === true) {
-        // We want to always overwrite the .config template files
-        const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
-        try {
-            fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
-            log.trace(`[uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
-        } catch (e) {
-            RED.log.error(`[uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
-            uibRootFolderOK = false
-        }
-
-        // and copy the common folder from template (contains the default blue node-red icon)
-        fsOpts.overwrite = false // we don't want to overwrite any common folder files
-        try {
-            fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err) {
-                if (err) {
-                    log.error(`[uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
-                } else {
-                    log.trace(`[uibuilder:runtimeSetup] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
-                }
-            })
-        } catch (e) {
-            // should never happen
-            log.error('[uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED')
-        }
-        // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeInstance() so available for each instance as `./common/`)
-    }
-    // If the root folder setup failed, throw an error and give up completely
-    if (uibRootFolderOK !== true) {
-        throw new Error(`[uibuilder:runtimeSetup] Failed to set up uibuilder root folder structure correctly. Check log for additional error messages. Root folder: ${uib.rootFolder}.`)
-    }
-
-    //#endregion ----- root folder ----- //
-
-    /** Set up the basics for security in case we need them for any uib instance */
-    // try {
-    //     security.setup(uib)
-    // } catch (e) {
-    //     console.error('[uibuilder:runtimeSetup] Security setup error ', e)
-    // }
-
-    /** Do this before doing the web setup so that the packages can be served */
-    packageMgt.setup(uib)
-
-    /** We need an ExpressJS web server to serve the page and vendor packages.
-     * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
-     * since v3.3.0 2021-03-16 Allow independent ExpressJS server/app
-     */
-    try {
-        web.setup(uib) // Singleton wrapper for ExpressJS
-    } catch (e) {
-        console.trace('[uibuilder:runtimeSetup] web.setup failed')
-    }
-
-    /** Pass core objects to the Socket.IO handler module */
-    // @ts-ignore
-    sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
-
-} // --- end of runtimeSetup --- //
 
 /** Create external event listeners
  * Called for every uibuilder node instance
@@ -366,44 +189,23 @@ function inputMsgHandler (msg, send, done) {
     if ( this.allowScripts !== true && Object.prototype.hasOwnProperty.call(msg, 'script') ) delete msg.script
     if ( this.allowStyles !== true && Object.prototype.hasOwnProperty.call(msg, 'style') ) delete msg.style
 
-    let sendme = false
+    // pass the complete msg object to the uibuilder client
+    if ( (!Object.prototype.hasOwnProperty.call(msg, 'topic')) && (this.topic !== '') ) msg.topic = this.topic
+    sockets.sendToFe( msg, this.url, uib.ioChannels.server )
 
-    // If security is active...
-    // TODO need to add client tracking for this to work
-    sendme = true
-    /*
-    if (this.useSecurity === true) {
-        // Check for valid auth and session
-        //  @type MsgAuth
-        msg._auth = security.authCheck2(msg, this)
-        tilib.mylog('[UIBUILDER:inputMsgHandler] _auth: ', msg._auth)
-        // Only send the msg onward if the user is validated OR if unauth is allowed
-        if (msg._auth.jwt !== undefined || this.allowUnauth === true ) sendme = true
-        sendme = true
-    } else sendme = true
-    */
-
-    if (sendme) {
-
-        // pass the complete msg object to the uibuilder client
-        if ( (!Object.prototype.hasOwnProperty.call(msg, 'topic')) && (this.topic !== '') ) msg.topic = this.topic
-        sockets.sendToFe( msg, this.url, uib.ioChannels.server )
-
-        // Pass on to output port 1 if wanted
-        if (this.fwdInMessages) {
-            // Send on the input msg to output
-            send(msg)
-            done()
-            log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg passed downstream to next node. ${JSON.stringify(msg)}`)
-        }
-
+    // Pass on to output port 1 if wanted
+    if (this.fwdInMessages) {
+        // Send on the input msg to output
+        send(msg)
+        done()
+        log.trace(`[uibuilder:uiblib:inputHandler:${this.url}] msg passed downstream to next node. ${JSON.stringify(msg)}`)
     }
 
     // tilib.dumpMem('On Msg')
 
 } // ----- End of inputMsgHandler ----- //
 
-/** 2) All of the initialisation of the Node
+/** 2) All of the initialisation of the Node Instance
  * This is callled once for each uibuilder node instance added to a flow
  * THIS IS ONLY RUN IF A NODE HAS BEEN OR IS BEING DEPLOYED.
  * type {function(this:runtimeNode&uib, runtimeNodeConfig & uib):void}
@@ -432,14 +234,10 @@ function nodeInstance(config) {
     this.templateFolder  = config.templateFolder || templateConf.blank.folder
     this.extTemplate     = config.extTemplate
     this.showfolder      = config.showfolder === undefined ? false : config.showfolder
-    // this.useSecurity     = config.useSecurity
-    // this.allowUnauth     = config.allowUnauth === undefined ? false : config.allowUnauth
-    // this.sessionLength   = Number(config.sessionLength) || 120  // in seconds
-    // this.jwtSecret       = this.credentials.jwtSecret || 'thisneedsreplacingwithacredential'
-    // this.tokenAutoExtend = config.tokenAutoExtend === undefined ? false : config.tokenAutoExtend
     this.reload          = config.reload === undefined ? false : config.reload
     this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:setupInstanceStatic
     this.deployedVersion = config.deployedVersion
+    this.showMsgUib    = config.showMsgUib // Show additional client id in standard msgs (see socket.js)
     //#endregion ====== Local node config copy ====== //
 
     log.trace(`[uibuilder:nodeInstance:${this.url}] ================ instance registered ================`)
@@ -595,7 +393,6 @@ function nodeInstance(config) {
     /** Do something when Node-RED is closing down which includes when this node instance is redeployed
      * Note use of arrow function so as to retain the correct `this` context
      */
-    // @ts-ignore
     this.on('close', (removed, done) => {
         log.trace(`[uibuilder:nodeInstance:close:${this.url}] nodeInstance:on-close: ${removed ? 'Node Removed' : 'Node (re)deployed'}`)
 
@@ -632,6 +429,179 @@ function nodeInstance(config) {
 
 } // ----- end of nodeInstance ----- //
 
+/** 1a) All of the initialisation of the Node
+ * This is only run once no matter how many uib node instances are added to a flow
+ */
+ function runtimeSetup() {
+    if ( uib.RED === null ) return
+    const RED = uib.RED
+
+    //#region ----- back-end debugging ----- //
+    log = RED.log
+    log.trace('[uibuilder:runtimeSetup] ----------------- uibuilder - module started -----------------')
+    //#endregion ----- back-end debugging ----- //
+
+    
+    // When uibuilder enters runtime state, show the details in the log
+    let initialised = false
+    RED.events.on('runtime-event', function(event) {
+        if (event.id === 'runtime-state' && initialised === false ) {
+            initialised = true
+            const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
+            RED.log.info('+-----------------------------------------------------')
+            RED.log.info(`| ${uib.moduleName} v${uib.version} initialised`)
+            RED.log.info(`| root folder: ${uib.rootFolder}`)
+            if ( uib.customServer.isCustom === true ) {
+                RED.log.info('| Using custom ExpressJS webserver at:')
+                RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
+            } else {
+                RED.log.info('| Using Node-RED\'s webserver at:')
+                RED.log.info(`|   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
+            }
+            RED.log.info('| Installed packages:')
+            // @ts-ignore
+            const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
+            for (let i = 0; i < pkgs.length; i += 4) {
+                const k = []
+                for (let j = 0; j <= 3; j++) {
+                    if ( pkgs[i + j] ) k.push(pkgs[i + j])
+                }
+                RED.log.info(`|   ${k.join(', ')}`)
+            }
+            RED.log.info('+-----------------------------------------------------')
+        }
+    })
+
+    //#region ----- Constants for standard setup ----- //
+
+    /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
+    userDir = RED.settings.userDir
+
+    uib.rootFolder = path.join(userDir, uib.moduleName)
+    // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
+    if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
+        const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
+        if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName)
+    }
+
+    // Record the httpNodeRoot for later use
+    uib.nodeRoot = RED.settings.httpNodeRoot
+
+    // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uib
+    if ( RED.settings.uibuilder ) {
+        const settings = RED.settings.uibuilder
+
+        // Change the root folder
+        if ( settings.uibRoot && typeof settings.uibRoot === 'string') {
+            uib.rootFolder = settings.uibRoot
+        }
+
+        // Get web-relavent uibuilder settings from settings.js
+        uib.customServer.port = Number(RED.settings.uiPort)
+        // Note the system host name
+        uib.customServer.hostName = require('os').hostname()
+        /** HTTP(s) port. If set & different to node-red, uibuilder will use its own ExpressJS server */
+        // @ts-ignore - deliberately allowing string/number comparison
+        if ( settings.port && settings.port != RED.settings.uiPort) { // eslint-disable-line eqeqeq
+            uib.customServer.isCustom = true
+            uib.customServer.port = Number(settings.port)
+            // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change instead if needed.
+            uib.nodeRoot = ''
+        }
+        // http, https or http2 (default=http)
+        if ( RED.settings.https ) uib.customServer.type = 'https'
+        if ( settings.customType ) uib.customServer.type = settings.customType
+
+        // Allow instance-level api's to be loaded (default=false)
+        if ( settings.instanceApiAllowed === true ) uib.instanceApiAllowed = true
+
+        if ( settings.serverOptions ) uib.customServer.serverOptions = settings.serverOptions
+
+    } // --- end of settings.js --- //
+
+    /** Locations for uib config can common folders */
+    uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
+    uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
+
+    //#endregion -------- Constants -------- //
+
+    //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
+
+    /** Check uib root folder: create if needed, writable? */
+    let uibRootFolderOK = true
+    // Try to create root and root/.config - ignore error if it already exists
+    try {
+        fs.ensureDirSync(uib.configFolder) // creates both folders
+        log.trace(`[uibuilder:runtimeSetup] uibRoot folder exists. ${uib.rootFolder}` )
+    } catch (e) {
+        if ( e.code !== 'EEXIST' ) { // ignore folder exists error
+            RED.log.error(`[uibuilder:runtimeSetup] Custom folder ERROR, path: ${uib.rootFolder}. ${e.message}`)
+            uibRootFolderOK = false
+        }
+    }
+    // Try to access the root folder (read/write) - if we can, create and serve the common resource folder
+    try {
+        fs.accessSync( uib.rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
+        log.trace(`[uibuilder:runtimeSetup] uibRoot folder is read/write accessible. ${uib.rootFolder}` )
+    } catch (e) {
+        RED.log.error(`[uibuilder:runtimeSetup] Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
+        uibRootFolderOK = false
+    }
+    // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
+    if (uibRootFolderOK === true) {
+        // Check if uibRoot/package.json exists and if not, create it
+        const uibRootPkgJson = path.join(uib.rootFolder, 'package.json')
+        if ( !fs.existsSync( uibRootPkgJson ) ) {
+            fs.writeJsonSync( uibRootPkgJson, {name: 'uib-root'} )
+        }
+        // We want to always overwrite the .config template files
+        const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
+        try {
+            fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
+            log.trace(`[uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
+        } catch (e) {
+            RED.log.error(`[uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
+            uibRootFolderOK = false
+        }
+
+        // and copy the common folder from template (contains the default blue node-red icon)
+        fsOpts.overwrite = false // we don't want to overwrite any common folder files
+        try {
+            fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err) {
+                if (err) {
+                    log.error(`[uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
+                } else {
+                    log.trace(`[uibuilder:runtimeSetup] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
+                }
+            })
+        } catch (e) {
+            // should never happen
+            log.error('[uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED')
+        }
+        // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeInstance() so available for each instance as `./common/`)
+    }
+    // If the root folder setup failed, throw an error and give up completely
+    if (uibRootFolderOK !== true) {
+        throw new Error(`[uibuilder:runtimeSetup] Failed to set up uibuilder root folder structure correctly. Check log for additional error messages. Root folder: ${uib.rootFolder}.`)
+    }
+
+    //#endregion ----- root folder ----- //
+
+    /** Do this before doing the web setup so that the packages can be served */
+    packageMgt.setup(uib)
+
+    /** We need an ExpressJS web server to serve the page and vendor packages.
+     * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
+     * since v3.3.0 2021-03-16 Allow independent ExpressJS server/app
+     */
+    web.setup(uib) // Singleton wrapper for ExpressJS
+
+    /** Pass core objects to the Socket.IO handler module */
+    // @ts-ignore
+    sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
+
+} // --- end of runtimeSetup --- //
+
 //#endregion ----- End of mod-level fns ----- //
 
 /** 1) The function that defines the node
@@ -661,6 +631,8 @@ function Uib(RED) {
             uibuilderRedeployNeeded: { value: uib.reDeployNeeded, exportable: true },
             // List of the deployed uib instances [{node_id: url}]
             uibuilderInstances: { value: uib.instances, exportable: true },
+            // uibRoot
+            uibuilderRootFolder: { value: uib.rootFolder, exportable: true },
         },
     })
 

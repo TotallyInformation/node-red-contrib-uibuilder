@@ -1478,6 +1478,7 @@
         $('#node-input-allowUnauth').prop('checked', node.allowUnauth)
         $('#node-input-tokenAutoExtend').prop('checked', node.tokenAutoExtend)
         $('#node-input-reload').prop('checked', node.reload)
+        $('#node-input-showMsgUib').prop('checked', node.showMsgUib)
     }
 
     /** Show what server is in use
@@ -1509,7 +1510,7 @@
         node.urlPrefix = `${eUrlSplit.join(':')}/${node.nodeRoot}`
 
         $('#info-webserver')
-            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank">${node.urlPrefix}</a><br>Server folder: <b>${RED.settings.uibuilderRootFolder}/${node.url}</b> </div>`)
+            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank">${node.urlPrefix}</a><br>Server folder: <b>${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/</b> </div>`)
 
     } // ---- end of showServerInUse ---- //
 
@@ -2026,7 +2027,7 @@
             reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
             sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)
             deployedVersion: { validate: validateVersion },
-            // jwtSecret: { value: defaultJwtSecret, validate: validateSecret },   // Must have content if useSecurity=true
+            showMsgUib: { value: false },    // Show msg._uib in standard msgs (client id, ip, page name)
         },
         credentials: {
             jwtSecret: { type: 'password' },  // text or password

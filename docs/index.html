@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <title>uibuilder Technical Documentation v5</title>
 
-    <meta name="description" content="uibuilder Technical Documentation v5">
+    <meta name="description" content="uibuilder Technical Documentation v6">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="./images/favicon.ico">
 
@@ -46,7 +46,7 @@
             font-size: 80%;
         }
         .app-name-link::after {
-            content: "uibuilder v5 docs";
+            content: "uibuilder v6 docs";
             float:right;
         }
         img[alt$=">"] {
@@ -64,9 +64,9 @@
             margin: auto;
             float: none!important;
         }
-        .callout {
-            max-width: 50%; 
-        }
+        /* .callout {
+            max-width: 100%; 
+        } */
     </style>
 </head><body>
     <div id="app">Loading, please wait ...</div>
@@ -76,7 +76,7 @@
         // https://docsify.js.org/
         // https://jhildenbiddle.github.io/docsify-themeable
         window.$docsify = { //  eslint-disable-line no-undef
-            name: 'uibuilder Technical Documentation v3',
+            name: 'uibuilder Technical Documentation v6',
             repo: 'TotallyInformation/node-red-contrib-uibuilder',
             homepage: 'README.md',
 
@@ -123,7 +123,7 @@
                         '<hr/>',
                         '<footer>',
                         '<span>',
-                        'Copyright &copy; 2021', // per-page - (c) and date
+                        `Copyright &copy; ${(new Date()).getFullYear()}`, // per-page - (c) and date
                         ` <a href="${orgUrl}">${orgName}</a>.`,
                         '', // updated date
                         '</span> ',
@@ -152,13 +152,22 @@
                             //#endregion ---  ---
 
                             //#region --- Add page specific (c) and last updated date to each page if available from YAML front-matter ---
-                            if ( vm.frontmatter.created ) {
+                            if ( vm.frontmatter.created ) { // uib docs/Obsidian
+                                mydate = new Date(vm.frontmatter.created)
+                                yearFrom = mydate.getFullYear()
+                            } else if ( vm.frontmatter.date ) { // Hugo
                                 mydate = new Date(vm.frontmatter.created)
                                 yearFrom = mydate.getFullYear()
                             }
 
-                            if ( vm.frontmatter.lastUpdated ) {
+                            if ( vm.frontmatter.lastUpdated ) { // uib docs
                                 mydate = new Date(vm.frontmatter.lastUpdated)
+                                yearTo = mydate.getFullYear()
+                            } else if ( vm.frontmatter.updated ) { // Obsidian
+                                mydate = new Date(vm.frontmatter.updated)
+                                yearTo = mydate.getFullYear()
+                            } else if ( vm.frontmatter.Lastmod ) { // Hugo IT blog
+                                mydate = new Date(vm.frontmatter.Lastmod)
                                 yearTo = mydate.getFullYear()
                             }
 

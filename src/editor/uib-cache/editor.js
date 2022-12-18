@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable strict */
 
 // Isolate this code
@@ -31,8 +32,7 @@
         })
     }
 
-    /**
-     *
+    /** Return a text string showing if caching by a key
      * @returns {string} Text to show if "Cache By" is set
      */
     function helpTextNumMsgsCacheBy() {
@@ -63,21 +63,15 @@
         // if (!node.persistence) node.persistence = false
         if (!node.cacheall) node.persistence = false
 
-        // Make sure that the key always as a value - default to msg.topic
-        if ( !node.cacheKey || node.cacheKey === '' ) node.cacheKey = 'topic'
+        // Make sure that the key always has a value (and is not '') - default to msg.topic
+        if ( !node.cacheKey ) node.cacheKey = 'topic'
 
-        if ( !node.varName || node.varName === '' ) {
+        if ( !node.varName ) {
             node.varName = 'uib_cache'
             $('#node-input-varName').val('uib_cache')
         }
 
-        // One-day maybe, request put in, doesn't currently work since context isn't an option
-        // $('#node-input-store').typedInput({
-        //     type: 'str',
-        //     default: 'node',
-        //     types: ['context', 'flow', 'global'],
-        //     typeField: '#node-input-store-type'
-        // })
+        // Populate Type dropdown: node, flow, global
         $('#node-input-storeContext').typedInput({
             type: 'contextType',
             types: [
@@ -106,6 +100,14 @@
         // Either all or by prop, not both
         $('#node-input-cacheall').on('change', function() {
             keyVisibility(!$(this).is(':checked'))
+        })
+
+        $('#node-input-storeContext').on('change',  function() {
+            if ( $(this).val() === 'context' ) {
+                $('#node-input-varName').val('uib_cache').prop( 'disabled', true )
+            } else {
+                $('#node-input-varName').val(`uib_cache_${node.id}`).prop( 'disabled', false )
+            }
         })
 
     } // ----- end of onEditPrepare() ----- //

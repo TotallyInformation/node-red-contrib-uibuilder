@@ -61,14 +61,18 @@ import io from 'socket.io-client' // Note: Only works when using esbuild to bund
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '5.1.1-mod'
+const version = '6.0.0-mod'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
 
+// @ts-ignore Detect whether the loaded library is minified or not
+const isMinified = !(/param/).test(function (param) { }) // eslint-disable-line no-unused-vars
+
 //#region --- print/console - debugging output functions --- //
+
 /** Default log level - Error & Warn */
-let logLevel = 1
+let logLevel = isMinified ? 0 : 1  // When using minified lib, assume production and only log errors otherwise also log warn
 // function changeLogLevel(level) {
 //     logLevel = level
 //     console.trace = logLevel < 4 ? function(){} : console.trace
@@ -243,13 +247,13 @@ function log() {
  * @returns {!object} _
  */
 function makeMeAnObject(thing, property) {
-    if (property === null || property === undefined) property = 'payload'
+    if (!property) property = 'payload'
     if (typeof property !== 'string') {
         log('warn', 'uibuilderfe:makeMeAnObject', `WARNING: property parameter must be a string and not: ${typeof property}`)()
         property = 'payload'
     }
     let out = {}
-    if (typeof thing === 'object') {
+    if ( thing !== null && thing.constructor.name === 'Object' ) {
         out = thing
     } else if (thing !== null) {
         out[property] = thing
@@ -285,7 +289,7 @@ export const Uib = class Uib {
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
     #connectedNum = 0
     // event listener callbacks by property name
-    #events = {}
+    // #events = {}
     // Socket.IO channel names
     _ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
     /** setInterval holder for pings @type {function|undefined} */
@@ -298,11 +302,8 @@ export const Uib = class Uib {
      * @type {number|null}
      */
     #timerid = null
-    // @ts-ignore Detect whether the loaded library is minified or not
-    #isMinified = !(/param/).test(function (param) { }) // eslint-disable-line no-unused-vars
     // Holds the reference ID for the internal msg change event handler so that it can be cancelled
     #MsgHandler
-
     // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
     _socket
 
@@ -339,14 +340,14 @@ export const Uib = class Uib {
     serverTimeOffset = null
     /** placeholder for a socket error message */
     socketError = null
+    /** Is the client online or offline? */
+    online = null
+    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
+    lastNavType = null
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
     //#region ---- Externally Writable (via .set method, read via .get method) ---- //
-    allowScript = true   // Allow incoming msg to contain msg.script with JavaScript that will be automatically executed
-    allowStyle = true   // Allow incoming msg to contain msg.style with CSS that will be automatically executed
-    removeScript = true   // Delete msg.code after inserting to DOM if it exists on incoming msg
-    removeStyle = true   // Delete msg.style after inserting to DOM if it exists on incoming msg
     originator = ''     // Default originator node id
     //#endregion ---- ---- ---- ---- //
 
@@ -372,8 +373,7 @@ export const Uib = class Uib {
             // Can only set headers when polling
             polling: {
                 extraHeaders: {
-                    'x-clientid': `uibuilderfe; ${this.clientId}`,
-                    // Authorization: 'test', //TODO: Replace with self.jwt variable? // Authorization: `Bearer ${your_jwt}`
+                    'x-clientid': `${Uib._meta.displayName}; ${Uib._meta.type}; ${Uib._meta.version}; ${this.clientId}`,
                 }
             },
         },
@@ -607,7 +607,7 @@ export const Uib = class Uib {
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
     setOriginator(originator = '') {
-        this.originator = originator
+        this.set('originator', originator)
     } // ---- End of setOriginator ---- //
 
     /** Write to localStorage if possible. console error output if can't write
@@ -1449,9 +1449,13 @@ export const Uib = class Uib {
                 return
             }
 
-            // TODO Process toast and alert requests - can also be requested via msg._ui
-            if ( msg._uib.componentRef === 'globalNotification' ) { }
-            if ( msg._uib.componentRef === 'globalAlert' ) { }
+            // Better to request via msg._ui - these are for backwards compatibility
+            if ( msg._uib.componentRef === 'globalNotification' ) {
+                this.showDialog('notify', msg._uib.options, msg)
+            }
+            if ( msg._uib.componentRef === 'globalAlert' ) {
+                this.showDialog('alert', msg._uib.options, msg)
+            }
         }
 
         // Handle msg._ui requests
@@ -1602,6 +1606,8 @@ export const Uib = class Uib {
      * @returns {boolean} Whether or not Socket.IO is connected to uibuilder in Node-RED
      */
     _checkConnect(delay, factor, depth = 1) {
+        if ( navigator.onLine === false ) return // Don't bother if we know we are offline
+
         if (!delay) delay = this.retryMs
         if (!factor) factor = this.retryFactor
 
@@ -1680,6 +1686,7 @@ export const Uib = class Uib {
         this.socketOptions.auth.pageName = this.pageName
         // Add stable client id (static unless browser closed)
         this.socketOptions.auth.clientId = this.clientId
+        this.socketOptions.transportOptions.polling.extraHeaders['x-clientid'] = `${Uib._meta.displayName}; ${Uib._meta.type}; ${Uib._meta.version}; ${this.clientId}`
         // How many times has the client (re)connected since page load
         this.socketOptions.auth.connectedNum = this.#connectedNum
         //#endregion --- ---- ---
@@ -1719,8 +1726,9 @@ export const Uib = class Uib {
             this._checkConnect()
         }) // --- End of socket disconnect processing ---
 
-        // Socket.io connection error - probably the wrong ioPath
+        // Socket.io connection error - probably the wrong ioPath - or client is offline
         this._socket.on('connect_error', (err) => {
+            if ( navigator.onLine === false ) return // Don't bother with an error if we know we are offline
             log('error', 'Uib:ioSetup:connect_error', `❌ Socket.IO Connect Error. Reason: ${err.message}`, err)()
             this.set('ioConnected', false)
             this.set('socketError', err)
@@ -1788,6 +1796,18 @@ export const Uib = class Uib {
     constructor() {
         log('trace', 'Uib:constructor', 'Starting')()
 
+        // Track whether the client is online or offline
+        window.addEventListener('offline', (e) => {
+            this.set('online', false)
+            this.set('ioConnected', false)
+            log('warn', 'Browser', 'DISCONNECTED from network')()
+        })
+        window.addEventListener('online', (e) => {
+            this.set('online', true)
+            log('warn', 'Browser', 'Reconnected to network')()
+            this._checkConnect()
+        })
+
         document.cookie.split(';').forEach((c) => {
             const splitC = c.split('=')
             this.cookies[splitC[0].trim()] = splitC[1]
@@ -1827,7 +1847,6 @@ export const Uib = class Uib {
         log('trace', 'Uib:constructor', 'Ending')()
     }
 
-    // TODO Add option to override auto-loading of stylesheet
     /** Start up Socket.IO comms and listeners
      * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
      * necessarily work out the correct ioPath to use.
@@ -1852,17 +1871,26 @@ export const Uib = class Uib {
         if (options) {
             if (options.ioNamespace !== undefined && options.ioNamespace !== null && options.ioNamespace !== '') this.ioNamespace = options.ioNamespace
             if (options.ioPath !== undefined && options.ioPath !== null && options.ioPath !== '') this.ioPath = options.ioPath
+            // See below for handling of options.loadStylesheet
         }
 
         // Do we need to load styles?
         if ( document.styleSheets.length > 1 || (document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) ) {
             log('info', 'Uib:start', 'Styles already loaded so not loading uibuilder default styles.')()
         } else {
-            log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
-            this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`)
+            if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
+            else {
+                log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
+                this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`)
+            }
         }
 
         // Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents
+
+        // Track last browser navigation type: navigate, reload, back_forward, prerender
+        const [entry] = performance.getEntriesByType('navigation')
+        // @ts-ignore
+        this.set('lastNavType', entry.type)
 
         // Start up (or restart) Socket.IO connections and listeners. Returns false if io not found
         this.started = this._ioSetup()
@@ -1872,6 +1900,7 @@ export const Uib = class Uib {
         } else {
             log('error', 'Uib:start', 'Start completed. ERROR: Socket.IO client library NOT LOADED.')()
         }
+
     }
 
     //#endregion -------- ------------ -------- //

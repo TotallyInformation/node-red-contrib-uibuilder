@@ -3,7 +3,7 @@ title: Front-End Build Steps and Tools
 description: >
    Describes how to use a build step to transpile and optimise your front-end code.
 created: 2021-04-22 09:53:00
-lastUpdated: 2022-02-15 16:25:14
+lastUpdated: 2022-12-01 19:51:39
 ---
 
 A build step is simply a way to take things that your browser wont understand directly (like .vue, .jsx files)
@@ -50,7 +50,7 @@ At present, only the Svelte development server will work correctly without you m
 For all other development servers, you will need to make the following changes:
 
 1. In `index.html` - replace the default `./xxxx` and `../uibuilder/xxxx` URL's with ones that start with the correct Node-RED/uibuilder server. e.g. `http://localhost:1880/xxxx`.
-2. In `indx.js` - replace the `uibuilder.start()` with `uibuilder.start('http://localhost:1880/aa')` (example) where the protocol, server name and port are your Node-RED/uibuilder server as above and `/aa` is the uibuilder node instances URL with a leading `/`. That is the Socket.io namespace.
+2. In `index.js` - replace the `uibuilder.start()` with `uibuilder.start('http://localhost:1880/aa')` (old client example) or `uibuilder.start({ioNamespace:'http://localhost:1880/aa'})` (new client example) where the protocol, server name and port are your Node-RED/uibuilder server as above and `/aa` is the uibuilder node instances URL with a leading `/`. That is the Socket.io namespace.
 
    Note that if you have set the `httpNodeRoot` in Node-RED and you are not using uibuilder's custom ExpressJS server, you **must** also include the second parameter which overrides the Socket.IO path such that it includes the httpNodeRoot. Example: if httpNodeRoot='nr', the path parameter must be `/nr/uibuilder/vendor/socket.io`.
 

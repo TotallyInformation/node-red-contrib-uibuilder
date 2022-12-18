@@ -72,13 +72,13 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
      * @returns {!object} _
      */
     function makeMeAnObject(thing, property) {
-        if (property === null || property === undefined) property = 'payload'
+        if (!property) property = 'payload'
         if ( typeof property !== 'string' ) {
             console.warn('[uibuilderfe:makeMeAnObject] WARNING: property parameter must be a string and not: ' + typeof property)
             property = 'payload'
         }
         var out = {}
-        if (typeof thing === 'object') {
+        if ( thing !== null && thing.constructor.name === 'Object' ) {
             out = thing
         } else if (thing !== null) {
             out[property] = thing
@@ -124,7 +124,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '5.1.1'
+        self.version = '6.0.0-old'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
@@ -208,7 +208,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ===== variables ===== //
 
-        // ---- These cannot be access externally via get/set: ----
+        // ---- These cannot be accessed externally via get/set: ----
         self.authToken    = ''    // populated when receive 'authorised' msg from server, must be returned with each msg sent
 
         //#region ---- These are unlikely to be needed externally: ----
@@ -238,6 +238,10 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
         self._auth = self.dummyAuth
         /** Flag to know whether `uibuilder.start()` has been run */
         self.started = false
+        // Work out pageName
+        self.pageName = window.location.pathname.replace(`${self.ioNamespace}/`, '')
+        if ( self.pageName.endsWith('/') ) self.pageName += 'index.html'
+        if ( self.pageName === '' ) self.pageName = 'index.html'        
         //#endregion ---- ---- ---- ----
 
         /** Writable (via custom method. read via .get method) */
@@ -397,25 +401,27 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                 auth: {
                     clientId: self.clientId,
                     connectedNum: self.connectedNum,
-                    pageName: window.location.pathname,
+                    pathName: window.location.pathname,
+                    pageName: self.pageName,
                     clientVersion: self.version,
                 },
                 transportOptions: {
                     // Can only set headers when polling
                     polling: {
                         extraHeaders: {
-                            'x-clientid': `uibuilderfe; ${self.clientId}`,
-                            //Authorization: 'test', //TODO: Replace with self.jwt variable? // Authorization: `Bearer ${your_jwt}`
+                            'x-clientid': `${self.moduleName}; old-iife; ${self.version}; ${self.clientId}`
                         }
                     },
                 },
             }
+
             self.socket = io(self.ioNamespace, self.socketOptions)  // eslint-disable-line block-scoped-var
 
             /** When the socket is connected - set ioConnected flag and reset connect timer  */
             self.socket.on('connect', function ioconnect() {
 
                 self.connectedNum++
+                // How many times has the client (re)connected since page load
                 self.socketOptions.auth.connectedNum = self.connectedNum
 
                 self.uiDebug('info', '[uibuilderfe:ioSetup] SOCKET CONNECTED - # connections: ' + self.connectedNum + ' Namespace: ' + self.ioNamespace, ' Server Channel: ', self.ioChannels.server, ' Control Channel: ', self.ioChannels.control)
@@ -507,7 +513,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
                     case 'client connect': {
                         self.uiDebug('info', `[uibuilderfe:ioSetup:${self.ioChannels.control}] Received "client connect" from server`)
                         self.uiDebug('info', `[uibuilderfe:ioSetup:client-connect] Server: Version=${receivedCtrlMsg.version}, Time=${receivedCtrlMsg.serverTimestamp}.`)
-                        if ( self.version !== receivedCtrlMsg.version)
+                        if ( !self.version.startsWith(receivedCtrlMsg.version.split('-')[0]) )
                             console.warn( `[uibuilderfe:ioSetup:client-connect] Server version (${receivedCtrlMsg.version}) not the same as the client version (${self.version})`)
 
                         // If security is on
