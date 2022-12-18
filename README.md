@@ -169,15 +169,15 @@ That will show you a simple page that will show you a formatted view of any msg 
 
 From the node's configuration panel in the Editor, click on "Edit Source Files" to see the front-end code. Make some changes to see what happens.
 
-If you need more space for the editor, click on the `<kbd>`&#x2921;`</kbd>` button underneath the text editor. To get back, press the same button (which is now highlighted) or the `<kbd>`Esc `</kbd>` key.
+If you need more space for the editor, click on the <kbd>&#x2921;</kbd> button underneath the text editor. To get back, press the same button (which is now highlighted) or the <kbd>Esc</kbd> key.
 
-Click on the `<kbd>`Save `</kbd>` button to save changes, `<kbd>`Reset `</kbd>` to revert to the saved file, `<kbd>`Close `</kbd>` to exit the editor. Note that the close button isn't available while there are outstanding changes, press Save or Reset first. The Editor's red Done button is also disabled while there are still outstanding changes.
+Click on the <kbd>Save</kbd> button to save changes, <kbd>Reset </kbd> to revert to the saved file, <kbd>Close</kbd> to exit the editor. Note that the close button isn't available while there are outstanding changes, press Save or Reset first. The Editor's red Done button is also disabled while there are still outstanding changes.
 
 You can create a new file and delete files and folders as well with the appropriate buttons. If you delete one of the default `index.(html|css|js)` files and have the _Copy Index_ flag set (in advanced settings), the file will be replaced automatically with the default template file. Useful if you get into a complete mess.
 
 ### 2.4. Install additional front-end libraries
 
-Click the "Manage front-end libraries" button. Then click the `<kbd>`+ add `</kbd>` button and type in the name of the package as it is defined in npm.
+Click the "Manage front-end libraries" button. Then click the <kbd>+ add</kbd> button and type in the name of the package as it is defined in npm.
 
 You can also remove installed libraries from here.
 
@@ -267,7 +267,7 @@ _[back to top](#contents)_
 
   See the [URI Paths page in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/V2-URI-Paths) for details of all URI's available to your web apps.
 
-  Better still, see the `<kbd>`uibuilder details `</kbd>` and `<kbd>`instance details `</kbd>` buttons in the uibuilder configuration panel in the Node-RED Editor, these will show pages of more detailed information.
+  Better still, see the <kbd>uibuilder details</kbd> and <kbd>instance details</kbd> buttons in the uibuilder configuration panel in the Node-RED Editor, these will show pages of more detailed information.
 - You can use a separate webserver from the Node-RED internal webserver by specifying a port in `settings.js`
 
   **The main purpose of this is that it lets you use a reverse proxy to securely expose _only_ uibuilder's endpoints without exposing Node-RED itself.** It also gives you more control over headers and other settings.
