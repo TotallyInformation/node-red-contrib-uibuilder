@@ -1,12 +1,14 @@
 # uibuilder Template: Blank
 
-This is about the simplest template you can get for uibuilder. Is is also (as of uibuilder v5), the default template.
+This is about the simplest template you can get for uibuilder. Is is also (as of uibuilder v5+), the default template.
 
 It does not use any frameworks and has no other dependencies.
 
 It demonstrates that you can use uibuilder purely with HTML/JavaScript and still easily build a simple, dynamic, data-driven user interface.
 
 All it does is start up uibuilder and will dump any msg you send to it from Node-RED into the browser tab. It also has a button that lets you send a message back to Node-RED.
+
+From uibuilder v6.1.0, it uses the new IIFE client library.
 
 ## Folders
 
@@ -17,7 +19,7 @@ can be used mostly however you like.
 One reserved item in the root folder however will be a `package.json` file. This will be used in the future to help with build/compile steps.
 You can still use it yourself, just bear in mind that a future version of uibuilder will make use it as well. If you need to have any development packages installed to build your UI, don't forget to tell `npm` to save them as development dependencies not normal dependencies.
 
-Two sub-folders are included. 
+Two sub-folders are included.
 
 The template only has files in the `src` folder. That folder is the default used by uibuilder to serve up files to clients.
 
@@ -30,11 +32,13 @@ Also note that you can use **linked** folders and files in this folder structure
 
 ## Files in this template
 
+* `package.json`: Defines the basic structure, name, description of the project and defines any local development dependencies if any.
+* `README.md`: This file.
 * `src/index.html`: Contains your basic HTML and will be the file loaded and displayed in the browser when going to the uibuilder defined URL.
 * `src/index.js`: Contains all of the logic for your UI. It must be linked to in the html file.
 * `src/index.css`: Contains your custom CSS for styling. It must be linked to in the html file.
 
-Note that only the `index.html` file is actually _required_. uibuilder will not function as expected without it.
+Note that only the `package.json` and `index.html` files are actually _required_. uibuilder will not function as expected without them.
 
 It is possible to use the index.html file simply as a link to other files but it must be present.
 
