@@ -1002,11 +1002,6 @@ class UibWeb {
     } // ---- End of showInstanceDetails ---- //
 
     /** */
-    // processClientLog() {
-    //     next()
-    // }
-
-    /** */
     addLogRoute(node) {
         // Reference static vars
         const uib = this.uib
