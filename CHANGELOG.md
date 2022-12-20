@@ -12,13 +12,37 @@ Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uib
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-* Update examples and templates to use new FE libraries
+* Extensions to new FE Library
+  * Add a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified.
+  * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
+  * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
+    * Add a client logging endpoint to each instance. The browser can use `navigator.sendBeacon()` with a URL of `./_clientLog` to send text. Objects must be encoded to strings.
+    * uibuilder node will output control msg of type `Client Log`.
+    * [ ] Needs a new endpoint in uibuilder (web.js) - `./<url>/_clientLog`.
+    * Make optional via flag in Editor with start msg enabling/disabling in client.
+    * ? window and document events - make optional via uibuilder fe command.
+
+* Examples
+  * Update all to use new libs. Remove (c).
+  * Global Notification/Toasts
+
+* uib-cache
+  * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
+
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v5.1.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.0.0...main)
 
 <!-- Nothing currently. -->
+
+* uibuilder node
+  * Add JSON and Form encoded body processing to all user instance routes to allow for processing POST requests
+  * Editor
+    * Add Open button to top button bar next to Delete. Add globe icon to open buttons.
+    * Add Docs button next to new Open button. Add book icon to docs buttons.
+
+## [v6.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.0.0...v5.1.1)
 
 ### Breaking Changes
 
