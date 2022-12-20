@@ -591,3 +591,19 @@ code {
 .toast-head {font-weight:bold}
 
 /*#endregion -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
+
+/*#region  Colours for Syntax Highlighted pre's */
+.syntax-highlight {
+    color:white;
+    background-color:black;
+    padding:5px 10px;
+    font-family: Consolas, "ui-monospace", "Lucida Console", monospace;
+    white-space: pre;
+}
+.syntax-highlight > .key {color:#ffbf35}
+.syntax-highlight > .string {color:#5dff39;}
+.syntax-highlight > .number {color:#70aeff;}
+.syntax-highlight > .boolean {color:#b993ff;}
+.syntax-highlight > .null {color:#93ffe4;}
+.syntax-highlight > .undefined {color:#ff93c9;}
+/*#endregion */
