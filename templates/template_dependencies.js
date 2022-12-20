@@ -1,18 +1,20 @@
 /** Describes the dependencies for each library-specific template
- * Note that the first entry will be the default.
  * THE OBJECT NAME MUST BE THE SAME AS THE FOLDER NAME
+ * Feel free to change this but keep a copy of your changes since
+ * they will be overwritten when uibuilder is updated.
+ * If changed, restart Node-RED and reload the Editor.
  */
 'use strict'
 
 module.exports = {
     vue: {
-        'name': 'VueJS & bootstrap-vue',
+        'name': 'VueJS v2 & bootstrap-vue',
         'folder': 'vue',
         'dependencies': [ 'vue', 'bootstrap-vue' ],
         'description': 'VueJS and bootstrap-vue example. Was the default until v4.'
     },
     'vue-simple': {
-        'name': 'Simple VueJS',
+        'name': 'Simple VueJS v2',
         'folder': 'vue-simple',
         'dependencies': [ 'vue', 'bootstrap-vue' ],
         'description': 'Simplest VueJS and bootstrap-vue template.'
@@ -41,14 +43,19 @@ module.exports = {
         'dependencies': [ 'vue' ],
         'description': 'Very simple Vue v3+ template that does not require a build step. Uses the modern IIFE uib client library.'
     },
+    'blank-old-client': {
+        'name': 'No framework, old client',
+        'folder': 'blank',
+        'dependencies': [ ],
+        'description': 'Minimal template using the old uibuilderfe client.'
+    },
     // DO NOT EVER REMOVE EITHER OF THESE
     blank: {
         'name': 'Blank template, no framework',
         'folder': 'blank',
         'dependencies': [ ],
-        'description': 'Default blank template.'
+        'description': 'Default blank template. As of v6, uses the iife client.'
     },
-    // See https://github.com/Rich-Harris/degit
     external: {
         'name': 'Load an external template using Degit',
         'folder': 'external',
