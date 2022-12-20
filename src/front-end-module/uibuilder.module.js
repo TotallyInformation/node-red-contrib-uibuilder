@@ -695,6 +695,31 @@ export const Uib = class Uib {
         log(...arguments)()
     }
 
+    /** Convert JSON to Syntax Highlighted HTML
+     * @param {object} json A JSON/JavaScript Object
+     * @returns {html} Object reformatted as highlighted HTML
+     */
+    syntaxHighlight(json) {
+        json = JSON.stringify(json, undefined, 4)
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
+        json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) { // eslint-disable-line prefer-named-capture-group
+            let cls = 'number'
+            if ((/^"/).test(match)) {
+                if ((/:$/).test(match)) {
+                    cls = 'key'
+                } else {
+                    cls = 'string'
+                }
+            } else if ((/true|false/).test(match)) {
+                cls = 'boolean'
+            } else if ((/null/).test(match)) {
+                cls = 'null'
+            }
+            return '<span class="' + cls + '">' + match + '</span>'
+        })
+        return json
+    } // --- End of syntaxHighlight --- //
+
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
      */
