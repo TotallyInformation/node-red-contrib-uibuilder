@@ -287,6 +287,9 @@ class UibWeb {
 
         // Note: Keep the router vars separate so that they can be used for reporting
 
+        this.app.use(express.json())
+        this.app.use(express.urlencoded({extended: true}))
+
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
 
@@ -478,7 +481,7 @@ class UibWeb {
         })
     } // ---- End of removeRouter ---- //
 
-    /** Setup the web resources for a specific uibuilder instance
+    /** *️⃣ Setup the web resources for a specific uibuilder instance
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     instanceSetup(node) {
@@ -513,6 +516,8 @@ class UibWeb {
          * TODO Make sure the above is documented in Tech Docs
          */
 
+        // (1.) Instance log route (./_clientLog)
+        this.addLogRoute(node)
         // (1a) httpMiddleware - Optional common middleware from a custom file (same for all instances)
         this.addMiddlewareFile(node)
         // (1b) masterMiddleware - uib's internal dynamic middleware to add uibuilder specific headers & cookie
@@ -995,6 +1000,31 @@ class UibWeb {
 
         return page
     } // ---- End of showInstanceDetails ---- //
+
+    /** */
+    // processClientLog() {
+    //     next()
+    // }
+
+    /** */
+    addLogRoute(node) {
+        // Reference static vars
+        const uib = this.uib
+        // const RED = this.RED
+        const log = this.log
+
+        if (uib.configFolder === null) throw new Error('uib.configFolder is null')
+
+        let logUrl = `/_clientLog`   // e.g. https://my.local:1880/<httpRoot>/<url>/_clientLog
+
+        this.instanceRouters[node.url].post(logUrl, express.json(), express.text(), express.urlencoded({extended: true}), (req, res) => {
+            console.log('POST request to logger', req.body)
+            // console.dir(req)
+            res.status(204) // no content
+        } )
+        log.trace(`[uibuilder:web:addLogRoute:${node.url}] Client Log route added`)
+        this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client log back to Node-RED', type: 'POST', folder: 'N/A' } )
+    }
 
     //#endregion ====== Per-node instance processing ====== //
 
