@@ -2260,7 +2260,7 @@ Object.assign(lookup2, {
 });
 
 // src/front-end-module/uibuilder.module.js
-var version = "6.0.0-esm";
+var version = "6.1.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
@@ -2428,7 +2428,9 @@ var Uib = (_a = class {
     __publicField(this, "serverTimeOffset", null);
     __publicField(this, "socketError", null);
     __publicField(this, "online", null);
-    __publicField(this, "lastNavType", null);
+    __publicField(this, "lastNavType", "");
+    __publicField(this, "tabId", "");
+    __publicField(this, "isVisible", false);
     __publicField(this, "originator", "");
     __publicField(this, "autoSendReady", true);
     __publicField(this, "httpNodeRoot", "");
@@ -2445,7 +2447,9 @@ var Uib = (_a = class {
         clientVersion: version,
         clientId: this.clientId,
         pathName: window.location.pathname,
-        pageName: void 0
+        pageName: void 0,
+        tabId: void 0,
+        lastNavType: void 0
       },
       transportOptions: {
         polling: {
@@ -2473,6 +2477,18 @@ var Uib = (_a = class {
     });
     this.clientId = this.cookies["uibuilder-client-id"];
     log("trace", "Uib:constructor", "Client ID: ", this.clientId)();
+    this.tabId = window.sessionStorage.getItem("tabId");
+    if (!this.tabId) {
+      this.tabId = "t" + Math.floor(Math.random() * 1e6);
+      window.sessionStorage.setItem("tabId", this.tabId);
+    }
+    document.addEventListener("load", () => {
+      this.set("isVisible", true);
+    });
+    document.addEventListener("visibilitychange", () => {
+      this.set("isVisible", document.visibilityState === "visible");
+      this.sendCtrl({ uibuilderCtrl: "visibility", isVisible: this.isVisible });
+    });
     this.ioNamespace = this._getIOnamespace();
     if ("uibuilder-webRoot" in this.cookies) {
       this.httpNodeRoot = this.cookies["uibuilder-webRoot"];
@@ -3068,6 +3084,9 @@ var Uib = (_a = class {
       msgToSend.from = "client";
     }
     msgToSend._socketId = this._socket.id;
+    this.socketOptions.auth.tabId = this.tabId;
+    this.socketOptions.auth.lastNavType = this.lastNavType;
+    this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
     let numMsgs;
     if (channel === this._ioChannels.client) {
       this.set("sentMsg", msgToSend);
@@ -3146,7 +3165,8 @@ var Uib = (_a = class {
         pointerType: domevent.pointerType,
         nodeName: target.nodeName,
         clientId: this.clientId,
-        pageName: this.pageName
+        pageName: this.pageName,
+        tabId: this.tabId
       }
     };
     log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
@@ -3212,10 +3232,6 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         }
         if (this.autoSendReady === true) {
           log("trace", `Uib:ioSetup:${this._ioChannels.control}/client connect`, "Auto-sending ready-for-content/replay msg to server");
-          this._send({
-            "uibuilderCtrl": "ready for content",
-            "cacheControl": "REPLAY"
-          }, this._ioChannels.control);
         }
         break;
       }
@@ -3291,12 +3307,19 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     this.socketOptions.auth.pageName = this.pageName;
     this.socketOptions.auth.clientId = this.clientId;
     this.socketOptions.transportOptions.polling.extraHeaders["x-clientid"] = `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`;
+    this.socketOptions.auth.tabId = this.tabId;
+    this.socketOptions.auth.lastNavType = this.lastNavType;
     this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
+    console.log("1", this.socketOptions.auth);
     log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
     this._socket = lookup2(this.ioNamespace, this.socketOptions);
     this._socket.on("connect", () => {
       __privateWrapper(this, _connectedNum)._++;
       this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
+      this.socketOptions.auth.lastNavType = this.lastNavType;
+      this.socketOptions.auth.tabId = this.tabId;
+      this.socketOptions.auth.more = this.tabId;
+      console.log("2", this.socketOptions.auth);
       log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${__privateGet(this, _connectedNum)}
 Namespace: ${this.ioNamespace}`)();
       this._dispatchCustomEvent("uibuilder:socket:connected", __privateGet(this, _connectedNum));

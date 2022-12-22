@@ -12,23 +12,55 @@ Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uib
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-* Extensions to new FE Library
-  * Add a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified.
-  * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
-  * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
-    * Add a client logging endpoint to each instance. The browser can use `navigator.sendBeacon()` with a URL of `./_clientLog` to send text. Objects must be encoded to strings.
-    * uibuilder node will output control msg of type `Client Log`.
-    * [ ] Needs a new endpoint in uibuilder (web.js) - `./<url>/_clientLog`.
-    * Make optional via flag in Editor with start msg enabling/disabling in client.
-    * ? window and document events - make optional via uibuilder fe command.
+### uibuilder node
 
-* Examples
-  * Update all to use new libs. Remove (c).
-  * Global Notification/Toasts
+* Add capability to restrict sends to a specific client. Needs the tab id and a map between tab id and socket.io session id. OR, maybe create a socket.io "room" for each tab?
+  * When a new client connection is made, use `socket.emit('join', tabId)`
+  * Output to a room using `io.to(tabId).emit(...)`
+  * https://socket.io/docs/v4/rooms/
+* Editor
+  * Disable the new Open button along with other disabled things when new or url has changed.
+  * Add template description to display.
+* `socket.js`
+  * Add rooms: Url, Url/page, User id, Tab id 
 
-* uib-cache
-  * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
+### ### IIFE/ESM/Module client library
 
+* Add a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified.
+* Add `uibuilder.cacheSend()` and `uibuilder.cacheClear()` functions - reinstate in uib-cache fn now we've removed extra ctrl send
+* Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
+  * uibuilder node will output control msg of type `Client Log` when client sends a beacon.
+  * Make optional via flag in Editor with start msg enabling/disabling in client.
+  * ? window and document events - make optional via uibuilder fe command.
+* Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
+
+### Examples
+
+* Update all to use new libs. Remove (c).
+* Global Notification/Toasts
+* Update/add examples for each template
+
+### Templates - update to latest standards
+
+* [ ] vue
+* [ ] vue-simple
+* [ ] svelte-basic
+
+### uib-cache
+
+* Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
+
+### Doc updates
+
+* `isVisible`, `tabId` and `syntaxHighlight(json)` in new client builds.
+* Updated `msg._uib` optional in standard msgs
+* Move v5 changes to archive log
+
+### Other Ideas (Will probably move to the roadmap)
+
+* Investigate use of WebWorkers to have a shared websocket that allows retained connection on page reload and between pages in the same uibuilder node.
+  * https://crossbario.com/blog/Websocket-Persistent-Connections/
+  * https://stackoverflow.com/questions/10886910/how-to-maintain-a-websockets-connection-between-pages
 
 ----
 
@@ -36,11 +68,76 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 <!-- Nothing currently. -->
 
-* uibuilder node
-  * Add JSON and Form encoded body processing to all user instance routes to allow for processing POST requests
-  * Editor
-    * Add Open button to top button bar next to Delete. Add globe icon to open buttons.
-    * Add Docs button next to new Open button. Add book icon to docs buttons.
+### uibuilder node
+
+* Added JSON and Form encoded body processing to all user instance routes to allow for processing POST requests
+
+* Added new user web endpoint `./_clientLog` (`web.js`::`addLogRoute()`). This can only be POSTed to and should only be used for `navigator.sendBeacon` text messages (the body of the POST has to be plain text).
+
+* Updated optional `msg._uib` properties on standard output messages, additional metadata added:
+
+  ```javascript
+  msg._uib = {
+    "clientId":"0yB8nqLSbhWAEyEpEuPYa",
+    "remoteAddress":"::1",
+    "pageName":"index.html",
+    // The uibuilder URL setting
+    "url":"uibUrl",
+    // ID of the client tab - NOTE: If a tab is duplicated, it will have the same ID
+    "tabId":"t568878"
+  }
+  ```
+  
+  This data should help when working out identities for authentication and authorisation as well as enabling specific page/tab/user processing.
+
+* Updated connect, disconnect and error control messages. They now show more details about the originating client and page.
+
+  In particular, the connect msg now has `msg.lastNavType` which shows what the browser reported about the last time the originating page loaded. e.g. "navigate", "reload", "back_forward", "prerender". This comes from the [Performance browser API](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming).
+
+* Reinstated ability for client to send uibuilder control messages.
+  * New "visibility" control msg now added which uses the document `visibilitychange` event.
+
+* Editor
+  * Added Open button to top button bar next to Delete. Add globe icon to open buttons.
+  * Added Docs button next to new Open button. Add book icon to docs buttons.
+
+* `socket.js`
+  * Added `url` to _uib property to make downstream processing easier.
+  * Added visibility change control msg. Seny by FE client.
+
+### IIFE/ESM/Module client library
+
+* Added `uibuilder.syntaxHighlight(json)` function - standard function that converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
+
+* Added a unique tab identifier `uibuilder.tabId` that remains while the tab does. Is include in std outputs. Based on [this](https://stackoverflow.com/questions/11896160/any-way-to-identify-browser-tab-in-javascript). NOTE however, that duplicating the browser tab will result in a duplicate tab id.
+
+* Added `uibuilder.isVisible` property. Is true when the browser tab containing the page is actually visible. On visibility change, sends a new control msg `msg.uibuilderCtrl` = "visibility" with the property `isVisible` true or false. Does not send this when the page loads but does set the property. Uses the document `visibilitychange` event.
+
+### `uib-brand.css`
+
+* Is now the default CSS for all of the templates.
+* Added JSON syntax highlight rules from `uib-styles.css`.
+
+### Templates
+
+* All of the templates have been updated to the latest uibuilder standards for v6. 
+* The default blank template and any others that don't specify which client build is used now use the new `uibuilder.IIFE.min.js` build.
+* All templates using the new clients have a `<div id="more"><!-- '#more' is used as a parent for dynamic content in examples --></div>` line in the HTML which is a useful target for adding dynamic content from Node-RED.
+* All templates have updated and rationalised README.md and package.json files in the root folder.
+* All templates have .eslintrc.js files in the root folder. You may need to install eslint extensions to match. If this file gets in the way, it can be safely deleted. It helps maintain standard coding practices and helps avoid the use of JavaScript which is too new.
+* Removed the (c) from the remaining templates. There is no (c) on any of them. They all fall under MIT license. Use as you will, there are no intellectual property restraints on the template code.
+* Updated:
+  * [x] blank
+  * [x] blank-iife-client
+  * [x] blank-old-client
+  * [x] blank-esm-client
+  * [x] iife-vue3-nobuild
+
+
+### Examples
+
+* 
+
 
 ## [v6.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.0.0...v5.1.1)
 

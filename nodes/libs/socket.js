@@ -317,11 +317,12 @@ class UibSockets {
         }
     } // ---- End of sendToFe2 ---- //
 
-    /** Get client details for JWT security check
+    /** DEPRECATED Get client details for JWT security check
      * @param {socketio.Socket} socket Reference to client socket connection
      * @returns {object} Extracted key information
      */
     getClientDetails(socket) {
+        this.log.warn('[uibuilder:socket.js:getClientDetails] CALL TO DEPRECATED FUNCTION')
 
         // tilib.mylog('>>>>> ========================= <<<<<')
         // tilib.mylog('>>>>>   remote address:', socket.request.connection.remoteAddress) // client ip address. May be IPv4 or v6
@@ -397,7 +398,10 @@ class UibSockets {
             if (!msg._uib) msg._uib = {}
             msg._uib.clientId = socket.handshake.auth.clientId
             msg._uib.remoteAddress = getClientRealIpAddress(socket)
+            msg._uib.url = node.url,
             msg._uib.pageName = getClientPageName(socket, node)
+            msg._uib.tabId = socket.handshake.auth.tabId
+            // msg._uib.lastNavType = socket.handshake.auth.lastNavType
         }
 
         // Send out the message for downstream flows
@@ -487,6 +491,8 @@ class UibSockets {
                     'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
                     'ip': getClientRealIpAddress(socket),
                     'clientId': socket.handshake.auth.clientId,
+                    'tabId': socket.handshake.auth.tabId,
+                    'url': node.url,
                     'pageName': pageName,
                     'connections': socket.handshake.auth.connectedNum
                 }
@@ -501,12 +507,12 @@ class UibSockets {
 
             }) // --- End of on-connection::on-disconnect() --- //
 
-            // Listen for msgs from clients only on specific input channels:
-
+            // Listen for msgs from clients on standard channel
             socket.on(uib.ioChannels.client, function(msg) {
                 that.listenFromClient(msg, socket, node )
             }) // --- End of on-connection::on-incoming-client-msg() --- //
 
+            // Listen for msgs from clients on control channel
             socket.on(uib.ioChannels.control, function(msg) {
                 node.rcvMsgCount++
                 log.trace(`[uibuilder:socket:${url}] Control Msg from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
@@ -527,86 +533,11 @@ class UibSockets {
 
                 if ( !msg.topic ) msg.topic = node.topic
 
-                /** If an auth/logon/logoff msg, we need to process it directly (don't send on the msg in this case) */
-                // if ( msg.uibuilderCtrl === 'logon') {
-
-                //     //uiblib.logon(msg, ioNs, node, socket, log, uib)
-                //     security.logon(msg, ioNs, node, socket)
-
-                // } else if ( msg.uibuilderCtrl === 'logoff') {
-
-                //     //uiblib.logoff(msg, ioNs, node, socket, log, uib)
-                //     security.logoff(msg, ioNs, node, socket.id)
-
-                // } else if ( msg.uibuilderCtrl === 'auth') {
-                //     // 'auth' is sent by client after server sends 'client connect' or 'request for logon' if security is on
-                //     /**
-                //      * == Server receives 'auth' control message. Checks auth
-                //      *    1. If auth is dummy
-                //      *       1. => Send 'request for logon' to client
-                //      *          1. ++ client must prompt user for logon
-                //      *          2. <= Client must send 'auth' control message to server
-                //      *          3. GOTO 1.0
-                //      *
-                //      *    2. Otherwise
-                //      *       1. == Server validates msg._auth (*1). Only succeeds if client was already auth and send a valid _auth with JWT (due to node redeploy since nr restart invalidates all JWT's).
-                //      *          1. => Server returns either an 'auth succeded' or 'auth failed' message to client.
-                //      *          2. If auth failed
-                //      *             1. => Send 'request for logon' to client
-                //      *             2. ++ client must prompt user for logon
-                //      *             3. <= Client must send 'auth' control message to server
-                //      *             4. GOTO 1.0
-                //      */
-
-                //     msg._auth = security.authCheck2(msg, node, that.getClientDetails(socket))
-
-                //     //! temp
-                //     node.send([null,msg])
-
-                //     // Report success & send token to client & to port #2
-                //     //if ( msg._auth.userValidated === true ) {
-                //     const ctrlMsg = {
-                //         'uibuilderCtrl': msg._auth.userValidated ? 'authorised' : 'not authorised',
-                //         'topic': msg.topic || node.topic || undefined,
-                //         '_auth': msg._auth,
-                //         '_socketId': socket.id,
-                //     }
-                //     that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
-                //     // Copy to port#2 for reference
-                //     ctrlMsg.ip = getClientRealIpAddress(socket)
-                //     ctrlMsg.clientId = socket.handshake.auth.clientId
-                //     node.send([null,ctrlMsg])
-                //     //}
-
-                // } else if (node.useSecurity === true) {
-                //     // If security is active...
-
-                //     /** Check for valid auth and session
-                //      * @type {MsgAuth} */
-                //     msg._auth = security.authCheck2( msg, node, that.getClientDetails(socket) )
-                //     //msg._auth = security.authCheck(msg, node, socket.id)
-                //     //msg._auth = uiblib.authCheck(msg, ioNs, node, socket.id, log, uib)
-
-                //     // Only send the msg onward if the user is validated or if unauth traffic permitted or if the msg is the initial ready for content handshake.
-                //     if ( node.allowUnauth === true || msg._auth.jwt !== undefined || msg.uibuilderCtrl === 'ready for content' ) {
-                //         msg.ip = getClientRealIpAddress(socket)
-                //         msg.clientId = socket.handshake.auth.clientId
-                //         node.send([null,msg])
-                //         tilib.mylog(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. But unauth traffic allowed.`)
-                //     } else
-                //         log.info(`[uibuilder:socket.js:addNs:connection:on:control] '${msg.uibuilderCtrl}' msg received from ${node.url} client but they are not authorised. Ignoring.`)
-
-                // } else {
-
-                //     // Send out the message on port #2 for downstream flows
-                //     msg.ip = getClientRealIpAddress(socket)
-                //     msg.clientId = socket.handshake.auth.clientId
-                //     node.send([null,msg])
-
-                // }
+                node.send([null, msg])
 
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
+            // Listen for socket.io errors - output a control msg
             socket.on('error', function(err) {
 
                 // ioNs.clientLog[socket.handshake.auth.clientId].connected = false
@@ -622,6 +553,8 @@ class UibSockets {
                     'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
                     'ip': getClientRealIpAddress(socket),
                     'clientId': socket.handshake.auth.clientId,
+                    'tabId': socket.handshake.auth.tabId,
+                    'url': node.url,
                     'pageName': pageName,
                     'connections': socket.handshake.auth.connectedNum
                 }
@@ -633,6 +566,7 @@ class UibSockets {
 
             //#endregion ----- Event Handlers ----- //
 
+            // How many client connections are there?
             node.ioClientsCount = ioNs.sockets.size
 
             log.trace(
@@ -668,20 +602,6 @@ class UibSockets {
                 'version': uib.version,  // Let the front-end know what v of uib is in use
                 '_socketId': socket.id,
             }
-
-            // Flow client connect msg (port #2 msg)
-            const msgFlow = {
-                'uibuilderCtrl': 'client connect',
-                'topic': node.topic || undefined,
-                'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
-                '_socketId': socket.id,
-                'ip': getClientRealIpAddress(socket),
-                'clientId': socket.handshake.auth.clientId,
-                'pageName': pageName,
-                'connections': socket.handshake.auth.connectedNum
-                // ? client time offset ?
-            }
-
             // msgClient.ip = getClientRealIpAddress(socket)
             // msgClient.clientId = socket.handshake.auth.clientId
             // msgClient.connections = socket.handshake.auth.connectedNum
@@ -696,7 +616,22 @@ class UibSockets {
             // Let the clients know we are connecting
             that.sendToFe(msgClient, node.url, uib.ioChannels.control)
 
-            // Let the flows (via port#2) a client is connecting
+            // Flow client connect msg (port #2 msg)
+            const msgFlow = {
+                'uibuilderCtrl': 'client connect',
+                'topic': node.topic || undefined,
+                'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
+                '_socketId': socket.id,
+                'ip': getClientRealIpAddress(socket),
+                'clientId': socket.handshake.auth.clientId,
+                'tabId': socket.handshake.auth.tabId,
+                'url': node.url,
+                'pageName': pageName,
+                'connections': socket.handshake.auth.connectedNum,
+                'lastNavType': socket.handshake.auth.lastNavType,
+                // ? client time offset ?
+            }
+            // Let the flows know (via port#2) a client is connecting
             node.send([null, msgFlow])
 
             // Let other nodes know a client is connecting (via custom event manager)

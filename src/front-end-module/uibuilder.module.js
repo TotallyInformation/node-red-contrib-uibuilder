@@ -61,7 +61,7 @@ import io from 'socket.io-client' // Note: Only works when using esbuild to bund
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.0.0-mod'
+const version = '6.1.0-mod'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -343,7 +343,11 @@ export const Uib = class Uib {
     /** Is the client online or offline? */
     online = null
     // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
-    lastNavType = null
+    lastNavType = ''
+    // tab identifier from session storage
+    tabId = ''
+    // Is the browser tab containing this page visible or not?
+    isVisible = false
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -368,6 +372,8 @@ export const Uib = class Uib {
             clientId: this.clientId,
             pathName: window.location.pathname,
             pageName: undefined,
+            tabId: undefined,
+            lastNavType: undefined,
         },
         transportOptions: {
             // Can only set headers when polling
@@ -1328,6 +1334,13 @@ export const Uib = class Uib {
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
         msgToSend._socketId = this._socket.id
 
+        // Session tab id
+        this.socketOptions.auth.tabId = this.tabId
+        // How was the page last loaded?
+        this.socketOptions.auth.lastNavType = this.lastNavType
+        // How many times has the client (re)connected since page load
+        this.socketOptions.auth.connectedNum = this.#connectedNum
+
         // Track how many messages have been sent & last msg sent
         let numMsgs
         if (channel === this._ioChannels.client) {
@@ -1446,6 +1459,7 @@ export const Uib = class Uib {
 
                 clientId: this.clientId,
                 pageName: this.pageName,
+                tabId: this.tabId,
             }
         }
 
@@ -1562,10 +1576,11 @@ export const Uib = class Uib {
                 if (this.autoSendReady === true) { // eslint-disable-line no-lonely-if
                     log('trace', `Uib:ioSetup:${this._ioChannels.control}/client connect`, 'Auto-sending ready-for-content/replay msg to server')
                     // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
-                    this._send({
-                        'uibuilderCtrl': 'ready for content',
-                        'cacheControl': 'REPLAY',
-                    }, this._ioChannels.control)
+                    // @since 6.1.0 Don't bother, we use the "client connect" msg
+                    // this._send({
+                    //     'uibuilderCtrl': 'ready for content',
+                    //     'cacheControl': 'REPLAY',
+                    // }, this._ioChannels.control)
                 }
 
                 break
@@ -1712,8 +1727,13 @@ export const Uib = class Uib {
         // Add stable client id (static unless browser closed)
         this.socketOptions.auth.clientId = this.clientId
         this.socketOptions.transportOptions.polling.extraHeaders['x-clientid'] = `${Uib._meta.displayName}; ${Uib._meta.type}; ${Uib._meta.version}; ${this.clientId}`
+        // Session tab id
+        this.socketOptions.auth.tabId = this.tabId
+        // How was the page last loaded?
+        this.socketOptions.auth.lastNavType = this.lastNavType
         // How many times has the client (re)connected since page load
         this.socketOptions.auth.connectedNum = this.#connectedNum
+        console.log('1', this.socketOptions.auth)
         //#endregion --- ---- ---
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
@@ -1724,7 +1744,16 @@ export const Uib = class Uib {
         this._socket.on('connect', () => {
 
             this.#connectedNum++
+            // How many times has the client (re)connected since page load
             this.socketOptions.auth.connectedNum = this.#connectedNum
+            // How was the page last loaded?
+            this.socketOptions.auth.lastNavType = this.lastNavType
+            // Session tab id
+            this.socketOptions.auth.tabId = this.tabId
+            this.socketOptions.auth.more = this.tabId
+
+            console.log('2', this.socketOptions.auth)
+
             log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.#connectedNum}\nNamespace: ${this.ioNamespace}`)()
             this._dispatchCustomEvent('uibuilder:socket:connected', this.#connectedNum)
 
@@ -1838,9 +1867,38 @@ export const Uib = class Uib {
             this.cookies[splitC[0].trim()] = splitC[1]
         })
 
-        /** Client ID set by uibuilder */
+        /** Client ID set by uibuilder - lasts until browser profile is closed, applies to all tabs */
         this.clientId = this.cookies['uibuilder-client-id']
         log('trace', 'Uib:constructor', 'Client ID: ', this.clientId)()
+
+        /** Tab ID - lasts while the tab is open (even if reloaded)
+         * WARNING: Duplicating a tab retains the same tabId
+         */
+        this.tabId = window.sessionStorage.getItem('tabId')
+        if (!this.tabId) {
+            this.tabId = 't' + Math.floor(Math.random() * 1000000)
+            window.sessionStorage.setItem('tabId', this.tabId)
+        }
+
+        // document.addEventListener('pagehide', (event) => {
+        //     // console.log(`pagehide. From Cache?: ${event.persisted}`)
+        //     navigator.sendBeacon('./_clientLog', `pagehide. From Cache?: ${event.persisted}`)
+        // })
+        // document.addEventListener('pageshow', (event) => {
+        //     // console.log(`pageshow. From Cache?: ${event.persisted}`)
+        //     navigator.sendBeacon('./_clientLog', `pageshow. From Cache?: ${event.persisted}`)
+        // })
+        document.addEventListener('load', () => {
+            this.set('isVisible', true)
+        })
+        document.addEventListener('visibilitychange', () => {
+            // hidden=unload, minimise. visible=un-minimise (not fired on load)
+            this.set('isVisible', document.visibilityState === 'visible')
+            this.sendCtrl({ uibuilderCtrl: 'visibility', isVisible: this.isVisible })
+            // navigator.userActivation is experimental Chromium only
+            // console.log('visibilitychange', ':', `Document Event: visibilitychange. Visibility State: ${document.visibilityState}. User Activity- Has:${navigator.userActivation.hasBeenActive}, Is:${navigator.userActivation.isActive}`)
+            // navigator.sendBeacon('./_clientLog', `${(new Date()).toISOString()} Document Event: visibilitychange. Visibility State: ${document.visibilityState}. User Activity- Has:${navigator.userActivation.hasBeenActive}, Is:${navigator.userActivation.isActive}`)
+        })
 
         this.ioNamespace = this._getIOnamespace()
 

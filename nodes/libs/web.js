@@ -1010,12 +1010,14 @@ class UibWeb {
 
         if (uib.configFolder === null) throw new Error('uib.configFolder is null')
 
-        let logUrl = `/_clientLog`   // e.g. https://my.local:1880/<httpRoot>/<url>/_clientLog
+        let logUrl = `/_clientLog`   // e.g. https://red.local:1880/<httpRoot>/<url>/_clientLog
 
-        this.instanceRouters[node.url].post(logUrl, express.json(), express.text(), express.urlencoded({extended: true}), (req, res) => {
+        // Only the text processor is useful since navigator.sendBeacon() only seems to send text no matter what MDN says. //express.json(), express.text(), express.urlencoded({extended: true}),
+        this.instanceRouters[node.url].post(logUrl, express.text(), (req, res) => {
+            log.trace(`[uibuilder:web:addLogRoute:${node.url}] POST to client logger: ${req.body}`)
             console.log('POST request to logger', req.body)
-            // console.dir(req)
-            res.status(204) // no content
+            // TODO - send control msg
+            res.status(200) // no content
         } )
         log.trace(`[uibuilder:web:addLogRoute:${node.url}] Client Log route added`)
         this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client log back to Node-RED', type: 'POST', folder: 'N/A' } )
