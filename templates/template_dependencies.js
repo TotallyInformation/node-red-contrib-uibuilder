@@ -25,15 +25,15 @@ module.exports = {
         'dependencies': [ ],
         'description': 'Simple Svelte template. Requires Svelte installation, see README.md'
     },
-    'blank-iife-client': {
+    'iife-blank-client': {
         'name': 'No framework, modern IIFE client',
-        'folder': 'blank-iife-client',
+        'folder': 'iife-blank-client',
         'dependencies': [ ],
         'description': 'Minimal template using the modern IIFE client library.'
     },
-    'blank-esm-client': {
+    'esm-blank-client': {
         'name': 'No framework, modern ESM client',
-        'folder': 'blank-esm-client',
+        'folder': 'esm-blank-client',
         'dependencies': [ ],
         'description': 'Minimal template using the modern ESM client library.'
     },
@@ -43,9 +43,9 @@ module.exports = {
         'dependencies': [ 'vue' ],
         'description': 'Very simple Vue v3+ template that does not require a build step. Uses the modern IIFE uib client library.'
     },
-    'blank-old-client': {
+    'old-blank-client': {
         'name': 'No framework, old client',
-        'folder': 'blank',
+        'folder': 'old-blank-client',
         'dependencies': [ ],
         'description': 'Minimal template using the old uibuilderfe client.'
     },

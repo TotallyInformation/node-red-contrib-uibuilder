@@ -1,14 +1,14 @@
-# uibuilder Template: Vue v3 with uibuilder IIFE client (no build)
+# uibuilder Template: Blank IIFE
 
 > NOTE: You can replace the contents of this README with text that describes your UI.
 
-A very simple template that just uses Vue v3 or above with no build step. There is no need to install any dev dependencies to get this going.
+This is about the simplest template you can get for uibuilder. It uses the IIFE version of the modern client library. This is the standard non-ESM method and simply needs the client to be referenced in an HTML `link` element.
 
-Note that Vue v3 is called from an Internet CDN so that you don't have to have it installed via uibuilder's library manager. However, you may want to install it if you continue to use Vue v3 to save a dependency on the Internet being up.
+It does not use any frameworks and has no other dependencies.
 
-Included are a few elements that demonstrate Vue's rectivity and demonstrates how to get data from and to Node-RED via uibuilder.
+It demonstrates that you can use uibuilder purely with HTML/JavaScript and still easily build a simple, dynamic, data-driven user interface.
 
-It uses the IIFE version of the modern client library. This is the standard non-ESM method and simply needs the client to be referenced in an HTML `link` element.
+All it does is start up uibuilder and will dump any msg you send to it from Node-RED into the browser tab. It also has buttons that let you send messages back to Node-RED.
 
 ## Folders
 

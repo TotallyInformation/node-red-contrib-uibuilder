@@ -14,13 +14,15 @@
 </head><body class="uib">
 
     <div id="app">
-        <h1>Simple Vue v3 App Using New uibuilder Client</h1>
+        <h1>Simple Vue v3 App Using New uibuilder IIFE Client</h1>
 
         <p>{{ message }}</p>
 
+        <div id="more"><!-- '#more' is used as a parent for dynamic content in examples --></div>
+
         <p>
             <button @click="count++">
-                Count is: {{ count }}
+                Simple VueJS Counter: {{ count }}
             </button>
         </p>
         

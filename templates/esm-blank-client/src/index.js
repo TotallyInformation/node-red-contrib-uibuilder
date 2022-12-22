@@ -1,12 +1,14 @@
 // @ts-nocheck
 
-/** The simplest use of uibuilder client library
- * Note that uibuilder.start() should no longer be needed.
- * See the Tech docs if the client doesn't start on its own.
+/** Minimalist code for uibuilder and Node-RED using ESM
+ *
+ * Note that you need to understand a bit about how ESM's work
+ * or you will get caught out! This is not a uibuilder issue.
+ * Script files loaded as a module have no access to other scripts
+ * unless imported here.
  */
 
-/** Minimalist code for uibuilder and Node-RED */
-'use strict'
+import '../uibuilder/uibuilder.esm.min.js'  // Adds `uibuilder` and `$` to globals
 
 // Set logLevel to 2 or above to see more built-in logging info & use info-level custom logging.
 // uibuilder.set('logLevel', 2)
@@ -21,7 +23,9 @@ window.fnSendToNR = function fnSendToNR(payload) {
 
 // Listen for incoming messages from Node-RED
 uibuilder.onChange('msg', function(msg) {
-    // dump the msg as formatted text to the "msg" html element - does nothing if the element not found
-    const eMsg = document.getElementById('msg')
+    // Dump the msg as text to the "msg" html element
+    // either the HTML way or via uibuilder's helper function
+    // const eMsg = document.getElementById('msg')
+    const eMsg = $('#msg')
     if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 })

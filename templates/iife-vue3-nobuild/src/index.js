@@ -13,7 +13,7 @@ const app = createApp({
         count: 0,
         lastMsgRecvd: '[Nothing]',
         input1: '',
-        
+
     } },
 
     // Dynamic data
@@ -21,9 +21,9 @@ const app = createApp({
 
         // This is auto-recalculated by Vue when lastMsgRecvd changes
         formatLastRcvd() {
-            let lastMsgRecvd = this.lastMsgRecvd
+            const lastMsgRecvd = this.lastMsgRecvd
             if (typeof lastMsgRecvd === 'string') return 'Last Message Received = ' + lastMsgRecvd
-            return 'Last Message Received = ' + this.syntaxHighlight(lastMsgRecvd)
+            return 'Last Message Received = ' + uibuilder.syntaxHighlight(lastMsgRecvd)
         },
 
     },
@@ -45,28 +45,6 @@ const app = createApp({
                 'payload': event.target.value,
             })
         },
-
-        // return formatted HTML version of JSON object
-        syntaxHighlight: function(json) {
-            json = JSON.stringify(json, undefined, 4)
-            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                let cls = 'number'
-                if ((/^"/).test(match)) {
-                    if ((/:$/).test(match)) {
-                        cls = 'key'
-                    } else {
-                        cls = 'string'
-                    }
-                } else if ((/true|false/).test(match)) {
-                    cls = 'boolean'
-                } else if ((/null/).test(match)) {
-                    cls = 'null'
-                }
-                return '<span class="' + cls + '">' + match + '</span>'
-            })
-            return json
-        }, // --- End of syntaxHighlight --- //
 
     },
 

@@ -1,6 +1,3 @@
-/* eslint-disable strict */
-/* jshint browser: true, esversion: 6, asi: true */
-/* globals uibuilder */
 // @ts-nocheck
 
 /** Minimalist code for uibuilder and Node-RED */
@@ -42,11 +39,11 @@ window.onload = function() {
     uibuilder.start()
 
     // Listen for incoming messages from Node-RED
-    uibuilder.onChange('msg', function(msg){
-        console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', msg)
+    uibuilder.onChange('msg', function(msg) {
+        // console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', msg)
 
         // dump the msg as text to the "msg" html element
         const eMsg = document.getElementById('msg')
-        eMsg.innerHTML = window.syntaxHighlight(msg)
+        if (eMsg) eMsg.innerHTML = window.syntaxHighlight(msg)
     })
 }

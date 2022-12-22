@@ -1,8 +1,8 @@
 {
-  "name": "uib-blank",
-  "version": "5.0.0",
+  "name": "uib-blank-old",
+  "version": "5.1.1",
   "private": true,
-  "description": "This is about the simplest template you can get for uibuilder.",
+  "description": "This is about the simplest template you can get for uibuilder using the old client.",
   "browser": "./src/index.js",
   "scripts": {
     "build": "echo \"Error: no build process specified\" && exit 1"

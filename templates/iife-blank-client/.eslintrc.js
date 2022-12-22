@@ -25,7 +25,7 @@ module.exports = { // eslint-disable-line no-undef
     },
     overrides: [
         {
-            files: ['*.esm.js', '*.module.js', '*.mod.js', '*.mjs'],
+            files: ['*.module.js', '*.mod.js', '*.mjs'],
             parserOptions: { sourceType: 'module' },
         }
     ],

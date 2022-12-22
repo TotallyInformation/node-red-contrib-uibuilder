@@ -1,5 +1,3 @@
-/* eslint-env node commonjs */
-/* global module */
 /** JavaScript Versions
  *  5 is minimum -> Last IE11
  *  6 = 2015 -> Node >8.10, iOS12+
@@ -10,21 +8,28 @@
  * 11 = 2020
  * 12 = 2021
  */
-'use strict'
-module.exports = {
+module.exports = { // eslint-disable-line no-undef
     env: {
         browser: true,
-        jquery: false,
         node: false,
-        'shared-node-browser': false
+        'shared-node-browser': false,
     },
-    global: ['uibuilder'],
     parserOptions: {
         // Modern browsers only
         ecmaVersion: 2019,
-        sourceType: 'module'
+        sourceType: 'script',
     },
     root: true,
+    globals: {
+        uibuilder: true,
+        $: true,
+    },
+    overrides: [
+        {
+            files: ['index.js', '*.module.js', '*.mod.js', '*.mjs'],
+            parserOptions: { sourceType: 'module' },
+        }
+    ],
     plugins: [
         'html',     // Check scripts in HTML. https://www.npmjs.com/package/eslint-plugin-html
         'es',       // Help avoid js that is too new. https://eslint-plugin-es.mysticatea.dev/
@@ -34,12 +39,19 @@ module.exports = {
     ],
     extends: [
         'standard',
-        'plugin:es/no-new-in-esnext',
+        // 'eslint:recommended',
+        'plugin:es/restrict-to-es2019',
         'plugin:jsdoc/recommended',
         'plugin:promise/recommended',
         'plugin:sonarjs/recommended',
+        // 'plugin:es/no-new-in-esnext',
     ],
     rules: {
+        // remove once min engines moves to node.js v15+
+        // 'es/no-logical-assignment-operators': 'error',
+        // 'es/no-promise-any': 'error',
+        // 'es/no-numeric-separators': 'error',
+
         'sonarjs/no-duplicate-string': ['error', 6], // Default is 3
         // 'sonarjs/cognitive-complexity': ['error', 15], // Default is 15
         'sonarjs/no-nested-template-literals': 0,
@@ -49,12 +61,8 @@ module.exports = {
         'jsdoc/newline-after-description': 0,
         'jsdoc/no-multi-asterisks': 0,
         'jsdoc/tag-lines': 0,
-        'jsdoc/check-tag-names': 0, // Seriously poor quality check
         'jsdoc/valid-types': 0, // Rubbish, fails on common type configs
         'jsdoc/no-undefined-types': 0, // ['error'|'warn', {'definedTypes':['Promise']}],
-
-        // Try to keep code complexity in functions to a minimum
-        'sonarjs/cognitive-complexity': ['error', 60],  // default is 15! Need to try and improve this :-)
 
         // Make Standard less annoying
         'brace-style': 'off',     // You should only use one-true-brace style but sometimes we want to compress things a bit.
@@ -70,5 +78,5 @@ module.exports = {
             'markers': ['html', '#region', '#endregion']
         }],
         'quote-props': 'off',     // Sometimes it is necessary and then much nicer to be able to quote things that don't need it.
-    }
+    },
 }
