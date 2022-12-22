@@ -14,15 +14,14 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### uibuilder node
 
-* Add capability to restrict sends to a specific client. Needs the tab id and a map between tab id and socket.io session id. OR, maybe create a socket.io "room" for each tab?
-  * When a new client connection is made, use `socket.emit('join', tabId)`
-  * Output to a room using `io.to(tabId).emit(...)`
-  * https://socket.io/docs/v4/rooms/
 * Editor
   * Disable the new Open button along with other disabled things when new or url has changed.
   * Add template description to display.
 * `socket.js`
-  * Add rooms: Url, Url/page, User id, Tab id 
+  * Add rooms: Url, Url/page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
+  * When a new client connection is made, use `socket.emit('join', tabId)`
+  * Output to a room using `io.to(tabId).emit(...)`
+  * https://socket.io/docs/v4/rooms/
 
 ### ### IIFE/ESM/Module client library
 
