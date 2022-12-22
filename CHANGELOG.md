@@ -41,9 +41,15 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Templates - update to latest standards
 
-* [ ] vue
-* [ ] vue-simple
-* [ ] svelte-basic
+* Not yet done:
+   * [ ] vue
+   * [ ] vue-simple
+   * [ ] svelte-basic
+* Maybe add:
+  * Vue v3 (build)
+  * Vue v3 + Quasar
+  * REACT (no-build)
+  * REACT (build)
 
 ### uib-cache
 
