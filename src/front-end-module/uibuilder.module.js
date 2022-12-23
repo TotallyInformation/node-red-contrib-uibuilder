@@ -876,8 +876,8 @@ export const Uib = class Uib {
         if ( !ui.title && msg.topic ) ui.title = msg.topic
         if ( ui.title ) content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`
 
-        // Allow for variants
-        if ( !ui.variant || !['', 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'].includes(ui.variant)) ui.variant = ''
+        // Allow for variants - @since v6.1 - don't bother - since this now sets CSS class, not tied to bootstrap-vue
+        // if ( !ui.variant || !['', 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'].includes(ui.variant)) ui.variant = ''
 
         // Toasts auto-hide by default after 10s but alerts do not auto-hide
         if ( ui.noAutohide ) ui.noAutoHide = ui.noAutohide

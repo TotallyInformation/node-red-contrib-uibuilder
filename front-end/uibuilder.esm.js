@@ -2763,8 +2763,6 @@ var Uib = (_a = class {
       ui.title = msg.topic;
     if (ui.title)
       content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
-    if (!ui.variant || !["", "primary", "secondary", "success", "info", "warn", "warning", "failure", "error", "danger"].includes(ui.variant))
-      ui.variant = "";
     if (ui.noAutohide)
       ui.noAutoHide = ui.noAutohide;
     if (ui.noAutoHide)

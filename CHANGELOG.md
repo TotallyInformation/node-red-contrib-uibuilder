@@ -131,6 +131,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Added `uibuilder.isVisible` property. Is true when the browser tab containing the page is actually visible. On visibility change, sends a new control msg `msg.uibuilderCtrl` = "visibility" with the property `isVisible` true or false. Does not send this when the page loads but does set the property. Uses the document `visibilitychange` event.
 
+* When triggering `showDialog()` either in the FE or by sending a toast notification from node-red, setting "variant" now allows any CSS class name to be used. Not just the previous list of names ('primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger') though since they are all included as classes in uib-brand.css, they all still work.
+
 ### `uib-brand.css`
 
 * Is now the default CSS for all of the templates.
@@ -154,7 +156,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Examples
 
-* 
+* Examples matching templates:
+  * Added node descriptions throughout.
+  * Added notification inputs to all and new card (dynamic UI creation) & reload inputs where appropriate.
+
 
 
 ## [v6.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.0.0...v5.1.1)
