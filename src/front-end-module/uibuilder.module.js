@@ -352,7 +352,14 @@ export const Uib = class Uib {
 
     // TODO Move to proper getters/setters
     //#region ---- Externally Writable (via .set method, read via .get method) ---- //
-    originator = ''     // Default originator node id
+    /** Default originator node id - empty string by default
+     * @type {string}
+     */
+    originator = ''
+    /** Default topic - used by send if set and no topic provided 
+     * @type {(string|undefined)}
+     */
+    topic = undefined
     //#endregion ---- ---- ---- ---- //
 
     //#region ---- These are unlikely to be needed externally: ----
@@ -1334,12 +1341,14 @@ export const Uib = class Uib {
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
         msgToSend._socketId = this._socket.id
 
+        //#region ---- Update socket.io metadata ---- //
         // Session tab id
         this.socketOptions.auth.tabId = this.tabId
         // How was the page last loaded?
         this.socketOptions.auth.lastNavType = this.lastNavType
         // How many times has the client (re)connected since page load
         this.socketOptions.auth.connectedNum = this.#connectedNum
+        //#endregion ---- ---- ---- //
 
         // Track how many messages have been sent & last msg sent
         let numMsgs
@@ -1354,6 +1363,18 @@ export const Uib = class Uib {
         // Add the originator metadata if required
         if (originator === '' && this.originator !== '') originator = this.originator
         if (originator !== '') Object.assign(msgToSend, { '_uib': { 'originator': originator } })
+
+        // If the msg does not have a topic - see if we want to add one
+        if ( !Object.prototype.hasOwnProperty.call(msgToSend, 'topic') ) {
+            // From the default (`uibuilder.set('topic', 'some topic')`)
+            if (this.topic !== undefined) msgToSend.topic = this.topic
+            else {
+                // Did the last inbound msg have a topic?
+                if ( Object.prototype.hasOwnProperty.call(this, 'msg') && Object.prototype.hasOwnProperty.call(this.msg, 'topic') ) {
+                    msgToSend.topic = this.msg.topic
+                }
+            }
+        }
 
         log('debug', 'Uib:_send', ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)()
 
@@ -1427,13 +1448,8 @@ export const Uib = class Uib {
             )
         )
 
-        let thisMsg
-        if ( !Object.prototype.hasOwnProperty.call(this, 'msg') ) thisMsg = { topic: undefined }
-        else thisMsg = this.msg
-        if ( !Object.prototype.hasOwnProperty.call(thisMsg, 'topic') ) thisMsg.topic = undefined
+        // Set up the msg to send - NB: Topic may be added by this._send
         const msg = {
-            topic: thisMsg.topic,  // repeats the topic from the last inbound msg if it exists
-
             // Each `data-xxxx` attribute is added as a property
             // - this may be an empty Object if no data attributes defined
             payload: target.dataset,
@@ -1733,7 +1749,6 @@ export const Uib = class Uib {
         this.socketOptions.auth.lastNavType = this.lastNavType
         // How many times has the client (re)connected since page load
         this.socketOptions.auth.connectedNum = this.#connectedNum
-        console.log('1', this.socketOptions.auth)
         //#endregion --- ---- ---
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
@@ -1751,8 +1766,6 @@ export const Uib = class Uib {
             // Session tab id
             this.socketOptions.auth.tabId = this.tabId
             this.socketOptions.auth.more = this.tabId
-
-            console.log('2', this.socketOptions.auth)
 
             log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.#connectedNum}\nNamespace: ${this.ioNamespace}`)()
             this._dispatchCustomEvent('uibuilder:socket:connected', this.#connectedNum)

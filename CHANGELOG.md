@@ -18,15 +18,15 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Disable the new Open button along with other disabled things when new or url has changed.
   * Add template description to display.
 * `socket.js`
-  * Add rooms: Url, Url/page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
+  * Add rooms: page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
   * When a new client connection is made, use `socket.emit('join', tabId)`
   * Output to a room using `io.to(tabId).emit(...)`
   * https://socket.io/docs/v4/rooms/
 
 ### ### IIFE/ESM/Module client library
 
-* Add a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified.
 * Add `uibuilder.cacheSend()` and `uibuilder.cacheClear()` functions - reinstate in uib-cache fn now we've removed extra ctrl send
+* Add a `uibuilder.navigate(url)` function to allow a msg from node-red to change the page. Ensure it works with SPA routers and with anchor links.
 * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
   * uibuilder node will output control msg of type `Client Log` when client sends a beacon.
   * Make optional via flag in Editor with start msg enabling/disabling in client.
@@ -36,8 +36,9 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Examples
 
 * Update all to use new libs. Remove (c).
-* Global Notification/Toasts
 * Update/add examples for each template
+  * Add global Notification/Toast input
+  * Add dynamic HTML input
 
 ### Templates - update to latest standards
 
@@ -72,6 +73,16 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.0.0...main)
 
 <!-- Nothing currently. -->
+
+### Summary of notable changes
+
+> Please remember that no changes are being made to the old `uibuilderfe.js` client. Nothing listed here applies to that.
+
+* Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference.
+* The client library has a number of new functions: `uibuilder.syntaxHighlight(json)`, 
+* The client library reports changes of visibility back to node-red via a new control msg.
+* The client library creates a `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
+* Messages from the client now also include the `url` from the uibuilder node they relate to so that it is easier to process messages from multiple different uibuilder nodes.
 
 ### uibuilder node
 
@@ -108,9 +119,11 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * `socket.js`
   * Added `url` to _uib property to make downstream processing easier.
-  * Added visibility change control msg. Seny by FE client.
+  * Added visibility change control msg. Sent by FE client.
 
 ### IIFE/ESM/Module client library
+
+* Added a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified. Note that if the default topic is not set, messages will inherit the topic from the _previous inbound message_ if that had a topic.
 
 * Added `uibuilder.syntaxHighlight(json)` function - standard function that converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
 

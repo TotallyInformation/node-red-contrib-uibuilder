@@ -2432,6 +2432,7 @@ var Uib = (_a = class {
     __publicField(this, "tabId", "");
     __publicField(this, "isVisible", false);
     __publicField(this, "originator", "");
+    __publicField(this, "topic");
     __publicField(this, "autoSendReady", true);
     __publicField(this, "httpNodeRoot", "");
     __publicField(this, "ioNamespace", "");
@@ -3099,6 +3100,15 @@ var Uib = (_a = class {
       originator = this.originator;
     if (originator !== "")
       Object.assign(msgToSend, { "_uib": { "originator": originator } });
+    if (!Object.prototype.hasOwnProperty.call(msgToSend, "topic")) {
+      if (this.topic !== void 0)
+        msgToSend.topic = this.topic;
+      else {
+        if (Object.prototype.hasOwnProperty.call(this, "msg") && Object.prototype.hasOwnProperty.call(this.msg, "topic")) {
+          msgToSend.topic = this.msg.topic;
+        }
+      }
+    }
     log("debug", "Uib:_send", ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)();
     this._socket.emit(channel, msgToSend);
   }
@@ -3139,15 +3149,7 @@ var Uib = (_a = class {
         }
       )
     );
-    let thisMsg;
-    if (!Object.prototype.hasOwnProperty.call(this, "msg"))
-      thisMsg = { topic: void 0 };
-    else
-      thisMsg = this.msg;
-    if (!Object.prototype.hasOwnProperty.call(thisMsg, "topic"))
-      thisMsg.topic = void 0;
     const msg = {
-      topic: thisMsg.topic,
       payload: target.dataset,
       _ui: {
         type: "eventSend",
@@ -3310,7 +3312,6 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     this.socketOptions.auth.tabId = this.tabId;
     this.socketOptions.auth.lastNavType = this.lastNavType;
     this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
-    console.log("1", this.socketOptions.auth);
     log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
     this._socket = lookup2(this.ioNamespace, this.socketOptions);
     this._socket.on("connect", () => {
@@ -3319,7 +3320,6 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       this.socketOptions.auth.lastNavType = this.lastNavType;
       this.socketOptions.auth.tabId = this.tabId;
       this.socketOptions.auth.more = this.tabId;
-      console.log("2", this.socketOptions.auth);
       log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${__privateGet(this, _connectedNum)}
 Namespace: ${this.ioNamespace}`)();
       this._dispatchCustomEvent("uibuilder:socket:connected", __privateGet(this, _connectedNum));
