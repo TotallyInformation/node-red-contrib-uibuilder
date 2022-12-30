@@ -298,6 +298,8 @@ export const Uib = class Uib {
     #propChangeCallbacks = {}
     // onTopic event callbacks
     #msgRecvdByTopicCallbacks = {}
+    // Is Vue available?
+    #isVue = false
     /** setInterval id holder for Socket.IO checkConnect
      * @type {number|null}
      */
@@ -356,7 +358,7 @@ export const Uib = class Uib {
      * @type {string}
      */
     originator = ''
-    /** Default topic - used by send if set and no topic provided 
+    /** Default topic - used by send if set and no topic provided
      * @type {(string|undefined)}
      */
     topic = undefined
@@ -751,28 +753,28 @@ export const Uib = class Uib {
 
     /** Replace or add an HTML element's slot from text or an HTML string
      * Will use DOMPurify if that library has been loaded to window.
-     * @param {*} ui Single entry from the msg._ui property
+     * param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
      * @param {*} component The component we are trying to add/replace
      */
-    replaceSlot(ui, el, component) {
+    replaceSlot(el, component) {
+        if (!component.slot) return
+
         // If DOMPurify is loaded, apply it now
         if (window['DOMPurify']) component.slot = window['DOMPurify'].sanitize(component.slot)
         // Set the component content to the msg.payload or the slot property
-        if (component.slot !== undefined && component.slot !== null && component.slot !== '') {
-            el.innerHTML = component.slot ? component.slot : ui.payload
-        }
+        el.innerHTML = component.slot
     }
 
     /** Replace or add an HTML element's slot from a Markdown string
      * Only does something if the markdownit library has been loaded to window.
      * Will use DOMPurify if that library has been loaded to window.
-     * @param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
      * @param {*} component The component we are trying to add/replace
      */
-    replaceSlotMarkdown(ui, el, component) {
+    replaceSlotMarkdown(el, component) {
         if (!window['markdownit']) return
+        if (!component.slotMarkdown) return
 
         const opts = { // eslint-disable-line object-shorthand
             html: true,
@@ -790,13 +792,12 @@ export const Uib = class Uib {
             },
         }
         const md = window['markdownit'](opts)
+        // Convert from markdown to HTML
         component.slotMarkdown = md.render(component.slotMarkdown)
         // If DOMPurify is loaded, apply it now
         if (window['DOMPurify']) component.slotMarkdown = window['DOMPurify'].sanitize(component.slotMarkdown)
-        // Set the component content to the msg.payload or the slot property
-        if (component.slotMarkdown !== undefined && component.slotMarkdown !== null && component.slotMarkdown !== '') {
-            el.innerHTML += component.slotMarkdown ? component.slotMarkdown : ui.payload
-        }
+        // Set the component content to the the converted slotMarkdown property
+        el.innerHTML = component.slotMarkdown
     }
 
     /** Attach a new remote script to the end of HEAD synchronously
@@ -980,70 +981,126 @@ export const Uib = class Uib {
 
     } // --- end of loadui
 
+    /** Enhance an HTML element that is being composed with ui data
+     *  such as ID, attribs, event handlers, custom props, etc.
+     * @param {HTMLElement} el HTML Element to enhance
+     * @param {*} comp Individual uibuilder ui component spec
+     */
+    _uiComposeComponent(el, comp) {
+        // Add attributes
+        if (comp.attributes) {
+            Object.keys(comp.attributes).forEach((attrib) => {
+                el.setAttribute(attrib, comp.attributes[attrib])
+            })
+        }
+
+        // ID if set
+        if (comp.id) el.setAttribute('id', comp.id)
+
+        // Add event handlers
+        if (comp.events) {
+            Object.keys(comp.events).forEach((type) => {
+                // @ts-ignore  I'm forever getting this wrong!
+                if (type.toLowerCase === 'onclick') type = 'click'
+                // Add the event listener - hate eval but it is the only way I can get it to work
+                try {
+                    el.addEventListener(type, (evt) => {
+                        // Use new Function to ensure that esbuild works: https://esbuild.github.io/content-types/#direct-eval
+                        (new Function('evt', `${comp.events[type]}(evt)`))(evt) // eslint-disable-line no-new-func
+                    })
+                    // newEl.setAttribute( 'onClick', `${comp.events[type]}()` )
+                } catch (err) {
+                    log('error', 'Uib:_uiComposeComponent', `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)()
+                }
+            })
+        }
+
+        // Add custom properties to the dataset
+        if (comp.properties) {
+            Object.keys(comp.properties).forEach((prop) => {
+                // TODO break a.b into sub properties
+                el[prop] = comp.properties[prop]
+            })
+        }
+
+        //#region Add Slot content to innerHTML
+        if (comp.slot) {
+            this.replaceSlot(el, comp)
+        }
+        //#endregion
+
+        // TODO Add multi-slot capability
+
+        //#region Add Slot Markdown content to innerHTML IF marked library is available
+        if (comp.slotMarkdown) {
+            this.replaceSlotMarkdown(el, comp)
+        }
+        //#endregion
+    }
+
+    /** Extend an HTML Element with appended elements using ui components
+     * NOTE: This fn follows a strict hierarchy of added components.
+     * @param {HTMLElement} parentEl The parent HTML Element we want to append to
+     * @param {*} components The ui component(s) we want to add
+     */
+    _uiExtendEl(parentEl, components) {
+        components.forEach( (compToAdd, i) => {
+            const newEl = document.createElement(compToAdd.type)
+            this._uiComposeComponent(newEl, compToAdd)
+            parentEl.appendChild(newEl)
+            // If nested components, go again - but don't pass payload to sub-components
+            if (compToAdd.components) {
+                this._uiExtendEl(newEl, compToAdd.components)
+            }
+        } )
+    }
+
+    // Vue dynamic inserts Don't really work ...
+    // _uiAddVue(ui, isRecurse) {
+
+    //     // must be Vue
+    //     // must have only 1 root element
+    //     const compToAdd = ui.components[0]
+    //     const newEl = document.createElement(compToAdd.type)
+
+    //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
+    //     this._uiComposeComponent(newEl, compToAdd)
+
+    //     // If nested components, go again - but don't pass payload to sub-components
+    //     if (compToAdd.components) {
+    //         this._uiExtendEl(newEl, compToAdd.components)
+    //     }
+
+    //     console.log('MAGIC: ', this.magick, newEl, newEl.outerHTML)
+    //     this.set('magick', newEl.outerHTML)
+
+    //     // if (compToAdd.id) newEl.setAttribute('ref', compToAdd.id)
+    //     // if (elParent.id) newEl.setAttribute('data-parent', elParent.id)
+    // }
+
     // TODO Add check if ID already exists
     // TODO Allow single add without using components array
     /** Handle incoming msg._ui add requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+     * @param {boolean} isRecurse Is this a recursive call?
      */
-    _uiAdd(ui) {
+    _uiAdd(ui, isRecurse) {
         log('trace', 'Uib:_uiManager:add', 'Starting _uiAdd')()
 
-        // console.log('>> ui >> ', ui)
+        // Vue dynamic inserts Don't really work ...
+        // if (this.#isVue && !isRecurse) {
+        //     this._uiAddVue(ui, false)
+        //     return
+        // }
 
-        ui.components.forEach((compToAdd) => {
+        ui.components.forEach((compToAdd, i) => {
             // Create the new component
             const newEl = document.createElement(compToAdd.type)
 
-            // Add attributes
-            if (compToAdd.attributes) {
-                Object.keys(compToAdd.attributes).forEach((attrib) => {
-                    newEl.setAttribute(attrib, compToAdd.attributes[attrib])
-                })
-            }
+            if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
 
-            // ID if set
-            if (compToAdd.id) newEl.setAttribute('id', compToAdd.id)
-
-            // Add event handlers
-            if (compToAdd.events) {
-                Object.keys(compToAdd.events).forEach((type) => {
-                    // @ts-ignore  I'm forever getting this wrong!
-                    if (type.toLowerCase === 'onclick') type = 'click'
-                    // Add the event listener - hate eval but it is the only way I can get it to work
-                    try {
-                        newEl.addEventListener(type, (evt) => {
-                            // Use new Function to ensure that esbuild works: https://esbuild.github.io/content-types/#direct-eval
-                            (new Function('evt', `${compToAdd.events[type]}(evt)`))(evt) // eslint-disable-line no-new-func
-                        })
-                        // newEl.setAttribute( 'onClick', `${compToAdd.events[type]}()` )
-                    } catch (err) {
-                        log('error', 'Uib:_uiAdd', `Add event '${type}' for element '${compToAdd.type}': Cannot add event handler. ${err.message}`)()
-                    }
-                })
-            }
-
-            // Add custom properties to the dataset
-            if (compToAdd.properties) {
-                Object.keys(compToAdd.properties).forEach((prop) => {
-                    // TODO break a.b into sub properties
-                    newEl[prop] = compToAdd.properties[prop]
-                })
-            }
-
-            //#region Add Slot content to innerHTML
-            if (!compToAdd.slot) compToAdd.slot = ui.payload
-            if (compToAdd.slot) {
-                this.replaceSlot(ui, newEl, compToAdd)
-            }
-            //#endregion
-
-            // TODO Add multi-slot capability
-
-            //#region Add Slot Markdown content to innerHTML IF marked library is available
-            if (compToAdd.slotMarkdown) {
-                this.replaceSlotMarkdown(ui, newEl, compToAdd)
-            }
-            //#endregion
+            // Updates the newEl and maybe the ui
+            this._uiComposeComponent(newEl, compToAdd)
 
             // Where to add the new element?
             let elParent
@@ -1051,15 +1108,13 @@ export const Uib = class Uib {
                 elParent = compToAdd.parentEl
             } else if (ui.parentEl) {
                 elParent = ui.parentEl
-            } else if (compToAdd.parent || ui.parent) {
-                const parent = compToAdd.parent ? compToAdd.parent : ui.parent
-                elParent = document.querySelector(parent)
-                if (!elParent) {
-                    log('info', 'Uib:_uiAdd', `Parent element '${parent}' not found, adding to body`)()
-                    elParent = document.querySelector('body')
-                }
-            } else {
-                log('info', 'Uib:_uiAdd', 'No parent specified, adding to body')()
+            } else if (compToAdd.parent) {
+                elParent = document.querySelector(compToAdd.parent)
+            } else if (ui.parent) {
+                elParent = document.querySelector(ui.parent)
+            }
+            if (!elParent) {
+                log('info', 'Uib:_uiAdd', 'No parent found, adding to body')()
                 elParent = document.querySelector('body')
             }
 
@@ -1068,11 +1123,12 @@ export const Uib = class Uib {
 
             // If nested components, go again - but don't pass payload to sub-components
             if (compToAdd.components) {
-                this._uiAdd({
-                    method: ui.method,
-                    parentEl: newEl,
-                    components: compToAdd.components,
-                })
+                // this._uiAdd({
+                //     method: ui.method,
+                //     parentEl: newEl,
+                //     components: compToAdd.components,
+                // }, true)
+                this._uiExtendEl(newEl, compToAdd.components)
             }
         })
 
@@ -1167,13 +1223,13 @@ export const Uib = class Uib {
             if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload
             if (compToUpd.slot) {
                 elToUpd.forEach( el => {
-                    this.replaceSlot(ui, el, compToUpd)
+                    this.replaceSlot(el, compToUpd)
                 })
             }
 
             if (compToUpd.slotMarkdown) {
                 elToUpd.forEach( el => {
-                    this.replaceSlotMarkdown(ui, el, compToUpd)
+                    this.replaceSlotMarkdown(el, compToUpd)
                 })
             }
 
@@ -1270,7 +1326,7 @@ export const Uib = class Uib {
 
             switch (ui.method) {
                 case 'add': {
-                    this._uiAdd(ui)
+                    this._uiAdd(ui, false)
                     break
                 }
 
@@ -1919,6 +1975,7 @@ export const Uib = class Uib {
 
         /** httpNodeRoot (to set path) */
         if ('uibuilder-webRoot' in this.cookies) {
+            // @ts-ignore
             this.httpNodeRoot = this.cookies['uibuilder-webRoot']
             log('trace', 'Uib:constructor', `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)()
         } else {
@@ -1996,6 +2053,9 @@ export const Uib = class Uib {
         } else {
             log('error', 'Uib:start', 'Start completed. ERROR: Socket.IO client library NOT LOADED.')()
         }
+
+        // Check if Vue is present (used for dynamic UI processing)
+        if (window['Vue']) this.#isVue = true
 
     }
 
