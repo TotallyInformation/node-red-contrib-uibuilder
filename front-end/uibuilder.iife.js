@@ -2404,7 +2404,7 @@
     }).join("/");
     return url2.replace("//", "/");
   }
-  var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _a;
+  var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _isVue, _timerid, _MsgHandler, _a;
   var Uib = (_a = class {
     constructor() {
       __privateAdd(this, _connectedNum, 0);
@@ -2412,6 +2412,7 @@
       __privateAdd(this, _pingInterval, void 0);
       __privateAdd(this, _propChangeCallbacks, {});
       __privateAdd(this, _msgRecvdByTopicCallbacks, {});
+      __privateAdd(this, _isVue, false);
       __privateAdd(this, _timerid, null);
       __privateAdd(this, _MsgHandler, void 0);
       __publicField(this, "_socket");
@@ -2692,15 +2693,17 @@
         msg._ui = json;
       this._uiManager(msg);
     }
-    replaceSlot(ui, el, component) {
+    replaceSlot(el, component) {
+      if (!component.slot)
+        return;
       if (window["DOMPurify"])
         component.slot = window["DOMPurify"].sanitize(component.slot);
-      if (component.slot !== void 0 && component.slot !== null && component.slot !== "") {
-        el.innerHTML = component.slot ? component.slot : ui.payload;
-      }
+      el.innerHTML = component.slot;
     }
-    replaceSlotMarkdown(ui, el, component) {
+    replaceSlotMarkdown(el, component) {
       if (!window["markdownit"])
+        return;
+      if (!component.slotMarkdown)
         return;
       const opts = {
         html: true,
@@ -2722,9 +2725,7 @@
       component.slotMarkdown = md.render(component.slotMarkdown);
       if (window["DOMPurify"])
         component.slotMarkdown = window["DOMPurify"].sanitize(component.slotMarkdown);
-      if (component.slotMarkdown !== void 0 && component.slotMarkdown !== null && component.slotMarkdown !== "") {
-        el.innerHTML += component.slotMarkdown ? component.slotMarkdown : ui.payload;
-      }
+      el.innerHTML = component.slotMarkdown;
     }
     loadScriptSrc(url2) {
       const newScript = document.createElement("script");
@@ -2838,66 +2839,73 @@
         log("warn", "Uib:loadui:catch", "Error. ", err)();
       });
     }
-    _uiAdd(ui) {
-      log("trace", "Uib:_uiManager:add", "Starting _uiAdd")();
-      ui.components.forEach((compToAdd) => {
+    _uiComposeComponent(el, comp) {
+      if (comp.attributes) {
+        Object.keys(comp.attributes).forEach((attrib) => {
+          el.setAttribute(attrib, comp.attributes[attrib]);
+        });
+      }
+      if (comp.id)
+        el.setAttribute("id", comp.id);
+      if (comp.events) {
+        Object.keys(comp.events).forEach((type) => {
+          if (type.toLowerCase === "onclick")
+            type = "click";
+          try {
+            el.addEventListener(type, (evt) => {
+              new Function("evt", `${comp.events[type]}(evt)`)(evt);
+            });
+          } catch (err) {
+            log("error", "Uib:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+          }
+        });
+      }
+      if (comp.properties) {
+        Object.keys(comp.properties).forEach((prop) => {
+          el[prop] = comp.properties[prop];
+        });
+      }
+      if (comp.slot) {
+        this.replaceSlot(el, comp);
+      }
+      if (comp.slotMarkdown) {
+        this.replaceSlotMarkdown(el, comp);
+      }
+    }
+    _uiExtendEl(parentEl, components) {
+      components.forEach((compToAdd, i2) => {
         const newEl = document.createElement(compToAdd.type);
-        if (compToAdd.attributes) {
-          Object.keys(compToAdd.attributes).forEach((attrib) => {
-            newEl.setAttribute(attrib, compToAdd.attributes[attrib]);
-          });
+        this._uiComposeComponent(newEl, compToAdd);
+        parentEl.appendChild(newEl);
+        if (compToAdd.components) {
+          this._uiExtendEl(newEl, compToAdd.components);
         }
-        if (compToAdd.id)
-          newEl.setAttribute("id", compToAdd.id);
-        if (compToAdd.events) {
-          Object.keys(compToAdd.events).forEach((type) => {
-            if (type.toLowerCase === "onclick")
-              type = "click";
-            try {
-              newEl.addEventListener(type, (evt) => {
-                new Function("evt", `${compToAdd.events[type]}(evt)`)(evt);
-              });
-            } catch (err) {
-              log("error", "Uib:_uiAdd", `Add event '${type}' for element '${compToAdd.type}': Cannot add event handler. ${err.message}`)();
-            }
-          });
-        }
-        if (compToAdd.properties) {
-          Object.keys(compToAdd.properties).forEach((prop) => {
-            newEl[prop] = compToAdd.properties[prop];
-          });
-        }
-        if (!compToAdd.slot)
+      });
+    }
+    _uiAdd(ui, isRecurse) {
+      log("trace", "Uib:_uiManager:add", "Starting _uiAdd")();
+      ui.components.forEach((compToAdd, i2) => {
+        const newEl = document.createElement(compToAdd.type);
+        if (!compToAdd.slot && ui.payload)
           compToAdd.slot = ui.payload;
-        if (compToAdd.slot) {
-          this.replaceSlot(ui, newEl, compToAdd);
-        }
-        if (compToAdd.slotMarkdown) {
-          this.replaceSlotMarkdown(ui, newEl, compToAdd);
-        }
+        this._uiComposeComponent(newEl, compToAdd);
         let elParent;
         if (compToAdd.parentEl) {
           elParent = compToAdd.parentEl;
         } else if (ui.parentEl) {
           elParent = ui.parentEl;
-        } else if (compToAdd.parent || ui.parent) {
-          const parent = compToAdd.parent ? compToAdd.parent : ui.parent;
-          elParent = document.querySelector(parent);
-          if (!elParent) {
-            log("info", "Uib:_uiAdd", `Parent element '${parent}' not found, adding to body`)();
-            elParent = document.querySelector("body");
-          }
-        } else {
-          log("info", "Uib:_uiAdd", "No parent specified, adding to body")();
+        } else if (compToAdd.parent) {
+          elParent = document.querySelector(compToAdd.parent);
+        } else if (ui.parent) {
+          elParent = document.querySelector(ui.parent);
+        }
+        if (!elParent) {
+          log("info", "Uib:_uiAdd", "No parent found, adding to body")();
           elParent = document.querySelector("body");
         }
         elParent.appendChild(newEl);
         if (compToAdd.components) {
-          this._uiAdd({
-            method: ui.method,
-            parentEl: newEl,
-            components: compToAdd.components
-          });
+          this._uiExtendEl(newEl, compToAdd.components);
         }
       });
     }
@@ -2963,12 +2971,12 @@
           compToUpd.slot = compToUpd.payload;
         if (compToUpd.slot) {
           elToUpd.forEach((el) => {
-            this.replaceSlot(ui, el, compToUpd);
+            this.replaceSlot(el, compToUpd);
           });
         }
         if (compToUpd.slotMarkdown) {
           elToUpd.forEach((el) => {
-            this.replaceSlotMarkdown(ui, el, compToUpd);
+            this.replaceSlotMarkdown(el, compToUpd);
           });
         }
         if (compToUpd.components) {
@@ -3037,7 +3045,7 @@
         );
         switch (ui.method) {
           case "add": {
-            this._uiAdd(ui);
+            this._uiAdd(ui, false);
             break;
           }
           case "remove": {
@@ -3383,8 +3391,10 @@ ioPath: ${this.ioPath}`)();
       } else {
         log("error", "Uib:start", "Start completed. ERROR: Socket.IO client library NOT LOADED.")();
       }
+      if (window["Vue"])
+        __privateSet(this, _isVue, true);
     }
-  }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
+  }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _isVue = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
     version,
     type: "module",
     displayName: "uibuilder"
