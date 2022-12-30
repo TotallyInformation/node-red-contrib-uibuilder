@@ -1,8 +1,10 @@
 /** Default Styles for uibuilder
  * see https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
+ * 
+ * @version: 1.17 2022-12-30
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
- * @created: 2022-01-30
+ * @created: 2022-05-02
  *
  * NOTES:
  * - Watch out for the order of loading of style sheets!
@@ -242,6 +244,9 @@ a:visited {
     padding:5px 10px;
     font-family: Consolas, "ui-monospace", "Lucida Console", monospace;
     white-space: pre;
+    max-width: 99%;
+    max-height: 33em;
+    overflow: scroll;
 }
 .syntax-highlight > .key {color:#ffbf35}
 .syntax-highlight > .string {color:#5dff39;}

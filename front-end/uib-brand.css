@@ -1,8 +1,5 @@
 /** Default Styles for uibuilder - Light & Dark options
  *
- * ! WARNING: THIS VERSION IS NON-NORMATIVE !
- * ! THE LIVE VERSION WILL BE PART OF node-red-contrib-uibuilder v5.x !
- *
  * TODO: Add darker/lighter shades for variant colours for headers, etc.
  *
  * https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
@@ -11,7 +8,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 1.16 2022-05-22
+ * @version: 1.17 2022-12-30
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -483,6 +480,7 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
     cursor: pointer;
     text-align: center;
     transition: background 250ms ease-in-out, transform 150ms ease;
+    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
     border-radius: 8px;
@@ -599,6 +597,9 @@ code {
     padding:5px 10px;
     font-family: Consolas, "ui-monospace", "Lucida Console", monospace;
     white-space: pre;
+    max-width: 99%;
+    max-height: 33em;
+    overflow: scroll;
 }
 .syntax-highlight > .key {color:#ffbf35}
 .syntax-highlight > .string {color:#5dff39;}
