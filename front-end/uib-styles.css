@@ -240,13 +240,16 @@ a:visited {
 /*#region  Colours for Syntax Highlighted pre's */
 .syntax-highlight {
     color:white;
+    display:block;
     background-color:black;
     padding:5px 10px;
     font-family: Consolas, "ui-monospace", "Lucida Console", monospace;
+    font-size: smaller;
     white-space: pre;
-    max-width: 99%;
-    max-height: 33em;
-    overflow: scroll;
+    width: 99%;
+    height: 22em;
+    overflow: auto;
+    resize: both;
 }
 .syntax-highlight > .key {color:#ffbf35}
 .syntax-highlight > .string {color:#5dff39;}
