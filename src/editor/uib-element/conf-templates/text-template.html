@@ -1,0 +1,15 @@
+<h3>Custom settings for the "Text output with label" type</h3>
+<div aria-label="Wrapper element (optional)" class="form-row" title="Optional wrapping HTML element. Leave blank for no wrapper">
+    <label for="conf-text-wrapper"><i class="fa fa-i-cursor"></i> Wrap El</label>
+    <input type="text" id="conf-text-wrapper" data-uib-el-prop="wrapper" placeholder="Optional wrapping HTML element. Blank for none">
+</div>
+<div aria-label="Label Text (optional)" class="form-row" title="Leave blank for no label">
+    <label for="conf-text-label"><i class="fa fa-i-cursor"></i> Label</label>
+    <input type="text" id="conf-text-label" data-uib-el-prop="label" placeholder="Optional text label. Blank for none">
+</div>
+<script>
+    console.log('Text template loaded')
+    window['uibElementConfigFns'] = {
+        type: 'text',
+    }
+</script>

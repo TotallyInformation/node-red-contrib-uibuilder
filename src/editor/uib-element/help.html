@@ -1,0 +1,94 @@
+
+<p>
+    <b>EXPERIMENTAL</b> Node demonstrating a way of building a ui element from a node.<br>
+    <b>This node requires the "new" front-end client library</b> (either the IIFE or ESM version).
+</p>
+<p>
+    Please try out the example in the import library.
+</p>
+
+<h3>Inputs</h3>
+<dl class="message-properties">
+    <dt>payload <span class="property-type">array | object</span></dt>
+    <dd>
+        The array or object that defines the output.<br>
+    </dd>
+
+    <dt class="optional">mode <span class="property-type">string</span></dt>
+    <dd> Optionally, set to "remove" which will remove the list from the UI. Payload is not needed in this case, it will be ignored.</dd>
+
+    <dt class="optional">topic <span class="property-type">string</span></dt>
+    <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+</dl>
+
+<h3>Outputs</h3>
+<ol class="node-ports">
+
+    <li>Element Configuration (Optional output)
+        <dl class="message-properties">
+            <dt>_uib <span class="property-type">object</span></dt>
+            <dd>
+                <code>msg._uib.originator</code> contains the node id of the originating uib-element node.
+            </dd>
+
+            <dt>_ui <span class="property-type">object</span></dt>
+            <dd>
+                The _ui configuration properties that defines the creation of the element.<br>
+                Use this in your own flows or in a JSON input for an initial setup of the UI if desired.
+            </dd>
+
+            <dt>topic <span class="property-type">string</span></dt>
+            <dd>
+                The input topic.
+            </dd>
+    </li>
+
+</ol>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt>URL <span class="property-type">selection</span></dt>
+    <dd>The uibuilder instance to connect to.</dd>
+
+    <dt>El ID <span class="property-type">string</span></dt>
+    <dd>
+        The HTML element id of the resulting HMTL tag.<br>
+        This is required otherwise later updates and removals cannot happen.
+    </dd>
+
+    <dt>Type <span class="property-type">selection</span></dt>
+    <dd>
+        What kind of element or component to create?<br>
+        <ul>
+            <li>TBC</li>
+        </ul>
+    </dd>
+
+    <dt>Parent <span class="property-type">string</span></dt>
+    <dd>
+        A CSS selector that the new list will be attached to.
+        E.g. "div#myid" or just "#myid" would attach the element as a child of a DIV tag with an id of <code>myid</code>.<br>
+        "p.myclass" would attach the list as a child of a P tag that has a class including <code>myclass</code>.
+        <p>
+            If a parent is not specified, the element will be added as a new child of the <code>body</code> tag. (e.g. the end of the UI)
+        </p>
+    </dd>
+
+    <dt>Output instead of send <span class="property-type">string</span></dt>
+    <dd>
+        By default, output is sent to the linked uibuilder node and therefore to any connected clients.<br>
+        Selecting this flag, an output port is added to the node. The output contains the standard msg._ui object.
+        You can use that in your own flows or loaded JSON configuration. In that case, the msg is not forwarded to clients.
+    </dd>
+
+    <dt>Name <span class="property-type">string</span></dt>
+    <dd>A short description shown in the admin interface</dd>
+</dl>
+
+<h3>Details</h3>
+<p>
+    You define the type of element and the parent uibuilder node and then send a payload to the node to create/update the element.
+</p>
+<p>
+    To empty the cache and remove from the connected clients, send a msg containing a <code>mode</code> property set to "remove".
+</p>

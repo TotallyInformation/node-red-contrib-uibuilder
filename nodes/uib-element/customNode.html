@@ -1,0 +1,578 @@
+<!--
+    Copyright (c) 2022-2023 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<template id="text-template">
+    <h3>Custom settings for the "Text output with label" type</h3>
+    <div aria-label="Wrapper element (optional)" class="form-row" title="Optional wrapping HTML element. Leave blank for no wrapper">
+        <label for="conf-text-wrapper"><i class="fa fa-i-cursor"></i> Wrap El</label>
+        <input type="text" id="conf-text-wrapper" data-uib-el-prop="wrapper" placeholder="Optional wrapping HTML element. Blank for none">
+    </div>
+    <div aria-label="Label Text (optional)" class="form-row" title="Leave blank for no label">
+        <label for="conf-text-label"><i class="fa fa-i-cursor"></i> Label</label>
+        <input type="text" id="conf-text-label" data-uib-el-prop="label" placeholder="Optional text label. Blank for none">
+    </div>
+    <script>
+        console.log('Text template loaded')
+        window['uibElementConfigFns'] = {
+            type: 'text',
+        }
+    </script>
+    
+</template>
+
+<template id="table-template">
+    <h3>Custom settings for the "Table" type</h3>
+    <div aria-label="Wrapping HTML element. Leave blank for no wrapper." class="form-row">
+        <label for="conf-text-wrapper"><i class="fa fa-i-cursor"></i> Wrap El</label>
+        <input type="text" id="conf-text-wrapper" data-uib-el-prop="wrapper" placeholder="Optional wrapping HTML element. Blank for none">
+    </div>
+    <div aria-label="Label Text. Leave blank for no label." class="form-row">
+        <label for="conf-text-label"><i class="fa fa-i-cursor"></i> Label</label>
+        <input type="text" id="conf-text-label" data-uib-el-prop="label" placeholder="Optional text label. Blank for none">
+    </div>
+    <div aria-label="Caption Text. Leave blank for no caption." class="form-row">
+        <label for="conf-text-caption"><i class="fa fa-i-cursor"></i> Label</label>
+        <input type="text" id="conf-text-caption" data-uib-el-prop="caption" placeholder="Optional table caption. Blank for none">
+    </div>
+    
+    <script>
+        console.log('Table template loaded')
+        window['uibElementConfigFns'] = {
+            type: 'table',
+        }
+        // uibElementConfigFns.myvar = 'hi'
+    </script>
+    
+</template>
+
+<style>
+    #uib-el *[aria-label] {
+        position:relative;
+    }
+    #uib-el *[aria-label]:after {
+        content: attr(aria-label);
+        position:absolute;
+        top:100%;left:50px;
+        box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--red-ui-form-input-border-color);
+        padding: 10px;
+        z-index: 999;
+        background-color: var(--red-ui-popover-background);
+        color: var(--red-ui-popover-color);
+        max-width: 350px;
+        text-decoration: none;
+        text-align: center;
+        border-radius: 6px;
+        white-space: break-spaces;
+        
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.5s ease-out;
+    }
+    #uib-el *[aria-label]:hover:after {
+        visibility: visible;
+        opacity: 1;
+        transition: all 0.5s ease-in 0.2s;
+    }
+</style>
+
+<script type="text/html" class="uib-tooltip" data-template-name="uib-element">
+<div id="uib-el">
+
+    <div class="form-row func-tabs-row">
+        <ul style="min-width: 450px; margin-bottom: 20px;" id="el-tabs"></ul>
+    </div>
+
+    <div id="el-tabs-content">
+
+        <div id="el-tab-main" style="display:none">
+            <div aria-label="uibuilder URL to associate with" class="form-row">
+                <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+                <input type="text" id="node-input-url" style="width:70%;"></input>
+            </div>
+            
+            <div aria-label="The HMTL id to apply to the created element" class="form-row">
+                <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> El ID</label>
+                <input type="text" id="node-input-elementid" placeholder="Must be a valid HTML element id">
+            </div>
+            
+            <div aria-label="The type of element or component to add to the UI" class="form-row">
+                <label for="node-input-elementtype"><i class="fa fa-code"></i> Type</label>
+                <input type="text" id="node-input-elementtype" style="width:70%;"></input>
+            </div>
+            
+            <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;If blank, will be added to #more or body" class="form-row">
+                <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
+                <input type="text" id="node-input-parent" placeholder="Optional. CSS Selector">
+            </div>
+            
+            <div aria-label="Wrapping HTML element type. Leave blank for no wrapper." class="form-row">
+                <label for="node-input-wrapper"><i class="fa fa-i-cursor"></i> Wrap El</label>
+                <input type="text" id="node-input-wrapper" placeholder="Optional wrapping HTML element type. Blank for none">
+            </div>
+            
+            <div aria-label="Outputs the configuration instead of sending it to the front-end" class="form-row">
+                <input type="checkbox" id="node-input-passthrough" style="display:inline-block; width:15px; vertical-align:baseline;">
+                <label for="node-input-passthrough" style="width: 90%;">Output instead of send?</label>
+            </div>
+            
+            <div aria-label="Cache the last sent msg. Replay for new clients" class="form-row">
+                <input type="checkbox" id="node-input-cacheOn" style="display: inline-block; width: auto; vertical-align: top;" checked>
+                <label for="node-input-cacheOn" style="width: 90%;">Use the cache?</label>
+            </div>
+            <div aria-label="Select which context store and variable to use" class="form-row">
+                <label for="node-input-storeName" style="width:25%"><i class="fa fa-database"></i> Store</label>
+                <label for="node-input-storeContext" style="width:25%"><i class="fa fa-database"></i> Type</label>
+                <label for="node-input-varName" style="width:41%"><i class="fa fa-tag"></i> Variable Name</label><br>
+                <input type="text" id="node-input-storeName" style="width:25%"></input>
+                <input type="text" id="node-input-storeContext" style="width:25%"></input>
+                <input type="text" id="node-input-varName" value="uib_cache" aria-label="Can only change if Type is not 'Node'" placeholder="REQD: Context variable name" style="width:41%">
+            </div>
+            <div aria-label="Only replay cache if client as actually new. A new client comes from a page-load, not a reconnection" class="form-row">
+                <input type="checkbox" id="node-input-newcache" style="display: inline-block; width: auto; vertical-align: top;" checked>
+                <label for="node-input-newcache" style="width: 90%;">Only replay cache when client is really new</label>
+            </div>
+            
+            <hr>
+            
+            <div aria-label="Node name (descriptive only)" class="form-row">
+                <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+                <input type="text" id="node-input-name">
+            </div>
+            
+            <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
+                <p>
+                    With no <code>msg.mode</code> set, sending another message will 
+                    automatically remove and replace the element.
+                </p>
+                <!-- <p>
+                    In order to <b>update</b> an existing element rather than replacing it,
+                    make sure to set <code>msg.mode</code> to "update". In that case,
+                    Whatever you send will be added to the element instead of replacing it.
+                </p> -->
+                <p>
+                    To <b>remove</b> an existing element, set <code>msg.mode</code> to "remove".
+                    This will also clear the cache.
+                </p>
+                <p>
+                    If node status is "Data Registered", when a new client connects to uibuilder,
+                    it will immediately be sent a copy of the data so that all connected clients
+                    have the same display.
+                </p>
+                <p>
+                    If you need to do more complex tasks such as update specific sub-elements,
+                    set the node to just output the configuration and then use the documentation to
+                    tweak it accordingly.
+                </p>
+                <p>
+                    <b>NOTE:</b> This node only works if you are using the new <i>ESM</i> or <i>IIFE</i> builds of the uibuilder front-end
+                    client library. It does not work with the previous <code>uibuilderfe</code> library.
+                </p>    
+            </div>
+        </div>
+
+        <div id="el-tab-conf" style="display:none"><!-- Content loaded when tab changes --></div>
+    </div>
+    
+</div>
+
+</script>
+
+<script type="text/html" data-help-name="uib-element">
+
+<p>
+    <b>EXPERIMENTAL</b> Node demonstrating a way of building a ui element from a node.<br>
+    <b>This node requires the "new" front-end client library</b> (either the IIFE or ESM version).
+</p>
+<p>
+    Please try out the example in the import library.
+</p>
+
+<h3>Inputs</h3>
+<dl class="message-properties">
+    <dt>payload <span class="property-type">array | object</span></dt>
+    <dd>
+        The array or object that defines the output.<br>
+    </dd>
+
+    <dt class="optional">mode <span class="property-type">string</span></dt>
+    <dd> Optionally, set to "remove" which will remove the list from the UI. Payload is not needed in this case, it will be ignored.</dd>
+
+    <dt class="optional">topic <span class="property-type">string</span></dt>
+    <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+</dl>
+
+<h3>Outputs</h3>
+<ol class="node-ports">
+
+    <li>Element Configuration (Optional output)
+        <dl class="message-properties">
+            <dt>_uib <span class="property-type">object</span></dt>
+            <dd>
+                <code>msg._uib.originator</code> contains the node id of the originating uib-element node.
+            </dd>
+
+            <dt>_ui <span class="property-type">object</span></dt>
+            <dd>
+                The _ui configuration properties that defines the creation of the element.<br>
+                Use this in your own flows or in a JSON input for an initial setup of the UI if desired.
+            </dd>
+
+            <dt>topic <span class="property-type">string</span></dt>
+            <dd>
+                The input topic.
+            </dd>
+    </li>
+
+</ol>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt>URL <span class="property-type">selection</span></dt>
+    <dd>The uibuilder instance to connect to.</dd>
+
+    <dt>El ID <span class="property-type">string</span></dt>
+    <dd>
+        The HTML element id of the resulting HMTL tag.<br>
+        This is required otherwise later updates and removals cannot happen.
+    </dd>
+
+    <dt>Type <span class="property-type">selection</span></dt>
+    <dd>
+        What kind of element or component to create?<br>
+        <ul>
+            <li>TBC</li>
+        </ul>
+    </dd>
+
+    <dt>Parent <span class="property-type">string</span></dt>
+    <dd>
+        A CSS selector that the new list will be attached to.
+        E.g. "div#myid" or just "#myid" would attach the element as a child of a DIV tag with an id of <code>myid</code>.<br>
+        "p.myclass" would attach the list as a child of a P tag that has a class including <code>myclass</code>.
+        <p>
+            If a parent is not specified, the element will be added as a new child of the <code>body</code> tag. (e.g. the end of the UI)
+        </p>
+    </dd>
+
+    <dt>Output instead of send <span class="property-type">string</span></dt>
+    <dd>
+        By default, output is sent to the linked uibuilder node and therefore to any connected clients.<br>
+        Selecting this flag, an output port is added to the node. The output contains the standard msg._ui object.
+        You can use that in your own flows or loaded JSON configuration. In that case, the msg is not forwarded to clients.
+    </dd>
+
+    <dt>Name <span class="property-type">string</span></dt>
+    <dd>A short description shown in the admin interface</dd>
+</dl>
+
+<h3>Details</h3>
+<p>
+    You define the type of element and the parent uibuilder node and then send a payload to the node to create/update the element.
+</p>
+<p>
+    To empty the cache and remove from the connected clients, send a msg containing a <code>mode</code> property set to "remove".
+</p>
+
+</script>
+
+<script type="text/javascript">
+    /* eslint-disable strict, sonarjs/no-duplicate-string */
+    
+    // Isolate this code
+    (function () {
+        'use strict'
+    
+        /** Module name must match this nodes html file @constant {string} moduleName */
+        const moduleName = 'uib-element'
+        /** Node's label @constant {string} paletteCategory */
+        const nodeLabel = moduleName
+        /** Node's palette category @constant {string} paletteCategory */
+        const paletteCategory = 'uibuilder'
+        /** Node's background color @constant {string} paletteColor */
+        const paletteColor = '#F6E0F8' // '#E6E0F8'
+    
+        /** Get all of the current uibuilder URL's */
+        function getUrls() {
+            $.ajax({
+                type: 'GET',
+                async: false,
+                dataType: 'json',
+                url: './uibuilder/admin/dummy',
+                data: {
+                    'cmd': 'listinstances',
+                },
+                success: function (instances) {
+                    const urls = []
+                    Object.keys(instances).forEach((val, i, arr) => {
+                        urls.push({ value: instances[val], label: instances[val] })
+                        // $('#node-input-url').append($('<option>', {
+                        //     value: instances[val],
+                        //     text: instances[val],
+                        // }))
+                    })
+    
+                    $('#node-input-url').typedInput({
+                        types: [
+                            {
+                                value: 'urls',
+                                options: urls,
+                            }
+                        ]
+                    })
+                }
+            })
+    
+        } // ---- end of getUrls ---- //
+    
+        /** Populate the store dropdown */
+        function populateUseStoreDropdown() {
+            const storeNames = []
+    
+            RED.settings.context.stores.forEach(store => {
+                storeNames.push({ value: store, label: store })
+            })
+    
+            $('#node-input-storeName').typedInput({
+                types: [
+                    {
+                        value: 'storeNames',
+                        options: storeNames,
+                    }
+                ]
+            })
+        }
+    
+        /** Prep for edit
+         * @param {*} node A node instance as seen from the Node-RED Editor
+         */
+        function onEditPrepare(node) {
+            // initial checkbox states
+            if (!node.passthrough) node.passthrough = false
+            $('#node-input-passthrough')
+                // Initial setting
+                .prop('checked', node.passthrough)
+                // If the setting changes, change the number of output ports
+                .on('change', function passthroughChange() {
+                    if ($(this).prop('checked') === true) {
+                        node.outputs = 1
+                    } else {
+                        node.outputs = 0
+                    }
+                })
+    
+            // Initial conf data
+            if (!node.confData) node.confData = {}
+    
+            // Define element types for drop-down
+            $('#node-input-elementtype').typedInput({
+                types: [
+                    {
+                        value: 'elementType',
+                        options: [
+                            // @ts-expect-error
+                            { value: 'text', label: 'Text output with label' },
+                            // @ts-expect-error
+                            { value: 'table', label: 'Table' },
+                            // @ts-expect-error
+                            { value: 'ul', label: 'Unordered (ul)' },
+                            // @ts-expect-error
+                            { value: 'ol', label: 'Ordered (ol)' },
+                            // @ts-expect-error
+                            { value: 'dl', label: 'Definition (dl)' },
+                        ]
+                    }
+                ]
+            })
+    
+            // One-day maybe, request put in, doesn't currently work since context isn't an option
+            // $('#node-input-store').typedInput({
+            //     type: 'str',
+            //     default: 'node',
+            //     types: ['context', 'flow', 'global'],
+            //     typeField: '#node-input-store-type'
+            // })
+            $('#node-input-storeContext').typedInput({ // eslint-disable-line sonarjs/no-duplicate-string
+                type: 'contextType',
+                types: [
+                    {
+                        value: 'contextType',
+                        options: [
+                            // @ts-expect-error
+                            { value: 'context', label: 'Node' },
+                            // @ts-expect-error
+                            { value: 'flow', label: 'Flow' },
+                            // @ts-expect-error
+                            { value: 'global', label: 'Global' },
+                        ]
+                    }
+                ]
+            })
+    
+            $('#node-input-storeContext').on('change', function () {
+                if ($(this).val() === 'context') {
+                    $('#node-input-varName').val('uib_el').prop('disabled', true)
+                } else {
+                    $('#node-input-varName').val(`uib_el_${node.id}`).prop('disabled', false)
+                }
+            })
+    
+            // Set up context store select drop-down
+            populateUseStoreDropdown()
+    
+            // Deal with the url
+            getUrls()
+            if (node.url && node.url.length > 0) {
+                $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
+                $('#node-input-url').val(node.url)
+            }
+    
+            // If caching turned off, grey out settings
+            $('#node-input-cacheOn').on('change', function () {
+                if (this.checked === true) {
+                    $('#node-input-storeName').typedInput('enable')
+                    $('#node-input-storeContext').typedInput('enable')
+                    if ($('#node-input-storeContext').val() !== 'context')
+                        $('#node-input-varName').prop('disabled', false)
+                    $('#node-input-newcache').prop('disabled', false)
+                } else {
+                    $('#node-input-storeName').typedInput('disable')
+                    $('#node-input-storeContext').typedInput('disable')
+                    $('#node-input-varName').prop('disabled', true)
+                    $('#node-input-newcache').prop('disabled', true)
+                }
+            })
+    
+            // TODO reset unused conf props on type change?
+    
+            // Delegated event handler for conf data - just marks things as changed
+            $('#el-tab-conf').on('change', '[data-uib-el-prop]', function() {
+                $(this).attr('data-changed', 'true')
+            })
+     
+            const tabs = RED.tabs.create({
+                id: 'el-tabs',
+                // scrollable: true,
+                // collapsible: true,
+                onchange: function (tab) {
+                    let templ, docFrag
+                    $('#el-tabs-content').children().hide()
+                    // Populate the element config tab based on type
+                    if ( tab.id === 'el-tab-conf') {
+                        const type = $('#node-input-elementtype').val()
+                        switch (type) { // eslint-disable-line sonarjs/no-small-switch
+                            case 'text': {
+                                templ = document.querySelector('#text-template')
+                                break
+                            }
+    
+                            case 'table': {
+                                templ = document.querySelector('#table-template')
+                                break
+                            }
+    
+                            default: {
+                                templ = document.createElement('template')
+                                break
+                            }
+                        }
+                        // @ts-ignore - Clone the template and apply to the UI
+                        docFrag = templ.content.cloneNode(true)
+                        $('#el-tab-conf').append(docFrag)
+                        // Get any required functions for this type from the template (append runs the script tags immediately)
+                        const confFns = window['uibElementConfigFns']
+                        console.log('confFns', confFns.type, confFns)
+                        // Re-constitute node.conf properties and values to the conf tab
+                        Object.keys(node.confData).forEach( conf => {
+                            // TODO Deal with select tags
+                            $(`#conf-${type}-${conf}`).val(node.confData[conf])
+                        })
+                    } else {
+                        $('#el-tab-conf').empty()
+                    }
+                    $('#' + tab.id).show()
+                }
+            })
+            tabs.addTab({
+                id: 'el-tab-main',
+                label: 'Main'
+            })
+            tabs.addTab({
+                id: 'el-tab-conf',
+                label: 'Element Config'
+            })
+    
+        } // ----- end of onEditPrepare() ----- //
+    
+        /** Prep for save
+         * @param {*} node A node instance as seen from the Node-RED Editor
+         */
+        function onEditSave(node) {
+            $('[data-changed="true"]').each(function(i) {
+                node.confData[this.dataset.prop] = $(this).val()
+                node.changed = true
+                RED.nodes.dirty(true)
+            })
+        } // ----- end of onEditPrepare() ----- //
+    
+        // @ts-ignore
+        RED.nodes.registerType(moduleName, {
+            category: paletteCategory,
+            color: paletteColor,
+            defaults: {
+                url: { value: '', required: true },
+                elementid: { value: '', required: true },
+                elementtype: { value: '', required: true },
+                parent: { value: '' },
+                wrapper: { value: '' },
+                passthrough: { value: false },
+                outputs: { value: 0 },
+                name: { value: '' },
+                // Configuration data specific to the chosen type
+                confData: { value: {} },
+                // Caching
+                cacheOn: { value: true },
+                storeName: { value: 'default', required: true },
+                storeContext: { value: 'context' },
+                varName: { value: 'uib_el', required: true },
+                newcache: { value: true },
+            },
+            align: 'right',
+            inputs: 1,
+            inputLabels: '',
+            outputs: 0,
+            outputLabels: ['uibuilder dynamic UI configuration'],
+            icon: 'font-awesome/fa-code',
+            paletteLabel: nodeLabel,
+            label: function () {
+                return `<${this.url}>${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName} [${this.elementtype}]`
+            },
+    
+            /** Prepares the Editor panel */
+            oneditprepare: function () { onEditPrepare(this) },
+    
+            /** Runs before save (Actually when Done button pressed) - oneditsave */
+            oneditsave: function () { onEditSave(this) },
+    
+            /** Runs before cancel - oneditcancel */
+            /** Handle window resizing for the editor - oneditresize */
+            /** Show notification warning before allowing delete - oneditdelete */
+    
+        }) // ---- End of registerType() ---- //
+    
+    }())
+    
+</script>

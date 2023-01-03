@@ -27,6 +27,7 @@
 //#region ----- Module level variables ---- //
 
 const tiEvents = require('@totallyinformation/ti-common-event-handler')
+const { node } = require('execa')
 //const uibPackages = require('../libs/package-mgt')
 
 /** Main (module) variables - acts as a configuration object
@@ -40,186 +41,6 @@ const mod = {
 }
 
 //#endregion ----- Module level variables ---- //
-
-//#region ----- UI definition builders ----- //
-
-/** Build the UI config instructions for the TEXT element
- * @param {*} msg The msg data in the custom event
- * @param {runtimeNode & uibElNode} node Reference to node instance
- */
-function buildText(msg, node) {} // ---- End of buildText ---- //
-
-/** Build the UI config instructions for the LIST elements
- * @param {*} msg The msg data in the custom event
- * @param {runtimeNode & uibElNode} node Reference to node instance
- */
-function buildList(msg, node) {
-
-        // If an object, turn into an array
-        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
-            // Turn into an array
-            msg.payload = Object.entries(msg.payload)
-        } else if ( typeof msg.payload === 'string' || typeof msg.payload === 'number' || typeof msg.payload === 'boolean' ) {
-            msg.payload = [msg.payload]
-        } else if ( !Array.isArray(msg.payload) ) {
-            node.warn('[uib-list:buildUi] msg.payload must be an array of strings or an array containing an array of strings. Cannot procede.')
-            return
-        }
-        
-        const ui = node._ui[1]
-    
-        // if ( this.topic === '' && msg.topic ) this.topic = msg.topic
-    
-        // Convert the input data array to _ui list entries
-        msg.payload.forEach( (el, i) => {
-            // List of objects
-            if ( el !== null && el.constructor.name === 'Object' ) {
-                el = Object.entries(el)
-            }
-            // Flatten nested objects/arrays
-            if ( Array.isArray(el) ) {
-                el.forEach( (el2, i) => {
-                    if ( el2 !== null && el2.constructor.name === 'Object' ) {
-                        // Turn into an array
-                        el.splice(i, 1, ...Object.entries(el2))
-                    } else if ( Array.isArray(el2) ) {
-                        el.splice(i, 1, ...el2)
-                    }
-                })
-            }
-    
-            if ( node.elementtype !== 'dl' ) {
-                // ul/ol
-                ui.components[0].components.push({
-                    type: 'li',
-                    slot: el,
-                })
-            } else {
-                // dl - needs a list of lists where the inner has 2 entries
-                if (el.length > 0) {
-                    ui.components[0].components.push({
-                        type: 'dt',
-                        slot: el[0],
-                    })
-                }
-                if (el.length > 1) {
-                    ui.components[0].components.push({
-                        type: 'dd',
-                        slot: el[1],
-                    })
-                }
-            }
-    
-        } )
-
-} // ---- End of buildList ---- //
-
-/** Build the UI config instructions for the TABLE element
- * @param {*} msg The msg data in the custom event
- * @param {runtimeNode & uibElNode} node Reference to node instance
- */
-function buildTable(msg, node) {
-    // TODO Make sure msg.payload is an object or an array
-
-    const ui = node._ui[1]
-    let c = node._ui[1].components[0] // TODO will have to adjust for wrapper
-    let cols = []
-    let numCols = 0
-
-    // Build the output - starting with the outer element - `table` in this case
-    let x = {
-        "type":"table",
-        "id":"eltest",
-        "attributes":{},
-        "components":[
-            {
-                "type":"thead",
-                "components":[
-                    {"type":"tr","id":"eltest-tr1","components":[{"type":"th","slot":"H1C1"},{"type":"th","slot":"H1C2"}]}
-                ]},{"type":"tbody","components":[{"type":"tr","components":[{"type":"td","slot":"R1C1"},{"type":"td","slot":"R1C2"}]},{"type":"tr","components":[{"type":"td","slot":"R2C1"},{"type":"td","slot":"R2C2"}]}]
-            }
-        ],
-        "parent":"#more"
-    }
-
-    c.components = [
-        {
-            "type":"thead",
-            "components": []
-        },
-        {
-            "type":"tbody",
-            "components": []
-        }
-    ]
-    let thead = c.components[0]
-    let tbody = c.components[1]
-    
-    const tbl = msg.payload
-    Object.keys(tbl).forEach( (row, i) => {
-        // Build the columns from the first set of entries
-        if (i===0) {
-            // TODO inp[el] has to be an object
-            // TODO check that there are >0 columns
-
-            thead.components = [
-                {
-                    "type":"tr",
-                    "components": []
-                }
-            ]
-
-            // Save the col names
-            cols = Object.keys(tbl[row])
-            numCols = cols.length + 1
-            
-            // Build the headings
-            cols.forEach( (colName,k) => {
-                thead.components[0].components.push({
-                    "type": "th",
-                    "attributes": {
-                        "data-hdr-row-index": 1,
-                        "data-col-index": k+1,
-                        "data-col-name": colName,
-                    },
-                    "slot": colName
-                })
-            } )
-        }
-
-        let rLen = tbody.components.push( {
-                "type":"tr",
-                "components": []
-            }
-        )
-        tbody.components[rLen-1].attributes = {
-            'data-row-index': rLen,
-            'class': (rLen % 2  == 0) ? "even" : "odd" 
-        }
-        console.warn(`${msg.payload.constructor.name}`)
-        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
-            tbody.components[rLen-1].attributes['data-row-name']
-        }
-        // TODO If tbl is an object - get the row names and apply to data-rowname attrib
-        // TODO Allow for class overrides in node
-
-        // Build the data row
-        cols.forEach( ( (colName, j) => {
-            tbody.components[rLen-1].components.push({
-                "type": "td",
-                "attributes": {
-                    "data-row-index": rLen,
-                    "data-col-index": j+1,
-                    "data-col-name": colName,
-                },
-                "slot": tbl[row][colName],
-            })
-        } ) )
-
-    } )
-} // ---- End of buildTable ---- //
-
-//#endregion ----- ----- ----- //
 
 //#region ----- Module-level support functions ----- //
 
@@ -245,6 +66,7 @@ function setNodeStatus(node) {
 function handleConnectionEvent(msg) {
     if (this.cacheOn === false) return
     // If no _ui elements object to send, don't bother
+    //! TODO - this looks odd, should it really be this._ui? Or should it be the cache object?
     if ( !this._ui ) return
 
     // Send the cached data - but only if connections=0 (e.g. fresh page load) if flag is set
@@ -265,15 +87,17 @@ function clearCache(node) {
     node.setC(node.varName, node.cache, node.storeName)
 }
 
-/** Replace the cached list with the latest msg
+/** Cache the INPUT. Replace the cached list with the latest msg
  * @param {*} msg The recieved message to add
  * @param {runtimeNode & uibElNode} node Reference to node instance
  */
 function replaceCache(msg, node) {
     if (mod.RED === null) return
     if (node.cacheOn === false) return
-
-    // HAS to be a CLONE to avoid downstream changes impacting cache
+    // TODO Check if there is something to cache (this._ui)
+    
+    // TODO Provide option to keep/remove the original data in the output
+    // // HAS to be a CLONE to avoid downstream changes impacting cache
     const clone = mod.RED.util.cloneMessage(msg)
     delete clone._msgid
 
@@ -284,109 +108,6 @@ function replaceCache(msg, node) {
     node.setC(node.varName, node.cache, node.storeName)
 
 } // ---- end of addToCache ---- //
-
-/** Create/update the _ui object and retain for replay
- * @param {*} msg incoming msg
- * @param {runtimeNode & uibElNode} node reference to node instance
- */
-function buildUi(msg, node) {
-    // TODO Allow combination of msg._ui and this node (eventually allowing chaining of the nodes).
-    if ( node._ui ) {
-        node.warn('[uib-element:buildUi] Don\'t include a msg._ui when using this node, send directly to uibuilder. Not processing.' )
-        return
-    }
-
-    // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
-    if ( !msg.mode ) msg.mode = 'update'
-
-    // If mode is remove, then simply do that and return
-    if ( msg.mode === 'remove' ) {
-        clearCache(node)
-        setNodeStatus(node)
-
-        if (!node.elementid) {
-            node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
-            return
-        }
-
-        node._ui = [{
-            method: 'remove',
-            components: [`#${node.elementid}`] // remove uses css selector, not raw id
-        }]
-        return
-    }
-    // Otherwise ...
-
-    // Create template
-    node._ui = [
-        {}, // Placeholder in case a remove is needed
-        {   // Blank template
-            'method': '',
-            'components': [
-                {
-                    'type': '',
-                    'id': '',
-                    // 'parent': '',
-                    'attributes': {},
-                    'components': [],
-                },
-            ],
-        }
-    ]
-
-    // If msg.mode = 'update' then remove+add.
-    if ( msg.mode == 'update' ) {
-        node._ui[0].method = 'remove'
-        node._ui[0].components = [`#${node.elementid}`] // remove uses css selector, not raw id
-        // node._ui[1].components[0].components = []
-    } else { // Assume add
-        // node._ui[0] = {}
-        // node._ui[1].components[0].components = []
-    }
-
-    // Common
-    node._ui[1].method = 'add' // looks odd but at present, the _ui[1] component can ONLY be an add.
-    // TODO Will need to adjust for wrapper
-    node._ui[1].components[0].type = node.elementtype
-    node._ui[1].components[0].id = node.elementid // `add` method allows raw id
-    if ( node.parent !== '' ) node._ui[1].components[0].parent = node.parent
-
-
-    // What type to process?
-    switch (node.elementtype) {
-        case 'text': {
-            buildText(msg, node)
-            break
-        }
-
-        case 'list':
-        case 'ol':
-        case 'dl':
-        case 'ul': {
-            buildList(msg, node)
-            break
-        }
-
-        case 'table': {
-            buildTable(msg, node)
-            break
-        }
-
-        // Unknown type. Issue warning and exit
-        default: {
-            node.warn(`[uib-list:buildUi] Type "${node.elementtype}" is unknown. Cannot process.`)
-            return
-            break
-        }
-    }
-
-
-
-    // Replace the cache if caching turned on
-    replaceCache(msg, node)
-
-    setNodeStatus(node)
-} // -- end of buildUI -- //
 
 /** Build the output and send the msg via an event emitter
  * @param {*} msg The input or custom event msg data
@@ -432,7 +153,7 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     // TODO: Accept cache-replay and cache-clear
     // Is this a uib control msg? If so, ignore it since this is connected to uib via event handler
     if ( msg.uibuilderCtrl ) {
-        this.warn('Received a uibuilder control msg, ignoring')
+        // this.warn('Received a uibuilder control msg, ignoring')
         done()
         return
     }
@@ -475,7 +196,7 @@ function nodeInstance(config) {
     this.cacheOn = config.cacheOn ?? false
     this.storeName = config.storeName ?? 'default'
     this.storeContext = config.storeContext ?? 'context'
-    this.varName = config.varName ?? 'uib_list'
+    this.varName = config.varName ?? 'uib_el'
     this.newcache = config.newcache ?? true
 
     this._ui = undefined // set in buildUI()
@@ -543,6 +264,333 @@ function nodeInstance(config) {
 }
 
 //#endregion ----- Module-level support functions ----- //
+
+//#region ----- UI definition builders ----- //
+
+/** Build the UI config instructions for the TEXT element
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parentComponent The parent descriptor object that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildText(msg, parentComponent) {
+    let err = ''
+    return err
+} // ---- End of buildText ---- //
+
+/** Build the UI config instructions for the UL or OL LIST elements
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parentComponent The parent descriptor object that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildUlOlList(msg, parentComponent) {
+    // Make sure msg.payload is an object or an array - if not, force to array
+    if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
+
+    let cols = []
+    let err = ''
+
+    // NOTE: that the outer element (ul/ol/dl) is built in the calling fn buildUi
+
+    // Convenient references
+    const listRows = parentComponent.components
+    const tbl = msg.payload
+
+    // Walk through the inbound msg payload (works as both object or array)
+    Object.keys(tbl).forEach( (row, i) => {
+        // Create next list row
+        listRows.push( {
+            "type": "li",
+            "attributes": {
+                // NB: Making all indexes 1-based for consistency
+                "data-row-index": i+1,
+                'class': ((i+1) % 2  == 0) ? "even" : "odd" 
+            },
+            "slot": tbl[row]
+        } )
+        // Add a row name attrib from the object key if the input is an object
+        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+            listRows[i].attributes['data-row-name'] = row
+        }
+    } )
+
+    return err
+} // ---- End of buildUlOlList ---- //
+
+/** Build the UI config instructions for DL LIST elements
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parentComponent The parent descriptor object that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildDlList(msg, parentComponent) {
+    // Make sure msg.payload is an object or an array - if not, force to array
+    if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
+
+    let cols = []
+    let err = ''
+
+    // NOTE: that the outer element (ul/ol/dl) is built in the calling fn buildUi
+
+    // Convenient references
+    const listRows = parentComponent.components
+    const tbl = msg.payload
+
+    // Walk through the inbound msg payload (works as both object or array)
+    Object.keys(tbl).forEach( (row, i) => {
+        // Each DL entry needs two elements - treated as a single row
+
+        // Check if we have an object(or array)? If not, make content an array - will output only DT's
+        if (!(tbl[row] instanceof Object)) {
+            tbl[row] = [tbl[row]]
+        }
+        // Check if the inner data is an object - if so, convert to key/value array
+        if (!Array.isArray(tbl[row])) tbl[row] = Object.entries(tbl[row])[0]
+
+        // We only want the first 2 elements of the tbl[row] object/array
+        Object.keys(tbl[row]).slice(0,2).forEach( (el,indx) => {
+            let lType
+            if ((indx) % 2  == 0) {
+                lType = 'dt'
+            } else {
+                lType = 'dd'
+            }
+
+            // If a 3rd-level object, stringify it (an array will stringify itself)
+            if ( tbl[row][indx] !== null && tbl[row][indx].constructor.name === 'Object' ) {
+                try {
+                    tbl[row][indx] = JSON.stringify(tbl[row][indx])
+                } catch (e) { }
+            }
+
+            let listIndex = listRows.push( {
+                "type": lType,
+                "attributes": {
+                    // NB: Making all indexes 1-based for consistency
+                    "data-row-index": i+1,
+                    'class': ((i+1) % 2  == 0) ? "even" : "odd" 
+                },
+                "slot": tbl[row][indx],
+            } )
+            // Add a row name attrib from the object key if the input is an object
+            if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+                listRows[listIndex-1].attributes['data-row-name'] = row
+            }
+        })
+    } )
+
+    return err
+} // ---- End of buildDlList ---- //
+
+/** Build the UI config instructions for the TABLE element
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parentComponent The parent descriptor object that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildTable(msg, parentComponent) {
+    // Make sure msg.payload is an object or an array - if not, force to array
+    if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
+
+    let cols = []
+    let err = ''
+
+    // NOTE: that the outer element (table) is built in the calling fn buildUi
+
+    // Add the thead and tbody wrappers
+    parentComponent.components = [
+        {
+            "type":"thead",
+            "components": []
+        },
+        {
+            "type":"tbody",
+            "components": []
+        }
+    ]
+
+    // Convenient references
+    let thead = parentComponent.components[0]
+    let tbody = parentComponent.components[1]
+    const tbl = msg.payload
+
+    // Walk through the inbound msg payload (works as both object or array)
+    Object.keys(tbl).forEach( (row, i) => {
+        // Build the columns from the first set of entries & add the thead
+        if (i===0) {
+            // TODO inp[el] has to be an object
+            // TODO check that there are >0 columns
+
+            // Create the header row
+            thead.components = [
+                {
+                    "type":"tr",
+                    "components": []
+                }
+            ]
+
+            // TODO Allow override from msg.cols
+            // Save the col names
+            cols = Object.keys(tbl[row])
+            
+            // Build the headings
+            cols.forEach( (colName,k) => {
+                thead.components[0].components.push({
+                    "type": "th",
+                    "attributes": {
+                        "data-hdr-row-index": 1,
+                        "data-col-index": k+1,
+                        "data-col-name": colName,
+                    },
+                    "slot": colName
+                })
+            } )
+    
+        }
+
+        // Create the data row
+        let rLen = tbody.components.push( {
+                "type":"tr",
+                "components": []
+            }
+        )
+        // Add the row index attrib and even/odd class
+        tbody.components[rLen-1].attributes = {
+            // NB: Making all indexes 1-based for consistency
+            'data-row-index': rLen,
+            'class': (rLen % 2  == 0) ? "even" : "odd" 
+        }
+        // Add a row name attrib from the object key if the input is an object
+        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+            tbody.components[rLen-1].attributes['data-row-name'] = row
+        }
+        // TODO If tbl is an object - get the row names and apply to data-rowname attrib
+        // TODO Allow for class overrides in node
+
+        // Build the columns
+        cols.forEach( ( (colName, j) => {
+            tbody.components[rLen-1].components.push({
+                "type": "td",
+                "attributes": {
+                    "data-row-index": rLen,
+                    // NB: Making all indexes 1-based for consistency
+                    "data-col-index": j+1,
+                    "data-col-name": colName,
+                },
+                "slot": tbl[row][colName],
+            })
+        } ) )
+
+    } )
+
+    return err
+} // ---- End of buildTable ---- //
+
+/** Create/update the _ui object and retain for replay
+ * @param {*} msg incoming msg
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ */
+function buildUi(msg, node) {
+    // Allow combination of msg._ui and this node allowing chaining of the nodes
+    if ( msg._ui ) node._ui = msg._ui
+    else node._ui = []
+    let uiIndex = node._ui.length === 0 ? 0 : node._ui.length-1
+
+    // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
+    if ( !msg.mode ) msg.mode = 'update'
+
+    // If mode is remove, then simply do that and return
+    if ( msg.mode === 'remove' ) {
+        clearCache(node)
+        setNodeStatus(node)
+
+        if (!node.elementid) {
+            node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
+            return
+        }
+
+        node._ui.push({
+            method: 'remove',
+            components: [`#${node.elementid}`] // remove uses css selector, not raw id
+        })
+        return
+    }
+    // Otherwise ...
+
+    // If msg.mode = 'update' then remove+add.
+    if ( msg.mode == 'update' ) {
+        node._ui.push({
+            method: 'remove',
+            components: [`#${node.elementid}`], // remove uses css selector, not raw id
+        })
+    }
+    // Create template
+    node._ui.push({   // Blank template
+        'method': '',
+        'components': [
+            {
+                'type': '',
+                'id': '',
+                // 'parent': '',
+                'attributes': {},
+                'components': [],
+            },
+        ],
+    } )
+    uiIndex = node._ui.length-1
+
+    // TODO Will need to adjust for wrapper
+    
+    // Keep track of the next set of components to add to the hierarchy
+    let nextComponents = node._ui[uiIndex].components
+    
+    // Common - add the outer component
+    node._ui[uiIndex].method = 'add' // looks odd but at present, the _ui[1] component can ONLY be an add.
+    nextComponents[0].type = node.elementtype
+    nextComponents[0].id = node.elementid // `add` method allows raw id
+    if ( node.parent !== '' ) nextComponents[0].parent = node.parent
+
+    // What type to process?
+    let err = ''
+    switch (node.elementtype) {
+        case 'text': {
+            err = buildText(msg, nextComponents[0])
+            break
+        }
+
+        case 'list':
+        case 'ol':
+        case 'ul': {
+            err = buildUlOlList(msg, nextComponents[0])
+            break
+        }
+
+        case 'dl': {
+            err = buildDlList(msg, nextComponents[0])
+            break
+        }
+
+        case 'table': {
+            err = buildTable(msg, nextComponents[0])
+            break
+        }
+
+        // Unknown type. Issue warning and exit
+        default: {
+            err = `Type "${node.elementtype}" is unknown. Cannot process.`
+            break
+        }
+    }
+
+    if (err.length>0) {
+        node.error(err, node)
+        return
+    }
+
+    // Replace the cache if caching turned on
+    replaceCache(msg, node)
+
+    setNodeStatus(node)
+} // -- end of buildUI -- //
+
+//#endregion ----- ui functions ----- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
