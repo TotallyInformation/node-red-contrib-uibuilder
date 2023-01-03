@@ -346,9 +346,25 @@ function buildPanelUibList(cb) {
 
     cb()
 }
+function buildPanelUibElement(cb) {
+    src(`${nodeSrcRoot}/uib-element/main.html`, ) // { since: lastRun(buildMe) } )
+        // .pipe(debug({title:'debug1',minimal:false}))
+        .pipe( include() )
+        // Rename output to $dirname/editor.html
+        .pipe(rename(function(thispath) {
+            // thispath.dirname = `${thispath.dirname}`
+            thispath.basename = 'customNode'
+            // thispath.extname = 'html'
+        }))
+        // Minimise HTML output
+        // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+        .pipe(dest(`${nodeDest}/uib-element/`))
+
+    cb()
+}
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
-const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList)
+const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList, buildPanelUibElement)
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
@@ -362,6 +378,7 @@ function watchme(cb) {
     // watch('src/editor/uib-receiver/*', buildPanelReceiver)
     watch('src/editor/uib-cache/*', buildPanelCache)
     watch('src/editor/uib-list/*', buildPanelUibList)
+    watch('src/editor/uib-element/*', buildPanelUibElement)
 
     cb()
 }
