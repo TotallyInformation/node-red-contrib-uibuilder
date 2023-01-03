@@ -8,6 +8,8 @@ typora-root-url: docs/images
 
 Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) to current and the old client library (`uibuilderfe.js`) to functionally stabilised and on the road to being deprecated. The experimental `uib-list` node has some improvements but is still feature incomplete. The new `uib-brand.css` style library still needs quite a bit of additional work. The new `uib-list` node is still a little rough but should work fine for most things.
 
+Dynamic content does not currently work with VueJS (and probably other frameworks that rely on pre-building components). Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only.
+
 ## To do/In-progress
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
@@ -17,13 +19,28 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Editor
   * Disable the new Open button along with other disabled things when new or url has changed.
   * Add template description to display.
+  * Switch tooltips to using aria-label with hover CSS as in the new node.
+
 * `socket.js`
   * Add rooms: page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
   * When a new client connection is made, use `socket.emit('join', tabId)`
   * Output to a room using `io.to(tabId).emit(...)`
   * https://socket.io/docs/v4/rooms/
 
-### ### IIFE/ESM/Module client library
+* Templates
+  * Add group/category to `template_dependencies.js`. Add grouping to drop-down in editor. Allow for no group specified (for backwards compatibility).
+  * Add option for external templates in `template_dependencies.js`.
+  * Consider allowing a local version of `template_dependencies.js`.
+
+### uib-cache node
+
+* Add empty cache button.
+
+### uib-list node
+
+* Add deprecation warning
+
+### IIFE/ESM/Module client library
 
 * Add `uibuilder.cacheSend()` and `uibuilder.cacheClear()` functions - reinstate in uib-cache fn now we've removed extra ctrl send
 * Add a `uibuilder.navigate(url)` function to allow a msg from node-red to change the page. Ensure it works with SPA routers and with anchor links.
@@ -33,15 +50,55 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * ? window and document events - make optional via uibuilder fe command.
 * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
 
+### New `uib-element` node
+
+NOTE: Caches the INPUT, not the OUTPUT
+
+* OPTIONS to add
+  * ALL
+    * Class, Style overrides
+    * Clear cache button
+    * Add input guides for each type
+  * TABLE
+    * Caption
+    * ? Optional heading ?
+  * LIST
+    * list-style-type (add to outer) - several options plus text (incl emoji's)
+    * Add div's around dt/dd pairs
+    * ? Optional heading ?
+    * ? Optional leading/trailing text ?
+    * Allow nested lists?
+* ?? Disable url if doing passthrough - what about reconnection events?
+  * Disable reconnect events but handle uibuilder cache control msgs
+  * [x] For chains - the last node would not be passthrough but would need to have cached the full msg._ui chain.
+* Allow type to be overridden by a msg property. Will also need to extend caching to be by element ID.
+* Don't need originator in msgs to FE?
+* ? Have JSON input msg templates for each type with links to copy to clipboard ?
+* Docs
+  * Parent: `#eltest-ul-ol > li:nth-child(3)` or `#eltest-ul-ol *[data-row-index="3"]`
+  * Chaining
+  * JSON msg templates for each type
+
+### NEW node: `uib-attribs`
+
+Send attribute overrides to an existing HTML element (using a selector)
+Might need changes to FE code? New _ui mode `attribs`?
+
+Also
+* slot changer
+* Mustache-like replacer ? How? Really need? Use ID instead? Maybe create our own event handler for data-driven elements?
+* ? Mustache-like if/then/else ?
+* ? Mustache-like loops ?
+
 ### Examples
 
 * Update all to use new libs. Remove (c).
+* Add example for Vue sfc loader.
 * Update/add examples for each template
   * Add global Notification/Toast input
   * Add dynamic HTML input
 
 ### Templates - update to latest standards
-
 * Not yet done:
    * [ ] vue
    * [ ] vue-simple
@@ -61,6 +118,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * `isVisible`, `tabId` and `syntaxHighlight(json)` in new client builds.
 * Updated `msg._uib` optional in standard msgs
 * Move v5 changes to archive log
+* Notes on limitation of dynamic UI for Vue, etc.
 
 ### Other Ideas (Will probably move to the roadmap)
 
@@ -84,7 +142,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * The client library creates a `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
 * Messages from the client now also include the `url` from the uibuilder node they relate to so that it is easier to process messages from multiple different uibuilder nodes.
 
-### uibuilder node
+### `uibuilder` node
 
 * Added JSON and Form encoded body processing to all user instance routes to allow for processing POST requests
 
@@ -133,10 +191,30 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * When triggering `showDialog()` either in the FE or by sending a toast notification from node-red, setting "variant" now allows any CSS class name to be used. Not just the previous list of names ('primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger') though since they are all included as classes in uib-brand.css, they all still work.
 
+* Added internal flag if VueJS is loaded. To be used for dynamic UI processing.
+
+### **NEW** `uib-element` node
+
+This node lets you easily create new front-end UI elements from within Node-RED. It has a selection of element types ranging from simple text structures, through different types of list and full tables. It is a much more comprehensive node than the previous, experimental, `uib-list` node.
+
+**Note that this generates pure HTML - no frameworks are used**.
+
+It creates configuration-driven dynamic additions to your front-end UI while letting you send fairly simple data to dynamically create the structure. For example, sending an array of objects with the `Table` type will create/replace a complete table in your front-end.
+
+*In this release, the node should be considered alpha quality.*
+
+> **Note**: The range of options built into the node for each element type is deliberately fairly restricted. If you want more complex layouts, you should either craft the JSON yourself (this node can output the raw JSON if you want so that you can save it and enhance it yourself.
+> 
+> This is NOT meant as a *Dashboard* replacement. It is mostly meant for people who need a quick and simple method of dynamically creating UI elements's within a pre-defined HTML design. The element content is rebuilt every time you send data so this is certainly not the most efficient method of working with data-driven UI's. However, it will often be good-enough for relatively simple requirements.
+
+Element types included in this release:
+* **Text** output with optional label
+* **Table** - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
+
 ### `uib-brand.css`
 
 * Is now the default CSS for all of the templates.
-* Added JSON syntax highlight rules from `uib-styles.css`.
+* Added JSON syntax highlight rules from `uib-styles.css`. Also improved the layout and features.
 
 ### Templates
 
@@ -146,6 +224,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * All templates have updated and rationalised README.md and package.json files in the root folder.
 * All templates have .eslintrc.js files in the root folder. You may need to install eslint extensions to match. If this file gets in the way, it can be safely deleted. It helps maintain standard coding practices and helps avoid the use of JavaScript which is too new.
 * Removed the (c) from the remaining templates. There is no (c) on any of them. They all fall under MIT license. Use as you will, there are no intellectual property restraints on the template code.
+* Change all to load client from `../uibuilder/uibuilder.xxx.min.js` instead of `./uibuilder.xxx.min.js` for consistency with other standard and installed library loads. Note that both locations remain valid.
 * Updated:
   * [x] blank
   * [x] blank-iife-client

@@ -95,18 +95,23 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * **ESM IS STILL EXPERIMENTAL**
     * Corepack https://nodejs.org/dist/latest-v14.x/docs/api/corepack.html
     * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
-    * Future changes to watch:
-      * Top-level await (experimental in v14 - behind flag, full in v18)
-      * Diagnostic channels (experimental in v14)
-      * AbortController and AbortSignal (experimental in v14)
-      * JSON Modules (experimental in v14, full in 16.15.0)
-      * Fetch (Experimental 16.15.0, 18.0.0)
-      * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
-      * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
-      * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
-      * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
-      * Test Runner module (experimental 18.0.0)
-      * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
+
+  * v16:
+    * JSON Modules (experimental in v14, full in 16.15.0)
+    * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
+    * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
+    * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
+    * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
+
+  * v18
+    * Test Runner module (experimental 18.0.0)
+    * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
+    * Top-level await (experimental in v14 - behind flag, full in v18)
+
+  * Unknown
+    * Diagnostic channels (experimental in v14)
+    * AbortController and AbortSignal (experimental in v14)
+    * Fetch (Experimental 16.15.0, 18.0.0)
 
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
 
@@ -124,13 +129,19 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Updates should update the original add which should be saved for replay but should instantly output an update
   * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
 * uib-list (and similar nodes)
+  * Handle uibuilder url rename.
   * Consider allowing pass-through which automatically nests nodes (e.g. makes the 2nd node in the flow a child of the first)?
   * Otherwise, maybe have a composite node that defines a tree?
   * Consider having a general `element` node that can select between different element types.
-    * List
-    * Para (with a section title and multiple paragraphs, optional html in text)
+    * [x] List
+    * [x] Table
+    * Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
     * Card
-    * Table
+    * tbody
+    * tr (use data-row-index)
+    * iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
+    * notify (globalNotification)
+    * button (NB: add type="button" to avoid form submit issues)
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
@@ -138,7 +149,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add syntax highlight properties
 
 * Extensions to new FE Library
-  * Consider adding a default `msg.topic` option.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
   * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
