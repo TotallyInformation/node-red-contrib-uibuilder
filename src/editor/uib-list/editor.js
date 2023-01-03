@@ -174,7 +174,7 @@
             cacheOn: { value: true },
             storeName: { value: 'default', required: true },
             storeContext: { value: 'context' },
-            varName: { value: 'uib_cache', required: true },
+            varName: { value: 'uib_list', required: true },
             newcache: { value: true },
         },
         align: 'right',
