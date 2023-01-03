@@ -7,24 +7,6 @@
 'use strict'
 
 module.exports = {
-    vue: {
-        'name': 'VueJS v2 & bootstrap-vue',
-        'folder': 'vue',
-        'dependencies': [ 'vue', 'bootstrap-vue' ],
-        'description': 'VueJS and bootstrap-vue example. Was the default until v4.'
-    },
-    'vue-simple': {
-        'name': 'Simple VueJS v2',
-        'folder': 'vue-simple',
-        'dependencies': [ 'vue', 'bootstrap-vue' ],
-        'description': 'Simplest VueJS and bootstrap-vue template.'
-    },
-    'svelte-basic': {
-        'name': 'Svelte Basic',
-        'folder': 'svelte-basic',
-        'dependencies': [ ],
-        'description': 'Simple Svelte template. Requires Svelte installation, see README.md'
-    },
     'iife-blank-client': {
         'name': 'No framework, modern IIFE client',
         'folder': 'iife-blank-client',
@@ -42,6 +24,24 @@ module.exports = {
         'folder': 'iife-vue3-nobuild',
         'dependencies': [ 'vue' ],
         'description': 'Very simple Vue v3+ template that does not require a build step. Uses the modern IIFE uib client library.'
+    },
+    'vue2-bootstrap': {
+        'name': 'VueJS v2 & bootstrap-vue',
+        'folder': 'vue2-bootstrap',
+        'dependencies': [ 'vue', 'bootstrap-vue' ],
+        'description': 'VueJS v2 and bootstrap-vue template. No build step. Uses the modern IIFE uib client library.'
+    },
+    'vue2-simple': {
+        'name': 'Simple VueJS v2',
+        'folder': 'vue2-simple',
+        'dependencies': [ 'vue', 'bootstrap-vue' ],
+        'description': 'Simplest VueJS v2 and bootstrap-vue template. No build step. Uses the modern IIFE uib client library.'
+    },
+    'svelte-basic': {
+        'name': 'Svelte Basic',
+        'folder': 'svelte-basic',
+        'dependencies': [ ],
+        'description': 'Simple Svelte template. Requires Svelte installation, see README.md'
     },
     'old-blank-client': {
         'name': 'No framework, old client',

@@ -1,15 +1,14 @@
 // @ts-nocheck
 
-/** The simplest use of uibuilder client library
+/** Example of using the IIFE build of the uibuilder client library
  * Note that uibuilder.start() should no longer be needed.
  * See the Tech docs if the client doesn't start on its own.
  */
-
-/** Minimalist code for uibuilder and Node-RED */
 'use strict'
 
-// Set logLevel to 2 or above to see more built-in logging info & use info-level custom logging.
+// logLevel 2+ shows more built-in logging. 0=error,1=warn,2=info,3=log,4=debug,5=trace.
 // uibuilder.set('logLevel', 2)
+// uibuilder.log('info', 'a prefix', 'some info', {any:'data',life:42})
 
 // Helper function to send a message back to Node-RED using the standard send function - see the HTML file for use
 window.fnSendToNR = function fnSendToNR(payload) {
@@ -21,7 +20,9 @@ window.fnSendToNR = function fnSendToNR(payload) {
 
 // Listen for incoming messages from Node-RED
 uibuilder.onChange('msg', function(msg) {
-    // dump the msg as formatted text to the "msg" html element - does nothing if the element not found
-    const eMsg = document.getElementById('msg')
+    // Dump the msg as text to the "msg" html element
+    // either the HTML way or via uibuilder's $ helper function
+    // const eMsg = document.getElementById('msg')
+    const eMsg = $('#msg')
     if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 })

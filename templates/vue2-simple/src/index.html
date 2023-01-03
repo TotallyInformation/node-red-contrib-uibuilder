@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>VueJS + bootstrap-vue simple template - Node-RED uibuilder</title>
+    <meta name="description" content="Node-RED uibuilder - VueJS + bootstrap-vue simple template">
+
+    <link rel="icon" href="./images/node-blue.ico">
+
+    <link type="text/css" rel="stylesheet" href="../uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.css" />
+    <!-- Your own CSS -->
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+
+</head><body>
+
+    <div id="app" class="uib" v-cloak><!-- All UI code needs to be in here -->
+        <b-container id="app_container"><!-- Wraps the bootstrap-vue formatting -->
+
+            <h1>uibuilder + Vue.js + bootstrap-vue for Node-RED - Simple Template</h1>
+
+            <pre id="msg" v-html="showLastReceivedMsg" class="syntax-highlight">Waiting for a message from Node-RED</pre>
+
+        </b-container>
+    </div>
+
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
+    <script src="../uibuilder/vendor/socket.io/socket.io.js">/* REQUIRED: Socket.IO is loaded only once for all instances. Without this, you don't get a websocket connection */</script>
+    <!-- Vendor Libraries - Load in the right order, use minified, production versions for speed -->
+    <script src="../uibuilder/vendor/vue/dist/vue.min.js">/* prod version with component compiler */</script>
+    <!-- <script src="../uibuilder/vendor/vue/dist/vue.js">/* dev version with component compiler */</script> -->
+    <!-- <script src="../uibuilder/vendor/vue/dist/vue.runtime.min.js">/* prod version without component compiler */</script> -->
+    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js">/* remove 'min.' to use dev version */</script> <!--  -->
+
+    <script src="../uibuilder/uibuilder.iife.min.js">/* REQUIRED: remove 'min.' to use dev version */</script>
+    <script src="./index.js">/* OPTIONAL: Put your custom code here */</script>
+    <!-- #endregion -->
+
+</body></html>

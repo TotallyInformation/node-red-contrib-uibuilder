@@ -1,0 +1,41 @@
+/* NOTE: Not loading uibuilder CSS since bootstrap-vue supplies its own */
+
+/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.css`
+ * This version auto-adjusts for light/dark browser settings but might not be as complete.
+ */
+ /* @import url("./uib-brand.css"); */
+
+ /* OR, load the defaults from the older `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-styles.css` */
+ /* @import url("./uib-styles.css"); */
+ 
+ /* For this template, we only want the syntax highlight styles
+ /*#region  Colours for Syntax Highlighted pre's */
+ .syntax-highlight {
+    color:white;
+    display:block;
+    background-color:black;
+    padding:5px 10px;
+    font-family: Consolas, "ui-monospace", "Lucida Console", monospace;
+    white-space: pre;
+    width: 99%;
+    max-height: 33em;
+    overflow: auto;
+}
+.syntax-highlight > .key {color:#ffbf35}
+.syntax-highlight > .string {color:#5dff39;}
+.syntax-highlight > .number {color:#70aeff;}
+.syntax-highlight > .boolean {color:#b993ff;}
+.syntax-highlight > .null {color:#93ffe4;}
+.syntax-highlight > .undefined {color:#ff93c9;}
+/*#endregion */
+
+/* Hide toasts if bootstrap-vue not loaded for some reason */
+.toaster { display: none; }
+
+/* Cloak elements on initial load to hide the possible display of {{ ... }} 
+ * Add to the app tag or to specific tags
+ * To display "loading...", change to the following:
+ *    [v-cloak] > * { display:none }
+ *    [v-cloak]::before { content: "loading…" }
+ */
+[v-cloak] { display: none; }

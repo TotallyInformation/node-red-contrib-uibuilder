@@ -1,18 +1,14 @@
-# uibuilder Template: Vue v3 with uibuilder IIFE client (no build)
+# uibuilder Template: VueJS v2 & bootstrap-vue, IIFE client
 
-> NOTE: You can replace the contents of this README with text that describes your UI.
+**NOTE**: You need to have installed `vue` v2 and `bootstrap-vue` v2 via uibuilder's library manager to use this template. uibuilder will warn you if you don't have them installed.
 
-A very simple template that just uses Vue v3 or above with no build step. There is no need to install any dev dependencies to get this going.
+It demonstrates the various basic features you are likely to want in a simple, dynamic, data-driven user interface that uses the help of the VueJS v2 and bootstrap-vue front-end framework libraries.
 
-Note that Vue v3 is called from an Internet CDN so that you don't have to have it installed via uibuilder's library manager. However, you may want to install it if you continue to use Vue v3 to save a dependency on the Internet being up.
-
-Included are a few elements that demonstrate Vue's rectivity and demonstrates how to get data from and to Node-RED via uibuilder.
-
-It uses the IIFE version of the modern client library. This is the standard non-ESM method and simply needs the client to be referenced in an HTML `link` element.
+It includes display of control and standard messages to/from Node-RED as well as a simple form with submission back to Node-RED.
 
 ## Limitations
 
-VueJS and similar advanced front-end frameworks require UI components and structure to be pre-defined _before_ the DOM is created. So you cannot dynamically insert further Vue elements easily. 
+VueJS and similar advanced front-end frameworks require UI components and structure to be pre-defined _before_ the DOM is created. So you cannot dynamically insert further Vue elements easily.
 
 You can still dynamically insert HTML elements but they will not be responsive Vue elements.
 
