@@ -6,7 +6,7 @@
  * See Uib._meta for client version string
  */
 /*
-  Copyright (c) 2017-2022 Julian Knight (Totally Information)
+  Copyright (c) 2022-2023 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -2038,7 +2038,7 @@ export const Uib = class Uib {
             }
         }
 
-        // Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents
+        /** Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents */
 
         // Track last browser navigation type: navigate, reload, back_forward, prerender
         const [entry] = performance.getEntriesByType('navigation')
