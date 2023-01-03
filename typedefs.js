@@ -2,7 +2,7 @@
 /* eslint-disable no-irregular-whitespace */
 /** Define typedefs for linting and JSDoc/ts checks - does not actually contain live code
  *
- * Copyright (c) 2017-2022 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2023 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -379,6 +379,28 @@
  *   _ui: any;
  * }} uibListNode
  */
+
+/** uibElNode (Element Node)
+ * @typedef {{
+*   name: string;
+*   url: string;
+*   elementid: string;
+*   elementtype: string;
+*   parent: string;
+*   wrapper: string;
+*   passthrough: boolean;
+*   cacheOn: boolean;
+*   storeName: string;
+*   storeContext: 'context'|'flow'|'node';
+*   varName: string;
+*   newcache: boolean;
+*   confData: object,
+*   cache: object;
+*   getC: Function;
+*   setC: Function;
+*   _ui: any;
+* }} uibElNode
+*/
 
 /** MsgAuth
  * @typedef {object} MsgAuth The standard auth object used by uibuilder security. See docs for details.
