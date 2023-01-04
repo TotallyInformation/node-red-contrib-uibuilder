@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 /** Send a dynamic UI config to the uibuilder front-end library.
  * The FE library will update the UI accordingly.
  *
@@ -27,8 +28,8 @@
 //#region ----- Module level variables ---- //
 
 const tiEvents = require('@totallyinformation/ti-common-event-handler')
-const { node } = require('execa')
-//const uibPackages = require('../libs/package-mgt')
+// const { node } = require('execa')
+// const uibPackages = require('../libs/package-mgt')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -49,7 +50,7 @@ const mod = {
  */
 function setNodeStatus(node) {
     let txt = 'Not caching'
-    let shape = 'ring'
+    const shape = 'ring'
 
     if (node.cacheOn === true) {
         if ( !node.cache || Object.keys(node.cache).length === 0 ) txt = 'No element cached'
@@ -66,7 +67,7 @@ function setNodeStatus(node) {
 function handleConnectionEvent(msg) {
     if (this.cacheOn === false) return
     // If no _ui elements object to send, don't bother
-    //! TODO - this looks odd, should it really be this._ui? Or should it be the cache object?
+    // ! TODO - this looks odd, should it really be this._ui? Or should it be the cache object?
     if ( !this._ui ) return
 
     // Send the cached data - but only if connections=0 (e.g. fresh page load) if flag is set
@@ -95,7 +96,7 @@ function replaceCache(msg, node) {
     if (mod.RED === null) return
     if (node.cacheOn === false) return
     // TODO Check if there is something to cache (this._ui)
-    
+
     // TODO Provide option to keep/remove the original data in the output
     // // HAS to be a CLONE to avoid downstream changes impacting cache
     const clone = mod.RED.util.cloneMessage(msg)
@@ -206,7 +207,7 @@ function nodeInstance(config) {
 
     // Show if anything in the cache
     setNodeStatus(this)
-    //this.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
+    // this.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
 
     // Get ref to this node's context store or the flow/global stores as needed
     let context = this.context()
@@ -215,7 +216,7 @@ function nodeInstance(config) {
     }
     this.getC = context.get
     this.setC = context.set
-    
+
     if (this.cacheOn === true) {
         // Get the cache or initialise it if new
         this.cache = this.getC(this.varName, this.storeName) ?? {}
@@ -229,7 +230,7 @@ function nodeInstance(config) {
             this.cache = {}
             this.setC(this.varName, this.cache, this.storeName)
             setNodeStatus(this)
-        } catch(e) { }
+        } catch (e) { }
     }
 
     // When a client disconnects
@@ -273,7 +274,7 @@ function nodeInstance(config) {
  * @returns {string} Error description or empty error string
  */
 function buildText(msg, parentComponent) {
-    let err = ''
+    const err = ''
     return err
 } // ---- End of buildText ---- //
 
@@ -286,8 +287,7 @@ function buildUlOlList(msg, parentComponent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
-    let cols = []
-    let err = ''
+    const err = ''
 
     // NOTE: that the outer element (ul/ol/dl) is built in the calling fn buildUi
 
@@ -299,13 +299,13 @@ function buildUlOlList(msg, parentComponent) {
     Object.keys(tbl).forEach( (row, i) => {
         // Create next list row
         listRows.push( {
-            "type": "li",
-            "attributes": {
+            'type': 'li',
+            'attributes': {
                 // NB: Making all indexes 1-based for consistency
-                "data-row-index": i+1,
-                'class': ((i+1) % 2  == 0) ? "even" : "odd" 
+                'data-row-index': i + 1,
+                'class': ((i + 1) % 2  === 0) ? 'even' : 'odd'
             },
-            "slot": tbl[row]
+            'slot': tbl[row]
         } )
         // Add a row name attrib from the object key if the input is an object
         if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
@@ -325,8 +325,7 @@ function buildDlList(msg, parentComponent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
-    let cols = []
-    let err = ''
+    const err = ''
 
     // NOTE: that the outer element (ul/ol/dl) is built in the calling fn buildUi
 
@@ -345,10 +344,25 @@ function buildDlList(msg, parentComponent) {
         // Check if the inner data is an object - if so, convert to key/value array
         if (!Array.isArray(tbl[row])) tbl[row] = Object.entries(tbl[row])[0]
 
-        // We only want the first 2 elements of the tbl[row] object/array
-        Object.keys(tbl[row]).slice(0,2).forEach( (el,indx) => {
+        const listIndex = listRows.push( {
+            'type': 'div',
+            'attributes': {
+                // NB: Making all indexes 1-based for consistency
+                'data-row-index': i + 1,
+                'class': ((i + 1) % 2  === 0) ? 'even' : 'odd'
+            },
+            'components': [],
+        } )
+        // Add a row name attrib from the object key if the input is an object
+        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+            listRows[listIndex - 1].attributes['data-row-name'] = row
+        }
+
+        // If multiple elements, treat the 1st as the term and the rest as definitions.
+        // Object.keys(tbl[row]).slice(0,2).forEach( (el,indx) => {
+        tbl[row].forEach( (el, indx) => {
             let lType
-            if ((indx) % 2  == 0) {
+            if (indx === 0) {
                 lType = 'dt'
             } else {
                 lType = 'dd'
@@ -361,19 +375,16 @@ function buildDlList(msg, parentComponent) {
                 } catch (e) { }
             }
 
-            let listIndex = listRows.push( {
-                "type": lType,
-                "attributes": {
-                    // NB: Making all indexes 1-based for consistency
-                    "data-row-index": i+1,
-                    'class': ((i+1) % 2  == 0) ? "even" : "odd" 
-                },
-                "slot": tbl[row][indx],
+            listRows[listIndex - 1].components.push( {
+                'type': lType,
+                // "attributes": {
+                //     // NB: Making all indexes 1-based for consistency
+                //     "data-row-index": i+1,
+                //     'class': ((i+1) % 2  == 0) ? "even" : "odd"
+                // },
+                'slot': tbl[row][indx],
             } )
-            // Add a row name attrib from the object key if the input is an object
-            if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
-                listRows[listIndex-1].attributes['data-row-name'] = row
-            }
+
         })
     } )
 
@@ -390,93 +401,92 @@ function buildTable(msg, parentComponent) {
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
     let cols = []
-    let err = ''
+    const err = ''
 
     // NOTE: that the outer element (table) is built in the calling fn buildUi
 
     // Add the thead and tbody wrappers
     parentComponent.components = [
         {
-            "type":"thead",
-            "components": []
+            'type': 'thead',
+            'components': []
         },
         {
-            "type":"tbody",
-            "components": []
+            'type': 'tbody',
+            'components': []
         }
     ]
 
     // Convenient references
-    let thead = parentComponent.components[0]
-    let tbody = parentComponent.components[1]
+    const thead = parentComponent.components[0]
+    const tbody = parentComponent.components[1]
     const tbl = msg.payload
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
         // Build the columns from the first set of entries & add the thead
-        if (i===0) {
+        if (i === 0) {
             // TODO inp[el] has to be an object
             // TODO check that there are >0 columns
 
             // Create the header row
             thead.components = [
                 {
-                    "type":"tr",
-                    "components": []
+                    'type': 'tr',
+                    'components': []
                 }
             ]
 
             // TODO Allow override from msg.cols
             // Save the col names
             cols = Object.keys(tbl[row])
-            
+
             // Build the headings
-            cols.forEach( (colName,k) => {
+            cols.forEach( (colName, k) => {
                 thead.components[0].components.push({
-                    "type": "th",
-                    "attributes": {
-                        "data-hdr-row-index": 1,
-                        "data-col-index": k+1,
-                        "data-col-name": colName,
+                    'type': 'th',
+                    'attributes': {
+                        'data-hdr-row-index': 1,
+                        'data-col-index': k + 1,
+                        'data-col-name': colName,
                     },
-                    "slot": colName
+                    'slot': colName
                 })
             } )
-    
+
         }
 
         // Create the data row
-        let rLen = tbody.components.push( {
-                "type":"tr",
-                "components": []
-            }
-        )
+        const rLen = tbody.components.push( {
+            'type': 'tr',
+            'components': []
+        } )
         // Add the row index attrib and even/odd class
-        tbody.components[rLen-1].attributes = {
+        tbody.components[rLen - 1].attributes = {
             // NB: Making all indexes 1-based for consistency
             'data-row-index': rLen,
-            'class': (rLen % 2  == 0) ? "even" : "odd" 
+            'class': (rLen % 2  === 0) ? 'even' : 'odd'
         }
         // Add a row name attrib from the object key if the input is an object
         if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
-            tbody.components[rLen-1].attributes['data-row-name'] = row
+            tbody.components[rLen - 1].attributes['data-row-name'] = row
         }
         // TODO If tbl is an object - get the row names and apply to data-rowname attrib
         // TODO Allow for class overrides in node
 
         // Build the columns
-        cols.forEach( ( (colName, j) => {
-            tbody.components[rLen-1].components.push({
-                "type": "td",
-                "attributes": {
-                    "data-row-index": rLen,
+        cols.forEach(  (colName, j) => {
+            tbody.components[rLen - 1].components.push({
+                'type': 'td',
+                'attributes': {
+                    'data-row-index': rLen,
                     // NB: Making all indexes 1-based for consistency
-                    "data-col-index": j+1,
-                    "data-col-name": colName,
+                    'data-col-index': j + 1,
+                    'data-col-name': colName,
                 },
-                "slot": tbl[row][colName],
+                'slot': tbl[row][colName],
             })
-        } ) )
+        } )
 
     } )
 
@@ -491,7 +501,7 @@ function buildUi(msg, node) {
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) node._ui = msg._ui
     else node._ui = []
-    let uiIndex = node._ui.length === 0 ? 0 : node._ui.length-1
+    let uiIndex = node._ui.length === 0 ? 0 : node._ui.length - 1
 
     // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
     if ( !msg.mode ) msg.mode = 'update'
@@ -515,7 +525,7 @@ function buildUi(msg, node) {
     // Otherwise ...
 
     // If msg.mode = 'update' then remove+add.
-    if ( msg.mode == 'update' ) {
+    if ( msg.mode === 'update' ) {
         node._ui.push({
             method: 'remove',
             components: [`#${node.elementid}`], // remove uses css selector, not raw id
@@ -534,13 +544,13 @@ function buildUi(msg, node) {
             },
         ],
     } )
-    uiIndex = node._ui.length-1
+    uiIndex = node._ui.length - 1
 
     // TODO Will need to adjust for wrapper
-    
+
     // Keep track of the next set of components to add to the hierarchy
-    let nextComponents = node._ui[uiIndex].components
-    
+    const nextComponents = node._ui[uiIndex].components
+
     // Common - add the outer component
     node._ui[uiIndex].method = 'add' // looks odd but at present, the _ui[1] component can ONLY be an add.
     nextComponents[0].type = node.elementtype
@@ -579,7 +589,7 @@ function buildUi(msg, node) {
         }
     }
 
-    if (err.length>0) {
+    if (err.length > 0) {
         node.error(err, node)
         return
     }

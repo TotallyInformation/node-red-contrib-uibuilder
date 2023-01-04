@@ -92,15 +92,15 @@
                     value: 'elementType',
                     options: [
                         // @ts-expect-error
-                        { value: 'text', label: 'Text output with label' },
+                        { value: 'table', label: 'Simple Table' },
                         // @ts-expect-error
-                        { value: 'table', label: 'Table' },
+                        { value: 'ul', label: 'Unordered List (ul)' },
                         // @ts-expect-error
-                        { value: 'ul', label: 'Unordered (ul)' },
+                        { value: 'ol', label: 'Ordered List (ol)' },
                         // @ts-expect-error
-                        { value: 'ol', label: 'Ordered (ol)' },
-                        // @ts-expect-error
-                        { value: 'dl', label: 'Definition (dl)' },
+                        { value: 'dl', label: 'Description List (dl)' },
+                        // ts-expect-error
+                        // { value: 'text', label: 'Text output with label' },
                     ]
                 }
             ]
@@ -150,14 +150,18 @@
 
         // If caching turned off, grey out settings
         $('#node-input-cacheOn').on('change', function () {
+            // @ts-expect-error
             if (this.checked === true) {
+                // @ts-expect-error
                 $('#node-input-storeName').typedInput('enable')
+                // @ts-expect-error
                 $('#node-input-storeContext').typedInput('enable')
-                if ($('#node-input-storeContext').val() !== 'context')
-                    $('#node-input-varName').prop('disabled', false)
+                if ($('#node-input-storeContext').val() !== 'context') $('#node-input-varName').prop('disabled', false)
                 $('#node-input-newcache').prop('disabled', false)
             } else {
+                // @ts-expect-error
                 $('#node-input-storeName').typedInput('disable')
+                // @ts-expect-error
                 $('#node-input-storeContext').typedInput('disable')
                 $('#node-input-varName').prop('disabled', true)
                 $('#node-input-newcache').prop('disabled', true)
@@ -170,7 +174,7 @@
         $('#el-tab-conf').on('change', '[data-uib-el-prop]', function() {
             $(this).attr('data-changed', 'true')
         })
- 
+
         const tabs = RED.tabs.create({
             id: 'el-tabs',
             // scrollable: true,
@@ -189,6 +193,14 @@
 
                         case 'table': {
                             templ = document.querySelector('#table-template')
+                            break
+                        }
+
+                        case 'list':
+                        case 'ol':
+                        case 'ul':
+                        case 'dl': {
+                            templ = document.querySelector('#list-template')
                             break
                         }
 
