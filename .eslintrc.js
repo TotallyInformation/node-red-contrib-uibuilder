@@ -68,7 +68,7 @@ module.exports = {
     extends: [
         'standard',
         // 'eslint:recommended',
-        'plugin:es/restrict-to-es2020',
+        'plugin:es/no-new-in-esnext',
         'plugin:jsdoc/recommended',
         'plugin:promise/recommended',
         'plugin:sonarjs/recommended',

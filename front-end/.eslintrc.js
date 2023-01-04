@@ -30,7 +30,7 @@ module.exports = {
             parserOptions: { ecmaVersion: 2019, sourceType: 'module' },
             extends: [
                 'standard',
-                'plugin:es/restrict-to-es2019',
+                'plugin:es/restrict-to-es2015',
                 'plugin:jsdoc/recommended',
                 'plugin:promise/recommended',
                 'plugin:sonarjs/recommended',
