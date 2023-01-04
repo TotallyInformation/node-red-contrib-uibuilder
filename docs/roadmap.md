@@ -139,6 +139,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Card
     * tbody
     * tr (use data-row-index)
+    * li
+    * Form
+      * Inputs: incl text, number, time, date, ...
+      * Select
     * iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
     * notify (globalNotification)
     * button (NB: add type="button" to avoid form submit issues)

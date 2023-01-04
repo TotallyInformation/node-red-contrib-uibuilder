@@ -4,7 +4,7 @@ description: >
    If you haven't used uibuilder before, it can be a little confusing as it brings together concepts from
    several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-lastUpdated: 2022-03-27 13:30:46
+lastUpdated: 2023-01-04 16:51:20
 ---
 
 Like uibuilder itself, this walkthrough may look complex. But you should bear in mind that if you follow the 7 steps in the [How to get started](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
@@ -18,9 +18,7 @@ We refer to this as a "data-driven web application".
 
 uibuilder was created in order to provide Node-RED users with a flexible alternative to the Dashboard.
 
-Dashboard is extremely simple to start using and great for doing relatively straight-forward UI's very quickly.
-However, if you want to do more complex things, you quickly hit the brick-wall that is common with many frameworks.
-Suddenly things go from being very simple to very complex.
+Dashboard is extremely simple to start using and great for doing relatively straight-forward UI's very quickly. However, if you want to do more complex things, you quickly hit the brick-wall that is common with many frameworks. Suddenly things go from being very simple to very complex.
 
 uibuilder takes the opposite approach to Dashboard. Its main purpose is to be a _foundation_ on which you can build whatever you like, however you like.
 
@@ -36,6 +34,9 @@ It may look complex, but really it isn't. 😊
 
 2. Add a new flow consisting of: `inject -> uibuilder -> debug` nodes connected in that order. 
    Add debug nodes to both of the output ports of the uibuilder node and set them both to show the full msg.
+
+   > [!note]
+   > You can import a working example using Node-RED's import menu. Look in the examples section under uibuilder.
 
 3. Double-click on the uibuilder node and change it's URL to `uibtest`. Click on the "Done" button.
 
@@ -62,10 +63,9 @@ It may look complex, but really it isn't. 😊
    You will also see a property called `cacheControl` with a value of "REPLAY". This can be wired back to the uibuilder input and used to send cached data when a new client connects 
    (or an existing client reloads the page).
 
-   Note that the top output port on the uibuilder node outputs messages from your client(s). There is a helper function in the `uibuilderfe` library: `uibuilder.send({...})` that sends a message back to Node-RED. The message must be structured the same as a Node-RED message. That is to say that it must be a JavaScript object containing properties with values. For example: `{ "payload": "Message from the client", "topic": "mymessage" }`. See below for more information on working with the front-end code.
+   Note that the top output port on the uibuilder node outputs messages from your client(s). There is a helper function in the uibuilder client library: `uibuilder.send({...})` that sends a message back to Node-RED. The message must be structured the same as a Node-RED message. That is to say that it must be a JavaScript object containing properties with values. For example: `{ "payload": "Message from the client", "topic": "mymessage" }`. See below for more information on working with the front-end code.
 
-   Remember that the Node-RED server and the browser client page run in completely separate contexts (even if they both run on the same device). The only communication between them
-   happens because the uibuilder node talks to the `uibuilderfe.js` library that you will see in a moment is loaded in your HTML file.
+   Remember that the Node-RED server and the browser client page run in completely separate contexts (even if they both run on the same device). The only communication between them happens because the uibuilder node talks to the uibuilder client library that you will see in a moment is loaded in your HTML file.
 
 You now have a fully working uibuilder configuration. However, it doesn't do anything useful.
 
@@ -74,7 +74,7 @@ You now have a fully working uibuilder configuration. However, it doesn't do any
 Now that you have the basics running, it is time to look at the front-end code. The important points to remember are:
 
 * The code is completely standard web code using HTML, CSS and JavaScript (and any libraries you might choose to use).
-* There is a JavaScript helper library `uibuilderfe.js` that provides the magic connections between the front and back ends. See the technical docs for more information. A second library called `socket.io` or `socket.io-client` is also needed in order to enable the communications.
+* There is a JavaScript helper library that provides the magic connections between the front and back ends. See the technical docs for more information. A second library called `socket.io-client` is also loaded for you in the background, it enables the communications to/from Node-RED. The uibuilder client library will be one of: `uibuilder.iife.min.js` or `uibuilder.min.esm.min.js`. There is an older library, `uibuilderfe.min.js` but this is deprecated (as of uibuilder v6+) and should be replaced.
 * All of the front-end code for a uibuilder node instance is stored in a single folder (with some pre-defined and any desired sub-folders).
 
 There are two ways to look at and change the content of an instance's root folder (which, remember, sits on the Node-RED server).
@@ -103,13 +103,11 @@ There are two ways to look at and change the content of an instance's root folde
 
    To use this approach, you need access to the folder on the server's filing system that contains the root folder for the instance.
 
-   Typically, all of the instance folders live in the `<uibRoot>` folder. This is at `~/.node-red/uibuilder` (where `~` is the root folder of the user ID that runs Node-RED).
-   However, this may be different if you have turned on Node-RED's projects feature. You can also move the `<uibRoot>` folder using a setting in Node-RED's `settings.js` file.
+   Typically, all of the instance folders live in the `<uibRoot>` folder. By default, this is at `~/.node-red/uibuilder` (where `~` is the root folder of the user ID that runs Node-RED). However, this may be different if you have turned on Node-RED's projects feature. You can also move the `<uibRoot>` folder using a setting in Node-RED's `settings.js` file.
 
-   Each uibuilder node instance has a URL setting. This has to be unique for the instance of Node-RED and it is used as the identifier for the instance. That includes the folder
-   that contains the front-end code. For example, if you use the URL from the first part of the walkthrough, the folder would be `~/.node-red/uibuilder/uibtest/`.
+   Each uibuilder node instance has a URL setting. This has to be unique for the instance of Node-RED and it is used as the identifier for the instance. That includes the folder that contains the front-end code. For example, if you use the URL from the first part of the walkthrough, the folder would be `~/.node-red/uibuilder/uibtest/`.
 
-   Editing your code and the tools to use are beyond this walkthrough.
+   Editing your code and the tools to use are beyond this walkthrough however the [web-app workflow](web-app-workflow#code-folders) page has some additional details.
 
 ## Choosing a template
 
@@ -162,13 +160,25 @@ Notes:
 
 ## Displaying data from Node-RED
 
-Hi, much easier. You don't really want to send HTML to the front-end if you can help it. Much better to send the data you need. So no need for any template nodes at all.
+You don't really want to send HTML to the front-end if you can help it. Much better to send the data you need. So no need for any template nodes at all.
 
 Send the data in 1 or more standard messages from Node-RED. The uibuilder node sends the whole msg to your front-end.
 
 In your front-end code, you need a uibuilder.onChange('msg', function(msg){...}). Inside the function, take the contents of the msg and assign it to variables that you have pre-defined in your Vue app data section so that they are responsive.
 
 You use the responsive variables in your Vue HTML. Lots of tutorials on using Vue so have a look at some of those if you've not used it before. The only difference with uibuilder is the onChange function which is your link from Node-RED.
+
+## No-code UI's
+
+uibuilder is still growing towards offering more no-code capabilities like Node-RED's Dashboard extension does. However, it is starting to offer these features via the "new" client available since v5. V6.1 introduced a new node `uib-element` that is the first usable no-code feature.
+
+It takes in simple data structures and outputs configuration data either direct to a uibuilder front-end or via an output msg. Several simple options such as tables and lists are available in uibuilder v6.1, additional elements and structures will be made available in future versions.
+
+## Low-code UI's
+
+The data that `uib-element` outputs is a format that you can use in your own flows in Node-RED and even in front-end code if desired. It describes a set of HTML UI elements but does not need you to actually write HTML code. The configuration schema is very flexible and even allows you to load configuration data, HTML, scripts, and new ECMA Modules/Components from external files.
+
+The schema and the UI creator functions built into the front-end client are specifically designed to work with current and future HTML standards in order to avoid the kinds of issues commonly encountered when using 3rd-party front-end frameworks (e.g. major version changes forcing rewrites of all of your tooling). So ES Modules, ECMA Components, and future ECMA versions should all be supported.
 
 ## Sending data to Node-RED
 
@@ -178,7 +188,7 @@ To send data back to Node-RED, use the uibuilder.send(msg) function. It pops out
 
 ### Software versions
 
-uibuilder v4 requires Node.js v12+, Node-RED v 1.3+ and for the browser, an ES6 (ECMA2015) capable version (Not IE. Virtually all modern browsers over the last few years but for Apple mobiles has to be iOS 12+).
+uibuilder v6 requires Node.js v14+, Node-RED v 3+ and for the browser, an ES6 (ECMA2015) capable version (Not IE. Virtually all modern browsers over the last few years but for Apple mobiles has to be iOS 12+). Some of the newer features need a browser capable of ECMA2019 which should be virtually every modern browser.
 
 Without these, you are likely to hit issues with compatibility or outright error. Please contact the author if you need something outside of these specifications though as it is possible that something could be put together.
 

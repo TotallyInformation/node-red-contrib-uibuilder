@@ -34,10 +34,26 @@ uibuilder should generally also be a **lot** faster and more resource efficient 
 
 The purpose of uibuilder is to:
 
-* Support an easy method for creating and delivering data-driven web apps.
+* Support easy methods for creating and delivering data-driven web apps.
 * Be a conduit between Node-RED and a front-end (browser) UI web app.
 * Be UI framework agnostic. While VueJS is often used with uibuilder, it isn't a necessary dependency. Indeed no framework is needed to use uibuilder.
 * Provide interface/data standards for exchanging data and controls with the UI.
+
+## No-code UI's
+
+uibuilder is still growing towards offering more no-code capabilities like Node-RED's Dashboard extension does. However, it is starting to offer these features via the "new" client available since v5. V6.1 introduced the new `uib-element` and `uib-change` nodes that are the first usable no-code feature.
+
+`uib-element` takes in simple data and outputs configuration data either direct to a uibuilder front-end or via an output msg. Several simple options such as tables and lists are available in uibuilder v6.1, additional elements and structures will be made available in future versions. The uibuilder front-end client takes the configuration information and dynamically builds HTML elements and inserts them to the web page (or removes/updates as needed).
+
+This is not the most efficient approach since updates are mostly replacing the whole element which could be quite large for things like big tables. So the `uib-change` node provides a more targetted approach to changing specific attributes and "slot" content for elements.
+
+It is important to note that no front-end, 3rd-party frameworks such as VueJS or REACT are needed for this approach! Everything uses vanilla HTML, JavaScript and CSS under the skin and so is compatible with current and future web standards.
+
+## Low-code UI's
+
+The data that `uib-element` outputs is a format that you can use in your own flows in Node-RED and even in front-end code if desired. It describes a set of HTML UI elements but does not need you to actually write HTML code. The configuration schema is very flexible and even allows you to load configuration data, HTML, scripts, and new ECMA Modules/Components from external files.
+
+The schema and the UI creator functions built into the front-end client are specifically designed to work with current and future HTML standards in order to avoid the kinds of issues commonly encountered when using 3rd-party front-end frameworks (e.g. major version changes forcing rewrites of all of your tooling). So ES Modules, ECMA Components, and future ECMA versions should all be supported.
 
 ## Core features
 
@@ -53,6 +69,7 @@ The purpose of uibuilder is to:
 
 The general direction of uibuilder (or associated modules) is likely to include:
 
+* Provide more no-code and low-code UI creation and update capabilities.
 * The ability within Node-RED to, for each uibuilder node, run npm scripts such as build processes and to manage instance-level npm packages.
 * Be able to install/update/remove instance-level npm packages as can already be done for uibuilder-level packages.
 * Provide a "development server" capability that auto-reloads connected clients when code changes are made.
@@ -102,6 +119,8 @@ The general direction of uibuilder (or associated modules) is likely to include:
 
 - [node-red-contrib-uibuilder](#node-red-contrib-uibuilder)
   - [Purpose](#purpose)
+  - [No-code UI's](#no-code-uis)
+  - [Low-code UI's](#low-code-uis)
   - [Core features](#core-features)
   - [Future direction](#future-direction)
   - [Feature details](#feature-details)

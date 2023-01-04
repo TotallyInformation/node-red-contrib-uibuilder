@@ -13,6 +13,10 @@
   * [How to use instance API's](instance-apis.md)
 * Developing UI's
   * [The modern front-end client](uibuilder.module.md)
+    * [Features](client-docs/features.md)
+    * [Dynamic, config-driven UI's](client-docs/config-driven-ui.md)
+    * [Technical Reference](client-docs/technical-reference.md)
+    * [Troubleshooting](client-docs/troubleshooting.md)
   * [Old uibuilderfe client library](front-end-library.md)
   * [Creating Templates](creating-templates)
   * [Browser auto-refresh](browser-refresh.md)
