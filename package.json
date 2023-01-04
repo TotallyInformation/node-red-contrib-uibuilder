@@ -31,7 +31,7 @@
     "@types/jquery": "^3.5.8",
     "@types/node": "^14.18.29",
     "@types/node-red": "^1.1.1",
-    "eslint": "^8.17.0",
+    "eslint": "^8.31.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^7.1.0",

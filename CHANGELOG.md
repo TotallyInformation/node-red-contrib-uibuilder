@@ -61,12 +61,13 @@ NOTE: Caches the INPUT, not the OUTPUT
     * Add input guides for each type
   * TABLE
     * Caption
-    * ? Optional heading ?
+    * Add data-row-name to td's as well
+    * ? Optional heading ? If so, wrap in a `<section>` & use aria-labelledby on the table tag
   * LIST
     * list-style-type (add to outer) - several options plus text (incl emoji's)
     * Add div's around dt/dd pairs
-    * ? Optional heading ?
-    * ? Optional leading/trailing text ?
+    * ? Optional heading ? If so, wrap in a `<section>` & use aria-labelledby on the ul/ol/dl tag
+    * ? Optional leading/trailing text ? If so, wrap in a `<section>` & use aria-labelledby on the ul/ol/dl tag
     * Allow nested lists?
 * ?? Disable url if doing passthrough - what about reconnection events?
   * Disable reconnect events but handle uibuilder cache control msgs

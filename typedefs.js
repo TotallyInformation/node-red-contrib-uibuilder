@@ -193,7 +193,7 @@
 
 /** uibuilderEditorVars
  * @typedef {object} uibuilderEditorVars The node instance variables accessible from the Editor config panel
- * 
+ *
  * @property {string} name Descriptive name, only used by Editor
  * @property {string} topic msg.topic overrides incoming msg.topic
  * @property {string} url The url path (and folder path) to be used by this instance
@@ -209,7 +209,7 @@
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
- * 
+ *
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -240,7 +240,7 @@
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
- * 
+ *
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -382,25 +382,25 @@
 
 /** uibElNode (Element Node)
  * @typedef {{
-*   name: string;
-*   url: string;
-*   elementid: string;
-*   elementtype: string;
-*   parent: string;
-*   wrapper: string;
-*   passthrough: boolean;
-*   cacheOn: boolean;
-*   storeName: string;
-*   storeContext: 'context'|'flow'|'node';
-*   varName: string;
-*   newcache: boolean;
-*   confData: object,
-*   cache: object;
-*   getC: Function;
-*   setC: Function;
-*   _ui: any;
-* }} uibElNode
-*/
+ *   name: string;
+ *   url: string;
+ *   elementid: string;
+ *   elementtype: string;
+ *   parent: string;
+ *   wrapper: string;
+ *   passthrough: boolean;
+ *   cacheOn: boolean;
+ *   storeName: string;
+ *   storeContext: 'context'|'flow'|'node';
+ *   varName: string;
+ *   newcache: boolean;
+ *   confData: object,
+ *   cache: object;
+ *   getC: Function;
+ *   setC: Function;
+ *   _ui: any;
+ * }} uibElNode
+ */
 
 /** MsgAuth
  * @typedef {object} MsgAuth The standard auth object used by uibuilder security. See docs for details.
