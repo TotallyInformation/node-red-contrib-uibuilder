@@ -1165,13 +1165,12 @@ export const Uib = class Uib {
             /** @type {NodeListOf<Element>} */
             let elToUpd
 
-            // Either the id, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
-            if ( compToUpd.parentEl ) { // Handles nested components
-                // ! NOT WORKING
-                console.log('>> parentEl >>', compToUpd.parentEl, ui)
-                elToUpd = compToUpd.parentEl[0]
-            } else if ( compToUpd.id ) {
+            // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
+            if ( compToUpd.id ) {
+                // NB We don't use get by id because this way the code is simpler later on
                 elToUpd = document.querySelectorAll(`#${compToUpd.id}`)
+            } else if ( compToUpd.selector ) {
+                elToUpd = document.querySelectorAll(compToUpd.selector)
             } else if ( compToUpd.name ) {
                 elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`)
             } else if ( compToUpd.type ) {

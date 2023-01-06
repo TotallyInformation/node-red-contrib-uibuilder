@@ -2924,11 +2924,10 @@
         ui.components = [ui];
       ui.components.forEach((compToUpd) => {
         let elToUpd;
-        if (compToUpd.parentEl) {
-          console.log(">> parentEl >>", compToUpd.parentEl, ui);
-          elToUpd = compToUpd.parentEl[0];
-        } else if (compToUpd.id) {
+        if (compToUpd.id) {
           elToUpd = document.querySelectorAll(`#${compToUpd.id}`);
+        } else if (compToUpd.selector) {
+          elToUpd = document.querySelectorAll(compToUpd.selector);
         } else if (compToUpd.name) {
           elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`);
         } else if (compToUpd.type) {
