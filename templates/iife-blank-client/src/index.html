@@ -11,6 +11,11 @@
     <!-- Your own CSS -->
     <link type="text/css" rel="stylesheet" href="./index.css" media="all">
 
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed  -->
+    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+    <script defer src="./index.js">/* OPTIONAL: Put your custom code in that */</script>
+    <!-- #endregion -->
+
 </head><body class="uib">
     
     <h1>uibuilder Minimal Modern Client Example using IIFE library - v6.1.0</h1>
@@ -25,9 +30,4 @@
     
     <pre id="msg" class="syntax-highlight">Waiting for a message from Node-RED</pre>
     
-    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed -->
-    <script src="../uibuilder/uibuilder.iife.min.js">/* REQUIRED: remove 'min.' to use dev version */</script>
-    <script src="./index.js">/* OPTIONAL: Put your custom code in that */</script>
-    <!-- #endregion -->
-
 </body></html>

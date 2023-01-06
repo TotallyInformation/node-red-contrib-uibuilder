@@ -9,11 +9,19 @@
 
     <link rel="icon" href="./images/node-blue.ico">
 
+    <!-- #region Supporting CSS. -->
     <link type="text/css" rel="stylesheet" href="../uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.css" />
-    <!-- Your own CSS -->
-    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all"><!-- Your own CSS -->
+    <!-- #endregion -->
 
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed -->
+    <script defer src="../uibuilder/vendor/vue/dist/vue.min.js">/* prod version with component compiler */</script>
+    <script defer src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js">/* remove 'min.' to use dev version */</script>
+    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+    <script defer src="./index.js">/* OPTIONAL: Put your custom code in that */</script>
+    <!-- #endregion -->
+    
 </head><body>
 
     <div id="app" class="uib" v-cloak><!-- All UI code needs to be in here -->
@@ -21,21 +29,11 @@
 
             <h1>uibuilder + Vue.js + bootstrap-vue for Node-RED - Simple Template</h1>
 
+            <div id="more"><!-- '#more' is used as a parent for dynamic content in examples --></div>
+
             <pre id="msg" v-html="showLastReceivedMsg" class="syntax-highlight">Waiting for a message from Node-RED</pre>
 
         </b-container>
     </div>
-
-    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
-    <script src="../uibuilder/vendor/socket.io/socket.io.js">/* REQUIRED: Socket.IO is loaded only once for all instances. Without this, you don't get a websocket connection */</script>
-    <!-- Vendor Libraries - Load in the right order, use minified, production versions for speed -->
-    <script src="../uibuilder/vendor/vue/dist/vue.min.js">/* prod version with component compiler */</script>
-    <!-- <script src="../uibuilder/vendor/vue/dist/vue.js">/* dev version with component compiler */</script> -->
-    <!-- <script src="../uibuilder/vendor/vue/dist/vue.runtime.min.js">/* prod version without component compiler */</script> -->
-    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js">/* remove 'min.' to use dev version */</script> <!--  -->
-
-    <script src="../uibuilder/uibuilder.iife.min.js">/* REQUIRED: remove 'min.' to use dev version */</script>
-    <script src="./index.js">/* OPTIONAL: Put your custom code here */</script>
-    <!-- #endregion -->
 
 </body></html>

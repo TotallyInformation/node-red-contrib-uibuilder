@@ -8,11 +8,19 @@
     <meta name="description" content="Node-RED uibuilder - Vue v2 + bootstrap-vue template">
     <link rel="icon" href="./images/node-blue.ico">
 
+    <!-- #region Supporting CSS. -->
     <link type="text/css" rel="stylesheet" href="../uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.css" />
-    <!-- Your own CSS -->
-    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all"><!-- Your own CSS -->
+    <!-- #endregion -->
 
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed -->
+    <script defer src="../uibuilder/vendor/vue/dist/vue.min.js">/* prod version with component compiler */</script>
+    <script defer src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js">/* remove 'min.' to use dev version */</script>
+    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+    <script defer src="./index.js">/* OPTIONAL: Put your custom code in that */</script>
+    <!-- #endregion -->
+    
 </head><body>
 
     <div id="app" class="uib" v-cloak><!-- All UI code needs to be within here for Vue -->
@@ -85,11 +93,4 @@
         </b-container>
     </div>
 
-    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed -->
-    <script src="../uibuilder/vendor/vue/dist/vue.min.js">/* prod version with component compiler */</script>
-    <script src="../uibuilder/vendor/bootstrap-vue/dist/bootstrap-vue.min.js">/* remove 'min.' to use dev version */</script>
-    <script src="../uibuilder/uibuilder.iife.min.js">/* REQUIRED: remove 'min.' to use dev version */</script>
-    <script src="./index.js">/* OPTIONAL: Put your custom code in that */</script>
-    <!-- #endregion -->
-    
 </body></html>
