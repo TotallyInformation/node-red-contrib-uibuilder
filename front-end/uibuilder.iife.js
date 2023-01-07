@@ -2934,7 +2934,7 @@
           elToUpd = document.querySelectorAll(compToUpd.type);
         }
         if (elToUpd === void 0 || elToUpd.length < 1) {
-          log("error", "Uib:_uiManager:update", "Cannot find the DOM element", compToUpd)();
+          log("warn", "Uib:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
           return;
         }
         if (compToUpd.properties) {

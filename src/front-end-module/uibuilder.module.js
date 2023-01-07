@@ -1179,7 +1179,7 @@ export const Uib = class Uib {
 
             // @ts-ignore Nothing was found so give up
             if ( elToUpd === undefined || elToUpd.length < 1 ) {
-                log('error', 'Uib:_uiManager:update', 'Cannot find the DOM element', compToUpd)()
+                log('warn', 'Uib:_uiManager:update', 'Cannot find the DOM element. Ignoring.', compToUpd)()
                 return
             }
 
