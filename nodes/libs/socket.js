@@ -2,7 +2,7 @@
 /** Manage Socket.IO on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  *
- * Copyright (c) 2017-2022 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2023 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -75,17 +75,16 @@ function getClientRealIpAddress(socket) {
 
 /** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
  * @param {socketio.Socket} socket Socket.IO socket object
+ * @param {uibNode} node Reference to the uibuilder node instance
  * @returns {string | string[] | undefined} Best estimate of the client's real IP address
  */
- function getClientPageName(socket, node) {
+function getClientPageName(socket, node) {
     let pageName = socket.handshake.auth.pathName.replace(`/${node.url}/`, '')
     if ( pageName.endsWith('/') ) pageName += 'index.html'
     if ( pageName === '' ) pageName = 'index.html'
 
     return pageName
 } // --- End of getClientPageName --- //
-
-
 
 class UibSockets {
     // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
@@ -362,7 +361,7 @@ class UibSockets {
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     sendIt(msg, node) {
-        if ( msg._uib && msg._uib.originator ) {
+        if ( msg._uib && msg._uib.originator && (typeof msg._uib.originator === 'string') ) {
             // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
             tiEventManager.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
         } else {
