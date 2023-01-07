@@ -3129,6 +3129,10 @@
         log("error", "Uib:eventSend", "`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`")();
         return;
       }
+      if (!domevent && !event) {
+        log("warn", "Uib:eventSend", "Neither the domevent nor the hidden event properties are set. You probably called this function directly rather than applying to an on click event.")();
+        return;
+      }
       if (!domevent || !domevent.constructor)
         domevent = event;
       if (!domevent.constructor.name.endsWith("Event") || !domevent.currentTarget) {

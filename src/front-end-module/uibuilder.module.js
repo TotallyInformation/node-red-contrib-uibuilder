@@ -1475,8 +1475,13 @@ export const Uib = class Uib {
             log('error', 'Uib:eventSend', '`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`' )()
             return
         }
+        if (!domevent && !event) {
+            log('warn', 'Uib:eventSend', 'Neither the domevent nor the hidden event properties are set. You probably called this function directly rather than applying to an on click event.' )()
+            return
+        }
         // Handle no argument, e.g. <button onClick="uibuilder.eventSend()"> - event is a hidden variable when fn used in addEventListener
         if (!domevent || !domevent.constructor) domevent = event
+
         // The argument must be a DOM event
         if ((!domevent.constructor.name.endsWith('Event')) || (!domevent.currentTarget)) {
             log('warn', 'Uib:eventSend', `ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data. Arg Type: ${domevent.constructor.name}`, domevent)()
