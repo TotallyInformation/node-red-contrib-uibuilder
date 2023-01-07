@@ -25,6 +25,12 @@ module.exports = {
         'dependencies': [ 'vue' ],
         'description': 'Very simple Vue v3+ template that does not require a build step. Uses the modern IIFE uib client library.'
     },
+    // 'vue3-sfc-load': {
+    //     'name': 'Vue3 no build step, modern IIFE client. SFC Loader to directly load/compile/run .vue files.',
+    //     'folder': 'vue3-sfc-load',
+    //     'dependencies': [ 'vue', 'vue3-sfc-loader' ],
+    //     'description': 'Vue v3 template demonstrating the direct loading of .vue files without a build step using vue3-sfc-loader.'
+    // },
     'vue2-bootstrap': {
         'name': 'VueJS v2 & bootstrap-vue',
         'folder': 'vue2-bootstrap',

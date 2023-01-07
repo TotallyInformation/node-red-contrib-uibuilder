@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Simple Vue3 with new uib client - Node-RED uibuilder</title>
+    <meta name="description" content="Node-RED uibuilder - Simple Vue3 with new uib client">
+    <link rel="icon" href="./images/node-blue.ico">
+
+    <!-- Your own CSS -->
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed  -->
+    <!-- <script defer src="https://cdn.jsdelivr.net/npm/vue@latest/dist/vue.global.prod.js">/* Remove .prod for development version */</script> -->
+    <script defer src="../uibuilder/vendor/vue/dist/vue.global.prod.js">/* Remove .prod for development version */</script>
+    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+    <script defer src="./index.js">/* OPTIONAL: Put your custom code in that */</script>
+    <!-- #endregion -->
+
+</head><body class="uib">
+
+    <div id="app">
+        <h1>Simple Vue v3 App Using New uibuilder IIFE Client - v6.1.0</h1>
+
+        <p>{{ message }}</p>
+
+        <div id="more"><!-- '#more' is used as a parent for dynamic content in examples --></div>
+
+        <p>
+            <button @click="count++" title="Not sent back to Node-RED - this just shows that VueJS is working">
+                Simple VueJS Counter: {{ count }}
+            </button>
+        </p>
+        
+        <p>
+            <button @click="doEvent" data-mything="This is a thing" title="This is sent back to Node-RED">
+                Click to send msg to Node-RED
+            </button>
+        </p>
+        
+        <p>
+            <label for="input1">This is sent to Node-RED when you exit it: </label>
+            <input v-model="input1" @change="doInputChange" id="input1" type="text" placeholder="Type text then exit field">
+        </p>
+        
+        <pre id="msg" v-html="formatLastRcvd" class="syntax-highlight">Waiting for a message from Node-RED</pre>
+    </div>
+
+</body></html>
