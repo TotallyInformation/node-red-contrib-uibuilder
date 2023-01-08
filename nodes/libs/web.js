@@ -193,7 +193,6 @@ class UibWeb {
 
         log.trace('[uibuilder:web:_webSetup] Configuring ExpressJS')
 
-        
         /** We need an http server to serve the page and vendor packages. The app is used to serve up the Socket.IO client.
          * NB: uib.nodeRoot is the root URL path for http-in/out and uibuilder nodes
          * Always set to empty string if a dedicated ExpressJS app is required
@@ -288,7 +287,7 @@ class UibWeb {
         // Note: Keep the router vars separate so that they can be used for reporting
 
         this.app.use(express.json())
-        this.app.use(express.urlencoded({extended: true}))
+        this.app.use(express.urlencoded({ extended: true }))
 
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
@@ -517,7 +516,7 @@ class UibWeb {
          */
 
         // (1.) Instance log route (./_clientLog)
-        this.addLogRoute(node)
+        this.addBeaconRoute(node)
         // (1a) httpMiddleware - Optional common middleware from a custom file (same for all instances)
         this.addMiddlewareFile(node)
         // (1b) masterMiddleware - uib's internal dynamic middleware to add uibuilder specific headers & cookie
@@ -1001,8 +1000,13 @@ class UibWeb {
         return page
     } // ---- End of showInstanceDetails ---- //
 
-    /** */
-    addLogRoute(node) {
+    /** Creates a route for logging to NR from the front-end via HTTP Beacons
+     * In FE code, use as: navigator.sendBeacon('./_clientLog', `pageshow. From Cache?: ${event.persisted}`)
+     * Only text can be sent. This fn attempts to split the text on "::". If it succedes, the 1st entry
+     * is assumed to be the log level. If no level provided, assumes "debug" level so it won't show in NR logs by default.
+     * @param {uibNode} node configuration data for this instance
+     */
+    addBeaconRoute(node) {
         // Reference static vars
         const uib = this.uib
         // const RED = this.RED
@@ -1010,17 +1014,49 @@ class UibWeb {
 
         if (uib.configFolder === null) throw new Error('uib.configFolder is null')
 
-        let logUrl = `/_clientLog`   // e.g. https://red.local:1880/<httpRoot>/<url>/_clientLog
+        const logUrl = '/_clientLog'   // e.g. https://red.local:1880/<httpRoot>/<url>/_clientLog
 
         // Only the text processor is useful since navigator.sendBeacon() only seems to send text no matter what MDN says. //express.json(), express.text(), express.urlencoded({extended: true}),
         this.instanceRouters[node.url].post(logUrl, express.text(), (req, res) => {
             log.trace(`[uibuilder:web:addLogRoute:${node.url}] POST to client logger: ${req.body}`)
-            console.log('POST request to logger', req.body)
-            // TODO - send control msg
-            res.status(200) // no content
+            res.status(204) // 204 = no content
+
+            const splitBody = req.body.split('::')
+            let logLevel = 'debug'
+            let logTxt = req.body
+            if (splitBody.length > 1) {
+                logLevel = splitBody.shift()
+                logTxt = splitBody.join('::')
+            } // Else no level provided, assume "debug"
+
+            log[logLevel](`[uibuilder:clientLog:${node.url}] ${logTxt}`)
+
+            let clientId
+            try {
+                clientId = req.headers.cookie.split(';').filter( c => c.trim().startsWith('uibuilder-client-id='))[0].replace('uibuilder-client-id=', '').trim()
+            } catch (e) {}
+
+            // Send a control msg to let the flows know (via port#2) a client has logged something
+            node.send( [null, {
+                'uibuilderCtrl': 'client beacon log',
+                'topic': node.topic || undefined,
+                'payload': logTxt,
+                'logLevel': logLevel,
+                // 'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
+                // '_socketId': socket.id,
+                // 'ip': getClientRealIpAddress(socket),
+                'ip': req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+                'clientId': clientId, // ['uibuilder-client-id'], // socket.handshake.auth.clientId,
+                // 'tabId': socket.handshake.auth.tabId,
+                'url': node.url,
+                // 'pageName': pageName,
+                // 'connections': socket.handshake.auth.connectedNum,
+                // 'lastNavType': socket.handshake.auth.lastNavType,
+            }] )
         } )
-        log.trace(`[uibuilder:web:addLogRoute:${node.url}] Client Log route added`)
-        this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client log back to Node-RED', type: 'POST', folder: 'N/A' } )
+
+        log.trace(`[uibuilder:web:addLogRoute:${node.url}] Client Beacon Log route added`)
+        this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client beacon log back to Node-RED', type: 'POST', folder: 'N/A' } )
     }
 
     //#endregion ====== Per-node instance processing ====== //
@@ -1143,7 +1179,7 @@ class UibWeb {
     dumpUserRoutes(print = true) {
         const routes = { 'app': [], 'uibRouter': [], 'vendorRouter': [] }
 
-        // Get the user-facing routes  
+        // Get the user-facing routes
         for ( const layer of this.app._router.stack) { this.summariseRoute(layer, routes.app) }
         if (this.uibRouter) for ( const layer of this.uibRouter.stack) { this.summariseRoute(layer, routes.uibRouter) }
         if (this.vendorRouter) for ( const layer of this.vendorRouter.stack) { this.summariseRoute(layer, routes.vendorRouter) }
