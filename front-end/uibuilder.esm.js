@@ -3251,6 +3251,23 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       }
     }
   }
+  beaconLog(txtToSend, logLevel2) {
+    if (!logLevel2)
+      logLevel2 = "debug";
+    navigator.sendBeacon("./_clientLog", `${logLevel2}::${txtToSend}`);
+  }
+  logToServer() {
+    this.sendCtrl({
+      uibuilderCtrl: "client log message",
+      payload: arguments,
+      _socketId: this._socket.id,
+      clientId: this.clientId,
+      tabId: this.tabId,
+      pageName: this.pageName,
+      connections: __privateGet(this, _connectedNum),
+      lastNavType: this.lastNavType
+    });
+  }
   _getIOnamespace() {
     let ioNamespace;
     ioNamespace = this.cookies["uibuilder-namespace"];

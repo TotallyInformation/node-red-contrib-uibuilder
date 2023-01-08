@@ -1671,6 +1671,34 @@ export const Uib = class Uib {
 
     } // -- End of websocket receive CONTROL msg from Node-RED -- //
 
+    /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
+     * @param {string} txtToSend Text string to send
+     * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
+     */
+    beaconLog(txtToSend, logLevel) {
+        if (!logLevel) logLevel = 'debug'
+        navigator.sendBeacon('./_clientLog', `${logLevel}::${txtToSend}`)
+    }
+
+    /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
+     * -@param {...*} arguments All arguments passed to the function are added to the msg.payload
+     */
+    logToServer() {
+        this.sendCtrl({
+            uibuilderCtrl: 'client log message',
+            payload: arguments,
+            // "version":"6.1.0-iife.min",
+            _socketId: this._socket.id,
+            // "ip":"::1",
+            clientId: this.clientId,
+            tabId: this.tabId,
+            // "url":"esp-test",
+            pageName: this.pageName,
+            connections: this.#connectedNum,
+            lastNavType: this.lastNavType,
+        })
+    }
+
     //#endregion -------- ------------ -------- //
 
     //#region ------- Socket.IO -------- //
