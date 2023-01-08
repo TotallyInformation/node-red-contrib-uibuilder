@@ -143,7 +143,7 @@ class UibSockets {
      * @param {Express} server reference to ExpressJS server being used by uibuilder
      */
     setup( uib, server ) {
-        if ( !uib || !server ) throw new Error(`[uibuilder:socket.js:setup] Called without required parameters or uib and/or server are undefined.`)
+        if ( !uib || !server ) throw new Error('[uibuilder:socket.js:setup] Called without required parameters or uib and/or server are undefined.')
         if (uib.RED === null) throw new Error('[uibuilder:socket.js:setup] uib.RED is null')
 
         // Prevent setup from being called more than once
@@ -151,7 +151,6 @@ class UibSockets {
             uib.RED.log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
         }
-
 
         /** reference to Core Node-RED runtime object */
         this.RED = uib.RED
@@ -269,7 +268,7 @@ class UibSockets {
         const socketId = msg._socketId || undefined
 
         // Control msgs should say where they came from
-        if ( channel === uib.ioChannels.control ) msg.from = 'server'
+        if ( channel === uib.ioChannels.control && !msg.from ) msg.from = 'server'
 
         // Process outbound middleware (middleware is loaded in this.setup)
         try {
@@ -316,35 +315,55 @@ class UibSockets {
         }
     } // ---- End of sendToFe2 ---- //
 
-    /** DEPRECATED Get client details for JWT security check
+    /** Send a uibuilder control message out of port #2
+     * Note: this.getClientDetails is used before calling this if client details needed
+     * @param {object} msg The message to output
+     * @param {uibNode} node Reference to the uibuilder node instance
+     */
+    sendCtrlMsg(msg, node) {
+        node.send( [null, msg])
+    }
+
+    /** Get client details for including in Node-RED messages
      * @param {socketio.Socket} socket Reference to client socket connection
+     * @param {uibNode} node Reference to the uibuilder node instance
      * @returns {object} Extracted key information
      */
-    getClientDetails(socket) {
-        this.log.warn('[uibuilder:socket.js:getClientDetails] CALL TO DEPRECATED FUNCTION')
+    getClientDetails(socket, node) {
 
-        // tilib.mylog('>>>>> ========================= <<<<<')
-        // tilib.mylog('>>>>>   remote address:', socket.request.connection.remoteAddress) // client ip address. May be IPv4 or v6
-        // tilib.mylog('>>>>> handshake secure:', socket.handshake.secure) // true if https/wss
-        // // tilib.mylog('>>>>>', socket.handshake.time)
-        // tilib.mylog('>>>>> handshake issued:', (new Date(socket.handshake.issued)).toISOString()) // when the client connected to the server
-        // // tilib.mylog('>>>>>', socket.handshake.url)
-        // tilib.mylog('>>>>>       x-clientid:', socket.request.headers['x-clientid']) // = 'uibuilderfe'
-        // tilib.mylog('>>>>>          referer:', socket.request.headers.referer) // = uibuilder url
-        // tilib.mylog('>>>>> ========================= <<<<<')
+        // Add page name meta to allow caches and other flows to send back to specific page
+        // Note, could use socket.handshake.auth.pageName instead
+        let pageName
+        if ( socket.handshake.auth.pathName ) {
+            pageName = getClientPageName(socket, node)
+        }
 
         return {
-            /** Client remote IP address (v4 or v6) */
-            remoteAddress: getClientRealIpAddress(socket),
+            '_socketId': socket.id,
+            // Let the flow know what v of uib client is in use
+            'version': socket.handshake.auth.clientVersion,
+            /** Do our best to get the actual IP addr of client despite any Proxies */
+            'ip': getClientRealIpAddress(socket),
+            /** What is the stable client id (set by uibuilder, retained till browser restart) */
+            'clientId': socket.handshake.auth.clientId,
+            /** What is the client tab identifier (set by uibuilder modern client) */
+            'tabId': socket.handshake.auth.tabId,
+            /** What was the originating uibuilder URL */
+            'url': node.url,
+            /** What was the originating page name (for SPA's) */
+            'pageName': pageName,
+            /** How many times has this client reconnected (e.g. after sleep) */
+            'connections': socket.handshake.auth.connectedNum,
+            /** What type of client nav happened previously */
+            'lastNavType': socket.handshake.auth.lastNavType,
             /** True if https/wss */
-            secure: socket.handshake.secure,
+            'tls': socket.handshake.secure,
             /** When the client connected to the server */
-            connectedTimestamp: (new Date(socket.handshake.issued)).toISOString(),
-            /** 'x-clientid' from headers. uibuilderfe sets this to 'uibuilderfe' */
-            clientId: socket.request.headers['x-clientid'],
+            'connectedTimestamp': (new Date(socket.handshake.issued)).toISOString(),
             /** THe referring webpage, should be the full URL of the uibuilder page */
-            referer: socket.request.headers.referer,
-            // url: socket.handshake.url
+            'referer': socket.request.headers.referer,
+
+            // ? client time offset ?
         }
     }
 
@@ -392,15 +411,15 @@ class UibSockets {
         // If the sender hasn't added msg._socketId, add the Socket.id now
         if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
-        // If required, add the clientId, page name and real IP to the msg using msg._uib
+        // If required, add/merge the client details to the msg using msg._uib
         if (node.showMsgUib) {
-            if (!msg._uib) msg._uib = {}
-            msg._uib.clientId = socket.handshake.auth.clientId
-            msg._uib.remoteAddress = getClientRealIpAddress(socket)
-            msg._uib.url = node.url,
-            msg._uib.pageName = getClientPageName(socket, node)
-            msg._uib.tabId = socket.handshake.auth.tabId
-            // msg._uib.lastNavType = socket.handshake.auth.lastNavType
+            if (!msg._uib) msg._uib = this.getClientDetails(socket, node)
+            else {
+                msg._uib = {
+                    ...msg._uib,
+                    ...this.getClientDetails(socket, node)
+                }
+            }
         }
 
         // Send out the message for downstream flows
@@ -427,12 +446,14 @@ class UibSockets {
 
         const ioNs = this.ioNamespaces[node.url] = this.io.of(node.url)
 
-        // Add some additional metadata to NS
+        // @ts-expect-error Add some additional metadata to NS
         const url = ioNs.url = node.url
-        ioNs.nodeId = node.id // allows us to track back to the actual node in Node-RED
-        // ioNs.useSecurity = node.useSecurity // Is security on for this node instance?
+        // @ts-expect-error Allows us to track back to the actual node in Node-RED
+        ioNs.nodeId = node.id
+        // @ts-expect-error ioNs.useSecurity = node.useSecurity // Is security on for this node instance?
         ioNs.rcvMsgCount = 0
-        ioNs.log = log // Make Node-RED's log available to middleware via custom ns property
+        // @ts-expect-error Make Node-RED's log available to middleware via custom ns property
+        ioNs.log = log
         // ioNs.clientLog = {}
 
         if (uib.configFolder === null) throw new Error('uib.configFolder is undefined')
@@ -460,13 +481,6 @@ class UibSockets {
 
         ioNs.on('connection', function(socket) {
 
-            // Add page name meta to allow caches and other flows to send back to specific page
-            // Note, could use socket.handshake.auth.pageName instead
-            let pageName
-            if ( socket.handshake.auth.pathName ) {
-                pageName = getClientPageName(socket, node)
-            }
-
             //#region ----- Event Handlers ----- //
 
             // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
@@ -483,25 +497,21 @@ class UibSockets {
 
                 // Let the control output port know a client has disconnected
                 const ctrlMsg = {
-                    'uibuilderCtrl': 'client disconnect',
-                    'reason': reason,
-                    'topic': node.topic || undefined,
-                    '_socketId': socket.id,
-                    'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
-                    'ip': getClientRealIpAddress(socket),
-                    'clientId': socket.handshake.auth.clientId,
-                    'tabId': socket.handshake.auth.tabId,
-                    'url': node.url,
-                    'pageName': pageName,
-                    'connections': socket.handshake.auth.connectedNum
+                    ...{
+                        uibuilderCtrl: 'client disconnect',
+                        reason: reason,
+                        topic: node.topic || undefined,
+                        from: 'server',
+                    },
+                    ...that.getClientDetails(socket, node),
                 }
 
                 that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
 
                 // Copy to port#2 for reference
-                node.send([null, ctrlMsg])
+                that.sendCtrlMsg(ctrlMsg, node)
 
-                // event
+                // Let other nodes know a client is disconnecting (via custom event manager)
                 tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientDisconnect`, ctrlMsg)
 
             }) // --- End of on-connection::on-disconnect() --- //
@@ -524,46 +534,40 @@ class UibSockets {
                         msg = { 'uibuilderCtrl': msg }
                 }
 
-                // If the sender hasn't added Socket.id, add it now
-                if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
+                // Apply standard client details to the control msg
+                msg = { ...msg, ...that.getClientDetails(socket, node) }
 
-                // @since 2017-11-05 v0.4.9 If the sender hasn't added msg.from, add it now
-                if ( !Object.prototype.hasOwnProperty.call(msg, 'from') ) msg.from = 'client'
+                // Control msgs should say where they came from
+                msg.from = 'client'
 
                 if ( !msg.topic ) msg.topic = node.topic
 
-                node.send([null, msg])
+                that.sendCtrlMsg(msg, node)
 
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
             // Listen for socket.io errors - output a control msg
             socket.on('error', function(err) {
 
-                // ioNs.clientLog[socket.handshake.auth.clientId].connected = false
-
                 log.error(`[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
 
-                // Let the control output port know there has been an error
+                // Let the control output port (port #2) know there has been an error
                 const ctrlMsg = {
-                    'uibuilderCtrl': 'socket error',
-                    'error': err.message,
-                    'topic': node.topic || undefined,
-                    '_socketId': socket.id,
-                    'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
-                    'ip': getClientRealIpAddress(socket),
-                    'clientId': socket.handshake.auth.clientId,
-                    'tabId': socket.handshake.auth.tabId,
-                    'url': node.url,
-                    'pageName': pageName,
-                    'connections': socket.handshake.auth.connectedNum
+                    ...{
+                        uibuilderCtrl: 'socket error',
+                        error: err.message,
+                        from: 'server',
+                    },
+                    ...that.getClientDetails(socket, node),
                 }
-                that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
-                // Copy to port#2 for reference
-                node.send([null, ctrlMsg])
+
+                that.sendCtrlMsg(ctrlMsg, node)
 
             }) // --- End of on-connection::on-error() --- //
 
             //#endregion ----- Event Handlers ----- //
+
+            //#region ---- run when client connects ---- //
 
             // How many client connections are there?
             node.ioClientsCount = ioNs.sockets.size
@@ -615,26 +619,22 @@ class UibSockets {
             // Let the clients know we are connecting
             that.sendToFe(msgClient, node.url, uib.ioChannels.control)
 
-            // Flow client connect msg (port #2 msg)
-            const msgFlow = {
-                'uibuilderCtrl': 'client connect',
-                'topic': node.topic || undefined,
-                'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
-                '_socketId': socket.id,
-                'ip': getClientRealIpAddress(socket),
-                'clientId': socket.handshake.auth.clientId,
-                'tabId': socket.handshake.auth.tabId,
-                'url': node.url,
-                'pageName': pageName,
-                'connections': socket.handshake.auth.connectedNum,
-                'lastNavType': socket.handshake.auth.lastNavType,
-                // ? client time offset ?
+            // Send client connect control msg (via port #2)
+            const ctrlMsg = {
+                ...{
+                    uibuilderCtrl: 'client connect',
+                    topic: node.topic || undefined,
+                    from: 'server',
+                },
+                ...that.getClientDetails(socket, node),
             }
-            // Let the flows know (via port#2) a client is connecting
-            node.send([null, msgFlow])
+
+            that.sendCtrlMsg(ctrlMsg, node)
 
             // Let other nodes know a client is connecting (via custom event manager)
-            tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientConnect`, msgFlow)
+            tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientConnect`, ctrlMsg)
+
+            //#endregion ---- run when client connects ---- //
 
         }) // --- End of on-connection() --- //
 
