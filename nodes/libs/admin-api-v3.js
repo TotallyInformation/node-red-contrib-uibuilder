@@ -266,7 +266,7 @@ function adminRouterV3(uib, log) {
                     log.trace(`[uibuilder:adminRouterV3:GET] Admin API. List all folders. url=${params.url}, root fldr=${uib.rootFolder}`)
 
                     // get list of all (sub)folders (follow symlinks as well)
-                    //const out = { 'root': [] }
+                    // const out = { 'root': [] }
                     const out = []
                     const root2 = uib.rootFolder.replace(/\\/g, '/')
                     fg.stream(
@@ -414,7 +414,7 @@ function adminRouterV3(uib, log) {
                 case 'updatepackage': {
                     log.trace(`[uibuilder:adminRouterV3:PUT:updatepackage] url=${params.url}`)
                     console.log(`[uibuilder:adminRouterV3:PUT:updatepackage] url=${params.url}, pkg=${params.pkgName}`)
-                    
+
                     res.statusMessage = 'PUT successful'
                     res.status(200).json({
                         newVersion: ''

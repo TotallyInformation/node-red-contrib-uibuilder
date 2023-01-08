@@ -116,7 +116,7 @@ class UibPackages {
         if ( !pj.uibuilder ) pj.uibuilder = {}
         // Make sure there is a uibuilder.packagedetails prop
         if ( !pj.uibuilder.packages ) pj.uibuilder.packages = {}
-        
+
         this.pkgsQuickUpd()
 
         // At this point we have the refs to uib and RED
@@ -132,7 +132,7 @@ class UibPackages {
     pkgsQuickUpd() {
         if ( this.uib === undefined ) throw this.#uibUndefinedError
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
-        
+
         const pj = this.uibPackageJson
 
         // Make sure no extra package details
@@ -142,22 +142,22 @@ class UibPackages {
         // Make sure all dependencies are reflected in uibuilder.packagedetails
         for (const depName in pj.dependencies) {
             if ( !pj.uibuilder.packages[depName] ) {
-                pj.uibuilder.packages[depName] = {installedVersion: pj.dependencies[depName]}
+                pj.uibuilder.packages[depName] = { installedVersion: pj.dependencies[depName] }
             }
         }
         // Get folders for web:startup:serveVendorPackages()
         for (const pkgName in pj.uibuilder.packages) {
-            let pkg = pj.uibuilder.packages[pkgName]
+            const pkg = pj.uibuilder.packages[pkgName]
             if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
             // The actual location of the package folder
             pkg.installFolder = path.join(this.uib.rootFolder, 'node_modules', pkgName)
             // The base url used by uib - note this is changed if this is a scoped package
             pkg.packageUrl = '/' + pkgName
-            //this.log.debug(`[uibuilder:package-mgt:pkgsQuickUpd] Updating '${pkgName}'. Fldr: '${pkg.installFolder}', URL: '${pkg.packageUrl}'.`)
+            // this.log.debug(`[uibuilder:package-mgt:pkgsQuickUpd] Updating '${pkgName}'. Fldr: '${pkg.installFolder}', URL: '${pkg.packageUrl}'.`)
         }
 
         // Re-save the updated file
-        //this.setUibRootPackageJson(pj)
+        // this.setUibRootPackageJson(pj)
         this.writePackageJson(this.uib.rootFolder, pj)
     }
 
@@ -333,7 +333,7 @@ class UibPackages {
         } catch {}
 
         // Make sure we have package details for all installed packages - NB: don't use await with forEach!
-        let depPkgNames = Object.keys(lsParsed.dependencies || {})
+        const depPkgNames = Object.keys(lsParsed.dependencies || {})
         // await depPkgNames.forEach( async pkgName => {
         //     await this.updIndividualPkgDetails(pkgName, lsParsed)
         // })
@@ -345,7 +345,7 @@ class UibPackages {
         await Promise.all( depPkgNames.map(async (pkgName) => {
             await this.updIndividualPkgDetails(pkgName, lsParsed)
         }))
-        
+
         // (re)Write package.json
         this.writePackageJson(rootFolder, pj)
     }
@@ -360,7 +360,7 @@ class UibPackages {
 
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:getUibRootPackageJson] Cannot run. Setup has not been called.')
-            return
+            return null
         }
 
         const uibRoot = this.uib.rootFolder
@@ -489,14 +489,14 @@ class UibPackages {
     /** Get the details for an installed package & update uibuilder specific details before returning it
      * @param {string} packageName - Name of the package who's install folder we are looking for.
      * @param {string} installRoot A uibuilder node instance - will search in node's root folder first
-     * @returns {object} Details object for an installed package
+     * @returns {object|null} Details object for an installed package
      */
     getPackageDetails2(packageName, installRoot) {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
             this.log.warn('[uibuilder:UibPackages:getPackagePath2] Cannot run. Setup has not been called.')
-            return
+            return null
         }
 
         // Trim the input just in case
@@ -772,7 +772,7 @@ class UibPackages {
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
      * @returns {Promise<string>} Combined stdout/stderr
      */
-     async npmUpdate(pkgName) {
+    async npmUpdate(pkgName) {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
@@ -808,7 +808,7 @@ class UibPackages {
 
         return /** @type {string} */ (all)
 
-     }
+    }
 
 } // ----- End of UibPackages ----- //
 
