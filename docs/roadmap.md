@@ -143,9 +143,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Form
       * Inputs: incl text, number, time, date, ...
       * Select
+    * Dialogue box
     * iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
     * notify (globalNotification)
-    * button (NB: add type="button" to avoid form submit issues)
+    * button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
@@ -185,6 +186,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
     * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
 
+  * Create/update package.json.bak file when updating package.json for safety.
   * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
   * Use new `uib-brand.css` style library on details pages.
   * Add api to query if a specific uib library is installed (and return version)

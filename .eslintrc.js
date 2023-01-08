@@ -26,8 +26,8 @@
  * v16 - Promisified setTimeout/setImmediate, RegExp match indices. npm v7 (peer deps now installed again).
  *       fs.rmdir no longer supports recursive (use new fs.rm)
  * v17 - OpenSSL 3 (incl QUIC), Readline Promise API
- * v18 - (Experimental: Fetch API, Web Streams API, Test Runner), HTTP Timeouts, findLast/findLastIndex array methods, 
- *       Improvements to the Intl.Locale API [calendars, collations, hourCycles, numberingSystems, timeZones, textInfo, weekInfo], 
+ * v18 - (Experimental: Fetch API, Web Streams API, Test Runner), HTTP Timeouts, findLast/findLastIndex array methods,
+ *       Improvements to the Intl.Locale API [calendars, collations, hourCycles, numberingSystems, timeZones, textInfo, weekInfo],
  *       Intl.supportedValuesOf function
  * v19 - (Experimental: node --watch), HTTP(S)/1.1 KeepAlive by default, Stable WebCrypto API, Intl.NumberFormat
  */
@@ -104,6 +104,7 @@ module.exports = {
 
         // Try to keep code complexity in functions to a minimum
         'sonarjs/cognitive-complexity': ['error', 60],  // default is 15! Need to try and improve this :-)
+        'sonarjs/no-duplicate-string': ['warn', 5],  // default is 3
 
         // Make Standard less annoying
         'brace-style': 'off',     // You should only use one-true-brace style but sometimes we want to compress things a bit.

@@ -7,6 +7,29 @@ created: 2022-06-11 14:15:26
 lastUpdated: 2023-01-04 15:40:54
 ---
 
+- [Dynamic content limitations](#dynamic-content-limitations)
+  - [Positioning new elements before existing ones rather than after](#positioning-new-elements-before-existing-ones-rather-than-after)
+  - [Updates and sub-components](#updates-and-sub-components)
+- [Dynamic content details](#dynamic-content-details)
+- [Initial load from JSON URL](#initial-load-from-json-url)
+- [Dynamic changes via messages from Node-RED (or local set)](#dynamic-changes-via-messages-from-node-red-or-local-set)
+- [Available methods](#available-methods)
+- [Method: load](#method-load)
+  - [Caveats and limitations](#caveats-and-limitations)
+  - [Msg schema \& example](#msg-schema--example)
+  - [Example showing load in your own index.js](#example-showing-load-in-your-own-indexjs)
+- [Method: add](#method-add)
+  - [Msg schema](#msg-schema)
+  - [Example msgs for nested components](#example-msgs-for-nested-components)
+- [Method: remove](#method-remove)
+- [Method: update](#method-update)
+  - [Msg schema](#msg-schema-1)
+- [Method: reload - Reloads the current page](#method-reload---reloads-the-current-page)
+- [Method: notify](#method-notify)
+  - [HTML Tags](#html-tags)
+    - [Schema](#schema)
+- [Method: alert](#method-alert)
+
 ## Dynamic content limitations
 
 There are currently a small number of limitations of this approach that you should be aware of.
@@ -379,9 +402,9 @@ The remove method will remove the listed HTML elements from the page assuming th
 
 ## Method: update
 
-The update method will update the referenced HTML elements (whether native HTML, web components or framework components). Most of the same properties as for the `add` method are available for updates.
+The update method will update the referenced HTML elements (whether native HTML, or ECMA web components). Most of the same properties as for the `add` method are available for updates.
 
-Obviously, to update something, you must identify it. CSS selectors are used to identify the elements to update.
+Obviously, to update something, you must identify it. You can identify the thing(s) to update by: The HTML ID attribute, a CSS selector, an HTML name attribute or the HTML tag (type). If multiple of those identifies are provided, the priority is in that order
 
 Unlike the other methods, the update method will find **ALL** matching elements and update them. This means that you could, for example, change the text colour of all list entries on the page with a single update.
 
@@ -396,22 +419,24 @@ Unlike the other methods, the update method will find **ALL** matching elements 
         // List of component instances to update on the page - results in 1 or more HTML custom elements being selected and updated
         "components": [
             {
-                // Only 1 of these three properties will be used to search. 
-                // In the order of preference id > name > type
+                // Only 1 of these four properties will be used to search. 
+                // In the order of preference id > selector > name > type
 
                 // The most direct way to select a single element
                 "id": "...",
-                // The element's name can be used instead of id - note that names may not be unique
+                // The most comprehensive and flexible way to select 1 or many elements via a CSS selector
+                "selector": "...",
+                // The element's name can be used instead of id - note that names might not be unique and so multiple elements may be updated
                 "name": "...",
-                // A generic CSS selector can be specified here. e.g. "div" or "p#classname", etc.
+                // A generic CSS selector can be specified here as well. e.g. "div" or "p#classname", etc.
                 "type": "...",
                 
-                // Optional. HTML to add to slot - if not present, the contents of msg.payload will be used. 
+                // Optional. Text or HTML to add to slot - if not present, the contents of msg.payload will be used. 
                 // This allows multi-components to have their own slot content. 
                 // However, the payload is not passed on to sub-components
                 "slot": "HTML to <i>add</i> to <sup>slot</sup> instead of <code>msg.payload</code>",
 
-                // Optional. Markdown to add to the slot. Converted Markdown is added after the standard slot.
+                // Optional. Markdown to add to the slot. Converted Markdown is added after the standard slot. Requires a markdown library of course.
                 "slotMarkdown": "## A heading 2\n\nRendered by **marked** <sub>if loaded</sub>.\n\n```javascript\nvar x = alert('Hey Jim')\n```\n"
                 
                 // Optional. Each property will be applied to the element attributes
@@ -423,6 +448,7 @@ Unlike the other methods, the update method will find **ALL** matching elements 
 
                 // Optional. properties to be added to/replaced on the element. Unlike attributes, these can contain any data.
                 // Take care to avoid name clashes with internal properties or bad things are likely to happen!
+                // Most useful when working with ECMA Components though will work with custom front-end code as well.
                 "properties": {
                     // ...
                 },

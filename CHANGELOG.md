@@ -4,9 +4,9 @@ typora-root-url: docs/images
 
 # Changelog
 
-## Known Issues
+## Known current limitations
 
-Note that v6.0.0 moves the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) to current and the old client library (`uibuilderfe.js`) to functionally stabilised and on the road to being deprecated. The experimental `uib-list` node has some improvements but is still feature incomplete. The new `uib-brand.css` style library still needs quite a bit of additional work. The new `uib-list` node is still a little rough but should work fine for most things.
+Note that v6.1.0 makes the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) current and the old client library (`uibuilderfe.js`) is now no longer recommended and is not being updated, it is on the road to being deprecated. The experimental `uib-list` node will now also be deprecated, the features are moved to the new `uib-element` node. The new `uib-brand.css` style library still needs quite a bit of additional work.
 
 Dynamic content does not currently work with VueJS (and probably other frameworks that rely on pre-building components). Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only.
 
@@ -20,6 +20,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Disable the new Open button along with other disabled things when new or url has changed.
   * Add template description to display.
   * Switch tooltips to using aria-label with hover CSS as in the new node.
+  * Improve help box for _uib switch 
 
 * `socket.js`
   * Add rooms: page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
@@ -42,6 +43,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### IIFE/ESM/Module client library
 
+* [ ] Ensure _ui method update allows "selector" - Order of pref: id>selector>name>type + upd docs `client-docs/config-driven-ui.md##msg-schema-1`
 * Add `uibuilder.cacheSend()` and `uibuilder.cacheClear()` functions - reinstate in uib-cache fn now we've removed extra ctrl send
 * Add a `uibuilder.navigate(url)` function to allow a msg from node-red to change the page. Ensure it works with SPA routers and with anchor links.
 * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
@@ -80,39 +82,30 @@ NOTE: Caches the INPUT, not the OUTPUT
   * Chaining
   * JSON msg templates for each type
 
-### NEW node: `uib-attribs`
+### NEW node: `uib-update`
 
-Send attribute overrides to an existing HTML element (using a selector)
-Might need changes to FE code? New _ui mode `attribs`?
-
-Also
-* slot changer
-* Mustache-like replacer ? How? Really need? Use ID instead? Maybe create our own event handler for data-driven elements?
-* ? Mustache-like if/then/else ?
-* ? Mustache-like loops ?
+Send updates to an existing HTML element (using a selector). Uses _ui mode `update`
 
 ### Examples
 
-* Update all to use new libs. Remove (c).
+* Update all to use new libs and updated templates
 * Add example for Vue sfc loader.
 * Update/add examples for each template
   * Add global Notification/Toast input
   * Add dynamic HTML input
 
-### Templates - update to latest standards
-* Not yet done:
-   * [ ] vue
-   * [ ] vue-simple
-   * [ ] svelte-basic
-* Maybe add:
+### Templates
+* Maybe add as external templates.
   * Vue v3 (build)
   * Vue v3 + Quasar
   * REACT (no-build)
   * REACT (build)
+  * jQuery + jQuery UI (maybe + some add-ons?)
 
 ### uib-cache
 
 * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
+* Add cache clear button
 
 ### Doc updates
 
@@ -138,10 +131,10 @@ Also
 > Please remember that no changes are being made to the old `uibuilderfe.js` client. Nothing listed here applies to that.
 
 * Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference.
-* The client library has a number of new functions: `uibuilder.syntaxHighlight(json)`, 
+* The client library has a number of new functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
 * The client library reports changes of visibility back to node-red via a new control msg.
 * The client library creates a `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
-* Messages from the client now also include the `url` from the uibuilder node they relate to so that it is easier to process messages from multiple different uibuilder nodes.
+* If you turn on the advanced option "Include msg._uib in standard msg output.", messages from the client now include client details for you to use in your own security processing or just to identify where things have come from (e.g. what page name as well as what client).
 
 ### `uibuilder` node
 
@@ -177,8 +170,12 @@ Also
   * Added Docs button next to new Open button. Add book icon to docs buttons.
 
 * `socket.js`
-  * Added `url` to _uib property to make downstream processing easier.
-  * Added visibility change control msg. Sent by FE client.
+  * When asked to add msg._uib to std output msgs, Standardised on the same client details as for control msgs to make downstream processing easier.
+  * Added visibility-change control msg. Sent by FE client. Fires when the open page changes from hidden-to-visible or visa versa.
+  * New functions: sendCtrlMsg, getClientDetails. Standardise/simplify client details shown on control msgs.
+
+* `web.js`
+  * Added new `addBeaconRoute` function that sets up the `./_clientLog` instance endpoint. Use the new client `uibuilder.beaconLog(txtToSend, logLevel)` function to send a simple text log back to Node-RED even if socket.io isn't working.
 
 ### IIFE/ESM/Module client library
 
@@ -193,6 +190,14 @@ Also
 * When triggering `showDialog()` either in the FE or by sending a toast notification from node-red, setting "variant" now allows any CSS class name to be used. Not just the previous list of names ('primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger') though since they are all included as classes in uib-brand.css, they all still work.
 
 * Added internal flag if VueJS is loaded. To be used for dynamic UI processing.
+
+* Added **new function** `uibuilder.beaconLog(txtToSend, logLevel)` which allows sending a simple, short log message back to Node-RED even if socket.io is not connected. In Node-RED, outputs to the Node-RED log and sends a uibuilder control message where `msg.uibuilderCtrl` = "client beacon log".
+
+* Added **new function** `uibuilder.logToServer()` which will take any number and type of arguments and send them all back to Node-RED in the msg.payload of a _control_ message (out of port #2) where `msg.uibuilderCtrl` = "client log message". Client details are added to the message.
+
+### `uib-cache` node
+
+* Added filter to remove msg.res and msg.req which come from ExpressJS and cannot be serialised so create errors.
 
 ### **NEW** `uib-element` node
 
@@ -226,12 +231,16 @@ Element types included in this release:
 * All templates have .eslintrc.js files in the root folder. You may need to install eslint extensions to match. If this file gets in the way, it can be safely deleted. It helps maintain standard coding practices and helps avoid the use of JavaScript which is too new.
 * Removed the (c) from the remaining templates. There is no (c) on any of them. They all fall under MIT license. Use as you will, there are no intellectual property restraints on the template code.
 * Change all to load client from `../uibuilder/uibuilder.xxx.min.js` instead of `./uibuilder.xxx.min.js` for consistency with other standard and installed library loads. Note that both locations remain valid.
+* Moved all scripts to head with defer now we no longer expect IE. Much cleaner code.
 * Updated:
   * [x] blank
   * [x] blank-iife-client
   * [x] blank-old-client
   * [x] blank-esm-client
   * [x] iife-vue3-nobuild
+  * [x] vue v2 + bootstrap-vue
+  * [x] vue v2 + bootstrap-vue - simple
+  * [x] svelte-basic
 
 
 ### Examples

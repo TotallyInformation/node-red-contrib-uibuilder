@@ -11,6 +11,7 @@
   * [How & why to use the list node](list-node.md)
   * [How to use the cache node](cache-node.md)
   * [How to use instance API's](instance-apis.md)
+  * [Other How-To's](how-to/README.md)
 * Developing UI's
   * [The modern front-end client](uibuilder.module.md)
     * [Features](client-docs/features.md)
