@@ -193,6 +193,13 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
             sendCache(send, this, msg)
         }
     } else {
+        // Remove ExpressJS msg.res and msg.req because they are recursive objects and cannot be serialised
+        if ( Object.prototype.hasOwnProperty.call(msg, 'req') || Object.prototype.hasOwnProperty.call(msg, 'res') ) {
+            mod.RED.log.info( '[uib-cache:inputMsgHandler] msg contains Express res/req. These cannot be serialised so removing them.' )
+            delete msg.req
+            delete msg.res
+        }
+
         // Forward
         send(msg)
         // Add to cache
