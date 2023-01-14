@@ -2788,6 +2788,8 @@
         toaster.id = "toaster";
         toaster.title = "Click to clear all notifcations";
         toaster.setAttribute("class", "toaster");
+        toaster.setAttribute("role", "dialog");
+        toaster.setAttribute("arial-label", "Toast message");
         toaster.onclick = function() {
           toaster.remove();
         };
@@ -2921,8 +2923,9 @@
     _uiUpdate(ui) {
       log("trace", "Uib:_uiManager:update", "Starting _uiUpdate")();
       if (!ui.components)
-        ui.components = [ui];
-      ui.components.forEach((compToUpd) => {
+        ui.components = [Object.assign({}, ui)];
+      ui.components.forEach((compToUpd, i2) => {
+        log("trace", "_uiUpdate:components-forEach", `Component #${i2}`, compToUpd)();
         let elToUpd;
         if (compToUpd.id) {
           elToUpd = document.querySelectorAll(`#${compToUpd.id}`);
@@ -2933,6 +2936,7 @@
         } else if (compToUpd.type) {
           elToUpd = document.querySelectorAll(compToUpd.type);
         }
+        log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
         if (elToUpd === void 0 || elToUpd.length < 1) {
           log("warn", "Uib:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
           return;
@@ -2980,6 +2984,7 @@
         }
         if (compToUpd.components) {
           elToUpd.forEach((el) => {
+            log("trace", "_uiUpdate:components", "el", el)();
             this._uiUpdate({
               method: ui.method,
               parentEl: el,

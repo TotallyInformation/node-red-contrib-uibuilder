@@ -419,7 +419,7 @@ export const Uib = class Uib {
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
      * @param {*} val _
-     * @returns {*} Input value
+     * @returns {*|undefined} Input value
      */
     set(prop, val) {
         // Check for excluded properties - we don't want people to set these
@@ -445,7 +445,7 @@ export const Uib = class Uib {
     /** Function to get the value of a uibuilder property
      * Example: uibuilder.get('msg')
      * @param {string} prop The name of the property to get as long as it does not start with a _ or #
-     * @returns {*} The current value of the property
+     * @returns {*|undefined} The current value of the property
      */
     get(prop) {
         if (prop.startsWith('_') || prop.startsWith('#')) {
@@ -905,6 +905,8 @@ export const Uib = class Uib {
             toaster.id = 'toaster'
             toaster.title = 'Click to clear all notifcations'
             toaster.setAttribute('class', 'toaster')
+            toaster.setAttribute('role', 'dialog')
+            toaster.setAttribute('arial-label', 'Toast message')
             toaster.onclick = function() {
                 // @ts-ignore
                 toaster.remove()
@@ -1158,9 +1160,11 @@ export const Uib = class Uib {
     _uiUpdate(ui) {
         log('trace', 'Uib:_uiManager:update', 'Starting _uiUpdate')()
 
-        if ( !ui.components ) ui.components = [ui]
+        // We allow an update not to actually need to spec a component
+        if ( !ui.components ) ui.components = [Object.assign({}, ui)]
 
-        ui.components.forEach((compToUpd) => {
+        ui.components.forEach((compToUpd, i) => {
+            log('trace', '_uiUpdate:components-forEach', `Component #${i}`, compToUpd)()
 
             /** @type {NodeListOf<Element>} */
             let elToUpd
@@ -1176,6 +1180,7 @@ export const Uib = class Uib {
             } else if ( compToUpd.type ) {
                 elToUpd = document.querySelectorAll(compToUpd.type)
             }
+            log('trace', '_uiUpdate:components-forEach', `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)()
 
             // @ts-ignore Nothing was found so give up
             if ( elToUpd === undefined || elToUpd.length < 1 ) {
@@ -1235,6 +1240,7 @@ export const Uib = class Uib {
             // If nested components, go again - but don't pass payload to sub-components
             if (compToUpd.components) {
                 elToUpd.forEach( el => {
+                    log('trace', '_uiUpdate:components', 'el', el)()
                     this._uiUpdate({
                         method: ui.method,
                         parentEl: el,
@@ -1747,7 +1753,7 @@ export const Uib = class Uib {
      * @param {number} [delay] Initial delay before checking (ms). Default=2000ms
      * @param {number} [factor] Multiplication factor for subsequent checks (delay*factor). Default=1.5
      * @param {number} [depth] Recursion depth
-     * @returns {boolean} Whether or not Socket.IO is connected to uibuilder in Node-RED
+     * @returns {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
      */
     _checkConnect(delay, factor, depth = 1) {
         if ( navigator.onLine === false ) return // Don't bother if we know we are offline
