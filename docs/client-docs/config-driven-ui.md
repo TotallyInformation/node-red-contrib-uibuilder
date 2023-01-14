@@ -4,7 +4,7 @@ description: >
    This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a uibuilder node where the messages contain a `msg._ui` property.
    This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-01-04 15:40:54
+lastUpdated: 2023-01-14 17:08:48
 ---
 
 - [Dynamic content limitations](#dynamic-content-limitations)
@@ -29,6 +29,7 @@ lastUpdated: 2023-01-04 15:40:54
   - [HTML Tags](#html-tags)
     - [Schema](#schema)
 - [Method: alert](#method-alert)
+- [References \& examples](#references--examples)
 
 ## Dynamic content limitations
 
@@ -506,3 +507,9 @@ Overlay an alert notification
 Old-style `msg._uib.componentRef = 'globalAlert'` also works. But this method is preferred.
 
 Uses the same schema and styles as the `notify` method. Except that autohide is set to false, modal is set to true and the content is prefixed by an alert symbol.
+
+---
+
+## References & examples
+
+* A flow that reproduces the TABLES example from [pdfmake](http://pdfmake.org/index.html#/) (which works in a similar way to this to produce PDF reports) using uibuilder and data sent direct from Node-RED is available on the [Node-RED Flows site](https://flows.nodered.org/flow/99e1e6169b5e93b460bcbcc8f493d011#).
