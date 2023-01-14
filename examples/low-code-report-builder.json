@@ -1,0 +1,281 @@
+[
+    {
+        "id": "279f069488faedf5",
+        "type": "uibuilder",
+        "z": "a70b22bf53a7ea9c",
+        "name": "",
+        "topic": "",
+        "url": "ui-tests",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "iife-blank-client",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 440,
+        "y": 220,
+        "wires": [
+            [
+                "2c2f7fac82a12c69"
+            ],
+            [
+                "df4025edc7711edd"
+            ]
+        ],
+        "info": "This example uses a blank template with\r\nthe IIFE build of the front-end client.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript.\r\n\r\nThe IIFE build should be included using a link\r\ntag in your HTML."
+    },
+    {
+        "id": "1b2196df2b92f409",
+        "type": "inject",
+        "z": "a70b22bf53a7ea9c",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 240,
+        "wires": [
+            [
+                "d621dd0923f1e188"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "767ae0f52380b47d",
+        "type": "inject",
+        "z": "a70b22bf53a7ea9c",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 160,
+        "y": 280,
+        "wires": [
+            [
+                "d621dd0923f1e188"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "e835cac509084abe",
+        "type": "inject",
+        "z": "a70b22bf53a7ea9c",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 125,
+        "y": 160,
+        "wires": [
+            [
+                "ada5575de6d2dc38"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "ada5575de6d2dc38",
+        "type": "function",
+        "z": "a70b22bf53a7ea9c",
+        "name": "Notification",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 160,
+        "wires": [
+            [
+                "d621dd0923f1e188"
+            ]
+        ],
+        "info": "Overlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
+    },
+    {
+        "id": "96f771bbdcc816fa",
+        "type": "inject",
+        "z": "a70b22bf53a7ea9c",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 125,
+        "y": 200,
+        "wires": [
+            [
+                "961d42bbb9613525"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "961d42bbb9613525",
+        "type": "function",
+        "z": "a70b22bf53a7ea9c",
+        "name": "New Card",
+        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 230,
+        "y": 200,
+        "wires": [
+            [
+                "d621dd0923f1e188"
+            ]
+        ],
+        "info": "Inserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "2c2f7fac82a12c69",
+        "type": "debug",
+        "z": "a70b22bf53a7ea9c",
+        "name": "uibuilder standard output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 655,
+        "y": 180,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "df4025edc7711edd",
+        "type": "debug",
+        "z": "a70b22bf53a7ea9c",
+        "name": "uibuilder control output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 655,
+        "y": 240,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "5b40492405adf766",
+        "type": "comment",
+        "z": "a70b22bf53a7ea9c",
+        "name": "Low-code report building with the help of uibuilder \\n Chk Description in each node & in here \\n You need to add a line to the HTML so that the Markdown output works correctly, see within",
+        "info": "To get the Markdown outputs to display,\nplease add the following line to the html\nfile before the reference to uibuilder's\nlibrary:\n\n```\n<script defer src=\"https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js\">/* Allows Markdown to be used in msg._ui */</script>\n```\n\n---\n\nThis example starts with the standard IIFE \nuibuilder template. You will note, however,\nthat you can remove all of the body HTML\nand it will still work.\n\nThis is because all of the important text,\ntables and layout are created dynamically\nusing a standardised configuration schema.\n\nThe schema used by uibuilder is actually\nquite similar, at least in concept, to that\nused by pdfmaker which was the inspiration\nfor this example. I didn't know about pdfmaker\nwhen I designed the config-driven aspects of\nuibuilder and it is comforting to know that I\ncame up with a similar solution to a similar\nproblem.\n\nOutput to HTML is far more flexible than\noutput to PDF via pdfmaker though and it will\ncontinue to grow and improve as HMTL and CSS do.\n\nYou can still output the resulting page to\nPDF very easily though.\n\n---\n\nFull documentation for uibuilder's low-code,\nconfiguration-driven UI creation capabilities\nis available in the Tech Docs:\n\nhttps://totallyinformation.github.io/node-red-contrib-uibuilder/#/uibuilder.module?id=dynamic-data-driven-html-content-1",
+        "x": 390,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "e8f0471862ab3f9c",
+        "type": "uib-sender",
+        "z": "a70b22bf53a7ea9c",
+        "url": "ui-tests",
+        "name": "",
+        "topic": "",
+        "passthrough": false,
+        "return": false,
+        "outputs": 0,
+        "x": 580,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "73e6d30f1e961bab",
+        "type": "inject",
+        "z": "a70b22bf53a7ea9c",
+        "name": "",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"remove\",\"components\":[\"#ui-test\"]},{\"method\":\"add\",\"components\":[{\"type\":\"main\",\"id\":\"ui-test\",\"parent\":\"#more\",\"components\":[{\"type\":\"h1\",\"slot\":\"uibuilder Low-Code Tests: Tables\"},{\"type\":\"p\",\"slot\":\"This is an example of using uibuilder's low-code, config-driven page builder. It is based on the TABLES example from <a href='http://pdfmake.org/playground.html' target='_blank'>pdfmake</a>. This is partly to demonstrate that pdfmake and uibuilder use related principals for similar outcomes.\"},{\"type\":\"p\",\"slot\":\"In addition, it demonstrates how to create a complex HTML report layout dynamically direct from Node-RED using a standardised configuration and data-driven, low-code methodology.\"},{\"type\":\"p\",\"slot\":\"It would be easy to directly print this to paper or print/save to PDF.\"},{\"type\":\"p\",\"slot\":\"Of course, much of the output configuration could also be dynamcially created from other data rather than being specified manually as in this example. Change the input from JSON to Expression for example in order to use JSONata to include data from an input msg.\"},{\"type\":\"p\",\"slot\":\"The input in this example is set up so that re-sending the data, removes and re-add's the entire thing. This should not be noticable in the browser. Try changing some data and resending to see the effect.\"},{\"type\":\"p\",\"slot\":\"Except where mentioned in the tables themselves, the majority of the styling comes from the pre-loaded uibuilder stylesheet. Of course, you can replace this with your own.\"},{\"type\":\"article\",\"components\":[{\"type\":\"h2\",\"slot\":\"A simple table (no style overrides)\"},{\"type\":\"p\",\"slot\":\"Nothing more than a couple of unstyled rows and columns. No headings.\"},{\"type\":\"table\",\"components\":[{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"Column 1\"},{\"type\":\"td\",\"slot\":\"Column 2\"},{\"type\":\"td\",\"slot\":\"Column 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"One value goes here\"},{\"type\":\"td\",\"slot\":\"Another one here\"},{\"type\":\"td\",\"slot\":\"OK\"}]}]}]},{\"type\":\"article\",\"components\":[{\"type\":\"h2\",\"slot\":\"A simple table with nested elements\"},{\"type\":\"p\",\"slot\":\"It is of course possible to nest any other type of nodes available in <del>pdfmake</del> uibuilder/HTML inside table cells.\"},{\"type\":\"table\",\"components\":[{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"Column 1\"},{\"type\":\"td\",\"slot\":\"Column 2\"},{\"type\":\"td\",\"slot\":\"Column 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"Let's try an unordered list\",\"components\":[{\"type\":\"ul\",\"components\":[{\"type\":\"li\",\"slot\":\"Item 1\"},{\"type\":\"li\",\"slot\":\"Item 2\"}]}]},{\"type\":\"td\",\"slot\":\"or a nested table\",\"components\":[{\"type\":\"table\",\"components\":[{\"type\":\"tr\",\"components\":[{\"type\":\"th\",\"slot\":\"Col 1\"},{\"type\":\"th\",\"slot\":\"Col 2\"},{\"type\":\"th\",\"slot\":\"Col 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"R1C1\"},{\"type\":\"td\",\"slot\":\"R1C2\"},{\"type\":\"td\",\"slot\":\"R1C3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"R2C1\"},{\"type\":\"td\",\"slot\":\"R2C2\"},{\"type\":\"td\",\"slot\":\"R2C3\"}]}]}]},{\"type\":\"td\",\"slotMarkdown\":\"Inlines can be _styled_ easily as everywhere else. Even using Markdown!\"}]}]}]},{\"type\":\"article\",\"components\":[{\"type\":\"h2\",\"slot\":\"Defining column widths\"},{\"type\":\"p\",\"slotMarkdown\":\"~~Tables support the same width definitions as standard columns~~ HTML is different to pdfmaker here since styling is done using CSS.\"},{\"type\":\"table\",\"components\":[{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"attributes\":{\"style\":\"width:100em;\"},\"slot\":\"width:100em\"},{\"type\":\"td\",\"slot\":\"Unsized\"},{\"type\":\"td\",\"attributes\":{\"style\":\"width:25%;\"},\"slot\":\"width:25%\"},{\"type\":\"td\",\"slot\":\"Unsized\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"fixed-width cells have exactly the specified width\"},{\"type\":\"td\",\"slotMarkdown\":\"_nothing interesting here_\"},{\"type\":\"td\",\"slotMarkdown\":\"_nothing interesting here_\"},{\"type\":\"td\",\"slotMarkdown\":\"_nothing interesting here_\"}]}]},{\"type\":\"table\",\"components\":[{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"attributes\":{\"style\":\"width:90%;\"},\"slotMarkdown\":\"This is a ~~star-sized~~ fixed % size column. The next column over, an auto-sized column, will wrap to accomodate all the text in this cell.\"},{\"type\":\"td\",\"slot\":\"I am auto sized.\"}]}]},{\"type\":\"table\",\"components\":[{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slotMarkdown\":\"This is ~~a star-sized~~ an unsized column. The next column over, also auto-sized, will not wrap to accomodate all the text in this cell, because it has been given the noWrap style.\"},{\"type\":\"td\",\"attributes\":{\"style\":\"white-space: nowrap;\"},\"slot\":\"I am no-wrap auto sized.\"}]}]}]},{\"type\":\"article\",\"components\":[{\"type\":\"h2\",\"slot\":\"Defining row heights\"},{\"type\":\"table\",\"components\":[{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"attributes\":{\"style\":\"height:2em;\"},\"slot\":\"row 1 with height 2em\"},{\"type\":\"td\",\"slot\":\"Column B\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"attributes\":{\"style\":\"height:5em;\"},\"slot\":\"row 2 with height 5em\"},{\"type\":\"td\",\"slot\":\"Column B\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"attributes\":{\"style\":\"height:7em;\"},\"slot\":\"row 3 with height 7em\"},{\"type\":\"td\",\"slot\":\"Column B\"}]}]}]},{\"type\":\"article\",\"components\":[{\"type\":\"h2\",\"slot\":\"Column/row spans\"},{\"type\":\"p\",\"slot\":\"Each cell-element can set a rowSpan or colSpan\"},{\"type\":\"table\",\"components\":[{\"type\":\"tr\",\"components\":[{\"type\":\"th\",\"attributes\":{\"colspan\":\"2\",\"alignment\":\"center\"},\"slot\":\"Header with Colspan = 2, centered\"},{\"type\":\"th\",\"slot\":\"Header 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"th\",\"slot\":\"Header 1\"},{\"type\":\"th\",\"slot\":\"Header 2\"},{\"type\":\"th\",\"slot\":\"Header 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"Sample value 1\"},{\"type\":\"td\",\"slot\":\"Sample value 2\"},{\"type\":\"td\",\"slot\":\"Sample value 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"attributes\":{\"rowspan\":3},\"slot\":\"rowSpan set to 3<br>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor\"},{\"type\":\"td\",\"slot\":\"Sample value 2\"},{\"type\":\"td\",\"slot\":\"Sample value 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"Sample value 2\"},{\"type\":\"td\",\"slot\":\"Sample value 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"Sample value 2\"},{\"type\":\"td\",\"slot\":\"Sample value 3\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"Sample value 1\"},{\"type\":\"td\",\"attributes\":{\"rowspan\":2,\"colspan\":2},\"slot\":\"Both:<br>rowSpan and colSpan<br>can be defined at the same time\"}]},{\"type\":\"tr\",\"components\":[{\"type\":\"td\",\"slot\":\"Sample value 1\"}]}]}]},{\"type\":\"article\",\"components\":[{\"type\":\"p\",\"slot\":\"The remainder of the pdfmaker example deals with formatting. For an HTML report, this is done via CSS which can easily reproduce everything pdfmaker can do and a lot more.\"}]}]}]}]",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "tables",
+        "x": 170,
+        "y": 340,
+        "wires": [
+            [
+                "e8f0471862ab3f9c"
+            ]
+        ]
+    },
+    {
+        "id": "d621dd0923f1e188",
+        "type": "junction",
+        "z": "a70b22bf53a7ea9c",
+        "x": 370,
+        "y": 220,
+        "wires": [
+            [
+                "279f069488faedf5"
+            ]
+        ]
+    }
+]
