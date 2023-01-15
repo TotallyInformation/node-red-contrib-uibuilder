@@ -2036,6 +2036,8 @@ export const Uib = class Uib {
         if ( this.pageName.endsWith('/') ) this.pageName += 'index.html'
         if ( this.pageName === '' ) this.pageName = 'index.html'
 
+        this._dispatchCustomEvent('uibuilder:constructorComplete')
+
         log('trace', 'Uib:constructor', 'Ending')()
     }
 
@@ -2096,6 +2098,7 @@ export const Uib = class Uib {
         // Check if Vue is present (used for dynamic UI processing)
         if (window['Vue']) this.#isVue = true
 
+        this._dispatchCustomEvent('uibuilder:startComplete')
     }
 
     //#endregion -------- ------------ -------- //

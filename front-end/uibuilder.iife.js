@@ -2513,6 +2513,7 @@
         this.pageName += "index.html";
       if (this.pageName === "")
         this.pageName = "index.html";
+      this._dispatchCustomEvent("uibuilder:constructorComplete");
       log("trace", "Uib:constructor", "Ending")();
     }
     get meta() {
@@ -3418,6 +3419,7 @@ ioPath: ${this.ioPath}`)();
       }
       if (window["Vue"])
         __privateSet(this, _isVue, true);
+      this._dispatchCustomEvent("uibuilder:startComplete");
     }
   }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _isVue = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
     version,
