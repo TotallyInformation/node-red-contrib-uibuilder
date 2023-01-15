@@ -2928,18 +2928,18 @@ var Uib = (_a = class {
       let elToUpd;
       if (compToUpd.id) {
         elToUpd = document.querySelectorAll(`#${compToUpd.id}`);
-      } else if (compToUpd.selector) {
+      } else if (compToUpd.selector || compToUpd.select) {
         elToUpd = document.querySelectorAll(compToUpd.selector);
       } else if (compToUpd.name) {
         elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`);
       } else if (compToUpd.type) {
         elToUpd = document.querySelectorAll(compToUpd.type);
       }
-      log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
       if (elToUpd === void 0 || elToUpd.length < 1) {
         log("warn", "Uib:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
         return;
       }
+      log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
       if (compToUpd.properties) {
         Object.keys(compToUpd.properties).forEach((prop) => {
           elToUpd.forEach((el) => {
