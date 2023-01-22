@@ -2420,19 +2420,19 @@
       __publicField(this, "cookies", {});
       __publicField(this, "ctrlMsg", {});
       __publicField(this, "ioConnected", false);
+      __publicField(this, "isVisible", false);
+      __publicField(this, "lastNavType", "");
       __publicField(this, "msg", {});
       __publicField(this, "msgsSent", 0);
       __publicField(this, "msgsReceived", 0);
       __publicField(this, "msgsSentCtrl", 0);
       __publicField(this, "msgsCtrlReceived", 0);
+      __publicField(this, "online", null);
       __publicField(this, "sentCtrlMsg", {});
       __publicField(this, "sentMsg", {});
       __publicField(this, "serverTimeOffset", null);
       __publicField(this, "socketError", null);
-      __publicField(this, "online", null);
-      __publicField(this, "lastNavType", "");
       __publicField(this, "tabId", "");
-      __publicField(this, "isVisible", false);
       __publicField(this, "originator", "");
       __publicField(this, "topic");
       __publicField(this, "autoSendReady", true);
@@ -2552,6 +2552,40 @@
       }
       return this[prop];
     }
+    setStore(id, value2) {
+      if (typeof value2 === "object") {
+        try {
+          value2 = JSON.stringify(value2);
+        } catch (e) {
+          log("error", "Uib:setStore", "Cannot stringify object, not storing. ", e)();
+          return false;
+        }
+      }
+      try {
+        localStorage.setItem(this.storePrefix + id, value2);
+        return true;
+      } catch (e) {
+        log("error", "Uib:setStore", "Cannot write to localStorage. ", e)();
+        return false;
+      }
+    }
+    getStore(id) {
+      try {
+        return JSON.parse(localStorage.getItem(this.storePrefix + id));
+      } catch (e) {
+      }
+      try {
+        return localStorage.getItem(this.storePrefix + id);
+      } catch (e) {
+        return void 0;
+      }
+    }
+    removeStore(id) {
+      try {
+        localStorage.removeItem(this.storePrefix + id);
+      } catch (e) {
+      }
+    }
     _dispatchCustomEvent(title, details) {
       const event2 = new CustomEvent(title, { detail: details });
       document.dispatchEvent(event2);
@@ -2606,36 +2640,6 @@
     }
     setOriginator(originator = "") {
       this.set("originator", originator);
-    }
-    setStore(id, value2) {
-      if (typeof value2 === "object") {
-        try {
-          value2 = JSON.stringify(value2);
-        } catch (e) {
-          log("error", "Uib:setStore", "Cannot stringify object, not storing. ", e)();
-          return false;
-        }
-      }
-      try {
-        localStorage.setItem(this.storePrefix + id, value2);
-        return true;
-      } catch (e) {
-        log("error", "Uib:setStore", "Cannot write to localStorage. ", e)();
-        return false;
-      }
-    }
-    getStore(id) {
-      try {
-        return JSON.parse(localStorage.getItem(this.storePrefix + id));
-      } catch (e) {
-        return localStorage.getItem(this.storePrefix + id);
-      }
-    }
-    removeStore(id) {
-      try {
-        localStorage.removeItem(this.storePrefix + id);
-      } catch (e) {
-      }
     }
     setPing(ms = 0) {
       const oReq = new XMLHttpRequest();
@@ -2921,6 +2925,33 @@
         }
       });
     }
+    _uiReplace(ui) {
+      log("trace", "Uib:_uiManager:replace", "Starting _uiReplace")();
+      ui.components.forEach((compToReplace, i2) => {
+        log("trace", "_uiReplace:components-forEach", `Component #${i2}`, compToReplace)();
+        let elToReplace;
+        if (compToReplace.id) {
+          elToReplace = document.getElementById(compToReplace.id);
+        } else if (compToReplace.selector || compToReplace.select) {
+          elToReplace = document.querySelector(compToReplace.selector);
+        } else if (compToReplace.name) {
+          elToReplace = document.querySelector(`[name="${compToReplace.name}"]`);
+        } else if (compToReplace.type) {
+          elToReplace = document.querySelector(compToReplace.type);
+        }
+        if (elToReplace === void 0 || elToReplace === null) {
+          log("trace", "Uib:_uiManager:replace", "Cannot find the DOM element. Adding instead.", compToReplace)();
+          this._uiAdd({ components: [compToReplace] }, false);
+          return;
+        }
+        const newEl = document.createElement(compToReplace.type);
+        this._uiComposeComponent(newEl, compToReplace);
+        elToReplace.replaceWith(newEl);
+        if (compToReplace.components) {
+          this._uiExtendEl(newEl, compToReplace.components);
+        }
+      });
+    }
     _uiUpdate(ui) {
       log("trace", "Uib:_uiManager:update", "Starting _uiUpdate")();
       if (!ui.components)
@@ -3057,6 +3088,10 @@
             this._uiRemove(ui);
             break;
           }
+          case "replace": {
+            this._uiReplace(ui);
+            break;
+          }
           case "update": {
             this._uiUpdate(ui);
             break;
@@ -3083,6 +3118,28 @@
           }
         }
       });
+    }
+    clearHtmlCache() {
+      this.removeStore("htmlCache");
+    }
+    restoreHtmlFromCache() {
+      const htmlCache = this.getStore("htmlCache");
+      if (htmlCache) {
+        const targetNode = document.getElementsByTagName("html")[0];
+        targetNode.innerHTML = htmlCache;
+        const eMsg = document.getElementById("msg");
+        if (eMsg)
+          eMsg.innerText = "Waiting for a message from Node-RED";
+      }
+    }
+    saveHtmlCache() {
+      const targetNode = document.documentElement;
+      const that = this;
+      const observer = new MutationObserver(function() {
+        this.takeRecords();
+        that.setStore("htmlCache", targetNode.innerHTML);
+      });
+      observer.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
     }
     _send(msgToSend, channel, originator = "") {
       if (channel === null || channel === void 0)
@@ -3399,12 +3456,14 @@ ioPath: ${this.ioPath}`)();
         if (options.ioPath !== void 0 && options.ioPath !== null && options.ioPath !== "")
           this.ioPath = options.ioPath;
       }
-      if (document.styleSheets.length > 1 || document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) {
+      if (document.styleSheets.length >= 1 || document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) {
         log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
       } else {
+        console.log(2);
         if (options && options.loadStylesheet === false)
           log("info", "Uib:start", "No styles loaded & options.loadStylesheet === false.")();
         else {
+          console.log(3);
           log("info", "Uib:start", "No styles loaded, loading uibuilder default styles.")();
           this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`);
         }

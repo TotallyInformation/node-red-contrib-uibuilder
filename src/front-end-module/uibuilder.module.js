@@ -324,6 +324,10 @@ export const Uib = class Uib {
     ctrlMsg = {}
     /** Is Socket.IO client connected to the server? */
     ioConnected = false
+    // Is the browser tab containing this page visible or not?
+    isVisible = false
+    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
+    lastNavType = ''
     /** Last std msg received from Node-RED */
     msg = {}
     /** number of messages sent to server since page load */
@@ -334,6 +338,8 @@ export const Uib = class Uib {
     msgsSentCtrl = 0
     /** number of control messages received from server since page load */
     msgsCtrlReceived = 0
+    /** Is the client online or offline? */
+    online = null
     /** last control msg object sent via uibuilder.send() @since v2.0.0-dev3 */
     sentCtrlMsg = {}
     /** last std msg object sent via uibuilder.send() */
@@ -342,14 +348,8 @@ export const Uib = class Uib {
     serverTimeOffset = null
     /** placeholder for a socket error message */
     socketError = null
-    /** Is the client online or offline? */
-    online = null
-    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
-    lastNavType = ''
     // tab identifier from session storage
     tabId = ''
-    // Is the browser tab containing this page visible or not?
-    isVisible = false
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -459,6 +459,59 @@ export const Uib = class Uib {
             log('warn', 'Uib:get', `get() - property "${prop}" does not exist`)()
         }
         return this[prop]
+    }
+
+    /** Write to localStorage if possible. console error output if can't write
+     * Also uses this.storePrefix
+     * @example
+     *   uibuilder.setStore('fred', 42)
+     *   console.log(uibuilder.getStore('fred'))
+     * @param {string} id localStorage var name to be used (prefixed with 'uib_')
+     * @param {*} value value to write to localstore
+     * @returns {boolean} True if succeeded else false
+     */
+    setStore(id, value) {
+        if (typeof value === 'object') {
+            try {
+                value = JSON.stringify(value)
+            } catch (e) {
+                log('error', 'Uib:setStore', 'Cannot stringify object, not storing. ', e)()
+                return false
+            }
+        }
+        try {
+            localStorage.setItem(this.storePrefix + id, value)
+            return true
+        } catch (e) {
+            log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
+            return false
+        }
+    } // --- end of setStore --- //
+
+    /** Attempt to get and re-hydrate a key value from localStorage
+     * Note that all uib storage is automatically prefixed using this.storePrefix
+     * @param {*} id The key of the value to attempt to retrieve
+     * @returns {*|null|undefined} The re-hydrated value of the key or null if key not found, undefined on error
+     */
+    getStore(id) {
+        try {
+            // @ts-ignore
+            return JSON.parse(localStorage.getItem(this.storePrefix + id))
+        } catch (e) { }
+        try {
+            return localStorage.getItem(this.storePrefix + id)
+        } catch (e) {
+            return undefined
+        }
+    }
+
+    /** Remove a given id from the uib keys in localStorage
+     * @param {*} id The key to remove
+     */
+    removeStore(id) {
+        try {
+            localStorage.removeItem(this.storePrefix + id)
+        } catch (e) { }
     }
 
     //#endregion ------- -------- ------- //
@@ -625,48 +678,6 @@ export const Uib = class Uib {
         this.set('originator', originator)
     } // ---- End of setOriginator ---- //
 
-    /** Write to localStorage if possible. console error output if can't write
-     * Also uses this.storePrefix
-     * @example
-     *   uibuilder.setStore('fred', 42)
-     *   console.log(uibuilder.getStore('fred'))
-     * @param {string} id localStorage var name to be used (prefixed with 'uib_')
-     * @param {*} value value to write to localstore
-     * @returns {boolean} True if succeeded else false
-     */
-    setStore(id, value) {
-        if (typeof value === 'object') {
-            try {
-                value = JSON.stringify(value)
-            } catch (e) {
-                log('error', 'Uib:setStore', 'Cannot stringify object, not storing. ', e)()
-                return false
-            }
-        }
-        try {
-            localStorage.setItem(this.storePrefix + id, value)
-            return true
-        } catch (e) {
-            log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
-            return false
-        }
-    } // --- end of setStore --- //
-
-    getStore(id) {
-        try {
-            // @ts-ignore
-            return JSON.parse(localStorage.getItem(this.storePrefix + id))
-        } catch (e) {
-            return localStorage.getItem(this.storePrefix + id)
-        }
-    }
-
-    removeStore(id) {
-        try {
-            localStorage.removeItem(this.storePrefix + id)
-        } catch (e) { }
-    }
-
     /** HTTP Ping/Keep-alive - makes a call back to uibuilder's ExpressJS server and receives a 204 response
      * Can be used to keep sessions alive.
      * @example
@@ -751,6 +762,7 @@ export const Uib = class Uib {
 
     //#region ------- UI handlers --------- //
 
+    // TODO Add multi-slot
     /** Replace or add an HTML element's slot from text or an HTML string
      * Will use DOMPurify if that library has been loaded to window.
      * param {*} ui Single entry from the msg._ui property
@@ -1152,8 +1164,58 @@ export const Uib = class Uib {
         })
     } // --- end of _uiRemove ---
 
+    /** Handle incoming _ui replace requests
+     * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+     */
+    _uiReplace(ui) {
+        log('trace', 'Uib:_uiManager:replace', 'Starting _uiReplace')()
+
+        ui.components.forEach((compToReplace, i) => {
+            log('trace', '_uiReplace:components-forEach', `Component #${i}`, compToReplace)()
+
+            /** @type {Element} */
+            let elToReplace
+
+            // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
+            if ( compToReplace.id ) {
+                // NB We don't use get by id because this way the code is simpler later on
+                elToReplace = document.getElementById(compToReplace.id) // .querySelector(`#${compToReplace.id}`)
+            } else if ( compToReplace.selector || compToReplace.select ) {
+                elToReplace = document.querySelector(compToReplace.selector)
+            } else if ( compToReplace.name ) {
+                elToReplace = document.querySelector(`[name="${compToReplace.name}"]`)
+            } else if ( compToReplace.type ) {
+                elToReplace = document.querySelector(compToReplace.type)
+            }
+
+            // Nothing was found so ADD the element instead
+            if ( elToReplace === undefined || elToReplace === null ) {
+                log('trace', 'Uib:_uiManager:replace', 'Cannot find the DOM element. Adding instead.', compToReplace)()
+                this._uiAdd({ components: [compToReplace] }, false)
+                return
+            }
+
+            // Create the new component
+            // const newEl = elToReplace.replaceWith(compToReplace.type)
+            const newEl = document.createElement(compToReplace.type)
+
+            // Updates the newEl and maybe the ui
+            this._uiComposeComponent(newEl, compToReplace)
+
+            // Replace the current element
+            elToReplace.replaceWith(newEl)
+
+            // If nested components, go again - but don't pass payload to sub-components
+            if (compToReplace.components) {
+                this._uiExtendEl(newEl, compToReplace.components)
+            }
+        })
+
+    } // --- end of _uiReplace ---
+
     // TODO Allow single add without using components array
     // TODO Allow sub-components
+    // TODO Add multi-slot capability
     /** Handle incoming _ui update requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
@@ -1341,6 +1403,11 @@ export const Uib = class Uib {
                     break
                 }
 
+                case 'replace': {
+                    this._uiReplace(ui)
+                    break
+                }
+
                 case 'update': {
                     this._uiUpdate(ui)
                     break
@@ -1374,6 +1441,43 @@ export const Uib = class Uib {
         })
 
     } // --- end of _uiManager ---
+
+    clearHtmlCache() {
+        this.removeStore('htmlCache')
+    }
+
+    restoreHtmlFromCache() {
+        // Is the html cached? If so, restore it
+        const htmlCache = this.getStore('htmlCache')
+        if (htmlCache) {
+            const targetNode = document.getElementsByTagName('html')[0]
+            // Restore the entire HTML
+            targetNode.innerHTML = htmlCache
+            // Blank out the old received msg
+            const eMsg = document.getElementById('msg')
+            if (eMsg) eMsg.innerText = 'Waiting for a message from Node-RED'
+        }
+    }
+
+    /** Use the Mutation Observer browser API to watch for and save changes to the HTML */
+    saveHtmlCache() {
+        // Select the node that will be observed for mutations
+        const targetNode = document.documentElement
+
+        // Need a ref to the Uib this
+        const that = this
+
+        // Create an observer instance
+        const observer = new MutationObserver( function() {
+            // We don't need to know the details - so kill off any outstanding mutation records
+            this.takeRecords()
+            // Save the updated entire HTML in localStorage
+            that.setStore('htmlCache', targetNode.innerHTML)
+        } )
+
+        // Start observing the target node for configured mutations
+        observer.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true })
+    }
 
     //#endregion -------- -------- -------- //
 
@@ -2069,11 +2173,13 @@ export const Uib = class Uib {
         }
 
         // Do we need to load styles?
-        if ( document.styleSheets.length > 1 || (document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) ) {
+        if ( document.styleSheets.length >= 1 || (document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) ) {
             log('info', 'Uib:start', 'Styles already loaded so not loading uibuilder default styles.')()
         } else {
+            console.log(2)
             if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
             else {
+                console.log(3)
                 log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
                 this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`)
             }
