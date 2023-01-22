@@ -3,7 +3,7 @@ title: uibuilder Technical Documentation
 description: >
    uibuilder is a low-code solution for easily building data-driven web sites and web apps in conjunction with Node-RED.
 created: 2019-06-16 16:16:00
-lastUpdated: 2023-01-04 16:51:12
+lastUpdated: 2023-01-15 12:20:47
 ---
 
 ?> These are the docs for uibuilder v6. If you need the v5 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate uibuilder version: `npm install node-red-contrib-uibuilder@5` then use the tech docs links from a uibuilder node.
@@ -118,6 +118,7 @@ Some information on testing uibuilder. Unfortunately, I have no real clue about 
 
 ## Archives
 
+* [v5 Changelog](archived/CHANGELOG-v5)
 * [v3/4 Changelog](archived/CHANGELOG-v3-v4)
 * [v2 Breaking Changes](archived/v2-breaking-changes.md)
 * [v2 Changelog](archived/CHANGELOG-v2.md)

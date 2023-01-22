@@ -77,7 +77,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ## Next - these are things that need to be done
 
-* STARTED: Change min node.js version to v14 LTS (in line with Node-RED v3)
+* Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features
     * Replace `||` default value tests with `??` .
     * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
@@ -96,19 +96,19 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Corepack https://nodejs.org/dist/latest-v14.x/docs/api/corepack.html
     * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
 
-  * v16:
+  * Changes due once Node.js v16 live:
     * JSON Modules (experimental in v14, full in 16.15.0)
     * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
     * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
     * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
     * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
 
-  * v18
+  * Changes due once Node.js v18 live
     * Test Runner module (experimental 18.0.0)
     * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
     * Top-level await (experimental in v14 - behind flag, full in v18)
 
-  * Unknown
+  * Changes due once Node.js post v18
     * Diagnostic channels (experimental in v14)
     * AbortController and AbortSignal (experimental in v14)
     * Fetch (Experimental 16.15.0, 18.0.0)
@@ -118,42 +118,41 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Improvements to `uib-cache` node
   * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
   * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
-  * Add checks to prevent non-string cach by property values.
+  * Add checks to prevent non-string cache by property values.
+  * Add empty cache button.
 
-* Extensions to experimental `uib-list` node
-  * Cope with parent uibuilder node renaming url
+* Extensions to the `uib-element` node
+  * Handle uibuilder url rename.
   * Removing node sends remove to clients
   * Allow additional attributes
   * Add optional page filter
   * Add return msg handling like uib-sender.
-  * Updates should update the original add which should be saved for replay but should instantly output an update
   * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
-* uib-list (and similar nodes)
-  * Handle uibuilder url rename.
-  * Consider allowing pass-through which automatically nests nodes (e.g. makes the 2nd node in the flow a child of the first)?
-  * Otherwise, maybe have a composite node that defines a tree?
-  * Consider having a general `element` node that can select between different element types.
+  * Add more elements:
     * [x] List
     * [x] Table
-    * Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
+    * [ ] HTML - allow raw html to be sent - e.g. from template node
+    * Grid/Flex-Grid
     * Card
+    * Form
+      * Select
+      * Inputs: incl text, number, time, date, ...
+    * Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
     * tbody
     * tr (use data-row-index)
     * li
-    * Form
-      * Inputs: incl text, number, time, date, ...
-      * Select
     * Dialogue box
     * iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
     * notify (globalNotification)
     * button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
+    * Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
   * Create min version of css.
   * Add syntax highlight properties
 
-* Extensions to new FE Library
+* Extensions to FE Library
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
   * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
@@ -177,9 +176,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/web-app-manifests
     * Allow push API interface as well as websocket. https://developer.mozilla.org/en-US/docs/Web/API/Push_API
 
-* Updates to old FE library
-  * Add client ID, client version & connections # to initial "ready for content" msg from client->NR
-  * Add `msg._ui` processing if possible.
+  * Accessibility
+    * Need to add a dismiss button to toasts
+    * Check all auto-added elements for accessibility
+    * Add count of current errors to title
 
 * Updates to uibuilder node
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
@@ -231,6 +231,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### General
 
+* Optimise runtime code using esbuild (see node-build.mjs). Reduce runtime dependencies by bundling and move deps to dev deps.
 * Allow client id to be set externally. Add Editor option to turn on client id and/or client IP address in standard msgs not just control msgs.
 * ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
 * Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
