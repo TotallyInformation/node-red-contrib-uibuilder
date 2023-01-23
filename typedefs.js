@@ -383,21 +383,15 @@
 /** uibElNode (Element Node)
  * @typedef {{
  *   name: string;
- *   url: string;
+ *   topic: string;
  *   elementid: string;
  *   elementtype: string;
  *   parent: string;
- *   wrapper: string;
- *   passthrough: boolean;
- *   cacheOn: boolean;
- *   storeName: string;
- *   storeContext: 'context'|'flow'|'node';
- *   varName: string;
- *   newcache: boolean;
- *   confData: object,
- *   cache: object;
- *   getC: Function;
- *   setC: Function;
+ *   classes: string;
+ *   styles: string;
+ *   containerclasses: string;
+ *   containerstyles: string;
+ *   confData: object;
  *   _ui: any;
  * }} uibElNode
  */

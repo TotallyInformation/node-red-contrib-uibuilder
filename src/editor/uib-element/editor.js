@@ -13,75 +13,121 @@
     /** Node's background color @constant {string} paletteColor */
     const paletteColor = '#F6E0F8' // '#E6E0F8'
 
-    /** Get all of the current uibuilder URL's */
-    function getUrls() {
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: './uibuilder/admin/dummy',
-            data: {
-                'cmd': 'listinstances',
-            },
-            success: function (instances) {
-                const urls = []
-                Object.keys(instances).forEach((val, i, arr) => {
-                    urls.push({ value: instances[val], label: instances[val] })
-                    // $('#node-input-url').append($('<option>', {
-                    //     value: instances[val],
-                    //     text: instances[val],
-                    // }))
-                })
-
-                $('#node-input-url').typedInput({
-                    types: [
-                        {
-                            value: 'urls',
-                            options: urls,
-                        }
-                    ]
-                })
-            }
-        })
-
-    } // ---- end of getUrls ---- //
-
-    /** Populate the store dropdown */
-    function populateUseStoreDropdown() {
-        const storeNames = []
-
-        RED.settings.context.stores.forEach(store => {
-            storeNames.push({ value: store, label: store })
-        })
-
-        $('#node-input-storeName').typedInput({
-            types: [
-                {
-                    value: 'storeNames',
-                    options: storeNames,
-                }
-            ]
-        })
+    /** Element Types definitions */
+    const elTypes = {
+        table: {
+            value: 'table',
+            label: 'Simple Table',
+            description: `
+                <p>
+                    A simple but accessible table.
+                </p><p>
+                    Set the incoming <code>msg.payload</code> to an <i>Array of Objects<i>.
+                    Each array entry will be a new row. Each property of the first array entry
+                    will be used for the column names.
+                </p><p>
+                    An Object of Objects can also be used. In that case, the outer object's keys will be
+                    used as row names by adding a <code>data-row-name</code> attribute to each row.
+                </p><p>
+                    Each row in the table has a unique <code>id</code>, and <code>data-row-index</code> attributes; 
+                    and has either the <code>odd</code> or <code>even</code> class added. 
+                </p><p>
+                    Each cell (<code>&lt;td></code>) in the table has a unique <code>id</code> attribute, as well as 
+                    <code>data-row-index</code>, <code>data-col-index</code> and <code>data-col-name</code> attributes. 
+                </p>
+            `,
+        },
+        ul: {
+            value: 'ul',
+            label: 'Unordered List (ul)',
+            description: `
+                <p>
+                    Outputs a simple, accessible, bullet list.
+                </p><p>
+                    Each row in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
+                    Each row also has either the <code>odd</code> or <code>even</code> class added.
+                </p>
+            `,
+        },
+        ol: {
+            value: 'ol',
+            label: 'Ordered List (ol)',
+            description: `
+                <p>
+                    Outputs a simple, accessible, numbered list
+                </p><p>
+                    Each row in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
+                    Each row also has either the <code>odd</code> or <code>even</code> class added.
+                </p>
+            `,
+        },
+        dl: {
+            value: 'dl',
+            label: 'Description List (dl)',
+            description: `
+                <p>
+                    Outputs a simple, accessible, description list.
+                </p>
+                <p>
+                    Set the incoming <code>msg.payload</code> to be an Array of Array's. The outer array representing each row 
+                    and the inner array containing at least 2 string entries representing the term/description pair.
+                    Additional entries in the inner array are added as secondary descriptions (<code>dd</code> tags).
+                </p>
+                <p>
+                    You can also use an Array of Objects where each object is a simple key/value pair. Or even an Object of Objects.
+                    Inner structures are catenated into a string separated by commas.
+                </p>
+                <p>
+                    Each entry has a wrapping <code>&lt;div></code> tag containing a term (<code>dt</code>) 
+                    and a definition (<code>dd</code>).
+                </p><p>
+                    Each row div in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
+                    Each row also has either the <code>odd</code> or <code>even</code> class added.
+                </p>
+            `,
+        },
+        article: {
+            value: 'article',
+            label: 'Text box with optional heading',
+            description: `
+                <p>
+                    A simple box containing text with an optional heading.
+                </p>
+            `,
+        },
+        html: {
+            value: 'html',
+            label: 'HTML',
+            description: `
+                <p>
+                    Pass-through HTML. When sent to the uibuilder node, will be reproduced in your page(s).
+                </p>
+                <p>
+                    May be used with the Node-RED core <code>template</code> node.
+                </p>
+                <p>
+                    <b>NOTE</b>: Use with caution, no validity checking is currently done.
+                </p>
+            `,
+        },
+        title: {
+            value: 'title',
+            label: 'Page Title',
+            description: `
+                <p>
+                    Updates the HTML page title and meta description. Amends the first <code>&lt;h1></code> tag on the page if it exists else adds one at the top of the page.
+                </p>
+                <p>
+                    <code>msg.payload</code> must be a simple string.
+                </p>
+            `,
+        },
     }
 
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
-        // initial checkbox states
-        if (!node.passthrough) node.passthrough = false
-        $('#node-input-passthrough')
-            // Initial setting
-            .prop('checked', node.passthrough)
-            // If the setting changes, change the number of output ports
-            .on('change', function passthroughChange() {
-                if ($(this).prop('checked') === true) {
-                    node.outputs = 1
-                } else {
-                    node.outputs = 0
-                }
-            })
-
         // Initial conf data
         if (!node.confData) node.confData = {}
 
@@ -90,82 +136,20 @@
             types: [
                 {
                     value: 'elementType',
-                    options: [
-                        // @ts-expect-error
-                        { value: 'table', label: 'Simple Table' },
-                        // @ts-expect-error
-                        { value: 'ul', label: 'Unordered List (ul)' },
-                        // @ts-expect-error
-                        { value: 'ol', label: 'Ordered List (ol)' },
-                        // @ts-expect-error
-                        { value: 'dl', label: 'Description List (dl)' },
-                        // ts-expect-error
-                        // { value: 'text', label: 'Text output with label' },
-                    ]
+                    // @ts-expect-error
+                    options: Object.values(elTypes)
                 }
             ]
+        // @ts-ignore On-change, update the info panel
+        }).on('change', function() {
+            if (elTypes[this.value].description === undefined) elTypes[this.value].description = 'No description available.'
+            $('#type-info').html(elTypes[this.value].description)
         })
 
-        // One-day maybe, request put in, doesn't currently work since context isn't an option
-        // $('#node-input-store').typedInput({
-        //     type: 'str',
-        //     default: 'node',
-        //     types: ['context', 'flow', 'global'],
-        //     typeField: '#node-input-store-type'
-        // })
-        $('#node-input-storeContext').typedInput({ // eslint-disable-line sonarjs/no-duplicate-string
-            type: 'contextType',
-            types: [
-                {
-                    value: 'contextType',
-                    options: [
-                        // @ts-expect-error
-                        { value: 'context', label: 'Node' },
-                        // @ts-expect-error
-                        { value: 'flow', label: 'Flow' },
-                        // @ts-expect-error
-                        { value: 'global', label: 'Global' },
-                    ]
-                }
-            ]
-        })
-
-        $('#node-input-storeContext').on('change', function () {
-            if ($(this).val() === 'context') {
-                $('#node-input-varName').val('uib_el').prop('disabled', true)
-            } else {
-                $('#node-input-varName').val(`uib_el_${node.id}`).prop('disabled', false)
-            }
-        })
-
-        // Set up context store select drop-down
-        populateUseStoreDropdown()
-
-        // Deal with the url
-        getUrls()
-        if (node.url && node.url.length > 0) {
-            $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
-            $('#node-input-url').val(node.url)
-        }
-
-        // If caching turned off, grey out settings
-        $('#node-input-cacheOn').on('change', function () {
+        // Create unique default topic from id
+        $('#node-input-elementid').on('change', function() {
             // @ts-expect-error
-            if (this.checked === true) {
-                // @ts-expect-error
-                $('#node-input-storeName').typedInput('enable')
-                // @ts-expect-error
-                $('#node-input-storeContext').typedInput('enable')
-                if ($('#node-input-storeContext').val() !== 'context') $('#node-input-varName').prop('disabled', false)
-                $('#node-input-newcache').prop('disabled', false)
-            } else {
-                // @ts-expect-error
-                $('#node-input-storeName').typedInput('disable')
-                // @ts-expect-error
-                $('#node-input-storeContext').typedInput('disable')
-                $('#node-input-varName').prop('disabled', true)
-                $('#node-input-newcache').prop('disabled', true)
-            }
+            $('#node-input-topic').val(this.value)
         })
 
         // TODO reset unused conf props on type change?
@@ -253,32 +237,30 @@
         category: paletteCategory,
         color: paletteColor,
         defaults: {
-            url: { value: '', required: true },
+            name: { value: '' },
+            topic: { value: '' },
+
             elementid: { value: '', required: true },
             elementtype: { value: '', required: true },
             parent: { value: '' },
-            wrapper: { value: '' },
-            passthrough: { value: false },
-            outputs: { value: 0 },
-            name: { value: '' },
+
+            classes: { value: '' },
+            styles: { value: '' },
+            containerclasses: { value: '' },
+            containerstyles: { value: '' },
+
             // Configuration data specific to the chosen type
             confData: { value: {} },
-            // Caching
-            cacheOn: { value: true },
-            storeName: { value: 'default', required: true },
-            storeContext: { value: 'context' },
-            varName: { value: 'uib_el', required: true },
-            newcache: { value: true },
         },
         align: 'right',
         inputs: 1,
         inputLabels: '',
-        outputs: 0,
+        outputs: 1,
         outputLabels: ['uibuilder dynamic UI configuration'],
         icon: 'font-awesome/fa-code',
         paletteLabel: nodeLabel,
         label: function () {
-            return `<${this.url}>${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName} [${this.elementtype}]`
+            return `[${this.elementtype}] ${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName}`
         },
 
         /** Prepares the Editor panel */

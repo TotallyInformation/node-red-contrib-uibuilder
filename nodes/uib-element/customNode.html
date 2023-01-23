@@ -114,13 +114,8 @@
     <div id="el-tabs-content">
 
         <div id="el-tab-main" style="display:none">
-            <div aria-label="uibuilder URL to associate with" class="form-row">
-                <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-                <input type="text" id="node-input-url" style="width:70%;"></input>
-            </div>
-            
-            <div aria-label="The HMTL id to apply to the created element" class="form-row">
-                <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> El ID</label>
+            <div aria-label="The HMTL id to apply to the created element. Must be unique on the page." class="form-row">
+                <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> HTML ID</label>
                 <input type="text" id="node-input-elementid" placeholder="Must be a valid HTML element id">
             </div>
             
@@ -128,51 +123,37 @@
                 <label for="node-input-elementtype"><i class="fa fa-code"></i> Type</label>
                 <input type="text" id="node-input-elementtype" style="width:70%;"></input>
             </div>
+            <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
             
             <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;If blank, will be added to #more or body" class="form-row">
                 <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
                 <input type="text" id="node-input-parent" placeholder="Optional. CSS Selector">
             </div>
             
-            <div aria-label="Wrapping HTML element type. Leave blank for no wrapper." class="form-row">
-                <label for="node-input-wrapper"><i class="fa fa-outdent"></i> Wrap El</label>
-                <input type="text" id="node-input-wrapper" placeholder="Optional wrapping HTML element type. Blank for none">
-            </div>
-            
-            <div aria-label="Optional. Space separated list of classes. Will be added to the root element (not the optional wrapper)" class="form-row">
+            <div aria-label="Optional. Space separated list of classes. Will be added to the root element (not the container div)" class="form-row">
                 <label for="node-input-classes"><i class="fa fa-i-cursor"></i> Classes</label>
                 <input type="text" id="node-input-classes" placeholder="Optional. Space separated list of classes">
             </div>
-            
-            <div aria-label="Optional. List of styles. Will be added to the root element (not the optional wrapper)" class="form-row">
-                <label for="node-input-wrapper"><i class="fa fa-i-cursor"></i> Wrap El</label>
+            <div aria-label="Optional. List of styles. Will be added to the root element (not the container div)" class="form-row">
+                <label for="node-input-styles"><i class="fa fa-i-cursor"></i> Styles</label>
                 <input type="text" id="node-input-wrapper" placeholder="Optional. List of styles">
             </div>
             
-            <div aria-label="Outputs the configuration instead of sending it to the front-end" class="form-row">
-                <input type="checkbox" id="node-input-passthrough" style="display:inline-block; width:15px; vertical-align:baseline;">
-                <label for="node-input-passthrough" style="width: 90%;">Output instead of send?</label>
+            <div aria-label="Optional classes for container div element. Space separated." class="form-row">
+                <label for="node-input-containerclasses"><i class="fa fa-outdent"></i> Cont. Class</label>
+                <input type="text" id="node-input-containerclasses" placeholder="Optional. Classes to apply to container div">
             </div>
-            
-            <div aria-label="Cache the last sent msg. Replay for new clients" class="form-row">
-                <input type="checkbox" id="node-input-cacheOn" style="display: inline-block; width: auto; vertical-align: top;" checked>
-                <label for="node-input-cacheOn" style="width: 90%;">Use the cache?</label>
-            </div>
-            <div aria-label="Select which context store and variable to use" class="form-row">
-                <label for="node-input-storeName" style="width:25%"><i class="fa fa-database"></i> Store</label>
-                <label for="node-input-storeContext" style="width:25%"><i class="fa fa-database"></i> Type</label>
-                <label for="node-input-varName" style="width:41%"><i class="fa fa-tag"></i> Variable Name</label><br>
-                <input type="text" id="node-input-storeName" style="width:25%"></input>
-                <input type="text" id="node-input-storeContext" style="width:25%"></input>
-                <input type="text" id="node-input-varName" value="uib_cache" aria-label="Can only change if Type is not 'Node'" placeholder="REQD: Context variable name" style="width:41%">
-            </div>
-            <div aria-label="Only replay cache if client as actually new. A new client comes from a page-load, not a reconnection" class="form-row">
-                <input type="checkbox" id="node-input-newcache" style="display: inline-block; width: auto; vertical-align: top;" checked>
-                <label for="node-input-newcache" style="width: 90%;">Only replay cache when client is really new</label>
+            <div aria-label="Optional styles for container div element. Must be valid CSS Styles." class="form-row">
+                <label for="node-input-containerstyles"><i class="fa fa-outdent"></i> Cont. Style</label>
+                <input type="text" id="node-input-containerstyles" placeholder="Optional. Styles to apply to container div">
             </div>
             
             <hr>
             
+            <div aria-label="Default msg topic. Make unique if using uib-cache." class="form-row">
+                <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+                <input type="text" id="node-input-topic">
+            </div>
             <div aria-label="Node name (descriptive only)" class="form-row">
                 <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
                 <input type="text" id="node-input-name">
@@ -180,27 +161,21 @@
             
             <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
                 <p>
-                    With no <code>msg.mode</code> set, sending another message will 
-                    automatically remove and replace the element.
-                </p>
-                <!-- <p>
-                    In order to <b>update</b> an existing element rather than replacing it,
-                    make sure to set <code>msg.mode</code> to "update". In that case,
-                    Whatever you send will be added to the element instead of replacing it.
-                </p> -->
-                <p>
-                    To <b>remove</b> an existing element, set <code>msg.mode</code> to "remove".
-                    This will also clear the cache.
+                    Creates a <b>copy</b> of the inbound msg, then adds a uibuilder <code>_ui</code>
+                    configuration object before sending.
                 </p>
                 <p>
-                    If node status is "Data Registered", when a new client connects to uibuilder,
-                    it will immediately be sent a copy of the data so that all connected clients
-                    have the same display.
+                    Send the output to a uibuilder main node and the resulting page(s) will have some
+                    new UI elements added dynamically without the need for any coding. Use the default
+                    "Blank" template to get a simple web page that will "just work". However, any of the 
+                    templates should easily accept the output of this node without coding needed.
                 </p>
                 <p>
-                    If you need to do more complex tasks such as update specific sub-elements,
-                    set the node to just output the configuration and then use the documentation to
-                    tweak it accordingly.
+                    The output of the node can be further processed for more complex requirements. uib-element
+                    nodes can also be chained together, simply use a change or function node to replace the
+                    <code>msg.payload</code> in readiness for the next <code>uib-element</code> node. Leave
+                    the <code>msg._ui</code> property as-is and the next <code>uib-element</code> node will 
+                    add to it.
                 </p>
                 <p>
                     <b>NOTE:</b> This node only works if you are using the new <i>ESM</i> or <i>IIFE</i> builds of the uibuilder front-end
@@ -330,75 +305,121 @@
         /** Node's background color @constant {string} paletteColor */
         const paletteColor = '#F6E0F8' // '#E6E0F8'
     
-        /** Get all of the current uibuilder URL's */
-        function getUrls() {
-            $.ajax({
-                type: 'GET',
-                async: false,
-                dataType: 'json',
-                url: './uibuilder/admin/dummy',
-                data: {
-                    'cmd': 'listinstances',
-                },
-                success: function (instances) {
-                    const urls = []
-                    Object.keys(instances).forEach((val, i, arr) => {
-                        urls.push({ value: instances[val], label: instances[val] })
-                        // $('#node-input-url').append($('<option>', {
-                        //     value: instances[val],
-                        //     text: instances[val],
-                        // }))
-                    })
-    
-                    $('#node-input-url').typedInput({
-                        types: [
-                            {
-                                value: 'urls',
-                                options: urls,
-                            }
-                        ]
-                    })
-                }
-            })
-    
-        } // ---- end of getUrls ---- //
-    
-        /** Populate the store dropdown */
-        function populateUseStoreDropdown() {
-            const storeNames = []
-    
-            RED.settings.context.stores.forEach(store => {
-                storeNames.push({ value: store, label: store })
-            })
-    
-            $('#node-input-storeName').typedInput({
-                types: [
-                    {
-                        value: 'storeNames',
-                        options: storeNames,
-                    }
-                ]
-            })
+        /** Element Types definitions */
+        const elTypes = {
+            table: {
+                value: 'table',
+                label: 'Simple Table',
+                description: `
+                    <p>
+                        A simple but accessible table.
+                    </p><p>
+                        Set the incoming <code>msg.payload</code> to an <i>Array of Objects<i>.
+                        Each array entry will be a new row. Each property of the first array entry
+                        will be used for the column names.
+                    </p><p>
+                        An Object of Objects can also be used. In that case, the outer object's keys will be
+                        used as row names by adding a <code>data-row-name</code> attribute to each row.
+                    </p><p>
+                        Each row in the table has a unique <code>id</code>, and <code>data-row-index</code> attributes; 
+                        and has either the <code>odd</code> or <code>even</code> class added. 
+                    </p><p>
+                        Each cell (<code>&lt;td></code>) in the table has a unique <code>id</code> attribute, as well as 
+                        <code>data-row-index</code>, <code>data-col-index</code> and <code>data-col-name</code> attributes. 
+                    </p>
+                `,
+            },
+            ul: {
+                value: 'ul',
+                label: 'Unordered List (ul)',
+                description: `
+                    <p>
+                        Outputs a simple, accessible, bullet list.
+                    </p><p>
+                        Each row in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
+                        Each row also has either the <code>odd</code> or <code>even</code> class added.
+                    </p>
+                `,
+            },
+            ol: {
+                value: 'ol',
+                label: 'Ordered List (ol)',
+                description: `
+                    <p>
+                        Outputs a simple, accessible, numbered list
+                    </p><p>
+                        Each row in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
+                        Each row also has either the <code>odd</code> or <code>even</code> class added.
+                    </p>
+                `,
+            },
+            dl: {
+                value: 'dl',
+                label: 'Description List (dl)',
+                description: `
+                    <p>
+                        Outputs a simple, accessible, description list.
+                    </p>
+                    <p>
+                        Set the incoming <code>msg.payload</code> to be an Array of Array's. The outer array representing each row 
+                        and the inner array containing at least 2 string entries representing the term/description pair.
+                        Additional entries in the inner array are added as secondary descriptions (<code>dd</code> tags).
+                    </p>
+                    <p>
+                        You can also use an Array of Objects where each object is a simple key/value pair. Or even an Object of Objects.
+                        Inner structures are catenated into a string separated by commas.
+                    </p>
+                    <p>
+                        Each entry has a wrapping <code>&lt;div></code> tag containing a term (<code>dt</code>) 
+                        and a definition (<code>dd</code>).
+                    </p><p>
+                        Each row div in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
+                        Each row also has either the <code>odd</code> or <code>even</code> class added.
+                    </p>
+                `,
+            },
+            article: {
+                value: 'article',
+                label: 'Text box with optional heading',
+                description: `
+                    <p>
+                        A simple box containing text with an optional heading.
+                    </p>
+                `,
+            },
+            html: {
+                value: 'html',
+                label: 'HTML',
+                description: `
+                    <p>
+                        Pass-through HTML. When sent to the uibuilder node, will be reproduced in your page(s).
+                    </p>
+                    <p>
+                        May be used with the Node-RED core <code>template</code> node.
+                    </p>
+                    <p>
+                        <b>NOTE</b>: Use with caution, no validity checking is currently done.
+                    </p>
+                `,
+            },
+            title: {
+                value: 'title',
+                label: 'Page Title',
+                description: `
+                    <p>
+                        Updates the HTML page title and meta description. Amends the first <code>&lt;h1></code> tag on the page if it exists else adds one at the top of the page.
+                    </p>
+                    <p>
+                        <code>msg.payload</code> must be a simple string.
+                    </p>
+                `,
+            },
         }
     
         /** Prep for edit
          * @param {*} node A node instance as seen from the Node-RED Editor
          */
         function onEditPrepare(node) {
-            // initial checkbox states
-            if (!node.passthrough) node.passthrough = false
-            $('#node-input-passthrough')
-                // Initial setting
-                .prop('checked', node.passthrough)
-                // If the setting changes, change the number of output ports
-                .on('change', function passthroughChange() {
-                    if ($(this).prop('checked') === true) {
-                        node.outputs = 1
-                    } else {
-                        node.outputs = 0
-                    }
-                })
-    
             // Initial conf data
             if (!node.confData) node.confData = {}
     
@@ -407,82 +428,20 @@
                 types: [
                     {
                         value: 'elementType',
-                        options: [
-                            // @ts-expect-error
-                            { value: 'table', label: 'Simple Table' },
-                            // @ts-expect-error
-                            { value: 'ul', label: 'Unordered List (ul)' },
-                            // @ts-expect-error
-                            { value: 'ol', label: 'Ordered List (ol)' },
-                            // @ts-expect-error
-                            { value: 'dl', label: 'Description List (dl)' },
-                            // ts-expect-error
-                            // { value: 'text', label: 'Text output with label' },
-                        ]
+                        // @ts-expect-error
+                        options: Object.values(elTypes)
                     }
                 ]
+            // @ts-ignore On-change, update the info panel
+            }).on('change', function() {
+                if (elTypes[this.value].description === undefined) elTypes[this.value].description = 'No description available.'
+                $('#type-info').html(elTypes[this.value].description)
             })
     
-            // One-day maybe, request put in, doesn't currently work since context isn't an option
-            // $('#node-input-store').typedInput({
-            //     type: 'str',
-            //     default: 'node',
-            //     types: ['context', 'flow', 'global'],
-            //     typeField: '#node-input-store-type'
-            // })
-            $('#node-input-storeContext').typedInput({ // eslint-disable-line sonarjs/no-duplicate-string
-                type: 'contextType',
-                types: [
-                    {
-                        value: 'contextType',
-                        options: [
-                            // @ts-expect-error
-                            { value: 'context', label: 'Node' },
-                            // @ts-expect-error
-                            { value: 'flow', label: 'Flow' },
-                            // @ts-expect-error
-                            { value: 'global', label: 'Global' },
-                        ]
-                    }
-                ]
-            })
-    
-            $('#node-input-storeContext').on('change', function () {
-                if ($(this).val() === 'context') {
-                    $('#node-input-varName').val('uib_el').prop('disabled', true)
-                } else {
-                    $('#node-input-varName').val(`uib_el_${node.id}`).prop('disabled', false)
-                }
-            })
-    
-            // Set up context store select drop-down
-            populateUseStoreDropdown()
-    
-            // Deal with the url
-            getUrls()
-            if (node.url && node.url.length > 0) {
-                $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
-                $('#node-input-url').val(node.url)
-            }
-    
-            // If caching turned off, grey out settings
-            $('#node-input-cacheOn').on('change', function () {
+            // Create unique default topic from id
+            $('#node-input-elementid').on('change', function() {
                 // @ts-expect-error
-                if (this.checked === true) {
-                    // @ts-expect-error
-                    $('#node-input-storeName').typedInput('enable')
-                    // @ts-expect-error
-                    $('#node-input-storeContext').typedInput('enable')
-                    if ($('#node-input-storeContext').val() !== 'context') $('#node-input-varName').prop('disabled', false)
-                    $('#node-input-newcache').prop('disabled', false)
-                } else {
-                    // @ts-expect-error
-                    $('#node-input-storeName').typedInput('disable')
-                    // @ts-expect-error
-                    $('#node-input-storeContext').typedInput('disable')
-                    $('#node-input-varName').prop('disabled', true)
-                    $('#node-input-newcache').prop('disabled', true)
-                }
+                $('#node-input-topic').val(this.value)
             })
     
             // TODO reset unused conf props on type change?
@@ -570,32 +529,30 @@
             category: paletteCategory,
             color: paletteColor,
             defaults: {
-                url: { value: '', required: true },
+                name: { value: '' },
+                topic: { value: '' },
+    
                 elementid: { value: '', required: true },
                 elementtype: { value: '', required: true },
                 parent: { value: '' },
-                wrapper: { value: '' },
-                passthrough: { value: false },
-                outputs: { value: 0 },
-                name: { value: '' },
+    
+                classes: { value: '' },
+                styles: { value: '' },
+                containerclasses: { value: '' },
+                containerstyles: { value: '' },
+    
                 // Configuration data specific to the chosen type
                 confData: { value: {} },
-                // Caching
-                cacheOn: { value: true },
-                storeName: { value: 'default', required: true },
-                storeContext: { value: 'context' },
-                varName: { value: 'uib_el', required: true },
-                newcache: { value: true },
             },
             align: 'right',
             inputs: 1,
             inputLabels: '',
-            outputs: 0,
+            outputs: 1,
             outputLabels: ['uibuilder dynamic UI configuration'],
             icon: 'font-awesome/fa-code',
             paletteLabel: nodeLabel,
             label: function () {
-                return `<${this.url}>${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName} [${this.elementtype}]`
+                return `[${this.elementtype}] ${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName}`
             },
     
             /** Prepares the Editor panel */

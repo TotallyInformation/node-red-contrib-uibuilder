@@ -18,6 +18,8 @@
  */
 'use strict'
 
+const { body } = require('express-validator')
+
 /** --- Type Defs - should help with coding ---
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
@@ -26,10 +28,6 @@
  */
 
 //#region ----- Module level variables ---- //
-
-const tiEvents = require('@totallyinformation/ti-common-event-handler')
-// const { node } = require('execa')
-// const uibPackages = require('../libs/package-mgt')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -48,69 +46,19 @@ const mod = {
 /** Set status msg in Editor
  * @param {runtimeNode & uibElNode} node Reference to node instance
  */
-function setNodeStatus(node) {
-    let txt = 'Not caching'
-    const shape = 'ring'
+// function setNodeStatus(node) {
+//     let txt = 'Not caching'
+//     const shape = 'ring'
 
-    if (node.cacheOn === true) {
-        if ( !node.cache || Object.keys(node.cache).length === 0 ) txt = 'No element cached'
-        else txt = 'Element is cached'
-    }
+//     if (node.cacheOn === true) {
+//         if ( !node.cache || Object.keys(node.cache).length === 0 ) txt = 'No element cached'
+//         else txt = 'Element is cached'
+//     }
 
-    node.status({ fill: 'blue', shape: shape, text: txt })
-} // ---- end of setStatus ---- //
+//     node.status({ fill: 'blue', shape: shape, text: txt })
+// } // ---- end of setStatus ---- //
 
-/** Deal with a new client connection: send the last msg
- * @param {*} msg The msg data in the custom event
- * @this {runtimeNode & uibElNode}
- */
-function handleConnectionEvent(msg) {
-    if (this.cacheOn === false) return
-    // If no _ui elements object to send, don't bother
-    // ! TODO - this looks odd, should it really be this._ui? Or should it be the cache object?
-    if ( !this._ui ) return
-
-    // Send the cached data - but only if connections=0 (e.g. fresh page load) if flag is set
-    if ( (this.newcache === true && msg.connections === 0) || this.newcache === false ) {
-        // Don't forget to include the _socketId
-        emitMsg(msg, this)
-    }
-}
-
-/** Clear the cache
- * @param {runtimeNode & uibElNode} node Reference to node instance
- */
-function clearCache(node) {
-    if (node.cacheOn === false) return
-
-    // Save the cache or initialise it if new
-    node.cache = {}
-    node.setC(node.varName, node.cache, node.storeName)
-}
-
-/** Cache the INPUT. Replace the cached list with the latest msg
- * @param {*} msg The recieved message to add
- * @param {runtimeNode & uibElNode} node Reference to node instance
- */
-function replaceCache(msg, node) {
-    if (mod.RED === null) return
-    if (node.cacheOn === false) return
-    // TODO Check if there is something to cache (this._ui)
-
-    // TODO Provide option to keep/remove the original data in the output
-    // // HAS to be a CLONE to avoid downstream changes impacting cache
-    const clone = mod.RED.util.cloneMessage(msg)
-    delete clone._msgid
-
-    // Replace the cache
-    node.cache = clone
-
-    // Save the cache
-    node.setC(node.varName, node.cache, node.storeName)
-
-} // ---- end of addToCache ---- //
-
-/** Build the output and send the msg via an event emitter
+/** Build the output and send the msg (clone input msg and add _ui prop)
  * @param {*} msg The input or custom event msg data
  * @param {runtimeNode & uibElNode} node reference to node instance
  */
@@ -121,25 +69,16 @@ function emitMsg(msg, node) {
     const msg2 = {
         ...msg,
         ...{
-            _uib: {
-                originator: node.id
-            },
             _ui: node._ui,
         }
     }
     delete msg2.payload
 
-    if ( node.passthrough === true ) {
-        node.send(msg2)
-    } else {
-        tiEvents.emit( `node-red-contrib-uibuilder/${node.url}`, msg2)
-    }
+    // Add default topic if defined and if not overridden by input msg
+    // NB: Needs to be unique if using uib-cache
+    if (!msg2.topic && node.topic !== '') msg2.topic = node.topic
 
-    if ( msg.mode && msg.mode === 'remove' ) {
-        node._ui = undefined
-        node.status({ fill: 'blue', shape: 'dot', text: 'Data cleared' })
-        // return
-    }
+    node.send(msg2)
 }
 
 /** 3) Run whenever a node instance receives a new input msg
@@ -187,103 +126,116 @@ function nodeInstance(config) {
 
     /** Transfer config items from the Editor panel to the runtime */
     this.name = config.name ?? ''
+    this.topic = config.topic ?? ''
+
     this.elementid = config.elementid ?? ''
     this.elementtype = config.elementtype ?? ''
     this.parent = config.parent ?? ''
-    this.passthrough = config.passthrough ?? false
+
+    this.classes = config.classes ?? ''
+    this.styles = config.styles ?? ''
+    this.containerclasses = config.containerclasses ?? ''
+    this.containerstyles = config.containerstyles ?? ''
+
     // Configuration data specific to the chosen type
     this.confData = config.confData ?? {}
-    // Cache configuration
-    this.cacheOn = config.cacheOn ?? false
-    this.storeName = config.storeName ?? 'default'
-    this.storeContext = config.storeContext ?? 'context'
-    this.varName = config.varName ?? 'uib_el'
-    this.newcache = config.newcache ?? true
 
     this._ui = undefined // set in buildUI()
-    this.cache = {} // make sure it exists but is empty until set
-
-    const url = this.url = config.url ?? ''
-
-    // Show if anything in the cache
-    setNodeStatus(this)
-    // this.status({ fill: 'blue', shape: 'dot', text: 'No initial data yet' })
-
-    // Get ref to this node's context store or the flow/global stores as needed
-    let context = this.context()
-    if ( this.storeContext !== 'context') {
-        context = context[this.storeContext]
-    }
-    this.getC = context.get
-    this.setC = context.set
-
-    if (this.cacheOn === true) {
-        // Get the cache or initialise it if new
-        this.cache = this.getC(this.varName, this.storeName) ?? {}
-        // Note that the cache is written back in addToCache and clearCache
-
-        // When a client (re)connects
-        tiEvents.on(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent.bind(this))
-    } else {
-        // See if we can clear the cache
-        try {
-            this.cache = {}
-            this.setC(this.varName, this.cache, this.storeName)
-            setNodeStatus(this)
-        } catch (e) { }
-    }
-
-    // When a client disconnects
-    // tiEvents.on(`node-red-contrib-uibuilder/${url}/clientDisconnect`, function(data) {
-    //     console.log(`>> list >> node-red-contrib-uibuilder/${url}/clientDisconnect >> `, data)
-    // })
-
-    // tiEvents.on(`node-red-contrib-uibuilder/${url}/**`, function(data) {
-    //     console.log(`>> list >> node-red-contrib-uibuilder/${url}/** >> `, this.event, data)
-    // })
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
 
-    /** Put things here if you need to do anything when a node instance is removed
-     * Or if Node-RED is shutting down.
-     * Note the use of an arrow function, ensures that the function keeps the
-     * same `this` context and so has access to all of the node instance properties.
-     */
-    this.on('close', (removed, done) => {
-        this._ui = undefined
-        tiEvents.removeEventListener(`node-red-contrib-uibuilder/${url}/clientConnect`, handleConnectionEvent)
-        done()
-    })
-
-    /** Properties of `this`
-     * Methods: updateWires(wires), context(), on(event,callback), emit(event,...args), removeListener(name,listener), removeAllListeners(name), close(removed)
-     *          send(msg), receive(msg), log(msg), warn(msg), error(logMessage,msg), debug(msg), trace(msg), metric(eventname, msg, metricValue), status(status)
-     * Other: credentials, id, type, z, wires, x, y
-     * + any props added manually from config, typically at least name and topic
-     */
-}
+} // ---- End of nodeInstance ---- //
 
 //#endregion ----- Module-level support functions ----- //
 
 //#region ----- UI definition builders ----- //
 
-/** Build the UI config instructions for the TEXT element
+/** Build the UI config instructions for the ARTICLE element
+ * @param {string} id The HTML ID of the wrapper tag
  * @param {*} msg The msg data in the custom event
  * @param {object} parentComponent The parent descriptor object that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildText(msg, parentComponent) {
+function buildArticle(id, msg, parentComponent) {
+    // const err = ''
+    // return err
+    return ''
+} // ---- End of buildArticle ---- //
+
+/** Build the UI config instructions for the HTML element
+ * @param {string} id The HTML ID of the wrapper tag
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parentComponent The parent descriptor object that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildHTML(parent, node, msg) {
+    // Must be a string or array
+    let data = msg.payload
+    if (!msg.payload) data = ''
+    else if (Array.isArray(msg.payload)) data = msg.payload.join('/n')
+    else if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+        try {
+            data = JSON.stringify(msg.payload)
+        } catch (e) {
+            data = 'ERROR: Could not parse input data'
+        }
+    }
+
     const err = ''
+
+    parent.components.push( {
+        'type': node.elementtype, // html
+        slot: data,
+    } )
+
     return err
-} // ---- End of buildText ---- //
+} // ---- End of buildHTML ---- //
+
+/** Build the UI config instructions for the Title and leading H1
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @param {*} msg The msg data in the custom event
+ * @returns {string} Error description or empty error string
+ */
+function buildTitle(node, msg) {
+    // Must be a string or array/object of strings
+    // If array/object, then catenate
+
+    const err = ''
+
+    // Convenient references
+    // const insertPoint = parentComponent // parentComponent.components
+    // const data = Array.isArray(msg.payload) ? msg.payload.join('/n') : msg.payload
+
+    // insertPoint.slot = data
+    node._ui[0] = ({
+        'method': 'update',
+        'type': 'title',
+        'slot': msg.payload
+    })
+    node._ui.push({
+        'method': 'replace',
+        'components': [
+            {
+                'type': 'h1',
+                'selector': 'h1',
+                'parent': node.parent ? node.parent : 'body',
+                'position': 'first',
+                'slot': msg.payload
+            },
+        ],
+    })
+
+    return err
+} // ---- End of buildTitle ---- //
 
 /** Build the UI config instructions for the UL or OL LIST elements
+ * @param {string} id The HTML ID of the wrapper tag
  * @param {*} msg The msg data in the custom event
  * @param {object} parentComponent The parent descriptor object that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildUlOlList(msg, parentComponent) {
+function buildUlOlList(id, msg, parentComponent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
@@ -297,13 +249,17 @@ function buildUlOlList(msg, parentComponent) {
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
+        // Track the data row offset
+        const rowNum = i + 1
+
         // Create next list row
         listRows.push( {
             'type': 'li',
+            'id': `${id}-data-R${rowNum}`,
             'attributes': {
                 // NB: Making all indexes 1-based for consistency
-                'data-row-index': i + 1,
-                'class': ((i + 1) % 2  === 0) ? 'even' : 'odd'
+                'data-row-index': rowNum,
+                'class': ((rowNum) % 2  === 0) ? 'even' : 'odd'
             },
             'slot': tbl[row]
         } )
@@ -317,11 +273,12 @@ function buildUlOlList(msg, parentComponent) {
 } // ---- End of buildUlOlList ---- //
 
 /** Build the UI config instructions for DL LIST elements
+ * @param {string} id The HTML ID of the wrapper tag
  * @param {*} msg The msg data in the custom event
  * @param {object} parentComponent The parent descriptor object that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildDlList(msg, parentComponent) {
+function buildDlList(id, msg, parentComponent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
@@ -337,6 +294,9 @@ function buildDlList(msg, parentComponent) {
     Object.keys(tbl).forEach( (row, i) => {
         // Each DL entry needs two elements - treated as a single row
 
+        // Track the data row offset
+        const rowNum = i + 1
+
         // Check if we have an object(or array)? If not, make content an array - will output only DT's
         if (!(tbl[row] instanceof Object)) {
             tbl[row] = [tbl[row]]
@@ -346,10 +306,11 @@ function buildDlList(msg, parentComponent) {
 
         const listIndex = listRows.push( {
             'type': 'div',
+            'id': `${id}-data-R${rowNum}`,
             'attributes': {
                 // NB: Making all indexes 1-based for consistency
-                'data-row-index': i + 1,
-                'class': ((i + 1) % 2  === 0) ? 'even' : 'odd'
+                'data-row-index': rowNum,
+                'class': ((rowNum) % 2  === 0) ? 'even' : 'odd'
             },
             'components': [],
         } )
@@ -392,11 +353,12 @@ function buildDlList(msg, parentComponent) {
 } // ---- End of buildDlList ---- //
 
 /** Build the UI config instructions for the TABLE element
+ * @param {string} id The HTML ID of the wrapper tag
  * @param {*} msg The msg data in the custom event
  * @param {object} parentComponent The parent descriptor object that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildTable(msg, parentComponent) {
+function buildTable(id, msg, parentComponent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
@@ -424,8 +386,12 @@ function buildTable(msg, parentComponent) {
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
+
+        // TODO Allow for msg.cols to be used as override
         // Build the columns from the first set of entries & add the thead
         if (i === 0) {
+            const hdrRowNum = i + 1
+
             // TODO inp[el] has to be an object
             // TODO check that there are >0 columns
 
@@ -433,6 +399,10 @@ function buildTable(msg, parentComponent) {
             thead.components = [
                 {
                     'type': 'tr',
+                    'id': `${id}-head-r${hdrRowNum}`,
+                    'attributes': {
+                        'data-hdr-row-index': hdrRowNum,
+                    },
                     'components': []
                 }
             ]
@@ -443,11 +413,13 @@ function buildTable(msg, parentComponent) {
 
             // Build the headings
             cols.forEach( (colName, k) => {
+                const colNum = k + 1
                 thead.components[0].components.push({
                     'type': 'th',
+                    'id': `${id}-head-r${hdrRowNum}-c${colNum}`,
                     'attributes': {
-                        'data-hdr-row-index': 1,
-                        'data-col-index': k + 1,
+                        'data-hdr-row-index': hdrRowNum,
+                        'data-col-index': colNum,
                         'data-col-name': colName,
                     },
                     'slot': colName
@@ -456,9 +428,13 @@ function buildTable(msg, parentComponent) {
 
         }
 
+        // Track the data row offset
+        const rowNum = i + 1
+
         // Create the data row
         const rLen = tbody.components.push( {
             'type': 'tr',
+            'id': `${id}-data-R${rowNum}`,
             'components': []
         } )
         // Add the row index attrib and even/odd class
@@ -476,12 +452,16 @@ function buildTable(msg, parentComponent) {
 
         // Build the columns
         cols.forEach(  (colName, j) => {
+            const colNum = j + 1
+
             tbody.components[rLen - 1].components.push({
                 'type': 'td',
+                'id': `${id}-data-R${rowNum}-C${colNum}`,
                 'attributes': {
-                    'data-row-index': rLen,
+                    'class': ((rowNum) % 2  === 0) ? 'even' : 'odd',
+                    'data-row-index': rowNum,
                     // NB: Making all indexes 1-based for consistency
-                    'data-col-index': j + 1,
+                    'data-col-index': colNum,
                     'data-col-name': colName,
                 },
                 'slot': tbl[row][colName],
@@ -493,6 +473,26 @@ function buildTable(msg, parentComponent) {
     return err
 } // ---- End of buildTable ---- //
 
+function addDiv(parent, node) {
+    if (!parent.components) parent.components = []
+    parent.components.push(
+        {
+            'type': 'div',
+            'id': node.elementid,
+            'parent': node.parent !== '' ? node.parent : undefined,
+            'attributes': {},
+            'components': [
+                // {
+                //     'type': node.elementtype,
+                //     'attributes': {},
+                //     'components': [],
+                // }
+            ],
+        },
+    )
+    return node._ui[node._ui.length - 1].components[0]
+}
+
 /** Create/update the _ui object and retain for replay
  * @param {*} msg incoming msg
  * @param {runtimeNode & uibElNode} node reference to node instance
@@ -501,16 +501,13 @@ function buildUi(msg, node) {
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) node._ui = msg._ui
     else node._ui = []
-    let uiIndex = node._ui.length === 0 ? 0 : node._ui.length - 1
+    // let uiIndex = node._ui.length === 0 ? 0 : node._ui.length - 1
 
     // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
     if ( !msg.mode ) msg.mode = 'update'
 
     // If mode is remove, then simply do that and return
     if ( msg.mode === 'remove' ) {
-        clearCache(node)
-        setNodeStatus(node)
-
         if (!node.elementid) {
             node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
             return
@@ -524,61 +521,57 @@ function buildUi(msg, node) {
     }
     // Otherwise ...
 
-    // If msg.mode = 'update' then remove+add.
-    if ( msg.mode === 'update' ) {
-        node._ui.push({
-            method: 'remove',
-            components: [`#${node.elementid}`], // remove uses css selector, not raw id
-        })
-    }
-    // Create template
-    node._ui.push({   // Blank template
-        'method': '',
-        'components': [
-            {
-                'type': '',
-                'id': '',
-                // 'parent': '',
-                'attributes': {},
-                'components': [],
-            },
-        ],
+    // Add the outer component which is always a div
+    node._ui.push({
+        'method': 'replace',
+        'components': [],
     } )
-    uiIndex = node._ui.length - 1
-
-    // TODO Will need to adjust for wrapper
+    let parent = node._ui[node._ui.length - 1]
 
     // Keep track of the next set of components to add to the hierarchy
-    const nextComponents = node._ui[uiIndex].components
+    // let nextComponents = node._ui[node._ui.length - 1].components
+    // TODO if heading, unshift new component object into nextComponents
+    // Get the component array for the actual element we are adding
+    // nextComponents = nextComponents[nextComponents.length - 1].components
 
-    // Common - add the outer component
-    node._ui[uiIndex].method = 'add' // looks odd but at present, the _ui[1] component can ONLY be an add.
-    nextComponents[0].type = node.elementtype
-    nextComponents[0].id = node.elementid // `add` method allows raw id
-    if ( node.parent !== '' ) nextComponents[0].parent = node.parent
-
-    // What type to process?
+    // ! What type to process?
     let err = ''
     switch (node.elementtype) {
-        case 'text': {
-            err = buildText(msg, nextComponents[0])
+        case 'article': {
+            parent = addDiv(parent, node)
+            err = buildArticle(node.elementid, msg, parent.components[0]) // nextComponents[0])
             break
         }
 
         case 'list':
         case 'ol':
         case 'ul': {
-            err = buildUlOlList(msg, nextComponents[0])
+            parent = addDiv(parent, node)
+            err = buildUlOlList(node.elementid, msg, nextComponents[0])
             break
         }
 
         case 'dl': {
-            err = buildDlList(msg, nextComponents[0])
+            parent = addDiv(parent, node)
+            err = buildDlList(node.elementid, msg, nextComponents[0])
             break
         }
 
         case 'table': {
-            err = buildTable(msg, nextComponents[0])
+            parent = addDiv(parent, node)
+            err = buildTable(node.elementid, msg, nextComponents[0])
+            break
+        }
+
+        case 'html': {
+            parent = addDiv(parent, node)
+            err = buildHTML(parent, node, msg)
+            break
+        }
+
+        case 'title': {
+            // In this case, we do not want a wrapping div
+            err = buildTitle(node, msg)
             break
         }
 
@@ -591,13 +584,8 @@ function buildUi(msg, node) {
 
     if (err.length > 0) {
         node.error(err, node)
-        return
     }
 
-    // Replace the cache if caching turned on
-    replaceCache(msg, node)
-
-    setNodeStatus(node)
 } // -- end of buildUI -- //
 
 //#endregion ----- ui functions ----- //
