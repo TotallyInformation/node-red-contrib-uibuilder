@@ -1059,9 +1059,19 @@ export const Uib = class Uib {
      */
     _uiExtendEl(parentEl, components) {
         components.forEach( (compToAdd, i) => {
-            const newEl = document.createElement(compToAdd.type)
-            this._uiComposeComponent(newEl, compToAdd)
-            parentEl.appendChild(newEl)
+            let newEl
+
+            if (compToAdd.type === 'html') {
+                newEl = parentEl
+                // newEl.outerHTML = compToAdd.slot
+                parentEl.innerHTML = compToAdd.slot
+            } else {
+                newEl = document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
+                // Updates newEl
+                this._uiComposeComponent(newEl, compToAdd)
+                parentEl.appendChild(newEl)
+            }
+
             // If nested components, go again - but don't pass payload to sub-components
             if (compToAdd.components) {
                 this._uiExtendEl(newEl, compToAdd.components)
@@ -1108,13 +1118,18 @@ export const Uib = class Uib {
         // }
 
         ui.components.forEach((compToAdd, i) => {
+
             // Create the new component
-            const newEl = document.createElement(compToAdd.type)
+            const newEl = document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
 
             if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
 
-            // Updates the newEl and maybe the ui
-            this._uiComposeComponent(newEl, compToAdd)
+            if (compToAdd.type === 'html') {
+                newEl.outerHTML = compToAdd.slot
+            } else {
+                // Updates newEl
+                this._uiComposeComponent(newEl, compToAdd)
+            }
 
             // Where to add the new element?
             let elParent
@@ -1132,8 +1147,13 @@ export const Uib = class Uib {
                 elParent = document.querySelector('body')
             }
 
-            // Append to the required parent
-            elParent.appendChild(newEl)
+            if ( compToAdd.position && compToAdd.position === 'first') {
+                // Insert new el before the first child of the parent. Ref: https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore#example_3
+                elParent.insertBefore(newEl, elParent.firstChild)
+            } else {
+                // Append to the required parent
+                elParent.appendChild(newEl)
+            }
 
             // If nested components, go again - but don't pass payload to sub-components
             if (compToAdd.components) {

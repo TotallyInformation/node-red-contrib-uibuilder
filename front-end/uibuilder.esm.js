@@ -2880,9 +2880,15 @@ var Uib = (_a = class {
   }
   _uiExtendEl(parentEl, components) {
     components.forEach((compToAdd, i2) => {
-      const newEl = document.createElement(compToAdd.type);
-      this._uiComposeComponent(newEl, compToAdd);
-      parentEl.appendChild(newEl);
+      let newEl;
+      if (compToAdd.type === "html") {
+        newEl = parentEl;
+        parentEl.innerHTML = compToAdd.slot;
+      } else {
+        newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+        this._uiComposeComponent(newEl, compToAdd);
+        parentEl.appendChild(newEl);
+      }
       if (compToAdd.components) {
         this._uiExtendEl(newEl, compToAdd.components);
       }
@@ -2891,10 +2897,14 @@ var Uib = (_a = class {
   _uiAdd(ui, isRecurse) {
     log("trace", "Uib:_uiManager:add", "Starting _uiAdd")();
     ui.components.forEach((compToAdd, i2) => {
-      const newEl = document.createElement(compToAdd.type);
+      const newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
       if (!compToAdd.slot && ui.payload)
         compToAdd.slot = ui.payload;
-      this._uiComposeComponent(newEl, compToAdd);
+      if (compToAdd.type === "html") {
+        newEl.outerHTML = compToAdd.slot;
+      } else {
+        this._uiComposeComponent(newEl, compToAdd);
+      }
       let elParent;
       if (compToAdd.parentEl) {
         elParent = compToAdd.parentEl;
@@ -2909,7 +2919,11 @@ var Uib = (_a = class {
         log("info", "Uib:_uiAdd", "No parent found, adding to body")();
         elParent = document.querySelector("body");
       }
-      elParent.appendChild(newEl);
+      if (compToAdd.position && compToAdd.position === "first") {
+        elParent.insertBefore(newEl, elParent.firstChild);
+      } else {
+        elParent.appendChild(newEl);
+      }
       if (compToAdd.components) {
         this._uiExtendEl(newEl, compToAdd.components);
       }
