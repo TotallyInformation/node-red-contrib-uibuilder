@@ -1618,6 +1618,11 @@ export const Uib = class Uib {
             log('warn', 'Uib:eventSend', `ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data. Arg Type: ${domevent.constructor.name}`, domevent)()
             return
         }
+
+        // Prevent default event action
+        domevent.preventDefault()
+
+        // The target element
         const target = domevent.currentTarget
 
         // Get target properties - only shows custom props not element default ones
@@ -1639,6 +1644,17 @@ export const Uib = class Uib {
             )
         )
 
+        // If target embedded in a form, include the form data
+        const form = {}
+        if ( target.form ) {
+            Object.values(target.form).forEach( (frmEl, i) => {
+                if (frmEl.tagName !== 'BUTTON' && frmEl.type !== 'button') { // We don't need any buttons
+                    const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
+                    if (id !== '') form[id] = frmEl.value
+                }
+            })
+        }
+
         // Set up the msg to send - NB: Topic may be added by this._send
         const msg = {
             // Each `data-xxxx` attribute is added as a property
@@ -1651,6 +1667,7 @@ export const Uib = class Uib {
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent !== '' ? target.textContent.substring(0, 255) : undefined,
 
+                form: form,
                 props: props,
                 attribs: attribs,
                 classes: Array.from(target.classList),
@@ -1669,6 +1686,8 @@ export const Uib = class Uib {
                 tabId: this.tabId,
             }
         }
+
+        if (domevent.type === 'change') msg._ui.newValue = domevent.target.value
 
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
         if (target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()

@@ -3216,6 +3216,7 @@
         log("warn", "Uib:eventSend", `ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data. Arg Type: ${domevent.constructor.name}`, domevent)();
         return;
       }
+      domevent.preventDefault();
       const target = domevent.currentTarget;
       const props = {};
       Object.keys(target).forEach((key) => {
@@ -3236,6 +3237,16 @@
           }
         )
       );
+      const form = {};
+      if (target.form) {
+        Object.values(target.form).forEach((frmEl, i2) => {
+          if (frmEl.tagName !== "BUTTON" && frmEl.type !== "button") {
+            const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
+            if (id !== "")
+              form[id] = frmEl.value;
+          }
+        });
+      }
       const msg = {
         payload: target.dataset,
         _ui: {
@@ -3243,6 +3254,7 @@
           id: target.id !== "" ? target.id : void 0,
           name: target.name !== "" ? target.name : void 0,
           slotText: target.textContent !== "" ? target.textContent.substring(0, 255) : void 0,
+          form,
           props,
           attribs,
           classes: Array.from(target.classList),
@@ -3258,6 +3270,8 @@
           tabId: this.tabId
         }
       };
+      if (domevent.type === "change")
+        msg._ui.newValue = domevent.target.value;
       log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
       if (target.dataset.length === 0)
         log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();
