@@ -6,7 +6,7 @@ created: 2021-02-17 14:28:00
 lastUpdated: 2022-11-26 17:32:09
 ---
 
-!> This page refers to the "old" original front-end library for uibuilder. There is now a new library that will eventually replace this one. Please see [this page](uibuilder.module.md). This older library has been functionally stabilised (there will not be any further enhancements after uibuilder v5). It still works as of uibuilder v6.0 but will eventually be deprecated.
+!> This page refers to the "old" original front-end library for uibuilder. There is now a new library that will eventually replace this one. Please see [the new front-end library pages](client-docs/readme.md). This older library has been functionally stabilised (there will not be any further enhancements after uibuilder v5). It still works as of uibuilder v6.0 but will eventually be deprecated.
 
 `uibuildefe.js` is the library that lets you interact with your uibuilder nodes in Node-RED.
 

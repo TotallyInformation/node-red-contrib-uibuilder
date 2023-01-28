@@ -8,7 +8,6 @@ lastUpdated: 2023-01-14 17:08:48
 ---
 
 - [Dynamic content limitations](#dynamic-content-limitations)
-  - [Positioning new elements before existing ones rather than after](#positioning-new-elements-before-existing-ones-rather-than-after)
   - [Updates and sub-components](#updates-and-sub-components)
 - [Dynamic content details](#dynamic-content-details)
 - [Initial load from JSON URL](#initial-load-from-json-url)
@@ -34,12 +33,6 @@ lastUpdated: 2023-01-14 17:08:48
 ## Dynamic content limitations
 
 There are currently a small number of limitations of this approach that you should be aware of.
-
-### Positioning new elements before existing ones rather than after
-
-If you want to add something new before siblings rather than at the end, this is not yet handled.
-
-For example, if you wanted to add a new list entry at the start of the list, you would need to `remove` then `add` the whole list.
 
 ### Updates and sub-components
 

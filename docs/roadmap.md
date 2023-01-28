@@ -131,11 +131,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add more elements:
     * [x] List
     * [x] Table
-    * [ ] HTML - allow raw html to be sent - e.g. from template node
+    * [x] HTML - allow raw html to be sent - e.g. from template node
+    * [ ] Page Title
     * Grid/Flex-Grid
     * Card
     * Form
-      * Select
+      * Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
       * Inputs: incl text, number, time, date, ...
     * Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
     * tbody
@@ -145,6 +146,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
     * notify (globalNotification)
     * button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
+    * LED (on/off/colour/brightness) - ref: node-red-contrib-ui-led
     * Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
 
 * Continue to improve the new `uib-brand.css`

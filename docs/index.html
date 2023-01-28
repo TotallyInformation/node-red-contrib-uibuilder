@@ -103,8 +103,8 @@
             },
             subMaxLevel: 2,
             search: {
-                depth      : 3,
-                noData     : 'No results!',
+                depth: 3,
+                noData: 'No results!',
                 placeholder: 'Search...'
             },
             pagination: {
@@ -122,7 +122,7 @@
                 EditOnGithubPlugin.create('https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/docs/'),
                 // Custom plugin
                 function (hook, vm) {
-                    //console.log({hook,vm})
+                    // console.log({hook,vm})
 
                     const orgName = 'Julian Knight (Totally Information)'
                     const orgUrl = 'https://it.knightnet.org.uk'
@@ -164,17 +164,17 @@
                                 mydate = new Date(vm.frontmatter.created)
                                 yearFrom = mydate.getFullYear()
                             } else if ( vm.frontmatter.date ) { // Hugo
-                                mydate = new Date(vm.frontmatter.created)
+                                mydate = new Date(vm.frontmatter.date)
                                 yearFrom = mydate.getFullYear()
                             }
 
-                            if ( vm.frontmatter.lastUpdated ) { // uib docs
+                            if ( vm.frontmatter.lastUpdated ) { // uib/IT Stds docs
                                 mydate = new Date(vm.frontmatter.lastUpdated)
                                 yearTo = mydate.getFullYear()
                             } else if ( vm.frontmatter.updated ) { // Obsidian
                                 mydate = new Date(vm.frontmatter.updated)
                                 yearTo = mydate.getFullYear()
-                            } else if ( vm.frontmatter.Lastmod ) { // Hugo IT blog
+                            } else if ( vm.frontmatter.Lastmod ) { // Hugo
                                 mydate = new Date(vm.frontmatter.Lastmod)
                                 yearTo = mydate.getFullYear()
                             }

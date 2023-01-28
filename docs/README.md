@@ -3,7 +3,7 @@ title: uibuilder Technical Documentation
 description: >
    uibuilder is a low-code solution for easily building data-driven web sites and web apps in conjunction with Node-RED.
 created: 2019-06-16 16:16:00
-lastUpdated: 2023-01-15 12:20:47
+lastUpdated: 2023-01-28 17:30:08
 ---
 
 ?> These are the docs for uibuilder v6. If you need the v5 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate uibuilder version: `npm install node-red-contrib-uibuilder@5` then use the tech docs links from a uibuilder node.
@@ -30,34 +30,26 @@ WIKI, code (PR's), documentation, and examples are all welcome contributions and
 * [A first-timers walkthough of using uibuilder](walkthrough1.md) - Let's get started!
 
 * [Did you know?](did-you-know.md) - Things you might not know about uibuilder
-* [Creating data-driven web apps with uibuilder and Node-RED](web-app-workflow.md)
-* [Configuring uibuilder nodes](uib-node-configuration.md)
-* [How to configure uibuilder](uib-configuration.md)
-* [Changing the root folder (uibRoot)](changing-uibroot.md)
-* [uibuilder messages](pre-defined-msgs.md) - A catalogue of messages and properties
-* [How & why to use the sender node](sender-node.md)
-* [How & why to use the list node](list-node.md)
-* [How to use the cache node](cache-node.md)
-* [How to define and use Instance API's](instance-apis.md)
-
-## Developing UI's
-
-Information on using the front-end client libraries in your own code, creating templates, using build processes if you need them.
-
-* [Using the new front-end client library](uibuilder.module.md) - `uibuilder.iife.js` and `uibuilder.esm.js`
-  * [Features](client-docs/features.md)
-  * [Dynamic, configuration-driven UI's](client-docs/config-driven-ui.md)
-  * [Technical Reference](client-docs/technical-reference.md)
-  * [Troubleshooting](client-docs/troubleshooting.md)
-* [Old client library](front-end-library.md) - `uibuilderfe.js`
+* [Creating data-driven web apps with uibuilder and Node-RED](web-app-workflow.md) - Different styles and workflows you can use
+* [Configuring uibuilder nodes](uib-node-configuration.md) - How to configure a uibuilder instance node
+* [Configuring uibuilder](uib-configuration.md) - Configure the uibuilder platform. Affects all uibuilder nodes
+* [Standard messages](pre-defined-msgs.md) - A catalogue of messages and properties
 * [Creating Templates](creating-templates) - Pre-defined and reusable front-end code, dependencies, and optional build steps
 * [Browser auto-refresh](browser-refresh.md) - Automatically reload your page after a change
-* [Avoiding a build step](front-end-no-build.md)
-* [Optimise & transpile (build)](front-end-builds.md)
-* [Snowpack as build tool](front-end-build-snowpack.md)
-* [Instance-specific API's](instance-apis.md)
 
-## UI Frameworks
+## The front-end client
+
+  * [Introduction](client-docs/readme.md)
+  
+  * [Features](client-docs/features.md)
+  * [Dynamic, config-driven UI's](client-docs/config-driven-ui.md)
+  * [Functions](client-docs/functions.md)
+  * [Variables](client-docs/variables.md)
+  * [Custom Events](client-docs/custom-events.md)
+  * [Troubleshooting](client-docs/troubleshooting.md)
+  * [Old uibuilderfe client library](front-end-library.md)
+
+## UI frameworks and builds
 
 Working with uibuilder and specific front-end frameworks.
 
@@ -65,7 +57,19 @@ Working with uibuilder and specific front-end frameworks.
 
 * [VueJS Components](vue-component-handling.md)
 * [Svelte](svelte.md)
+* [Avoiding a build step](front-end-no-build.md)
+* [Optimise & transpile (build)](front-end-builds.md)
+* [Snowpack as build tool](front-end-build-snowpack.md)
 * W3C Web Components - TBC
+
+## How to
+
+* [How & why to use the sender node](sender-node.md)
+* [How & why to use the list node](list-node.md)
+* [How to use the cache node](cache-node.md)
+* [Changing the root folder (uibRoot)](changing-uibroot.md)
+* [Create instance-specific API's](instance-apis.md)
+* [Other How-To's](how-to/README.md)
 
 ## Security
 
@@ -88,17 +92,22 @@ Deep dives into the internals of uibuilder. This is where to go if you need to u
   * [`nodes/lib/tilib.js`](tilib-js.md) - A generic Node.js utility library.
   * [`nodes/lib/web.js`](web-js.md) - Web interface library.
   * [`nodes/lib/socket.js`](socket-js.md) - Socket.IO communications library.
-  * `nodes/lib/sec-lib.js` - Security library. TBC.
   * `nodes/lib/package-mgt.js` - Package management (npm) library. TBC.
   * `nodes/lib/admin-api-v2.js` - v2 Admin API library. TBC.
   * `nodes/lib/admin-api-v3.js` - v3 Admin API library. TBC.
 
-* Front-end
-  * [`front-end/uibuilderfe.js`](uibuilderfe-js.md) - Front end library.
-
-    This is not developed directly. The actual code to edit is in `src/editor/front-end/` and is built using `gulp` scripts.
+* uibuilder front-end client library
+  * `front-end/uibuilder.iife.min.js` & `front-end/uibuilder.esm.min.js` Modern library builds
   
+    These are generated by a `gulp` script that uses `esbuild` from `src/front-end-module/uibuilder.module.js`.
+
+  * [`front-end/uibuilderfe.min.js`](uibuilderfe-js.md) - Old `uibuilderfe` client library
+    
+    This is generated by a `gulp` script from `src/front-end/uibuilderfe.dev.js`.
+
 * uib-cache node - TBC
+* uib-element node - TBC
+* uib-update node - TBC
 * uib-sender node - TBC
 * Gulp scripts - TBC
 
