@@ -49,9 +49,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### IIFE/ESM/Module client library
 
-* [x] Ensure _ui method update allows "selector" - Order of pref: id>selector>name>type + upd docs `client-docs/config-driven-ui.md##msg-schema-1`
-* [ ] Add `position` property to `add` _ui mode. "first"/"last": Adds start/end of parent's children respectively. https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore#example_3
-
 * Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
 * Add `uibuilder.cacheSend()` and `uibuilder.cacheClear()` functions that send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send
 * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow sessionCache.
@@ -67,21 +64,18 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### New `uib-element` node
 
-NOTE: Caches the INPUT, not the OUTPUT
-
 * OPTIONS to add
   * ALL
-    * Class, Style overrides
-    * Clear cache button
-    * Add input guides for each type
+    * 
+    * Wire up classes, styles and heading settings
+    * Allow msg overrides of settings. Props to allow: heading, classes, styles
   * TABLE
     * Caption
+    * If named row comes from a field, make sure it is the 1st col and marked as a th
     * Add data-row-name to td's as well
-    * ? Optional heading ? If so, wrap in a `<section>` & use aria-labelledby on the table tag
   * LIST
     * list-style-type (add to outer) - several options plus text (incl emoji's)
     * Add div's around dt/dd pairs
-    * ? Optional heading ? If so, wrap in a `<section>` & use aria-labelledby on the ul/ol/dl tag
     * ? Optional leading/trailing text ? If so, wrap in a `<section>` & use aria-labelledby on the ul/ol/dl tag
     * Allow nested lists?
 * ?? Disable url if doing passthrough - what about reconnection events?
@@ -90,6 +84,7 @@ NOTE: Caches the INPUT, not the OUTPUT
 * Allow type to be overridden by a msg property. Will also need to extend caching to be by element ID.
 * Don't need originator in msgs to FE?
 * ? Have JSON input msg templates for each type with links to copy to clipboard ?
+* ? Consider having a pop-up/-out page outline view ?
 * Docs
   * Parent: `#eltest-ul-ol > li:nth-child(3)` or `#eltest-ul-ol *[data-row-index="3"]`
   * Chaining
@@ -143,6 +138,8 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 ### Other Ideas (Will probably move to the roadmap)
 
+* **NEW NODE** `uib-html` - takes `_ui` config output and creates HTML from it. Optionally wraps with full HTML. Uses same code as the front-end client.
+
 * Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
 
 * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
@@ -167,11 +164,16 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 > Please remember that no changes are being made to the old `uibuilderfe.js` client. Nothing listed here applies to that.
 
-* Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference.
-* The client library has a number of new functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
-* The client library reports changes of visibility back to node-red via a new control msg.
-* The client library creates a `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
+* New zero-code nodes `uib-element` and `uib-update` let you use simple data to create dynamic web UI's.
+* The client library has a number of fixes and new features
+  * New functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
+  * Reports changes of visibility back to node-red via a new control msg.
+  * Creates a `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
+  * Extensions to the `eventSend` function to include form data and value changes.
+  * Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference.
 * If you turn on the advanced option "Include msg._uib in standard msg output.", messages from the client now include client details for you to use in your own security processing or just to identify where things have come from (e.g. what page name as well as what client).
+* All of the templates and example flows have been refreshed with the latest standards.
+* Plenty of documentation updates and additions.
 
 ### `uibuilder` node
 
@@ -246,6 +248,8 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 * Extended the standards for `msg._ui` with mode=update to include the properties `selector` or `select`. These take CSS selectors as their value (as does the `type` property) and take preference over a `name` or `type` property but not over an `id` property. Mostly for convenience and just easier to remember. Documentation also updated.
 
+* Added a `position` property to the `add` _ui mode. "first"/"last": Adds start/end of parent's children respectively.
+
 * Added **new function** `uibuilder.beaconLog(txtToSend, logLevel)` which allows sending a simple, short log message back to Node-RED even if socket.io is not connected. In Node-RED, outputs to the Node-RED log and sends a uibuilder control message where `msg.uibuilderCtrl` = "client beacon log".
 
 * Added **new function** `uibuilder.logToServer()` which will take any number and type of arguments and send them all back to Node-RED in the msg.payload of a _control_ message (out of port #2) where `msg.uibuilderCtrl` = "client log message". Client details are added to the message.
@@ -264,15 +268,28 @@ This node lets you easily create new front-end UI elements from within Node-RED.
 
 It creates configuration-driven dynamic additions to your front-end UI while letting you send fairly simple data to dynamically create the structure. For example, sending an array of objects with the `Table` type will create/replace a complete table in your front-end.
 
-*In this release, the node should be considered alpha quality.*
+Has a single output. Outputs can be chained to more `uib-element` nodes. At the end of the chain, simply send to a uibuilder node input. Optionally, make sure each chain has a unique topic and send to a `uib-cache` node so that new and reloaded browser clients get the last output.
 
-> **Note**: The range of options built into the node for each element type is deliberately fairly restricted. If you want more complex layouts, you should either craft the JSON yourself (this node can output the raw JSON if you want so that you can save it and enhance it yourself.
+> **Note**: The range of options built into the node for each element type is deliberately fairly restricted. If you want more complex layouts, you should either craft the JSON yourself (this node can output the raw JSON if you want so that you can save it and enhance it yourself. Also, this initial release is mostly driven by the input data; in future releases some options will be capable of override using configuration inputs in the node.
 > 
 > This is NOT meant as a *Dashboard* replacement. It is mostly meant for people who need a quick and simple method of dynamically creating UI elements's within a pre-defined HTML design. The element content is rebuilt every time you send data so this is certainly not the most efficient method of working with data-driven UI's. However, it will often be good-enough for relatively simple requirements.
 
 Element types included in this release:
-* **Text** output with optional label
-* **Table** - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
+* **Simple Table** - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
+* **Unordered List (ul)**/**Ordered List (ol)** - Generates a bullet or number list from a simple input array or object.
+* **Description List (dl)** - Generates a description list from a simple input array of objects.
+* **Text box with optional heading** - A simple "card" like element.
+* **HTML** - Pass-though HTML (e.g. from a Node-RED Template node).
+* **Page Title** - Change the page HTML title, description and the first H1 tag on the page to all be the same input text.
+
+Each element except the page title is wrapped in a `<div>` tag which has the specified HTML ID applied to it. Where possible, rows and columns are given their own identifiers to make updates and styling easier. Attempts are made to ensure that the resulting HTML is accessible.
+
+Each element can have an optional heading. If used, a aria-labelledby attribute is added to the `div` tag for accessibility.
+
+> [!warning]
+> 1) Each HTML ID **must** be unique on the page otherwise updates and replacements will almost certainly not work as expected.
+>
+> 2) Only the `msg.topic` can currently override any of the settings. This will be improved in future releases.
 
 ### `uib-brand.css`
 
