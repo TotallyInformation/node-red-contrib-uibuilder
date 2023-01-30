@@ -12,7 +12,7 @@
     /** Node's palette category @constant {string} paletteCategory */
     const paletteCategory  = 'uibuilder'
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = '#F6E0F8' // '#E6E0F8'
+    const paletteColor  = '#E6E0F8'
 
     /** Populate the store dropdown */
     function populateUseStoreDropdown() {
