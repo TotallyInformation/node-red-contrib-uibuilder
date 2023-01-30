@@ -55,6 +55,8 @@
     --lightness-value: var(--light-lightness);
     --lightness: calc(var(--lightness-value) + var(--lightness-bias));
 
+    --border-radius: 0.5rem; /*8px;*/
+
     /*#region --- Brand --- */
     --brand: hsl(
         var(--brand-hue)
@@ -483,7 +485,7 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
     box-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
                 inset -2px -2px 3px rgba(0,0,0, .3);
@@ -501,35 +503,6 @@ button:active, input[type="button" i]:active, input[type="reset" i]:active, inpu
 input, button, textarea, select {
     font: inherit;
 }
-table {
-    border-collapse: collapse;
-    border: 1px solid var(--text3);
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-}
-thead th {
-    color: var(--text2);
-    background: var(--surface4);
-}
-tfoot th, tfoot td {
-    color: var(--text2);
-    background: var(--surface3);
-}
-th[scope=row] {
-    font-style: italic;
-    color: var(--text2);
-    background: var(--surface3);
-    background-blend-mode: lighten;
-}
-th, td {
-    padding: .5rem;
-    border: 1px solid var(--text4);
-}
-tbody tr:nth-child(even) {
-    color: var(--text2);
-    background: var(--surface2);
-    background-blend-mode: lighten;
-}
 blockquote {
     border: 1px solid var(--text3);
     padding: 0.3rem;
@@ -539,7 +512,96 @@ code {
     font-size: 120%;
 }
 
+/* TODO odd/even li? */
+
 /*#endregion --- Basic reset --- */
+
+/*#region --- Tables --- */
+table {
+    border-collapse: collapse;
+    border: 1px solid var(--text3);
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+thead th, thead td {
+    color: var(--text2);
+    font-weight: bolder;
+    background: var(--surface4);
+}
+tfoot th, tfoot td {
+    color: var(--text2);
+    font-style: italic;
+    background: var(--surface4);
+}
+th[scope=row], tbody th {
+    font-style: italic;
+    color: var(--text2);
+    font-weight: bolder;
+    background: var(--surface4);
+    background-blend-mode: lighten;
+}
+th, td {
+    padding: .5rem;
+    border: 1px solid var(--text4);
+}
+tbody tr:nth-child(even) {
+    color: var(--text2);
+    background-color: var(--surface3);
+    background-blend-mode: lighten;
+}
+/*#endregion --- Tables --- */
+
+/* TODO Try flexbox or grid instead of float? */
+/*#region --- Forms --- */
+form {
+    border: 1px solid var(--text3);
+    /* box-sizing: border-box; */
+    margin: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+}
+form label {
+    float: left;
+    width: 25%;
+}
+form input, form textarea, form select {
+    float: right;
+    width: 75%;
+    border-radius: var(--border-radius);
+    padding:0.2rem;
+    border: 1px solid var(--text3);
+}
+form select {
+    cursor: pointer;
+    transition: background 250ms ease-in-out, transform 150ms ease;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255, .3),
+                inset -1px -1px 2px rgba(0,0,0, .3);
+    background-color: 
+        /* var(--brand); */
+        hsl(
+            var(--brand-hue)
+            calc(60% * var(--saturation))
+            calc(100% * var(--lightness))
+        );
+}
+form div {
+    clear: both;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+form input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
+    float:none;
+    width:auto;
+}
+@media screen and (max-width: 600px) {
+    form label, form input, form textarea {
+        width: 100%;
+        margin-top: 0;
+    }
+}
+/*#endregion --- Forms --- */
+
+/*#region ---- Utility ---- */
 
 .emoji { /* Nicer, cross-platform emoji's */
     font-family: 
@@ -552,6 +614,17 @@ code {
         "Android Emoji",
         sans-serif;
 }
+
+.noborder {
+    border: none;
+}
+
+.border {
+    border: 1px solid var(--text3);
+    border-radius: var(--border-radius);
+}
+
+/*#endregion ---- Utility ---- */
 
 /*#region -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
 
@@ -567,7 +640,7 @@ code {
 .toast {
     /* all: unset;  */
     border: 4px solid var(--text3);
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow2);
     background-clip: border-box;
     box-sizing: border-box;
@@ -578,7 +651,7 @@ code {
 .toast.alert {
     /* all: unset;  */
     border: 4px solid var(--text3);
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow2);
     background-clip: border-box;
     box-sizing: border-box;
