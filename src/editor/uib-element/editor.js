@@ -11,7 +11,7 @@
     /** Node's palette category @constant {string} paletteCategory */
     const paletteCategory = 'uibuilder'
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor = '#F6E0F8' // '#E6E0F8'
+    const paletteColor = '#E6E0F8'
 
     /** Element Types definitions */
     const elTypes = {
@@ -146,6 +146,28 @@
             $('#type-info').html(elTypes[this.value].description)
         })
 
+        // Set up optional heading input
+        $('#node-input-heading').typedInput({
+            typeField: $('#node-input-headingLevel'),
+            types: [
+                {
+                    value: 'h2', label: 'H2: ', hasValue: true,
+                },
+                {
+                    value: 'h3', label: 'H3 ', hasValue: true,
+                },
+                {
+                    value: 'h4', label: 'H4 ', hasValue: true,
+                },
+                {
+                    value: 'h5', label: 'H5 ', hasValue: true,
+                },
+                {
+                    value: 'h6', label: 'H6 ', hasValue: true,
+                },
+            ]
+        }).typedInput('width', '68.5%')
+
         // Create unique default topic from id
         $('#node-input-elementid').on('change', function() {
             // @ts-expect-error
@@ -246,8 +268,9 @@
 
             classes: { value: '' },
             styles: { value: '' },
-            containerclasses: { value: '' },
-            containerstyles: { value: '' },
+
+            heading: { value: '' },
+            headingLevel: { value: 'h2' },
 
             // Configuration data specific to the chosen type
             confData: { value: {} },

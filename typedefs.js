@@ -389,8 +389,8 @@
  *   parent: string;
  *   classes: string;
  *   styles: string;
- *   containerclasses: string;
- *   containerstyles: string;
+ *   heading: string;
+ *   headingLevel: string;
  *   confData: object;
  *   _ui: any;
  * }} uibElNode

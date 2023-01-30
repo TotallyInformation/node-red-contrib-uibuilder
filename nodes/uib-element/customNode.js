@@ -18,8 +18,6 @@
  */
 'use strict'
 
-const { body } = require('express-validator')
-
 /** --- Type Defs - should help with coding ---
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
@@ -134,8 +132,9 @@ function nodeInstance(config) {
 
     this.classes = config.classes ?? ''
     this.styles = config.styles ?? ''
-    this.containerclasses = config.containerclasses ?? ''
-    this.containerstyles = config.containerstyles ?? ''
+
+    this.heading = config.heading ?? ''
+    this.headingLevel = config.headingLevel ?? 'h2'
 
     // Configuration data specific to the chosen type
     this.confData = config.confData ?? {}
@@ -152,21 +151,21 @@ function nodeInstance(config) {
 //#region ----- UI definition builders ----- //
 
 /** Build the UI config instructions for the ARTICLE element
- * @param {string} id The HTML ID of the wrapper tag
+ * @param {object} parent The parent JSON node that we will add components to
+ * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
- * @param {object} parentComponent The parent descriptor object that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildArticle(id, msg, parentComponent) {
+function buildArticle(parent, node, msg) {
     // const err = ''
     // return err
     return ''
 } // ---- End of buildArticle ---- //
 
 /** Build the UI config instructions for the HTML element
- * @param {string} id The HTML ID of the wrapper tag
+ * @param {object} parent The parent JSON node that we will add components to
+ * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
- * @param {object} parentComponent The parent descriptor object that we will add components to
  * @returns {string} Error description or empty error string
  */
 function buildHTML(parent, node, msg) {
@@ -185,8 +184,8 @@ function buildHTML(parent, node, msg) {
     const err = ''
 
     parent.components.push( {
-        'type': node.elementtype, // html
-        slot: data,
+        'type': node.elementtype,
+        'slot': data,
     } )
 
     return err
@@ -230,21 +229,25 @@ function buildTitle(node, msg) {
 } // ---- End of buildTitle ---- //
 
 /** Build the UI config instructions for the UL or OL LIST elements
- * @param {string} id The HTML ID of the wrapper tag
+ * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
- * @param {object} parentComponent The parent descriptor object that we will add components to
+ * @param {object} parent The parent JSON node that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildUlOlList(id, msg, parentComponent) {
+function buildUlOlList(node, msg, parent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
     const err = ''
 
-    // NOTE: that the outer element (ul/ol/dl) is built in the calling fn buildUi
+    // Add the ol/ul tag
+    parent.components.push({
+        'type': node.elementtype,
+        'components': [],
+    })
 
     // Convenient references
-    const listRows = parentComponent.components
+    const listRows = parent.components[parent.components.length - 1].components
     const tbl = msg.payload
 
     // Walk through the inbound msg payload (works as both object or array)
@@ -255,7 +258,7 @@ function buildUlOlList(id, msg, parentComponent) {
         // Create next list row
         listRows.push( {
             'type': 'li',
-            'id': `${id}-data-R${rowNum}`,
+            'id': `${node.elementid}-data-R${rowNum}`,
             'attributes': {
                 // NB: Making all indexes 1-based for consistency
                 'data-row-index': rowNum,
@@ -273,21 +276,25 @@ function buildUlOlList(id, msg, parentComponent) {
 } // ---- End of buildUlOlList ---- //
 
 /** Build the UI config instructions for DL LIST elements
- * @param {string} id The HTML ID of the wrapper tag
+ * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
- * @param {object} parentComponent The parent descriptor object that we will add components to
+ * @param {object} parent The parent JSON node that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildDlList(id, msg, parentComponent) {
+function buildDlList(node, msg, parent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
     const err = ''
 
-    // NOTE: that the outer element (ul/ol/dl) is built in the calling fn buildUi
+    // Add the dl tag
+    parent.components.push({
+        'type': node.elementtype,
+        'components': [],
+    })
 
     // Convenient references
-    const listRows = parentComponent.components
+    const listRows = parent.components[parent.components.length - 1].components
     const tbl = msg.payload
 
     // Walk through the inbound msg payload (works as both object or array)
@@ -306,7 +313,7 @@ function buildDlList(id, msg, parentComponent) {
 
         const listIndex = listRows.push( {
             'type': 'div',
-            'id': `${id}-data-R${rowNum}`,
+            'id': `${node.elementid}-data-R${rowNum}`,
             'attributes': {
                 // NB: Making all indexes 1-based for consistency
                 'data-row-index': rowNum,
@@ -338,11 +345,6 @@ function buildDlList(id, msg, parentComponent) {
 
             listRows[listIndex - 1].components.push( {
                 'type': lType,
-                // "attributes": {
-                //     // NB: Making all indexes 1-based for consistency
-                //     "data-row-index": i+1,
-                //     'class': ((i+1) % 2  == 0) ? "even" : "odd"
-                // },
                 'slot': tbl[row][indx],
             } )
 
@@ -353,35 +355,36 @@ function buildDlList(id, msg, parentComponent) {
 } // ---- End of buildDlList ---- //
 
 /** Build the UI config instructions for the TABLE element
- * @param {string} id The HTML ID of the wrapper tag
+ * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
- * @param {object} parentComponent The parent descriptor object that we will add components to
+ * @param {object} parent The parent JSON node that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildTable(id, msg, parentComponent) {
+function buildTable(node, msg, parent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
     let cols = []
     const err = ''
 
-    // NOTE: that the outer element (table) is built in the calling fn buildUi
-
-    // Add the thead and tbody wrappers
-    parentComponent.components = [
-        {
-            'type': 'thead',
-            'components': []
-        },
-        {
-            'type': 'tbody',
-            'components': []
-        }
-    ]
+    // Add the table and thead/tbody tags
+    parent.components.push({
+        'type': node.elementtype,
+        'components': [
+            {
+                'type': 'thead',
+                'components': []
+            },
+            {
+                'type': 'tbody',
+                'components': []
+            }
+        ],
+    })
 
     // Convenient references
-    const thead = parentComponent.components[0]
-    const tbody = parentComponent.components[1]
+    const thead = parent.components[parent.components.length - 1].components[0]
+    const tbody = parent.components[parent.components.length - 1].components[1]
     const tbl = msg.payload
 
     // Walk through the inbound msg payload (works as both object or array)
@@ -399,7 +402,7 @@ function buildTable(id, msg, parentComponent) {
             thead.components = [
                 {
                     'type': 'tr',
-                    'id': `${id}-head-r${hdrRowNum}`,
+                    'id': `${node.elementid}-head-r${hdrRowNum}`,
                     'attributes': {
                         'data-hdr-row-index': hdrRowNum,
                     },
@@ -416,7 +419,7 @@ function buildTable(id, msg, parentComponent) {
                 const colNum = k + 1
                 thead.components[0].components.push({
                     'type': 'th',
-                    'id': `${id}-head-r${hdrRowNum}-c${colNum}`,
+                    'id': `${node.elementid}-head-r${hdrRowNum}-c${colNum}`,
                     'attributes': {
                         'data-hdr-row-index': hdrRowNum,
                         'data-col-index': colNum,
@@ -434,7 +437,7 @@ function buildTable(id, msg, parentComponent) {
         // Create the data row
         const rLen = tbody.components.push( {
             'type': 'tr',
-            'id': `${id}-data-R${rowNum}`,
+            'id': `${node.elementid}-data-R${rowNum}`,
             'components': []
         } )
         // Add the row index attrib and even/odd class
@@ -456,7 +459,7 @@ function buildTable(id, msg, parentComponent) {
 
             tbody.components[rLen - 1].components.push({
                 'type': 'td',
-                'id': `${id}-data-R${rowNum}-C${colNum}`,
+                'id': `${node.elementid}-data-R${rowNum}-C${colNum}`,
                 'attributes': {
                     'class': ((rowNum) % 2  === 0) ? 'even' : 'odd',
                     'data-row-index': rowNum,
@@ -473,6 +476,11 @@ function buildTable(id, msg, parentComponent) {
     return err
 } // ---- End of buildTable ---- //
 
+/** Adds a wrapping DIV tag
+ * @param {object} parent The parent JSON node that we will add components to
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @returns {object} Reference to new compontents array for next element to be added into
+ */
 function addDiv(parent, node) {
     if (!parent.components) parent.components = []
     parent.components.push(
@@ -481,16 +489,37 @@ function addDiv(parent, node) {
             'id': node.elementid,
             'parent': node.parent !== '' ? node.parent : undefined,
             'attributes': {},
-            'components': [
-                // {
-                //     'type': node.elementtype,
-                //     'attributes': {},
-                //     'components': [],
-                // }
-            ],
+            'components': [],
         },
     )
     return node._ui[node._ui.length - 1].components[0]
+}
+
+/** Add the element heading if defined
+ * @param {object} parent The parent JSON node that we will add components to
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @returns {object} Reference to new compontents array for next element to be added into
+ */
+function addHeading(parent, node) {
+    if (node.heading === '') return parent
+
+    const hdId = `${node.elementid}-heading`
+
+    // Add accessibility label
+    if (!parent.attributes) parent.attributes = {}
+    parent.attributes['aria-labelledby'] = hdId
+
+    if (!parent.components) parent.components = []
+    parent.components.push(
+        {
+            'type': node.headingLevel,
+            'id': hdId,
+            'slot': node.heading,
+            'components': [],
+        },
+    )
+
+    return parent
 }
 
 /** Create/update the _ui object and retain for replay
@@ -539,7 +568,8 @@ function buildUi(msg, node) {
     switch (node.elementtype) {
         case 'article': {
             parent = addDiv(parent, node)
-            err = buildArticle(node.elementid, msg, parent.components[0]) // nextComponents[0])
+            parent = addHeading(parent, node)
+            err = buildArticle(node, msg, parent)
             break
         }
 
@@ -547,24 +577,28 @@ function buildUi(msg, node) {
         case 'ol':
         case 'ul': {
             parent = addDiv(parent, node)
-            err = buildUlOlList(node.elementid, msg, nextComponents[0])
+            parent = addHeading(parent, node)
+            err = buildUlOlList(node, msg, parent)
             break
         }
 
         case 'dl': {
             parent = addDiv(parent, node)
-            err = buildDlList(node.elementid, msg, nextComponents[0])
+            parent = addHeading(parent, node)
+            err = buildDlList(node, msg, parent)
             break
         }
 
         case 'table': {
             parent = addDiv(parent, node)
-            err = buildTable(node.elementid, msg, nextComponents[0])
+            parent = addHeading(parent, node)
+            err = buildTable(node, msg, parent)
             break
         }
 
         case 'html': {
             parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
             err = buildHTML(parent, node, msg)
             break
         }
