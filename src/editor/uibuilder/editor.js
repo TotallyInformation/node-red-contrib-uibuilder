@@ -999,7 +999,7 @@
                     'opacity': 0.3,
                 })
 
-            $('#uibuilderurl, #uibinstanceconf')
+            $('#uibuilderurl, #uibinstanceconf, #btntopopen')
                 .prop('disabled', true)
                 .css({
                     // 'pointer-events': 'none',
@@ -1675,6 +1675,20 @@
      * @param {*} node -
      */
     function onEditPrepare(node) {
+        // Add open and docs buttons to top button bar, next to Delete button
+        $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-globe" aria-hidden="true"></i> Open</button>')
+            .on('click', (evt) => {
+                evt.preventDefault()
+                window.open(`${node.urlPrefix}${$('#node-input-url').val()}`, '_blank')
+            })
+            .appendTo($('div.red-ui-tray-toolbar'))
+        $('<button type="button" title="Open uibuilders Tech Docs" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book"></i> Docs</button>')
+            .on('click', (evt) => {
+                evt.preventDefault()
+                RED.sidebar.help.show('uibuilder')
+                window.open('./uibuilder/techdocs', '_blank')
+            })
+            .appendTo($('div.red-ui-tray-toolbar'))
 
         getFolders()
 
@@ -1997,21 +2011,6 @@
         //#endregion ---- File Editor ---- //
 
         dumpUibSettings()
-
-        // Add open and docs buttons to top button bar, next to Delete button
-        $('<button type="button" title="Open the uibuilder web page" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-globe" aria-hidden="true"></i> Open</button>')
-            .on('click', (evt) => {
-                evt.preventDefault()
-                window.open(`${node.urlPrefix}${$('#node-input-url').val()}`, '_blank')
-            })
-            .appendTo($('div.red-ui-tray-toolbar'))
-        $('<button type="button" title="Open uibuilders Tech Docs" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book"></i> Docs</button>')
-            .on('click', (evt) => {
-                evt.preventDefault()
-                RED.sidebar.help.show('uibuilder')
-                window.open('./uibuilder/techdocs', '_blank')
-            })
-            .appendTo($('div.red-ui-tray-toolbar'))
 
     } // ---- End of oneditprepare ---- //
 
