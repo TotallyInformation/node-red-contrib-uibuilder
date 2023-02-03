@@ -17,18 +17,20 @@
 **Please Note** that:
 
 * For v6.0.0, the minimum Node-RED version is now v3. The minimum Node.js version is now v14 LTS (in line with Node-RED v3) - note that the minimum minor version may change to the latest v14 LTS version whenever uibuilder is updated.
-* v5.0.0 was a very large change and had breaking changes from v4.1.4, please see the [CHANGELOG](CHANGELOG.md) for details.
+* v5.0.0 was a very large change and had breaking changes from v4.1.4, please see the [CHANGELOG-V5](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v5.md) for details.
 * uibuilder follows [semantic version numbering](https://docs.npmjs.com/about-semantic-versioning) - as such, each major number change indicates breaking changes and you should review them carefully before installation.
 
-Older changes can be found in the previous change documents: [CHANGELOG-V3/V4](/docs/CHANGELOG-v3-v4.md), [CHANGELOG-v2](/docs/CHANGELOG-v2.md), and [CHANGELOG-v2](/docs/CHANGELOG-v1.md)
+Older changes can be found in the previous change documents: [CHANGELOG-V5](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v5.md), [CHANGELOG-V3/V4]([/docs](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/)/CHANGELOG-v3-v4.md), [CHANGELOG-v2](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v2.md), and [CHANGELOG-v2](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v1.md)
 
 # node-red-contrib-uibuilder
 
-A Node-RED web user interface builder. uibuilder aims to provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
+A data-driven web page/web app utility for Node-RED. uibuilder aims to provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
 
 uibuilder is rather the opposite of Node-RED's Dashboard. Whereas Dashboard is designed to make it very easy to create a UI but trades that off with some limitations, uibuilder is designed to let you do anything you can think of with any framework (or none) but at the trade off of having to write your own front-end code.
 
 uibuilder should generally also be a **lot** faster and more resource efficient in use than Dashboard though that obviously depends on what front-end libraries and frameworks you choose to use.
+
+It provides communication between the browser and Node-RED server and many helper features that reduce or eliminate the need to write code to build a data-driven web app.
 
 ## Purpose
 
@@ -38,16 +40,19 @@ The purpose of uibuilder is to:
 * Be a conduit between Node-RED and a front-end (browser) UI web app.
 * Be UI framework agnostic. While VueJS is often used with uibuilder, it isn't a necessary dependency. Indeed no framework is needed to use uibuilder.
 * Provide interface/data standards for exchanging data and controls with the UI.
+* Reduce the amount of front-end code (HTML/JavaScript) needed to create and manage a web app.
+* Reduce the knowledge required for creating reliable, accessible web apps by providing low-code and no-code features.
+* Make it easy to install and serve front-end libraries.
 
 ## No-code UI's
 
-uibuilder is still growing towards offering more no-code capabilities like Node-RED's Dashboard extension does. However, it is starting to offer these features via the "new" client available since v5. V6.1 introduced the new `uib-element` and `uib-change` nodes that are the first usable no-code feature.
+uibuilder is still growing towards offering more no-code capabilities like Node-RED's Dashboard extension does. However, it is starting to offer these features via the "new" client available since v5. V6.1 introduced the new `uib-element` and `uib-update` nodes that offer the first usable no-code features.
 
-`uib-element` takes in simple data and outputs configuration data either direct to a uibuilder front-end or via an output msg. Several simple options such as tables and lists are available in uibuilder v6.1, additional elements and structures will be made available in future versions. The uibuilder front-end client takes the configuration information and dynamically builds HTML elements and inserts them to the web page (or removes/updates as needed).
+`uib-element` takes in simple data and outputs configuration data. This can then be sent to the front-end via the uibuilder node. Alternatively, it can be saved and the result used in an initial load. Several simple options such as tables and lists are available in uibuilder v6.1, additional elements and structures will be made available in future versions. The uibuilder front-end client takes the configuration information and dynamically builds HTML elements and inserts them to the web page (or removes/updates as needed).
 
-This is not the most efficient approach since updates are mostly replacing the whole element which could be quite large for things like big tables. So the `uib-change` node provides a more targetted approach to changing specific attributes and "slot" content for elements.
+While this is not the most efficient processing approach (since updates are mostly replacing the whole element which could be quite large for things like big tables), it is very efficient from an authoring perspective. So the `uib-update` node provides a more targetted approach to updating and changing specific attributes and "slot" content for elements.
 
-It is important to note that no front-end, 3rd-party frameworks such as VueJS or REACT are needed for this approach! Everything uses vanilla HTML, JavaScript and CSS under the skin and so is compatible with current and future web standards.
+It is important to note that no front-end, 3rd-party frameworks such as VueJS or REACT are needed for this approach! Everything uses vanilla HTML, JavaScript and CSS under the skin and so is **compatible with current and future web standards**.
 
 ## Low-code UI's
 
@@ -57,23 +62,23 @@ The schema and the UI creator functions built into the front-end client are spec
 
 ## Core features
 
-* Provide a 2-way communications channel between the Node-RED server (back-end) and front-end UI code.
-* Provide a Node-RED node to act as the focus for communications and installation of front-end packages for use in your code.
-* Provide a front-end library to do the complex parts of the communications and to help standardise interactions with the Node-RED server.
-* Provide templates for front-end code to enable people to get a quick start on creating web apps.
-* Allow management and serving of npm packages that provide front-end libraries consumable easily by front-end code.
-* Allow editing of front-end code (designed for small changes, use web development tools generally).
-* Provide a capability to have configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code without you needing to write code.
+* Provides a 2-way communications channel between the Node-RED server (back-end) and front-end UI code.
+* Provides a Node-RED node to act as the focus for communications and installation of front-end packages for use in your code.
+* Provides a front-end library to do the complex parts of the communications and to help standardise interactions with the Node-RED server.
+* Provides templates for front-end code to enable people to get a quick start on creating web apps.
+* Allows management and serving of npm packages that provide front-end libraries consumable easily by front-end code.
+* Allows editing of front-end code (designed for small changes, use web development tools generally).
+* Provides a capability to have low-code, configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code without you needing to write code.
+* Provides nodes to enable zero-code translation of input data to usable and accessible web elements.
 
 ## Future direction
 
 The general direction of uibuilder (or associated modules) is likely to include:
 
-* Provide more no-code and low-code UI creation and update capabilities.
+* Provide more no-code and low-code UI creation and update capabilities. As of v6.1, these are now starting to be delivered.
 * The ability within Node-RED to, for each uibuilder node, run npm scripts such as build processes and to manage instance-level npm packages.
 * Be able to install/update/remove instance-level npm packages as can already be done for uibuilder-level packages.
 * Provide a "development server" capability that auto-reloads connected clients when code changes are made.
-* A set of extension front-end components with well defined (reusable) data schemas for doing common UI tasks. The defined data schema's would cover both the component content and configuration data so that both could be sent from Node-RED via uibuilder and any return data structures would similarly be well defined.
 * A UI designer allowing users without HTML/CSS/JS skills to create reasonable web apps without code.
 
 ## Feature details
@@ -82,20 +87,21 @@ The general direction of uibuilder (or associated modules) is likely to include:
 
 * Designed as an alternative to the Node-RED official Dashboard. Without the overheads and restrictions.
 * Control everything from the Node-RED admin ui. Edit your front-end resource files, manage front-end packages. No need to access the servers command line.
-* Manage startup templates. Internal templates for VueJS and bootstrap-vue in addition to a plain template are available. Load templates from other repositories via _degit_. Makes it easy to share templates that provide a whole app or just deal with boilerplate.
+* Manage startup templates. Internal templates for vanilla HTML, Svelte, VueJS (v2 & v3), and VueJS/bootstrap-vue are provided. Load templates from other repositories via _degit_. Makes it easy to share templates that provide a whole app or just deal with boilerplate.
 * Have as many custom user interfaces as you want. Just 1 node is needed for each entry point. Use link nodes to send data from other parts of your flows. An entry point can be contain multiple web pages.
-* Has a control interface separate to the message interface. Know when a browser tab connects or disconnects, send cached data.
-* Provide a stable _client id__ that identifies a specific browser profile until it is restarted.
+* Has a control interface separate to the message interface. Know when a browser tab connects or disconnects, send cached data, and more.
+* Provide a stable _client id_ that identifies a specific browser profile until it is restarted. A _tabId_ is provided that identifies a specific browser tab on a client device.
+* Provide information to Node-RED about the client that is sending a msg so that security and other processing can identify the client, the user, and so on.
 * Can be a lot lighter in weight and more mobile friendly than the Node-RED official Dashboard.
 * Use **any** front-end framework you like. Simply install via the built-in library manager.
-* Use without any front-end framework if you prefer. Keep it light and simple. Try this out with the "Blank" template and the `uib-list` node.
-* The included front-end libraries (`uibuilder.iife.js`, `uibuilder.esm.js` or the older `uibuilderfe.js`) provide connectivity to Node-RED and msg event handling along with some helper utility functions.
+* Use without any front-end framework if you prefer. Keep it light and simple. Try this out with the "Blank" template and the `uib-element` node.
+* The included front-end libraries (`uibuilder.iife.js`, `uibuilder.esm.js`) provide connectivity to Node-RED and msg event handling along with some helper utility functions.
 * Write your own HTML, CSS and JavaScript to define the perfect front-end user interface for your needs. Or define it using a JSON config description.
 * Edit your custom front-end code from within the Node-RED Editor. Auto-reload your clients on changes to the code. Great for rapid development. *Note* that this is designed for quick edits, it is recommended to use your normal web development toolchain for larger edits.
 * Needs almost no boilerplate in your front-end code in order to work.
 * Optional index web page listing of available files.
 * Two detailed admin info web pages are included to help authors understand where everything is and what is available.
-* Uses Node-RED's own ExpressJS webservers by default. Switch to a custom ExpressJS server if desired.
+* Uses Node-RED's own ExpressJS webservers by default. Switch to a custom ExpressJS server if desired. When using a custom server, pages can also include EJB server-side templating.
 * Has middleware for ExpressJS (for web services) and Socket.IO (for communications, both at initial connection and per-message) so that you can add your own custom features including security.
 * Can create custom API's for each uibuilder instance.
 
@@ -107,6 +113,7 @@ The general direction of uibuilder (or associated modules) is likely to include:
 * You have to know the front-end library locations for installed 3rd-party packages and edit your HTML accordingly. The `uibindex` admin API (accessible from any node's admin ui) shows you all of the root folders and what the package authors report as the main entry point for all active packages. There is now also a simplified information page for the currently viewed uibuilder node instance, this is access from a button in the configuration panel.
 
   Note that this is a limitation of `npm` and module authors, not of uibuilder. Unless module authors correctly identify the browser entrypoint for their libraries, uibuilder can only guess.
+  
 * You cannot yet compile/compress your custom front-end code (HMTL, JS, SCSS, etc.) for efficiency. *This will be added soon.*
 
   This will use a local package.json file that contains a "build" script. If it exists, uibuilder will expose a build button that will run the script.
