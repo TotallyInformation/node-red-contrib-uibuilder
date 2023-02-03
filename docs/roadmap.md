@@ -75,6 +75,32 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ----
 
+## vNext - the next release after current (v6.2)
+
+* **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations
+
+  Uses the same code as the client library. Outputs HTML on `msg.payload`, removes the input `msg._ui`.
+  Optionally, can add one of the uibuilder templates as a wrapper to the input payload HTML or wrap in a non-uibuilder template
+
+  Why?
+
+  - Learn how to write your own HTML
+  - Output to a uibuilder node to save processing the _ui data in the front-end
+  - Output to a uibuilder server folder for use in your app as a static load (or occasionally changing load)
+  - Output to a file for use in an external (to Node-RED) static web server/service
+  - Output to an `http-out` node as a response to a request
+  - Output to a `ui_template` node for incorporation in Dashboard UI's
+
+* **NEW NODE** - `uib-save` - Easily save files to uibuilder-specific locations
+
+  Select a deployed uibuilder node as the "parent" and the server folder location will be set for you so that you don't need to remember it.
+
+  Why?
+
+  - Save `msg._ui` configuration data to a static JSON which can then be used to load an entire UI on page load.
+  - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
+  - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
+
 ## Next - these are things that need to be done
 
 * Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
@@ -116,18 +142,14 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
 
 * Improvements to `uib-cache` node
+  * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
+  * Add cache clear button to complement the cache clear control msg
   * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
   * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
   * Add checks to prevent non-string cache by property values.
   * Add empty cache button.
 
 * Extensions to the `uib-element` node
-  * Handle uibuilder url rename.
-  * Removing node sends remove to clients
-  * Allow additional attributes
-  * Add optional page filter
-  * Add return msg handling like uib-sender.
-  * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
   * Add more elements:
     * [x] List
     * [x] Table
@@ -148,11 +170,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
     * LED (on/off/colour/brightness) - ref: node-red-contrib-ui-led
     * Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
+    * Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
   * Create min version of css.
-  * Add syntax highlight properties
 
 * Extensions to FE Library
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
@@ -161,6 +183,24 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
   * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
 
+  * Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
+  * Add `uibuilder.cacheSend()` and `uibuilder.cacheClear()` functions that send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send
+  * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow sessionCache.
+  * Add a `uibuilder.navigate(url)` function to allow a msg from node-red to change the page. Ensure it works with SPA routers and with anchor links.
+  * Add a [resizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to report resize events back to Node-RED as a control msg.
+  * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
+    * uibuilder node will output control msg of type `Client Log` when client sends a beacon.
+    * Make optional via flag in Editor with start msg enabling/disabling in client.
+    * ? window and document events - make optional via uibuilder fe command.
+  * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
+  * Consider adding `exists` and `visible` methods for checking if an element exists on the page and whether it is visible to the user.
+  * Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
+  
+  * Add ability to save the current DOM.
+    * To local storage - with option to reload on reload
+    * Send to Node-RED as a control msg
+
+
   * _UI - improvements to the config-/data-driven UI creation features
     * Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process
        - probably needs list and wildcard though.
@@ -168,7 +208,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
        name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
     * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
     * Add HTML loader capability to _ui handling (see html-loader web component)
-    * Allow adding to more locations: 1st child rather than last, next/previous sibling
+    * Allow adding to more locations: ~~1st child rather than last~~ (done), next/previous sibling
     * Add click coordinates to return msgs where appropriate. See https://discourse.nodered.org/t/contextmenu-location/22780/51
   
   * Allow for PWA use:
@@ -184,6 +224,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Add count of current errors to title
 
 * Updates to uibuilder node
+
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
     * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
     * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
@@ -197,6 +238,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Allow instance npm installs to be served (would allow both vue 2 and vue 3 for example). Instance serves to take preference. Would need extension to editor libraries tab to differentiate the locations.
   
   * Editor:
+    * Add template description to display.
+    * Switch tooltips to using aria-label with hover CSS as in the new node.
     * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
     * Change getFileList to only return files, use the separate folder list for folders. No need to run it multiple times then.
     * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
@@ -205,15 +248,41 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * NEW TAB: `Build` - run npm scripts, install instance libraries (for dev or dependencies - just dev initially)
     * Add visual error when changing advanced/Serve to a folder with no index.html.
     * Option for project folder storage.
+    * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
     * Libraries tab
       * Add update indicator to Libraries tab.
       * Trigger indicator to Libraries to show if new major version available when switching to the tab.
+    * Consider adding an action for when a uibuilder node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
 
   * Details index page
     * Make sure that the ExpressJS `views` folder is shown.
 
+  * Templates
+    * Add group/category to `template_dependencies.js`. Add grouping to drop-down in editor. Allow for no group specified (for backwards compatibility).
+    * Add option for external templates in `template_dependencies.js`.
+    * Consider allowing a local version of `template_dependencies.js`.
+    * Add descriptions when chosen.
+    * Maybe add as external templates.
+      * Vue v3 (build)
+      * Vue v3 + Quasar
+      * REACT (no-build)
+      * REACT (build)
+      * jQuery + jQuery UI (maybe + some add-ons?)
+
+  * Investigate use of WebWorkers to have a shared websocket that allows retained connection on page reload and between pages in the same uibuilder node.
+    * https://crossbario.com/blog/Websocket-Persistent-Connections/
+    * https://stackoverflow.com/questions/10886910/how-to-maintain-a-websockets-connection-between-pages
+
+
 * `package-mgt.js`
   * Rationalise the various functions - several of them have similar tasks.
+
+* `socket.js`
+  * Add rooms: page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
+  * When a new client connection is made, use `socket.emit('join', tabId)`
+  * Output to a room using `io.to(tabId).emit(...)`
+  * https://socket.io/docs/v4/rooms/
+
 
 * Updates to Documentation
   * Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
@@ -224,9 +293,13 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add some notes about Node-RED's projects feature. It doesn't seem to add a correct .gitignore which should contain `**/node_modules`. Also add notes about the fact that projects creates a disconnect between the flows and the userDir folder.
 
 
+
 * **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 
   Currently available by adding the appropriate ExpressJS option in settings.js.
+
+* Examples
+  * Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
 
 
 ## Ideas for releases further out

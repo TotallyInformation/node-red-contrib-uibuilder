@@ -10,7 +10,7 @@ Please see the Tech Docs for archived changelogs - a new archive is produced for
 
 Note that v6.1.0 makes the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) current and the old client library (`uibuilderfe.js`) is now no longer recommended and is not being updated, it is on the road to being deprecated. The experimental `uib-list` node will now also be deprecated, the features are moved to the new `uib-element` node. The new `uib-brand.css` style library still needs quite a bit of additional work.
 
-Dynamic content does not currently work with VueJS (and probably other frameworks that rely on pre-building components). Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only.
+Dynamic content does not currently work with VueJS (and probably other frameworks that rely on pre-building components). Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only. And of course, it is possible - but probably less useful - to combine the vanilla HTML from the low-/no-code features with front-end frameworks such as Vue.
 
 ### Needs Fixing
 
@@ -27,46 +27,16 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### uibuilder node
 
 * Editor
-  * Disable the new Open button along with other disabled things when new or url has changed.
-  * Add template description to display.
-  * Switch tooltips to using aria-label with hover CSS as in the new node.
   * Improve help box for _uib switch 
-
-* `socket.js`
-  * Add rooms: page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
-  * When a new client connection is made, use `socket.emit('join', tabId)`
-  * Output to a room using `io.to(tabId).emit(...)`
-  * https://socket.io/docs/v4/rooms/
-
-* Templates
-  * Add group/category to `template_dependencies.js`. Add grouping to drop-down in editor. Allow for no group specified (for backwards compatibility).
-  * Add option for external templates in `template_dependencies.js`.
-  * Consider allowing a local version of `template_dependencies.js`.
 
 ### uib-list node
 
 * Add deprecation warning
 
-### IIFE/ESM/Module client library
-
-* Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
-* Add `uibuilder.cacheSend()` and `uibuilder.cacheClear()` functions that send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send
-* Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow sessionCache.
-* Add a `uibuilder.navigate(url)` function to allow a msg from node-red to change the page. Ensure it works with SPA routers and with anchor links.
-* Add a [resizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to report resize events back to Node-RED as a control msg.
-* Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
-  * uibuilder node will output control msg of type `Client Log` when client sends a beacon.
-  * Make optional via flag in Editor with start msg enabling/disabling in client.
-  * ? window and document events - make optional via uibuilder fe command.
-* Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
-* Consider adding `exists` and `visible` methods for checking if an element exists on the page and whether it is visible to the user.
-* Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
-
 ### New `uib-element` node
 
 * OPTIONS to add
   * ALL
-    * 
     * Wire up classes, styles and heading settings
     * Allow msg overrides of settings. Props to allow: heading, classes, styles
   * TABLE
@@ -76,15 +46,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * LIST
     * list-style-type (add to outer) - several options plus text (incl emoji's)
     * Add div's around dt/dd pairs
-    * ? Optional leading/trailing text ? If so, wrap in a `<section>` & use aria-labelledby on the ul/ol/dl tag
-    * Allow nested lists?
-* ?? Disable url if doing passthrough - what about reconnection events?
-  * Disable reconnect events but handle uibuilder cache control msgs
-  * [x] For chains - the last node would not be passthrough but would need to have cached the full msg._ui chain.
-* Allow type to be overridden by a msg property. Will also need to extend caching to be by element ID.
-* Don't need originator in msgs to FE?
+    * ? Optional leading/trailing text ?
 * ? Have JSON input msg templates for each type with links to copy to clipboard ?
-* ? Consider having a pop-up/-out page outline view ?
 * Docs
   * Parent: `#eltest-ul-ol > li:nth-child(3)` or `#eltest-ul-ol *[data-row-index="3"]`
   * Chaining
@@ -104,18 +67,6 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 ### Templates
 * Make the blank template truly blank
-* Add descriptions when chosen.
-* Maybe add as external templates.
-  * Vue v3 (build)
-  * Vue v3 + Quasar
-  * REACT (no-build)
-  * REACT (build)
-  * jQuery + jQuery UI (maybe + some add-ons?)
-
-### uib-cache
-
-* Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
-* Add cache clear button
 
 ### Doc updates
 
@@ -135,24 +86,6 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
   * Set `--heading-h3-border-color: var(--mono-tint2)`
 
 * Document new client fns: clearHtmlCache, restoreHtmlFromCache, saveHtmlCache
-
-### Other Ideas (Will probably move to the roadmap)
-
-* **NEW NODE** `uib-html` - takes `_ui` config output and creates HTML from it. Optionally wraps with full HTML. Uses same code as the front-end client.
-
-* Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
-
-* Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
-
-* Investigate use of WebWorkers to have a shared websocket that allows retained connection on page reload and between pages in the same uibuilder node.
-  * https://crossbario.com/blog/Websocket-Persistent-Connections/
-  * https://stackoverflow.com/questions/10886910/how-to-maintain-a-websockets-connection-between-pages
-
-* Consider adding an action for when a uibuilder node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
-
-* Add ability to save the current DOM.
-  * To local storage - with option to reload on reload
-  * Send to Node-RED as a control msg
 
 ----
 
@@ -207,6 +140,8 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 * Editor
   * Added Open button to top button bar next to Delete. Add globe icon to open buttons.
   * Added Docs button next to new Open button. Add book icon to docs buttons.
+  * Disable the new Open button along with other disabled things when new or url has changed.
+
 
 * `socket.js`
   * When asked to add msg._uib to std output msgs, Standardised on the same client details as for control msgs to make downstream processing easier.
