@@ -30,7 +30,7 @@
     #uib-el *[aria-label] {
         position:relative;
     }
-    #uib-el *[aria-label]:after {
+    #uib-el *[aria-label]::after {
         content: attr(aria-label);
         position:absolute;
         top:100%;left:50px;
@@ -50,7 +50,7 @@
         opacity: 0;
         transition: all 0.5s ease-out;
     }
-    #uib-el *[aria-label]:hover:after {
+    #uib-el *[aria-label]:hover::after {
         visibility: visible;
         opacity: 1;
         transition: all 0.5s ease-in 0.2s;

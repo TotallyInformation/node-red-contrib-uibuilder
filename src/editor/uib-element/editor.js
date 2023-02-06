@@ -140,7 +140,7 @@
                     options: Object.values(elTypes)
                 }
             ]
-        // @ts-ignore On-change, update the info panel
+        // @ts-ignore On-change of element type, update the info panel
         }).on('change', function() {
             if (elTypes[this.value].description === undefined) elTypes[this.value].description = 'No description available.'
             $('#type-info').html(elTypes[this.value].description)
@@ -173,6 +173,18 @@
             // @ts-expect-error
             $('#node-input-topic').val(this.value)
         })
+
+        // Make position of aria-labels dynamic to cursor
+        // $('#uib-el *[aria-label]').on('mousemove', function(event) {
+        //     document.documentElement.style.setProperty('--x', event.pageX )
+        //     document.documentElement.style.setProperty('--y', event.pageY )
+        //     document.documentElement.style.setProperty('--moveX', event.originalEvent.movementX )
+        //     document.documentElement.style.setProperty('--moveY', event.originalEvent.movementY )
+        //     console.log(event)
+        //     // document.documentElement.style.setProperty('--x', event.clientX)
+        //     // document.documentElement.style.setProperty('--y', event.clientY)
+        //     // $(this).prop('style', `top:${event.pageY}px;left:${event.pageX}`)
+        // })
 
         // TODO reset unused conf props on type change?
 
@@ -275,7 +287,7 @@
             // Configuration data specific to the chosen type
             confData: { value: {} },
         },
-        align: 'right',
+        align: 'left',
         inputs: 1,
         inputLabels: '',
         outputs: 1,
