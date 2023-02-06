@@ -62,7 +62,7 @@ const stdio = 'inherit'
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 
 // npm version 4.2.1 --no-git-tag-version --allow-same-version
-const release = '6.0.0'
+const release = '6.1.0'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}`)
 
@@ -363,8 +363,26 @@ function buildPanelUibElement(cb) {
     cb()
 }
 
+/** Combine the parts of uib-update.html */
+function buildPanelUpdate(cb) {
+    src(`${nodeSrcRoot}/uib-update/main.html`, ) // { since: lastRun(buildMe) } )
+        // .pipe(debug({title:'debug1',minimal:false}))
+        .pipe( include() )
+        // Rename output to $dirname/editor.html
+        .pipe(rename(function(thispath) {
+            // thispath.dirname = `${thispath.dirname}`
+            thispath.basename = 'customNode'
+            // thispath.extname = 'html'
+        }))
+        // Minimise HTML output
+        // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+        .pipe(dest(`${nodeDest}/uib-update/`))
+
+    cb()
+}
+
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
-const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList, buildPanelUibElement)
+const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList, buildPanelUibElement, buildPanelUpdate)
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
@@ -379,6 +397,7 @@ function watchme(cb) {
     watch('src/editor/uib-cache/*', buildPanelCache)
     watch('src/editor/uib-list/*', buildPanelUibList)
     watch('src/editor/uib-element/*', buildPanelUibElement)
+    watch('src/editor/uib-update/*', buildPanelUpdate)
 
     cb()
 }

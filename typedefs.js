@@ -396,6 +396,22 @@
  * }} uibElNode
  */
 
+/** uibUpdNode (Update Node)
+ * @typedef {{
+ *   name: string;
+ *   topic: string;
+ *   elementid: string;
+ *   elementtype: string;
+ *   parent: string;
+ *   classes: string;
+ *   styles: string;
+ *   heading: string;
+ *   headingLevel: string;
+ *   confData: object;
+ *   _ui: any;
+ * }} uibUpdNode
+ */
+
 /** MsgAuth
  * @typedef {object} MsgAuth The standard auth object used by uibuilder security. See docs for details.
  * Note that any other data may be passed from your front-end code in the _auth.info object.
