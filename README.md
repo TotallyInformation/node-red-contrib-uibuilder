@@ -121,7 +121,7 @@ The schema and the UI creator functions built into the front-end client are spec
 * Provides nodes to enable zero-code translation of input data to usable and accessible web elements.
 * Allows the creation of a dedicated web service to facilitate independent security.
 * Provides a caching capability allowing newly joining clients to receive the latest data and configurations. Joining/leaving clients create notifications in Node-RED.
-</details
+</details>
 
 <details><summary>Future direction</summary>
 
