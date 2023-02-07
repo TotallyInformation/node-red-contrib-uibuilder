@@ -28,18 +28,13 @@ uibuilder provides communication between the browser and Node-RED server and has
 
 uibuilder is best installed using Node-RED's Palette Manager.
 
+<details><summary>Manual installs and other versions</summary>
+
 To install manually, from a command line on your Node-RED server:
 
 ```bash
 cd ~/.node-red
 npm install node-red-contrib-uibuilder
-```
-
-To install development branches, please install from [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder):
-
-```bash
-cd ~/.node-red
-npm install totallyinformation/node-red-contrib-uibuilder#branchname
 ```
 
 To install old versions:
@@ -49,11 +44,17 @@ cd ~/.node-red
 npm install node-red-contrib-uibuilder@v5.1.1
 ```
 
+To install development branches, please install from [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder):
+
+```bash
+cd ~/.node-red
+npm install totallyinformation/node-red-contrib-uibuilder#branchname
+```
+
 You will need to restart Node-RED if installing manually.
+</details>
 
 ## Updates
-
-Version numbers for uibuilder follow [Semantic Versioning](https://docs.npmjs.com/about-semantic-versioning). So a change of major number (e.g. from 5 to 6) indicates that there will be breaking changes that will need you to check your deployed nodes and underlying requirements for Node-RED and Node.js versions. The middle number indicates new features. The last number indicates bug fixes and minor tweaks.
 
 The current [CHANGELOG](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/CHANGELOG.md) contains all of the changes and requirement details for each version.
 
@@ -71,7 +72,7 @@ Now re-open the uibuilder node's settings and click the "Open" button to see the
 
 You are now ready to edit the front-end html/javascript/css if you wish and to add logic in Node-RED to provide inputs and handle outputs.
 
-Please see the [First-timers walkthrough](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/walkthrough1) in the documenand the [Introduction Video](https://www.youtube.com/watch?v=IVWR_3cx05A) for more help to get started. Also try out the built-in example flows.
+Please see the [First-timers walkthrough](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/walkthrough1) in the documentation the [Introduction Video](https://www.youtube.com/watch?v=IVWR_3cx05A) for more help to get started. Also try out the built-in example flows.
 
 ---
 
