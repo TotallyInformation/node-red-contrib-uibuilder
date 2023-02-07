@@ -74,7 +74,19 @@ You are now ready to edit the front-end html/javascript/css if you wish and to a
 
 Please see the [First-timers walkthrough](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/walkthrough1) in the documentation the [Introduction Video](https://www.youtube.com/watch?v=IVWR_3cx05A) for more help to get started. Also try out the built-in example flows.
 
----
+## Examples
+
+Within Node-RED, use the hamburger menu. Click Import. Click Examples. Select the node-red-contrib-uibuilder folder and choose an example.
+
+The templates feature in uibuilder provides working front-end code of various configurations.
+
+Other examples can be found on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder) and the [uibuilder WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). Also see the FAQ's and answered questions on the [Node-RED Forum](https://discourse.nodered.org/tag/node-red-contrib-uibuilder).
+
+## Documentation
+
+Please refer to the [Documentation website](https://totallyinformation.github.io/node-red-contrib-uibuilder). This can also be accessed from within uibuilder nodes.
+
+There is a library of "official" [video tutorials on YouTube](https://www.youtube.com/playlist?list=PL9IEADRqAal3mG3RcF0cJaaxIgFh3GdRQ). Other folk have also produced [uibuilder-related content](https://www.youtube.com/results?search_query=uibuilder+node-red).
 
 ## Purpose
 
@@ -170,29 +182,17 @@ The general direction of uibuilder (or associated modules) is likely to include:
   This will use a local package.json file that contains a "build" script. If it exists, uibuilder will expose a build button that will run the script.
 </details>
 
-## Additional Documentation
+## Questions, issues and suggestions
 
-Documentation is available on the [GitHub pages site](https://totallyinformation.github.io/node-red-contrib-uibuilder). Or from within Node-RED using the button in the Editor's configuration panel for any uibuilder.
-
-There is more information and some examples in the [GitHub WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). A growing number of example flows are available on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder).
-
-There are example flows built into the Node-RED library that you can import. uibuilder also has its template feature that lets you load example front-end code.
-
-There is also a small library of "official" [video tutorials on YouTube](https://www.youtube.com/playlist?list=PL9IEADRqAal3mG3RcF0cJaaxIgFh3GdRQ). Other folk have also produced [uibuilder-related content](https://www.youtube.com/results?search_query=uibuilder+node-red).
-
-## Discussions and suggestions
-
-The best place to ask questions about uibuilder is the [Node-RED Forum](https://discourse.nodered.org/).
+The best place to ask questions or discuss possible enhancements is the [Node-RED Forum](https://discourse.nodered.org/).
 
 Alternatively, use the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements and the [GitHub Discussions page](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) for general questions, suggestions, etc.
-
-Please note that I rarely have time to monitor the [#uibuilder channel](https://node-red.slack.com/messages/C7K77MG06) in Slack any more, it is best to use Discourse or raise an issue.
-
-I do occasionally try to look out for [uibuilder related questions on Stack Overflow](https://stackoverflow.com/search?tab=newest&q=%5bnode-red%5d%20uibuilder) but again, time does not always let me do this so ping me on the forum if you want a response.
 
 ## Contributing
 
 If you would like to contribute to this node, you can contact [Totally Information via GitHub](https://github.com/TotallyInformation) or raise a request in the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
+
+Pull Requests both for code and documentation are welcomed and the WIKI is open to new entries and corrections (but please let me know if you make a change).
 
 Please refer to the [contributing guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/.github/CONTRIBUTING.md) for more information.
 
