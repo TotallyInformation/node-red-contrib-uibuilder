@@ -64,11 +64,9 @@ Older changes can be found in the previous change documents: [CHANGELOG-V5](http
 
 Once installed, The following is a typical simple flow to get going.
 
-Add a uibuilder node. Open its settings and give it a "URL" which is used as the identifying name. Close the settings and click on the Deploy button.
-
-Then you can add an inject node for some simple input data and two debug nodes on the two output ports so that you can see everything that is going on. Deploy the flow.
-
-Now re-open the uibuilder node's settings and click the "Open" button to see the resulting web page.
+1. Add a uibuilder node. Open its settings and give it a "URL" which is used as the identifying name. Close the settings and click on the Deploy button.
+2. Add an inject node for some simple input data and two debug nodes on the two output ports so that you can see everything that is going on. Deploy the flow.
+3. Re-open the uibuilder node's settings and click the "Open" button to see the resulting web page.
 
 You are now ready to edit the front-end html/javascript/css if you wish and to add logic in Node-RED to provide inputs and handle outputs.
 
