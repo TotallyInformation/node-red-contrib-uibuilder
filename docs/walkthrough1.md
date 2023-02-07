@@ -129,7 +129,7 @@ Installing the libraries:
 1. Open the uibuilder Editor panel.
 2. Click on the "Manage front-end libraries" button.
 3. Click on the "+ add" button.
-4. Typw "vue" (without the quotes) into the input box
+4. Type "vue@2" (without the quotes) into the input box. Noting that, at this time, bootstrap-vue requires Vue v2 which is no longer the default, hence the need for "@2" on the end of the name.
 5. Click on the "Install" button.
 6. Wait for the confirmation message that tells you the installation is successful.
 7. Click the "Close Library Manager" button.
