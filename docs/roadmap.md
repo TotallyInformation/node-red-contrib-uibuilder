@@ -101,6 +101,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
   - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
 
+* Continuing documentation improvements
+  * `README.md`: Add more links to the Features section so that each feature points to appropriate documentation. Add a landing-page link to "includes many helper features" to signpost to relavent detailed documentation.
+  * Node-specific docs.
+  * Reorg docs to make more sense to new starters & make more logical.
+
 ## Next - these are things that need to be done
 
 * Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
@@ -148,6 +153,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
   * Add checks to prevent non-string cache by property values.
   * Add empty cache button.
+  * Think about impact of a cache clear (affects all connected clients)
 
 * Extensions to the `uib-element` node
   * Add more elements:
@@ -170,7 +176,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
     * LED (on/off/colour/brightness) - ref: node-red-contrib-ui-led
     * Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
-    * Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag
+    * Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
@@ -195,6 +201,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Consider adding `exists` and `visible` methods for checking if an element exists on the page and whether it is visible to the user.
   * Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
+  * Get better control over what control messages can be sent. Centralise the list of control messages in use.
   
   * Add ability to save the current DOM.
     * To local storage - with option to reload on reload
@@ -236,6 +243,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add API test harness using VScode restbook.
   * Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
   * Allow instance npm installs to be served (would allow both vue 2 and vue 3 for example). Instance serves to take preference. Would need extension to editor libraries tab to differentiate the locations.
+  * Centralise the list of control messages in use.
   
   * Editor:
     * Add template description to display.

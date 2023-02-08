@@ -1,5 +1,5 @@
 ---
-title: A first-timers walkthough of using uibuilder
+title: A first-timers walkthrough of using uibuilder
 description: >
    If you haven't used uibuilder before, it can be a little confusing as it brings together concepts from
    several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
@@ -42,7 +42,14 @@ It may look complex, but really it isn't. 😊
 
 4. Click on the Node-RED "Deploy" button.
    
-**At this point, you now have a working web app!** The rest is testing.
+**At this point, you now have a working web app!** However, it doesn't really show anything useful.
+
+To improve that, re-open the node's settings and change the _Template_ drop-down to "No framework, IIFE client". Then click the "Load & Overwrite Files" button. 
+You will get a warning that you should carefully read and if OK, click on the "OK, overwrite" button. If you don't want to overwrite things, click on the cancel button (which is the default).
+
+When you now revisit your web page, you will see that there is a bit more to it that will help you understand how to get things done.
+
+The rest is really now just testing.
 
 1. Re-open the uibuilder node and click on the "Open uibtest" button.
    
@@ -59,9 +66,8 @@ It may look complex, but really it isn't. 😊
    
    You should see several messages listed there. If you check, you will see that they all come from the second output port of the uibuilder node.
 
-   That port outputs uibuilder _control_ messages. The messages tell you where they came from, either the server (the uibuilder node itself) or the client and what they represent ("Client Connect" and "Ready for Content").
-   You will also see a property called `cacheControl` with a value of "REPLAY". This can be wired back to the uibuilder input and used to send cached data when a new client connects 
-   (or an existing client reloads the page).
+   That port outputs uibuilder _control_ messages. The messages tell you where they came from, either the server (the uibuilder node itself) or the client and what they represent ("Client Connect" for example).
+   You will also see a bunch of other properties that tell you things about the connected client browser tab.
 
    Note that the top output port on the uibuilder node outputs messages from your client(s). There is a helper function in the uibuilder client library: `uibuilder.send({...})` that sends a message back to Node-RED. The message must be structured the same as a Node-RED message. That is to say that it must be a JavaScript object containing properties with values. For example: `{ "payload": "Message from the client", "topic": "mymessage" }`. See below for more information on working with the front-end code.
 
