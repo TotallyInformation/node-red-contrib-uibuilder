@@ -162,12 +162,14 @@ class UibWeb {
         this.adminRouter.use('/admin', this.adminRouterV3)
         this.routers.admin.push( { name: 'Admin API v3', path: `${this.RED.settings.httpAdminRoot}uibuilder/admin`, desc: 'Consolidated admin APIs used by the uibuilder Editor panel', type: 'Router' } )
 
-        /** Serve up the package docs folder on /<httpAdminRoot>/uibuilder/techdocs (uses docsify)
+        /** Serve up the package docs folder on /<httpAdminRoot>/uibuilder/techdocs (uses docsify) - also make available on /uibuilder/docs
          * @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108
          */
         const techDocsPath = path.join(__dirname, '..', '..', 'docs')
+        this.adminRouter.use('/docs', express.static( techDocsPath, this.uib.staticOpts ) )
+        this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/docs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
         this.adminRouter.use('/techdocs', express.static( techDocsPath, this.uib.staticOpts ) )
-        this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/techdocs`, desc: 'Tech docs website powered by Docsify', type: 'Static', folder: techDocsPath } )
+        this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/techdocs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
 
         // TODO: Move v2 API's to V3
         this.adminRouterV2 = require('./admin-api-v2')(this.uib, this.log)
