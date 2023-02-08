@@ -1523,7 +1523,7 @@
 
         // Show the root URL
         $('#uibuilderurl').prop('href', `${node.urlPrefix}${thisurl}`)
-            .html(`<i class="fa fa-globe" aria-hidden="true"></i> Open ${node.nodeRoot}${thisurl}`)
+        // .html(`<i class="fa fa-globe" aria-hidden="true"></i> Open ${node.nodeRoot}${thisurl}`)
         $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
         // NB: The index url link is only shown if the option is turned on
         $('#show-src-folder-idx-url').empty()
@@ -1682,11 +1682,11 @@
                 window.open(`${node.urlPrefix}${$('#node-input-url').val()}`, '_blank')
             })
             .appendTo($('div.red-ui-tray-toolbar'))
-        $('<button type="button" title="Open uibuilders Tech Docs" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book"></i> Docs</button>')
+        $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book" aria-hidden="true"></i> Docs</button>')
             .on('click', (evt) => {
                 evt.preventDefault()
                 RED.sidebar.help.show('uibuilder')
-                window.open('./uibuilder/techdocs', '_blank')
+                window.open('./uibuilder/docs', '_blank')
             })
             .appendTo($('div.red-ui-tray-toolbar'))
 

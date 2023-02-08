@@ -1,26 +1,27 @@
     <p>
-        Easily create a data-driven web user interface (UI)<br><br>
-        Create dynamic, data-driven user interfaces that send and receive messages to/from Node-RED.
-        Creates a file/folder structure that is used to deliver static resources (html, css, js, images, etc) and
-        manages the delivery of vendor library resources (VueJS, jQuery, etc).
+        Provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.<br><br>
+
+        You need at least one of these in order to make full use of all of uibuilder's features.
+    </p><p>
+        It is this node that creates a custom web server. You can have many nodes if that best meets your needs. But each node can serve many pages.
+    </p><p>
+        It also creates a set of filing system folders and files on the Node-RED server. 
+        These define the front-end UI you see in the browser as well as providing some important configuration.
+    </p><p>
+        This node is also where you configure much of uibuilder's web server such as installing helper libraries that 
+        you may wish to use to support your interfaces (e.g. VueJS, jQuery, etc). You can also use it to edit your custom UI code.
     </p>
 
     <p id="uib_help_docs">
-        Detailed technical documentation can be found <a href="./uibuilder/techdocs" target="_blank">HERE</a>.
+        Detailed documentation can be found <a href="./uibuilder/docs" target="_blank">HERE</a>.
     </p>
 
     <p>
-        More information on how to configure this node: <a href="./uibuilder/techdocs/#/uib-node-configuration" target="_blank">uibuilder node configuration</a>.
+        More information on how to configure this node: <a href="./uibuilder/docs/#/nodes/uibuilder" target="_blank">uibuilder node configuration</a>.
     </p>
 
     <p>
-        Specific information on how to use the new front-end library: <a href="./uibuilder/techdocs/#/uibuilder.module" target="_blank">Client Library</a>. 
-        And the old library: <a href="./uibuilder/techdocs/#/front-end-library" target="_blank">uibuilderfe</a>. 
-        Note that the new library is preferred, the old one will not be updated and will eventually be deprecated.
-    </p>
-
-    <p>
-        Still more information is available in the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/" target="_blank">uibuilder WIKI</a>.
+        Specific information on how to use the front-end library: <a href="./uibuilder/docs/#/uibuilder.module" target="_blank">Client Library</a>. 
     </p>
 
     <h3>Status display</h3>
@@ -34,14 +35,11 @@
         <dt class="optional">payload <span class="property-type">string | buffer</span></dt>
         <dd> Optionally, the payload of the message to send to all connected client browser tabs. </dd>
 
-        <!-- <dt class="optional">_auth <span class="property-type">object</span></dt>
-        <dd> Optionally, the authentication and authorisation object. See the <a href="./uibuilder/techdocs/#/security?id=standard-schema-for-msg_auth">security page in the technical docs</a> for specifics.</dd> -->
-
         <dt class="optional">_uib <span class="property-type">object</span></dt>
         <dd>
-            Optionally, trigger low-code front-end events such as showing a "toast". 
-            See the <a href="./uibuilder/techdocs/#/security?id=msg_uib-object-uibuilder-v3" target="_blank">Using uibuilder page in the technical docs</a> for specifics.<br>
-            Also used to <a href="uibuilder/techdocs/#/pre-defined-msgs?id=browser-client-reload-page" target="_blank">
+            Optionally, trigger low-code front-end events such as 
+            <a href="./uibuilder/docs/#/pre-defined-msgs?id=ui-notification-toast-control-message-partially-deprecated-in-v51" target="_blank">showing a notification message</a>.
+            Also used to <a href="uibuilder/docs/#/pre-defined-msgs?id=browser-client-reload-page" target="_blank">
             signal to the front-end that the page should reload automatically</a>. Useful when developing front-end code via the node's editor.
         </dd>
 
@@ -68,22 +66,15 @@
 
         <li>Standard output (data from front-end)
             <dl class="message-properties">
-                <dt>payload <span class="property-type">string | buffer</span></dt>
+                <dt class="optional">payload <span class="property-type">string | buffer</span></dt>
                 <dd>
-                    Data sent by the front-end page.
+                    Typical data sent by the client.
                 </dd>
 
-                <!-- <dt class="optional">_auth <span class="property-type">object</span></dt>
-                <dd>
-                    The authentication and authorisation object. 
-                    This <b>MUST</b> always be included when security is turned on.
-                    See the <a href="./uibuilder/techdocs/#/security?id=standard-schema-for-msg_auth" target="_blank">security page in the technical docs</a> for specifics.
-                </dd> -->
-        
                 <dt class="optional">uibDomEvent <span class="property-type">object</span></dt>
                 <dd>
                     Used by the <code>uibuilder.eventSend()</code> front-end function. 
-                    See the <a href="./uibuilder/techdocs/#/security?id=msguibdomevent-object-uibuilder-v32" target="_blank">Using uibuilder page in the technical docs</a> for specifics.
+                    See the <a href="./uibuilder/docs/#/client-docs/features?id=eventsend-function" target="_blank">eventSend feature in the documentation</a> for specifics.
                 </dd>
         
                 <dt>topic <span class="property-type">string</span></dt>
@@ -92,20 +83,17 @@
                     Could also be changed by the front-end.
                 </dd>
 
-                <dt>_socketId <span class="property-type">string</span></dt>
+                <dt class="optional">_uib <span class="property-type">string</span></dt>
                 <dd>
-                    Identifies the sending browser/tab. Retain this if needing to send a reply back to the originator.
-                    Remove if needing to send a reply to all connected broweser/tabs.
-                    <br>Notes:
-                    <table>
-                        <tr><td>The initial part of the ID contains the source URI.</td></tr>
-                        <tr><td>The socket id may change if the client temporarily looses the connection or if the user reloads the page.</td></tr>
-                    </table>
+                    Included only if turned on in advanced settings.
+                    Provides detailed information about the sending client.
+                    Useful for custom security processing.<br><br>
+                    See the control output below for more specifics.
                 </dd>
 
                 <dt>other</dt>
                 <dd>
-                    Note that any inbound msg.script or msg.style is stripped and not sent to the output.
+                    The client may send other data on the <code>msg</code> object.
                 </dd>
             </dl>
             <p>
@@ -118,7 +106,7 @@
                 <dt>uibuilderCtrl <span class="property-type">string</span></dt>
                 <dd>
                     The name/id of the control message. 
-                    See the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Control-Message-Structure" target="_blank">WIKI page</a> for details.
+                    See the <a href="./uibuilder/docs/#/pre-defined-msg" target="_blank">documentation</a> for details.
                 </dd>
 
                 <dt>cacheControl <span class="property-type">string</span></dt>
@@ -129,7 +117,7 @@
                         <tr><th>REPLAY</th> <td>Indicate to the back-end flow that a copy of the cached messages should be dumped to the front-end. Retaining the <code>_socket.id</code> will send the cache contents back to the requesting client.<hr></td></tr>
                         <tr><th>CLEAR</th> <td>Indicate to the back-end flow that any cache should be completely cleared for everyone.</td></tr>
                     </table>
-                    See the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Message-Caching" target="_blank">WIKI</a> for details.
+                    See the <a href="./uibuilder/docs/#/pre-defined-msg" target="_blank">documentation</a> for details.
                 </dd>
 
                 <dt>from <span class="property-type">string</span></dt>
@@ -138,15 +126,11 @@
                     will appear out of port #2.
                 </dd>
 
-                <dt>_socketId <span class="property-type">string</span></dt>
+                <dt>Other <span class="property-type">string</span></dt>
                 <dd>
-                    Identifies the sending browser/tab. Retain this if needing to send a reply back to the originator.
-                    Remove if needing to send a reply to all connected broweser/tabs.
-                    <br>Notes:
-                    <table>
-                        <tr><td>The initial part of the ID contains the source URI.</td></tr>
-                        <tr><td>The socket id may change if the client temporarily looses the connection or if the user reloads the page.</td></tr>
-                    </table>
+                    Additional details about the client the message relates to is included.
+                    This varies somewhat between the different control message types.
+                    See <a href="./uibuilder/docs/#/pre-defined-msg" target="_blank">the documentation</a> for more details.
                 </dd>
             </dl>
         </li>
@@ -163,36 +147,26 @@
 
             <dt>URL <span class="property-type">string</span></dt>
             <dd>
+                There is no default and this entry is required.<br>
                 The URL path that the resulting page and other resources will be served from.
                 Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
-                and port. Will also be prefixed by the Node-RED setting <i>httpNodeRoot</i>.<br>
-                The default URL is <a href="/uibuilder" target="_blank">/uibuilder</a>.<br>
+                and port or the custom uibuilder scheme and port if specified in settings.js. 
+                Will also be prefixed by the Node-RED setting <i>httpNodeRoot</i>.<br>
                 The url is also used to define the server filing system path for front-end code files.<br>
                 The url must be valid as a filename as well as a url path. It may not exceed 20 characters.
             </dd>
 
-            <dt>Edit Source Files <span class="property-type">button</span></dt>
-            <dd>
-                Clicking this button will hide the above settings and display a file editor allowing you
+            <h4>Files tab</h4>
+            <p>
+                Clicking this tab will display a file editor allowing you
                 to edit the front-end files that define your user interface.<br />
                 All text-based files in the <code>&lt;uibRoot>/&lt;url>/</code> folder on the server's filing system will
-                be available to edit.<br />
-                To return back, click the red <kbd class="help-key">Done</kbd> or grey <kbd class="help-key">Cancel</kbd> buttons.
+                be available to edit.
                 <p>
                     Note that you can expand the edit panel by clicking on the <kbd class="help-key">&#x2921;</kbd> arrow button underneath the panel.
                     To exit fullscreen, press the same button (now highlighted) or the <kbd class="help-key">Esc</kbd> key.
                 </p>
-            </dd>
-
-            <dt>Manage Front-End Libraries <span class="property-type">button</span></dt>
-            <dd>
-                Clicking this button will hide the above settings and display a list of currently available
-                front-end library packages. This interface allows you to add, remove and update any library
-                that can be installed via <a href="https://www.npmjs.com/" target="_blank">npm</a>.<br>
-                Libraries will be loaded into your <code>&lt;userDir>/</code> folder in the same place as custom nodes.
-                uibuilder retains an internal list of front-end libraries loaded this way.
-                Each library will be served so that you can use it in your front-end html.
-            </dd>
+            </p>
         </dl>
 
         <h4>Template Settings</h4>
@@ -216,7 +190,17 @@
             </dd>
         </dl>
 
-        <h4>Advanced Settings</h4>
+        <h4>Libraries tab</h4>
+        <p>
+            Clicking this tab will display a list of currently available
+            front-end library packages. This interface allows you to add, remove and update any library
+            that can be installed via <a href="https://www.npmjs.com/" target="_blank">npm</a>.<br>
+            Libraries will be loaded into your <code>&lt;userDir>/</code> folder in the same place as custom nodes.
+            uibuilder retains an internal list of front-end libraries loaded this way.
+            Each library will be served so that you can use it in your front-end html.
+        </p>
+
+        <h4>Advanced tab</h4>
         <dl class="message-properties">
             <dt>Serve <span class="property-type">drop-down</span></dt>
             <dd>
@@ -239,13 +223,15 @@
             <dt>Allow scripts to be passed to front-end? <span class="property-type">check box</span></dt>
             <dd>
                 If on, any string(s) in <code>msg.script</code> will be dynamically added to the scripts of the web page.
-                Turn off to prevent scripts from being dynamically added and executed.
+                Turn off to prevent scripts from being dynamically added and executed.<br>
+                <b>NOTE</b>: It is better to use uibuilder's <code>msg._ui</code> low-code features for passing scripts.
             </dd>
 
             <dt>Allow styles to be passed to front-end? <span class="property-type">check box</span></dt>
             <dd>
                 If on, any string(s) in <code>msg.style</code> will be dynamically added to the styles of the web page.
-                Turn off to prevent styles from being dynamically added.
+                Turn off to prevent styles from being dynamically added.<br>
+                <b>NOTE</b>: It is better to use uibuilder's <code>msg._ui</code> low-code features for passing styles.
             </dd>
 
             <dt>Forward input to output? <span class="property-type">check box</span></dt>
@@ -259,49 +245,15 @@
             </dd>
         </dl>
 
-        <!-- <h4>Security Settings</h4>
-        <dl class="message-properties">
-            <dt>Use uibuilder's security? <span class="property-type">link</span></dt>
-            <dd>
-                If on, uibuilder will add security processing.
-                All messages in both directions <b>MUST</b> have a <code>msg._auth</code> object attached in this case.
-                See the <a href="./uibuilder/techdocs/#/security" target="_blank">security documentation</a> for details.
-                The user of uibuilder's security requires a custom <code>&lt;uibRoot>/.config/security.js</code> file.
-                A template file is provided when you install uibuilder but you will need to amend this.<br>
-                If off, all other security settings are disabled.
-            </dd>
-
-            <dt>Allow unauthorised msg traffic? <span class="property-type">link</span></dt>
-            <dd>
-                If on, uibuilder will allow messages to flow freely even if the client is not authenticated/authorised.<br>
-                If off, uibuilder will block all but basic control messages until the client is authenticated and authorised.
-            </dd>
-
-            <dt>Sess Length <span class="property-type">link</span></dt>
-            <dd>
-                Controls how long a session is valid for without the client having to reauthenticate.
-            </dd>
-
-            <dt>JWT Secret <span class="property-type">link</span></dt>
-            <dd>
-                A (long) string that is used to help keep JWT's secure.
-            </dd>
-
-            <dt>Auto-extend the token expiry? <span class="property-type">link</span></dt>
-            <dd>
-                If on, every message sent by a client will extend the session.
-            </dd>
-
-        </dl> -->
-
         <h4>Button Row</h4>
         <dl class="message-properties">
-            <dt>Open xxxx <span class="property-type">link</span></dt>
+            <dt><i class="fa fa-globe" aria-hidden="true"></i> Open <span class="property-type">link</span></dt>
             <dd>
                 The web app url for this instance. Click to see the app page in a new tab.
+                Also available as a button at the top of the panel on all tabs.
             </dd>
 
-            <dt>uibuilder details <span class="property-type">link</span></dt>
+            <dt><i class="fa fa-info-circle" aria-hidden="true"></i> Full details <span class="property-type">link</span></dt>
             <dd>
                 Shows a web page with detailed information about the overall uibuilder
                 configuration. Including details of all of the vendor modules that are
@@ -309,42 +261,36 @@
                 and URL paths.
             </dd>
 
-            <dt>Instance Details <span class="property-type">link</span></dt>
+            <dt><i class="fa fa-info" aria-hidden="true"></i> Node Details <span class="property-type">link</span></dt>
             <dd>
                 Shows a web page with detailed information relavent just for this
                 instance (node) of uibuilder. May be easier to read than the full details.
             </dd>
 
-            <dt>Tech Docs <span class="property-type">link</span></dt>
+            <dt><i class="fa fa-book" aria-hidden="true"></i> Docs <span class="property-type">link</span></dt>
             <dd>
-                Opens the technical documentation for uibuilder in a separate tab.
+                Opens the documentation for uibuilder in a separate tab.
                 This does not require an Internet connection, the local docs are used.
+                Also available as a button at the top of the panel on all tabs.
             </dd>
 
         </dl>
 
-        <h4>Information Box</h4>
-        <p>
-            The final display on the settings panel shows information about whether
-            uibuilder is using Node-RED's internal ExpressJS server or is using its
-            own custom server. It also shows the url.
-        </p>
-
     <h3>File/Folder Structure</h3>
     <p>
-        For more information, see the GitHub page for <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder" target="_blank">node-red-contrib-uibuilder</a>
+        For more information, see the <a href="./uibuilder/docs" target="_blank">uibuilder documentation</a>.
     </p>
 
 
     <h3>Details</h3>
     <p>
-        For more information, see the GitHub page for <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder" target="_blank">node-red-contrib-uibuilder</a>
+        For more information, see the <a href="./uibuilder/docs" target="_blank">uibuilder documentation</a>.
     </p>
     <p>
-        There are also examples of how to use uibuilder in the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki" target="_blank">GitHub WIKI</a>.
+        There are also examples of how to use uibuilder in the Node-RED import library, on the <a href="https://flows.nodered.org/search?term=uibuilder" target="_blank"></a>, and in the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki" target="_blank">GitHub WIKI</a>.
     </p>
     <p>
-        uibuilder can be discussed in the <a href="https://discourse.nodered.org/" target="_blank">Node-RED Forum</a> and in the <a href="https://node-red.slack.com/messages/C7K77MG06" target="_blank">Node-RED #uibuilder Slack channel</a>. Issues/bugs can be raised in <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues" target="_blank">GitHub</a>.
+        uibuilder can be discussed in the <a href="https://discourse.nodered.org/tag/node-red-contrib-uibuilder" target="_blank">Node-RED Forum</a>. Issues/bugs can be raised on <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues" target="_blank">GitHub</a>.
     </p>
 
     <h3>Admin Index (Details) page</h3>
