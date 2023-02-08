@@ -16,13 +16,9 @@
 
 # node-red-contrib-uibuilder
 
-A data-driven web page/web app utility for Node-RED. uibuilder aims to provide an easy to use way to create dynamic web interfaces using any (or no) front end libraries for convenience.
+uibuilder provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.
 
-uibuilder is rather the opposite of Node-RED's Dashboard. Whereas Dashboard is designed to make it very easy to create a UI but trades that off with some limitations, uibuilder is designed to let you do anything you can think of with any framework (or none) but at the trade off of having to create more of the page structure yourself.
-
-uibuilder should generally also be faster and more resource efficient in use than Dashboard, though that obviously depends on what front-end libraries and frameworks you choose to use.
-
-uibuilder provides communication between the browser and Node-RED server and has many helper features that reduce or eliminate the need to write code to build data-driven web apps.
+It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces for Node-RED.
 
 ## Installation
 
@@ -82,7 +78,7 @@ Other examples can be found on the [Node-RED Flows site](https://flows.nodered.o
 
 ## Documentation
 
-Please refer to the [Documentation website](https://totallyinformation.github.io/node-red-contrib-uibuilder). This can also be accessed from within uibuilder nodes.
+Please refer to the [Documentation web site](https://totallyinformation.github.io/node-red-contrib-uibuilder). This can also be accessed from within uibuilder nodes even without an Internet connection.
 
 There is a library of "official" [video tutorials on YouTube](https://www.youtube.com/playlist?list=PL9IEADRqAal3mG3RcF0cJaaxIgFh3GdRQ). Other folk have also produced [uibuilder-related content](https://www.youtube.com/results?search_query=uibuilder+node-red).
 
