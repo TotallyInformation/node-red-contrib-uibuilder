@@ -8,25 +8,25 @@
 
 module.exports = {
     'iife-blank-client': {
-        'name': 'No framework, modern IIFE client',
+        'name': 'No framework, IIFE client',
         'folder': 'iife-blank-client',
-        'dependencies': [ ],
-        'description': 'Minimal template using the modern IIFE client library.'
+        'dependencies': [],
+        'description': 'Minimal template using the IIFE client library.'
     },
     'esm-blank-client': {
-        'name': 'No framework, modern ESM client',
+        'name': 'No framework, ESM client',
         'folder': 'esm-blank-client',
-        'dependencies': [ ],
-        'description': 'Minimal template using the modern ESM client library.'
+        'dependencies': [],
+        'description': 'Minimal template using the ESM client library.'
     },
     'iife-vue3-nobuild': {
-        'name': 'Vue3 no build step, modern IIFE client',
+        'name': 'Vue3 no build step, IIFE client',
         'folder': 'iife-vue3-nobuild',
-        'dependencies': [ 'vue' ],
-        'description': 'Very simple Vue v3+ template that does not require a build step. Uses the modern IIFE uib client library.'
+        'dependencies': ['vue'],
+        'description': 'Very simple Vue v3+ template that does not require a build step. Uses the IIFE uib client library.'
     },
     // 'vue3-sfc-load': {
-    //     'name': 'Vue3 no build step, modern IIFE client. SFC Loader to directly load/compile/run .vue files.',
+    //     'name': 'Vue3 no build step, IIFE client. SFC Loader to directly load/compile/run .vue files.',
     //     'folder': 'vue3-sfc-load',
     //     'dependencies': [ 'vue', 'vue3-sfc-loader' ],
     //     'description': 'Vue v3 template demonstrating the direct loading of .vue files without a build step using vue3-sfc-loader.'
@@ -34,38 +34,38 @@ module.exports = {
     'vue2-bootstrap': {
         'name': 'VueJS v2 & bootstrap-vue',
         'folder': 'vue2-bootstrap',
-        'dependencies': [ 'vue', 'bootstrap-vue' ],
-        'description': 'VueJS v2 and bootstrap-vue template. No build step. Uses the modern IIFE uib client library.'
+        'dependencies': ['vue', 'bootstrap-vue'],
+        'description': 'VueJS v2 and bootstrap-vue template. No build step. Uses the IIFE uib client library.'
     },
     'vue2-simple': {
         'name': 'Simple VueJS v2',
         'folder': 'vue2-simple',
-        'dependencies': [ 'vue', 'bootstrap-vue' ],
-        'description': 'Simplest VueJS v2 and bootstrap-vue template. No build step. Uses the modern IIFE uib client library.'
+        'dependencies': ['vue', 'bootstrap-vue'],
+        'description': 'Simplest VueJS v2 and bootstrap-vue template. No build step. Uses the IIFE uib client library.'
     },
     'svelte-basic': {
         'name': 'Svelte Basic',
         'folder': 'svelte-basic',
-        'dependencies': [ ],
+        'dependencies': [],
         'description': 'Simple Svelte template. Requires Svelte installation, see README.md'
     },
     'old-blank-client': {
         'name': 'No framework, old client',
         'folder': 'old-blank-client',
-        'dependencies': [ ],
+        'dependencies': [],
         'description': 'Minimal template using the old uibuilderfe client.'
     },
     // DO NOT EVER REMOVE EITHER OF THESE
     blank: {
         'name': 'Blank template, no framework',
         'folder': 'blank',
-        'dependencies': [ ],
+        'dependencies': [],
         'description': 'Default blank template. As of v6, uses the iife client.'
     },
     external: {
         'name': 'Load an external template using Degit',
         'folder': 'external',
-        'dependencies': [ ],
+        'dependencies': [],
         'description': 'Use this to load a template from GitHub or elsewhere. See https://github.com/Rich-Harris/degit for details. Example name: totallyinformation/uib-template-test'
     },
 }
