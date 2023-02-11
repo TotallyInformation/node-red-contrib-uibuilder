@@ -2404,7 +2404,7 @@
     }).join("/");
     return url2.replace("//", "/");
   }
-  var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _isVue, _timerid, _MsgHandler, _a;
+  var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _isVue, _timerid, _MsgHandler, _isShowMsg, _a;
   var Uib = (_a = class {
     constructor() {
       __privateAdd(this, _connectedNum, 0);
@@ -2417,6 +2417,7 @@
       __privateAdd(this, _MsgHandler, void 0);
       __publicField(this, "_socket");
       __publicField(this, "_htmlObserver");
+      __privateAdd(this, _isShowMsg, false);
       __publicField(this, "clientId", "");
       __publicField(this, "cookies", {});
       __publicField(this, "ctrlMsg", {});
@@ -3134,6 +3135,31 @@
         }
       });
     }
+    showMsg(showHide, parent = "body") {
+      __privateSet(this, _isShowMsg, showHide);
+      if (showHide === false || showHide === void 0) {
+        this._uiRemove({
+          components: [
+            "#nrmsg"
+          ]
+        });
+      } else {
+        this._uiAdd({
+          parent,
+          components: [
+            {
+              type: "pre",
+              id: "nrmsg",
+              attributes: {
+                title: "Last message from Node-RED",
+                class: "syntax-highlight"
+              },
+              slot: "Waiting for a message from Node-RED"
+            }
+          ]
+        }, false);
+      }
+    }
     clearHtmlCache() {
       this.removeStore("htmlCache");
       log("trace", "uibuilder.module.js:clearHtmlCache", "HTML cache cleared")();
@@ -3519,9 +3545,16 @@ ioPath: ${this.ioPath}`)();
       }
       if (window["Vue"])
         __privateSet(this, _isVue, true);
+      this.onChange("msg", (msg) => {
+        if (__privateGet(this, _isShowMsg) === true) {
+          const eMsg = document.getElementById("nrmsg");
+          if (eMsg)
+            eMsg.innerHTML = this.syntaxHighlight(msg);
+        }
+      });
       this._dispatchCustomEvent("uibuilder:startComplete");
     }
-  }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _isVue = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
+  }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _isVue = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), __publicField(_a, "_meta", {
     version,
     type: "module",
     displayName: "uibuilder"

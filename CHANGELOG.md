@@ -32,8 +32,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### uibuilder node
 
-* Editor
-  * Improve help box for _uib switch 
+* Editor: Improve help box for _uib switch 
 
 ### uib-list node
 
@@ -63,10 +62,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Send updates to an existing HTML element (using a selector). Uses _ui mode `update`
 
-### Client library
-
-* Add **new function** `uibuilder.showMsg(true)` - Adds a visual display of incoming messages from Node-RED to the web page. Use `uibuilder.showMsg(true)` to remove it.
-
 ### Examples
 
 * Update all to use new libs and updated templates
@@ -77,10 +72,11 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 ### Templates
 * Make the blank template truly blank
+* Remove all msg displays. Add comment for showMsg, commented out for blank, in for others.
 
 ### Doc updates
 
-* `isVisible`, `tabId` and `syntaxHighlight(json)`, `watchDom`, `showMsg`, clearHtmlCache, restoreHtmlFromCache, saveHtmlCache in new client builds.
+* `isVisible`, `tabId` in new client builds.
 * Updated `msg._uib` optional in standard msgs
 * Notes on limitation of dynamic UI for Vue, etc.
 * WIKI
@@ -107,6 +103,7 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 * New zero-code nodes `uib-element` and `uib-update` let you use simple data to create dynamic web UI's.
 * The client library has a number of fixes and new features
+  * New function: `uibuilder.showMsg(true)` Displays an on-screen card at the end of the current display that automatically updates with the last msg received from Node-RED. `uibuilder.showMsg(false)` turns it off.
   * New functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
   * New function: `uibuilder.watchDom(true)` Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
   * Reports changes of visibility back to node-red via a new control msg.
@@ -182,7 +179,7 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 * Added **new function** `uibuilder.syntaxHighlight(json)` - Converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
 
-* Added **new function** `uibuilder.showMsg(true)` - Adds a visual display of incoming messages from Node-RED to the web page. Use `uibuilder.showMsg(true)` to remove it.
+* Added **new function** `uibuilder.showMsg(true)` - Adds a visual display of incoming messages from Node-RED to the web page. Use `uibuilder.showMsg(false)` to remove it.
 
 * Added a unique tab identifier `uibuilder.tabId` that remains while the tab does. Is include in std outputs. Based on [this](https://stackoverflow.com/questions/11896160/any-way-to-identify-browser-tab-in-javascript). NOTE however, that duplicating the browser tab will result in a duplicate tab id.
 

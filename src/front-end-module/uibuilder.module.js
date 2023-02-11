@@ -310,6 +310,8 @@ export const Uib = class Uib {
     _socket
     // Placeholder for an observer that watches the whole DOM for changes - can't make a # var until # fns allowed in all browsers
     _htmlObserver
+    // Has showMsg been turned on?
+    #isShowMsg = false
 
     //#endregion
 
@@ -1464,6 +1466,42 @@ export const Uib = class Uib {
 
     } // --- end of _uiManager ---
 
+    /** Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
+     * The card has the id `nrmsg`.
+     * @param {boolean} showHide true=show, false=hide
+     * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     */
+    showMsg(showHide, parent = 'body') {
+        this.#isShowMsg = showHide
+
+        if ( showHide === false || showHide === undefined) {
+            this._uiRemove( {
+                components: [
+                    '#nrmsg',
+                ],
+            })
+        } else {
+            this._uiAdd({
+                parent: parent,
+                components: [
+                    {
+                        type: 'pre',
+                        id: 'nrmsg',
+                        attributes: {
+                            title: 'Last message from Node-RED',
+                            class: 'syntax-highlight',
+                        },
+                        slot: 'Waiting for a message from Node-RED',
+                    }
+                ]
+            }, false)
+        }
+    }
+
+    //#endregion -------- -------- -------- //
+
+    //#region ------- HTML cache and DOM watch --------- //
+
     /** Clear the saved DOM from localStorage */
     clearHtmlCache() {
         this.removeStore('htmlCache')
@@ -2270,6 +2308,14 @@ export const Uib = class Uib {
 
         // Check if Vue is present (used for dynamic UI processing)
         if (window['Vue']) this.#isVue = true
+
+        // Set up msg listener for the optional showMsg
+        this.onChange('msg', (msg) => {
+            if (this.#isShowMsg === true) {
+                const eMsg = document.getElementById('nrmsg')
+                if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg)
+            }
+        })
 
         this._dispatchCustomEvent('uibuilder:startComplete')
     }

@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder modern front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-01-28 16:12:25
+lastUpdated: 2023-02-11 16:13:59
 ---
 
 Functions accessible in user code.
@@ -160,6 +160,42 @@ Requires a valid URL that returns correct _ui data. For example, a JSON file del
 ### `replaceSlotMarkdown(el, component)` - Attach a new text script to the end of HEAD synchronously
 ### `showDialog(type, ui, msg)` - Attach a new text script to the end of HEAD synchronously
 
+### `showMsg(boolean, parent=body)` - Show/hide a card to the end of BODY that automatically updates and shows the latest incoming msg from Node-RED
+
+Simply add `uibuilder.showMsg(true)` early in your index.js custom code and a box will be added to the end of your page that will automatically show the last message sent from Node-RED.
+
+`uibuilder.showMsg(false)` or `uibuilder.showMsg()` will remove the box and stop the updates.
+
+You can also position the box in a different location by specifying a "parent". This is a CSS selector that, if found on the page, uibuilder will add the box to the end of. For example, `uibuilder.showMsg(true, 'h1')` would attach the box to the end of a heading level 1 element on the page. Don't forget that the box will inherit at least some of the CSS style from the parent, so attaching to an H1 element will make the text much bigger.
+
+### `syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as HTML formatted
+
+Requires some CSS that is contained in both the `uib-brand.css` and older `uib-styles.css`. Feel free to copy to your own CSS if you don't want to reference those files.
+
+Use as:
+
+```javascript
+const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
+if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
+```
+
+## HTML/DOM Cacheing
+
+### `watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage
+
+`uibuilder.watchDom(true)` will start the browser watching for any changes to the displayed HTML. When it detects a change, it automatically saves the new HTML (the whole page) to the browser's `localStorage`. This persists across browser and device restarts.
+
+You can ensure that the page display looks exactly like the last update upon page load simply by adding `uibuilder.restoreHtmlFromCache()` at the start of your index.js custom code.
+
+> [!note]
+> Browser `localStorage` capacity is set by the browser, not uibuilder. Very large pages might concevably fill the storage as might other things saved to it.
+>
+> You should be able to change the capacity in the browser settings but of course, this would have to be done on every client device.
+
+### `clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage
+### `restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage
+### `saveHtmlCache()` - Manually saves the currently displayed HTML to the browser localStorage
+
 ## Event Handling
 
 ### `onChange(prop, callbackFn)` - Register on-change event listeners for uibuilder tracked properties
@@ -229,13 +265,4 @@ First argument is the log level (0=Error, 1=Warn, 2=Info, 3=log, 4=debug, 5=trac
 
 The first 2 arguments are required. All remaining arguments are included in the output and may include array, objects, etc.
 
-### `syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as HTML formatted
-
-Requires some CSS that is contained in both the `uib-brand.css` and older `uib-styles.css`. Feel free to copy to your own CSS if you don't want to reference those files.
-
-Use as:
-
-```javascript
-const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
-if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
-```
+To set the log level to display in your code, use `uibuilder.logLevel = 5` or `uibuilder.logLevel = 'trace`. Set to your desired level.
