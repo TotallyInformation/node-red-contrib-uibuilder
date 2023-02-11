@@ -146,6 +146,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
 
+* Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
+
 * Improvements to `uib-cache` node
   * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
   * Add cache clear button to complement the cache clear control msg
