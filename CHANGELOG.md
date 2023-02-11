@@ -4,13 +4,17 @@ typora-root-url: docs/images
 
 # Changelog
 
-Please see the Tech Docs for archived changelogs - a new archive is produced for each major version.
+Please see the documentation for archived changelogs - a new archive is produced for each major version.
 
-## Known current limitations
+## Notes for the current version
 
-Note that v6.1.0 makes the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) current and the old client library (`uibuilderfe.js`) is now no longer recommended and is not being updated, it is on the road to being deprecated. The experimental `uib-list` node will now also be deprecated, the features are moved to the new `uib-element` node. The new `uib-brand.css` style library still needs quite a bit of additional work.
+v6.1.0 makes the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) current and the old client library (`uibuilderfe.js`) is now no longer recommended and is not being updated, it is on the road to being deprecated. 
 
-Dynamic content does not currently work with VueJS (and probably other frameworks that rely on pre-building components). Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only. And of course, it is possible - but probably less useful - to combine the vanilla HTML from the low-/no-code features with front-end frameworks such as Vue.
+The experimental `uib-list` node will now be deprecated, the features are moved to the new `uib-element` node.
+
+The new `uib-brand.css` style library is not yet feature complete - if you find something missing or wrong, please raise an issue.
+
+Dynamic content does not currently work with VueJS (and probably not other frameworks that rely on pre-building components). Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only. And of course, it is possible - but probably less useful - to combine the vanilla HTML from the low-/no-code features with front-end frameworks such as Vue.
 
 ### Needs Fixing
 
@@ -19,6 +23,8 @@ Dynamic content does not currently work with VueJS (and probably other framework
 ```
 
 element - update mode - change to replace mode? Replace mode looks for root id, if found, replace outerHTML, if not found add.
+
+Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'"
 
 ## To do/In-progress
 
@@ -57,6 +63,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Send updates to an existing HTML element (using a selector). Uses _ui mode `update`
 
+### Client library
+
+* Add **new function** `uibuilder.showMsg(true)` - Adds a visual display of incoming messages from Node-RED to the web page. Use `uibuilder.showMsg(true)` to remove it.
+
 ### Examples
 
 * Update all to use new libs and updated templates
@@ -70,9 +80,8 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 ### Doc updates
 
-* `isVisible`, `tabId` and `syntaxHighlight(json)` in new client builds.
+* `isVisible`, `tabId` and `syntaxHighlight(json)`, `watchDom`, `showMsg`, clearHtmlCache, restoreHtmlFromCache, saveHtmlCache in new client builds.
 * Updated `msg._uib` optional in standard msgs
-* Move v5 changes to archive log
 * Notes on limitation of dynamic UI for Vue, etc.
 * WIKI
   * Update examples
@@ -85,11 +94,10 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
   * Set `.markdown-section h3 {border-bottom-width: thin;}`
   * Set `--heading-h3-border-color: var(--mono-tint2)`
 
-* Document new client fns: clearHtmlCache, restoreHtmlFromCache, saveHtmlCache
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.0.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.0...main)
 
 <!-- Nothing currently. -->
 
@@ -100,6 +108,7 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 * New zero-code nodes `uib-element` and `uib-update` let you use simple data to create dynamic web UI's.
 * The client library has a number of fixes and new features
   * New functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
+  * New function: `uibuilder.watchDom(true)` Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
   * Reports changes of visibility back to node-red via a new control msg.
   * Creates a `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
   * Extensions to the `eventSend` function to include form data and value changes.
@@ -171,7 +180,9 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 * Added a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified. Note that if the default topic is not set, messages will inherit the topic from the _previous inbound message_ if that had a topic.
 
-* Added `uibuilder.syntaxHighlight(json)` function - standard function that converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
+* Added **new function** `uibuilder.syntaxHighlight(json)` - Converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
+
+* Added **new function** `uibuilder.showMsg(true)` - Adds a visual display of incoming messages from Node-RED to the web page. Use `uibuilder.showMsg(true)` to remove it.
 
 * Added a unique tab identifier `uibuilder.tabId` that remains while the tab does. Is include in std outputs. Based on [this](https://stackoverflow.com/questions/11896160/any-way-to-identify-browser-tab-in-javascript). NOTE however, that duplicating the browser tab will result in a duplicate tab id.
 
@@ -188,6 +199,8 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 * Added **new function** `uibuilder.beaconLog(txtToSend, logLevel)` which allows sending a simple, short log message back to Node-RED even if socket.io is not connected. In Node-RED, outputs to the Node-RED log and sends a uibuilder control message where `msg.uibuilderCtrl` = "client beacon log".
 
 * Added **new function** `uibuilder.logToServer()` which will take any number and type of arguments and send them all back to Node-RED in the msg.payload of a _control_ message (out of port #2) where `msg.uibuilderCtrl` = "client log message". Client details are added to the message.
+
+* Added **new function** `uibuilder.watchDom(true)` - Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
 
 * Added 2 new events: `uibuilder:constructorComplete` and `uibuilder:startComplete`. Mostly for potential internal use.
 
@@ -241,6 +254,7 @@ Each element can have an optional heading. If used, a aria-labelledby attribute 
 * Removed the (c) from the remaining templates. There is no (c) on any of them. They all fall under MIT license. Use as you will, there are no intellectual property restraints on the template code.
 * Change all to load client from `../uibuilder/uibuilder.xxx.min.js` instead of `./uibuilder.xxx.min.js` for consistency with other standard and installed library loads. Note that both locations remain valid.
 * Moved all scripts to head with defer now we no longer expect IE. Much cleaner code.
+* Changed templates to use CSS from `../uibuilder/uib-brand.css` rather than `./uib-brand.css` for better consistency.
 * Updated:
   * [x] blank
   * [x] blank-iife-client
@@ -276,6 +290,7 @@ Each element can have an optional heading. If used, a aria-labelledby attribute 
 * Improvements to h1-h5 headings to make them stand out more clearly.
 * Split the "The modern front-end client" into multiple pages for easier reading and navigation.
 * Updated the modern front-end client docs with the latest client updates.
+* Renamed "Tech Docs" to "Docs" throughout.
 
 ## [v6.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.0.0...v5.1.1)
 
@@ -346,39 +361,5 @@ Each element can have an optional heading. If used, a aria-labelledby attribute 
   * Add uib url to name display
 
 * Various library improvements including some trace and info log msg improvements.
-* Tech docs - updated to indicate the the old client library is now functionally stabilised and will eventually be deprecated.
+* Documentation - updated to indicate the the old client library is now functionally stabilised and will eventually be deprecated.
 * uibindex page (adminapiv2.js) - Add folders to Vendor Routes table (from `packageMgt.uibPackageJson.uibuilder.packages`).
-
-## Experimental and partially working new features
-
-**WARNING**: _Consider these features **experimental**, some parts may not work and might even cause Node-RED to crash if used. Do not yet use on production._
-
-### NOT YET FULLY WORKING
-
-- Added configuration option to add browser/proxy caching control to all static assets - set the length of time before assets will be reloaded from the server. This may sometimes significantly improve performance in the browser. It depends on the performance of your server and the complexity of the UI.
-
-  Added on options variable for serve-static to allow control of caching & other headers. `uib.staticOpts`.
-
-  Some static folders are served at module level and so don't have access to instance settings. Would likely need to have different settings on global serves from instance ones. _Needs more thought_.
-
-  This lets you control caching of your "static" assets like JavaScript, HTML, CSS, Images and any installed front-end library resources (Vue, etc).
-
-  Note that this is **not** for caching the msg's coming through the node, see the caching examples in the WIKI for that.
-
-- If you use Node-RED's projects feature, restart Node-RED after changing projects otherwise uibuilder will not recognise the new root folder location.
-  
-----
-
-Because of the many changes in v5, the v3/v4 changelog has been moved to a separate file: [v3/v4 Changelog](/docs/CHANGELOG-v3-v4.md).
-Similarly, older chanegs are in: [v1 Changelog](/docs/CHANGELOG-v1.md), [v2 Changelog](/docs/CHANGELOG-v2.md).
-
-----
-
-## Types of changes
-
-- **Added** for new features.
-- **Changed** for changes in existing functionality.
-- **Deprecated** for soon-to-be removed features.
-- **Removed** for now removed features.
-- **Fixed** for any bug fixes.
-- **Security** in case of vulnerabilities.

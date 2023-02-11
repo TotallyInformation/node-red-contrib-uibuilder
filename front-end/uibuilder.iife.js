@@ -2416,6 +2416,7 @@
       __privateAdd(this, _timerid, null);
       __privateAdd(this, _MsgHandler, void 0);
       __publicField(this, "_socket");
+      __publicField(this, "_htmlObserver");
       __publicField(this, "clientId", "");
       __publicField(this, "cookies", {});
       __publicField(this, "ctrlMsg", {});
@@ -3135,25 +3136,37 @@
     }
     clearHtmlCache() {
       this.removeStore("htmlCache");
+      log("trace", "uibuilder.module.js:clearHtmlCache", "HTML cache cleared")();
     }
     restoreHtmlFromCache() {
       const htmlCache = this.getStore("htmlCache");
       if (htmlCache) {
         const targetNode = document.getElementsByTagName("html")[0];
         targetNode.innerHTML = htmlCache;
-        const eMsg = document.getElementById("msg");
-        if (eMsg)
-          eMsg.innerText = "Waiting for a message from Node-RED";
+        log("trace", "uibuilder.module.js:restoreHtmlFromCache", "Restored HTML from cache")();
+      } else {
+        log("trace", "uibuilder.module.js:restoreHtmlFromCache", "No cache to restore")();
       }
     }
     saveHtmlCache() {
+      this.setStore("htmlCache", document.documentElement.innerHTML);
+    }
+    watchDom(startStop) {
       const targetNode = document.documentElement;
       const that = this;
-      const observer = new MutationObserver(function() {
-        this.takeRecords();
-        that.setStore("htmlCache", targetNode.innerHTML);
-      });
-      observer.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
+      if (!this._htmlObserver) {
+        this._htmlObserver = new MutationObserver(function() {
+          this.takeRecords();
+          that.saveHtmlCache();
+        });
+      }
+      if (startStop === true || startStop === void 0) {
+        this._htmlObserver.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
+        log("trace", "uibuilder.module.js:watchDom", "Started Watching and saving DOM changes")();
+      } else {
+        this._htmlObserver.disconnect();
+        log("trace", "uibuilder.module.js:watchDom", "Stopped Watching and saving DOM changes")();
+      }
     }
     _send(msgToSend, channel, originator = "") {
       if (channel === null || channel === void 0)

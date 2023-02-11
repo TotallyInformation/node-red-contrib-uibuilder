@@ -308,6 +308,8 @@ export const Uib = class Uib {
     #MsgHandler
     // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
     _socket
+    // Placeholder for an observer that watches the whole DOM for changes - can't make a # var until # fns allowed in all browsers
+    _htmlObserver
 
     //#endregion
 
@@ -1462,10 +1464,13 @@ export const Uib = class Uib {
 
     } // --- end of _uiManager ---
 
+    /** Clear the saved DOM from localStorage */
     clearHtmlCache() {
         this.removeStore('htmlCache')
+        log('trace', 'uibuilder.module.js:clearHtmlCache', 'HTML cache cleared')()
     }
 
+    /** Restore the complete DOM (the whole web page) from browser localStorage if available */
     restoreHtmlFromCache() {
         // Is the html cached? If so, restore it
         const htmlCache = this.getStore('htmlCache')
@@ -1473,14 +1478,29 @@ export const Uib = class Uib {
             const targetNode = document.getElementsByTagName('html')[0]
             // Restore the entire HTML
             targetNode.innerHTML = htmlCache
-            // Blank out the old received msg
-            const eMsg = document.getElementById('msg')
-            if (eMsg) eMsg.innerText = 'Waiting for a message from Node-RED'
+            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'Restored HTML from cache')()
+        } else {
+            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'No cache to restore')()
         }
     }
 
-    /** Use the Mutation Observer browser API to watch for and save changes to the HTML */
+    /** Save the current DOM state to browser localStorage.
+     * localStorage is persistent and so can be recovered even after a browser restart.
+     */
     saveHtmlCache() {
+        // Save the updated entire HTML in localStorage
+        this.setStore('htmlCache', document.documentElement.innerHTML)
+    }
+
+    /** Use the Mutation Observer browser API to watch for and save changes to the HTML
+     * Once the observer is created, it will be reused.
+     * Sending true or undefined will turn on the observer, false turns it off.
+     * saveHtmlCache is called whenever anything changes in the dom. This allows
+     * users to call restoreHtmlFromCache() on page load if desired to completely reload
+     * to the last saved state.
+     * @param {boolean} startStop true=start watching the DOM, false=stop
+     */
+    watchDom(startStop) {
         // Select the node that will be observed for mutations
         const targetNode = document.documentElement
 
@@ -1488,16 +1508,24 @@ export const Uib = class Uib {
         const that = this
 
         // Create an observer instance
-        const observer = new MutationObserver( function() {
-            // We don't need to know the details - so kill off any outstanding mutation records
-            this.takeRecords()
-            // Save the updated entire HTML in localStorage
-            that.setStore('htmlCache', targetNode.innerHTML)
-        } )
+        if (!this._htmlObserver) {
+            this._htmlObserver = new MutationObserver( function(/* mutationList, observer */) {
+                // We don't need to know the details - so kill off any outstanding mutation records
+                this.takeRecords()
+                // Save the updated entire HTML in localStorage
+                that.saveHtmlCache()
+            } )
+        }
 
-        // Start observing the target node for configured mutations
-        observer.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true })
-    }
+        if (startStop === true || startStop === undefined) {
+            // Start observing the target node for configured mutations
+            this._htmlObserver.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true })
+            log('trace', 'uibuilder.module.js:watchDom', 'Started Watching and saving DOM changes')()
+        } else {
+            this._htmlObserver.disconnect()
+            log('trace', 'uibuilder.module.js:watchDom', 'Stopped Watching and saving DOM changes')()
+        }
+    } // ---- End of watchDom ---- //
 
     //#endregion -------- -------- -------- //
 
