@@ -208,6 +208,7 @@ Please refer to the [contributing guidelines](https://github.com/TotallyInformat
 - [Calum Knott](https://github.com/calumk) - Thanks for the tidied up node-blue logo.
 - [Harold Peters Inskipp](https://github.com/HaroldPetersInskipp) - Thanks for the logging examples.
 - [dczysz](https://github.com/dczysz) - Thanks for reporting [Issue #186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186) and helping work through the complex async bug.
+- [Colin J (mudwalkercj)](https://github.com/mudwalkercj) - Thanks for helping with the documentation.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 
