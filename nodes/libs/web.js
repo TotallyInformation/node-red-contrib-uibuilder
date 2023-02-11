@@ -167,7 +167,7 @@ class UibWeb {
          */
         const techDocsPath = path.join(__dirname, '..', '..', 'docs')
         this.adminRouter.use('/docs', express.static( techDocsPath, this.uib.staticOpts ) )
-        this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/docs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
+        this.routers.admin.push( { name: 'Documentation', path: `${this.RED.settings.httpAdminRoot}uibuilder/docs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
         this.adminRouter.use('/techdocs', express.static( techDocsPath, this.uib.staticOpts ) )
         this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/techdocs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
 
@@ -514,7 +514,7 @@ class UibWeb {
          *   (3) Master static folders - for the built-in front-end resources (css, default html, uibuilderfe, etc)
          *   (4) [Optionally] The folder lister
          *   (5) Common static folder is last
-         * TODO Make sure the above is documented in Tech Docs
+         * TODO Make sure the above is documented in Docs
          */
 
         // (1.) Instance log route (./_clientLog)

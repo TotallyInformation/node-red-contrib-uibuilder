@@ -50,7 +50,7 @@ The `uibuilder Details` button opens a page showing the full configuration of ui
 
 The `Instance Details` button opens a page with a summary of the configuration and web routes for this instance.
 
-The `Tech Docs` button opens the local copy of this documentation.
+The `Docs` button opens the local copy of this documentation.
 
 ### Info panel
 

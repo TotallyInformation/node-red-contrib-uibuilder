@@ -97,7 +97,7 @@ This file contains the global settings for Node-RED. You can add a new property 
 
         /** Controls whether the uibuilder instance API feature is enabled
          *  Off by default since uncontrolled instance api's are a security and 
-         *  operational risk. Use with caution. See Tech Docs for details.
+         *  operational risk. Use with caution. See Docs for details.
          */
         instanceApiAllowed: true,
    },

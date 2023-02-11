@@ -50,7 +50,7 @@ Current focus (beyond what has already been developed) is on:
 * _STARTED_. Creating a new front-end library. Simplified and more robust, using ES2019 and supporting configuration-driven web interfaces.
 * _STARTED_, see [web-components](https://github.com/TotallyInformation/web-components). Creating W3C web components to replace the VueJS ones - especially for the ones baked into the fe code. Noting that v5 already contains a non-Vue toast notification feature.
 * _STARTED_. Displaying and enabling updatable packages in the package manager. The data is now in place, the Editor panel needs updating.
-* Continuing to improve the technical documentation. Updating details and changes, adding how-to's, moving some things from the WIKI. Improving language consistency.
+* Continuing to improve the documentation. Updating details and changes, adding how-to's, moving some things from the WIKI. Improving language consistency.
 * Start moving towards ECMA Modules rather than CommonJS.
 
 Next immediate focus will be on:
@@ -293,7 +293,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 
 * Updates to Documentation
-  * Tech Docs: Update glossary with ESM, ECMA, UMD, IIFE
+  * Update glossary with ESM, ECMA, UMD, IIFE
   * Split the new client library, move _ui features to separate page.
   * Add message interaction diagram to "pre-defined-msgs.md"
   * Add note to documentation for the library manager that you can install LOCAL folders.

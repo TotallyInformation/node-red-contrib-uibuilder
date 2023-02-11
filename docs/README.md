@@ -176,4 +176,4 @@ Some information on testing uibuilder. Unfortunately, I have no real clue about 
 * [v1 Changelog](archived/CHANGELOG-v1.md)
 
 > [!TIP]
-> These are the docs for uibuilder v6. If you need the v5 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate uibuilder version: `npm install node-red-contrib-uibuilder@5` then use the tech docs links from a uibuilder node.
+> These are the docs for uibuilder v6. If you need the v5 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate uibuilder version: `npm install node-red-contrib-uibuilder@5` then use the documentation links from a uibuilder node.

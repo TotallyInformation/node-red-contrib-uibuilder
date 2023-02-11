@@ -5,7 +5,7 @@
  *  with Vue and bootstrap-vue.
  *
  * Note that uibuilder.start() should no longer be needed.
- * See the Tech docs if the client doesn't start on its own.
+ * See the docs if the client doesn't start on its own.
  */
 
 // logLevel 2+ shows more built-in logging. 0=error,1=warn,2=info,3=log,4=debug,5=trace.

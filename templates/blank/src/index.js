@@ -2,7 +2,7 @@
 
 /** The simplest use of uibuilder client library
  * Note that uibuilder.start() should no longer be needed.
- * See the Tech docs if the client doesn't start on its own.
+ * See the docs if the client doesn't start on its own.
  */
 'use strict'
 

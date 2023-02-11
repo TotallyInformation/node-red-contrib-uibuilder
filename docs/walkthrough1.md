@@ -80,7 +80,7 @@ You now have a fully working uibuilder configuration. However, it doesn't do any
 Now that you have the basics running, it is time to look at the front-end code. The important points to remember are:
 
 * The code is completely standard web code using HTML, CSS and JavaScript (and any libraries you might choose to use).
-* There is a JavaScript helper library that provides the magic connections between the front and back ends. See the technical docs for more information. A second library called `socket.io-client` is also loaded for you in the background, it enables the communications to/from Node-RED. The uibuilder client library will be one of: `uibuilder.iife.min.js` or `uibuilder.min.esm.min.js`. There is an older library, `uibuilderfe.min.js` but this is deprecated (as of uibuilder v6+) and should be replaced.
+* There is a JavaScript helper library that provides the magic connections between the front and back ends. See the documentation for more information. A second library called `socket.io-client` is also loaded for you in the background, it enables the communications to/from Node-RED. The uibuilder client library will be one of: `uibuilder.iife.min.js` or `uibuilder.min.esm.min.js`. There is an older library, `uibuilderfe.min.js` but this is deprecated (as of uibuilder v6+) and should be replaced.
 * All of the front-end code for a uibuilder node instance is stored in a single folder (with some pre-defined and any desired sub-folders).
 
 There are two ways to look at and change the content of an instance's root folder (which, remember, sits on the Node-RED server).
