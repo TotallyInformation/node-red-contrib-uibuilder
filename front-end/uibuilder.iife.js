@@ -3223,7 +3223,7 @@
       if (originator !== "")
         Object.assign(msgToSend, { "_uib": { "originator": originator } });
       if (!Object.prototype.hasOwnProperty.call(msgToSend, "topic")) {
-        if (this.topic !== void 0)
+        if (this.topic !== void 0 && this.topic !== "")
           msgToSend.topic = this.topic;
         else {
           if (Object.prototype.hasOwnProperty.call(this, "msg") && Object.prototype.hasOwnProperty.call(this.msg, "topic")) {

@@ -11,7 +11,7 @@ lastUpdated: 2023-01-28 15:57:02
 
 Always use `uibuilder.set('varname', value)` to change these.
 
-* `topic` - Sets a default `msg.topic` that will be added to all outbound messages if nothing takes preference.
+* `topic` - Sets a default `msg.topic` that will be added to all outbound messages if nothing takes preference. Set to an empty string to turn it off.
 
 * `logLevel` - Sets the current logging level. The default is `2` ('error' and 'warn'). Increase to see more detailed logging.
   

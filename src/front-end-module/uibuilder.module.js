@@ -1,6 +1,6 @@
 /** This is the Front-End JavaScript for uibuilder  in HTML Module form
  * It provides a number of global objects that can be used in your own javascript.
- * @see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
+ * see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
  *
  * Please use the default index.js file for your own code and leave this as-is.
  * See Uib._meta for client version string
@@ -281,7 +281,9 @@ function urlJoin() {
 
 //#endregion --- Module-level utility functions --- //
 
-// Define and export the Uib class - note that an instance of the class is also exported in the wrap-up
+/** Define and export the Uib class - note that an instance of the class is also exported in the wrap-up
+ * @typicalname uibuilder
+ */
 export const Uib = class Uib {
 
     //#region private class vars
@@ -1619,7 +1621,7 @@ export const Uib = class Uib {
         // If the msg does not have a topic - see if we want to add one
         if ( !Object.prototype.hasOwnProperty.call(msgToSend, 'topic') ) {
             // From the default (`uibuilder.set('topic', 'some topic')`)
-            if (this.topic !== undefined) msgToSend.topic = this.topic
+            if (this.topic !== undefined && this.topic !== '') msgToSend.topic = this.topic
             else {
                 // Did the last inbound msg have a topic?
                 if ( Object.prototype.hasOwnProperty.call(this, 'msg') && Object.prototype.hasOwnProperty.call(this.msg, 'topic') ) {
