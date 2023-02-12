@@ -624,6 +624,17 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
     border-radius: var(--border-radius);
 }
 
+/* Apply to headings where you want a sub-title */
+.with-subtitle {
+    margin-bottom: 0;
+}
+/* Add the subtitle as a div with the Aria role */
+[role="doc-subtitle"] {
+    font-size: smaller;
+    font-style: italic;
+    margin-bottom: 1em;
+}
+
 /*#endregion ---- Utility ---- */
 
 /*#region -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
