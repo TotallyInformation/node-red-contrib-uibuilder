@@ -6,17 +6,19 @@ created: 2023-02-05 16:31:39
 lastUpdated: 2023-02-05 16:31:46
 ---
 
-?> This page is about configuring an individual uibuilder node in the Node-RED Editor. If you are looking for how to configure uibuilder as a whole, please refer to the [Configuring uibuilder](uib-configuration.md) page.
-
-<!-- ![uibuilder node configuration panel >](2022-04-09-18-16-24.png) -->
-<img style="float:right;max-width:30%" src="2022-04-09-18-16-24.png" alt="uibuilder node configuration panel" title="uibuilder node configuration panel">
+> [!note]
+> This page is about configuring an individual uibuilder node in the Node-RED Editor. If you are looking for how to configure uibuilder as a whole, please refer to the [Configuring uibuilder](uib-configuration.md) page.
 
 A uibuilder node that has been added to a flow is configured using its Editor configuration panel. Open this by double-clicking on the node you want to configure.
 
+> [!tip]
+> When setting up a new uibuilder node, you will note that you cannot change many settings until you have set the URL and deployed the change. This is to ensure that the node has the server folder to work with. Once the folder exists, you can make other changes.
 
 The panel is split into several tabs: Core, Files, Libraries, and Advanced.
 
 ## Core Tab
+
+![uibuilder node configuration panel >](../images/uibuilder-config-core.jpg)
 
 This is the main tab.
 
@@ -24,9 +26,7 @@ This is the main tab.
 
 The URL field defines the last part of the URL for this uibuilder instance. 
 
-!> When setting up a new uibuilder node, you will note that you cannot change many settings until you have set the URL and deployed the change. This is to ensure that the node has the server folder to work with. Once the folder exists, you can make other changes.
-
-A URL of `test` will result in a full URL that looks something like `http://localhost:1880/test`. (Of course, yours may look different depending on your setup).
+A URL of `test` will result in a full URL that looks something like `http://localhost:1880/test`. (Yours may look different depending on the configuration of Node-RED's settings).
 
 The Open button just below the URL will open this default location. The actual file that is opened is `/test/index.html`.
 

@@ -7,13 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="./images/favicon.ico">
 
-    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify/themes/vue.css" /> -->
-    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/style.min.css"
-        title="docsify-darklight-theme" type="text/css" /> -->
-    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable/dist/css/theme-simple.css"> -->
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/style.min.css" type="text/css">
-    <!-- docsify-themeable styles-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable/dist/css/theme-simple.css" title="light">
     <link rel="stylesheet alternative" href="https://cdn.jsdelivr.net/npm/docsify-themeable/dist/css/theme-simple-dark.css" title="dark">
     <style>
@@ -54,7 +48,9 @@
         img[alt$=">"] {
             /* use as ![image alt >](/image-right.jpg) */
             float: right;
-            max-width: 20%;
+            max-width: 30%;
+            position: relative;
+            z-index: 1;
         }
         img[alt$="<"] {
             float: left;
@@ -72,6 +68,19 @@
         .markdown-section h2 { border-bottom-width: thick;}
         .markdown-section h3 { border-bottom-width: thin;}
         
+        .flex-container {
+            display: flex;
+            flex-direction: row;
+        }
+        .flex-left {
+            width: 69%;
+            margin-right: 1%;
+        }
+        .flex-right {
+            width: 29%;
+            margin-left: 1%;
+        }
+
         /* .callout {
             max-width: 100%; 
         } */
@@ -81,8 +90,6 @@
     <script src="https://cdn.jsdelivr.net/npm/docsify-edit-on-github/index.min.js"></script>
     <script>
         'use strict'
-        // https://docsify.js.org/
-        // https://jhildenbiddle.github.io/docsify-themeable
         window.$docsify = { //  eslint-disable-line no-undef
             name: 'uibuilder Documentation v6',
             repo: 'TotallyInformation/node-red-contrib-uibuilder',
@@ -108,8 +115,6 @@
                 placeholder: 'Search...'
             },
             pagination: {
-                // previousText: '上一章节',
-                // nextText: '下一章节',
                 crossChapter: true,
                 crossChapterText: true,
             },
@@ -208,22 +213,13 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/index.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/main.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/index.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js">/* see https://cdn.jsdelivr.net/npm/prismjs@1/components/ */</script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-nginx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/front-matter.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-mustache/dist/docsify-mustache.min.js">/* https://ppipada.github.io/post/markdown/2020-04-29-docsify-mustache/ */</script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-mustache/dist/docsify-mustache.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts/dist/docsify-plugin-flexible-alerts.min.js">/* https://github.com/fzankl/docsify-plugin-flexible-alerts/ */</script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js">/* https://github.com/jperasmus/docsify-copy-code/#docsify-copy-code */</script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/docsify-tabs/dist/docsify-tabs.min.js">/* https://jhildenbiddle.github.io/docsify-tabs/#/ */</script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/docsify-select">/* https://jthegedus.github.io/docsify-select */</script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@markbattistella/docsify-autoheaders">/* https://github.com/markbattistella/docsify-autoHeaders/#docsify-autoheaders */</script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/docsify-include-template/index.min.js">/* https://github.com/kissybnts/docsify-include-template/#docsify-include-template */</script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/docsify-example-panels/dist/docsify-example-panels.min.js">/* https://vagnerdomingues.github.io/docsify-example-panels/#/ */</script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/docsify-accordify/src/index.min.js">/* https://www.npmjs.com/package/docsify-accordify */</script> -->
-
-    <!--<script src="//cdn.jsdelivr.net/npm/vue@2/dist/vue.min.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts/dist/docsify-plugin-flexible-alerts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
 </body></html>

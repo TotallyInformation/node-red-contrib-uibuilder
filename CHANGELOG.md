@@ -73,6 +73,7 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 ### Templates
 * Make the blank template truly blank
 * Remove all msg displays. Add comment for showMsg, commented out for blank, in for others.
+* [TotallyInformation/uib-template-svelte-simple](https://github.com/TotallyInformation/uib-template-svelte-simple), [TotallyInformation/uib-template-test](https://github.com/TotallyInformation/uib-template-test),
 
 ### Doc updates
 
@@ -83,6 +84,7 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
   * Update examples
 * Flows site
   * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
+* Update caching info to include info on html cache.
 
 * HTML
   *     --heading-h2-border-color: var(--mono-tint2);
@@ -102,14 +104,17 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 > Please remember that no changes are being made to the old `uibuilderfe.js` client. Nothing listed here applies to that.
 
 * New zero-code nodes `uib-element` and `uib-update` let you use simple data to create dynamic web UI's.
+
 * The client library has a number of fixes and new features
+  * Extensions to the `eventSend` function to include **form data** and **value changes**. Should greatly simplify creating and using FORMs and providing quick inputs for Node-RED flows.
+
   * New function: `uibuilder.showMsg(true)` Displays an on-screen card at the end of the current display that automatically updates with the last msg received from Node-RED. `uibuilder.showMsg(false)` turns it off.
-  * New functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
   * New function: `uibuilder.watchDom(true)` Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
-  * Reports changes of visibility back to node-red via a new control msg.
-  * Creates a `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
-  * Extensions to the `eventSend` function to include form data and value changes.
-  * Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference.
+  * New functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
+
+  * Reports changes of **visibility** of the page back to node-red via a new control msg.
+  * Creates a browser `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
+  * Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference. Reset by setting to an empty string.
 * If you turn on the advanced option "Include msg._uib in standard msg output.", messages from the client now include client details for you to use in your own security processing or just to identify where things have come from (e.g. what page name as well as what client).
 * All of the templates and example flows have been refreshed with the latest standards.
 * Plenty of documentation updates and additions.
@@ -175,7 +180,7 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
     Alternatively, `onfocus="this.uib_oldvalue = this.value"` would cause the previous value to be included as `msg._ui.props.uib_oldvalue`.
 
-* Added a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified. Note that if the default topic is not set, messages will inherit the topic from the _previous inbound message_ if that had a topic.
+* Added a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified. Note that if the default topic is not set, messages will inherit the topic from the _previous inbound message_ if that had a topic. Reset by setting to an empty string.
 
 * Added **new function** `uibuilder.syntaxHighlight(json)` - Converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
 

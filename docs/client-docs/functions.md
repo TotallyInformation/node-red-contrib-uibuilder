@@ -1,13 +1,60 @@
 ---
 title: Functions available in the modern client
 description: >
-   Details about the functions/methods used in the uibuilder modern front-end client library.
+   Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-02-11 16:13:59
+lastUpdated: 2023-02-12 15:34:39
 ---
 
-Functions accessible in user code.
+Functions accessible in client-side user code.
+
+- [`start(options)` - (Mostly no longer needed) Starts Socket.IO communications with Node-RED](#startoptions---mostly-no-longer-needed-starts-socketio-communications-with-node-red)
+- [Message Handling](#message-handling)
+  - [`send(msg, originator = '')` - Send a custom message back to Node-RED](#sendmsg-originator-----send-a-custom-message-back-to-node-red)
+  - [`eventSend(domevent, originator = '')` - Send a standard message back to Node-RED in response to a DOM event](#eventsenddomevent-originator-----send-a-standard-message-back-to-node-red-in-response-to-a-dom-event)
+  - [`setOriginator(originator = '')` - Set/clear the default originator](#setoriginatororiginator-----setclear-the-default-originator)
+  - [`sendCtrl(msg)` - Send a custom control message back to Node-RED](#sendctrlmsg---send-a-custom-control-message-back-to-node-red)
+  - [`beaconLog(txtToSend, logLevel)` - Send a short log message to Node-RED](#beaconlogtxttosend-loglevel---send-a-short-log-message-to-node-red)
+  - [~~logToServer()~~ - Not yet available. Will cause the input to appear in Node-RED logs](#logtoserver---not-yet-available-will-cause-the-input-to-appear-in-node-red-logs)
+- [Variable Handling](#variable-handling)
+  - [`get(prop)` - Get a uibuilder property](#getprop---get-a-uibuilder-property)
+      - [Example](#example)
+  - [`set(prop, val)` - Set a uibuilder property and dispatch a change event](#setprop-val---set-a-uibuilder-property-and-dispatch-a-change-event)
+      - [Example](#example-1)
+  - [`getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage](#getstoreid---attempt-to-get-and-re-hydrate-a-key-value-from-browser-localstorage)
+  - [`setStore(id, val)` - Attempt to save to the browsers localStorage](#setstoreid-val---attempt-to-save-to-the-browsers-localstorage)
+  - [`removeStore(id)` - Attempt to remove a uibuilder key from browser localStorage](#removestoreid---attempt-to-remove-a-uibuilder-key-from-browser-localstorage)
+  - [`setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED](#setpingms---set-a-repeating-pingkeep-alive-http-call-to-node-red)
+      - [Example](#example-2)
+- [UI Handling](#ui-handling)
+  - [`ui(json)` - Directly manage UI via JSON](#uijson---directly-manage-ui-via-json)
+  - [`loadui(url)` - Load a dynamic UI from a JSON web reponse](#loaduiurl---load-a-dynamic-ui-from-a-json-web-reponse)
+  - [`loadScriptSrc(url)` - Attach a new remote script to the end of HEAD synchronously](#loadscriptsrcurl---attach-a-new-remote-script-to-the-end-of-head-synchronously)
+  - [`loadStyleSrc(url)` - Attach a new remote style to the end of HEAD synchronously](#loadstylesrcurl---attach-a-new-remote-style-to-the-end-of-head-synchronously)
+  - [`loadScriptTxt(string)` - Attach a new text script to the end of HEAD synchronously](#loadscripttxtstring---attach-a-new-text-script-to-the-end-of-head-synchronously)
+  - [`loadStyleTxt(string)` - Attach a new text style to the end of HEAD synchronously](#loadstyletxtstring---attach-a-new-text-style-to-the-end-of-head-synchronously)
+  - [`replaceSlot(el, component)` - Attach a new text script to the end of HEAD synchronously](#replaceslotel-component---attach-a-new-text-script-to-the-end-of-head-synchronously)
+  - [`replaceSlotMarkdown(el, component)` - Attach a new text script to the end of HEAD synchronously](#replaceslotmarkdownel-component---attach-a-new-text-script-to-the-end-of-head-synchronously)
+  - [`showDialog(type, ui, msg)` - Attach a new text script to the end of HEAD synchronously](#showdialogtype-ui-msg---attach-a-new-text-script-to-the-end-of-head-synchronously)
+  - [`showMsg(boolean, parent=body)` - Show/hide a card to the end of BODY that automatically updates and shows the latest incoming msg from Node-RED](#showmsgboolean-parentbody---showhide-a-card-to-the-end-of-body-that-automatically-updates-and-shows-the-latest-incoming-msg-from-node-red)
+  - [`syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as HTML formatted](#syntaxhighlightjson---takes-a-javascript-object-or-json-and-outputs-as-html-formatted)
+- [HTML/DOM Cacheing](#htmldom-cacheing)
+  - [`watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage](#watchdomstartstop---startstop-watching-for-dom-changes-changes-automatically-saved-to-browser-localstorage)
+  - [`clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage](#clearhtmlcache---clears-the-html-previously-saved-to-the-browser-localstorage)
+  - [`restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage](#restorehtmlfromcache---swaps-the-currently-displayed-html-to-the-version-last-saved-in-the-browser-localstorage)
+  - [`saveHtmlCache()` - Manually saves the currently displayed HTML to the browser localStorage](#savehtmlcache---manually-saves-the-currently-displayed-html-to-the-browser-localstorage)
+- [Event Handling](#event-handling)
+  - [`onChange(prop, callbackFn)` - Register on-change event listeners for uibuilder tracked properties](#onchangeprop-callbackfn---register-on-change-event-listeners-for-uibuilder-tracked-properties)
+      - [Example](#example-3)
+  - [`cancelChange(prop, cbRef)` - remove all the onchange listeners for a given property](#cancelchangeprop-cbref---remove-all-the-onchange-listeners-for-a-given-property)
+  - [`onTopic(topic, callbackFn)` - like onChange but directly listens for a specific topic](#ontopictopic-callbackfn---like-onchange-but-directly-listens-for-a-specific-topic)
+  - [`cancelTopic(topic, cbRef)` - like cancelChange for for onTopic](#canceltopictopic-cbref---like-cancelchange-for-for-ontopic)
+- [Other](#other)
+  - [`$(css-selector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element](#css-selector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element)
+    - [Example](#example-4)
+  - [`log` - output log messages like the library does](#log---output-log-messages-like-the-library-does)
+
 
 ## `start(options)` - (Mostly no longer needed) Starts Socket.IO communications with Node-RED
 
