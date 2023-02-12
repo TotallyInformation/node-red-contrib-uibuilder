@@ -7,6 +7,13 @@
 'use strict'
 
 module.exports = {
+    // Do not remove this one, it is the default and expected to be there
+    blank: {
+        'name': 'Blank template, no framework',
+        'folder': 'blank',
+        'dependencies': [],
+        'description': 'Default blank template. As of v6, uses the iife client.'
+    },
     'iife-blank-client': {
         'name': 'No framework, IIFE client',
         'folder': 'iife-blank-client',
@@ -55,13 +62,7 @@ module.exports = {
         'dependencies': [],
         'description': 'Minimal template using the old uibuilderfe client.'
     },
-    // DO NOT EVER REMOVE EITHER OF THESE
-    blank: {
-        'name': 'Blank template, no framework',
-        'folder': 'blank',
-        'dependencies': [],
-        'description': 'Default blank template. As of v6, uses the iife client.'
-    },
+    // DO NOT REMOVE THIS ONE OR YOU WILL NOT BE ABLE TO LOAD EXTERNAL TEMPLATES
     external: {
         'name': 'Load an external template using Degit',
         'folder': 'external',
