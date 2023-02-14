@@ -400,14 +400,15 @@
  * @typedef {{
  *   name: string;
  *   topic: string;
- *   elementid: string;
- *   elementtype: string;
- *   parent: string;
- *   classes: string;
- *   styles: string;
- *   heading: string;
- *   headingLevel: string;
- *   confData: object;
+ *
+ *   cssSelector: string;
+ *   cssSelectorType: string;
+ *
+ *   slotSourceProp: string;
+ *   slotSourcePropType: string;
+ *
+ *   slotPropMarkdown: boolean;
+ *
  *   _ui: any;
  * }} uibUpdNode
  */
