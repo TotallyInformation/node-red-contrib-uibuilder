@@ -26,4 +26,3 @@ lastUpdated: 2023-02-11 16:26:25
 | userHome     | The operating system folder designated as the "home" folder for the user ID running Node-RED.<br>For Linux, MacOS and in PowerShell on Windows, there is a shortcut for userHome: `~`. |
 | vendor       | A 3rd party. In this case, refers to any 3rd-party package installed via `npm`. |
 | wire         | In Node-RED, the line that connects nodes together. Indicates the passing of messages from one node to another. |
-

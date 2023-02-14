@@ -75,13 +75,13 @@ All methods and components are processed in the order they appear in the message
 msg._ui.method = 'load' || 'add' || 'remove' || 'update' || 'reload' || 'notify' || 'alert'
 ```
 
-* `load`: Load a new UI component using `import()` so that it can be used. Used, for example, to dynamically load web components or other modules. It can also load plain JS and CSS.
-* `add`: Add a UI component instance to the web page dynamically.
-* `remove`: Remove a UI component instance from the web page dynamically.
-* `update`: Update the settings/data of a UI component instance on the web page.
-* `reload`: Triggers the page to automatically reload
-* `notify`: Shows an overlayed notification message (toast)
-* `alert`: Shows an overlayed alert notification
+* [`load`](#method-load): Load a new UI component using `import()` so that it can be used. Used, for example, to dynamically load web components or other modules. It can also load plain JS and CSS.
+* [`add`](#method-add): Add a UI component instance to the web page dynamically.
+* [`remove`](#method-remove): Remove a UI component instance from the web page dynamically.
+* [`update`](#method-update): Update the settings/data of a UI component instance on the web page.
+* [`reload`](#method-reload---reloads-the-current-page): Triggers the page to automatically reload
+* [`notify`](#method-notify): Shows an overlayed notification message (toast)
+* [`alert`](#method-alert): Shows an overlayed alert notification
 
 Other future possibilities: `reset`
 

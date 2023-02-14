@@ -168,7 +168,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Card
     * Form
       * Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
-      * Inputs: incl text, number, time, date, ...
+      * Inputs: incl text, number, time, date, colour picker, ...
     * Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
     * tbody
     * tr (use data-row-index)
@@ -180,6 +180,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * LED (on/off/colour/brightness) - ref: node-red-contrib-ui-led
     * Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
     * Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
+    * Container (with option for drag/drop of contents) [ref](https://discourse.nodered.org/t/is-there-a-pallete-that-can-do-this/75143?u=totallyinformation)
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
