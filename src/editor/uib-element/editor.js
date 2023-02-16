@@ -292,7 +292,7 @@
         inputLabels: '',
         outputs: 1,
         outputLabels: ['uibuilder dynamic UI configuration'],
-        icon: 'font-awesome/fa-code',
+        icon: 'pencilBoxMultipleWhite.svg',
         paletteLabel: nodeLabel,
         label: function () {
             return `[${this.elementtype}] ${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName}`

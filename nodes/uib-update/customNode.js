@@ -27,12 +27,16 @@
 
 //#region ----- Module level variables ---- //
 
+const { promisify } = require('util')
+
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
  */
 const mod = {
     /** @type {runtimeRED|undefined} Reference to the master RED instance */
     RED: undefined,
+    /** @type {Function|undefined} Reference to a promisified version of RED.util.evaluateNodeProperty*/
+    evaluateNodeProperty: undefined,
     /** @type {string} Custom Node Name - has to match with html file and package.json `red` section */
     nodeName: 'uib-update', // Note that 'uib-update' will be replaced with actual node-name. Do not forget to also add to package.json
 }
@@ -40,6 +44,46 @@ const mod = {
 //#endregion ----- Module level variables ---- //
 
 //#region ----- Module-level support functions ----- //
+
+/** Create/update the _ui object and retain for replay
+ * @param {*} msg incoming msg
+ * @param {runtimeNode & uibUpdNode} node reference to node instance
+ */
+async function buildUi(msg, node) {
+    const cssSelector = await mod.evaluateNodeProperty(node.cssSelector, node.cssSelectorType, node, msg)
+    const slotContent = await mod.evaluateNodeProperty(node.slotSourceProp, node.slotSourcePropType, node, msg)
+    const attribs = await mod.evaluateNodeProperty(node.attribsSource, node.attribsSourceType, node, msg)
+
+    // console.log({
+    //     'name': node.name,
+    //     'topic': node.topic,
+
+    //     'cssSelector': cssSelector,
+    //     'cssSelectorType': node.cssSelectorType,
+
+    //     'slotContent': slotContent,
+    //     'slotSourcePropType': node.slotSourcePropType,
+
+    //     'slotPropMarkdown': node.slotPropMarkdown,
+    // })
+
+    // Allow combination of msg._ui and this node allowing chaining of the nodes
+    if ( msg._ui ) node._ui = msg._ui
+    else node._ui = []
+
+    // NB: eval returns undefined for undefined input so no output produced
+    node._ui.push({
+        'method': 'update',
+        'components': [
+            {
+                'selector': cssSelector,
+                'slot': slotContent,
+                'attributes': attribs,
+            }
+        ]
+    })
+
+} // -- end of buildUI -- //
 
 /** Build the output and send the msg (clone input msg and add _ui prop)
  * @param {*} msg The input or custom event msg data
@@ -64,48 +108,6 @@ function emitMsg(msg, node) {
     node.send(msg2)
 }
 
-/**
- * Parse a returned global/flow variable reference from typedInput
- * Borrowed from RED.util
- * @param {string} key The value returned by typedInput
- * @returns {*} Object containing either just the key or the key and the store name as appropriate
- */
-function parseContextStore(key) {
-    const parts = {}
-    const m = /^#:\((\S+?)\)::(.*)$/.exec(key)
-    if (m) {
-        parts.store = m[1]
-        parts.key = m[2]
-    } else {
-        parts.key = key
-    }
-    return parts
-}
-
-// ! TODO: How do we handle asynch flow/global access? Wrap in try and error out if the store needs async.
-/** Evaluate a typed input value from its type
- * @param {string} propName The name of the property to evaluate
- * @param {*} propType The typedInput type
- * @param {runtimeNode & uibUpdNode} node reference to node instance
- * @param {*} msg The input or custom event msg data
- * @returns {*} The value of the typed input field - undefined if input not defined
- */
-function evalTypedInput(propName, propType, node, msg) {
-    const RED = mod.RED
-    let result
-    if (propType === 'flow' || propType === 'global') {
-        const contextKey = parseContextStore(node[propName])
-        // if (/\[msg/.test(contextKey.key)) {
-        //     The key has a nest msg. reference to evaluate first
-        //     contextKey.key = normalisePropertyExpression(contextKey.key, msg, true)
-        // }
-        result = node.context()[propType].get(contextKey.key, contextKey.store)
-    } else {
-        result = RED.util.evaluateNodeProperty(node[propName], propType, node, msg)
-    }
-    return result
-}
-
 /** 3) Run whenever a node instance receives a new input msg
  * NOTE: `this` context is still the parent (nodeInstance).
  * See https://nodered.org/blog/2019/09/20/node-done
@@ -114,12 +116,12 @@ function evalTypedInput(propName, propType, node, msg) {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & uibUpdNode}
  */
-function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
 
     // const RED = mod.RED
 
     // Save the last input msg for replay to new client connections, creates/update this._ui
-    buildUi(msg, this)
+    await buildUi(msg, this)
 
     // Emit the list (sends to the matching uibuilder instance) or fwd to output depending on settings
     emitMsg(msg, this)
@@ -156,6 +158,9 @@ function nodeInstance(config) {
 
     this.slotPropMarkdown = config.slotPropMarkdown ?? false
 
+    this.attribsSource = config.attribsSource ?? ''
+    this.attribsSourceType = config.attribsSourceType ?? 'msg'
+
     this._ui = undefined // set in buildUI()
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
@@ -165,45 +170,6 @@ function nodeInstance(config) {
 
 //#endregion ----- Module-level support functions ----- //
 
-//#region ----- UI definition builders ----- //
-
-/** Create/update the _ui object and retain for replay
- * @param {*} msg incoming msg
- * @param {runtimeNode & uibUpdNode} node reference to node instance
- */
-function buildUi(msg, node) {
-    console.log({
-        'name': node.name,
-        'topic': node.topic,
-
-        'cssSelector': evalTypedInput('cssSelector', node.cssSelectorType, node, msg),
-        'cssSelectorType': node.cssSelectorType,
-
-        'slotSourceProp': evalTypedInput('slotSourceProp', node.slotSourcePropType, node, msg),
-        'slotSourcePropType': node.slotSourcePropType,
-
-        'slotPropMarkdown': node.slotPropMarkdown,
-    })
-
-    // Allow combination of msg._ui and this node allowing chaining of the nodes
-    if ( msg._ui ) node._ui = msg._ui
-    else node._ui = []
-
-    // NB: eval returns undefined for undefined input so no output produced
-    node._ui.push({
-        'method': 'update',
-        'components': [
-            {
-                'selector': evalTypedInput('cssSelector', node.cssSelectorType, node, msg),
-                'slot': evalTypedInput('slotSourceProp', node.slotSourcePropType, node, msg),
-            }
-        ]
-    })
-
-} // -- end of buildUI -- //
-
-//#endregion ----- ui functions ----- //
-
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
  */
@@ -212,6 +178,9 @@ function ModuleDefinition(RED) {
 
     // Save a reference to the RED runtime for convenience
     mod.RED = RED
+
+    // Save a ref to a promisified version to simplify async callback handling
+    mod.evaluateNodeProperty = promisify(mod.RED.util.evaluateNodeProperty)
 
     /** Register a new instance of the specified node type (2) */
     RED.nodes.registerType(mod.nodeName, nodeInstance)

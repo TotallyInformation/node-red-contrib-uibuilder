@@ -2050,7 +2050,9 @@
         inputLabels: 'Msg to send to front-end',
         outputs: 2,
         outputLabels: ['Data from front-end', 'Control Msgs from front-end'],
-        icon: 'ui_template.png',
+        // icon: 'node-white.svg',
+        icon: 'node-blue-inverted.svg',
+        // icon: 'semanticWebWhite.svg',
         paletteLabel: nodeLabel,
         label: function () {
             const url = this.url ? `<${this.url}>` : '<no url>'
