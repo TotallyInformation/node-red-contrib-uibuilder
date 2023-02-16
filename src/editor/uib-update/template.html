@@ -6,9 +6,9 @@
         <input type="hidden" id="node-input-cssSelectorType">
     </div>
     
-    <div style="border:1px solid var(--red-ui-primary-border-color);padding: 0.1rem;">
-        <p>Update HTML slot content:</p>
-        <div aria-label="The source of the update data" class="form-row">
+    <div>
+        <i>Update HTML slot content:</i>
+        <div aria-label="The source of the slot content update data" class="form-row">
             <label for="node-input-slotSourceProp">Content Source</label>
             <input type="text" id="node-input-slotSourceProp" placeholder="Source data to update elements content">
             <input type="hidden" id="node-input-slotSourcePropType">
@@ -18,6 +18,23 @@
             <input type="checkbox" id="node-input-slotPropMarkdown" style="width: auto;vertical-align: top;">
             <span id="slotPropMarkdown-unchecked" style="font-size:smaller;"> &nbsp; Input can be an HTML string</span>
             <span id="slotPropMarkdown-checked" style="display:none;font-size:smaller;"> &nbsp; Markdown-It library must be loaded in browser</span>
+        </div>
+    </div>
+
+    <!-- <div style="border:1px solid var(--red-ui-primary-border-color);padding: 0.1rem;"> -->
+    <div>
+        <i>Update element attributes:</i>
+        <div aria-label="The source of the attribute update data" class="form-row">
+            <label for="node-input-attribsSource">Attribs Source</label>
+            <input type="text" id="node-input-attribsSource" placeholder="Source data to update elements attributes" style="width:75%">
+            <input type="hidden" id="node-input-attribsSourceType">
+        </div>
+        <div aria-label="Additional information" class="form-row form-tips node-help">
+            <p style="font-size: smaller;">
+                The source data must be an object containing attribute name keys. e.g.
+                <pre>{"class": "myclassname",
+ "style": "color:red; border: 1px solid silver;"}</pre>
+            </p>    
         </div>
     </div>
 
@@ -32,7 +49,7 @@
         <input type="text" id="node-input-name">
     </div>
     
-    <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
+    <div aria-label="Additional information" class="form-row form-tips node-help">
         <p>
             
         </p>    

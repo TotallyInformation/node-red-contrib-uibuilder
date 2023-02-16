@@ -33,14 +33,14 @@
             types: inputTypes,
             default: 'str',
             typeField: $('#node-input-cssSelectorType')
-        })
+        }).typedInput('width', '73%')
 
         // slotSourceProp typed input - https://nodered.org/docs/api/ui/typedInput/
         $('#node-input-slotSourceProp').typedInput({
             types: inputTypes,
             default: 'msg',
             typeField: $('#node-input-slotSourcePropType')
-        })
+        }).typedInput('width', '73%')
 
         $('#node-input-slotPropMarkdown').on('change', function() {
             if ($(this).is(':checked') === false) {
@@ -51,6 +51,13 @@
                 $('#slotPropMarkdown-checked').show()
             }
         })
+
+        // attribsSource typed input - https://nodered.org/docs/api/ui/typedInput/
+        $('#node-input-attribsSource').typedInput({
+            types: ['msg', 'flow', 'global', 'json', 'jsonata',],
+            default: 'msg',
+            typeField: $('#node-input-attribsSourceType')
+        }).typedInput('width', '73%')
 
     } // ----- end of onEditPrepare() ----- //
 
@@ -68,6 +75,9 @@
             slotSourceProp: { value: '' },
             slotSourcePropType: { value: 'msg' },
 
+            attribsSource: { value: '' },
+            attribsSourceType: { value: 'msg' },
+
             slotPropMarkdown: { value: false },
 
         },
@@ -76,10 +86,10 @@
         inputLabels: 'Source data',
         outputs: 1,
         outputLabels: ['uibuilder dynamic UI configuration'],
-        icon: 'font-awesome/fa-code',
+        icon: 'pencilProgressWhiteSmaller.svg',
         paletteLabel: nodeLabel,
         label: function () {
-            return this.cssSelector || this.name || moduleName
+            return `${this.cssSelectorType}.${this.cssSelector.replace(/.*::/, '')}` || this.name || moduleName
         },
 
         /** Prepares the Editor panel */
