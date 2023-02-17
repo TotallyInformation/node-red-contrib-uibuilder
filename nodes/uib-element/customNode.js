@@ -41,21 +41,6 @@ const mod = {
 
 //#region ----- Module-level support functions ----- //
 
-/** Set status msg in Editor
- * @param {runtimeNode & uibElNode} node Reference to node instance
- */
-// function setNodeStatus(node) {
-//     let txt = 'Not caching'
-//     const shape = 'ring'
-
-//     if (node.cacheOn === true) {
-//         if ( !node.cache || Object.keys(node.cache).length === 0 ) txt = 'No element cached'
-//         else txt = 'Element is cached'
-//     }
-
-//     node.status({ fill: 'blue', shape: shape, text: txt })
-// } // ---- end of setStatus ---- //
-
 /** Build the output and send the msg (clone input msg and add _ui prop)
  * @param {*} msg The input or custom event msg data
  * @param {runtimeNode & uibElNode} node reference to node instance
@@ -136,6 +121,8 @@ function nodeInstance(config) {
     this.heading = config.heading ?? ''
     this.headingLevel = config.headingLevel ?? 'h2'
 
+    this.position = config.position ?? 'last'
+
     // Configuration data specific to the chosen type
     this.confData = config.confData ?? {}
 
@@ -151,24 +138,30 @@ function nodeInstance(config) {
 //#region ----- UI definition builders ----- //
 
 /** Build the UI config instructions for the ARTICLE element
- * @param {object} parent The parent JSON node that we will add components to
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildArticle(parent, node, msg) {
-    // const err = ''
-    // return err
-    return ''
+function buildArticle(node, msg, parent) {
+    const err = ''
+
+    // Add the ol/ul tag
+    parent.components.push({
+        'type': node.elementtype,
+        'slot': msg.payload,
+    })
+
+    return err
 } // ---- End of buildArticle ---- //
 
 /** Build the UI config instructions for the HTML element
- * @param {object} parent The parent JSON node that we will add components to
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildHTML(parent, node, msg) {
+function buildHTML(node, msg, parent) {
     // Must be a string or array
     let data = msg.payload
     if (!msg.payload) data = ''
@@ -229,6 +222,7 @@ function buildTitle(node, msg) {
 } // ---- End of buildTitle ---- //
 
 /** Build the UI config instructions for the UL or OL LIST elements
+ * NB: Row ids all removed since rows might change position
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
  * @param {object} parent The parent JSON node that we will add components to
@@ -253,16 +247,16 @@ function buildUlOlList(node, msg, parent) {
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
         // Track the data row offset
-        const rowNum = i + 1
+        // const rowNum = i + 1
 
         // Create next list row
         listRows.push( {
             'type': 'li',
-            'id': `${node.elementid}-data-R${rowNum}`,
+            // 'id': `${node.elementid}-data-R${rowNum}`,
             'attributes': {
                 // NB: Making all indexes 1-based for consistency
-                'data-row-index': rowNum,
-                'class': ((rowNum) % 2  === 0) ? 'even' : 'odd'
+                // 'data-row-index': rowNum,
+                // 'class': ((rowNum) % 2  === 0) ? 'even' : 'odd'
             },
             'slot': tbl[row]
         } )
@@ -276,6 +270,7 @@ function buildUlOlList(node, msg, parent) {
 } // ---- End of buildUlOlList ---- //
 
 /** Build the UI config instructions for DL LIST elements
+ * NB: Row ids all removed since rows might change position
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
  * @param {object} parent The parent JSON node that we will add components to
@@ -302,7 +297,7 @@ function buildDlList(node, msg, parent) {
         // Each DL entry needs two elements - treated as a single row
 
         // Track the data row offset
-        const rowNum = i + 1
+        // const rowNum = i + 1
 
         // Check if we have an object(or array)? If not, make content an array - will output only DT's
         if (!(tbl[row] instanceof Object)) {
@@ -313,11 +308,11 @@ function buildDlList(node, msg, parent) {
 
         const listIndex = listRows.push( {
             'type': 'div',
-            'id': `${node.elementid}-data-R${rowNum}`,
+            // 'id': `${node.elementid}-data-R${rowNum}`,
             'attributes': {
                 // NB: Making all indexes 1-based for consistency
-                'data-row-index': rowNum,
-                'class': ((rowNum) % 2  === 0) ? 'even' : 'odd'
+                // 'data-row-index': rowNum,
+                // 'class': ((rowNum) % 2  === 0) ? 'even' : 'odd'
             },
             'components': [],
         } )
@@ -355,6 +350,7 @@ function buildDlList(node, msg, parent) {
 } // ---- End of buildDlList ---- //
 
 /** Build the UI config instructions for the TABLE element
+ * NB: Row ids all removed since rows might change position
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
  * @param {object} parent The parent JSON node that we will add components to
@@ -402,10 +398,10 @@ function buildTable(node, msg, parent) {
             thead.components = [
                 {
                     'type': 'tr',
-                    'id': `${node.elementid}-head-r${hdrRowNum}`,
-                    'attributes': {
-                        'data-hdr-row-index': hdrRowNum,
-                    },
+                    // 'id': `${node.elementid}-head-r${hdrRowNum}`,
+                    // 'attributes': {
+                    //     'data-hdr-row-index': hdrRowNum,
+                    // },
                     'components': []
                 }
             ]
@@ -419,9 +415,9 @@ function buildTable(node, msg, parent) {
                 const colNum = k + 1
                 thead.components[0].components.push({
                     'type': 'th',
-                    'id': `${node.elementid}-head-r${hdrRowNum}-c${colNum}`,
+                    // 'id': `${node.elementid}-head-r${hdrRowNum}-c${colNum}`,
                     'attributes': {
-                        'data-hdr-row-index': hdrRowNum,
+                        // 'data-hdr-row-index': hdrRowNum,
                         'data-col-index': colNum,
                         'data-col-name': colName,
                     },
@@ -432,20 +428,21 @@ function buildTable(node, msg, parent) {
         }
 
         // Track the data row offset
-        const rowNum = i + 1
+        // const rowNum = i + 1
 
         // Create the data row
         const rLen = tbody.components.push( {
             'type': 'tr',
-            'id': `${node.elementid}-data-R${rowNum}`,
-            'components': []
+            // 'id': `${node.elementid}-data-R${rowNum}`,
+            'components': [],
+            'attributes': {},
         } )
-        // Add the row index attrib and even/odd class
-        tbody.components[rLen - 1].attributes = {
-            // NB: Making all indexes 1-based for consistency
-            'data-row-index': rLen,
-            'class': (rLen % 2  === 0) ? 'even' : 'odd'
-        }
+        // // Add the row index attrib and even/odd class
+        // tbody.components[rLen - 1].attributes = {
+        //     // NB: Making all indexes 1-based for consistency
+        //     'data-row-index': rLen,
+        //     // 'class': (rLen % 2  === 0) ? 'even' : 'odd'
+        // }
         // Add a row name attrib from the object key if the input is an object
         if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
             tbody.components[rLen - 1].attributes['data-row-name'] = row
@@ -459,10 +456,10 @@ function buildTable(node, msg, parent) {
 
             tbody.components[rLen - 1].components.push({
                 'type': 'td',
-                'id': `${node.elementid}-data-R${rowNum}-C${colNum}`,
+                // 'id': `${node.elementid}-data-R${rowNum}-C${colNum}`,
                 'attributes': {
-                    'class': ((rowNum) % 2  === 0) ? 'even' : 'odd',
-                    'data-row-index': rowNum,
+                    // 'class': ((rowNum) % 2  === 0) ? 'even' : 'odd',
+                    // 'data-row-index': rowNum,
                     // NB: Making all indexes 1-based for consistency
                     'data-col-index': colNum,
                     'data-col-name': colName,
@@ -475,6 +472,81 @@ function buildTable(node, msg, parent) {
 
     return err
 } // ---- End of buildTable ---- //
+
+/** Build the UI config instructions for adding a table row to an existing table
+ * NB: Row ids all removed since rows might change position
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildTableRow(node, msg, parent) {
+    // Payload must be an object (col/value pairs)
+    // TODO Allow payload to be an array
+
+    const err = ''
+
+    parent.method = 'add'
+    const rLen = parent.components.push({
+        'type': 'tr',
+        'parent': `${node.parent} > table > tbody`,
+        'position': node.position,
+        'components': [],
+    })
+    // const rowNum = -10
+    Object.keys(msg.payload).forEach(  (colName, j) => {
+        const colNum = j + 1
+
+        parent.components[rLen - 1].components.push({
+            'type': 'td',
+            'attributes': {
+                'data-col-index': colNum,
+                'data-col-name': colName,
+            },
+            'slot': msg.payload[colName],
+        })
+    } )
+
+    return err
+} // ---- End of buildTableRow ---- //
+
+/** Build the UI config instructions for adding a table row to an existing table
+ * NB: Row ids all removed since rows might change position
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildUlOlRow(node, msg, parent) {
+    // Payload must be a a string
+    // TODO Allow payload to be an array
+    if ( !Array.isArray(msg.payload) ) msg.payload = [msg.payload]
+
+    const err = ''
+
+    parent.method = 'add'
+    const rLen = parent.components.push({
+        'type': 'li',
+        'parent': `${node.parent} > ul`,
+        'position': node.position,
+        'components': [],
+    })
+    // const rowNum = -10
+    Object.keys(msg.payload).forEach(  (colName, j) => {
+        const colNum = j + 1
+
+        parent.components[rLen - 1].components.push({
+            'type': 'li',
+            'attributes': {
+                'data-col-index': colNum,
+                'data-col-name': colName,
+            },
+            'slot': msg.payload,
+        })
+    } )
+
+    return err
+} // ---- End of buildUlOlRow ---- //
 
 /** Adds a wrapping DIV tag
  * @param {object} parent The parent JSON node that we will add components to
@@ -599,13 +671,23 @@ function buildUi(msg, node) {
         case 'html': {
             parent = addDiv(parent, node)
             parent = addHeading(parent, node)
-            err = buildHTML(parent, node, msg)
+            err = buildHTML(node, msg, parent)
             break
         }
 
         case 'title': {
             // In this case, we do not want a wrapping div
             err = buildTitle(node, msg)
+            break
+        }
+
+        case 'tr': {
+            err = buildTableRow(node, msg, parent)
+            break
+        }
+
+        case 'li': {
+            err = buildUlOlRow(node, msg, parent)
             break
         }
 
