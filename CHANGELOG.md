@@ -16,6 +16,8 @@ The new `uib-brand.css` style library is not yet feature complete - if you find 
 
 Dynamic content does not currently work with VueJS (and probably not other frameworks that rely on pre-building components). Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only. And of course, it is possible - but probably less useful - to combine the vanilla HTML from the low-/no-code features with front-end frameworks such as Vue.
 
+Context store handling currently does not cope with stores that require asynchronous setters/getters. [ref](https://discourse.nodered.org/t/context-stores-maybe-async-but-how-can-we-tell/75190/2?u=totallyinformation).
+
 ### Needs Fixing
 
 ```
@@ -25,6 +27,10 @@ Dynamic content does not currently work with VueJS (and probably not other frame
 element - update mode - change to replace mode? Replace mode looks for root id, if found, replace outerHTML, if not found add.
 
 Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'"
+
+"sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
+
+**HOW TO DELETE THINGS** from the UI? Need to update `uib-update`.
 
 ## To do/In-progress
 
@@ -40,6 +46,9 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### New `uib-element` node
 
+* Convert text inputs to typedInputs. Include "none" as an option. For classes, styles, allow JSON array/object.
+* Disable parent/heading inputs where not needed (html, page title, table row, list row )
+* Enforce parent id for table row and list row
 * OPTIONS to add
   * ALL
     * Wire up classes, styles and heading settings
@@ -52,6 +61,11 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
     * list-style-type (add to outer) - several options plus text (incl emoji's)
     * Add div's around dt/dd pairs
     * ? Optional leading/trailing text ?
+  * tr
+    * row number to add after
+  * li
+    * row number to add after
+    * list-style-type (add to outer) - several options plus text (incl emoji's)
 * ? Have JSON input msg templates for each type with links to copy to clipboard ?
 * Docs
   * Parent: `#eltest-ul-ol > li:nth-child(3)` or `#eltest-ul-ol *[data-row-index="3"]`
@@ -60,7 +74,11 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### NEW node: `uib-update`
 
-Send updates to an existing HTML element (using a selector). Uses _ui mode `update`
+Sends updates to an existing HTML element (using a selector). Uses _ui mode `update`. Can change slot/slotMarkdown, attributes, properties, and events.
+
+* Fix input fields not resizing.
+* Add ability to DELETE things.
+* Consider if worth adding a way to update a front-end javascript variable directly?
 
 ### Examples
 
@@ -152,6 +170,7 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
   * Added Open button to top button bar next to Delete. Add globe icon to open buttons.
   * Added Docs button next to new Open button. Add book icon to docs buttons.
   * Disable the new Open button along with other disabled things when new or url has changed.
+  * Icon changed.
 
 
 * `socket.js`
@@ -196,13 +215,17 @@ Send updates to an existing HTML element (using a selector). Uses _ui mode `upda
 
 * Extended the standards for `msg._ui` with mode=update to include the properties `selector` or `select`. These take CSS selectors as their value (as does the `type` property) and take preference over a `name` or `type` property but not over an `id` property. Mostly for convenience and just easier to remember. Documentation also updated.
 
-* Added a `position` property to the `add` _ui mode. "first"/"last": Adds start/end of parent's children respectively.
+* Added a `position` property to the `add` _ui mode. "first"/"last": Adds start/end of parent's children respectively. An integer will add the element after the nth child.
 
 * Added **new function** `uibuilder.beaconLog(txtToSend, logLevel)` which allows sending a simple, short log message back to Node-RED even if socket.io is not connected. In Node-RED, outputs to the Node-RED log and sends a uibuilder control message where `msg.uibuilderCtrl` = "client beacon log".
 
 * Added **new function** `uibuilder.logToServer()` which will take any number and type of arguments and send them all back to Node-RED in the msg.payload of a _control_ message (out of port #2) where `msg.uibuilderCtrl` = "client log message". Client details are added to the message.
 
 * Added **new function** `uibuilder.watchDom(true)` - Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
+
+* Added **new function** `uibuilder.uiGet(cssSelector [, propName])` - Get data from the DOM. Returns selection of useful properties unless a specific property requested.
+
+  Data can be sent straight back to Node-RED: `uibuilder.send( uibuilder.uiGet('input') )` (gets all useful properties from all `input` fields on the page)
 
 * Added 2 new events: `uibuilder:constructorComplete` and `uibuilder:startComplete`. Mostly for potential internal use.
 
@@ -225,12 +248,18 @@ Has a single output. Outputs can be chained to more `uib-element` nodes. At the 
 > This is NOT meant as a *Dashboard* replacement. It is mostly meant for people who need a quick and simple method of dynamically creating UI elements's within a pre-defined HTML design. The element content is rebuilt every time you send data so this is certainly not the most efficient method of working with data-driven UI's. However, it will often be good-enough for relatively simple requirements.
 
 Element types included in this release:
+
 * **Simple Table** - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
 * **Unordered List (ul)**/**Ordered List (ol)** - Generates a bullet or number list from a simple input array or object.
 * **Description List (dl)** - Generates a description list from a simple input array of objects.
-* **Text box with optional heading** - A simple "card" like element.
+* **Text box** - A simple "card" like article element.
 * **HTML** - Pass-though HTML (e.g. from a Node-RED Template node).
 * **Page Title** - Change the page HTML title, description and the first H1 tag on the page to all be the same input text.
+
+The following element types are also available but behave slightly differently in that they will **always** add a new row:
+
+* **Add row to existing table** - Adds a single row, must provide the _Parent_ of the table to update, can insert the row anywhere via the _Position_ input.
+* **Add row to existing unordered or ordered list** - Adds a single row, must provide the _Parent_ of the list to update, can insert the row anywhere via the _Position_ input.
 
 Each element except the page title is wrapped in a `<div>` tag which has the specified HTML ID applied to it. Where possible, rows and columns are given their own identifiers to make updates and styling easier. Attempts are made to ensure that the resulting HTML is accessible.
 
