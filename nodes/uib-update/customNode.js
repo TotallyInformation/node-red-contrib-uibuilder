@@ -50,22 +50,29 @@ const mod = {
  * @param {runtimeNode & uibUpdNode} node reference to node instance
  */
 async function buildUi(msg, node) {
-    const cssSelector = await mod.evaluateNodeProperty(node.cssSelector, node.cssSelectorType, node, msg)
-    const slotContent = await mod.evaluateNodeProperty(node.slotSourceProp, node.slotSourcePropType, node, msg)
-    const attribs = await mod.evaluateNodeProperty(node.attribsSource, node.attribsSourceType, node, msg)
+    let cssSelector, slotContent, attribs
 
-    // console.log({
-    //     'name': node.name,
-    //     'topic': node.topic,
+    try {
+        cssSelector = await mod.evaluateNodeProperty(node.cssSelector, node.cssSelectorType, node, msg)
+    } catch (e) {
+        node.error(`Cannot evaluate source for CSS Selector. ${e.message} (${node.cssSelectorType})`, e)
+        return
+    }
 
-    //     'cssSelector': cssSelector,
-    //     'cssSelectorType': node.cssSelectorType,
-
-    //     'slotContent': slotContent,
-    //     'slotSourcePropType': node.slotSourcePropType,
-
-    //     'slotPropMarkdown': node.slotPropMarkdown,
-    // })
+    if (node.slotSourceProp !== '') {
+        try {
+            slotContent = await mod.evaluateNodeProperty(node.slotSourceProp, node.slotSourcePropType, node, msg)
+        } catch (e) {
+            node.warn(`Cannot evaluate source for slot. ${e.message} (${node.slotSourcePropType})`)
+        }
+    }
+    if (node.attribsSource !== '') {
+        try {
+            attribs = await mod.evaluateNodeProperty(node.attribsSource, node.attribsSourceType, node, msg)
+        } catch (e) {
+            node.warn(`Cannot evaluate source for attributes. ${e.message} (${node.attribsSourceType})`)
+        }
+    }
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) node._ui = msg._ui

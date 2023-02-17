@@ -30,7 +30,10 @@
 
         // css selector typed input - https://nodered.org/docs/api/ui/typedInput/
         $('#node-input-cssSelector').typedInput({
-            types: inputTypes,
+            types: [
+                'msg', 'flow', 'global',
+                'str', 'env', 'jsonata', 're',
+            ],
             default: 'str',
             typeField: $('#node-input-cssSelectorType')
         }).typedInput('width', '73%')
