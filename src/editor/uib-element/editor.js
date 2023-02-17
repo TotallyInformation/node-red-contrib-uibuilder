@@ -29,13 +29,14 @@
                     An Object of Objects can also be used. In that case, the outer object's keys will be
                     used as row names by adding a <code>data-row-name</code> attribute to each row.
                 </p><p>
-                    Each row in the table has a unique <code>id</code>, and <code>data-row-index</code> attributes; 
-                    and has either the <code>odd</code> or <code>even</code> class added. 
-                </p><p>
-                    Each cell (<code>&lt;td></code>) in the table has a unique <code>id</code> attribute, as well as 
-                    <code>data-row-index</code>, <code>data-col-index</code> and <code>data-col-name</code> attributes. 
+                    Each column in the table has 
+                    <code>data-col-index</code> and <code>data-col-name</code> attributes. 
                 </p>
             `,
+            allowsParent: true,
+            parentRequired: false,
+            allowsHead: true,
+            allowsPos: false,
         },
         ul: {
             value: 'ul',
@@ -44,10 +45,14 @@
                 <p>
                     Outputs a simple, accessible, bullet list.
                 </p><p>
-                    Each row in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
-                    Each row also has either the <code>odd</code> or <code>even</code> class added.
+                    Input <code>msg.payload</code> should be an array of strings.
+                    An object of key/values can also be used.
                 </p>
             `,
+            allowsParent: true,
+            parentRequired: false,
+            allowsHead: true,
+            allowsPos: false,
         },
         ol: {
             value: 'ol',
@@ -56,10 +61,14 @@
                 <p>
                     Outputs a simple, accessible, numbered list
                 </p><p>
-                    Each row in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
-                    Each row also has either the <code>odd</code> or <code>even</code> class added.
+                    Input <code>msg.payload</code> should be an array of strings.
+                    An object of key/values can also be used.
                 </p>
             `,
+            allowsParent: true,
+            parentRequired: false,
+            allowsHead: true,
+            allowsPos: false,
         },
         dl: {
             value: 'dl',
@@ -79,21 +88,26 @@
                 </p>
                 <p>
                     Each entry has a wrapping <code>&lt;div></code> tag containing a term (<code>dt</code>) 
-                    and a definition (<code>dd</code>).
-                </p><p>
-                    Each row div in the list has a unique <code>id</code>, and <code>data-row-index</code> attributes.
-                    Each row also has either the <code>odd</code> or <code>even</code> class added.
+                    and one or more descriptions (<code>dd</code>).
                 </p>
             `,
+            allowsParent: true,
+            parentRequired: false,
+            allowsHead: true,
+            allowsPos: false,
         },
         article: {
             value: 'article',
-            label: 'Text box with optional heading',
+            label: 'Text box',
             description: `
                 <p>
                     A simple box containing text with an optional heading.
                 </p>
             `,
+            allowsParent: true,
+            parentRequired: false,
+            allowsHead: true,
+            allowsPos: false,
         },
         html: {
             value: 'html',
@@ -109,6 +123,10 @@
                     <b>NOTE</b>: Use with caution, no validity checking is currently done.
                 </p>
             `,
+            allowsParent: false,
+            parentRequired: false,
+            allowsHead: false,
+            allowsPos: false,
         },
         title: {
             value: 'title',
@@ -121,9 +139,55 @@
                     <code>msg.payload</code> must be a simple string.
                 </p>
             `,
+            allowsParent: false,
+            parentRequired: false,
+            allowsHead: false,
+            allowsPos: false,
+        },
+        li: {
+            value: 'li',
+            label: 'Add row to existing ordered or unordered list',
+            description: `
+                <p>
+                    Add a new row to an existing list.
+                </p><p>
+                    Set the <b>Parent</b> to the id of the existing table.
+                    The <b>HTML ID</b> can be anything unique to the page.
+                </p><p>
+                    Set the incoming <code>msg.payload</code> to a string.
+                </p><p>
+                    Set the <b>Position</b> to "first", "last" or a number.
+                </p>
+            `,
+            allowsParent: true,
+            parentRequired: true,
+            allowsHead: false,
+            allowsPos: true,
+        },
+        tr: {
+            value: 'tr',
+            label: 'Add row to existing table',
+            description: `
+                <p>
+                    Add a new row to an existing table.
+                </p><p>
+                    Set the <b>Parent</b> to the id of the existing table.
+                    The <b>HTML ID</b> can be anything unique to the page.
+                </p><p>
+                    Set the incoming <code>msg.payload</code> to an <i>Object<i>.
+                    The properties of the object must match the column definitions of the existing table.
+                </p><p>
+                    Set the <b>Position</b> to "first", "last" or a number.
+                </p>
+            `,
+            allowsParent: true,
+            parentRequired: true,
+            allowsHead: false,
+            allowsPos: true,
         },
     }
 
+    // TODO Turn off parent & heading inputs where not wanted
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
@@ -144,6 +208,15 @@
         }).on('change', function() {
             if (elTypes[this.value].description === undefined) elTypes[this.value].description = 'No description available.'
             $('#type-info').html(elTypes[this.value].description)
+
+            if ( elTypes[this.value].allowsParent === false ) $('#node-input-parent').prop('disabled', true)
+            else $('#node-input-parent').prop('disabled', false)
+
+            if ( elTypes[this.value].allowsHead === false ) $('#node-input-heading').typedInput('disable')
+            else $('#node-input-heading').typedInput('enable')
+
+            if ( elTypes[this.value].allowsPos === false ) $('#node-input-position').prop('disabled', true)
+            else $('#node-input-position').prop('disabled', false)
         })
 
         // Set up optional heading input
@@ -283,6 +356,8 @@
 
             heading: { value: '' },
             headingLevel: { value: 'h2' },
+
+            position: { value: 'last' },
 
             // Configuration data specific to the chosen type
             confData: { value: {} },

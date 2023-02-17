@@ -18,11 +18,6 @@
             </div>
             <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
             
-            <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;If blank, will be added to #more or body" class="form-row">
-                <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
-                <input type="text" id="node-input-parent" placeholder="Optional. CSS Selector">
-            </div>
-            
             <div aria-label="Optional. Space separated list of classes. Will be added to the root element (not the container div)" class="form-row">
                 <label for="node-input-classes"><i class="fa fa-i-cursor"></i> Classes</label>
                 <input type="text" id="node-input-classes" placeholder="Optional. Space separated list of classes">
@@ -32,10 +27,20 @@
                 <input type="text" id="node-input-wrapper" placeholder="Optional. List of styles">
             </div>
             
+            <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;If blank, will be added to #more or body" class="form-row">
+                <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
+                <input type="text" id="node-input-parent" placeholder="Optional. CSS Selector">
+            </div>
+            
             <div aria-label="Optional heading. Leave blank for no heading." class="form-row">
                 <label for="node-input-heading"><i class="fa fa-header"></i> Heading</label>
                 <input type="text" id="node-input-heading" placeholder="Optional heading text">
                 <input type="hidden" id="node-input-headingLevel">
+            </div>
+            
+            <div aria-label="Position of insert relative to the child elements of the selected parent. 'first', 'last' or a number." class="form-row">
+                <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
+                <input type="text" id="node-input-position" placeholder="Optional. first, last or a number">
             </div>
             
             <hr>
@@ -51,11 +56,11 @@
             
             <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
                 <p>
-                    Creates a <b>copy</b> of the inbound msg, then adds a uibuilder <code>_ui</code>
-                    configuration object before sending.
+                    Outputs a uibuilder <code>_ui</code> configuration object.
                 </p>
                 <p>
-                    Each output element is wrapped in a containing <code>&lt;div></code> tag. It is that
+                    Each output element is wrapped in a containing <code>&lt;div></code> tag
+                    (except for the add table/list rows and the title element). It is that
                     tag that has the <code>id</code> on it.
                 </p>
                 <p>
@@ -72,8 +77,7 @@
                     add to it.
                 </p>
                 <p>
-                    <b>NOTE:</b> This node only works if you are using the new <i>ESM</i> or <i>IIFE</i> builds of the uibuilder front-end
-                    client library. It does not work with the previous <code>uibuilderfe</code> library.
+                    <b>NOTE:</b> Does <i>not</i> work with the old <code>uibuilderfe</code> client library.
                 </p>    
             </div>
         </div>
