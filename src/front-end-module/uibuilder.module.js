@@ -1125,7 +1125,7 @@ export const Uib = class Uib {
 
         ui.components.forEach((compToAdd, i) => {
 
-            // Create the new component
+            /** @type {HTMLElement} Create the new component */
             const newEl = document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
 
             if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
@@ -1137,7 +1137,7 @@ export const Uib = class Uib {
                 this._uiComposeComponent(newEl, compToAdd)
             }
 
-            // Where to add the new element?
+            /** @type {HTMLElement} Where to add the new element? */
             let elParent
             if (compToAdd.parentEl) {
                 elParent = compToAdd.parentEl
@@ -1156,6 +1156,8 @@ export const Uib = class Uib {
             if ( compToAdd.position && compToAdd.position === 'first') {
                 // Insert new el before the first child of the parent. Ref: https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore#example_3
                 elParent.insertBefore(newEl, elParent.firstChild)
+            } else if ( compToAdd.position && Number.isInteger(Number(compToAdd.position)) ) {
+                elParent.insertBefore(newEl, elParent.children[compToAdd.position])
             } else {
                 // Append to the required parent
                 elParent.appendChild(newEl)
@@ -1499,6 +1501,74 @@ export const Uib = class Uib {
             }, false)
         }
     }
+
+    /**
+     * Get data from the DOM. Returns selection of useful props unless a specific prop requested.
+     * @param {string} cssSelector Identify the DOM element to get data from
+     * @param {string} [propName] Optional. Specific name of property to get from the element
+     * @returns {*}
+     */
+    uiGet(cssSelector, propName = null) {
+        const selection = document.querySelectorAll(cssSelector)
+
+        const out = []
+
+        selection.forEach( node => {
+            // Specific property asked for ...
+            if (propName !== null && propName !== '') {
+                const prop = propName.split('.').reduce((prev, cur) => prev[cur], node)
+                // Nightmare of different object types in a DOM Element!
+                if (prop.constructor.name === 'NamedNodeMap') { // Attributes
+                    const p = {}
+                    for (const key of prop) {
+                        p[key.name] = prop[key.name].value
+                    }
+                    out.push(p)
+                } else if (!prop.constructor.name.toLowerCase().includes('map')) { // Ordinary properties
+                    out.push({
+                        [propName]: prop
+                    })
+                } else { // Other MAP types
+                    const p = {}
+                    for (const key in prop) {
+                        p[key] = prop[key]
+                    }
+                    out.push(p)
+                }
+            } else { // Otherwise, grab everything useful
+                const len = out.push({
+                    id: node.id === '' ? undefined : node.id,
+                    name: node.name,
+                    children: node.childNodes.length,
+                    type: node.nodeName,
+                    attributes: undefined,
+    
+                    isUserInput: node.value === undefined ? false : true, // eslint-disable-line no-unneeded-ternary
+                    userInput: node.value === undefined ? undefined : { // eslint-disable-line multiline-ternary
+                        value: node.value,
+                        validity: undefined,
+                        willValidate: node.willValidate,
+                        valueAsDate: node.valueAsDate,
+                        valueAsNumber: node.valueAsNumber,
+                        type: node.type,
+                    },
+                })
+                const thisOut = out[len - 1]
+                if ( node.attributes.length > 0 ) thisOut.attributes = {}
+                for (const attrib of node.attributes) {
+                    if (attrib.name !== 'id') {
+                        thisOut.attributes[attrib.name] = node.attributes[attrib.name].value
+                    }
+                }
+                if ( node.value !== undefined ) thisOut.userInput.validity = {}
+                for (const v in node.validity) {
+                    thisOut.userInput.validity[v] = node.validity[v]
+                }
+            }
+        })
+
+        return out
+    } // --- end of uiGet ---
 
     //#endregion -------- -------- -------- //
 

@@ -2923,6 +2923,8 @@ var Uib = (_a = class {
       }
       if (compToAdd.position && compToAdd.position === "first") {
         elParent.insertBefore(newEl, elParent.firstChild);
+      } else if (compToAdd.position && Number.isInteger(Number(compToAdd.position))) {
+        elParent.insertBefore(newEl, elParent.children[compToAdd.position]);
       } else {
         elParent.appendChild(newEl);
       }
@@ -3158,6 +3160,63 @@ var Uib = (_a = class {
         ]
       }, false);
     }
+  }
+  uiGet(cssSelector, propName = null) {
+    const selection = document.querySelectorAll(cssSelector);
+    const out = [];
+    selection.forEach((node) => {
+      if (propName !== null && propName !== "") {
+        const prop = propName.split(".").reduce((prev2, cur) => prev2[cur], node);
+        if (prop.constructor.name === "NamedNodeMap") {
+          const p = {};
+          for (const key of prop) {
+            p[key.name] = prop[key.name].value;
+          }
+          out.push(p);
+        } else if (!prop.constructor.name.toLowerCase().includes("map")) {
+          out.push({
+            [propName]: prop
+          });
+        } else {
+          const p = {};
+          for (const key in prop) {
+            p[key] = prop[key];
+          }
+          out.push(p);
+        }
+      } else {
+        const len = out.push({
+          id: node.id === "" ? void 0 : node.id,
+          name: node.name,
+          children: node.childNodes.length,
+          type: node.nodeName,
+          attributes: void 0,
+          isUserInput: node.value === void 0 ? false : true,
+          userInput: node.value === void 0 ? void 0 : {
+            value: node.value,
+            validity: void 0,
+            willValidate: node.willValidate,
+            valueAsDate: node.valueAsDate,
+            valueAsNumber: node.valueAsNumber,
+            type: node.type
+          }
+        });
+        const thisOut = out[len - 1];
+        if (node.attributes.length > 0)
+          thisOut.attributes = {};
+        for (const attrib of node.attributes) {
+          if (attrib.name !== "id") {
+            thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
+          }
+        }
+        if (node.value !== void 0)
+          thisOut.userInput.validity = {};
+        for (const v in node.validity) {
+          thisOut.userInput.validity[v] = node.validity[v];
+        }
+      }
+    });
+    return out;
   }
   clearHtmlCache() {
     this.removeStore("htmlCache");
