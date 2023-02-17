@@ -541,7 +541,7 @@ function buildUlOlRow(node, msg, parent) {
                 'data-col-index': colNum,
                 'data-col-name': colName,
             },
-            'slot': msg.payload,
+            'slot': msg.payload[j],
         })
     } )
 
