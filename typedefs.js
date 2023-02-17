@@ -392,6 +392,7 @@
  *   heading: string;
  *   headingLevel: string;
  *   confData: object;
+ *   position: string|number;
  *   _ui: any;
  * }} uibElNode
  */
@@ -406,6 +407,9 @@
  *
  *   slotSourceProp: string;
  *   slotSourcePropType: string;
+ *
+ *   attribsSource: string;
+ *   attribsSourceType: string;
  *
  *   slotPropMarkdown: boolean;
  *
