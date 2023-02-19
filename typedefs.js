@@ -384,15 +384,28 @@
  * @typedef {{
  *   name: string;
  *   topic: string;
- *   elementid: string;
  *   elementtype: string;
  *   parent: string;
+ *   parentSource: string;
+ *   parentSourceType: string;
+ *   elementid: string;
+ *   elementId: string;
+ *   elementIdSource: string;
+ *   elementIdSourceType: string;
  *   classes: string;
+ *   classesSource: string;
+ *   classesSourceType: string;
  *   styles: string;
+ *   stylesSource: string;
+ *   stylesSourceType: string;
  *   heading: string;
+ *   headingSource: string;
+ *   headingSourceType: string;
  *   headingLevel: string;
- *   confData: object;
  *   position: string|number;
+ *   positionSource: string|number;
+ *   positionSourceType: string;
+ *   confData: object;
  *   _ui: any;
  * }} uibElNode
  */
@@ -401,18 +414,13 @@
  * @typedef {{
  *   name: string;
  *   topic: string;
- *
  *   cssSelector: string;
  *   cssSelectorType: string;
- *
  *   slotSourceProp: string;
  *   slotSourcePropType: string;
- *
  *   attribsSource: string;
  *   attribsSourceType: string;
- *
  *   slotPropMarkdown: boolean;
- *
  *   _ui: any;
  * }} uibUpdNode
  */
