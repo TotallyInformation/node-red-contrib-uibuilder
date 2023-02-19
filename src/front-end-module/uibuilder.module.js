@@ -1506,10 +1506,11 @@ export const Uib = class Uib {
      * Get data from the DOM. Returns selection of useful props unless a specific prop requested.
      * @param {string} cssSelector Identify the DOM element to get data from
      * @param {string} [propName] Optional. Specific name of property to get from the element
-     * @returns {*}
+     * @returns {*} Object containing either specific requested property or a selection of useful properties
      */
     uiGet(cssSelector, propName = null) {
-        const selection = document.querySelectorAll(cssSelector)
+        // The type cast below not really correct but it gets rid of the other typescript errors
+        const selection = /** @type {NodeListOf<HTMLInputElement>} */ (document.querySelectorAll(cssSelector))
 
         const out = []
 
@@ -1542,7 +1543,7 @@ export const Uib = class Uib {
                     children: node.childNodes.length,
                     type: node.nodeName,
                     attributes: undefined,
-    
+
                     isUserInput: node.value === undefined ? false : true, // eslint-disable-line no-unneeded-ternary
                     userInput: node.value === undefined ? undefined : { // eslint-disable-line multiline-ternary
                         value: node.value,
@@ -1555,6 +1556,7 @@ export const Uib = class Uib {
                 })
                 const thisOut = out[len - 1]
                 if ( node.attributes.length > 0 ) thisOut.attributes = {}
+                // @ts-ignore
                 for (const attrib of node.attributes) {
                     if (attrib.name !== 'id') {
                         thisOut.attributes[attrib.name] = node.attributes[attrib.name].value
