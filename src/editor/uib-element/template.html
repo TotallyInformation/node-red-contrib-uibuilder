@@ -7,40 +7,53 @@
     <div id="el-tabs-content">
 
         <div id="el-tab-main" style="display:none">
-            <div aria-label="The HMTL id to apply to the created element. Must be unique on the page." class="form-row">
-                <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> HTML ID</label>
-                <input type="text" id="node-input-elementid" placeholder="Must be a valid HTML element id">
-            </div>
-            
             <div aria-label="The type of element or component to add to the UI" class="form-row">
                 <label for="node-input-elementtype"><i class="fa fa-code"></i> Type</label>
                 <input type="text" id="node-input-elementtype" style="width:70%;"></input>
             </div>
+
+            <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;Must be a non-blank string" class="form-row">
+                <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
+                <input type="text" id="node-input-parent" placeholder="CSS Selector">
+                <input type="hidden" id="node-input-parentSourceType">
+            </div>
+            
+            <div aria-label="The HMTL id to apply to the created element. If supplied, must be unique on the page." class="form-row">
+                <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> HTML ID</label>
+                <input type="text" id="node-input-elementid" placeholder="Valid unique HTML element id string">
+                <input type="hidden" id="node-input-elementIdSourceType">
+            </div>
+            
             <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
+            
+            <div aria-label="Relative position inside the parent. 'first', 'last' or a number." class="form-row">
+                <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
+                <input type="text" id="node-input-position" placeholder="Last, first or a number">
+                <input type="hidden" id="node-input-positionSourceType">
+            </div>
             
             <div aria-label="Optional. Space separated list of classes. Will be added to the root element (not the container div)" class="form-row">
                 <label for="node-input-classes"><i class="fa fa-i-cursor"></i> Classes</label>
                 <input type="text" id="node-input-classes" placeholder="Optional. Space separated list of classes">
+                <input type="hidden" id="node-input-classesSourceType">
             </div>
             <div aria-label="Optional. List of styles. Will be added to the root element (not the container div)" class="form-row">
                 <label for="node-input-styles"><i class="fa fa-i-cursor"></i> Styles</label>
-                <input type="text" id="node-input-wrapper" placeholder="Optional. List of styles">
-            </div>
-            
-            <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;If blank, will be added to #more or body" class="form-row">
-                <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
-                <input type="text" id="node-input-parent" placeholder="Optional. CSS Selector">
+                <input type="text" id="node-input-styles" placeholder="Optional. List of styles">
+                <input type="hidden" id="node-input-stylesSourceType">
             </div>
             
             <div aria-label="Optional heading. Leave blank for no heading." class="form-row">
                 <label for="node-input-heading"><i class="fa fa-header"></i> Heading</label>
-                <input type="text" id="node-input-heading" placeholder="Optional heading text">
-                <input type="hidden" id="node-input-headingLevel">
-            </div>
-            
-            <div aria-label="Position of insert relative to the child elements of the selected parent. 'first', 'last' or a number." class="form-row">
-                <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
-                <input type="text" id="node-input-position" placeholder="Optional. first, last or a number">
+                <select id="node-input-headingLevel" style="width:3.7em;">
+                    <option value="h2">H2</option>
+                    <option value="h3">H3</option>
+                    <option value="h4">H4</option>
+                    <option value="h5">H5</option>
+                    <option value="h6">H6</option>
+                </select>
+                <input type="text" id="node-input-heading" placeholder="Optional heading">
+                <input type="hidden" id="node-input-headingSourceType">
             </div>
             
             <hr>

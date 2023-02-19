@@ -1,4 +1,4 @@
-/* eslint-disable strict, sonarjs/no-duplicate-string */
+/* eslint-disable strict, sonarjs/no-duplicate-string, sonarjs/no-duplicated-branches */
 
 // Isolate this code
 (function () {
@@ -34,9 +34,8 @@
                 </p>
             `,
             allowsParent: true,
-            parentRequired: false,
             allowsHead: true,
-            allowsPos: false,
+            allowsPos: true,
         },
         ul: {
             value: 'ul',
@@ -50,9 +49,8 @@
                 </p>
             `,
             allowsParent: true,
-            parentRequired: false,
             allowsHead: true,
-            allowsPos: false,
+            allowsPos: true,
         },
         ol: {
             value: 'ol',
@@ -66,9 +64,8 @@
                 </p>
             `,
             allowsParent: true,
-            parentRequired: false,
             allowsHead: true,
-            allowsPos: false,
+            allowsPos: true,
         },
         dl: {
             value: 'dl',
@@ -92,9 +89,8 @@
                 </p>
             `,
             allowsParent: true,
-            parentRequired: false,
             allowsHead: true,
-            allowsPos: false,
+            allowsPos: true,
         },
         article: {
             value: 'article',
@@ -105,9 +101,8 @@
                 </p>
             `,
             allowsParent: true,
-            parentRequired: false,
             allowsHead: true,
-            allowsPos: false,
+            allowsPos: true,
         },
         html: {
             value: 'html',
@@ -123,24 +118,27 @@
                     <b>NOTE</b>: Use with caution, no validity checking is currently done.
                 </p>
             `,
-            allowsParent: false,
-            parentRequired: false,
+            allowsParent: true,
             allowsHead: false,
-            allowsPos: false,
+            allowsPos: true,
         },
         title: {
             value: 'title',
             label: 'Page Title',
             description: `
                 <p>
-                    Updates the HTML page title and meta description. Amends the first <code>&lt;h1></code> tag on the page if it exists else adds one at the top of the page.
+                    Updates the HTML page title and meta description. Amends the first 
+                    <code>&lt;h1></code> tag on the page if it exists else adds one at the top of the page.
+                    There should only ever be one H1 tag on a page.
+                </p>
+                <p>
+                    The <b>Parent</b> and <b>HTML ID</b> are ignored in this case
                 </p>
                 <p>
                     <code>msg.payload</code> must be a simple string.
                 </p>
             `,
             allowsParent: false,
-            parentRequired: false,
             allowsHead: false,
             allowsPos: false,
         },
@@ -149,10 +147,9 @@
             label: 'Add row to existing ordered or unordered list',
             description: `
                 <p>
-                    Add a new row to an existing list.
+                    Always add a new row to an existing list. (no replace)
                 </p><p>
                     Set the <b>Parent</b> to the id of the existing table.
-                    The <b>HTML ID</b> can be anything unique to the page.
                 </p><p>
                     Set the incoming <code>msg.payload</code> to a string.
                 </p><p>
@@ -160,7 +157,6 @@
                 </p>
             `,
             allowsParent: true,
-            parentRequired: true,
             allowsHead: false,
             allowsPos: true,
         },
@@ -169,10 +165,9 @@
             label: 'Add row to existing table',
             description: `
                 <p>
-                    Add a new row to an existing table.
+                    Always add a new row to an existing table. (no replace)
                 </p><p>
                     Set the <b>Parent</b> to the id of the existing table.
-                    The <b>HTML ID</b> can be anything unique to the page.
                 </p><p>
                     Set the incoming <code>msg.payload</code> to an <i>Object<i>.
                     The properties of the object must match the column definitions of the existing table.
@@ -181,71 +176,107 @@
                 </p>
             `,
             allowsParent: true,
-            parentRequired: true,
             allowsHead: false,
             allowsPos: true,
         },
     }
 
-    // TODO Turn off parent & heading inputs where not wanted
+    const stdStrTypes = [
+        'msg', 'flow', 'global',
+        'str', 'env', 'jsonata', 're',
+    ]
+
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
-        // Initial conf data
+        // Initial config data
         if (!node.confData) node.confData = {}
+        if (!node.parent || node.parent === '') $('#node-input-parent').val('body')
+        if (!node.position || node.position === '') {
+            $('#node-input-position').val('last')
+            node.position = 'last'
+        }
+
+        const tiWidth = '68.5%'
 
         // Define element types for drop-down
         $('#node-input-elementtype').typedInput({
             types: [
                 {
                     value: 'elementType',
-                    // @ts-expect-error
-                    options: Object.values(elTypes)
+                    options: Object.values(elTypes),
                 }
             ]
-        // @ts-ignore On-change of element type, update the info panel
+        // On-change of element type, update the info panel
         }).on('change', function() {
+            // @ts-ignore
             if (elTypes[this.value].description === undefined) elTypes[this.value].description = 'No description available.'
+            // @ts-ignore
             $('#type-info').html(elTypes[this.value].description)
 
+            // @ts-ignore
             if ( elTypes[this.value].allowsParent === false ) $('#node-input-parent').prop('disabled', true)
             else $('#node-input-parent').prop('disabled', false)
 
+            // @ts-ignore
             if ( elTypes[this.value].allowsHead === false ) $('#node-input-heading').typedInput('disable')
             else $('#node-input-heading').typedInput('enable')
 
+            // @ts-ignore
             if ( elTypes[this.value].allowsPos === false ) $('#node-input-position').prop('disabled', true)
             else $('#node-input-position').prop('disabled', false)
+
+            // TODO If type is heading - change parent to disabled (perhaps hide the input)
         })
+
+        // parent selector typed input - https://nodered.org/docs/api/ui/typedInput/
+        $('#node-input-parent').typedInput({
+            types: stdStrTypes,
+            default: 'str',
+            typeField: $('#node-input-parentSourceType'),
+        }).typedInput('width', tiWidth)
+
+        // element id typed input
+        $('#node-input-elementid')
+            .typedInput({
+                types: stdStrTypes,
+                default: 'str',
+                typeField: $('#node-input-elementIdSourceType'),
+            })
+            .on('change', function() {
+                // @ts-expect-error Create unique default topic from id
+                $('#node-input-topic').val(this.value)
+            })
+            .typedInput('width', tiWidth)
+
+        // classes typed input - https://nodered.org/docs/api/ui/typedInput/
+        $('#node-input-classes').typedInput({
+            types: stdStrTypes,
+            default: 'str',
+            typeField: $('#node-input-classesSourceType'),
+        }).typedInput('width', tiWidth)
+
+        // styles typed input - https://nodered.org/docs/api/ui/typedInput/
+        $('#node-input-styles').typedInput({
+            types: stdStrTypes,
+            default: 'str',
+            typeField: $('#node-input-stylesSourceType'),
+        }).typedInput('width', tiWidth)
 
         // Set up optional heading input
         $('#node-input-heading').typedInput({
-            typeField: $('#node-input-headingLevel'),
-            types: [
-                {
-                    value: 'h2', label: 'H2: ', hasValue: true,
-                },
-                {
-                    value: 'h3', label: 'H3 ', hasValue: true,
-                },
-                {
-                    value: 'h4', label: 'H4 ', hasValue: true,
-                },
-                {
-                    value: 'h5', label: 'H5 ', hasValue: true,
-                },
-                {
-                    value: 'h6', label: 'H6 ', hasValue: true,
-                },
-            ]
-        }).typedInput('width', '68.5%')
+            types: stdStrTypes,
+            default: 'str',
+            typeField: $('#node-input-headingSourceType'),
+        }).typedInput('width', '56.5%')
 
-        // Create unique default topic from id
-        $('#node-input-elementid').on('change', function() {
-            // @ts-expect-error
-            $('#node-input-topic').val(this.value)
-        })
+        // position typed input - https://nodered.org/docs/api/ui/typedInput/
+        $('#node-input-position').typedInput({
+            types: stdStrTypes,
+            default: 'str',
+            typeField: $('#node-input-positionSourceType'),
+        }).typedInput('width', tiWidth)
 
         // Make position of aria-labels dynamic to cursor
         // $('#uib-el *[aria-label]').on('mousemove', function(event) {
@@ -339,7 +370,42 @@
         })
     } // ----- end of onEditPrepare() ----- //
 
-    // @ts-ignore
+    //#region ---- Validation functions ---- //
+
+    /** Validate a typed input as a string
+     * Must not be JSON. Can be a number only if allowNum=true. Can be an empty string only if allowBlank=true
+     * Sets typedInput border to red if not valid since custom validation not available on std typedInput types
+     * @param {string} value Input value
+     * @param {string} inpName Input field name
+     * @param {boolean} allowBlank true=allow blank string. Default=true
+     * @param {boolean} allowNum true=allow numeric input. Default=false
+     * @returns {boolean} True if valid
+     */
+    function tiValidateOptString(value, inpName, allowBlank = true, allowNum = false) {
+        let isValid = true
+        let f
+        try {
+            f = value.slice(0, 1)
+        } catch (e) {}
+
+        if (allowBlank === false && value === '') {
+            isValid = false
+            // console.log({ name: inpName, why: 'Blank failed', value: value, allowBlank: allowBlank })
+        }
+
+        if ( allowNum === false && (value !== '' && !isNaN(Number(value))) ) {
+            isValid = false
+            // console.log({ name: inpName, why: 'Num failed', value: value, allowNum: allowNum })
+        }
+
+        if ( f === '{' || f === '[' ) isValid = false
+
+        $(`#node-input-${inpName} + .red-ui-typedInput-container`).css('border-color', isValid ? 'var(--red-ui-form-input-border-color)' : 'red')
+        return isValid
+    }
+
+    //#endregion ---- Validation functions ---- //
+
     RED.nodes.registerType(moduleName, {
         category: paletteCategory,
         color: paletteColor,
@@ -347,17 +413,27 @@
             name: { value: '' },
             topic: { value: '' },
 
-            elementid: { value: '', required: true },
-            elementtype: { value: '', required: true },
-            parent: { value: '' },
+            elementtype: { value: 'table', required: true },
 
-            classes: { value: '' },
-            styles: { value: '' },
+            parent: { value: 'body', validate: (v) => tiValidateOptString(v, 'parent', false, false) },
+            parentSource: { value: '' }, // ! only here to allow for migration to parentSource field - remove after go-live of v6.1
+            parentSourceType: { value: 'str' },
 
-            heading: { value: '' },
-            headingLevel: { value: 'h2' },
+            elementid: { value: '', validate: (v) => tiValidateOptString(v, 'elementid', true, false) },
+            elementId: { value: '' }, // ! TODO remove after go-live 6.1
+            elementIdSourceType: { value: 'str' },
 
-            position: { value: 'last' },
+            classes: { value: '', validate: (v) => tiValidateOptString(v, 'classes', true, false) },
+            classesSourceType: { value: 'str' },
+            styles: { value: '', validate: (v) => tiValidateOptString(v, 'styles', true, false) },
+            stylesSourceType: { value: 'str' },
+
+            heading: { value: '', validate: (v) => tiValidateOptString(v, 'heading', true, false) },
+            headingSourceType: { value: 'str' },
+            headingLevel: { value: 'h2', required: true },
+
+            position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true) },
+            positionSourceType: { value: 'str' },
 
             // Configuration data specific to the chosen type
             confData: { value: {} },

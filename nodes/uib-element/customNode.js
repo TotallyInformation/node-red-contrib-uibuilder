@@ -27,12 +27,16 @@
 
 //#region ----- Module level variables ---- //
 
+const { promisify } = require('util')
+
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
  */
 const mod = {
     /** @type {runtimeRED|undefined} Reference to the master RED instance */
     RED: undefined,
+    /** @type {Function|undefined} Reference to a promisified version of RED.util.evaluateNodeProperty*/
+    evaluateNodeProperty: undefined,
     /** @type {string} Custom Node Name - has to match with html file and package.json `red` section */
     nodeName: 'uib-element', // Note that 'uib-element' will be replaced with actual node-name. Do not forget to also add to package.json
 }
@@ -72,7 +76,7 @@ function emitMsg(msg, node) {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & uibElNode}
  */
-function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
     // TODO: Accept cache-replay and cache-clear
     // Is this a uib control msg? If so, ignore it since this is connected to uib via event handler
     if ( msg.uibuilderCtrl ) {
@@ -82,7 +86,7 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     }
 
     // Save the last input msg for replay to new client connections, creates/update this._ui
-    buildUi(msg, this)
+    await buildUi(msg, this)
 
     // Emit the list (sends to the matching uibuilder instance) or fwd to output depending on settings
     emitMsg(msg, this)
@@ -111,17 +115,32 @@ function nodeInstance(config) {
     this.name = config.name ?? ''
     this.topic = config.topic ?? ''
 
-    this.elementid = config.elementid ?? ''
-    this.elementtype = config.elementtype ?? ''
-    this.parent = config.parent ?? ''
+    this.elementtype = config.elementtype
 
-    this.classes = config.classes ?? ''
-    this.styles = config.styles ?? ''
+    this.parentSource = config.parent ?? 'body' // Swap to source naming
+    this.parentSourceType = config.parentSourceType ?? 'str'
+    this.parent = undefined // update in buildui
 
-    this.heading = config.heading ?? ''
+    this.elementIdSource = config.elementid ?? config.elementId ?? '' // Swap to source naming
+    this.elementIdSourceType = config.elementIdSourceType ?? 'str'
+    this.elementId = undefined
+
+    this.positionSource = config.position ?? 'last'
+    this.positionSourceType = config.positionSourceType ?? 'str'
+    this.position = undefined
+
+    this.classesSource = config.classes ?? ''
+    this.classesSourceType = config.classesSourceType ?? 'str'
+    this.classes = undefined
+
+    this.stylesSource = config.styles ?? ''
+    this.stylesSourceType = config.stylesSourceType ?? 'str'
+    this.styles = undefined
+
+    this.headingSource = config.heading ?? ''
+    this.headingSourceType = config.headingSourceType ?? ''
+    this.heading = undefined
     this.headingLevel = config.headingLevel ?? 'h2'
-
-    this.position = config.position ?? 'last'
 
     // Configuration data specific to the chosen type
     this.confData = config.confData ?? {}
@@ -252,7 +271,7 @@ function buildUlOlList(node, msg, parent) {
         // Create next list row
         listRows.push( {
             'type': 'li',
-            // 'id': `${node.elementid}-data-R${rowNum}`,
+            // 'id': `${node.elementId}-data-R${rowNum}`,
             'attributes': {
                 // NB: Making all indexes 1-based for consistency
                 // 'data-row-index': rowNum,
@@ -308,7 +327,7 @@ function buildDlList(node, msg, parent) {
 
         const listIndex = listRows.push( {
             'type': 'div',
-            // 'id': `${node.elementid}-data-R${rowNum}`,
+            // 'id': `${node.elementId}-data-R${rowNum}`,
             'attributes': {
                 // NB: Making all indexes 1-based for consistency
                 // 'data-row-index': rowNum,
@@ -389,7 +408,7 @@ function buildTable(node, msg, parent) {
         // TODO Allow for msg.cols to be used as override
         // Build the columns from the first set of entries & add the thead
         if (i === 0) {
-            const hdrRowNum = i + 1
+            // const hdrRowNum = i + 1
 
             // TODO inp[el] has to be an object
             // TODO check that there are >0 columns
@@ -398,7 +417,7 @@ function buildTable(node, msg, parent) {
             thead.components = [
                 {
                     'type': 'tr',
-                    // 'id': `${node.elementid}-head-r${hdrRowNum}`,
+                    // 'id': `${node.elementId}-head-r${hdrRowNum}`,
                     // 'attributes': {
                     //     'data-hdr-row-index': hdrRowNum,
                     // },
@@ -415,7 +434,7 @@ function buildTable(node, msg, parent) {
                 const colNum = k + 1
                 thead.components[0].components.push({
                     'type': 'th',
-                    // 'id': `${node.elementid}-head-r${hdrRowNum}-c${colNum}`,
+                    // 'id': `${node.elementId}-head-r${hdrRowNum}-c${colNum}`,
                     'attributes': {
                         // 'data-hdr-row-index': hdrRowNum,
                         'data-col-index': colNum,
@@ -433,7 +452,7 @@ function buildTable(node, msg, parent) {
         // Create the data row
         const rLen = tbody.components.push( {
             'type': 'tr',
-            // 'id': `${node.elementid}-data-R${rowNum}`,
+            // 'id': `${node.elementId}-data-R${rowNum}`,
             'components': [],
             'attributes': {},
         } )
@@ -456,7 +475,7 @@ function buildTable(node, msg, parent) {
 
             tbody.components[rLen - 1].components.push({
                 'type': 'td',
-                // 'id': `${node.elementid}-data-R${rowNum}-C${colNum}`,
+                // 'id': `${node.elementId}-data-R${rowNum}-C${colNum}`,
                 'attributes': {
                     // 'class': ((rowNum) % 2  === 0) ? 'even' : 'odd',
                     // 'data-row-index': rowNum,
@@ -519,28 +538,21 @@ function buildTableRow(node, msg, parent) {
  */
 function buildUlOlRow(node, msg, parent) {
     // Payload must be a a string
-    // TODO Allow payload to be an array
     if ( !Array.isArray(msg.payload) ) msg.payload = [msg.payload]
 
     const err = ''
 
     parent.method = 'add'
-    const rLen = parent.components.push({
-        'type': 'li',
-        'parent': `${node.parent} > ul`,
-        'position': node.position,
-        'components': [],
-    })
-    // const rowNum = -10
-    Object.keys(msg.payload).forEach(  (colName, j) => {
-        const colNum = j + 1
 
-        parent.components[rLen - 1].components.push({
+    // const rowNum = -10
+    Object.keys(msg.payload).forEach(  (rowName, j) => {
+        parent.components.push({
             'type': 'li',
-            'attributes': {
-                'data-col-index': colNum,
-                'data-col-name': colName,
-            },
+            'parent': `${node.parent} > ul`,
+            'position': node.position,
+            // 'attributes': {
+            //     'data-row-name': rowName,
+            // },
             'slot': msg.payload[j],
         })
     } )
@@ -558,8 +570,9 @@ function addDiv(parent, node) {
     parent.components.push(
         {
             'type': 'div',
-            'id': node.elementid,
-            'parent': node.parent !== '' ? node.parent : undefined,
+            'id': node.elementId,
+            'parent': node.parent,
+            'position': node.position,
             'attributes': {},
             'components': [],
         },
@@ -575,7 +588,7 @@ function addDiv(parent, node) {
 function addHeading(parent, node) {
     if (node.heading === '') return parent
 
-    const hdId = `${node.elementid}-heading`
+    const hdId = `${node.elementId}-heading`
 
     // Add accessibility label
     if (!parent.attributes) parent.attributes = {}
@@ -594,29 +607,58 @@ function addHeading(parent, node) {
     return parent
 }
 
+/** Get an individual value for a typed input field
+ * @param {string} propName Name of the node property to check
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @param {*} msg incoming msg
+ */
+async function getSource(propName, node, msg) {
+    const src = `${propName}Source`
+    const srcType = `${propName}SourceType`
+    if (node[src] !== '') {
+        try {
+            node[propName] = await mod.evaluateNodeProperty(node[src], node[srcType], node, msg)
+        } catch (e) {
+            node.warn(`Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
+        }
+    }
+}
+
 /** Create/update the _ui object and retain for replay
  * @param {*} msg incoming msg
  * @param {runtimeNode & uibElNode} node reference to node instance
  */
-function buildUi(msg, node) {
+async function buildUi(msg, node) {
+
+    // Get all of the typed input values (in parallel)
+    await Promise.all([
+        getSource('parent', node, msg),
+        getSource('elementId', node, msg),
+        getSource('classes', node, msg),
+        getSource('styles', node, msg),
+        getSource('heading', node, msg),
+        getSource('position', node, msg),
+    ])
+
+    console.log('NODE', node)
+
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) node._ui = msg._ui
     else node._ui = []
-    // let uiIndex = node._ui.length === 0 ? 0 : node._ui.length - 1
 
     // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
     if ( !msg.mode ) msg.mode = 'update'
 
     // If mode is remove, then simply do that and return
     if ( msg.mode === 'remove' ) {
-        if (!node.elementid) {
+        if (!node.elementId) {
             node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
             return
         }
 
         node._ui.push({
             method: 'remove',
-            components: [`#${node.elementid}`] // remove uses css selector, not raw id
+            components: [`#${node.elementId}`] // remove uses css selector, not raw id
         })
         return
     }
@@ -714,6 +756,9 @@ function ModuleDefinition(RED) {
 
     // Save a reference to the RED runtime for convenience
     mod.RED = RED
+
+    // Save a ref to a promisified version to simplify async callback handling
+    mod.evaluateNodeProperty = promisify(mod.RED.util.evaluateNodeProperty)
 
     /** Register a new instance of the specified node type (2) */
     RED.nodes.registerType(mod.nodeName, nodeInstance)
