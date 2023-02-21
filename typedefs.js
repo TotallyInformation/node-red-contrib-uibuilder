@@ -392,12 +392,6 @@
  *   elementId: string;
  *   elementIdSource: string;
  *   elementIdSourceType: string;
- *   classes: string;
- *   classesSource: string;
- *   classesSourceType: string;
- *   styles: string;
- *   stylesSource: string;
- *   stylesSourceType: string;
  *   heading: string;
  *   headingSource: string;
  *   headingSourceType: string;
@@ -414,10 +408,19 @@
  * @typedef {{
  *   name: string;
  *   topic: string;
+ *   mode: 'update'|'delete'|'remove'|'msg.mode';
+ *   modeSource: string;
+ *   modeSourceType: string;
  *   cssSelector: string;
+ *   cssSelectorSource: string;
  *   cssSelectorType: string;
+ *   cssSelectorSourceType: string;
+ *   slotContent: string;
  *   slotSourceProp: string;
+ *   slotContentSource: string;
+ *   slotContentSourceType: string;
  *   slotSourcePropType: string;
+ *   attribs: object;
  *   attribsSource: string;
  *   attribsSourceType: string;
  *   slotPropMarkdown: boolean;

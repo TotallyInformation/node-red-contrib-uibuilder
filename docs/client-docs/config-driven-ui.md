@@ -21,6 +21,7 @@ lastUpdated: 2023-01-14 17:08:48
   - [Msg schema](#msg-schema)
   - [Example msgs for nested components](#example-msgs-for-nested-components)
 - [Method: remove](#method-remove)
+- [Method: removeAll](#method-removeall)
 - [Method: update](#method-update)
   - [Msg schema](#msg-schema-1)
 - [Method: reload - Reloads the current page](#method-reload---reloads-the-current-page)
@@ -72,12 +73,13 @@ All methods and components are processed in the order they appear in the message
 ## Available methods
 
 ```js
-msg._ui.method = 'load' || 'add' || 'remove' || 'update' || 'reload' || 'notify' || 'alert'
+msg._ui.method = 'load' || 'add' || 'remove' || 'removeAll' || 'update' || 'reload' || 'notify' || 'alert'
 ```
 
 * [`load`](#method-load): Load a new UI component using `import()` so that it can be used. Used, for example, to dynamically load web components or other modules. It can also load plain JS and CSS.
 * [`add`](#method-add): Add a UI component instance to the web page dynamically.
 * [`remove`](#method-remove): Remove a UI component instance from the web page dynamically.
+* [`removeAll`](#method-removeAll): Remove a UI component instance from the web page dynamically.
 * [`update`](#method-update): Update the settings/data of a UI component instance on the web page.
 * [`reload`](#method-reload---reloads-the-current-page): Triggers the page to automatically reload
 * [`notify`](#method-notify): Shows an overlayed notification message (toast)
@@ -378,10 +380,34 @@ Each component can:
 
 The remove method will remove the listed HTML elements from the page assuming they can be found. The search specifier is a [CSS Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) statement.
 
+Note that generic selections such as `li` will remove the **FIRST** matching element on the page.
+
 ```jsonc
 {
     "_ui": {
         "method": "remove",
+
+        // List of component instances to remove from the page - use CSS Selector
+        // - will remove the 1st match found so specify multiple times to remove more than one of same selector
+        "components": [
+            "selector1",
+            "selector2"
+            // and others as desired. Each will be removed in order.
+        ]
+    }
+}
+```
+
+## Method: removeAll
+
+The remove method will remove the listed HTML elements from the page assuming they can be found. The search specifier is a [CSS Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) statement.
+
+Note that generic selections such as `li` will remove **ALL** matching elements on the page.
+
+```jsonc
+{
+    "_ui": {
+        "method": "removeAll",
 
         // List of component instances to remove from the page - use CSS Selector
         // - will remove the 1st match found so specify multiple times to remove more than one of same selector
@@ -400,7 +426,9 @@ The update method will update the referenced HTML elements (whether native HTML,
 
 Obviously, to update something, you must identify it. You can identify the thing(s) to update by: The HTML ID attribute, a CSS selector, an HTML name attribute or the HTML tag (type). If multiple of those identifies are provided, the priority is in that order
 
-Unlike the other methods, the update method will find **ALL** matching elements and update them. This means that you could, for example, change the text colour of all list entries on the page with a single update.
+> [!TIP]
+> 
+> Unlike the other methods, the *update method* will find **ALL** matching elements and update them. This means that you could, for example, change the text colour of all list entries on the page with a single update.
 
 ### Msg schema
 

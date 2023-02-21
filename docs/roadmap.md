@@ -101,6 +101,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
   - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
 
+* **NEW NODE** - `uib-get` - Gets data from a page's DOM. Will also need change to FE library.
+
+  e.g. Get the number of rows in a table or list. Get the ID of the first `div`. Get the current value of an input field.
+
 * Continuing documentation improvements
   * `README.md`: Add more links to the Features section so that each feature points to appropriate documentation. Add a landing-page link to "includes many helper features" to signpost to relavent detailed documentation.
   * Node-specific docs.
@@ -150,6 +154,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Allow control of showMsg from Node-RED.
 
 * Improvements to `uib-cache` node
+  * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
   * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
   * Add cache clear button to complement the cache clear control msg
   * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
@@ -158,29 +163,54 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add empty cache button.
   * Think about impact of a cache clear (affects all connected clients)
 
+* Impovements to `uib-sender` node
+
+  * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
+
 * Extensions to the `uib-element` node
+  * As more element types are added, group into types: main, add, form, etc
+  * ? Have JSON input msg templates for each type with links to copy to clipboard ?
+  * ?? update mode - change to replace mode? Replace mode looks for root id, if found, replace outerHTML, if not found add.
   * Add more elements:
-    * [x] List
+    * [x] List (ul, ol, dl)
+      * Future improvements:
+        * list-style-type (add to outer) - several options plus text (incl emoji's)
+        * ? Optional list leading/trailing text ?
     * [x] Table
+      * Future improvements:
+        * Caption
+        * If named row comes from a field, make sure it is the 1st col and marked as a th
+        * Add data-row-name to td's as well
     * [x] HTML - allow raw html to be sent - e.g. from template node
-    * [ ] Page Title
-    * Grid/Flex-Grid
-    * Card
+    * [x] Page Title
+    * [x] tr - Add a row to an existing table
+    * [x] li - Add a row to an existing ul/ol list
+      * Future improvements:
+        * list-style-type (add to outer) - several options plus text (incl emoji's)
+    * [x] Card/Article
+      * Future improvements:
+        * Better layout, more optional internal structure (footer, etc)
+    * Grid/Flex-Grid (with option to turn on visible grid to help with layout)
     * Form
       * Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
       * Inputs: incl text, number, time, date, colour picker, ...
+      * button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
     * Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
     * tbody
-    * tr (use data-row-index)
-    * li
-    * Dialogue box
     * iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
     * notify (globalNotification)
-    * button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
+    * Modal Dialogue
     * LED (on/off/colour/brightness) - ref: node-red-contrib-ui-led
     * Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
     * Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
     * Container (with option for drag/drop of contents) [ref](https://discourse.nodered.org/t/is-there-a-pallete-that-can-do-this/75143?u=totallyinformation)
+
+  * ??? How to allow EXTERNAL element definitions ???
+    
+    e.g. Someone else's contributed package.
+
+* Extensions to the `uib-update` node
+  * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
 
 * Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
@@ -190,6 +220,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
   * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
+  * Add new fn: `uiWatch(cssSelector)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically.
   * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
   * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
 
@@ -234,7 +265,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Check all auto-added elements for accessibility
     * Add count of current errors to title
 
-* Updates to uibuilder node
+* Updates to `uibuilder` node
 
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
     * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
@@ -248,6 +279,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
   * Allow instance npm installs to be served (would allow both vue 2 and vue 3 for example). Instance serves to take preference. Would need extension to editor libraries tab to differentiate the locations.
   * Centralise the list of control messages in use.
+  * Add occasional check for new version of uib being available and give single prompt in editor.
+  * Improve checks for rename failures. `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` - these should clear after restart but sometimes don't.
+  * Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'". "sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
+
   
   * Editor:
     * Add template description to display.
@@ -298,6 +333,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Updates to Documentation
   * Update glossary with ESM, ECMA, UMD, IIFE
+  * Add CSS Selectors how-to with typical examples. e.g. element with id, element with class, nth list entry/table row.
   * Split the new client library, move _ui features to separate page.
   * Add message interaction diagram to "pre-defined-msgs.md"
   * Add note to documentation for the library manager that you can install LOCAL folders.

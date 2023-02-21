@@ -20,16 +20,6 @@ Context store handling currently does not cope with stores that require asynchro
 
 ### Needs Fixing
 
-```
-[error] [uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=aa, oldUrl=cache-test, Fldr=\src\uibRoot\aa. Error=dest already exists.
-```
-
-element - update mode - change to replace mode? Replace mode looks for root id, if found, replace outerHTML, if not found add.
-
-Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'"
-
-"sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
-
 **HOW TO DELETE THINGS** from the UI? Need to update `uib-update`.
 
 ## To do/In-progress
@@ -40,45 +30,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Editor: Improve help box for _uib switch 
 
-### uib-list node
-
-* Add deprecation warning
-
-### New `uib-element` node
-
-* Convert text inputs to typedInputs. Include "none" as an option. For classes, styles, allow JSON array/object.
-* Disable parent/heading inputs where not needed (html, page title, table row, list row )
-* Enforce parent id for table row and list row
-* OPTIONS to add
-  * ALL
-    * Wire up classes, styles and heading settings
-    * Allow msg overrides of settings. Props to allow: heading, classes, styles
-  * TABLE
-    * Caption
-    * If named row comes from a field, make sure it is the 1st col and marked as a th
-    * Add data-row-name to td's as well
-  * LIST
-    * list-style-type (add to outer) - several options plus text (incl emoji's)
-    * Add div's around dt/dd pairs
-    * ? Optional leading/trailing text ?
-  * tr
-    * row number to add after
-  * li
-    * row number to add after
-    * list-style-type (add to outer) - several options plus text (incl emoji's)
-* ? Have JSON input msg templates for each type with links to copy to clipboard ?
-* Docs
-  * Parent: `#eltest-ul-ol > li:nth-child(3)` or `#eltest-ul-ol *[data-row-index="3"]`
-  * Chaining
-  * JSON msg templates for each type
-
-### NEW node: `uib-update`
-
-Sends updates to an existing HTML element (using a selector). Uses _ui mode `update`. Can change slot/slotMarkdown, attributes, properties, and events.
-
-* Fix input fields not resizing.
-* Add ability to DELETE things.
-* Consider if worth adding a way to update a front-end javascript variable directly?
+### Templates
+* Make the blank template truly blank
+* Remove all msg displays. Add comment for showMsg, commented out for blank, in for others.
+* [TotallyInformation/uib-template-svelte-simple](https://github.com/TotallyInformation/uib-template-svelte-simple), [TotallyInformation/uib-template-test](https://github.com/TotallyInformation/uib-template-test),
 
 ### Examples
 
@@ -87,11 +42,6 @@ Sends updates to an existing HTML element (using a selector). Uses _ui mode `upd
 * Update/add examples for each template
   * Add global Notification/Toast input
   * Add dynamic HTML input
-
-### Templates
-* Make the blank template truly blank
-* Remove all msg displays. Add comment for showMsg, commented out for blank, in for others.
-* [TotallyInformation/uib-template-svelte-simple](https://github.com/TotallyInformation/uib-template-svelte-simple), [TotallyInformation/uib-template-test](https://github.com/TotallyInformation/uib-template-test),
 
 ### Doc updates
 
@@ -104,11 +54,17 @@ Sends updates to an existing HTML element (using a selector). Uses _ui mode `upd
   * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
 * Update caching info to include info on html cache.
 
+* uib-element Docs
+  * Parent: `#eltest-ul-ol > li:nth-child(3)`
+  * Chaining
+  * JSON msg templates for each type
+
 * HTML
   *     --heading-h2-border-color: var(--mono-tint2);
   * Set `.markdown-section h2 {border-bottom-width: thick;}`
   * Set `.markdown-section h3 {border-bottom-width: thin;}`
   * Set `--heading-h3-border-color: var(--mono-tint2)`
+
 
 
 ----
@@ -133,6 +89,7 @@ Sends updates to an existing HTML element (using a selector). Uses _ui mode `upd
   * Reports changes of **visibility** of the page back to node-red via a new control msg.
   * Creates a browser `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
   * Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference. Reset by setting to an empty string.
+
 * If you turn on the advanced option "Include msg._uib in standard msg output.", messages from the client now include client details for you to use in your own security processing or just to identify where things have come from (e.g. what page name as well as what client).
 * All of the templates and example flows have been refreshed with the latest standards.
 * Plenty of documentation updates and additions.
@@ -209,23 +166,27 @@ Sends updates to an existing HTML element (using a selector). Uses _ui mode `upd
 
 * Added `uibuilder.isVisible` property. Is true when the browser tab containing the page is actually visible. On visibility change, sends a new control msg `msg.uibuilderCtrl` = "visibility" with the property `isVisible` true or false. Does not send this when the page loads but does set the property. Uses the document `visibilitychange` event.
 
-* When triggering `showDialog()` either in the FE or by sending a toast notification from node-red, setting "variant" now allows any CSS class name to be used. Not just the previous list of names ('primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger') though since they are all included as classes in uib-brand.css, they all still work.
-
 * Added internal flag if VueJS is loaded. To be used for dynamic UI processing.
 
-* Extended the standards for `msg._ui` with mode=update to include the properties `selector` or `select`. These take CSS selectors as their value (as does the `type` property) and take preference over a `name` or `type` property but not over an `id` property. Mostly for convenience and just easier to remember. Documentation also updated.
+* `_ui` handler updates
 
-* Added a `position` property to the `add` _ui mode. "first"/"last": Adds start/end of parent's children respectively. An integer will add the element after the nth child.
+  * When triggering `showDialog()` either in the FE or by sending a toast notification from node-red, setting "variant" now allows any CSS class name to be used. Not just the previous list of names ('primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger') though since they are all included as classes in uib-brand.css, they all still work.
+
+  * Extended the standards for `msg._ui` with mode=update to include the properties `selector` or `select`. These take CSS selectors as their value (as does the `type` property) and take preference over a `name` or `type` property but not over an `id` property. Mostly for convenience and just easier to remember. Documentation also updated.
+
+  * Added a `position` property to the `add` _ui mode. "first"/"last": Adds start/end of parent's children respectively. An integer will add the element after the nth child.
+
+  * Added **new function** `uibuilder.uiGet(cssSelector [, propName])` - Get data from the DOM. Returns selection of useful properties unless a specific property requested.
+
+    Data can be sent straight back to Node-RED: `uibuilder.send( uibuilder.uiGet('input') )` (gets all useful properties from all `input` fields on the page).
+  
+  * Added a new ui handler `removeAll` and updated the handler function with an optional 2nd parameter to remove all (rather than the 1st) matching elements.
 
 * Added **new function** `uibuilder.beaconLog(txtToSend, logLevel)` which allows sending a simple, short log message back to Node-RED even if socket.io is not connected. In Node-RED, outputs to the Node-RED log and sends a uibuilder control message where `msg.uibuilderCtrl` = "client beacon log".
 
 * Added **new function** `uibuilder.logToServer()` which will take any number and type of arguments and send them all back to Node-RED in the msg.payload of a _control_ message (out of port #2) where `msg.uibuilderCtrl` = "client log message". Client details are added to the message.
 
 * Added **new function** `uibuilder.watchDom(true)` - Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
-
-* Added **new function** `uibuilder.uiGet(cssSelector [, propName])` - Get data from the DOM. Returns selection of useful properties unless a specific property requested.
-
-  Data can be sent straight back to Node-RED: `uibuilder.send( uibuilder.uiGet('input') )` (gets all useful properties from all `input` fields on the page)
 
 * Added 2 new events: `uibuilder:constructorComplete` and `uibuilder:startComplete`. Mostly for potential internal use.
 
@@ -235,7 +196,7 @@ Sends updates to an existing HTML element (using a selector). Uses _ui mode `upd
 
 ### **NEW** `uib-element` node
 
-This node lets you easily create new front-end UI elements from within Node-RED. It has a selection of element types ranging from simple text structures, through different types of list and full tables. It is a much more comprehensive node than the previous, experimental, `uib-list` node.
+This node lets you easily create new front-end UI elements from within Node-RED. It has a selection of element types ranging from simple text structures, through different types of list and full tables. It is a much more comprehensive node than the previous, experimental, `uib-list` node. This node is classed as _zero-code_ since no coding is required in order to produce a web user interface.
 
 **Note that this generates pure HTML - no frameworks are used**.
 
@@ -256,19 +217,34 @@ Element types included in this release:
 * **HTML** - Pass-though HTML (e.g. from a Node-RED Template node).
 * **Page Title** - Change the page HTML title, description and the first H1 tag on the page to all be the same input text.
 
-The following element types are also available but behave slightly differently in that they will **always** add a new row:
-
-* **Add row to existing table** - Adds a single row, must provide the _Parent_ of the table to update, can insert the row anywhere via the _Position_ input.
-* **Add row to existing unordered or ordered list** - Adds a single row, must provide the _Parent_ of the list to update, can insert the row anywhere via the _Position_ input.
+Where an *ID* is specified in the config, each of the above will attempt to *replace* an existing instance when called again. If *no ID* is specified, they will *always add* a new element.
 
 Each element except the page title is wrapped in a `<div>` tag which has the specified HTML ID applied to it. Where possible, rows and columns are given their own identifiers to make updates and styling easier. Attempts are made to ensure that the resulting HTML is accessible.
 
 Each element can have an optional heading. If used, a aria-labelledby attribute is added to the `div` tag for accessibility.
 
-> [!warning]
-> 1) Each HTML ID **must** be unique on the page otherwise updates and replacements will almost certainly not work as expected.
+The following element types are also available but behave slightly differently in that they will **always** add a new row regardless of the ID setting, they are not wrapped in a div and you cannot add a heading:
+
+* **Add row to existing table** - Adds a single row, must provide the _Parent_ of the table to update, can insert the row anywhere via the _Position_ input.
+* **Add row to existing unordered or ordered list** - Adds a single row, must provide the _Parent_ of the list to update, can insert the row anywhere via the _Position_ input.
+
+In addition, a special msg may be sent to this node: `msg.mode` where `mode` = "remove". In this case, as long as an HTML ID has been provided, the element will be removed from the UI.
+
+> Unfortunately, many front-end frameworks such as REACT and VueJS require the UI page structure to be pre-defined at load time. Because of this, many of the features in this node are of limited use when working with those frameworks.
 >
-> 2) Only the `msg.topic` can currently override any of the settings. This will be improved in future releases.
+> Oher frameworks though are better behaved (e.g. Svelte) and will work well with this node.
+
+### **NEW** `uib-update` node
+
+Zero-code UI updates from Node-RED flows. Outputs msg._ui low-code config data that the uibuilder client library can turn into full HTML. (Same format as the `uib-element` node)
+
+Can also delete (remove) existing elements. Note that in delete mode, this node will remove **ALL** element specified by the CSS Selector. e.g. if you specify a selector of "li", every list entry from every list on the page will be deleted. Use with caution.
+
+In update mode (the default), any combination of attributes (e.g. class, style, etc) and inner content (the so-called "slot" content) can be updated. Slot content can be text, HTML or (if the `markdown-it` library is loaded) Markdown.
+
+### `uib-list` node - **NOW DEPRECATED**
+
+Please switch to using the `uib-element` node. This node will be removed in the next major release of uibuilder (v7).
 
 ### `uib-brand.css`
 
