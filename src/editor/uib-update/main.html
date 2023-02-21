@@ -15,10 +15,10 @@
 -->
 
 <style>
-    #uib-el *[aria-label] {
+    #uib-upd *[aria-label] {
         position:relative;
     }
-    #uib-el *[aria-label]:after {
+    #uib-upd *[aria-label]:after {
         content: attr(aria-label);
         position:absolute;
         top:100%;left:50px;
@@ -38,10 +38,13 @@
         opacity: 0;
         transition: all 0.5s ease-out;
     }
-    #uib-el *[aria-label]:hover:after {
+    #uib-upd *[aria-label]:hover:after {
         visibility: visible;
         opacity: 1;
-        transition: all 0.5s ease-in 0.2s;
+        transition: all 0.5s ease-in 1s;
+    }
+    #uib-upd .red-ui-typedInput-container {
+        width:69% !important;
     }
 </style>
 

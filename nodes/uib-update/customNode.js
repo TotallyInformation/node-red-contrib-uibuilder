@@ -45,32 +45,49 @@ const mod = {
 
 //#region ----- Module-level support functions ----- //
 
+/** Get an individual value for a typed input field
+ * @param {string} propName Name of the node property to check
+ * @param {runtimeNode & uibUpdNode} node reference to node instance
+ * @param {*} msg incoming msg
+ */
+async function getSource(propName, node, msg) {
+    const src = `${propName}Source`
+    const srcType = `${propName}SourceType`
+    if (node[src] !== '') {
+        try {
+            node[propName] = await mod.evaluateNodeProperty(node[src], node[srcType], node, msg)
+        } catch (e) {
+            node.warn(`Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
+        }
+    }
+}
+
 /** Create/update the _ui object and retain for replay
  * @param {*} msg incoming msg
  * @param {runtimeNode & uibUpdNode} node reference to node instance
  */
 async function buildUi(msg, node) {
-    let cssSelector, slotContent, attribs
 
-    try {
-        cssSelector = await mod.evaluateNodeProperty(node.cssSelector, node.cssSelectorType, node, msg)
-    } catch (e) {
-        node.error(`Cannot evaluate source for CSS Selector. ${e.message} (${node.cssSelectorType})`, e)
-        return
-    }
+    // Get all of the typed input values (in parallel)
+    await Promise.all([
+        getSource('mode', node, msg),
+        getSource('cssSelector', node, msg),
+        getSource('attribs', node, msg),
+        getSource('slotContent', node, msg),
+    ])
 
-    if (node.slotSourceProp !== '') {
-        try {
-            slotContent = await mod.evaluateNodeProperty(node.slotSourceProp, node.slotSourcePropType, node, msg)
-        } catch (e) {
-            node.warn(`Cannot evaluate source for slot. ${e.message} (${node.slotSourcePropType})`)
-        }
-    }
-    if (node.attribsSource !== '') {
-        try {
-            attribs = await mod.evaluateNodeProperty(node.attribsSource, node.attribsSourceType, node, msg)
-        } catch (e) {
-            node.warn(`Cannot evaluate source for attributes. ${e.message} (${node.attribsSourceType})`)
+    if ( node.mode === 'msg.mode') {
+        if (msg.mode) {
+            const msgMode = msg.mode.toLowerCase()
+            if (msgMode === 'update' || msgMode === 'delete' || msgMode === 'remove') {
+                node.mode = msgMode
+            } else {
+                node.error(`Invalid mode. msg.mode must be 'update' or 'delete'. ${msg.mode}`)
+                return
+            }
+        } else {
+            node.error('Invalid mode. msg.mode requested but it does not exist on current msg')
+            return
         }
     }
 
@@ -78,17 +95,25 @@ async function buildUi(msg, node) {
     if ( msg._ui ) node._ui = msg._ui
     else node._ui = []
 
-    // NB: eval returns undefined for undefined input so no output produced
-    node._ui.push({
-        'method': 'update',
-        'components': [
-            {
-                'selector': cssSelector,
-                'slot': slotContent,
-                'attributes': attribs,
-            }
-        ]
-    })
+    if (node.mode === 'delete' || node.mode === 'remove') {
+        node._ui.push({
+            'method': 'removeAll',
+            'components': [
+                node.cssSelector,
+            ]
+        })
+    } else {
+        node._ui.push({
+            'method': 'update',
+            'components': [
+                {
+                    'selector': node.cssSelector,
+                    'slot': node.slotContent,
+                    'attributes': node.attribs,
+                }
+            ]
+        })
+    }
 
 } // -- end of buildUI -- //
 
@@ -157,11 +182,17 @@ function nodeInstance(config) {
     this.name = config.name ?? ''
     this.topic = config.topic ?? ''
 
-    this.cssSelector = config.cssSelector ?? 'body'
-    this.cssSelectorType = config.cssSelectorType ?? 'str'
+    this.modeSource = config.mode ?? 'update'
+    this.modeSourceType = config.modeSourceType ?? 'update'
+    this.mode = undefined
 
-    this.slotSourceProp = config.slotSourceProp ?? ''
-    this.slotSourcePropType = config.slotSourcePropType ?? 'msg'
+    this.cssSelectorSource = config.cssSelector ?? 'body'
+    this.cssSelectorSourceType = config.cssSelectorType ?? 'str'
+    this.cssSelector = undefined
+
+    this.slotContentSource = config.slotSourceProp ?? ''
+    this.slotContentSourceType = config.slotSourcePropType ?? 'msg'
+    this.slotContent = undefined
 
     this.slotPropMarkdown = config.slotPropMarkdown ?? false
 

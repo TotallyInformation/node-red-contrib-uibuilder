@@ -13,37 +13,65 @@
     /** Node's background color @constant {string} paletteColor */
     const paletteColor = '#E6E0F8'
 
+    const inputTypes = [
+        'msg', 'flow', 'global',
+        'str', 'num', 'bool', 'date',
+        'env', 'jsonata', 're', 'json',
+        // 'bin', 'cred',
+    ]
+    // Standard typed input types for string fields
+    const stdStrTypes = [
+        'msg', 'flow', 'global',
+        'str', 'env', 'jsonata', 're',
+    ]
+
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
+        if (!node.mode) {
+            node.mode = 'update'
+            $('#node-input-mode').val('update')
+        }
         $('#node-input-slotPropMarkdown').prop('checked', node.slotPropMarkdown)
 
-        // @ts-expect-error
-        /** @type {editorClient.WidgetTypedInputTypeDefinition)[]} */
-        const inputTypes = [
-            'msg', 'flow', 'global',
-            'str', 'num', 'bool', 'date',
-            'env', 'jsonata', 're', 'json',
-            // 'bin', 'cred',
-        ]
+        // mode typed input - https://nodered.org/docs/api/ui/typedInput/
+        $('#node-input-mode').typedInput({
+            types: [
+                {
+                    value: 'modeType',
+                    options: [
+                        {
+                            value: 'update',
+                            label: 'Update',
+                        },
+                        {
+                            value: 'delete',
+                            label: 'Delete',
+                        },
+                        {
+                            value: 'msg.mode',
+                            label: 'msg.mode',
+                        },
+                    ],
+                }
+            ],
+            typeField: $('#node-input-modeSourceType'),
+        })
 
         // css selector typed input - https://nodered.org/docs/api/ui/typedInput/
         $('#node-input-cssSelector').typedInput({
-            types: [
-                'msg', 'flow', 'global',
-                'str', 'env', 'jsonata', 're',
-            ],
+            types: stdStrTypes,
             default: 'str',
-            typeField: $('#node-input-cssSelectorType')
-        }).typedInput('width', '73%')
+            typeField: $('#node-input-cssSelectorType'),
+        })
 
         // slotSourceProp typed input - https://nodered.org/docs/api/ui/typedInput/
         $('#node-input-slotSourceProp').typedInput({
             types: inputTypes,
             default: 'msg',
             typeField: $('#node-input-slotSourcePropType')
-        }).typedInput('width', '73%')
+        })
 
         $('#node-input-slotPropMarkdown').on('change', function() {
             if ($(this).is(':checked') === false) {
@@ -60,9 +88,41 @@
             types: ['msg', 'flow', 'global', 'json', 'jsonata',],
             default: 'msg',
             typeField: $('#node-input-attribsSourceType')
-        }).typedInput('width', '73%')
+        })
 
     } // ----- end of onEditPrepare() ----- //
+
+    /** Validate a typed input as a string
+     * Must not be JSON. Can be a number only if allowNum=true. Can be an empty string only if allowBlank=true
+     * Sets typedInput border to red if not valid since custom validation not available on std typedInput types
+     * @param {string} value Input value
+     * @param {string} inpName Input field name
+     * @param {boolean} allowBlank true=allow blank string. Default=true
+     * @param {boolean} allowNum true=allow numeric input. Default=false
+     * @returns {boolean} True if valid
+     */
+    function tiValidateOptString(value, inpName, allowBlank = true, allowNum = false) {
+        let isValid = true
+        let f
+        try {
+            f = value.slice(0, 1)
+        } catch (e) {}
+
+        if (allowBlank === false && value === '') {
+            isValid = false
+            // console.log({ name: inpName, why: 'Blank failed', value: value, allowBlank: allowBlank })
+        }
+
+        if ( allowNum === false && (value !== '' && !isNaN(Number(value))) ) {
+            isValid = false
+            // console.log({ name: inpName, why: 'Num failed', value: value, allowNum: allowNum })
+        }
+
+        if ( f === '{' || f === '[' ) isValid = false
+
+        $(`#node-input-${inpName} + .red-ui-typedInput-container`).css('border-color', isValid ? 'var(--red-ui-form-input-border-color)' : 'red')
+        return isValid
+    }
 
     // @ts-ignore
     RED.nodes.registerType(moduleName, {
@@ -72,7 +132,10 @@
             name: { value: '' },
             topic: { value: '' },
 
-            cssSelector: { value: '', required: true },
+            mode: { value: 'update', required: true },
+            modeSourceType: { value: 'update', required: true },
+
+            cssSelector: { value: '', validate: (v) => tiValidateOptString(v, 'cssSelector', false, true) },
             cssSelectorType: { value: 'str', required: true },
 
             slotSourceProp: { value: '' },
@@ -92,7 +155,7 @@
         icon: 'pencilProgressWhiteSmaller.svg',
         paletteLabel: nodeLabel,
         label: function () {
-            return `${this.cssSelectorType}.${this.cssSelector.replace(/.*::/, '')}` || this.name || moduleName
+            return `${this.mode}${this.cssSelectorType === 'str' ? ` ${this.cssSelector.replace(/.*::/, '')}` : ''}`  || this.name || moduleName
         },
 
         /** Prepares the Editor panel */
