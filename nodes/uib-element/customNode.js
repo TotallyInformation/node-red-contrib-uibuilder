@@ -129,14 +129,6 @@ function nodeInstance(config) {
     this.positionSourceType = config.positionSourceType ?? 'str'
     this.position = undefined
 
-    this.classesSource = config.classes ?? ''
-    this.classesSourceType = config.classesSourceType ?? 'str'
-    this.classes = undefined
-
-    this.stylesSource = config.styles ?? ''
-    this.stylesSourceType = config.stylesSourceType ?? 'str'
-    this.styles = undefined
-
     this.headingSource = config.heading ?? ''
     this.headingSourceType = config.headingSourceType ?? ''
     this.heading = undefined
@@ -634,8 +626,6 @@ async function buildUi(msg, node) {
     await Promise.all([
         getSource('parent', node, msg),
         getSource('elementId', node, msg),
-        getSource('classes', node, msg),
-        getSource('styles', node, msg),
         getSource('heading', node, msg),
         getSource('position', node, msg),
     ])
@@ -662,11 +652,17 @@ async function buildUi(msg, node) {
         })
         return
     }
+
+    // If no HMTL ID is specified, then always ADD
+    if (!node.elementId) {
+        msg.mode = 'add'
+    }
+
     // Otherwise ...
 
     // Add the outer component which is always a div
     node._ui.push({
-        'method': 'replace',
+        'method': msg.mode === 'add' ? 'add' : 'replace',
         'components': [],
     } )
     let parent = node._ui[node._ui.length - 1]

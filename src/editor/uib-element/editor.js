@@ -181,10 +181,13 @@
         },
     }
 
+    // Standard typed input types for string fields
     const stdStrTypes = [
         'msg', 'flow', 'global',
         'str', 'env', 'jsonata', 're',
     ]
+    // Standard width for typed input fields
+    const tiWidth = '68.5%'
 
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
@@ -197,8 +200,6 @@
             $('#node-input-position').val('last')
             node.position = 'last'
         }
-
-        const tiWidth = '68.5%'
 
         // Define element types for drop-down
         $('#node-input-elementtype').typedInput({
@@ -243,26 +244,7 @@
                 types: stdStrTypes,
                 default: 'str',
                 typeField: $('#node-input-elementIdSourceType'),
-            })
-            .on('change', function() {
-                // @ts-expect-error Create unique default topic from id
-                $('#node-input-topic').val(this.value)
-            })
-            .typedInput('width', tiWidth)
-
-        // classes typed input - https://nodered.org/docs/api/ui/typedInput/
-        $('#node-input-classes').typedInput({
-            types: stdStrTypes,
-            default: 'str',
-            typeField: $('#node-input-classesSourceType'),
-        }).typedInput('width', tiWidth)
-
-        // styles typed input - https://nodered.org/docs/api/ui/typedInput/
-        $('#node-input-styles').typedInput({
-            types: stdStrTypes,
-            default: 'str',
-            typeField: $('#node-input-stylesSourceType'),
-        }).typedInput('width', tiWidth)
+            }).typedInput('width', tiWidth)
 
         // Set up optional heading input
         $('#node-input-heading').typedInput({
@@ -308,26 +290,27 @@
                 if ( tab.id === 'el-tab-conf') {
                     const type = $('#node-input-elementtype').val()
                     switch (type) { // eslint-disable-line sonarjs/no-small-switch
-                        case 'text': {
-                            templ = document.querySelector('#text-template')
-                            break
-                        }
+                        // case 'text': {
+                        //     templ = document.querySelector('#text-template')
+                        //     break
+                        // }
 
-                        case 'table': {
-                            templ = document.querySelector('#table-template')
-                            break
-                        }
+                        // case 'table': {
+                        //     templ = document.querySelector('#table-template')
+                        //     break
+                        // }
 
-                        case 'list':
-                        case 'ol':
-                        case 'ul':
-                        case 'dl': {
-                            templ = document.querySelector('#list-template')
-                            break
-                        }
+                        // case 'list':
+                        // case 'ol':
+                        // case 'ul':
+                        // case 'dl': {
+                        //     templ = document.querySelector('#list-template')
+                        //     break
+                        // }
 
                         default: {
-                            templ = document.createElement('template')
+                            // templ = document.createElement('template')
+                            templ = document.querySelector('#default-template')
                             break
                         }
                     }
@@ -336,10 +319,10 @@
                     $('#el-tab-conf').append(docFrag)
                     // Get any required functions for this type from the template (append runs the script tags immediately)
                     const confFns = window['uibElementConfigFns']
-                    console.log('confFns', confFns.type, confFns)
+                    // console.log('confFns', confFns.type, confFns)
                     // Re-constitute node.conf properties and values to the conf tab
+                    // TODO Deal with select tags
                     Object.keys(node.confData).forEach( conf => {
-                        // TODO Deal with select tags
                         $(`#conf-${type}-${conf}`).val(node.confData[conf])
                     })
                 } else {
@@ -422,11 +405,6 @@
             elementid: { value: '', validate: (v) => tiValidateOptString(v, 'elementid', true, false) },
             elementId: { value: '' }, // ! TODO remove after go-live 6.1
             elementIdSourceType: { value: 'str' },
-
-            classes: { value: '', validate: (v) => tiValidateOptString(v, 'classes', true, false) },
-            classesSourceType: { value: 'str' },
-            styles: { value: '', validate: (v) => tiValidateOptString(v, 'styles', true, false) },
-            stylesSourceType: { value: 'str' },
 
             heading: { value: '', validate: (v) => tiValidateOptString(v, 'heading', true, false) },
             headingSourceType: { value: 'str' },

@@ -1,10 +1,10 @@
 
 <p>
-    Zero-code UI builder. Creates HTML elements from simple input data.<br><br>
-    Requires the "new" front-end client library (either the IIFE or ESM version).
+    Zero-code UI builder. Creates HTML elements from simple input data.<br>
+    Outputs <code>msg._ui</code> standard configuration data.
 </p>
 <p>
-    Please try out the example in the import library.
+    Please try out the examples in the import library.
 </p>
 
 <h3>Inputs</h3>
@@ -17,11 +17,17 @@
     </dd>
 
     <dt class="optional">mode <span class="property-type">string</span></dt>
-    <dd>Optionally, set to "remove" which will remove the list from the UI. Payload is not needed in this case, it will be ignored.</dd>
+    <dd>Optionally, set to "remove" which will remove the element from the UI. Requires that the HTML ID is set.</dd>
+    <dd>Payload is not needed in this case, it will be ignored.</dd>
     <dd>Otherwise not needed.</dd>
 
     <dt class="optional">topic <span class="property-type">string</span></dt>
     <dd>Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+
+    <dt class="optional">other <span class="property-type">various</span></dt>
+    <dd>
+        Other properties can be used for the various other settings in the node if desired.
+    </dd>
 </dl>
 
 <h3>Outputs</h3>
@@ -46,93 +52,84 @@
         </p>
     </dd>
 </dl>
+<p>
+    Note that other inputs are <b>not</b> carried forward to the output.
+</p>
 
 <h3>Node Settings</h3>
 <dl class="message-properties">
-    <dt>HTML ID <span class="property-type">string</span></dt>
-    <dd>
-        The HTML element id of the resulting HTML tag.<br>
-        This is required otherwise later updates and removals cannot happen.
-        <P><b>Applied to the wrapping <code>&lt;div></code> tag</b>.</P>
-        <p>
-            ID's must be unique on the page otherwise updates/replacement processing
-            will be challenging.
-        </p>
-    </dd>
-
     <dt>Type <span class="property-type">selection</span></dt>
     <dd>
         What kind of element or component to create?
-        <p>
-            Each selection will show an information box below the field
-            that explains what is created and what input data is needed.
-        </p>
+    </dd>
+    <dd>
+        Each selection will show an information box
+        that explains what is created and what input data is needed.
     </dd>
 
-    <dt class="optional">Parent <span class="property-type">string</span></dt>
+    <dt>Parent <span class="property-type">string</span></dt>
     <dd>
-        Optional. A CSS selector that the elements will be attached to.
+        Required. A <a href="https://developer.mozilla.org/en-US/docs/web/css/css_selectors" target="_blank">CSS selector</a> that the elements will be attached to.
         E.g. "div#more" or just "#more" would attach the element as a child of a DIV tag <code>&lt;div id="more"></code>.<br>
         "p.myclass" would attach the list as a child of a P tag that has a class including <code>myclass</code>.
-        <p>
-            If a parent is not specified, the element will be added as a new child of the <code>body</code> tag. (e.g. the end of the UI)
-        </p>
-        <p>
-            Most of the templates have a div with an ID of <code>more</code> pre-defined for convenience.
-        </p>
+    </dd>
+    <dd>
+        The default parent is <code>body</code> tag. (e.g. the end of the UI)
+    </dd>
+    <dd>
+        Most of the uibuilder templates have a pre-defined div with an ID of <code>#more</code> for convenience.
     </dd>
 
-    <dt class="optional">Classes <span class="property-type">string</span></dt>
+    <dt class="optional">HTML ID <span class="property-type">string</span></dt>
     <dd>
-        Optional set of space-separated CSS class names that will be applied to
-        the wrapping <code>&lt;div></code> tag.
+        The HTML element id of the resulting HTML tag.
     </dd>
     <dd>
-        <b>
-            NOTE that the classes are NOT applied to the "type" element (e.g. <code>&lt;table></code>) but
-            to the wrapping div.
-        </b>
+        If not provided, the element will be hard to update or remove from the UI procedurally.
+        (The remove mode of this node would not be usable)
     </dd>
+    <dd>Applied to the <b>wrapping <code>&lt;div></code> tag</b> where that applies.</dd>
     <dd>
-        e.g. "warning bold"
-    </dd>
-
-    <dt class="optional">Styles <span class="property-type">string</span></dt>
-    <dd>
-        Optional set of CSS style definitions that will be applied to
-        the wrapping <code>&lt;div></code> tag.
-    </dd>
-    <dd>
-        e.g. "color:yellow;background-color:red;"
+        ID's must be unique on the page otherwise updates/replacement processing
+        will be challenging.
     </dd>
 
     <div style="margin:8px 8px 2px 13px;border:1px solid var(--red-ui-secondary-border-color);padding:4px;">
         <p>
-            It is better to define styles and classes in a style sheet. All of the
-            templates, for example, include a <code>index.css</code> file.
-            This enables much finer control over styles.
+            <i>NOTE:</i> Pre-define the styles and classes for your UI in a CSS style sheet where possible.
+            Use <code>uib-update</code> nodes or front-end code to procedurally change them.
         </p><p>
             Each created element should be easily accessible. Use your browser's
             Developer Tools to select the appropriate element and copy the CSS selector.
         </p>
     </div>
 
+    <dt>Position <span class="property-type">string</span></dt>
+    <dd>
+        Required. Position of the resulting UI element relative to the selected <i>Parent</i> element.
+    </dd>
+    <dd>
+        <i>last</i>, <i>first</i>, or a number. Default is <i>last</i>.
+    </dd>
+    <dd>
+        Positions the new element within the parent elements child elements. 
+        E.g. Selecting a list as the parent and adding a new list row, selecting 
+        <code>first</code> would add the new row at the start of the list.
+    </dd>
+
     <dt class="optional">Heading <span class="property-type">string</span></dt>
     <dd>
         Optional text to use as a heading for the added element.
         Leave blank for no heading.
     </dd>
-
-    <dt>Topic <span class="property-type">string</span></dt>
     <dd>
-        Fixed topic string. Only used if the input <code>msg</code> does not
-        contain a <code>topic</code> property.
+        Heading level 2 is the default. Levels 2-6 are available.
     </dd>
+
+    <dt class="optional">Topic <span class="property-type">string</span></dt>
     <dd>
-        <b>Note</b>: A topic is always auto-generated when the ID changes.
-        You can change this but it will be reset if changing the ID.
-        The purpose is to ensure that you always have a unique topic for
-        use with the <code>uib-cache</code> node.
+        Optional. Fixed topic string. Only used if the input <code>msg</code> does not
+        contain a <code>topic</code> property.
     </dd>
 
     <dt class="optional">Name <span class="property-type">string</span></dt>
@@ -141,8 +138,8 @@
 
 <h3>Details</h3>
 <p>
-    You define the HTML ID (of the wrapping div) and type of element to create and then send the 
-    payload to a uibuilder node to create/update the element.
+    Select the type of element to create, parent element and HTML ID. Then send the 
+    output to a uibuilder node to create/update/remove the element.
 </p>
 <p>
     The resulting output produces the dynamic, configuration-driven, low-code <code>msg._ui</code>
@@ -152,9 +149,11 @@
 </p>
 <p>
     You can also easily remove the resulting HTML from your page simply by sending a msg
-    containing just <code>msg.mode</code> set to "remove".
+    containing just <code>msg.mode</code> set to "remove". As long as you have chosen a defined <i>HTML ID</i>.
 </p>
 <p>
-    Additionally, you can resend data to the node which will result in the HTML being replaced
-    with the new configuration/data.
+    In standard mode, resending to the same parent/HTML ID will cause the original element to be replaced completely.
+</p>
+<p>
+    To update parts of the resulting UI element, use the <code>uib-update</code> node with an appropriate CSS Selector.
 </p>

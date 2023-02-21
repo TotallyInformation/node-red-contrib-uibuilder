@@ -18,7 +18,7 @@
                 <input type="hidden" id="node-input-parentSourceType">
             </div>
             
-            <div aria-label="The HMTL id to apply to the created element. If supplied, must be unique on the page." class="form-row">
+            <div aria-label="The HMTL id to apply to the created element.&#10;If supplied, must be unique on the page.&#10;If not supplied, element will always be ADDED to page." class="form-row">
                 <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> HTML ID</label>
                 <input type="text" id="node-input-elementid" placeholder="Valid unique HTML element id string">
                 <input type="hidden" id="node-input-elementIdSourceType">
@@ -26,23 +26,12 @@
             
             <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
             
-            <div aria-label="Relative position inside the parent. 'first', 'last' or a number." class="form-row">
+            <div aria-label="Relative position inside the parent.&#10;'first', 'last' or a number.&#10;Ignored if no HTML ID provided." class="form-row">
                 <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
                 <input type="text" id="node-input-position" placeholder="Last, first or a number">
                 <input type="hidden" id="node-input-positionSourceType">
             </div>
-            
-            <div aria-label="Optional. Space separated list of classes. Will be added to the root element (not the container div)" class="form-row">
-                <label for="node-input-classes"><i class="fa fa-i-cursor"></i> Classes</label>
-                <input type="text" id="node-input-classes" placeholder="Optional. Space separated list of classes">
-                <input type="hidden" id="node-input-classesSourceType">
-            </div>
-            <div aria-label="Optional. List of styles. Will be added to the root element (not the container div)" class="form-row">
-                <label for="node-input-styles"><i class="fa fa-i-cursor"></i> Styles</label>
-                <input type="text" id="node-input-styles" placeholder="Optional. List of styles">
-                <input type="hidden" id="node-input-stylesSourceType">
-            </div>
-            
+                        
             <div aria-label="Optional heading. Leave blank for no heading." class="form-row">
                 <label for="node-input-heading"><i class="fa fa-header"></i> Heading</label>
                 <select id="node-input-headingLevel" style="width:3.7em;">

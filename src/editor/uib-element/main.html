@@ -14,16 +14,8 @@
     limitations under the License.
 -->
 
-<template id="text-template">
-    <!--=include conf-templates/text-template.html -->
-</template>
-
-<template id="table-template">
-    <!--=include conf-templates/table-template.html -->
-</template>
-
-<template id="list-template">
-    <!--=include conf-templates/list-template.html -->
+<template id="default-template">
+    <!--=include conf-templates/default-template.html -->
 </template>
 
 <style>
@@ -53,7 +45,7 @@
     #uib-el *[aria-label]:hover::after {
         visibility: visible;
         opacity: 1;
-        transition: all 0.5s ease-in 0.2s;
+        transition: all 0.5s ease-in 1s !important;
     }
 </style>
 
