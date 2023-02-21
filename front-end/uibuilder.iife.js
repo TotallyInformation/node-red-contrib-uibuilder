@@ -2934,13 +2934,20 @@
         }
       });
     }
-    _uiRemove(ui) {
+    _uiRemove(ui, all = false) {
       ui.components.forEach((compToRemove) => {
-        try {
-          document.querySelector(compToRemove).remove();
-        } catch (err) {
-          log("trace", "Uib:_uiRemove", `Could not remove. ${err.message}`)();
-        }
+        let els;
+        if (all !== true)
+          els = [document.querySelector(compToRemove)];
+        else
+          els = document.querySelectorAll(compToRemove);
+        els.forEach((el) => {
+          try {
+            el.remove();
+          } catch (err) {
+            log("trace", "Uib:_uiRemove", `Could not remove. ${err.message}`)();
+          }
+        });
       });
     }
     _uiReplace(ui) {
@@ -2957,6 +2964,7 @@
         } else if (compToReplace.type) {
           elToReplace = document.querySelector(compToReplace.type);
         }
+        log("trace", "_uiReplace:components-forEach", `Component #${i2}: Element: `, elToReplace)();
         if (elToReplace === void 0 || elToReplace === null) {
           log("trace", "Uib:_uiManager:replace", "Cannot find the DOM element. Adding instead.", compToReplace)();
           this._uiAdd({ components: [compToReplace] }, false);
@@ -3103,7 +3111,11 @@
             break;
           }
           case "remove": {
-            this._uiRemove(ui);
+            this._uiRemove(ui, false);
+            break;
+          }
+          case "removeAll": {
+            this._uiRemove(ui, true);
             break;
           }
           case "replace": {

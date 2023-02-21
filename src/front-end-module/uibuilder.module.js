@@ -1179,16 +1179,23 @@ export const Uib = class Uib {
     // TODO Add better tests for failures (see comments)
     /** Handle incoming _ui remove requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+     * @param {boolean} all Optional, default=false. If true, will remove ALL found elements, otherwise only the 1st is removed
      */
-    _uiRemove(ui) {
+    _uiRemove(ui, all = false) {
         ui.components.forEach((compToRemove) => {
-            try {
-                document.querySelector(compToRemove).remove()
-            } catch (err) {
-                // Could not remove. Cannot read properties of null <= no need to report this one
-                // Could not remove. Failed to execute 'querySelector' on 'Document': '##testbutton1' is not a valid selector
-                log('trace', 'Uib:_uiRemove', `Could not remove. ${err.message}`)()
-            }
+            let els
+            if (all !== true) els = [document.querySelector(compToRemove)]
+            else els = document.querySelectorAll(compToRemove)
+
+            els.forEach( el => {
+                try {
+                    el.remove()
+                } catch (err) {
+                    // Could not remove. Cannot read properties of null <= no need to report this one
+                    // Could not remove. Failed to execute 'querySelector' on 'Document': '##testbutton1' is not a valid selector
+                    log('trace', 'Uib:_uiRemove', `Could not remove. ${err.message}`)()
+                }
+            })
         })
     } // --- end of _uiRemove ---
 
@@ -1204,7 +1211,7 @@ export const Uib = class Uib {
             /** @type {Element} */
             let elToReplace
 
-            // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
+            // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. FIRST element matching is updated.
             if ( compToReplace.id ) {
                 // NB We don't use get by id because this way the code is simpler later on
                 elToReplace = document.getElementById(compToReplace.id) // .querySelector(`#${compToReplace.id}`)
@@ -1215,6 +1222,8 @@ export const Uib = class Uib {
             } else if ( compToReplace.type ) {
                 elToReplace = document.querySelector(compToReplace.type)
             }
+
+            log('trace', '_uiReplace:components-forEach', `Component #${i}: Element: `, elToReplace)()
 
             // Nothing was found so ADD the element instead
             if ( elToReplace === undefined || elToReplace === null ) {
@@ -1427,7 +1436,12 @@ export const Uib = class Uib {
                 }
 
                 case 'remove': {
-                    this._uiRemove(ui)
+                    this._uiRemove(ui, false)
+                    break
+                }
+
+                case 'removeAll': {
+                    this._uiRemove(ui, true)
                     break
                 }
 
