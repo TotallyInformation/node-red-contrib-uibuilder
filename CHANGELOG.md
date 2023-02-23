@@ -18,10 +18,6 @@ Dynamic content does not currently work with VueJS (and probably not other frame
 
 Context store handling currently does not cope with stores that require asynchronous setters/getters. [ref](https://discourse.nodered.org/t/context-stores-maybe-async-but-how-can-we-tell/75190/2?u=totallyinformation).
 
-### Needs Fixing
-
-**HOW TO DELETE THINGS** from the UI? Need to update `uib-update`.
-
 ## To do/In-progress
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
@@ -86,11 +82,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * New function: `uibuilder.watchDom(true)` Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
   * New functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
 
-  * Reports changes of **visibility** of the page back to node-red via a new control msg.
+  * The uibuilder client now reports changes of **visibility** of the page back to node-red via a new control msg.
   * Creates a browser `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
   * Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference. Reset by setting to an empty string.
 
-* If you turn on the advanced option "Include msg._uib in standard msg output.", messages from the client now include client details for you to use in your own security processing or just to identify where things have come from (e.g. what page name as well as what client).
+* If you turn on the advanced option "*Include msg._uib in standard msg output*", messages from the client now include client details for you to use in your own security processing or just to identify where things have come from (e.g. what page name as well as what client).
+* uibuilder now makes a copy of its main `<uibRoot>/package.json` file to `package.json.bak` before it updates it. Trace and error messages have been added to the process.
 * All of the templates and example flows have been refreshed with the latest standards.
 * Plenty of documentation updates and additions.
 
@@ -137,6 +134,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * `web.js`
   * Added new `addBeaconRoute` function that sets up the `./_clientLog` instance endpoint. Use the new client `uibuilder.beaconLog(txtToSend, logLevel)` function to send a simple text log back to Node-RED even if socket.io isn't working.
+
+* `package-mgt.js`
+  * A backup copy of `package.json` to `package.json.bak` is now made on each write.
+  * Trace/Error log messages added to `writePackageJson`.
 
 ### IIFE/ESM/Module client library
 

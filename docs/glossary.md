@@ -11,9 +11,11 @@ lastUpdated: 2023-02-11 16:26:25
 | `<xxxx>`     | When a word is shown between angle brackets in the uibuilder documentation, it indicates that this is a variable. (unless it is clearly an HTML tag). |
 |              |                                                              |
 | CSS Selector | The standardised code that allows CSS or JavaScript to identify one or more elements on a web page. See [MDN CSS Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) for details. e.g. the selector for an HTML element with an id of `more` would be `#more`, to select all the elements with a specific class, `.classname`, all list entries `li`. |
+| element      | Something on a web page. Defined by one or more HTML "tags" such as `<div>...</div>`. |
 | instance     | In Node-RED, when a node is added to a flow, it is said that this is an instance of a node. Unlike the Node-RED Dashboard, uibuilder can have many instances, each on a separate root url (*instanceRoot*).<br>In addtion, Node-RED itself can be run multiple times. Each of these is "an instance of Node-RED". |
 | instanceRoot | The root folder for a specific uibuilder node instance. It will be at `<uibRoot>/<url>/`. |
 | library      | One or more programme files that are utilised by other programs. Often delivered as one or more modules and installed as a _package_. |
+| low-code     | The ability to process information with minimal, reduced computer code. |
 | module       | A node.js module contains one or more exported objects. These are then `require`d (for old-style CommonJS modules) or `import`ed for ESM style modules. See the Node.js documentation for details. |
 | package      | A collection of scripts, configuration and documentation that is normally installed via the`npm` command.<br>A package is defined by a `package.json` file in the root folder. |
 | parent       | Indicates a level up in the HTML page's hierarcy. For example, an H1 element would typically have a parent of BODY, a TD a parent of TR.<br />Also indicates a level up in a filing system or URL hierarchy. |
@@ -26,3 +28,4 @@ lastUpdated: 2023-02-11 16:26:25
 | userHome     | The operating system folder designated as the "home" folder for the user ID running Node-RED.<br>For Linux, MacOS and in PowerShell on Windows, there is a shortcut for userHome: `~`. |
 | vendor       | A 3rd party. In this case, refers to any 3rd-party package installed via `npm`. |
 | wire         | In Node-RED, the line that connects nodes together. Indicates the passing of messages from one node to another. |
+| zero-code    | The ability to process information without the need to write computer code. |

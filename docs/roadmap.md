@@ -191,6 +191,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * Future improvements:
         * Better layout, more optional internal structure (footer, etc)
     * Grid/Flex-Grid (with option to turn on visible grid to help with layout)
+    * Markdown - allow raw Markdown to be sent similar to the HTML element (will require the Markdown-IT library to be loaded)
     * Form
       * Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
       * Inputs: incl text, number, time, date, colour picker, ...
@@ -217,6 +218,16 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Create min version of css.
 
 * Extensions to FE Library
+  * See *Add ability to send control msgs to front-end* in uibuilder changes below.
+    * Control commands:
+      * Reload
+      * Change log level
+      * Turn on/off domWatch or elementWatch
+      * Manually save/clear/load saved HTML
+      * Get current HTML back to Node-RED
+      * Get/Set front-end settings/variables
+      * Call a uibuilder public method.
+
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
   * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
@@ -267,6 +278,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Updates to `uibuilder` node
 
+  * Add ability to send control msgs to front-end - must use `msg._uib`
+    * Remove restriction for messages containing `msg.uibuilderCtrl` - make sure nothing in the front-end processes those.
+  
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
     * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
     * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
@@ -282,8 +296,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add occasional check for new version of uib being available and give single prompt in editor.
   * Improve checks for rename failures. `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` - these should clear after restart but sometimes don't.
   * Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'". "sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
+  * Improve handling for when Node-RED changes projects.
+  * Introduce standard events: url-change (so that all uib related nodes can be notified if a uib endpoint changes url).
+  * uibindex change "User-Facing Routes" to "Client-Facing Routes".
 
-  
   * Editor:
     * Add template description to display.
     * Switch tooltips to using aria-label with hover CSS as in the new node.
@@ -300,6 +316,19 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * Add update indicator to Libraries tab.
       * Trigger indicator to Libraries to show if new major version available when switching to the tab.
     * Consider adding an action for when a uibuilder node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
+    * Add optional sidebar (or drop-down menu on NR header bar) displaying list of all uib URLs (and link to nodes).
+    * Move folder management to a popup dialog (to save vertical space)
+    * If `uibRoot` and the browser are on the same client, add an "Edit with VSCode" link to the Files tab
+    * Add all local package.json script entries as links/buttons so they can be run from the editor panel.
+      * If `dev` script discovered in local package.json scripts, enable a dev button so that a CI dev service can be spun up (e.g. Svelte). Will need debug output to be visible in Editor?
+    * Show Socket.io server & client versions
+    * Extend folder/file management
+      * Allow renaming of files/folders.
+      * Add the `common` folder to the file editor.
+      * Allow editing in the `common` folder not just the instance folder.
+      * Add a file upload button.
+      * Method to import/export front-end files. Needs ZIP/Unzip functions at the back-end.
+      * Add a reminder to the Editor help about examples. Add an onclick to that <a> icon that calls RED.actions.invoke('core:show-import-dialog'); as a quick action to get the user to the import dialog. See [here](https://discourse.nodered.org/t/documentation-example-flows-for-contributed-nodes/44198/2?u=totallyinformation) for more info.
 
   * Details index page
     * Make sure that the ExpressJS `views` folder is shown.
@@ -355,7 +384,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 ### General
 
 * Optimise runtime code using esbuild (see node-build.mjs). Reduce runtime dependencies by bundling and move deps to dev deps.
-* Allow client id to be set externally. Add Editor option to turn on client id and/or client IP address in standard msgs not just control msgs.
+* Allow client id to be set externally.
 * ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
 * Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
 
@@ -369,8 +398,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Add option to log http(s) requests to control output port
 
-* See if typedefs.js can be migrated to index.d.ts.
-
 * Switch to [dynamic imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports) for require's with low probability of usage. [ref](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_import_expressions).
 
 * Migrate from commonjs to [ES modules](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_commonjs_json_and_native_modules). (2) [JSON can't be imported directly in ESMs](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_experimental_json_modules), use createRequire.
@@ -379,10 +406,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
 
-* Introduce standard events: url-change (so that all uib related nodes can be notified if a uib endpoint changes url).
-
-* uibindex change "User-Facing Routes" to "Client-Facing Routes".
-  
+ 
 * Add settings.js options to use different paths/names for middleware files.
 
 * Add socket.io instrumentation server. See https://socket.io/docs/v4/admin-ui/
@@ -399,16 +423,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Editor (`uibuilder.html`)
 
-* Add all local package.json script entries as links/buttons so they can be run from the editor panel.
-  * If `dev` script discovered in local package.json scripts, enable a dev button so that a CI dev service can be spun up (e.g. Svelte). Will need debug output to be visible in Editor?
-* Show Socket.io server & client versions
 * Show template (instance root) folder
-* Extend folder/file management
-  * Add the `common` folder to the file editor.
-  * Allow renaming of files/folders.
-  * Allow editing in the `common` folder not just the instance folder.
-  * Add a file upload button.
-  * Method to import/export front-end files. Needs ZIP/Unzip functions at the back-end.
 * Editor Help: Change output msgs headers to include guidance to say that port 1 is the upper port and port 2 the lower port.
 * Check for new versions of installed packages when entering the library manager.
 * Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
@@ -416,26 +431,13 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Allow custom locations for delivery folder (normally `src/` or `dist/`) and for api's folder (normally `api/`)
   * Allow the use of `public` as well as `src` and `dist`. Svelte outputs to the public folder by default. Also add warnings if no index.html file exists in the folder in use.
 * Method to show output from npm package handling.
-* Add a reminder to the Editor help about examples. Add an onclick to that <a> icon that calls RED.actions.invoke('core:show-import-dialog'); as a quick action to get the user to the import dialog. See [here](https://discourse.nodered.org/t/documentation-example-flows-for-contributed-nodes/44198/2?u=totallyinformation) for more info.
 * Add optional plugin displaying drop-down in Editors header bar - listing links to all deployed uib URLs. See example: https://github.com/kazuhitoyokoi/node-red-contrib-plugin-header
 * If instance folder doesn't exist - need to mark node as changed to force deploy.
-* Introduce standard events: url-change
-* Prevent removal of socket.io and uibuilder client modules in the libraries manager.
-
-### Front-End library (`uibuilderfe.js`)
-
-* How to add originator to the eventSend method? via an HTML data- attrib or use mapper?
-* Add mapper to map component id to originator & extend `eventSend` accordingly
-* Add `onMsg` convenience handler (maybe allow wildcard topics?)
-* Add a visual warning/alert if uib cannot connect over websockets. Use toast.
-* Move client libraries to separate package `@totallyinformation/node-red-uibuilder-client` - allowing a better package.json definition (see socket.io-client for reference). And more flexible use. Will need to be a dependency of the uibuilder package and needs some changes to load to the correct path. Also allows different versions to be built for different purposes. And map files for min versions.
-* Add a standard logging fn to uibuilderfe - allow that to return log statements back to Node-RED via control msgs.
 
 ### Front-End new ESM library (`uibuilder.esm.js`/`uibuilder.module.js`)
 
 * Allow add/change to use a.b prop names
 * Document `loadScriptSrc` and `loadScriptTxt`
-* Add markdown render function
 * UI
   * Add prop validation
   * keep track of added ids?
@@ -492,18 +494,10 @@ These are some thoughts about possible future direction. They need further thoug
 
 ### General
 
-* Add HTML loader & Syntax Highlight web components to main package?
 * Add `uibuilder` prop to `<uibInstanceRoot>/package.json`
   * `uibuilder.loader` - an array of folder paths - relative to `<uibInstanceRoot>` that would be served using uibuilder's ExpressJS web server. Allowing instance-specific front-end resources. To be used by things like components.
   * `uibuilder.scripts.deploy` - pointing to node.js file to run when the template is deployed.
-* _[Superceded by the new config-UI features]_. ~~Add new node to specify component instances to add to the UI. Would need to auto-cache. Will need a way to specify settings - as these will be different for different components - sucggest making this JSON to begin with. Needs a way to know what components are available for a uib instance. Components should specify their settings and provide a default json settings file. Might be able to use JSON Schema? See New Nodes section below.~~
-* Add experimental flag - use settings.js and have an object of true/false values against a set of text keys for each feature.
-  * Update docs
-  * Add processing to nodes to be able to mark them as experimental.
 * Find a way to support wildcard URL patterns which would automatically add structured data and make it available to uibuilder flows. Possibly by adding the param data to all output msg's.
-* Add client IP address to trace messages on connection.
-* Add optional sidebar (or drop-down menu on NR header bar) displaying list of all uib URLs (and link to nodes).
-* Improve handling for when Node-RED changes projects.
 
 * Trial use of [web-workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) since majority support goes back to 2014.
   * Create a [Progressive Web App](https://web.dev/what-are-pwas/) (PWA) capable version with [Service Worker](https://developers.google.com/web/fundamentals/primers/service-workers) [Mozilla](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
@@ -524,48 +518,34 @@ These are some thoughts about possible future direction. They need further thoug
 
 * Add support for HTTP/2 with auto-push. See [http2-express-autopush - npm](https://www.npmjs.com/package/http2-express-autopush)
 * Add support for HTTP/3 and QUIC (available in Node.js v14, in preview with NGINX as at June 2022, websockets over http/3 is defined in RFC9220 in draft at June 2022). https://www.f5.com/company/blog/quic-will-eat-the-internet
-* _[Implemented in the new ESM client library]_ ~~Consider changing my custom event handler in uibuilderfe.js to use the `document` DOM element. This then inherits the JS event hander capabilities.~~
 * Allow transfer of files via Socket.IO. https://stackoverflow.com/a/59224495/1309986
 * Allow switch of log.trace to log.info for advanced debugging (would need new switch in Editor or setting in settings.js:uibuilder)
 * New node: allowing a socket.io "room" to be defined. Will need to pick a current main instance from a dropdown (using API)
-
    * Change FE to allow for rooms.
 
 
 ### Core (`uibuilder.js`)
 
-* _[Implemented as `uib-cache` node]_ ~~Add caching option to uibuilder - as a shared service so that other nodes could also use it - allow control via msg so that any msg could use/avoid the cache - may need additional option to say whether to cache by msg.topic or just cache all msgs. May also need persistance (use context vars, allow access to all store types) - offer option to limit the number of msgs retained~~
-* add in/out msg counts to status? Maybe as an option.
-* Add option to turn on/off connect/disconnect control msgs
 * Add index web page for the `common` folder.
 
 ### Templates
 
-* Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?)
-
+* Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?) - using the pluggable libraries feature of Node-RED v2.1?
 * Add option to auto-load npm dependencies on change of Template. [Issue #165](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/165)
-
-* Add example flows - using the pluggable libraries feature of Node-RED v2.1
-
 * Maybe move dependencies and other template meta-data into the template package.json file.
-  
   Would require making sure that package.json always exists (e.g. after template change). May need to be able to reload package.json file as well.
-  
   Couldn't use the dependencies prop because we dont want to install libraries in the instance root but rather the uibRoot. 
-  
   Will need matching code in the Editor panel & a suitable API.
 
 
 ### Editor (`uibuilder.html`)
 
-* Move folder management to a popup dialog (to save vertical space)
 * Add option to allow new front-end code files to be input via inbound msg.
   Allows a flow to read a file and save to the server. Optional because it could be a security issue. Allow folder name as well as file name.
 * Add (advanced) flag to make use of project folder optional.
 * Add option to keep backups for edited files + button to reset to backup + hide backup files
 * Add npm package delete confirmation - probably via std NR notifications
 * When adding a package, make sure that the input field gets focus & add <keyb>Enter</keyb> & <keyb>Esc</keyb> key processing.
-* If `uibRoot` and the browser are on the same client, add an "Edit with VSCode" link to the Files tab
 * Add GIT processing? Or maybe just handle via npm scripts?
    * Is git command available?
    * is front-end src folder a git repository?
@@ -608,9 +588,5 @@ These are some thoughts about possible future direction. They need further thoug
 * Add safety validation checks to `msg` before allowing it to be sent/received to/from front-end
 
   Started: script/style is removed if disallowed in settings, uibuilder control msgs dropped (since v1.0.0)
-
-
-
-
 
 * _We might need to add some checks for updated master templates? Maybe issue a warning? Not sure._
