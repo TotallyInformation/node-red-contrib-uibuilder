@@ -46,7 +46,7 @@
     <dd>
         The input topic.
         <p>
-            When chaining <code>uib-element</code> nodes together, make sure that at least the final
+            When chaining <code>uib-element</code>/<code>uib-update</code> nodes together, make sure that at least the final
             output has a unique topic string so that caching using the <code>uib-cache</code> node is
             easier.
         </p>
@@ -157,3 +157,7 @@
 <p>
     To update parts of the resulting UI element, use the <code>uib-update</code> node with an appropriate CSS Selector.
 </p>
+<p>
+    Multiple <code>uib-update</code> and <code>uib-element</code> nodes can be chained together for more complex needs.
+</p>
+
