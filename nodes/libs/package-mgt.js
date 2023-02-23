@@ -181,6 +181,7 @@ class UibPackages {
     } // ---- End of readPackageJson ---- //
 
     /** Write updated <folder>/package.json (async)
+     * Also makes a backup copy to package.json.bak
      * @param {string} folder The folder where to write the file
      * @param {object} json The Object data to write to the file
      */
@@ -189,8 +190,19 @@ class UibPackages {
 
         const fileName = path.join( folder, this.packageJson )
 
-        // TODO Add try & error message
-        fs.writeJson(fileName, json, { spaces: 2 })
+        try { // Make a backup copy
+            await fs.copy(fileName, `${fileName}.bak`)
+            this.log.trace(`[uibuilder:package-mgt:writePackageJson] package.json file successfully backed up in ${folder}`)
+        } catch (err) {
+            this.log.error(`[uibuilder:package-mgt:writePackageJson] Failed to copy package.json to backup.  ${folder}`, this.packageJson, err)
+        }
+
+        try {
+            await fs.writeJson(fileName, json, { spaces: 2 })
+            this.log.trace(`[uibuilder:package-mgt:writePackageJson] package.json file written successfully in ${folder}`)
+        } catch (err) {
+            this.log.error(`[uibuilder:package-mgt:writePackageJson] Failed to write package.json.  ${folder}`, this.packageJson, err)
+        }
     }
 
     /** Get the uibRoot package.json and return as object. Or, if not exists, return minimal object
