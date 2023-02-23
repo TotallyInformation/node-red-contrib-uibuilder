@@ -10,19 +10,18 @@
 // uibuilder.set('logLevel', 2)
 // uibuilder.log('info', 'a prefix', 'some info', {any:'data',life:42})
 
-// Helper function to send a message back to Node-RED using the standard send function - see the HTML file for use
-window.fnSendToNR = function fnSendToNR(payload) {
-    uibuilder.send({
-        'topic': 'msg-from-uibuilder-front-end',
-        'payload': payload,
-    })
-}
+// Show the latest incoming msg from Node-RED
+// uibuilder.showMsg(true, 'body')
 
-// Listen for incoming messages from Node-RED
-uibuilder.onChange('msg', function(msg) {
-    // Dump the msg as text to the "msg" html element
-    // either the HTML way or via uibuilder's $ helper function
-    // const eMsg = document.getElementById('msg')
-    const eMsg = $('#msg')
-    if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
-})
+// Helper function to send a message back to Node-RED using the standard send function
+// window.fnSendToNR = function fnSendToNR(payload) {
+//     uibuilder.send({
+//         'topic': 'msg-from-uibuilder-front-end',
+//         'payload': payload,
+//     })
+// }
+
+// Listen for incoming messages from Node-RED and action
+// uibuilder.onChange('msg', function(msg) {
+//     // do stuff with the incoming msg
+// })
