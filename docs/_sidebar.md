@@ -19,6 +19,7 @@
 * The front-end client
   * [Introduction](client-docs/readme.md)
   * [Features](client-docs/features.md)
+  * [Controlling from Node-RED](client-docs/control-from-node-red.md)
   * [Dynamic, config-driven UI's](client-docs/config-driven-ui.md)
   * [Functions](client-docs/functions.md)
   * [Variables](client-docs/variables.md)

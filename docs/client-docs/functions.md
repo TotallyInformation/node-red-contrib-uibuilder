@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-02-12 15:34:39
+lastUpdated: 2023-02-23 13:20:20
 ---
 
 Functions accessible in client-side user code.
@@ -120,7 +120,7 @@ The `logLevel` matches both Node-RED and uibuilder defined log levels (e.g. erro
 
 ### `get(prop)` - Get a uibuilder property
 
-This is the preferred method to get an exposed uibuilder variable or property. Do not try to access variables and properties directly unless explicitly shared in this documentation.
+This is the preferred method to get an exposed uibuilder variable or property. Do not try to access variables and properties directly unless explicitly shared in this documentation. This function can also be called from Node-RED via `msg._uib.command` - `get` with `msg._uib.prop` set to the variable name to get.
 
 ##### Example
 
@@ -135,6 +135,8 @@ This is the preferred method to set an exposed uibuilder variable or property. D
 When using set, the variable that is set becomes responsive. That is to say, that issuing a set triggers both the internal event handler (as used in `uibuilder.onChange('prop', ...)`) but also the DOM custom event `uibuilder:propertyChanged`. Normally, you will want to use the `onChange` handler.
 
 Note that you can add additional custom data to the uibuilder object but care must be taken not to overwrite existing internal variables. This is useful if you want to be able to automatically process changes to your own variables using the `onChange` handler.
+
+This function can also be called from Node-RED via `msg._uib.command` - `set` with `msg._uib.prop` set to the variable name to set. and `msg._uib.value` set to the new value.
 
 ##### Example
 
@@ -214,6 +216,8 @@ Simply add `uibuilder.showMsg(true)` early in your index.js custom code and a bo
 `uibuilder.showMsg(false)` or `uibuilder.showMsg()` will remove the box and stop the updates.
 
 You can also position the box in a different location by specifying a "parent". This is a CSS selector that, if found on the page, uibuilder will add the box to the end of. For example, `uibuilder.showMsg(true, 'h1')` would attach the box to the end of a heading level 1 element on the page. Don't forget that the box will inherit at least some of the CSS style from the parent, so attaching to an H1 element will make the text much bigger.
+
+This function can also be called from Node-RED via `msg._uib.command` - `showMsg` with `msg._uib.value` set to `true`.
 
 ### `syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as HTML formatted
 

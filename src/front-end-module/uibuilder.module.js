@@ -314,6 +314,10 @@ export const Uib = class Uib {
     _htmlObserver
     // Has showMsg been turned on?
     #isShowMsg = false
+    // Externally accessible command functions (NB: Case must match)
+    #extCommands = [
+        'get', 'set', 'showMsg',
+    ]
 
     //#endregion
 
@@ -1516,8 +1520,7 @@ export const Uib = class Uib {
         }
     }
 
-    /**
-     * Get data from the DOM. Returns selection of useful props unless a specific prop requested.
+    /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
      * @param {string} cssSelector Identify the DOM element to get data from
      * @param {string} [propName] Optional. Specific name of property to get from the element
      * @returns {*} Object containing either specific requested property or a selection of useful properties
@@ -1868,6 +1871,46 @@ export const Uib = class Uib {
                 return
             }
 
+            /** Process msg._uib.command messages - allows Node-RED to run uibuilder FE functions */
+            if (msg._uib.command) {
+                const cmd = msg._uib.command
+                // Disallowed command request outputs error and ignores the msg (NB: Case must match)
+                if (!this.#extCommands.includes(cmd.trim())) {
+                    log('error', 'Uib:_msgRcvdEvents:_uib', `Command '${cmd} is not allowed to be called externally`)()
+                    return
+                }
+                const prop = msg._uib.prop
+                const value = msg._uib.value
+
+                // console.log('CMD FROM NODE-RED: ', cmd, ', Prop: ', prop, ', Sent Val: ', value)
+                switch (msg._uib.command) {
+                    case 'get': {
+                        msg._uib.response = this.get(prop)
+                        this.send(msg)
+                        break
+                    }
+
+                    case 'set': {
+                        msg._uib.response = this.set(prop, value)
+                        this.send(msg)
+                        break
+                    }
+
+                    case 'showMsg': {
+                        this.showMsg(value, prop)
+                        break
+                    }
+
+                    default: {
+                        log('warning', 'Uib:_msgRcvdEvents:command', `Command '${cmd} not yet implemented`)()
+                        // msg._uib.response = this[cmd]()
+                        // this.send(msg)
+                        break
+                    }
+                }
+                return
+            }
+
             // Better to request via msg._ui - these are for backwards compatibility
             if ( msg._uib.componentRef === 'globalNotification' ) {
                 this.showDialog('notify', msg._uib.options, msg)
@@ -1916,6 +1959,9 @@ export const Uib = class Uib {
 
     } // -- End of websocket receive DATA msg from Node-RED -- //
 
+    /** Handles original control msgs (not to be confused with "new" msg._uib controls)
+     * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
+     */
     _ctrlMsgFromServer(receivedCtrlMsg) {
 
         // Make sure that msg is an object & not null

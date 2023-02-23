@@ -2404,7 +2404,7 @@
     }).join("/");
     return url2.replace("//", "/");
   }
-  var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _isVue, _timerid, _MsgHandler, _isShowMsg, _a;
+  var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _isVue, _timerid, _MsgHandler, _isShowMsg, _extCommands, _a;
   var Uib = (_a = class {
     constructor() {
       __privateAdd(this, _connectedNum, 0);
@@ -2418,6 +2418,11 @@
       __publicField(this, "_socket");
       __publicField(this, "_htmlObserver");
       __privateAdd(this, _isShowMsg, false);
+      __privateAdd(this, _extCommands, [
+        "get",
+        "set",
+        "showMsg"
+      ]);
       __publicField(this, "clientId", "");
       __publicField(this, "cookies", {});
       __publicField(this, "ctrlMsg", {});
@@ -3397,6 +3402,36 @@
           location.reload();
           return;
         }
+        if (msg._uib.command) {
+          const cmd = msg._uib.command;
+          if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
+            log("error", "Uib:_msgRcvdEvents:_uib", `Command '${cmd} is not allowed to be called externally`)();
+            return;
+          }
+          const prop = msg._uib.prop;
+          const value2 = msg._uib.value;
+          switch (msg._uib.command) {
+            case "get": {
+              msg._uib.response = this.get(prop);
+              this.send(msg);
+              break;
+            }
+            case "set": {
+              msg._uib.response = this.set(prop, value2);
+              this.send(msg);
+              break;
+            }
+            case "showMsg": {
+              this.showMsg(value2, prop);
+              break;
+            }
+            default: {
+              log("warning", "Uib:_msgRcvdEvents:command", `Command '${cmd} not yet implemented`)();
+              break;
+            }
+          }
+          return;
+        }
         if (msg._uib.componentRef === "globalNotification") {
           this.showDialog("notify", msg._uib.options, msg);
         }
@@ -3625,7 +3660,7 @@ ioPath: ${this.ioPath}`)();
       });
       this._dispatchCustomEvent("uibuilder:startComplete");
     }
-  }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _isVue = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), __publicField(_a, "_meta", {
+  }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _isVue = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _extCommands = new WeakMap(), __publicField(_a, "_meta", {
     version,
     type: "module",
     displayName: "uibuilder"

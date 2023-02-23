@@ -218,34 +218,40 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Create min version of css.
 
 * Extensions to FE Library
-  * See *Add ability to send control msgs to front-end* in uibuilder changes below.
-    * Control commands:
-      * Reload
-      * Change log level
-      * Turn on/off domWatch or elementWatch
-      * Manually save/clear/load saved HTML
-      * Get current HTML back to Node-RED
-      * Get/Set front-end settings/variables
-      * Call a uibuilder public method.
+  * Control from Node-RED. Functions to implement:
+    * [x] get/set
+    * [x] showMsg(boolean, parent=body)
+    * [ ] clearHtmlCache(), saveHtmlCache(), restoreHtmlFromCache()
+    * [ ] htmlSend()
+    * [ ] getStore, setStore, removeStore
+    * [ ] watchDom(startStop), uiWatch(cssSelector)
+    * [ ] reload, navigate(url)
+    * [ ] setPing
+    * [ ] `elementExists(selector), `elementIsVisible(selector)`
 
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
   * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
+  * Add new fn: `htmlSend()` - sends the current web page back to Node-RED.
   * Add new fn: `uiWatch(cssSelector)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically.
   * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
   * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
 
+  * Extend logging functions:
+    * Report socket.io setup/config issues back to Node-RED using `beaconLog(txtToSend, logLevel)`.
+    * Add showLog function similar to showMsg - showing log output to the UI instead of the console.
+    * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
+        * uibuilder node will output control msg of type `Client Log` when client sends a beacon.
+        * Make optional via flag in Editor with start msg enabling/disabling in client.
+        * ? window and document events - make optional via uibuilder fe command.
+      
   * Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
   * Add `uibuilder.cacheSend()` and `uibuilder.cacheClear()` functions that send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send
-  * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow sessionCache.
+  * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow *sessionCache*.
   * Add a `uibuilder.navigate(url)` function to allow a msg from node-red to change the page. Ensure it works with SPA routers and with anchor links.
   * Add a [resizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to report resize events back to Node-RED as a control msg.
-  * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
-    * uibuilder node will output control msg of type `Client Log` when client sends a beacon.
-    * Make optional via flag in Editor with start msg enabling/disabling in client.
-    * ? window and document events - make optional via uibuilder fe command.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
-  * Consider adding `exists` and `visible` methods for checking if an element exists on the page and whether it is visible to the user.
+  * Consider adding `elementExists(selector)` and `elementIsVisible(selector)` methods for checking if an element exists on the page and whether it is visible to the user.
   * Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
   * Get better control over what control messages can be sent. Centralise the list of control messages in use.
   
@@ -278,15 +284,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Updates to `uibuilder` node
 
-  * Add ability to send control msgs to front-end - must use `msg._uib`
-    * Remove restriction for messages containing `msg.uibuilderCtrl` - make sure nothing in the front-end processes those.
-  
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
     * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
     * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
 
-  * Create/update package.json.bak file when updating package.json for safety.
   * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
+  * Improve handling for when Node-RED changes projects.
   * Use new `uib-brand.css` style library on details pages.
   * Add api to query if a specific uib library is installed (and return version)
   * Add API test harness using VScode restbook.
@@ -296,7 +299,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add occasional check for new version of uib being available and give single prompt in editor.
   * Improve checks for rename failures. `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` - these should clear after restart but sometimes don't.
   * Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'". "sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
-  * Improve handling for when Node-RED changes projects.
   * Introduce standard events: url-change (so that all uib related nodes can be notified if a uib endpoint changes url).
   * uibindex change "User-Facing Routes" to "Client-Facing Routes".
 

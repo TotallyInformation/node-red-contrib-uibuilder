@@ -3,7 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: >
    Description of the main features.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-01-04 15:30:54
+lastUpdated: 2023-02-23 11:59:35
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -33,6 +33,7 @@ lastUpdated: 2023-01-04 15:30:54
   - [Client Disconnect (and error) message](#client-disconnect-and-error-message)
   - [Message from server to client](#message-from-server-to-client)
 - [ui function](#ui-function)
+- [Controlling from Node-RED](#controlling-from-node-red)
 
 ## Dynamic, data-driven HTML content
 
@@ -533,4 +534,6 @@ This new function allows passing the same data as `msg._ui` from within your fro
 
 See the next section for details.
 
----
+## Controlling from Node-RED
+
+A number of the uibuilder client's functions can be controlled from Node-RED via specially formatted messages. See []() for details.

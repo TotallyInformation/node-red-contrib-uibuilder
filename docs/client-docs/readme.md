@@ -24,6 +24,7 @@ So for all of its initial simplicity, the library does enable a wealth of featur
 - [How to use](client-docs/how-to-use)
 - [Feature Summary](client-docs/features.md)
 - [Low-code dynamic, configuration-driven UI's](client-docs/config-driven-ui.md)
+- [Controlling from Node-RED](client-docs/control-from-node-red.md)
 - Technical Details
   - [Functions](client-docs/functions.md)
   - [Variables](client-docs/variables.md)
