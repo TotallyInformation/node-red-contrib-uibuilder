@@ -1,22 +1,46 @@
 <main>
 	<h1>Svelte + uibuilder</h1>
+	<h1 class="with-subtitle">uibuilder + Svelte</h1>
+    <div role="doc-subtitle">Using the IIFE library - v6.1.0.</div>
+
+	<div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>
 
 	<p title="A dynamic greeting that can be update using a msg from Node-RED">{myGreeting}</p>
 	<p title="Some other dynamic property that main.js might update">{anotherProp}</p>
 
-	<div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>
+	<!-- A form is an easy way to input data to send to Node-RED -->
+	<form>
+		<div>
+			This is a form element, it is an easy way to get input and send it back to Node-RED.
+		</div>
 
-	<!-- Two different ways to send data back to Node-RED via buttons.
-		fnSendToNR uses standard `uibuilder.send`.
-		eventSend includes `data-*` attributes, keyb modifiers, etc. Works with any event. -->
+		<div><!-- Accessible form element -->
+			<label for="quickMsg">Quick Message:</label>
+			<!-- onchange is optional, it saves the previous value of the field -->
+			<input id="quickMsg" value="A message from the browser" onchange="this.uib_newValue = this.value" onfocus="this.uib_oldValue = this.value">
+		</div>
+
+		<div>
+			<!-- Send data back to Node-RED the simple way - automatically includes the form's inputs,
+				`data-*` attributes, keyboard modifiers, etc. Also works with other event types. -->
+			<!-- <button onclick="uibuilder.eventSend(event)" data-type="eventSend" data-foo="Bah">eventSend</button> -->
+			<button on:click={uibsend} data-greeting="{myGreeting}"  data-type="eventSend" data-foo="Bah" 
+					title="Uses the uibuilder.eventSend fn and sents both static and dynamic data back to Node-RED">
+				eventSend
+			</button>
+		</div>
+	</form>
+
+	<!-- Another way to send custom data back to Node-RED. fnSendToNR is defined in index.js,
+		it uses the standard `uibuilder.send` function -->
+	<!-- <button onclick="fnSendToNR('A message from the sharp end!')">Send a custom msg back to Node-RED</button> -->
 	<button on:click={ e => sendToNR('A message from the sharp end!') }>Send a msg back to Node-RED</button>
-	<button on:click={uibsend} data-greeting="{myGreeting}"  data-type="eventSend" data-foo="Bah" 
-			title="Uses the uibuilder.eventSend fn and sents both static and dynamic data back to Node-RED">
-			eventSend
-	</button>	 
+
+
+	<div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>	 
 </main>
 
-<pre id="msg" class="syntax-highlight" title="Uses @html because nrMsg contains html highlights">{@html nrMsg}</pre>
+<!-- <pre id="msg" class="syntax-highlight" title="Uses @html because nrMsg contains html highlights">{@html nrMsg}</pre> -->
 
 <style>
 	/* These styles will be constrained just to this component by Svelte.
@@ -32,7 +56,8 @@
 	
 	/** This .svelte file is the master, top-level App. Use it to define everything else.
 	 * It is treated as a module so no need to 'use strict' and you can use the import statement.
-	 * This app is based on the sveltejs/template package.
+	 * This app is based on the sveltejs/template package and the uibuilder simple IIFE template.
+	 * logLevel and showMsg can be controlled from Node-RED instead of here if preferred.
 	 */
 
 	// import { onMount } from 'svelte'
@@ -42,12 +67,19 @@
 	export let uibsend
 	export let sendToNR
 	// Exported data props
-	export let nrMsg = ''
 	export let myGreeting = 'Hello there from App.svelte! Send me a msg containing msg.greeting to replace this text.'
 	// Defined in main.js
 	export let anotherProp = '--'
 	//#endregion ---- ---- ----
 	
+	// logLevel 2+ shows more built-in logging. 0=error,1=warn,2=info,3=log,4=debug,5=trace.
+	// uibuilder.set('logLevel', 2) // uibuilder.set('logLevel', 'info')
+	// Using the log output yourself:
+	// uibuilder.log('info', 'a prefix', 'some info', {any:'data',life:42})
+
+	// Show the latest incoming msg from Node-RED
+	uibuilder.showMsg(true, 'body')
+
 	// A global helper function to send a message back to Node-RED using the standard uibuilder send function
 	sendToNR = function fnSendToNR(payload) {
 		uibuilder.send({
@@ -61,10 +93,7 @@
 	uibsend = uibuilder.eventSend.bind(uibuilder)
 
 	// Listen for new messages from Node-RED/uibuilder
-	uibuilder.onChange('msg', (msg) => {
-		// Push an HTML highlighted visualisation of the msg to a prop so we can display it
-		nrMsg = uibuilder.syntaxHighlight(msg)
-		
+	uibuilder.onChange('msg', (msg) => {	
 		// Update the greeting if present in the msg
 		if ( msg.greeting ) myGreeting = msg.greeting
 	})

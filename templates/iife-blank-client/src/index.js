@@ -1,13 +1,13 @@
 // @ts-nocheck
 /** Example of using the IIFE build of the uibuilder client library
- * Note that uibuilder.start() should no longer be needed.
  * See the docs if the client doesn't start on its own.
+ * logLevel and showMsg can be controlled from Node-RED instead of here if preferred.
  */
 'use strict'
 
 // logLevel 2+ shows more built-in logging. 0=error,1=warn,2=info,3=log,4=debug,5=trace.
 // uibuilder.set('logLevel', 2) // uibuilder.set('logLevel', 'info')
-// Using the log yourself:
+// Using the log output yourself:
 // uibuilder.log('info', 'a prefix', 'some info', {any:'data',life:42})
 
 // Show the latest incoming msg from Node-RED
@@ -23,6 +23,6 @@ window.fnSendToNR = function fnSendToNR(payload) {
 }
 
 // Listen for incoming messages from Node-RED and action
-// uibuilder.onChange('msg', function(msg) {
+// uibuilder.onChange('msg', (msg) => {
 //     // do stuff with the incoming msg
 // })

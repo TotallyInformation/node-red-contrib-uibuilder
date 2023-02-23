@@ -22,13 +22,26 @@ Context store handling currently does not cope with stores that require asynchro
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+### Client updates
+
+* Only add showMsg once! Allow `showMsg()` to toggle.
+* Control from Node-RED. Functions to implement:
+  * [x] get/set
+  * [x] showMsg(boolean, parent=body)
+  * [ ] clearHtmlCache(), saveHtmlCache(), restoreHtmlFromCache()
+  * [ ] htmlSend()
+  * [ ] getStore, setStore, removeStore
+  * [ ] watchDom(startStop)
+  * [ ] reload
+  * [ ] setPing
+
 ### uibuilder node
 
 * Editor: Improve help box for _uib switch 
 
 ### Templates
-* Make the blank template truly blank
 * Remove all msg displays. Add comment for showMsg, commented out for blank, in for others.
+* Add `event.preventDefault()` to `fnSendToNR`
 * [TotallyInformation/uib-template-svelte-simple](https://github.com/TotallyInformation/uib-template-svelte-simple), [TotallyInformation/uib-template-test](https://github.com/TotallyInformation/uib-template-test),
 
 ### Examples
@@ -54,14 +67,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Parent: `#eltest-ul-ol > li:nth-child(3)`
   * Chaining
   * JSON msg templates for each type
-
-* HTML
-  *     --heading-h2-border-color: var(--mono-tint2);
-  * Set `.markdown-section h2 {border-bottom-width: thick;}`
-  * Set `.markdown-section h3 {border-bottom-width: thin;}`
-  * Set `--heading-h3-border-color: var(--mono-tint2)`
-
-
 
 ----
 
@@ -264,7 +269,7 @@ Please switch to using the `uib-element` node. This node will be removed in the 
 * Moved all scripts to head with defer now we no longer expect IE. Much cleaner code.
 * Changed templates to use CSS from `../uibuilder/uib-brand.css` rather than `./uib-brand.css` for better consistency.
 * Updated:
-  * [x] blank
+  * [x] blank - now truly blank, a clean canvas.
   * [x] blank-iife-client
   * [x] blank-old-client
   * [x] blank-esm-client

@@ -3,10 +3,10 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../uibuilder/images/node-blue.ico">
 
     <title>Minimal modern ESM client example - Node-RED uibuilder</title>
     <meta name="description" content="Node-RED uibuilder - Minimal modern ESM client example">
-    <link rel="icon" href="../uibuilder/images/node-blue.ico">
 
     <!-- Your own CSS -->
     <link type="text/css" rel="stylesheet" href="./index.css" media="all">
@@ -16,16 +16,32 @@
 
 </head><body class="uib">
     
-    <h1>uibuilder Minimal Modern Client Example using ESM library - v6.1.0</h1>
+    <h1 class="with-subtitle">uibuilder Modern Client Example</h1>
+    <div role="doc-subtitle">Using the ESM library - v6.1.0.</div>
 
     <div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>
 
-    <!-- Two different ways to send data back to Node-RED via buttons.
-         fnSendToNR uses standard `uibuilder.send`.
-         eventSend includes `data-*` attributes, keyb modifiers, etc. Works with any event. -->
-    <button onclick="fnSendToNR('A message from the sharp end!')">Send a msg back to Node-RED</button>
-    <button onclick="uibuilder.eventSend(event)" data-type="eventSend" data-foo="Bah">eventSend</button>
+    <!-- A form is an easy way to input data to send to Node-RED -->
+    <form>
+        <div>
+            This is a form element, it is an easy way to get input and send it back to Node-RED.
+        </div>
 
-    <pre id="msg" class="syntax-highlight">Waiting for a message from Node-RED</pre>
+        <div><!-- Accessible form element -->
+            <label for="quickMsg">Quick Message:</label>
+            <!-- onchange is optional, it saves the previous value of the field -->
+            <input id="quickMsg" value="A message from the browser" onchange="this.uib_newValue = this.value" onfocus="this.uib_oldValue = this.value">
+        </div>
+
+        <div>
+            <!-- Send data back to Node-RED the simple way - automatically includes the form's inputs,
+                 `data-*` attributes, keyboard modifiers, etc. Also works with other event types. -->
+            <button onclick="uibuilder.eventSend(event)" data-type="eventSend" data-foo="Bah">eventSend</button>
+        </div>
+    </form>
+
+    <!-- Another way to send custom data back to Node-RED. fnSendToNR is defined in index.js,
+         it uses the standard `uibuilder.send` function -->
+    <button onclick="fnSendToNR('A message from the sharp end!')">Send a custom msg back to Node-RED</button>
 
 </body></html>

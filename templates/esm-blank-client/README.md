@@ -2,13 +2,13 @@
 
 > NOTE: You can replace the contents of this README with text that describes your UI.
 
-This is about the simplest template you can get for uibuilder. It uses the ESM version of the modern client library. Your custom JavaScript code **MUST** be loaded as a `module` and the uibuilder client must be `import`ed in your custom code.
+This template uses the ES Module (ESM) version of the modern client library. Your custom JavaScript code **MUST** be loaded as a `module` and the uibuilder client must be `import`ed in your custom code. It is an extended version of the default "blank" template.
 
 It does not use any frameworks and has no other dependencies.
 
 It demonstrates that you can use uibuilder purely with HTML/JavaScript and still easily build a simple, dynamic, data-driven user interface.
 
-All it does is start up uibuilder and will dump any msg you send to it from Node-RED into the browser tab. It also has buttons that let you send messages back to Node-RED.
+All it does is start up uibuilder and will dump any msg you send to it from Node-RED into the browser tab. It also has a form and buttons that let you send messages back to Node-RED.
 
 ## Folders
 
@@ -44,6 +44,6 @@ The other files are all optional. However, you will need to change the index.htm
 
 uibuilder will happily serve up any number of web pages from a single instance. It will also make use of sub-folders. However, each folder should have an `index.html` file so that a URL that ends with the folder name will still work without error.
 
-Note that each html file is a separate page and requires its own JavaScript and uibuilder library reference. When moving between pages, remember that every page is stand-alone, a new environment.
+Note that each html file is a separate page and requires its own JavaScript and uibuilder library reference. When moving between pages, remember that every page is stand-alone, a new environment. You can share one `index.js` file between multiple pages if you prefer but each page will run a separate instance.
 
-However, if multiple pages are connected to the same uibuilder instance, they will all get the same broadcast messages from Node-RED. So if you want to handle different messages on different pages, remember to filter them in your front-end JavaScript in `uibuilder.onChange('msg', ....)` function.
+If multiple pages are connected to the same uibuilder instance, they will all get the same broadcast messages from Node-RED. So if you want to handle different messages on different pages, remember to filter them in your front-end JavaScript in `uibuilder.onChange('msg', ....)` function. Turn on the advanced flag for including a `msg._uib` property in output if you need to differentiate between pages and/or clients in Node-RED.

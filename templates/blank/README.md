@@ -6,9 +6,9 @@ This is about the simplest template you can get for uibuilder. Is is also (as of
 
 It does not use any frameworks and has no other dependencies.
 
-It demonstrates that you can use uibuilder purely with HTML/JavaScript and still easily build a simple, dynamic, data-driven user interface.
+It demonstrates that you can use uibuilder purely with HTML/JavaScript or even just HTML and still easily build a simple, dynamic, data-driven user interface with the help of Node-RED.
 
-All it does is start up uibuilder and will dump any msg you send to it from Node-RED into the browser tab. It also has buttons that let you send messages back to Node-RED.
+All it does is start up uibuilder.
 
 From uibuilder v6.1.0, it uses the new IIFE client library.
 
@@ -33,8 +33,8 @@ Also note that you can use **linked** folders and files in this folder structure
 * `package.json`: Defines the basic structure, name, description of the project and defines any local development dependencies if any.
 * `README.md`: This file.
 * `src/index.html`: Contains your basic HTML and will be the file loaded and displayed in the browser when going to the uibuilder defined URL.
-* `src/index.js`: Contains all of the logic for your UI. It must be linked to in the html file.
-* `src/index.css`: Contains your custom CSS for styling. It must be linked to in the html file.
+* `src/index.js`: Contains all of the logic for your UI. It must be linked to in the html file. Optional.
+* `src/index.css`: Contains your custom CSS for styling. It must be linked to in the html file. Optional.
 
 Note that only the `package.json` and `index.html` files are actually _required_. uibuilder will not function as expected without them.
 
@@ -46,6 +46,6 @@ The other files are all optional. However, you will need to change the index.htm
 
 uibuilder will happily serve up any number of web pages from a single instance. It will also make use of sub-folders. However, each folder should have an `index.html` file so that a URL that ends with the folder name will still work without error.
 
-Note that each html file is a separate page and requires its own JavaScript and uibuilder library reference. When moving between pages, remember that every page is stand-alone, a new environment.
+Note that each html file is a separate page and requires its own JavaScript and uibuilder library reference. When moving between pages, remember that every page is stand-alone, a new environment. You can share one `index.js` file between multiple pages if you prefer but each page will run a separate instance.
 
-However, if multiple pages are connected to the same uibuilder instance, they will all get the same broadcast messages from Node-RED. So if you want to handle different messages on different pages, remember to filter them in your front-end JavaScript in `uibuilder.onChange('msg', ....)` function.
+If multiple pages are connected to the same uibuilder instance, they will all get the same broadcast messages from Node-RED. So if you want to handle different messages on different pages, remember to filter them in your front-end JavaScript in `uibuilder.onChange('msg', ....)` function. Turn on the advanced flag for including a `msg._uib` property in output if you need to differentiate between pages and/or clients in Node-RED.
