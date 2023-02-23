@@ -272,48 +272,63 @@ function packfeIIFE(cb) {
 
 /** Combine the parts of uibuilder.html */
 function buildPanelUib1(cb) {
-    src('src/editor/uibuilder/editor.js')
-        // .pipe(debug({title:'1', minimal:true}))
-        // .pipe(once())
-        // .pipe(debug({title:'2', minimal:true}))
-        .pipe(uglify())
-        .pipe(rename('editor.min.js'))
-        .pipe(dest('src/editor/uibuilder'))
-
+    try {
+        src('src/editor/uibuilder/editor.js')
+            // .pipe(debug({title:'1', minimal:true}))
+            // .pipe(once())
+            // .pipe(debug({title:'2', minimal:true}))
+            .pipe(uglify())
+            .pipe(rename('editor.min.js'))
+            .pipe(dest('src/editor/uibuilder'))
+    } catch (e) {
+        console.error('buildPanelUib1 failed', e)
+    }
     cb()
 }
 /** compress */
 function buildPanelUib2(cb) {
-    src('src/editor/uibuilder/main.html')
-        .pipe(include())
-        // .pipe(once())
-        .pipe(rename('uibuilder.html'))
-        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-        .pipe(dest(nodeDest))
+    try {
+        src('src/editor/uibuilder/main.html')
+            .pipe(include())
+            // .pipe(once())
+            .pipe(rename('uibuilder.html'))
+            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(nodeDest))
+    } catch (e) {
+        console.error('buildPanelUib2 failed', e)
+    }
 
     cb()
 }
 
 /** Combine the parts of uib-cache.html */
 function buildPanelCache(cb) {
-    src('src/editor/uib-cache/main.html')
-        .pipe(include())
-        .pipe(once())
-        .pipe(rename('uib-cache.html'))
-        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-        .pipe(dest(nodeDest))
+    try {
+        src('src/editor/uib-cache/main.html')
+            .pipe(include())
+            .pipe(once())
+            .pipe(rename('uib-cache.html'))
+            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
+            .pipe(dest(nodeDest))
+    } catch (e) {
+        console.error('buildPanelCache failed', e)
+    }
 
     cb()
 }
 
 /** Combine the parts of uib-sender.html */
 function buildPanelSender(cb) {
-    src('src/editor/uib-sender/main.html')
-        .pipe(include())
-        .pipe(once())
-        .pipe(rename('uib-sender.html'))
-        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-        .pipe(dest(nodeDest))
+    try {
+        src('src/editor/uib-sender/main.html')
+            .pipe(include())
+            .pipe(once())
+            .pipe(rename('uib-sender.html'))
+            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
+            .pipe(dest(nodeDest))
+    } catch (e) {
+        console.error('buildPanelSender failed', e)
+    }
 
     cb()
 }
@@ -331,52 +346,65 @@ function buildPanelSender(cb) {
 
 // For new nodes, the html & js files go in /nodes/<node-name>/ with the filename customNode.{html|js}
 function buildPanelUibList(cb) {
-    src(`${nodeSrcRoot}/uib-list/main.html`, ) // { since: lastRun(buildMe) } )
-        // .pipe(debug({title:'debug1',minimal:false}))
-        .pipe( include() )
-        // Rename output to $dirname/editor.html
-        .pipe(rename(function(thispath) {
-            // thispath.dirname = `${thispath.dirname}`
-            thispath.basename = 'customNode'
-            // thispath.extname = 'html'
-        }))
-        // Minimise HTML output
-        // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-        .pipe(dest(`${nodeDest}/uib-list/`))
+    try {
+        src(`${nodeSrcRoot}/uib-list/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-list/`))
+    } catch (e) {
+        console.error('buildPanelUibList failed', e)
+    }
 
     cb()
 }
+/** Build the uib-element panel */
 function buildPanelUibElement(cb) {
-    src(`${nodeSrcRoot}/uib-element/main.html`, ) // { since: lastRun(buildMe) } )
-        // .pipe(debug({title:'debug1',minimal:false}))
-        .pipe( include() )
-        // Rename output to $dirname/editor.html
-        .pipe(rename(function(thispath) {
-            // thispath.dirname = `${thispath.dirname}`
-            thispath.basename = 'customNode'
-            // thispath.extname = 'html'
-        }))
-        // Minimise HTML output
-        // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-        .pipe(dest(`${nodeDest}/uib-element/`))
+    try {
+        src(`${nodeSrcRoot}/uib-element/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-element/`))
+    } catch (e) {
+        console.error('buildPanelUibElement failed', e)
+    }
 
     cb()
 }
 
 /** Combine the parts of uib-update.html */
 function buildPanelUpdate(cb) {
-    src(`${nodeSrcRoot}/uib-update/main.html`, ) // { since: lastRun(buildMe) } )
-        // .pipe(debug({title:'debug1',minimal:false}))
-        .pipe( include() )
-        // Rename output to $dirname/editor.html
-        .pipe(rename(function(thispath) {
-            // thispath.dirname = `${thispath.dirname}`
-            thispath.basename = 'customNode'
-            // thispath.extname = 'html'
-        }))
-        // Minimise HTML output
-        // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-        .pipe(dest(`${nodeDest}/uib-update/`))
+    try {
+        src(`${nodeSrcRoot}/uib-update/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-update/`))
+    } catch (e) {
+        console.error('buildPanelUpdate failed', e)
+    }
 
     cb()
 }
