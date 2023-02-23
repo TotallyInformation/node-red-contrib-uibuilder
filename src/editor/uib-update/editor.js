@@ -31,7 +31,7 @@
     function onEditPrepare(node) {
         if (!node.mode) {
             node.mode = 'update'
-            $('#node-input-mode').val('update')
+            // $('#node-input-mode').typedInput('value', 'update')
         }
         $('#node-input-slotPropMarkdown').prop('checked', node.slotPropMarkdown)
 
@@ -56,7 +56,7 @@
                     ],
                 }
             ],
-            typeField: $('#node-input-modeSourceType'),
+            // typeField: $('#node-input-modeSourceType'),
         })
 
         // css selector typed input - https://nodered.org/docs/api/ui/typedInput/

@@ -9,19 +9,15 @@
 
 <h3>Inputs</h3>
 <dl class="message-properties">
-    <dt>payload <span class="property-type">array | object</span></dt>
+    <dt>mode <span class="property-type">string</span></dt>
     <dd>
-        The string, array or object that defines the output.<br>
-        Each element type has its own input data definition.<br>
-        See the info box for each type.
+        If the <code>msg.mode</code> option is chosen in settings, this property can be set to either "update" or "delete".
     </dd>
 
-    <dt class="optional">mode <span class="property-type">string</span></dt>
-    <dd>Optionally, set to "remove" which will remove the list from the UI. Payload is not needed in this case, it will be ignored.</dd>
-    <dd>Otherwise not needed.</dd>
-
-    <dt class="optional">topic <span class="property-type">string</span></dt>
-    <dd>Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+    <dt class="optional">Other <span class="property-type">various</span></dt>
+    <dd>
+        Other msg properties may be passed into the <i>CSS Selector</i>, <i>Content Source</i> and <i>Attributes Source</i> fields if set in the settings.
+    </dd>
 </dl>
 
 <h3>Outputs</h3>
@@ -39,100 +35,58 @@
     <dt>topic <span class="property-type">string</span></dt>
     <dd>
         The input topic.
-        <p>
-            When chaining <code>uib-element</code> nodes together, make sure that at least the final
-            output has a unique topic string so that caching using the <code>uib-cache</code> node is
-            easier.
-        </p>
     </dd>
+    <dd>
+        When chaining <code>uib-element</code>/<code>uib-update</code> nodes together, make sure that at least the final
+        output has a unique topic string so that caching using the <code>uib-cache</code> node is
+        easier.
+    </dd>
+    
 </dl>
 
 <h3>Node Settings</h3>
 <dl class="message-properties">
-    <dt>HTML ID <span class="property-type">string</span></dt>
+    <dt>Mode <span class="property-type">selection</span></dt>
     <dd>
-        The HTML element id of the resulting HTML tag.<br>
-        This is required otherwise later updates and removals cannot happen.
-        <P><b>Applied to the wrapping <code>&lt;div></code> tag</b>.</P>
-        <p>
-            ID's must be unique on the page otherwise updates/replacement processing
-            will be challenging.
-        </p>
+        The mode of operation.
+    </dd>
+    <dd>
+        Must be one of 'update' or 'delete'. Can also be set to <code>msg.mode</code>.
     </dd>
 
-    <dt>Type <span class="property-type">selection</span></dt>
+    <dt>CSS Selector <span class="property-type">string</span></dt>
     <dd>
-        What kind of element or component to create?
-        <p>
-            Each selection will show an information box below the field
-            that explains what is created and what input data is needed.
-        </p>
+        Required. A <a href="https://developer.mozilla.org/en-US/docs/web/css/css_selectors" target="_blank">CSS selector</a> that the node will update.
+    </dd>
+    <dd>
+        Note that <b>ALL</b> matching elements will be updated/deleted not just the first.
     </dd>
 
-    <dt class="optional">Parent <span class="property-type">string</span></dt>
+    <dt class="optional">Content Source <span class="property-type">string</span></dt>
     <dd>
-        Optional. A CSS selector that the elements will be attached to.
-        E.g. "div#more" or just "#more" would attach the element as a child of a DIV tag <code>&lt;div id="more"></code>.<br>
-        "p.myclass" would attach the list as a child of a P tag that has a class including <code>myclass</code>.
-        <p>
-            If a parent is not specified, the element will be added as a new child of the <code>body</code> tag. (e.g. the end of the UI)
-        </p>
-        <p>
-            Most of the templates have a div with an ID of <code>more</code> pre-defined for convenience.
-        </p>
+        Optional. Text, HTML or Markdown that will replace the slot content of the selected element.
+    </dd>
+    <dd>
+        If specified, the result must be a string.
     </dd>
 
-    <dt class="optional">Classes <span class="property-type">string</span></dt>
+    <dt class="optional">Markdown? <span class="property-type">boolean</span></dt>
     <dd>
-        Optional set of space-separated CSS class names that will be applied to
-        the wrapping <code>&lt;div></code> tag.
-    </dd>
-    <dd>
-        <b>
-            NOTE that the classes are NOT applied to the "type" element (e.g. <code>&lt;table></code>) but
-            to the wrapping div.
-        </b>
-    </dd>
-    <dd>
-        e.g. "warning bold"
+        If set, the <i>Content Source</i> will be treated as Markdown <i>IF</i> the <a href="https://markdown-it.github.io/" target="_blank">Markdown-IT</a> library is loaded into the client web page.
     </dd>
 
-    <dt class="optional">Styles <span class="property-type">string</span></dt>
+    <dt class="optional">Attribs Source <span class="property-type">object</span></dt>
     <dd>
-        Optional set of CSS style definitions that will be applied to
-        the wrapping <code>&lt;div></code> tag.
+        Optional. An object containing attribute-name/value keypairs.
     </dd>
     <dd>
-        e.g. "color:yellow;background-color:red;"
-    </dd>
-
-    <div style="margin:8px 8px 2px 13px;border:1px solid var(--red-ui-secondary-border-color);padding:4px;">
-        <p>
-            It is better to define styles and classes in a style sheet. All of the
-            templates, for example, include a <code>index.css</code> file.
-            This enables much finer control over styles.
-        </p><p>
-            Each created element should be easily accessible. Use your browser's
-            Developer Tools to select the appropriate element and copy the CSS selector.
-        </p>
-    </div>
-
-    <dt class="optional">Heading <span class="property-type">string</span></dt>
-    <dd>
-        Optional text to use as a heading for the added element.
-        Leave blank for no heading.
+        e.g. <code>{"class":"myclass", "data-foo":"bah"}</code>
     </dd>
 
     <dt>Topic <span class="property-type">string</span></dt>
     <dd>
         Fixed topic string. Only used if the input <code>msg</code> does not
         contain a <code>topic</code> property.
-    </dd>
-    <dd>
-        <b>Note</b>: A topic is always auto-generated when the ID changes.
-        You can change this but it will be reset if changing the ID.
-        The purpose is to ensure that you always have a unique topic for
-        use with the <code>uib-cache</code> node.
     </dd>
 
     <dt class="optional">Name <span class="property-type">string</span></dt>
@@ -141,20 +95,16 @@
 
 <h3>Details</h3>
 <p>
-    You define the HTML ID (of the wrapping div) and type of element to create and then send the 
-    payload to a uibuilder node to create/update the element.
+    Select the mode of operation (update or delete), provide a CSS Selector that will identify the element(s) to work on.
+    If updating, provide updated slot content and/or attributes. Then send the 
+    output to a uibuilder node to update/remove the element(s).
+</p>
+<p>
+    Multiple <code>uib-update</code> and <code>uib-element</code> nodes can be chained together for more complex needs.
 </p>
 <p>
     The resulting output produces the dynamic, configuration-driven, low-code <code>msg._ui</code>
     JSON configuration data used by the uibuilder front-end client library to automatically
     create HTML on your page. So this can be further processed, saved for future use or sent 
     direct to a uibuilder node (via a <code>uib-cache</code> node if desired).
-</p>
-<p>
-    You can also easily remove the resulting HTML from your page simply by sending a msg
-    containing just <code>msg.mode</code> set to "remove".
-</p>
-<p>
-    Additionally, you can resend data to the node which will result in the HTML being replaced
-    with the new configuration/data.
 </p>
