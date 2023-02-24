@@ -174,10 +174,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add more elements:
     * [x] List (ul, ol, dl)
       * Future improvements:
+        * Better validation of input data
         * list-style-type (add to outer) - several options plus text (incl emoji's)
         * ? Optional list leading/trailing text ?
     * [x] Table
       * Future improvements:
+        * Better validation of input data
         * Caption
         * If named row comes from a field, make sure it is the 1st col and marked as a th
         * Add data-row-name to td's as well
@@ -186,25 +188,33 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [x] tr - Add a row to an existing table
     * [x] li - Add a row to an existing ul/ol list
       * Future improvements:
+        * Better validation of input data
         * list-style-type (add to outer) - several options plus text (incl emoji's)
     * [x] Card/Article
       * Future improvements:
         * Better layout, more optional internal structure (footer, etc)
-    * Grid/Flex-Grid (with option to turn on visible grid to help with layout)
-    * Markdown - allow raw Markdown to be sent similar to the HTML element (will require the Markdown-IT library to be loaded)
-    * Form
-      * Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
-      * Inputs: incl text, number, time, date, colour picker, ...
-      * button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
-    * Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
-    * tbody
-    * iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
-    * notify (globalNotification)
-    * Modal Dialogue
-    * LED (on/off/colour/brightness) - ref: node-red-contrib-ui-led
-    * Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
-    * Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
-    * Container (with option for drag/drop of contents) [ref](https://discourse.nodered.org/t/is-there-a-pallete-that-can-do-this/75143?u=totallyinformation)
+    * [x] Simple Form - Input types: button, checkbox, color, date, detetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week
+      * Future Improvements:
+        * Better validation of input data
+        * Additional input types: select, combo, file, image, textarea.
+        * Eventually add extended inputs such as HTML WYSIWYG/Markdown
+        * Add Auto-complete for text inputs
+        * If no button added, make each input send changes direct - or possibly add that as an optional setting.
+    * [ ] Grid/Flex-Grid (with option to turn on visible grid to help with layout)
+    * [ ] Markdown - allow raw Markdown to be sent similar to the HTML element (will require the Markdown-IT library to be loaded)
+    * [ ] Form
+      * [ ] Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
+      * [ ] Inputs: incl text, number, time, date, colour picker, ...
+      * [ ] button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
+    * [ ] Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
+    * [ ] tbody
+    * [ ] iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
+    * [ ] notify (globalNotification)
+    * [ ] Modal Dialogue
+    * [ ] LED (on/off/colour/brightness) - ref: node-red-contrib-ui-led
+    * [ ] Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
+    * [ ] Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
+    * [ ] Container (with option for drag/drop of contents) [ref](https://discourse.nodered.org/t/is-there-a-pallete-that-can-do-this/75143?u=totallyinformation)
 
   * ??? How to allow EXTERNAL element definitions ???
     
@@ -257,7 +267,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   
   * Add ability to save the current DOM.
     * To local storage - with option to reload on reload
-    * Send to Node-RED as a control msg
+    * Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
 
 
   * _UI - improvements to the config-/data-driven UI creation features

@@ -26,6 +26,12 @@
   * [Custom Events](client-docs/custom-events.md)
   * [Troubleshooting](client-docs/troubleshooting.md)
   * [Old uibuilderfe client library](front-end-library.md)
+* Zero-code element types
+  * [Tables](elements/tables.md)
+  * [Forms](elements/forms.md)
+  * [Lists](elements/lists.md)
+  * [HTML](elements/html.md)
+  * [Headings, text boxes, etc.](elements/other.md)
 * UI frameworks & builds
   * [VueJS complexities](vue-complexities.md)
   * [VueJS components](vue-component-handling.md)

@@ -51,6 +51,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Update/add examples for each template
   * Add global Notification/Toast input
   * Add dynamic HTML input
+* Ticklist
+  * Send a list
+  * Attach click handler to switch list type from bullet to ticked & msg node-red
+  * Save changes to cache on click
+* Table
+  * Weather example?
 
 ### Doc updates
 
@@ -78,22 +84,30 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 > Please remember that no changes are being made to the old `uibuilderfe.js` client. Nothing listed here applies to that.
 
-* New zero-code nodes `uib-element` and `uib-update` let you use simple data to create dynamic web UI's.
+* New zero-code nodes `uib-element` and `uib-update` let you use simple data to create dynamic web UI's. Including in this release: Tables, Forms and Lists.
 
 * The client library has a number of fixes and new features
-  * Extensions to the `eventSend` function to include **form data** and **value changes**. Should greatly simplify creating and using FORMs and providing quick inputs for Node-RED flows.
+  
+  * Extensions to the `eventSend` function to include **form data** and **value changes**. Should greatly simplify creating and using FORMs and providing quick inputs for Node-RED flows. Used by `uib-element` to create zero-code input forms.
 
   * New function: `uibuilder.showMsg(true)` Displays an on-screen card at the end of the current display that automatically updates with the last msg received from Node-RED. `uibuilder.showMsg(false)` turns it off.
+  
   * New function: `uibuilder.watchDom(true)` Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
+  
   * New functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
 
   * The uibuilder client now reports changes of **visibility** of the page back to node-red via a new control msg.
+  
   * Creates a browser `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
+  
   * Messages sent from the client either inherit the topic from the last inbound msg or from a default set using `uibuilder.set('topic', 'my topic string')`. The default will take preference. Reset by setting to an empty string.
 
 * If you turn on the advanced option "*Include msg._uib in standard msg output*", messages from the client now include client details for you to use in your own security processing or just to identify where things have come from (e.g. what page name as well as what client).
+
 * uibuilder now makes a copy of its main `<uibRoot>/package.json` file to `package.json.bak` before it updates it. Trace and error messages have been added to the process.
+
 * All of the templates and example flows have been refreshed with the latest standards.
+
 * Plenty of documentation updates and additions.
 
 ### `uibuilder` node
@@ -217,6 +231,7 @@ Has a single output. Outputs can be chained to more `uib-element` nodes. At the 
 Element types included in this release:
 
 * **Simple Table** - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
+* ** Simple Form** - Generate a simple but accessible input form from an array of objects where each object in the array defines the attributes and label.
 * **Unordered List (ul)**/**Ordered List (ol)** - Generates a bullet or number list from a simple input array or object.
 * **Description List (dl)** - Generates a description list from a simple input array of objects.
 * **Text box** - A simple "card" like article element.
@@ -271,28 +286,29 @@ Please switch to using the `uib-element` node. This node will be removed in the 
 * Updated:
   * [x] blank - now truly blank, a clean canvas.
   * [x] blank-iife-client
-  * [x] blank-old-client
   * [x] blank-esm-client
-  * [x] iife-vue3-nobuild
-  * [x] vue v2 + bootstrap-vue
-  * [x] vue v2 + bootstrap-vue - simple
-  * [x] svelte-basic
+  * [ ] svelte-basic
+  * [ ] iife-vue3-nobuild
+  * [ ] vue v2 + bootstrap-vue
+  * [ ] vue v2 + bootstrap-vue - simple
+  * [ ] blank-old-client
 
 
 ### Examples
 
 * Report Builder. Create HTML reports direct from Node-RED. See [Forum thread](https://discourse.nodered.org/t/creating-reports-using-node-red/73664), [Flow site](https://flows.nodered.org/flow/99e1e6169b5e93b460bcbcc8f493d011#).
 * Update to use modern client
-  * [x] jQuery
+  * [ ] jQuery
   * [ ] logging
-  * [x] simple - No longer uses VueJS since it really isn't needed!
+  * [ ] simple - No longer uses VueJS since it really isn't needed!
   * [ ] toast-notifications
   * [ ] uib-cache
   * [ ] uib-sender
   * [ ] vue
 * New for v6.1.0
-  * [x] low-code-report-builder (new for v6.1.0)
-  * [x] Svelte-basic
+  * [x] Zero-code: Using `uib-element`
+  * [ ] low-code-report-builder (new for v6.1.0)
+  * [ ] Svelte-basic
   * [ ] ESM
 * Examples matching templates:
   * Added node descriptions throughout.

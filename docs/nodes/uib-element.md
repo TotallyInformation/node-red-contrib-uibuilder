@@ -22,12 +22,13 @@ Has a single output. Outputs can be chained to more `uib-element` nodes. At the 
 
 Element types included in this release:
 
-* **Simple Table** - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
-* **Unordered List (ul)**/**Ordered List (ol)** - Generates a bullet or number list from a simple input array or object.
-* **Description List (dl)** - Generates a description list from a simple input array of objects.
-* **Text box** - A simple "card" like article element.
-* **HTML** - Pass-though HTML (e.g. from a Node-RED Template node).
-* **Page Title** - Change the page HTML title, description and the first H1 tag on the page to all be the same input text. If no H1 tag exists on the page, it will be added. (Note that only 1 H1 tag should ever be on a page)
+* [**Simple Table**](elements/tables.md) - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
+* [**Simple Form**](elements/forms.md) - Generate a simple but accessible input form from an array of objects where each object in the array defines the attributes and label.
+* [**Unordered List (ul)**/**Ordered List (ol)**](elements/lists.md) - Generates a bullet or number list from a simple input array or object.
+* [**Description List (dl)**](elements/lists.md) - Generates a description list from a simple input array of objects.
+* [**Text box**](elements/other.md) - A simple "card" like article element.
+* [**HTML**](elements/html.md) - Pass-though HTML (e.g. from a Node-RED Template node).
+* [**Page Title**](elements/other.md) - Change the page HTML title, description and the first H1 tag on the page to all be the same input text. If no H1 tag exists on the page, it will be added. (Note that only 1 H1 tag should ever be on a page)
 
 Where an *ID* is specified in the config, each of the above will attempt to *replace* an existing instance when called again. If *no ID* is specified, they will *always add* a new element.
 
@@ -37,8 +38,8 @@ Each element can have an optional heading. If used, a aria-labelledby attribute 
 
 The following element types are also available but behave slightly differently in that they will **always** add a new row regardless of the ID setting, they are not wrapped in a div and you cannot add a heading:
 
-* **Add row to existing table** - Adds a single row, must provide the _Parent_ of the table to update, can insert the row anywhere via the _Position_ input.
-* **Add row to existing unordered or ordered list** - Adds a single row, must provide the _Parent_ of the list to update, can insert the row anywhere via the _Position_ input.
+* [**Add row to existing table**](elements/tables.md) - Adds a single row, must provide the _Parent_ of the table to update, can insert the row anywhere via the _Position_ input.
+* [**Add row to existing unordered or ordered list**](elements/lists.md) - Adds a single row, must provide the _Parent_ of the list to update, can insert the row anywhere via the _Position_ input.
 
 In addition, a special msg may be sent to this node: `msg.mode` where `mode` = "remove". In this case, as long as an HTML ID has been provided, the element will be removed from the UI.
 
