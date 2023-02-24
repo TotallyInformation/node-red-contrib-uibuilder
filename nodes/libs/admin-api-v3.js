@@ -413,7 +413,7 @@ function adminRouterV3(uib, log) {
 
                 case 'updatepackage': {
                     log.trace(`[uibuilder:adminRouterV3:PUT:updatepackage] url=${params.url}`)
-                    console.log(`[uibuilder:adminRouterV3:PUT:updatepackage] url=${params.url}, pkg=${params.pkgName}`)
+                    // console.log(`[uibuilder:adminRouterV3:PUT:updatepackage] url=${params.url}, pkg=${params.pkgName}`)
 
                     res.statusMessage = 'PUT successful'
                     res.status(200).json({
