@@ -484,6 +484,89 @@ function buildTable(node, msg, parent) {
     return err
 } // ---- End of buildTable ---- //
 
+/** Build the UI config instructions for the SIMPLE FORM element
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildSForm(node, msg, parent) {
+    // Make sure msg.payload is an object or an array - if not, force to array
+    if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
+
+    let cols = []
+    const err = ''
+
+    // Add the form tag
+    parent.components.push({
+        'type': 'form',
+        'components': [],
+    })
+
+    // Convenient references
+    const frmBody = parent.components[0]
+    const frm = msg.payload
+    console.log({frmBody})
+
+    // Walk through the inbound msg payload (works as both object or array)
+    Object.keys(frm).forEach( (rowRef, i) => {
+        // Data for this row/element of the form: id, type
+        const frmRow = frm[rowRef]
+        // TODO Check that required properties are present
+        // Add event handlers
+        if (frmRow.type === 'button') {
+            // Automatically submit form data on click
+            frmRow.onclick = 'uibuilder.eventSend(event)'
+        } else {
+            // Tracks old/new values on data atrributes for input fields
+            frmRow.onchange = 'this.dataset.newValue = this.value'
+            frmRow.onfocus = 'this.dataset.oldValue = this.value'
+        }
+        if (!frmRow.name) frmRow.name = frmRow.id
+
+        // TODO Maybe wrap all buttons in a single row at the end of the form?
+        // Create the form row
+        const rLen = frmBody.components.push( {
+            'type': 'div',
+            'components': [], // label and input/form/select/button - 2 for input, 1 for button
+            'attributes': {},
+        } )
+
+        // Add the row elements
+        const row = frmBody.components[rLen - 1]
+        if (frmRow.type === 'button') {
+            const len = row.components.push({
+                'type': 'button',
+                'attributes': frmRow,
+                'slot': frmRow.label,
+            })
+            row.components[len - 1].attributes.type = 'button'
+        } else {
+            row.components.push({
+                'type': 'label',
+                'attributes': {
+                    'for': frmRow.id,
+                },
+                'slot': frmRow.label,
+            })
+            row.components.push({
+                'type': 'input',
+                'id': frmRow.id,
+                'attributes': frmRow
+                // 'attributes': {
+                //     'name': frmRow.id,
+                //     'type': frmRow.type,
+                //     'value': frmRow.value,
+                //     'required': frmRow.required ? 'required' : undefined,
+                //     // Other attribs: minlength, maxlength, size, checked, disabled, max, min, multiple, pattern, step
+                // }
+            })
+        }
+    } )
+
+    return err
+} // ---- End of buildTable ---- //
+
 /** Build the UI config instructions for adding a table row to an existing table
  * NB: Row ids all removed since rows might change position
  * @param {runtimeNode & uibElNode} node reference to node instance
@@ -578,7 +661,7 @@ function addDiv(parent, node) {
  * @returns {object} Reference to new compontents array for next element to be added into
  */
 function addHeading(parent, node) {
-    if (node.heading === '') return parent
+    if (!node.heading) return parent
 
     const hdId = `${node.elementId}-heading`
 
@@ -630,7 +713,7 @@ async function buildUi(msg, node) {
         getSource('position', node, msg),
     ])
 
-    console.log('NODE', node)
+    // console.log('NODE', node)
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) node._ui = msg._ui
@@ -703,6 +786,13 @@ async function buildUi(msg, node) {
             parent = addDiv(parent, node)
             parent = addHeading(parent, node)
             err = buildTable(node, msg, parent)
+            break
+        }
+
+        case 'sform': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildSForm(node, msg, parent)
             break
         }
 

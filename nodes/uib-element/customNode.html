@@ -343,7 +343,7 @@
                 label: 'Simple Table',
                 description: `
                     <p>
-                        A simple but accessible table.
+                        A simple but accessible table. <b><a href="./uibuilder/docs/#/elements/tables" target="_blank">Docs</a></b>.
                     </p><p>
                         Set the incoming <code>msg.payload</code> to an <i>Array of Objects<i>.
                         Each array entry will be a new row. Each property of the first array entry
@@ -360,12 +360,46 @@
                 allowsHead: true,
                 allowsPos: true,
             },
+            sform: {
+                value: 'sform',
+                label: 'Simple Form',
+                description: `
+                    <p>
+                        A simple but accessible Form with inputs and buttons. <b><a href="./uibuilder/docs/#/elements/forms" target="_blank">Docs</a></b>.
+                    </p><p>
+                        Set the incoming <code>msg.payload</code> to an <i>Array of Objects<i>.
+                        Each array entry will be a new form input or button.
+                        An Object of Objects can also be used where the outer object is key'd by the ID of the entry.
+                    </p><p>
+                        Currently supported properties in the inner objects are: 
+                        <code>type=</code>One of the input types listed below, 
+                        <code>id=</code>Unique HTML identifier, 
+                        <code>label=</code>Label text of the input field or button, 
+                        <code>required=</code>true/false whether a value is required,
+                        <code>value=</code>Optional starting value.
+                    </p><p>
+                        Other properties can be provided. These only work with the appropriate input types and are otherwise ignored
+                    </p><p>
+                        Available input types are:
+                        button, checkbox, color, date, detetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week.
+                        See <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input" target="_blank">this explanation of the types and properties</a>.
+                    </p><p>
+                        Some additional types will be made available in the future: select, combo, file, image, textarea. Auto-complete will also be added eventually.
+                    </p><p>
+                        If a button is included, pressing the button will automatically send a message from the client back to Node-RED
+                        All of the form data will be included in that message in <code>msg._ui.form</code>.
+                    </p>
+                `,
+                allowsParent: true,
+                allowsHead: true,
+                allowsPos: true,
+            },
             ul: {
                 value: 'ul',
                 label: 'Unordered List (ul)',
                 description: `
                     <p>
-                        Outputs a simple, accessible, bullet list.
+                        Outputs a simple, accessible, bullet list.  <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
                     </p><p>
                         Input <code>msg.payload</code> should be an array of strings.
                         An object of key/values can also be used.
@@ -380,7 +414,7 @@
                 label: 'Ordered List (ol)',
                 description: `
                     <p>
-                        Outputs a simple, accessible, numbered list
+                        Outputs a simple, accessible, numbered list. <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
                     </p><p>
                         Input <code>msg.payload</code> should be an array of strings.
                         An object of key/values can also be used.
@@ -395,7 +429,7 @@
                 label: 'Description List (dl)',
                 description: `
                     <p>
-                        Outputs a simple, accessible, description list.
+                        Outputs a simple, accessible, description list. <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
                     </p>
                     <p>
                         Set the incoming <code>msg.payload</code> to be an Array of Array's. The outer array representing each row 
@@ -420,7 +454,7 @@
                 label: 'Text box',
                 description: `
                     <p>
-                        A simple box containing text with an optional heading.
+                        A simple box containing text with an optional heading. <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
                     </p>
                 `,
                 allowsParent: true,
@@ -432,7 +466,7 @@
                 label: 'HTML',
                 description: `
                     <p>
-                        Pass-through HTML. When sent to the uibuilder node, will be reproduced in your page(s).
+                        Pass-through HTML. When sent to the uibuilder node, will be reproduced in your page(s). <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
                     </p>
                     <p>
                         May be used with the Node-RED core <code>template</code> node.
@@ -450,8 +484,10 @@
                 label: 'Page Title',
                 description: `
                     <p>
-                        Updates the HTML page title and meta description. Amends the first 
-                        <code>&lt;h1></code> tag on the page if it exists else adds one at the top of the page.
+                        Updates the HTML page title and meta description.  <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
+                    </p>
+                    <p>
+                        Amends the first <code>&lt;h1></code> tag on the page if it exists else adds one at the top of the page.
                         There should only ever be one H1 tag on a page.
                     </p>
                     <p>
@@ -470,7 +506,7 @@
                 label: 'Add row to existing ordered or unordered list',
                 description: `
                     <p>
-                        Always add a new row to an existing list. (no replace)
+                        Always add a new row to an existing list. (no replace). <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
                     </p><p>
                         Set the <b>Parent</b> to the id of the existing table.
                     </p><p>
@@ -488,7 +524,7 @@
                 label: 'Add row to existing table',
                 description: `
                     <p>
-                        Always add a new row to an existing table. (no replace)
+                        Always add a new row to an existing table (no replace). <b><a href="./uibuilder/docs/#/elements/tables" target="_blank">Docs</a></b>.
                     </p><p>
                         Set the <b>Parent</b> to the id of the existing table.
                     </p><p>
