@@ -3028,6 +3028,8 @@ var Uib = (_a = class {
       if (compToUpd.attributes) {
         Object.keys(compToUpd.attributes).forEach((attrib) => {
           elToUpd.forEach((el) => {
+            if (attrib === "value")
+              el.value = compToUpd.attributes[attrib];
             el.setAttribute(attrib, compToUpd.attributes[attrib]);
           });
         });
@@ -3332,6 +3334,7 @@ var Uib = (_a = class {
     }
     domevent.preventDefault();
     const target = domevent.currentTarget;
+    console.log(domevent);
     const props = {};
     Object.keys(target).forEach((key) => {
       if (key.startsWith("_"))
@@ -3354,10 +3357,14 @@ var Uib = (_a = class {
     const form = {};
     if (target.form) {
       Object.values(target.form).forEach((frmEl, i2) => {
-        if (frmEl.tagName !== "BUTTON" && frmEl.type !== "button") {
-          const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
-          if (id !== "")
-            form[id] = frmEl.value;
+        const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
+        if (id !== "") {
+          form[id] = {
+            "id": frmEl.id,
+            "name": frmEl.name,
+            "value": frmEl.value,
+            "data": frmEl.dataset
+          };
         }
       });
     }
@@ -3631,11 +3638,9 @@ ioPath: ${this.ioPath}`)();
     if (document.styleSheets.length >= 1 || document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) {
       log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
     } else {
-      console.log(2);
       if (options && options.loadStylesheet === false)
         log("info", "Uib:start", "No styles loaded & options.loadStylesheet === false.")();
       else {
-        console.log(3);
         log("info", "Uib:start", "No styles loaded, loading uibuilder default styles.")();
         this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`);
       }

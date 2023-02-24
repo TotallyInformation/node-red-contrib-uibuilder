@@ -543,7 +543,7 @@ export const Uib = class Uib {
     /** Register on-change event listeners for uibuilder tracked properties
      * Make it possible to register a function that will be run when the property changes.
      * Note that you can create listeners for non-existant properties
-     * @example: uibuilder.onChange('msg', function(msg){ console.log('uibuilder.msg changed! It is now: ', msg) })
+     * @example: uibuilder.onChange('msg', (msg) => { console.log('uibuilder.msg changed! It is now: ', msg) })
      *
      * @param {string} prop The property of uibuilder that we want to monitor
      * @param {Function} callback The function that will run when the property changes, parameter is the new value of the property after change
@@ -1323,6 +1323,8 @@ export const Uib = class Uib {
             if (compToUpd.attributes) {
                 Object.keys(compToUpd.attributes).forEach((attrib) => {
                     elToUpd.forEach( el => {
+                        // For values, set the actual value as well since the attrib only changes the DEFAULT value
+                        if (attrib === 'value') el.value = compToUpd.attributes[attrib]
                         el.setAttribute(attrib, compToUpd.attributes[attrib])
                     })
                 })
@@ -1781,6 +1783,7 @@ export const Uib = class Uib {
 
         // The target element
         const target = domevent.currentTarget
+        console.log(domevent)
 
         // Get target properties - only shows custom props not element default ones
         const props = {}
@@ -1804,10 +1807,34 @@ export const Uib = class Uib {
         // If target embedded in a form, include the form data
         const form = {}
         if ( target.form ) {
+            // console.log(target.form)
             Object.values(target.form).forEach( (frmEl, i) => {
-                if (frmEl.tagName !== 'BUTTON' && frmEl.type !== 'button') { // We don't need any buttons
-                    const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
-                    if (id !== '') form[id] = frmEl.value
+                const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
+                // const attribs = Object.assign({},
+                //     ...Array.from(frmEl.attributes,
+                //         ( { name, value } ) => {
+                //             if ( !ignoreAttribs.includes(name) ) {
+                //                 return ({ [name]: value })
+                //             }
+                //             return undefined
+                //         }
+                //     )
+                // )
+                if (id !== '') {
+                    // form[id] = frmEl.value
+                    form[id] = {
+                        'id': frmEl.id,
+                        'name': frmEl.name,
+                        'value': frmEl.value,
+                        'data': frmEl.dataset,
+                        // 'meta': {
+                        //     'defaultValue': frmEl.defaultValue,
+                        //     'defaultChecked': frmEl.defaultChecked,
+                        //     'disabled': frmEl.disabled,
+                        //     'valid': frmEl.willValidate,
+                        //     'attributes': attribs,
+                        // },
+                    }
                 }
             })
         }
@@ -2415,10 +2442,8 @@ export const Uib = class Uib {
         if ( document.styleSheets.length >= 1 || (document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) ) {
             log('info', 'Uib:start', 'Styles already loaded so not loading uibuilder default styles.')()
         } else {
-            console.log(2)
             if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
             else {
-                console.log(3)
                 log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
                 this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`)
             }
