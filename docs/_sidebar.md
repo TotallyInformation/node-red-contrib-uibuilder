@@ -24,6 +24,7 @@
   * [Functions](client-docs/functions.md)
   * [Variables](client-docs/variables.md)
   * [Custom Events](client-docs/custom-events.md)
+  * [uib-brand Style Sheet](client-docs/uib-brand-css.md "How to use the uibuilder standard style sheet uib-brand.css")
   * [Troubleshooting](client-docs/troubleshooting.md)
   * [Old uibuilderfe client library](front-end-library.md)
 * Zero-code element types

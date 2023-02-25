@@ -511,6 +511,13 @@ blockquote {
 code {
     font-size: 120%;
 }
+main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-width: 64rem;
+    margin-left:auto;
+    margin-right: auto;    
+}
 
 /* TODO odd/even li? */
 
@@ -624,6 +631,12 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
     border-radius: var(--border-radius);
 }
 
+.box {
+    border: 1px solid var(--text3);
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+}
+
 /* Apply to headings where you want a sub-title */
 .with-subtitle {
     margin-bottom: 0;
@@ -633,6 +646,37 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
     font-size: smaller;
     font-style: italic;
     margin-bottom: 1em;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+.centre {
+    margin-left:auto;
+    margin-right: auto;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+    50% {
+        opacity: .5;
+    }
+}
+
+.status-side-panel {
+    border-radius: 9999px;
+    width: .5rem;
+    height: 100%;
+}
+
+.text-smaller {
+    font-size: smaller;
+}
+.text-larger {
+    font-size: larger;
 }
 
 /*#endregion ---- Utility ---- */
@@ -673,6 +717,35 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
 .toast-head {font-weight:bold}
 
 /*#endregion -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
+
+/*#region ---- Flex/Grid Layouts ---- */
+
+.grid {
+    display:grid;
+    gap:0.5rem;
+}
+.grid-2 {
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:0.5rem;
+}
+.grid-3 {
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap:0.5rem;
+}
+.grid-4 {
+    display:grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap:0.5rem;
+}
+
+.flex {
+    display: flex;
+    gap:0.5rem;
+}
+
+/*#endregion ---- ---- ---- */
 
 /*#region  Colours for Syntax Highlighted pre's */
 .syntax-highlight {
