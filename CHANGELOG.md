@@ -22,6 +22,7 @@ Context store handling currently does not cope with stores that require asynchro
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+
 ### Client updates
 
 * Only add showMsg once! Allow `showMsg()` to toggle.

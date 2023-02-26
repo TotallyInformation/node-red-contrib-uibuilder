@@ -103,7 +103,7 @@
         outputLabels: ['Input msg with node ID added'],
         icon: 'link-out.svg',
         paletteLabel: nodeLabel,
-        label: function () { return this.url || this.name || nodeLabel },
+        label: function () { return this.name || this.url || nodeLabel },
 
         oneditprepare: function() { onEditPrepare(this) },
 

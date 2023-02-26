@@ -783,7 +783,7 @@
             icon: 'pencilBoxMultipleWhite.svg',
             paletteLabel: nodeLabel,
             label: function () {
-                return `[${this.elementtype}] ${this.parent ? `${this.parent}.` : ''}${this.elementid || this.name || moduleName}`
+                return this.name || `[${this.elementtype}] ${this.parent ? `${this.parent}.` : ''}${this.elementid || moduleName}`
             },
     
             /** Prepares the Editor panel */

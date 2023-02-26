@@ -155,7 +155,7 @@
         icon: 'pencilProgressWhiteSmaller.svg',
         paletteLabel: nodeLabel,
         label: function () {
-            return `${this.mode}${this.cssSelectorType === 'str' ? ` ${this.cssSelector.replace(/.*::/, '')}` : ''}`  || this.name || moduleName
+            return this.name || `${this.mode}${this.cssSelectorType === 'str' ? ` ${this.cssSelector.replace(/.*::/, '')}` : ''}`  || moduleName
         },
 
         /** Prepares the Editor panel */
