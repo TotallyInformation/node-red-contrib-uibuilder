@@ -1,5 +1,4 @@
 <main>
-	<h1>Svelte + uibuilder</h1>
 	<h1 class="with-subtitle">uibuilder + Svelte</h1>
     <div role="doc-subtitle">Using the IIFE library - v6.1.0.</div>
 
@@ -23,8 +22,7 @@
 		<div>
 			<!-- Send data back to Node-RED the simple way - automatically includes the form's inputs,
 				`data-*` attributes, keyboard modifiers, etc. Also works with other event types. -->
-			<!-- <button onclick="uibuilder.eventSend(event)" data-type="eventSend" data-foo="Bah">eventSend</button> -->
-			<button on:click={uibsend} data-greeting="{myGreeting}"  data-type="eventSend" data-foo="Bah" 
+			<button on:click={uibsend} data-greeting="{myGreeting}"  data-type="eventSend" data-foo="Bah" type="button"
 					title="Uses the uibuilder.eventSend fn and sents both static and dynamic data back to Node-RED">
 				eventSend
 			</button>
@@ -33,14 +31,9 @@
 
 	<!-- Another way to send custom data back to Node-RED. fnSendToNR is defined in index.js,
 		it uses the standard `uibuilder.send` function -->
-	<!-- <button onclick="fnSendToNR('A message from the sharp end!')">Send a custom msg back to Node-RED</button> -->
-	<button on:click={ e => sendToNR('A message from the sharp end!') }>Send a msg back to Node-RED</button>
+	<button on:click={ e => sendToNR('A message from the sharp end!') } type="button">Send a msg back to Node-RED</button>
 
-
-	<div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>	 
 </main>
-
-<!-- <pre id="msg" class="syntax-highlight" title="Uses @html because nrMsg contains html highlights">{@html nrMsg}</pre> -->
 
 <style>
 	/* These styles will be constrained just to this component by Svelte.
@@ -76,9 +69,6 @@
 	// uibuilder.set('logLevel', 2) // uibuilder.set('logLevel', 'info')
 	// Using the log output yourself:
 	// uibuilder.log('info', 'a prefix', 'some info', {any:'data',life:42})
-
-	// Show the latest incoming msg from Node-RED
-	uibuilder.showMsg(true, 'body')
 
 	// A global helper function to send a message back to Node-RED using the standard uibuilder send function
 	sendToNR = function fnSendToNR(payload) {
