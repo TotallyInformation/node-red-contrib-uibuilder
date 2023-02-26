@@ -110,6 +110,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Node-specific docs.
   * Reorg docs to make more sense to new starters & make more logical.
 
+* Update _ui handling to allow filtering on page name. Add `pageName` as an option to all ui instructions. Change client to check for pageName and ignore if it doesn't match.
+
 ## Next - these are things that need to be done
 
 * Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
@@ -168,6 +170,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 
 * Extensions to the `uib-element` node
+  * Disable or hide inputs when unused for a specific type.
   * As more element types are added, group into types: main, add, form, etc
   * ? Have JSON input msg templates for each type with links to copy to clipboard ?
   * ?? update mode - change to replace mode? Replace mode looks for root id, if found, replace outerHTML, if not found add.
@@ -200,6 +203,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
         * Eventually add extended inputs such as HTML WYSIWYG/Markdown
         * Add Auto-complete for text inputs
         * If no button added, make each input send changes direct - or possibly add that as an optional setting.
+    * [ ] Status Box, Status Panel - [ref](https://discourse.nodered.org/t/web-endpoint-status-dashboard-uibuilder-zero-code-example/75740)
     * [ ] Grid/Flex-Grid (with option to turn on visible grid to help with layout)
     * [ ] Markdown - allow raw Markdown to be sent similar to the HTML element (will require the Markdown-IT library to be loaded)
     * [ ] Form
@@ -215,6 +219,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
     * [ ] Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
     * [ ] Container (with option for drag/drop of contents) [ref](https://discourse.nodered.org/t/is-there-a-pallete-that-can-do-this/75143?u=totallyinformation)
+    * [ ] Style/Theme changer.
 
   * ??? How to allow EXTERNAL element definitions ???
     
@@ -298,6 +303,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
     * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
 
+  * Gracefully handle when rename cannot (re)move original folder (e.g. held open by browser).
+  * Files: Changing filetype in editor does not change the highlighting.
+  * On template load, issue reload command to all connected clients.
+  
   * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
   * Improve handling for when Node-RED changes projects.
   * Use new `uib-brand.css` style library on details pages.
@@ -373,6 +382,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 
 * Updates to Documentation
+  * Add the `replace` type to the `config-driven-ui.md` document.
+  * Search for `*(This document is a work-in-progress, it is not complete)*` and update documents.
   * Update glossary with ESM, ECMA, UMD, IIFE
   * Add CSS Selectors how-to with typical examples. e.g. element with id, element with class, nth list entry/table row.
   * Split the new client library, move _ui features to separate page.
