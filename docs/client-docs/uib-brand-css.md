@@ -49,7 +49,7 @@ Still much to be done to provide a set of standard grid and flex layouts. Curren
 
 * `.animate-pulse` - A standard pulse animation. Useful with `.status-side-panel`.
 * `.border` - Turn on a border with a standard color and corner radius.
-* `.box` - Similar to border but with internal padding.
+* `.box` - Similar to border but with internal padding. The box class has matching `h2`-`h6` sub-classes that reduce top margin to 0.5rem.
 * `.centre` - Centres blocks within their parent block (by applying left & right auto margins).
 * `.emoji` - Apply to a `<span>` containing an emoji to make it look a lot nicer on most platforms.
 * `.noborder` - Turn off a border

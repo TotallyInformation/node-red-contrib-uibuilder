@@ -636,6 +636,9 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
     border-radius: var(--border-radius);
     padding: 0.5rem;
 }
+.box h2, .box h3, .box h4, .box h5, .box h6 {
+    margin-top: 0.5rem;
+}
 
 /* Apply to headings where you want a sub-title */
 .with-subtitle {
