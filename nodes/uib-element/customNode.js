@@ -157,6 +157,8 @@ function nodeInstance(config) {
 function buildArticle(node, msg, parent) {
     const err = ''
 
+    parent.attributes.class = 'box'
+
     // Add the ol/ul tag
     parent.components.push({
         'type': node.elementtype,
@@ -173,7 +175,7 @@ function buildArticle(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildHTML(node, msg, parent) {
-    // Must be a string or array
+    // Must be a string so convert arrays/objects
     let data = msg.payload
     if (!msg.payload) data = ''
     else if (Array.isArray(msg.payload)) data = msg.payload.join('/n')
@@ -187,8 +189,12 @@ function buildHTML(node, msg, parent) {
 
     const err = ''
 
+    // No wrapping div at this end - done in the client, so deal with parent/position here
     parent.components.push( {
+        'id': node.elementId,
         'type': node.elementtype,
+        'parent': node.parent,
+        'position': node.position,
         'slot': data,
     } )
 
@@ -494,7 +500,6 @@ function buildSForm(node, msg, parent) {
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
 
-    let cols = []
     const err = ''
 
     // Add the form tag
@@ -506,7 +511,6 @@ function buildSForm(node, msg, parent) {
     // Convenient references
     const frmBody = parent.components[0]
     const frm = msg.payload
-    console.log({frmBody})
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(frm).forEach( (rowRef, i) => {
@@ -797,8 +801,8 @@ async function buildUi(msg, node) {
         }
 
         case 'html': {
-            parent = addDiv(parent, node)
-            parent = addHeading(parent, node)
+            // parent = addDiv(parent, node)
+            // parent = addHeading(parent, node)
             err = buildHTML(node, msg, parent)
             break
         }
