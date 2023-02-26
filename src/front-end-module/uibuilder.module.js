@@ -1134,12 +1134,11 @@ export const Uib = class Uib {
 
             if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
 
-            if (compToAdd.type === 'html') {
-                newEl.outerHTML = compToAdd.slot
-            } else {
-                // Updates newEl
-                this._uiComposeComponent(newEl, compToAdd)
-            }
+            // const parser = new DOMParser()
+            // const newDoc = parser.parseFromString(compToAdd.slot, 'text/html')
+            // console.log(compToAdd, newDoc.body)
+
+            this._uiComposeComponent(newEl, compToAdd)
 
             /** @type {HTMLElement} Where to add the new element? */
             let elParent
@@ -1207,17 +1206,16 @@ export const Uib = class Uib {
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiReplace(ui) {
-        log('trace', 'Uib:_uiManager:replace', 'Starting _uiReplace')()
+        log('trace', '_uiReplace', 'Starting')()
 
-        ui.components.forEach((compToReplace, i) => {
-            log('trace', '_uiReplace:components-forEach', `Component #${i}`, compToReplace)()
+        ui.components.forEach((compToReplace, /** @type {number} */ i) => {
+            log('trace', `_uiReplace:components-forEach:${i}`, 'Component to replace: ', compToReplace)()
 
-            /** @type {Element} */
+            /** @type {HTMLElement} */
             let elToReplace
 
             // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. FIRST element matching is updated.
             if ( compToReplace.id ) {
-                // NB We don't use get by id because this way the code is simpler later on
                 elToReplace = document.getElementById(compToReplace.id) // .querySelector(`#${compToReplace.id}`)
             } else if ( compToReplace.selector || compToReplace.select ) {
                 elToReplace = document.querySelector(compToReplace.selector)
@@ -1227,18 +1225,18 @@ export const Uib = class Uib {
                 elToReplace = document.querySelector(compToReplace.type)
             }
 
-            log('trace', '_uiReplace:components-forEach', `Component #${i}: Element: `, elToReplace)()
+            log('trace', `_uiReplace:components-forEach:${i}`, 'Element to replace: ', elToReplace)()
 
             // Nothing was found so ADD the element instead
             if ( elToReplace === undefined || elToReplace === null ) {
-                log('trace', 'Uib:_uiManager:replace', 'Cannot find the DOM element. Adding instead.', compToReplace)()
+                log('trace', `Uib:_uiReplace:components-forEach:${i}:noReplace`, 'Cannot find the DOM element. Adding instead.', compToReplace)()
                 this._uiAdd({ components: [compToReplace] }, false)
                 return
             }
 
-            // Create the new component
-            // const newEl = elToReplace.replaceWith(compToReplace.type)
-            const newEl = document.createElement(compToReplace.type)
+            /** @type {HTMLElement} Create the new component */
+            const newEl = document.createElement(compToReplace.type === 'html' ? 'div' : compToReplace.type)
+            // const newEl = document.createElement(compToReplace.type)
 
             // Updates the newEl and maybe the ui
             this._uiComposeComponent(newEl, compToReplace)

@@ -2908,11 +2908,7 @@
         const newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
         if (!compToAdd.slot && ui.payload)
           compToAdd.slot = ui.payload;
-        if (compToAdd.type === "html") {
-          newEl.outerHTML = compToAdd.slot;
-        } else {
-          this._uiComposeComponent(newEl, compToAdd);
-        }
+        this._uiComposeComponent(newEl, compToAdd);
         let elParent;
         if (compToAdd.parentEl) {
           elParent = compToAdd.parentEl;
@@ -2956,9 +2952,9 @@
       });
     }
     _uiReplace(ui) {
-      log("trace", "Uib:_uiManager:replace", "Starting _uiReplace")();
+      log("trace", "_uiReplace", "Starting")();
       ui.components.forEach((compToReplace, i2) => {
-        log("trace", "_uiReplace:components-forEach", `Component #${i2}`, compToReplace)();
+        log("trace", `_uiReplace:components-forEach:${i2}`, "Component to replace: ", compToReplace)();
         let elToReplace;
         if (compToReplace.id) {
           elToReplace = document.getElementById(compToReplace.id);
@@ -2969,13 +2965,13 @@
         } else if (compToReplace.type) {
           elToReplace = document.querySelector(compToReplace.type);
         }
-        log("trace", "_uiReplace:components-forEach", `Component #${i2}: Element: `, elToReplace)();
+        log("trace", `_uiReplace:components-forEach:${i2}`, "Element to replace: ", elToReplace)();
         if (elToReplace === void 0 || elToReplace === null) {
-          log("trace", "Uib:_uiManager:replace", "Cannot find the DOM element. Adding instead.", compToReplace)();
+          log("trace", `Uib:_uiReplace:components-forEach:${i2}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
           this._uiAdd({ components: [compToReplace] }, false);
           return;
         }
-        const newEl = document.createElement(compToReplace.type);
+        const newEl = document.createElement(compToReplace.type === "html" ? "div" : compToReplace.type);
         this._uiComposeComponent(newEl, compToReplace);
         elToReplace.replaceWith(newEl);
         if (compToReplace.components) {
