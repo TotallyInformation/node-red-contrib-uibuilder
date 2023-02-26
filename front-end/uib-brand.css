@@ -390,32 +390,32 @@
     box-shadow: var(--shadow);
 }
 .info {
-    color: var(--text1);
-    background-color: var(--info);
+    color: var(--text1) !important;
+    background-color: var(--info) !important;
 }
 .success {
-    color: var(--text1);
-    background-color: var(--success);
+    color: var(--text1) !important;
+    background-color: var(--success) !important;
 }
 .warning {
-    color: var(--text1);
-    background-color: var(--warning);
+    color: var(--text1) !important;
+    background-color: var(--warning) !important;
 }
 .warn {
-    color: var(--text1);
-    background-color: var(--warn);
+    color: var(--text1) !important;
+    background-color: var(--warn) !important;
 }
 .failure {
-    color: var(--text1);
-    background-color: var(--failure);
+    color: var(--text1) !important;
+    background-color: var(--failure) !important;
 }
 .error {
-    color: var(--text1);
-    background-color: var(--error);
+    color: var(--text1) !important;
+    background-color: var(--error) !important;
 }
 .danger {
-    color: var(--text1);
-    background-color: var(--danger);
+    color: var(--text1) !important;
+    background-color: var(--danger) !important;
 }
 .primary {
     color: var(--primary-fg);
@@ -670,6 +670,7 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
     border-radius: 9999px;
     width: .5rem;
     height: 100%;
+    background-color: var(--surface1);
 }
 
 .text-smaller {
