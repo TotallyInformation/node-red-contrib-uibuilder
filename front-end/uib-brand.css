@@ -30,6 +30,7 @@
  /* :root applies to everything, :root.light is for manually selected light mode */
 :root, :root.light {
     color-scheme: light dark;
+    -–xxx: #00ff00;
 
     /* Create a checkable var - helps web components know if this stylesheet is loaded
      * Use this from general code: 
@@ -569,7 +570,7 @@ form {
 }
 form label {
     float: left;
-    width: 25%;
+    width: 24%;
 }
 form input, form textarea, form select {
     float: right;
@@ -599,6 +600,9 @@ form div {
 form input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
     float:none;
     width:auto;
+}
+input[type="color"] {
+    min-height: 2.5rem;
 }
 @media screen and (max-width: 600px) {
     form label, form input, form textarea {
@@ -722,6 +726,22 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
 
 /*#endregion -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
 
+/*#region ---- Status Grid ---- */
+.status-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
+    gap:0.5rem;
+}
+.status-heading {
+  grid-column: 1/-1;
+}
+.status-link {
+  display:contents;
+  color:inherit;
+  text-decoration:none;
+}
+/*#endregion ---- ---- ---- */
+
 /*#region ---- Flex/Grid Layouts ---- */
 
 .grid {
@@ -736,6 +756,7 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
 .grid-3 {
     display:grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); */
     gap:0.5rem;
 }
 .grid-4 {
