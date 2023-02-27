@@ -208,20 +208,18 @@ function buildHTML(node, msg, parent) {
  */
 function buildTitle(node, msg) {
     // Must be a string or array/object of strings
-    // If array/object, then catenate
+    // If array/object, then add LAST entry entry as <div role="doc-subtitle">
+
+    if (!Array.isArray(msg.payload)) msg.payload = [msg.payload]
 
     const err = ''
 
-    // Convenient references
-    // const insertPoint = parentComponent // parentComponent.components
-    // const data = Array.isArray(msg.payload) ? msg.payload.join('/n') : msg.payload
-
-    // insertPoint.slot = data
     node._ui[0] = ({
         'method': 'update',
         'type': 'title',
-        'slot': msg.payload
+        'slot': msg.payload[0]
     })
+
     node._ui.push({
         'method': 'replace',
         'components': [
@@ -230,10 +228,33 @@ function buildTitle(node, msg) {
                 'selector': 'h1',
                 'parent': node.parent ? node.parent : 'body',
                 'position': 'first',
-                'slot': msg.payload
+                'attributes': {
+                    'class': 'with-subtitle',
+                },
+                'slot': msg.payload.shift()
             },
         ],
     })
+
+    if (msg.payload.length > 0) {
+        msg.payload.forEach( (element, i) => {
+            node._ui.push({
+                'method': 'replace',
+                'components': [
+                    {
+                        'type': 'div',
+                        'selector': 'div[role="doc-subtitle"] ',
+                        'parent': node.parent ? node.parent : 'body',
+                        'position': 'last',
+                        'attributes': {
+                            'role': 'doc-subtitle',
+                        },
+                        'slot': element
+                    },
+                ],
+            })
+        } )
+    }
 
     return err
 } // ---- End of buildTitle ---- //
