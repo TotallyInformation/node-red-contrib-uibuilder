@@ -111,6 +111,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Reorg docs to make more sense to new starters & make more logical.
 
 * Update _ui handling to allow filtering on page name. Add `pageName` as an option to all ui instructions. Change client to check for pageName and ignore if it doesn't match.
+* Improve client `eventSend` to put form values into payload along with data-* attributes.
 
 ## Next - these are things that need to be done
 
@@ -220,17 +221,19 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
     * [ ] Container (with option for drag/drop of contents) [ref](https://discourse.nodered.org/t/is-there-a-pallete-that-can-do-this/75143?u=totallyinformation)
     * [ ] Style/Theme changer.
+    * [ ] Segmented vertical/horizontal status/progress panel. For things like battery displays, etc.
 
-  * ??? How to allow EXTERNAL element definitions ???
-    
-    e.g. Someone else's contributed package.
+  * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
 * Extensions to the `uib-update` node
   * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
 
 * Continue to improve the new `uib-brand.css`
-  * Parameterise other aspects such as font-size, typeface, varient colours, flexbox spacing. `
+  * Parameterise other aspects such as font-size, typeface, varient colours, flexbox & grid spacing. `
   * Create min version of css.
+  * Something similar to the sidebar status panel but segmented. Choose number of segments.
+  * Make `input[type="color"]` starting colour the brand colour. Can only be done via JavaScript.
+  * Check `input:valid` pseudo-class defaults
 
 * Extensions to FE Library
   * Control from Node-RED. Functions to implement:

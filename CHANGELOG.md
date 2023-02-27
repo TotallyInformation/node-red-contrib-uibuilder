@@ -232,12 +232,12 @@ Has a single output. Outputs can be chained to more `uib-element` nodes. At the 
 Element types included in this release:
 
 * **Simple Table** - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
-* ** Simple Form** - Generate a simple but accessible input form from an array of objects where each object in the array defines the attributes and label.
+* **Simple Form** - Generate a simple but accessible input form from an array of objects where each object in the array defines the attributes and label.
 * **Unordered List (ul)**/**Ordered List (ol)** - Generates a bullet or number list from a simple input array or object.
 * **Description List (dl)** - Generates a description list from a simple input array of objects.
-* **Text box** - A simple "card" like article element.
-* **HTML** - Pass-though HTML (e.g. from a Node-RED Template node).
-* **Page Title** - Change the page HTML title, description and the first H1 tag on the page to all be the same input text.
+* **Text box** - A simple "card" like article element with a border.
+* **HTML** - Pass-though HTML (e.g. from a Node-RED Template node) wrapped in a `div`.
+* **Page Title** - Change the page HTML title, description and the first H1 tag on the page to all be the same input text. Also add sub-heading if input is an array.
 
 Where an *ID* is specified in the config, each of the above will attempt to *replace* an existing instance when called again. If *no ID* is specified, they will *always add* a new element.
 

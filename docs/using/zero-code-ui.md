@@ -27,6 +27,8 @@ Where a node specifies a unique HTML ID, most of the element types will either a
 
 Some of the element types however, will always add. For example the list and table row elements.
 
+See "Zero-code element types" in the sidebar menu for details of the different element types available.
+
 ## `uib-update`
 
 This node updates or deletes an existing element on one or more of your uibuilder web pages. Elements are identified using a [CSS Selector](https://developer.mozilla.org/en-US/docs/web/css/css_selectors). All elements identified by the selector will be updated/deleted. This means that, for example, all of the entries in a bullet list can be updated with a single node, or all of the rows of a table could be removed.

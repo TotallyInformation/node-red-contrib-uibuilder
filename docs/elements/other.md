@@ -26,4 +26,15 @@ Changes the page's meta head data. Both the meta title and description are chang
 
 Additionall, updates the first `<h1>` heading if present, if not present, adds a new `<h1>` at the top of the `<body>` (top of the visible page). Note that the *Parent* and *Position* inputs are ignored. Also note that there should only ever be a single `<h1>` tag on a page in accordance with W3C and WCAG standards.
 
-The input payload should be plain text, not HTML.
+The input payload should be plain text, not HTML. If the input payload is an array, the first entry will be the `<h1>` heading and the last entry will be a _sub-heading_ which renders in smaller text and in *italic*.
+
+### Example input message with sub-heading
+
+```json
+{
+   "payload": [
+      "Text-Only Heading",
+      "A text-only sub-heading"
+   ]
+}
+```
