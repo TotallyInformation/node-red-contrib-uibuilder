@@ -394,6 +394,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add note to documentation for the library manager that you can install LOCAL folders.
   * Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
   * Add some notes about Node-RED's projects feature. It doesn't seem to add a correct .gitignore which should contain `**/node_modules`. Also add notes about the fact that projects creates a disconnect between the flows and the userDir folder.
+  * Add new doc to explain the HTML document hierarchy.
 
 
 
