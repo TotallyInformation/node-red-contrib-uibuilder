@@ -8,7 +8,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 1.17 2022-12-30
+ * @version: 1.20 2023-03-04
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -27,7 +27,7 @@
  * - Include in your index.css file as `@import url("./uib-brand.css");`
  */
 
- /* :root applies to everything, :root.light is for manually selected light mode */
+/* :root applies to everything, :root.light is for manually selected light mode */
 :root, :root.light {
     color-scheme: light dark;
     -–xxx: #00ff00;
