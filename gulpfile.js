@@ -52,6 +52,7 @@ const { default: esm } = require('socket.io-client')
 const feSrc = 'src/front-end'
 const feModuleSrc = 'src/front-end-module'
 const feDest = 'front-end'
+const feDestAlt = 'test-front-end'
 const nodeDest = 'nodes'
 const nodeSrcRoot = 'src/editor'
 
@@ -266,6 +267,127 @@ function packfeIIFE(cb) {
         // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
     } catch (e) {
         console.error('Could not pack uibuilder.module.js for iife', e)
+    }
+    cb()
+}
+
+/** Pack (Uglify) front-end IIFE ES6 task
+ * @param {Function} cb Callback
+ */
+function packfeIIFEes6(cb) {
+    try {
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.es6.min.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: true,
+                sourcemap: true,
+                target: [
+                    'es2016',
+                    // Start of 2019
+                    // 'chrome72',
+                    // 'safari12.1',
+                    // 'firefox65',
+                    // 'opera58',
+
+                    // For private class fields:
+                    // 'chrome74',   // Apr 23, 2019
+                    // 'opera62',    // Jun 27, 2019
+                    // 'edge79',     // Jan 15, 2020
+                    // 'safari14.1', // Apr 26, 2021
+                    // 'firefox90',  // Jul 13, 2021
+
+                    // If we need top-level await
+                    // 'chrome89',  // March 1, 2021
+                    // 'edge89',
+                    // 'opera75',   // Mar 24, 2021
+                    // 'firefox89', // Jun 1, 2021
+                    // 'safari15',  // Sep 20, 2021
+                ]
+            }))
+            .pipe(greplace(/="(.*)-mod"/, '="$1-es6.min"'))
+            .pipe(dest(feDestAlt))
+
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.es6.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: false,
+                sourcemap: false,
+                target: [
+                    'es2016',
+                ]
+            }))
+            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es6"'))
+            .pipe(dest(feDestAlt))
+
+        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
+    } catch (e) {
+        console.error('Could not pack uibuilder.module.js for es6', e)
+    }
+    cb()
+}
+/** Pack (Uglify) front-end IIFE ES5 task - DOES NOT WORK!
+ * @param {Function} cb Callback
+ */
+function packfeIIFEes5(cb) {
+    try {
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.es5.min.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: true,
+                sourcemap: true,
+                target: [
+                    'es5',
+                    // Start of 2019
+                    // 'chrome72',
+                    // 'safari12.1',
+                    // 'firefox65',
+                    // 'opera58',
+
+                    // For private class fields:
+                    // 'chrome74',   // Apr 23, 2019
+                    // 'opera62',    // Jun 27, 2019
+                    // 'edge79',     // Jan 15, 2020
+                    // 'safari14.1', // Apr 26, 2021
+                    // 'firefox90',  // Jul 13, 2021
+
+                    // If we need top-level await
+                    // 'chrome89',  // March 1, 2021
+                    // 'edge89',
+                    // 'opera75',   // Mar 24, 2021
+                    // 'firefox89', // Jun 1, 2021
+                    // 'safari15',  // Sep 20, 2021
+                ]
+            }))
+            .pipe(greplace(/="(.*)-mod"/, '="$1-es5.min"'))
+            .pipe(dest(feDestAlt))
+
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.es5.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: false,
+                sourcemap: false,
+                target: [
+                    'es5',
+                ]
+            }))
+            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es5"'))
+            .pipe(dest(feDestAlt))
+
+        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
+    } catch (e) {
+        console.error('Could not pack uibuilder.module.js for es5', e)
     }
     cb()
 }
