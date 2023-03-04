@@ -29,6 +29,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Control from Node-RED. Functions to implement:
   * [x] get/set
   * [x] showMsg(boolean, parent=body)
+  * [x] showStatus(boolean, parent=body)
   * [ ] clearHtmlCache(), saveHtmlCache(), restoreHtmlFromCache()
   * [ ] htmlSend()
   * [ ] getStore, setStore, removeStore
@@ -179,15 +180,25 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Added a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified. Note that if the default topic is not set, messages will inherit the topic from the _previous inbound message_ if that had a topic. Reset by setting to an empty string.
 
-* Added **new function** `uibuilder.syntaxHighlight(json)` - Converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
+* Added **new functions**
 
-* Added **new function** `uibuilder.showMsg(true)` - Adds a visual display of incoming messages from Node-RED to the web page. Use `uibuilder.showMsg(false)` to remove it.
+  * `uibuilder.syntaxHighlight(json)` - Converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
+
+  * `uibuilder.showMsg(true, selector=body)` - Adds a visual display of incoming messages from Node-RED to the web page. Use `uibuilder.showMsg(false)` to remove it. `selector` is a CSS selector to use as the parent position. Will always show the last incoming standard msg from Node-RED.
+
+  * `uibuilder.showStatus(true, selector=body)` - Adds a visual display of the current status of the client library. Use `uibuilder.showMsg(false)` to remove it.`selector` is a CSS selector to use as the parent position. May be helpful when trying to debug pages and connectivity, especially from mobile devices.
+
+  * `uibuilder.uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element
+
+  * `uibuilder.beaconLog(txtToSend, logLevel)` which allows sending a simple, short log message back to Node-RED even if socket.io is not connected. In Node-RED, outputs to the Node-RED log and sends a uibuilder control message where `msg.uibuilderCtrl` = "client beacon log". _Still somewhat experimental and may not always work reliably_.
+
+  * `uibuilder.logToServer()` which will take any number and type of arguments and send them all back to Node-RED in the msg.payload of a _control_ message (out of port #2) where `msg.uibuilderCtrl` = "client log message". Client details are added to the message. _Still somewhat experimental and may not always work reliably_.
 
 * Added a unique tab identifier `uibuilder.tabId` that remains while the tab does. Is include in std outputs. Based on [this](https://stackoverflow.com/questions/11896160/any-way-to-identify-browser-tab-in-javascript). NOTE however, that duplicating the browser tab will result in a duplicate tab id.
 
 * Added `uibuilder.isVisible` property. Is true when the browser tab containing the page is actually visible. On visibility change, sends a new control msg `msg.uibuilderCtrl` = "visibility" with the property `isVisible` true or false. Does not send this when the page loads but does set the property. Uses the document `visibilitychange` event.
 
-* Added internal flag if VueJS is loaded. To be used for dynamic UI processing.
+* Added flag `uibuilder.isVue` if VueJS is loaded. To be used for dynamic UI processing. Also added `uibuilder.vueVersion` though this may not be always populated due to differences between VueJS versions.
 
 * `_ui` handler updates
 
@@ -201,15 +212,13 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
     Data can be sent straight back to Node-RED: `uibuilder.send( uibuilder.uiGet('input') )` (gets all useful properties from all `input` fields on the page).
   
-  * Added a new ui handler `removeAll` and updated the handler function with an optional 2nd parameter to remove all (rather than the 1st) matching elements.
-
-* Added **new function** `uibuilder.beaconLog(txtToSend, logLevel)` which allows sending a simple, short log message back to Node-RED even if socket.io is not connected. In Node-RED, outputs to the Node-RED log and sends a uibuilder control message where `msg.uibuilderCtrl` = "client beacon log".
-
-* Added **new function** `uibuilder.logToServer()` which will take any number and type of arguments and send them all back to Node-RED in the msg.payload of a _control_ message (out of port #2) where `msg.uibuilderCtrl` = "client log message". Client details are added to the message.
+  * Added a **new ui handler** `removeAll` and updated the handler function with an optional 2nd parameter to remove all (rather than the 1st) matching elements.
 
 * Added **new function** `uibuilder.watchDom(true)` - Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
 
 * Added 2 new events: `uibuilder:constructorComplete` and `uibuilder:startComplete`. Mostly for potential internal use.
+
+
 
 ### `uib-cache` node
 

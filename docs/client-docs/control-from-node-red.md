@@ -4,7 +4,7 @@ description: >
    How to send specially formatted messages from Node-RED to the uibuilder node that
    get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-lastUpdated: 2023-02-23 11:59:48
+lastUpdated: 2023-03-04 18:08:46
 ---
 
 The uibuilder client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
@@ -63,7 +63,18 @@ This command results in a standard message out of the top port of the uibuilder 
 
 Where:
 
-- `value` is *true* to turn on the message display, *false* turns it off. 
+- `value` is *true* to turn on the message display, *false* turns it off. If not provided, toggles the display.
+- `prop` is the CSS Selector under which the display will be shown. If omitted, 'body' is used which results in the display being added to the end of the visible page.
+
+### Turn on/off visible current status of the uibuilder front-end client
+
+```json
+{"command": "showStatus", "prop": "body", "value": true}
+```
+
+Where:
+
+- `value` is *true* to turn on the status display, *false* turns it off. If not provided, toggles the display.
 - `prop` is the CSS Selector under which the display will be shown. If omitted, 'body' is used which results in the display being added to the end of the visible page.
 
 

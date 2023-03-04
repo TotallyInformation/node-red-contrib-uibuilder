@@ -3,7 +3,7 @@ title: Custom document events used in the modern client
 description: >
    Details about the custom `document` events used in the uibuilder modern front-end client library.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-01-28 17:08:40
+lastUpdated: 2023-03-02 20:28:34
 ---
 
 
@@ -14,7 +14,7 @@ Can be used as:
 ```javascript
 document.addEventListener('uibuilder:socket:connected', (event) => { 
    console.log(event.detail)
-}
+})
 ```
 
 ## `uibuilder:constructorComplete`

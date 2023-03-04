@@ -26,10 +26,12 @@ Always use `uibuilder.set('varname', value)` to change these.
 Always use `uibuilder.get('varname', value)` to obtain the value of these. You can also use `uibuilder.onChange('varname', (val)=>{})` to watch for changes to them. Or you can also use the custom `document` event `uibuilder:propertyChanged` if you really want to.
 
 * `clientId` - Client ID set by uibuilder on connect
+* `connectedNum` - How many times the page has had to reconnect to Socket.IO
 * `cookies` - The collection of cookies provided by uibuilder
 * `ctrlMsg` - Copy of last control msg object received from sever
 * `ioConnected` - Is Socket.IO client connected to the server?
 * `isVisible` - Whether or not, the current page is showing to the user
+* `isVue` - Has the VueJS framework library been loaded?
 * `lastNavType` - Remember the last page (re)load/navigation type (navigate, reload, back_forward, prerender)
 * `meta` - module metadata {version, type, displayName}
 * `msg` - Last std msg received from Node-RED
@@ -38,11 +40,13 @@ Always use `uibuilder.get('varname', value)` to obtain the value of these. You c
 * `msgsSentCtrl` - The number of control messages sent to server since page load
 * `msgsCtrlReceived` - The number of control messages received from server since page load
 * `online` - Is the client browser online (true) or offline (false)?
+* `pageName` - Actual name of the current page
 * `sentCtrlMsg` - The last control msg object sent via uibuilder.send()
 * `sentMsg` - The last std msg object sent via uibuilder.send()
 * `serverTimeOffset` - Time offset between browser clock and server clock
 * `socketError` - Holds the details of the last socket error
 * `tabId` - Identifier for the current browser tab
+* `vueVersion` - if the VueJS front-end library is loaded, this _may_ tell you the version (does not work for all versions of VueJS)
 
 In addition, `uibuilder.logLevel` will automatically be retrieved via its own getter, use as `console.log(uibuilder.logLevel)`.
 

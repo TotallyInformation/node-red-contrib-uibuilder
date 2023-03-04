@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-02-23 13:20:20
+lastUpdated: 2023-03-04 18:08:18
 ---
 
 Functions accessible in client-side user code.
@@ -37,8 +37,10 @@ Functions accessible in client-side user code.
   - [`replaceSlot(el, component)` - Attach a new text script to the end of HEAD synchronously](#replaceslotel-component---attach-a-new-text-script-to-the-end-of-head-synchronously)
   - [`replaceSlotMarkdown(el, component)` - Attach a new text script to the end of HEAD synchronously](#replaceslotmarkdownel-component---attach-a-new-text-script-to-the-end-of-head-synchronously)
   - [`showDialog(type, ui, msg)` - Attach a new text script to the end of HEAD synchronously](#showdialogtype-ui-msg---attach-a-new-text-script-to-the-end-of-head-synchronously)
-  - [`showMsg(boolean, parent=body)` - Show/hide a card to the end of BODY that automatically updates and shows the latest incoming msg from Node-RED](#showmsgboolean-parentbody---showhide-a-card-to-the-end-of-body-that-automatically-updates-and-shows-the-latest-incoming-msg-from-node-red)
+  - [`showMsg(boolean, parent=body)` - Show/hide a card that automatically updates and shows the last incoming msg from Node-RED](#showmsgboolean-parentbody---showhide-a-card-that-automatically-updates-and-shows-the-last-incoming-msg-from-node-red)
+  - [`showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the uibuilder client library](#showstatusboolean-parentbody---showhide-a-card-shows-the-current-status-of-the-uibuilder-client-library)
   - [`syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as HTML formatted](#syntaxhighlightjson---takes-a-javascript-object-or-json-and-outputs-as-html-formatted)
+  - [`uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element](#uigetcssselector-propnamenull---get-most-useful-information-or-specific-property-from-a-dom-element)
 - [HTML/DOM Cacheing](#htmldom-cacheing)
   - [`watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage](#watchdomstartstop---startstop-watching-for-dom-changes-changes-automatically-saved-to-browser-localstorage)
   - [`clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage](#clearhtmlcache---clears-the-html-previously-saved-to-the-browser-localstorage)
@@ -195,7 +197,7 @@ For functions with no descriptions, please refer to the code. In general, these 
 
 ### `ui(json)` - Directly manage UI via JSON
 
-Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions.
+Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
 
 ### `loadui(url)` - Load a dynamic UI from a JSON web reponse
 
@@ -209,15 +211,29 @@ Requires a valid URL that returns correct _ui data. For example, a JSON file del
 ### `replaceSlotMarkdown(el, component)` - Attach a new text script to the end of HEAD synchronously
 ### `showDialog(type, ui, msg)` - Attach a new text script to the end of HEAD synchronously
 
-### `showMsg(boolean, parent=body)` - Show/hide a card to the end of BODY that automatically updates and shows the latest incoming msg from Node-RED
+### `showMsg(boolean, parent=body)` - Show/hide a card that automatically updates and shows the last incoming msg from Node-RED
 
-Simply add `uibuilder.showMsg(true)` early in your index.js custom code and a box will be added to the end of your page that will automatically show the last message sent from Node-RED.
+Simply add `uibuilder.showMsg(true)` early in your index.js custom code and a box will be added to the end of your page that will automatically show the last message sent from Node-RED. Use `uibuilder.showMsg()` to toggle the display.
 
 `uibuilder.showMsg(false)` or `uibuilder.showMsg()` will remove the box and stop the updates.
 
 You can also position the box in a different location by specifying a "parent". This is a CSS selector that, if found on the page, uibuilder will add the box to the end of. For example, `uibuilder.showMsg(true, 'h1')` would attach the box to the end of a heading level 1 element on the page. Don't forget that the box will inherit at least some of the CSS style from the parent, so attaching to an H1 element will make the text much bigger.
 
-This function can also be called from Node-RED via `msg._uib.command` - `showMsg` with `msg._uib.value` set to `true`.
+This function can also be called from Node-RED via `msg._uib.command` - `showMsg` with `msg._uib.value` set to `true`. Leave the value property off to toggle the display.
+
+Adds/removes `<div id="uib_last_msg">` to/from the page.
+
+### `showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the uibuilder client library
+
+Simply add `uibuilder.showStatus(true)` early in your index.js custom code and a box will be added to the end of your page that will show all of the important settings in the uibuilder client. Use `uibuilder.showStatus()` to toggle the display.
+
+`uibuilder.showStatus(false)` or `uibuilder.showStatus()` will remove the box and stop the updates.
+
+You can also position the box in a different location by specifying a "parent". This is a CSS selector that, if found on the page, uibuilder will add the box to the end of. For example, `uibuilder.showStatus(true, 'h1')` would attach the box to the end of a heading level 1 element on the page. Don't forget that the box will inherit at least some of the CSS style from the parent, so attaching to an H1 element will make the text much bigger.
+
+This function can also be called from Node-RED via `msg._uib.command` - `showStatus` optionally with `msg._uib.value` set to `true`. Leave the value property off to toggle the display.
+
+Adds/removes `<div id="uib_status">` to/from the page.
 
 ### `syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as HTML formatted
 
@@ -229,6 +245,12 @@ Use as:
 const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
+
+### `uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element
+
+Will return an array of found elements with properties.
+
+If no `propName` supplied, will return a selection of the most useful information about the selected element(s).
 
 ## HTML/DOM Cacheing
 

@@ -3,7 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: >
    Description of the main features.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-02-23 11:59:35
+lastUpdated: 2023-03-04 15:37:14
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -39,7 +39,7 @@ lastUpdated: 2023-02-23 11:59:35
 
 This feature allows you to dynamically create a UI or part of a UI using just configuration information either send in messages from Node-RED or loaded from a JSON file (or a combination of both).
 
-See the detail section on [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content) for details.
+See the [Dynamic, data-driven HTML content](client-docs/config-driven-ui.md) page for details.
 
 ## Exposes global uibuilder and $
 
