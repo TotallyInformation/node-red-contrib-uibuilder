@@ -27,14 +27,6 @@
     setter ? setter.call(obj, value2) : member.set(obj, value2);
     return value2;
   };
-  var __privateWrapper = (obj, member, setter, getter) => ({
-    set _(value2) {
-      __privateSet(obj, member, value2, setter);
-    },
-    get _() {
-      return __privateGet(obj, member, getter);
-    }
-  });
 
   // node_modules/engine.io-parser/build/esm/commons.js
   var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -2404,25 +2396,49 @@
     }).join("/");
     return url2.replace("//", "/");
   }
-  var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _isVue, _timerid, _MsgHandler, _isShowMsg, _extCommands, _a;
+  var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _extCommands, _showStatus, _a;
   var Uib = (_a = class {
     constructor() {
-      __privateAdd(this, _connectedNum, 0);
+      __publicField(this, "connectedNum", 0);
       __publicField(this, "_ioChannels", { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
       __privateAdd(this, _pingInterval, void 0);
       __privateAdd(this, _propChangeCallbacks, {});
       __privateAdd(this, _msgRecvdByTopicCallbacks, {});
-      __privateAdd(this, _isVue, false);
+      __publicField(this, "isVue", false);
+      __publicField(this, "vueVersion");
       __privateAdd(this, _timerid, null);
       __privateAdd(this, _MsgHandler, void 0);
       __publicField(this, "_socket");
       __publicField(this, "_htmlObserver");
       __privateAdd(this, _isShowMsg, false);
+      __privateAdd(this, _isShowStatus, false);
       __privateAdd(this, _extCommands, [
         "get",
         "set",
-        "showMsg"
+        "showMsg",
+        "showStatus"
       ]);
+      __privateAdd(this, _showStatus, {
+        online: { "var": "online", "label": "Online?", "description": "Is the browser online?" },
+        ioConnected: { "var": "ioConnected", "label": "Socket.IO connected?", "description": "Is Socket.IO connected?" },
+        connectedNum: { "var": "connectedNum", "label": "# reconnections", "description": "How many times has Socket.IO had to reconnect since last page load?" },
+        clientId: { "var": "clientId", "label": "Client ID", "description": "Static client unique id set in Node-RED. Only changes when browser is restarted." },
+        tabId: { "var": "tabId", "label": "Browser tab ID", "description": "Static unique id for the browser's current tab" },
+        cookies: { "var": "cookies", "label": "Cookies", "description": "Cookies set in Node-RED" },
+        httpNodeRoot: { "var": "httpNodeRoot", "label": "httpNodeRoot", "description": "From Node-RED' settings.js, affects URL's. May be wrong for pages in sub-folders" },
+        pageName: { "var": "pageName", "label": "Page name", "description": "Actual name of this page" },
+        ioNamespace: { "var": "ioNamespace", "label": "SIO namespace", "description": "Socket.IO namespace - unique to each uibuilder node instance" },
+        socketError: { "var": "socketError", "label": "Socket error", "description": "If the Socket.IO connection has failed, says why" },
+        msgsSent: { "var": "msgsSent", "label": "# msgs sent", "description": "How many standard messages have been sent to Node-RED?" },
+        msgsReceived: { "var": "msgsReceived", "label": "# msgs received", "description": "How many standard messages have been received from Node-RED?" },
+        msgsSentCtrl: { "var": "msgsSentCtrl", "label": "# control msgs sent", "description": "How many control messages have been sent to Node-RED?" },
+        msgsCtrlReceived: { "var": "msgsCtrlReceived", "label": "# control msgs received", "description": "How many control messages have been received from Node-RED?" },
+        originator: { "var": "originator", "label": "Node Originator", "description": "If the last msg from Node-RED was from a `uib-sender` node, this will be its node id so that messasges can be returned to it" },
+        topic: { "var": "topic", "label": "Default topic", "description": "Optional default topic to be included in outgoing standard messages" },
+        started: { "var": "started", "label": "Has uibuilder client started?", "description": "Whether `uibuilder.start()` ran successfully. This should self-run and should not need to be run manually" },
+        version: { "var": "version", "label": "uibuilder client version", "description": "The version of the loaded uibuilder client library" },
+        serverTimeOffset: { "var": "serverTimeOffset", "label": "Server time offset (Hrs)", "description": "The number of hours difference between the Node-red server and the client" }
+      });
       __publicField(this, "clientId", "");
       __publicField(this, "cookies", {});
       __publicField(this, "ctrlMsg", {});
@@ -2434,12 +2450,13 @@
       __publicField(this, "msgsReceived", 0);
       __publicField(this, "msgsSentCtrl", 0);
       __publicField(this, "msgsCtrlReceived", 0);
-      __publicField(this, "online", null);
+      __publicField(this, "online", navigator.onLine);
       __publicField(this, "sentCtrlMsg", {});
       __publicField(this, "sentMsg", {});
       __publicField(this, "serverTimeOffset", null);
       __publicField(this, "socketError", null);
       __publicField(this, "tabId", "");
+      __publicField(this, "pageName", null);
       __publicField(this, "originator", "");
       __publicField(this, "topic");
       __publicField(this, "autoSendReady", true);
@@ -2485,11 +2502,11 @@
         const splitC = c.split("=");
         this.cookies[splitC[0].trim()] = splitC[1];
       });
-      this.clientId = this.cookies["uibuilder-client-id"];
+      this.set("clientId", this.cookies["uibuilder-client-id"]);
       log("trace", "Uib:constructor", "Client ID: ", this.clientId)();
-      this.tabId = window.sessionStorage.getItem("tabId");
+      this.set("tabId", window.sessionStorage.getItem("tabId"));
       if (!this.tabId) {
-        this.tabId = "t" + Math.floor(Math.random() * 1e6);
+        this.set("tabId", `t${Math.floor(Math.random() * 1e6)}`);
         window.sessionStorage.setItem("tabId", this.tabId);
       }
       document.addEventListener("load", () => {
@@ -2499,9 +2516,16 @@
         this.set("isVisible", document.visibilityState === "visible");
         this.sendCtrl({ uibuilderCtrl: "visibility", isVisible: this.isVisible });
       });
-      this.ioNamespace = this._getIOnamespace();
+      document.addEventListener("uibuilder:propertyChanged", (event2) => {
+        if (!__privateGet(this, _isShowStatus))
+          return;
+        if (event2.detail.prop in __privateGet(this, _showStatus)) {
+          document.querySelector(`td[data-vartype="${event2.detail.prop}"]`).innerText = JSON.stringify(event2.detail.value);
+        }
+      });
+      this.set("ioNamespace", this._getIOnamespace());
       if ("uibuilder-webRoot" in this.cookies) {
-        this.httpNodeRoot = this.cookies["uibuilder-webRoot"];
+        this.set("httpNodeRoot", this.cookies["uibuilder-webRoot"]);
         log("trace", "Uib:constructor", `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)();
       } else {
         const fullPath = window.location.pathname.split("/").filter(function(t) {
@@ -2510,16 +2534,16 @@
         if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith(".html"))
           fullPath.pop();
         fullPath.pop();
-        this.httpNodeRoot = "/" + fullPath.join("/");
+        this.set("httpNodeRoot", `/${fullPath.join("/")}`);
         log("trace", "[Uib:constructor]", `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)();
       }
-      this.ioPath = urlJoin(this.httpNodeRoot, _a._meta.displayName, "vendor", "socket.io");
+      this.set("ioPath", urlJoin(this.httpNodeRoot, _a._meta.displayName, "vendor", "socket.io"));
       log("trace", "Uib:constructor", `ioPath: "${this.ioPath}"`)();
-      this.pageName = window.location.pathname.replace(`${this.ioNamespace}/`, "");
+      this.set("pageName", window.location.pathname.replace(`${this.ioNamespace}/`, ""));
       if (this.pageName.endsWith("/"))
-        this.pageName += "index.html";
+        this.set("pageName", `${this.pageName}index.html`);
       if (this.pageName === "")
-        this.pageName = "index.html";
+        this.set("pageName", "index.html");
       this._dispatchCustomEvent("uibuilder:constructorComplete");
       log("trace", "Uib:constructor", "Ending")();
     }
@@ -2553,7 +2577,7 @@
       if (prop === "msgsCtrl")
         return this.msgsCtrlReceived;
       if (prop === "reconnections")
-        return __privateGet(this, _connectedNum);
+        return this.connectedNum;
       if (this[prop] === void 0) {
         log("warn", "Uib:get", `get() - property "${prop}" does not exist`)();
       }
@@ -3153,29 +3177,95 @@
       });
     }
     showMsg(showHide, parent = "body") {
+      if (showHide === void 0)
+        showHide = !__privateGet(this, _isShowMsg);
       __privateSet(this, _isShowMsg, showHide);
-      if (showHide === false || showHide === void 0) {
+      let slot = "Waiting for a message from Node-RED";
+      if (this.msg) {
+        slot = this.syntaxHighlight(this.msg);
+      }
+      if (showHide === false) {
         this._uiRemove({
           components: [
-            "#nrmsg"
+            "#uib_last_msg"
           ]
         });
       } else {
-        this._uiAdd({
+        this._uiReplace({
           parent,
           components: [
             {
               type: "pre",
-              id: "nrmsg",
+              id: "uib_last_msg",
               attributes: {
                 title: "Last message from Node-RED",
                 class: "syntax-highlight"
               },
-              slot: "Waiting for a message from Node-RED"
+              slot
             }
           ]
-        }, false);
+        });
       }
+    }
+    showStatus(showHide, parent = "body") {
+      if (showHide === void 0)
+        showHide = !__privateGet(this, _isShowStatus);
+      __privateSet(this, _isShowStatus, showHide);
+      if (showHide === false) {
+        this._uiRemove({
+          components: [
+            "#uib_status"
+          ]
+        });
+        return;
+      }
+      const root = {
+        parent,
+        components: [
+          {
+            type: "div",
+            id: "uib_status",
+            attributes: {
+              title: "Current status of the uibuilder client",
+              class: "text-smaller"
+            },
+            components: [
+              {
+                "type": "table",
+                "components": [
+                  {
+                    "type": "tbody",
+                    "components": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+      const details = root.components[0].components[0].components[0].components;
+      Object.values(__privateGet(this, _showStatus)).forEach((entry) => {
+        details.push({
+          "type": "tr",
+          "attributes": {
+            title: entry.description
+          },
+          "components": [
+            {
+              "type": "th",
+              "slot": entry.label
+            },
+            {
+              "type": "td",
+              "attributes": {
+                "data-varType": entry.var
+              },
+              "slot": entry.var === "version" ? _a._meta.version : JSON.stringify(this[entry.var])
+            }
+          ]
+        });
+      });
+      this._uiReplace(root);
     }
     uiGet(cssSelector, propName = null) {
       const selection = document.querySelectorAll(cssSelector);
@@ -3283,7 +3373,7 @@
       msgToSend._socketId = this._socket.id;
       this.socketOptions.auth.tabId = this.tabId;
       this.socketOptions.auth.lastNavType = this.lastNavType;
-      this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
+      this.socketOptions.auth.connectedNum = this.connectedNum;
       let numMsgs;
       if (channel === this._ioChannels.client) {
         this.set("sentMsg", msgToSend);
@@ -3428,6 +3518,10 @@
               this.showMsg(value2, prop);
               break;
             }
+            case "showStatus": {
+              this.showStatus(value2, prop);
+              break;
+            }
             default: {
               log("warning", "Uib:_msgRcvdEvents:command", `Command '${cmd} not yet implemented`)();
               break;
@@ -3504,7 +3598,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         clientId: this.clientId,
         tabId: this.tabId,
         pageName: this.pageName,
-        connections: __privateGet(this, _connectedNum),
+        connections: this.connectedNum,
         lastNavType: this.lastNavType
       });
     }
@@ -3577,18 +3671,18 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       this.socketOptions.transportOptions.polling.extraHeaders["x-clientid"] = `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`;
       this.socketOptions.auth.tabId = this.tabId;
       this.socketOptions.auth.lastNavType = this.lastNavType;
-      this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
+      this.socketOptions.auth.connectedNum = this.connectedNum;
       log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
       this._socket = lookup2(this.ioNamespace, this.socketOptions);
       this._socket.on("connect", () => {
-        __privateWrapper(this, _connectedNum)._++;
-        this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
+        this.set("connectedNum", this.connectedNum++);
+        this.socketOptions.auth.connectedNum = this.connectedNum;
         this.socketOptions.auth.lastNavType = this.lastNavType;
         this.socketOptions.auth.tabId = this.tabId;
         this.socketOptions.auth.more = this.tabId;
-        log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${__privateGet(this, _connectedNum)}
+        log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}
 Namespace: ${this.ioNamespace}`)();
-        this._dispatchCustomEvent("uibuilder:socket:connected", __privateGet(this, _connectedNum));
+        this._dispatchCustomEvent("uibuilder:socket:connected", this.connectedNum);
         this._checkConnect();
       });
       this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this));
@@ -3628,9 +3722,9 @@ Client ID: ${this.clientId}`)();
 ioPath: ${this.ioPath}`)();
       if (options) {
         if (options.ioNamespace !== void 0 && options.ioNamespace !== null && options.ioNamespace !== "")
-          this.ioNamespace = options.ioNamespace;
+          this.set("ioNamespace", options.ioNamespace);
         if (options.ioPath !== void 0 && options.ioPath !== null && options.ioPath !== "")
-          this.ioPath = options.ioPath;
+          this.set("ioPath", options.ioPath);
       }
       if (document.styleSheets.length >= 1 || document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) {
         log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
@@ -3644,14 +3738,19 @@ ioPath: ${this.ioPath}`)();
       }
       const [entry] = performance.getEntriesByType("navigation");
       this.set("lastNavType", entry.type);
-      this.started = this._ioSetup();
+      this.set("started", this._ioSetup());
       if (this.started === true) {
         log("trace", "Uib:start", "Start completed. Socket.IO client library loaded.")();
       } else {
         log("error", "Uib:start", "Start completed. ERROR: Socket.IO client library NOT LOADED.")();
       }
-      if (window["Vue"])
-        __privateSet(this, _isVue, true);
+      if (window["Vue"]) {
+        this.set("isVue", true);
+        try {
+          this.set("vueVersion", window["Vue"].version);
+        } catch (e) {
+        }
+      }
       this.onChange("msg", (msg) => {
         if (__privateGet(this, _isShowMsg) === true) {
           const eMsg = document.getElementById("nrmsg");
@@ -3661,7 +3760,7 @@ ioPath: ${this.ioPath}`)();
       });
       this._dispatchCustomEvent("uibuilder:startComplete");
     }
-  }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _isVue = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _extCommands = new WeakMap(), __publicField(_a, "_meta", {
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), __publicField(_a, "_meta", {
     version,
     type: "module",
     displayName: "uibuilder"

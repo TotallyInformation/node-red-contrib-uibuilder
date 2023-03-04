@@ -483,9 +483,9 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
     cursor: pointer;
     text-align: center;
     transition: background 250ms ease-in-out, transform 150ms ease;
-    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
+    appearance: none;
     border-radius: var(--border-radius);
     /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
     box-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
@@ -544,9 +544,10 @@ tfoot th, tfoot td {
 th[scope=row], tbody th {
     font-style: italic;
     color: var(--text2);
-    font-weight: bolder;
+    font-weight:lighter;
     background: var(--surface4);
     background-blend-mode: lighten;
+    text-align: left;
 }
 th, td {
     padding: .5rem;

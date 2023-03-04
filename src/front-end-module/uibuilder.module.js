@@ -289,7 +289,7 @@ export const Uib = class Uib {
     //#region private class vars
 
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
-    #connectedNum = 0
+    connectedNum = 0
     // event listener callbacks by property name
     // #events = {}
     // Socket.IO channel names
@@ -301,7 +301,9 @@ export const Uib = class Uib {
     // onTopic event callbacks
     #msgRecvdByTopicCallbacks = {}
     // Is Vue available?
-    #isVue = false
+    isVue = false
+    // What version? Set in startup if Vue is loaded. Won't always work
+    vueVersion = undefined
     /** setInterval id holder for Socket.IO checkConnect
      * @type {number|null}
      */
@@ -314,10 +316,40 @@ export const Uib = class Uib {
     _htmlObserver
     // Has showMsg been turned on?
     #isShowMsg = false
+    // Has showStatus been turned on?
+    #isShowStatus = false
     // Externally accessible command functions (NB: Case must match)
     #extCommands = [
-        'get', 'set', 'showMsg',
+        'get', 'set', 'showMsg', 'showStatus'
     ]
+
+    // What status variables to show via showStatus()
+    #showStatus = {
+        online: { 'var': 'online', 'label': 'Online?', 'description': 'Is the browser online?', },
+        ioConnected: { 'var': 'ioConnected', 'label': 'Socket.IO connected?', 'description': 'Is Socket.IO connected?', },
+        connectedNum: { 'var': 'connectedNum', 'label': '# reconnections', 'description': 'How many times has Socket.IO had to reconnect since last page load?', },
+
+        clientId: { 'var': 'clientId', 'label': 'Client ID', 'description': 'Static client unique id set in Node-RED. Only changes when browser is restarted.', },
+        tabId: { 'var': 'tabId', 'label': 'Browser tab ID', 'description': 'Static unique id for the browser\'s current tab', },
+        cookies: { 'var': 'cookies', 'label': 'Cookies', 'description': 'Cookies set in Node-RED', },
+        httpNodeRoot: { 'var': 'httpNodeRoot', 'label': 'httpNodeRoot', 'description': 'From Node-RED\' settings.js, affects URL\'s. May be wrong for pages in sub-folders', },
+        pageName: { 'var': 'pageName', 'label': 'Page name', 'description': 'Actual name of this page', },
+
+        ioNamespace: { 'var': 'ioNamespace', 'label': 'SIO namespace', 'description': 'Socket.IO namespace - unique to each uibuilder node instance', },
+        // ioPath: { 'var': 'ioPath', 'label': 'SIO path', 'description': '', }, // no longer needed in the modern client
+        socketError: { 'var': 'socketError', 'label': 'Socket error', 'description': 'If the Socket.IO connection has failed, says why', },
+
+        msgsSent: { 'var': 'msgsSent', 'label': '# msgs sent', 'description': 'How many standard messages have been sent to Node-RED?', },
+        msgsReceived: { 'var': 'msgsReceived', 'label': '# msgs received', 'description': 'How many standard messages have been received from Node-RED?', },
+        msgsSentCtrl: { 'var': 'msgsSentCtrl', 'label': '# control msgs sent', 'description': 'How many control messages have been sent to Node-RED?', },
+        msgsCtrlReceived: { 'var': 'msgsCtrlReceived', 'label': '# control msgs received', 'description': 'How many control messages have been received from Node-RED?', },
+        originator: { 'var': 'originator', 'label': 'Node Originator', 'description': 'If the last msg from Node-RED was from a `uib-sender` node, this will be its node id so that messasges can be returned to it', },
+        topic: { 'var': 'topic', 'label': 'Default topic', 'description': 'Optional default topic to be included in outgoing standard messages', },
+
+        started: { 'var': 'started', 'label': 'Has uibuilder client started?', 'description': 'Whether `uibuilder.start()` ran successfully. This should self-run and should not need to be run manually', },
+        version: { 'var': 'version', 'label': 'uibuilder client version', 'description': 'The version of the loaded uibuilder client library', },
+        serverTimeOffset: { 'var': 'serverTimeOffset', 'label': 'Server time offset (Hrs)', 'description': 'The number of hours difference between the Node-red server and the client', },
+    }
 
     //#endregion
 
@@ -349,7 +381,7 @@ export const Uib = class Uib {
     /** number of control messages received from server since page load */
     msgsCtrlReceived = 0
     /** Is the client online or offline? */
-    online = null
+    online = navigator.onLine
     /** last control msg object sent via uibuilder.send() @since v2.0.0-dev3 */
     sentCtrlMsg = {}
     /** last std msg object sent via uibuilder.send() */
@@ -360,6 +392,8 @@ export const Uib = class Uib {
     socketError = null
     // tab identifier from session storage
     tabId = ''
+    // Actual name of current page (set in constructor)
+    pageName = null
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -405,8 +439,6 @@ export const Uib = class Uib {
     }
     //#endregion -- not external --
 
-    //#endregion --- End of variables ---
-
     //#region ------- Static metadata ------- //
     static _meta = {
         version: version,
@@ -416,6 +448,8 @@ export const Uib = class Uib {
 
     get meta() { return Uib._meta }
     //#endregion ---- ---- ---- ---- //
+
+    //#endregion --- End of variables ---
 
     //#region ------- Getters and Setters ------- //
 
@@ -464,7 +498,7 @@ export const Uib = class Uib {
         }
         if (prop === 'version') return Uib._meta.version
         if (prop === 'msgsCtrl') return this.msgsCtrlReceived
-        if (prop === 'reconnections') return this.#connectedNum
+        if (prop === 'reconnections') return this.connectedNum
         if (this[prop] === undefined) {
             log('warn', 'Uib:get', `get() - property "${prop}" does not exist`)()
         }
@@ -756,6 +790,10 @@ export const Uib = class Uib {
         return json
     } // --- End of syntaxHighlight --- //
 
+    //#endregion -------- -------- -------- //
+
+    //#region ------- UI handlers --------- //
+
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
      */
@@ -767,10 +805,6 @@ export const Uib = class Uib {
 
         this._uiManager(msg)
     }
-
-    //#endregion -------- -------- -------- //
-
-    //#region ------- UI handlers --------- //
 
     // TODO Add multi-slot
     /** Replace or add an HTML element's slot from text or an HTML string
@@ -1322,6 +1356,7 @@ export const Uib = class Uib {
                 Object.keys(compToUpd.attributes).forEach((attrib) => {
                     elToUpd.forEach( el => {
                         // For values, set the actual value as well since the attrib only changes the DEFAULT value
+                        // @ts-ignore
                         if (attrib === 'value') el.value = compToUpd.attributes[attrib]
                         el.setAttribute(attrib, compToUpd.attributes[attrib])
                     })
@@ -1489,41 +1524,117 @@ export const Uib = class Uib {
     } // --- end of _uiManager ---
 
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
-     * The card has the id `nrmsg`.
-     * @param {boolean} showHide true=show, false=hide
+     * The card has the id `uib_last_msg`.
+     * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
      */
     showMsg(showHide, parent = 'body') {
+        if ( showHide === undefined ) showHide = !this.#isShowMsg
         this.#isShowMsg = showHide
+        let slot = 'Waiting for a message from Node-RED'
 
-        if ( showHide === false || showHide === undefined) {
+        if (this.msg) {
+            slot = this.syntaxHighlight(this.msg)
+        }
+
+        if ( showHide === false ) {
             this._uiRemove( {
                 components: [
-                    '#nrmsg',
+                    '#uib_last_msg',
                 ],
             })
         } else {
-            this._uiAdd({
+            this._uiReplace({
                 parent: parent,
                 components: [
                     {
                         type: 'pre',
-                        id: 'nrmsg',
+                        id: 'uib_last_msg',
                         attributes: {
                             title: 'Last message from Node-RED',
                             class: 'syntax-highlight',
                         },
-                        slot: 'Waiting for a message from Node-RED',
+                        slot: slot,
                     }
                 ]
-            }, false)
+            })
         }
+    }
+
+    /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
+     * The card has the id `uib_status`.
+     * The display is updated by an event listener created in the class constructor.
+     * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
+     * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     */
+    showStatus(showHide, parent = 'body') {
+        if ( showHide === undefined ) showHide = !this.#isShowStatus
+        this.#isShowStatus = showHide
+
+        if ( showHide === false ) {
+            this._uiRemove( {
+                components: [
+                    '#uib_status',
+                ],
+            })
+            return
+        }
+
+        const root = {
+            parent: parent,
+            components: [
+                {
+                    type: 'div',
+                    id: 'uib_status',
+                    attributes: {
+                        title: 'Current status of the uibuilder client',
+                        class: 'text-smaller',
+                    },
+                    components: [
+                        {
+                            'type': 'table',
+                            'components': [
+                                {
+                                    'type': 'tbody',
+                                    'components': []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        const details = root.components[0].components[0].components[0].components
+
+        Object.values(this.#showStatus).forEach( entry => {
+            details.push({
+                'type': 'tr',
+                'attributes': {
+                    title: entry.description,
+                },
+                'components': [
+                    {
+                        'type': 'th',
+                        'slot': entry.label,
+                    },
+                    {
+                        'type': 'td',
+                        'attributes': {
+                            'data-varType': entry.var,
+                        },
+                        'slot': entry.var === 'version' ? Uib._meta.version : JSON.stringify(this[entry.var]),
+                    }
+                ],
+            })
+        })
+
+        this._uiReplace(root)
     }
 
     /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
      * @param {string} cssSelector Identify the DOM element to get data from
      * @param {string} [propName] Optional. Specific name of property to get from the element
-     * @returns {*} Object containing either specific requested property or a selection of useful properties
+     * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
      */
     uiGet(cssSelector, propName = null) {
         // The type cast below not really correct but it gets rid of the other typescript errors
@@ -1690,7 +1801,7 @@ export const Uib = class Uib {
         // How was the page last loaded?
         this.socketOptions.auth.lastNavType = this.lastNavType
         // How many times has the client (re)connected since page load
-        this.socketOptions.auth.connectedNum = this.#connectedNum
+        this.socketOptions.auth.connectedNum = this.connectedNum
         //#endregion ---- ---- ---- //
 
         // Track how many messages have been sent & last msg sent
@@ -1926,6 +2037,11 @@ export const Uib = class Uib {
                         break
                     }
 
+                    case 'showStatus': {
+                        this.showStatus(value, prop)
+                        break
+                    }
+
                     default: {
                         log('warning', 'Uib:_msgRcvdEvents:command', `Command '${cmd} not yet implemented`)()
                         // msg._uib.response = this[cmd]()
@@ -2069,7 +2185,7 @@ export const Uib = class Uib {
             tabId: this.tabId,
             // "url":"esp-test",
             pageName: this.pageName,
-            connections: this.#connectedNum,
+            connections: this.connectedNum,
             lastNavType: this.lastNavType,
         })
     }
@@ -2211,7 +2327,7 @@ export const Uib = class Uib {
         // How was the page last loaded?
         this.socketOptions.auth.lastNavType = this.lastNavType
         // How many times has the client (re)connected since page load
-        this.socketOptions.auth.connectedNum = this.#connectedNum
+        this.socketOptions.auth.connectedNum = this.connectedNum
         //#endregion --- ---- ---
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
@@ -2221,17 +2337,17 @@ export const Uib = class Uib {
         /** When the socket is connected - set ioConnected flag and reset connect timer  */
         this._socket.on('connect', () => {
 
-            this.#connectedNum++
+            this.set('connectedNum', this.connectedNum++)
             // How many times has the client (re)connected since page load
-            this.socketOptions.auth.connectedNum = this.#connectedNum
+            this.socketOptions.auth.connectedNum = this.connectedNum
             // How was the page last loaded?
             this.socketOptions.auth.lastNavType = this.lastNavType
             // Session tab id
             this.socketOptions.auth.tabId = this.tabId
             this.socketOptions.auth.more = this.tabId
 
-            log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.#connectedNum}\nNamespace: ${this.ioNamespace}`)()
-            this._dispatchCustomEvent('uibuilder:socket:connected', this.#connectedNum)
+            log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}\nNamespace: ${this.ioNamespace}`)()
+            this._dispatchCustomEvent('uibuilder:socket:connected', this.connectedNum)
 
             this._checkConnect() // resets any reconnection timers & sets connected flag
 
@@ -2344,15 +2460,15 @@ export const Uib = class Uib {
         })
 
         /** Client ID set by uibuilder - lasts until browser profile is closed, applies to all tabs */
-        this.clientId = this.cookies['uibuilder-client-id']
+        this.set('clientId', this.cookies['uibuilder-client-id'])
         log('trace', 'Uib:constructor', 'Client ID: ', this.clientId)()
 
         /** Tab ID - lasts while the tab is open (even if reloaded)
          * WARNING: Duplicating a tab retains the same tabId
          */
-        this.tabId = window.sessionStorage.getItem('tabId')
+        this.set('tabId', window.sessionStorage.getItem('tabId'))
         if (!this.tabId) {
-            this.tabId = 't' + Math.floor(Math.random() * 1000000)
+            this.set('tabId', `t${Math.floor(Math.random() * 1000000)}`)
             window.sessionStorage.setItem('tabId', this.tabId)
         }
 
@@ -2376,14 +2492,22 @@ export const Uib = class Uib {
             // navigator.sendBeacon('./_clientLog', `${(new Date()).toISOString()} Document Event: visibilitychange. Visibility State: ${document.visibilityState}. User Activity- Has:${navigator.userActivation.hasBeenActive}, Is:${navigator.userActivation.isActive}`)
         })
 
-        this.ioNamespace = this._getIOnamespace()
+        // Set a listener to update showStatus table if it is active
+        document.addEventListener('uibuilder:propertyChanged', (event) => {
+            if (!this.#isShowStatus) return
+
+            if (event.detail.prop in this.#showStatus) {
+                document.querySelector(`td[data-vartype="${event.detail.prop}"]`).innerText = JSON.stringify(event.detail.value)
+            }
+        })
+
+        this.set('ioNamespace', this._getIOnamespace())
 
         //#region - Try to make sure client uses Socket.IO client version from the uibuilder module (using cookie or path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
 
         /** httpNodeRoot (to set path) */
         if ('uibuilder-webRoot' in this.cookies) {
-            // @ts-ignore
-            this.httpNodeRoot = this.cookies['uibuilder-webRoot']
+            this.set('httpNodeRoot', this.cookies['uibuilder-webRoot'])
             log('trace', 'Uib:constructor', `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)()
         } else {
             // split current url path, eliminate any blank elements and trailing or double slashes
@@ -2391,18 +2515,18 @@ export const Uib = class Uib {
             /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
             if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
             fullPath.pop() // gives the last path section of the url
-            this.httpNodeRoot = '/' + fullPath.join('/')
+            this.set('httpNodeRoot', `/${fullPath.join('/')}`)
             log('trace', '[Uib:constructor]', `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)()
         }
-        this.ioPath = urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io')
+        this.set('ioPath', urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
         log('trace', 'Uib:constructor', `ioPath: "${this.ioPath}"`)()
 
         //#endregion
 
         // Work out pageName
-        this.pageName = window.location.pathname.replace(`${this.ioNamespace}/`, '')
-        if ( this.pageName.endsWith('/') ) this.pageName += 'index.html'
-        if ( this.pageName === '' ) this.pageName = 'index.html'
+        this.set('pageName', window.location.pathname.replace(`${this.ioNamespace}/`, ''))
+        if ( this.pageName.endsWith('/') ) this.set('pageName', `${this.pageName}index.html`)
+        if ( this.pageName === '' ) this.set('pageName', 'index.html')
 
         this._dispatchCustomEvent('uibuilder:constructorComplete')
 
@@ -2431,8 +2555,8 @@ export const Uib = class Uib {
 
         // Handle options
         if (options) {
-            if (options.ioNamespace !== undefined && options.ioNamespace !== null && options.ioNamespace !== '') this.ioNamespace = options.ioNamespace
-            if (options.ioPath !== undefined && options.ioPath !== null && options.ioPath !== '') this.ioPath = options.ioPath
+            if (options.ioNamespace !== undefined && options.ioNamespace !== null && options.ioNamespace !== '') this.set('ioNamespace', options.ioNamespace)
+            if (options.ioPath !== undefined && options.ioPath !== null && options.ioPath !== '') this.set('ioPath', options.ioPath)
             // See below for handling of options.loadStylesheet
         }
 
@@ -2455,7 +2579,7 @@ export const Uib = class Uib {
         this.set('lastNavType', entry.type)
 
         // Start up (or restart) Socket.IO connections and listeners. Returns false if io not found
-        this.started = this._ioSetup()
+        this.set('started', this._ioSetup())
 
         if ( this.started === true ) {
             log('trace', 'Uib:start', 'Start completed. Socket.IO client library loaded.')()
@@ -2464,7 +2588,12 @@ export const Uib = class Uib {
         }
 
         // Check if Vue is present (used for dynamic UI processing)
-        if (window['Vue']) this.#isVue = true
+        if (window['Vue']) {
+            this.set('isVue', true)
+            try {
+                this.set('vueVersion', window['Vue'].version)
+            } catch (e) { }
+        }
 
         // Set up msg listener for the optional showMsg
         this.onChange('msg', (msg) => {
@@ -2495,6 +2624,7 @@ if (!window['uibuilder']) {
 }
 
 if (!window['$']) {
+    /** @type {HTMLElement} */
     window['$'] = document.querySelector.bind(document)
 } else {
     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use')
