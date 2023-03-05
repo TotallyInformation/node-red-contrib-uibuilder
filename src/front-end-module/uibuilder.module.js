@@ -712,7 +712,9 @@ export const Uib = class Uib {
         }
     }
 
-    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element */
+    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+     * @type {HTMLElement}
+     */
     $ = document.querySelector.bind(document)
 
     /** Set the default originator. Set to '' to ignore. Used with uib-sender.
@@ -1524,7 +1526,7 @@ export const Uib = class Uib {
     } // --- end of _uiManager ---
 
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
-     * The card has the id `uib_last_msg`.
+     * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
      */
@@ -2623,11 +2625,13 @@ if (!window['uibuilder']) {
     log('error', 'uibuilder.module.js', 'uibuilder already assigned to window. Have you tried to load it more than once?')
 }
 
+// Assign `$` to global window object unless it is already in use.
+// Note that this is also available as `uibuilder.$`.
 if (!window['$']) {
     /** @type {HTMLElement} */
     window['$'] = document.querySelector.bind(document)
 } else {
-    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use')
+    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.')
 }
 
 // Can import as `import uibuilder from ...` OR `import {uibuilder} from ...`

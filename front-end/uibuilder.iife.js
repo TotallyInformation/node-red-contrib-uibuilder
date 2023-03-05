@@ -3774,7 +3774,7 @@ ioPath: ${this.ioPath}`)();
   if (!window["$"]) {
     window["$"] = document.querySelector.bind(document);
   } else {
-    log("warn", "uibuilder.module.js", "Cannot allocate the global `$`, it is already in use");
+    log("warn", "uibuilder.module.js", "Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.");
   }
   var uibuilder_module_default = uibuilder;
   uibuilder.start();
