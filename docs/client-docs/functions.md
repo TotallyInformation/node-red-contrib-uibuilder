@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-03-04 18:08:18
+lastUpdated: 2023-03-05 18:05:25
 ---
 
 Functions accessible in client-side user code.
@@ -16,7 +16,7 @@ Functions accessible in client-side user code.
   - [`setOriginator(originator = '')` - Set/clear the default originator](#setoriginatororiginator-----setclear-the-default-originator)
   - [`sendCtrl(msg)` - Send a custom control message back to Node-RED](#sendctrlmsg---send-a-custom-control-message-back-to-node-red)
   - [`beaconLog(txtToSend, logLevel)` - Send a short log message to Node-RED](#beaconlogtxttosend-loglevel---send-a-short-log-message-to-node-red)
-  - [~~logToServer()~~ - Not yet available. Will cause the input to appear in Node-RED logs](#logtoserver---not-yet-available-will-cause-the-input-to-appear-in-node-red-logs)
+  - [~~logToServer()~~ - Not yet reliable. Will cause the input to appear in Node-RED logs](#logtoserver---not-yet-reliable-will-cause-the-input-to-appear-in-node-red-logs)
 - [Variable Handling](#variable-handling)
   - [`get(prop)` - Get a uibuilder property](#getprop---get-a-uibuilder-property)
       - [Example](#example)
@@ -30,16 +30,13 @@ Functions accessible in client-side user code.
 - [UI Handling](#ui-handling)
   - [`ui(json)` - Directly manage UI via JSON](#uijson---directly-manage-ui-via-json)
   - [`loadui(url)` - Load a dynamic UI from a JSON web reponse](#loaduiurl---load-a-dynamic-ui-from-a-json-web-reponse)
-  - [`loadScriptSrc(url)` - Attach a new remote script to the end of HEAD synchronously](#loadscriptsrcurl---attach-a-new-remote-script-to-the-end-of-head-synchronously)
-  - [`loadStyleSrc(url)` - Attach a new remote style to the end of HEAD synchronously](#loadstylesrcurl---attach-a-new-remote-style-to-the-end-of-head-synchronously)
-  - [`loadScriptTxt(string)` - Attach a new text script to the end of HEAD synchronously](#loadscripttxtstring---attach-a-new-text-script-to-the-end-of-head-synchronously)
-  - [`loadStyleTxt(string)` - Attach a new text style to the end of HEAD synchronously](#loadstyletxtstring---attach-a-new-text-style-to-the-end-of-head-synchronously)
-  - [`replaceSlot(el, component)` - Attach a new text script to the end of HEAD synchronously](#replaceslotel-component---attach-a-new-text-script-to-the-end-of-head-synchronously)
-  - [`replaceSlotMarkdown(el, component)` - Attach a new text script to the end of HEAD synchronously](#replaceslotmarkdownel-component---attach-a-new-text-script-to-the-end-of-head-synchronously)
-  - [`showDialog(type, ui, msg)` - Attach a new text script to the end of HEAD synchronously](#showdialogtype-ui-msg---attach-a-new-text-script-to-the-end-of-head-synchronously)
+  - [`loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously](#loadscriptsrcurl-loadstylesrcurl-loadscripttxtstring-loadstyletxtstring---attach-a-new-script-or-css-stylesheet-to-the-end-of-head-synchronously)
+  - [`replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string](#replaceslotel-component---replace-or-add-an-html-elements-slot-from-text-or-an-html-string)
+  - [`replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string](#replaceslotmarkdownel-component---replace-or-add-an-html-elements-slot-from-a-markdown-string)
+  - [`showDialog(type, ui, msg)` - Show a toast or alert style message on the UI](#showdialogtype-ui-msg---show-a-toast-or-alert-style-message-on-the-ui)
   - [`showMsg(boolean, parent=body)` - Show/hide a card that automatically updates and shows the last incoming msg from Node-RED](#showmsgboolean-parentbody---showhide-a-card-that-automatically-updates-and-shows-the-last-incoming-msg-from-node-red)
   - [`showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the uibuilder client library](#showstatusboolean-parentbody---showhide-a-card-shows-the-current-status-of-the-uibuilder-client-library)
-  - [`syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as HTML formatted](#syntaxhighlightjson---takes-a-javascript-object-or-json-and-outputs-as-html-formatted)
+  - [`syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as formatted HTML](#syntaxhighlightjson---takes-a-javascript-object-or-json-and-outputs-as-formatted-html)
   - [`uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element](#uigetcssselector-propnamenull---get-most-useful-information-or-specific-property-from-a-dom-element)
 - [HTML/DOM Cacheing](#htmldom-cacheing)
   - [`watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage](#watchdomstartstop---startstop-watching-for-dom-changes-changes-automatically-saved-to-browser-localstorage)
@@ -60,7 +57,10 @@ Functions accessible in client-side user code.
 
 ## `start(options)` - (Mostly no longer needed) Starts Socket.IO communications with Node-RED
 
-!> In most cases, you no longer need to call this yourself. The client startup is now more robust and should rarely need any help. The exception will be if you are loading a page from an external server instead of from Node-RED.
+> [!NOTE]
+> In most cases, you no longer need to call this yourself. The client startup is now more robust and should rarely need any help. The exception will be if you are loading a page from an external server instead of from Node-RED.
+>
+> Use the `uibuilder.showStatus()` function to display the status of the client library on-page. This can show when the start function has failed and show what you need to change.
 
 Unlike the original uibuilder client, this version:
 
@@ -75,6 +75,10 @@ While multiple properties can be given in the options object, only the following
 * `loadStylesheet` - (default=true). Set to false if you don't want the uibuilder default stylesheet (`uib-brand.css`) to be loaded if you haven't loaded your own. Checks to see if any stylesheet has already been loaded and if it has, does not load.
 
 ## Message Handling
+
+These send or receive messages to/from Node-RED.
+
+You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-end code which instructs the client to treat the object as though it had come from Node-RED.
 
 ### `send(msg, originator = '')` - Send a custom message back to Node-RED
 
@@ -116,7 +120,7 @@ However, only text strings can be sent and messages need to be kept short. It on
 
 The `logLevel` matches both Node-RED and uibuilder defined log levels (e.g. error, warn, info, debug, trace ).
 
-### ~~logToServer()~~ - Not yet available. Will cause the input to appear in Node-RED logs
+### ~~logToServer()~~ - Not yet reliable. Will cause the input to appear in Node-RED logs
 
 ## Variable Handling
 
@@ -203,13 +207,59 @@ Takes either an object containing `{_ui: {}}` or simply simple `{}` containing u
 
 Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
 
-### `loadScriptSrc(url)` - Attach a new remote script to the end of HEAD synchronously
-### `loadStyleSrc(url)` - Attach a new remote style to the end of HEAD synchronously
-### `loadScriptTxt(string)` - Attach a new text script to the end of HEAD synchronously
-### `loadStyleTxt(string)` - Attach a new text style to the end of HEAD synchronously
-### `replaceSlot(el, component)` - Attach a new text script to the end of HEAD synchronously
-### `replaceSlotMarkdown(el, component)` - Attach a new text script to the end of HEAD synchronously
-### `showDialog(type, ui, msg)` - Attach a new text script to the end of HEAD synchronously
+### `loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously
+
+Either from a remote URL or from a text string.
+
+### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string
+
+This function is mostly for internal use.
+
+`el` must be an HTML Element, its slot content will be replaced.
+
+`component` must be a single `_ui` components entry with a `slot` property that will be used to replace the `el`s slot.
+
+Will use DOMPurify if that library has been loaded.
+
+### `replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string
+
+This function is mostly for internal use.
+
+The Markdown-IT library must be loaded for this to work, otherwise it silently fails.
+
+`el` must be an HTML Element, its slot content will be replaced.
+
+`component` must be a single `_ui` components entry with a `markdownSlot` property that will be used to replace the `el`s slot after being run through Markdown-IT to turn it into HTML.
+
+Will use DOMPurify if that library has been loaded.
+
+### `showDialog(type, ui, msg)` - Show a toast or alert style message on the UI
+
+`type` is either "notify" or "alert".
+
+`msg` is optional. If passed, msg.topic and msg.payload will be used.
+
+`ui` allows control over the element that is created. Allowed properties are:
+
+```json
+{
+  // Optional title. May include HTML. If not set, will use msg.topic
+  "title": "",
+  // The message content. Note that msg.payload will also be added. May include HTML.
+  "content": "",
+  // Optionally set to any class name or one of: 
+  //   'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'
+  "varient": "",
+  // Optionally turn off the 10s auto-hide of the message.
+  "noAutohide": false,
+  "autohide": true, // opposite of noAutoHide, use one or the other
+  "autoHideDelay": 10000, // 10s
+  // Make the dialog modal - currently not used as all dialogs are model. For future use.
+  "modal": true,
+  // Append messages after each other otherwise latest messages appear on top.
+  "appendToast": false,
+}
+```
 
 ### `showMsg(boolean, parent=body)` - Show/hide a card that automatically updates and shows the last incoming msg from Node-RED
 
@@ -235,7 +285,9 @@ This function can also be called from Node-RED via `msg._uib.command` - `showSta
 
 Adds/removes `<div id="uib_status">` to/from the page.
 
-### `syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as HTML formatted
+### `syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as formatted HTML
+
+Is used internally by the `showMsg` function but may be useful for custom processing. If used in custom code, make sure to wrap the output in a `<pre>` tag.
 
 Requires some CSS that is contained in both the `uib-brand.css` and older `uib-styles.css`. Feel free to copy to your own CSS if you don't want to reference those files.
 
@@ -252,6 +304,8 @@ Will return an array of found elements with properties.
 
 If no `propName` supplied, will return a selection of the most useful information about the selected element(s).
 
+Returned data can be sent back to Node-RED using: `uibuilder.send( uibuilder.uiGet('#myelementid') )`.
+
 ## HTML/DOM Cacheing
 
 ### `watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage
@@ -267,7 +321,12 @@ You can ensure that the page display looks exactly like the last update upon pag
 
 ### `clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage
 ### `restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage
+
 ### `saveHtmlCache()` - Manually saves the currently displayed HTML to the browser localStorage
+
+> [!NOTE]
+> Browser local cache is generally limited to 10MB for the whole source domain.
+> Therefore, it is quite easy to exceed this - use with caution.
 
 ## Event Handling
 
@@ -338,4 +397,6 @@ First argument is the log level (0=Error, 1=Warn, 2=Info, 3=log, 4=debug, 5=trac
 
 The first 2 arguments are required. All remaining arguments are included in the output and may include array, objects, etc.
 
-To set the log level to display in your code, use `uibuilder.logLevel = 5` or `uibuilder.logLevel = 'trace`. Set to your desired level.
+To set the log level to display in your code, use `uibuilder.logLevel = 5` or `uibuilder.logLevel = 'trace'`. Set to your desired level.
+
+Future versions of this function after v6.1 will extend it to output to an on-page visible log and/or log back to Node-RED.

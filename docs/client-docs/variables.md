@@ -46,6 +46,7 @@ Always use `uibuilder.get('varname', value)` to obtain the value of these. You c
 * `serverTimeOffset` - Time offset between browser clock and server clock
 * `socketError` - Holds the details of the last socket error
 * `tabId` - Identifier for the current browser tab
+* `version` - accessible via `uibuilder.get('version')` or `uibuilder.get('meta')` only - the uibuilder client version in use
 * `vueVersion` - if the VueJS front-end library is loaded, this _may_ tell you the version (does not work for all versions of VueJS)
 
 In addition, `uibuilder.logLevel` will automatically be retrieved via its own getter, use as `console.log(uibuilder.logLevel)`.

@@ -87,14 +87,34 @@ There is a library of "official" [video tutorials on YouTube](https://www.youtub
 The purpose of uibuilder is to:
 
 * Support easy methods for creating and delivering data-driven web apps and web pages (also known as web User-Interfaces).
-* Be a conduit between Node-RED and a front-end (browser) UI web app.
-* Be UI framework agnostic. While VueJS is often used with uibuilder, it isn't a necessary dependency. Indeed no framework is needed to use uibuilder.
+* Be a conduit between Node-RED and front-end (browser) UI web apps.
+* Be UI framework agnostic. No framework is needed to use uibuilder but it will work with them where desired. uibuilder aims to reduce the requirement for a framework by making it easier to work with vanilla HTML/CSS.
 * Provide interface/data standards for exchanging data and controls between Node-RED and the web pages.
+* Enable the creation and management of multiple web apps from a single Node-RED instance.
 * Reduce the amount of front-end code (HTML/JavaScript) needed to create and manage a web app.
 * Reduce the knowledge required for creating reliable, accessible web apps by providing low-code and no-code features.
 * Make it easy to install and serve front-end libraries to support the development of more complex web apps.
 
 ## Features
+
+The core features of uibuilder:
+
+* Provides nodes to enable zero-code translation of input data to usable and accessible web elements.
+* Provides capability for low-code, configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code without having to write code.
+* Provides a 2-way communications channel between the Node-RED server (back-end) and front-end UI.
+* Provides a Node-RED node to act as the focus for communications with other nodes for additional ease of use.
+* Provides a front-end library to: do the complex parts of the communications in the client browser; make manipulation of the UI easier and more consistent; make it easy to get data back to Node-RED as needed (both automatically and manually).
+* Provides easy to use templates and examples for front-end code to enable people to get a quick start on creating web apps.
+* Provides management and serving of npm packages that provide front-end libraries consumable easily by front-end code.
+* Allows editing of front-end code from the Node-RED Editor (designed for small changes, use web development tools generally).
+* Enables the use of external authentication and authorisation methods and services to control multi-user access to web apps.
+* Provides various server middleware and API options for additional custom capabilities.
+* Allows as many uibuilder node instances as you like. Each instance allows the creation of many web pages and sub-folders for easy management.
+* Each uibuilder node instance provides a private 2-way communications channel between the Node-RED server (back-end) and browser (front-end) UI code.
+* Supports the use of standard web development workflows.
+* Allows the creation of a dedicated web service to facilitate independent security.
+* Provides a caching capability allowing newly joining clients to receive the latest data and configurations. Joining/leaving clients create notifications in Node-RED.
+
 
 <details><summary>No-code UI's</summary>
 
@@ -114,27 +134,14 @@ The data that `uib-element` outputs is a format that you can use in your own flo
 The schema and the UI creator functions built into the front-end client are specifically designed to work with current and future HTML standards in order to avoid the kinds of issues commonly encountered when using 3rd-party front-end frameworks (e.g. major version changes forcing rewrites of all of your tooling). So ES Modules, ECMA Components, and future ECMA versions should all be supported.
 </details>
 
-<details><summary>Core features</summary>
-
-* Provides a Node-RED node to act as the focus for communications and installation of front-end packages for use in your code.
-* Allows as many uibuilder node instances as you like. Each instance allows the creation of many web pages and sub-folders for easy management.
-* Each uibuilder node instance provides a private 2-way communications channel between the Node-RED server (back-end) and browser (front-end) UI code.
-* Provides a front-end library to do the complex parts of the communications and to help standardise interactions with the Node-RED server.
-* Provides templates for front-end code to enable people to get a quick start on creating web apps.
-* Allows management and serving of npm packages that provide front-end libraries, consumable easily by front-end code.
-* Allows editing of front-end code (designed for small changes, use web development tools generally).
-* Supports the use of standard web development workflows.
-* Provides a capability to have low-code, configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code without you needing to write code.
-* Provides nodes to enable zero-code translation of input data to usable and accessible web elements.
-* Allows the creation of a dedicated web service to facilitate independent security.
-* Provides a caching capability allowing newly joining clients to receive the latest data and configurations. Joining/leaving clients create notifications in Node-RED.
-</details>
 
 <details><summary>Future direction</summary>
 
 The general direction of uibuilder (or associated modules) is likely to include:
 
-* Provide more no-code and low-code UI creation and update capabilities. As of v6.1, these are now starting to be delivered.
+* Provide more no-code and low-code UI creation and update capabilities. As of v6.1, these are now starting to be delivered, v6.2 will extend these.
+* The ability to save updated HTML from the front-end via Node-RED so that UI building can be done once and loaded as efficient, static HTML.
+* The ability to use the zero-code features to produce HTML for other tools to use.
 * The ability within Node-RED to, for each uibuilder node, run npm scripts such as build processes and to manage instance-level npm packages.
 * Be able to install/update/remove instance-level npm packages as can already be done for uibuilder-level packages.
 * Provide a "development server" capability that auto-reloads connected clients when code changes are made.

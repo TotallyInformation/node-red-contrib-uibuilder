@@ -8,15 +8,13 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Notes for the current version
 
-v6.1.0 makes the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) current and the old client library (`uibuilderfe.js`) is now no longer recommended and is not being updated, it is on the road to being deprecated. 
+v6.1.0 makes the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) current and the old client library (`uibuilderfe.js`) is now no longer recommended and is not being updated, it is on the road to being deprecated (it will remain until at least v7, mahbe v8 but probably not longer unless someone calls for it). 
 
-The experimental `uib-list` node will now be deprecated, the features are moved to the new `uib-element` node.
+The experimental `uib-list` node is now deprecated, the features are moved to the new `uib-element` node. It will be removed certainly by v7.
 
-The new `uib-brand.css` style library is not yet feature complete - if you find something missing or wrong, please raise an issue.
+The new `uib-brand.css` style library is not yet feature complete - if you find something missing or wrong, please raise an issue. It does, however, continue to develop.
 
-Dynamic content does not currently work with VueJS (and probably not other frameworks that rely on pre-building components). Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only. And of course, it is possible - but probably less useful - to combine the vanilla HTML from the low-/no-code features with front-end frameworks such as Vue.
-
-Context store handling currently does not cope with stores that require asynchronous setters/getters. [ref](https://discourse.nodered.org/t/context-stores-maybe-async-but-how-can-we-tell/75190/2?u=totallyinformation).
+Dynamic content does not currently work fully with VueJS (and probably not other frameworks that rely on pre-building components). It is possible though to combine the vanilla HTML from the low-/no-code features with front-end frameworks. Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components and any frameworks that are compatible with them such as _Svelte_. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only. 
 
 ## To do/In-progress
 
@@ -180,19 +178,26 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Added a default `msg.topic` option. `uibuilder.set('topic', '....')` Will be used in msgs sent back to node-red if no topic specified. Note that if the default topic is not set, messages will inherit the topic from the _previous inbound message_ if that had a topic. Reset by setting to an empty string.
 
-* Added **new functions**
+* The following client functions can now be called direct from Node-RED via a msg like: `{_uib: {command:"showMsg", value:true}}`. get, set, showMsg, showStatus. More will follow in the next release.
 
-  * `uibuilder.syntaxHighlight(json)` - Converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
+* Added **new functions**
 
   * `uibuilder.showMsg(true, selector=body)` - Adds a visual display of incoming messages from Node-RED to the web page. Use `uibuilder.showMsg(false)` to remove it. `selector` is a CSS selector to use as the parent position. Will always show the last incoming standard msg from Node-RED.
 
   * `uibuilder.showStatus(true, selector=body)` - Adds a visual display of the current status of the client library. Use `uibuilder.showMsg(false)` to remove it.`selector` is a CSS selector to use as the parent position. May be helpful when trying to debug pages and connectivity, especially from mobile devices.
 
-  * `uibuilder.uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element
+  * `uibuilder.syntaxHighlight(json)` - Converts JSON/JavaScript object into highlighted HTML. Useful for debugging messages sent from/to Node-RED. This used to be in each template so you don't need it there any more.
+
+  * `uibuilder.uiGet(cssSelector, propName=null)` - Get data from the DOM. Returns selection of useful properties unless a specific property requested.
+
+    Data can be sent straight back to Node-RED: `uibuilder.send( uibuilder.uiGet('input') )` (gets all useful properties from all `input` fields on the page).
+  
+  * `uibuilder.watchDom(true)` - Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
 
   * `uibuilder.beaconLog(txtToSend, logLevel)` which allows sending a simple, short log message back to Node-RED even if socket.io is not connected. In Node-RED, outputs to the Node-RED log and sends a uibuilder control message where `msg.uibuilderCtrl` = "client beacon log". _Still somewhat experimental and may not always work reliably_.
 
   * `uibuilder.logToServer()` which will take any number and type of arguments and send them all back to Node-RED in the msg.payload of a _control_ message (out of port #2) where `msg.uibuilderCtrl` = "client log message". Client details are added to the message. _Still somewhat experimental and may not always work reliably_.
+
 
 * Added a unique tab identifier `uibuilder.tabId` that remains while the tab does. Is include in std outputs. Based on [this](https://stackoverflow.com/questions/11896160/any-way-to-identify-browser-tab-in-javascript). NOTE however, that duplicating the browser tab will result in a duplicate tab id.
 
@@ -208,13 +213,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
   * Added a `position` property to the `add` _ui mode. "first"/"last": Adds start/end of parent's children respectively. An integer will add the element after the nth child.
 
-  * Added **new function** `uibuilder.uiGet(cssSelector [, propName])` - Get data from the DOM. Returns selection of useful properties unless a specific property requested.
-
-    Data can be sent straight back to Node-RED: `uibuilder.send( uibuilder.uiGet('input') )` (gets all useful properties from all `input` fields on the page).
-  
   * Added a **new ui handler** `removeAll` and updated the handler function with an optional 2nd parameter to remove all (rather than the 1st) matching elements.
-
-* Added **new function** `uibuilder.watchDom(true)` - Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
 
 * Added 2 new events: `uibuilder:constructorComplete` and `uibuilder:startComplete`. Mostly for potential internal use.
 

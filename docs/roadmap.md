@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-02-27 11:20:00
+lastUpdated: 2023-03-05 18:05:36
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -14,23 +14,7 @@ Please note that I no longer have the time to monitor the #uibuilder channel in 
 
 ### uibuilder aims and overall direction
 
-The purpose of uibuilder is to:
-
-* Support an easy method for creating and delivering data-driven web apps.
-* Be a conduit between Node-RED and front-end (browser) UI web apps.
-* Be UI framework agnostic. While VueJS is often used with uibuilder, it isn't a necessary dependency. Indeed no framework will be needed to use uibuilder.
-* Provide interface/data standards for exchanging data and controls with the UI.
-* Enable the creation and management of multiple web apps from a single Node-RED instance.
-
-The core features of uibuilder:
-
-* Provide a 2-way communications channel between the Node-RED server (back-end) and front-end UI code.
-* Provide a Node-RED node to act as the focus for communications.
-* Provide a front-end library to do the complex parts of the communications in the client browser.
-* Provide easy to use templates for front-end code to enable people to get a quick start on creating web apps.
-* Allow management and serving of npm packages that provide front-end libraries consumable easily by front-end code.
-* Allow editing of front-end code (designed for small changes, use web development tools generally).
-* Enable the use of external authentication and authorisation methods and services to control multi-user access to web apps.
+_THIS NEEDS AN UPDATE_
 
 The general direction of uibuilder (or associated modules) that I would like to see includes:
 
@@ -42,29 +26,30 @@ Information also needs to be provided to enable people to build security, identi
 
 ### Focus for the near future
 
+_THIS NEEDS AN UPDATE_
+
 The following is the immediate direction. These are not likely to be incuded in v5.0.0 but are likely to be added to v5.1 or maybe a little later.
 
 Current focus (beyond what has already been developed) is on:
 
-* _STARTED_. Demonstrate how nodes can be build that manipulate a web front-end (in similar fashion to Dashboard).
-* _STARTED_. Creating a new front-end library. Simplified and more robust, using ES2019 and supporting configuration-driven web interfaces.
-* _STARTED_, see [web-components](https://github.com/TotallyInformation/web-components). Creating W3C web components to replace the VueJS ones - especially for the ones baked into the fe code. Noting that v5 already contains a non-Vue toast notification feature.
-* _STARTED_. Displaying and enabling updatable packages in the package manager. The data is now in place, the Editor panel needs updating.
+* Continuing to improve  the zero-code features.
+* Ensuring that control is easy from both front-end code and Node-RED flows. Creating visible elements and updating them should be easy and consistent.
+* Ensuring the information from the UI and the uibuilder client is easy to recover and use either in front-end code or in Node-RED.
+* Add further options for efficiency - such as easy ways to save updated HTML such that it will be used on new connections and reloads.
 * Continuing to improve the documentation. Updating details and changes, adding how-to's, moving some things from the WIKI. Improving language consistency.
-* Start moving towards ECMA Modules rather than CommonJS.
+* Creating more YouTube videos.
 
 Next immediate focus will be on:
 
 * Enabling instance npm scripts to be run from the Editor.
-* Enable templates to provide examples to the Node-RED example library. Still not sure how this will work.
-* Add *option* to auto-install npm dependencies on change of Template (and possibly run an install script).
-
-If you would like to contribute to any of these future features, please get in touch via the Node-RED forum or GitHub so that we can plan things out.
 
 ### Longer term focus
 
+_THIS NEEDS AN UPDATE_
+
 * Creating usable components that have standardised data interfaces. So that other developers can produce similar outputs with different frameworks but the data that is exchanged with Node-RED remains the same. These components should make things easy that flow designers might typically want to do (notifications, forms, charts, tables, drag-and-drop, etc.)
 * Creating a visual layout generator to bridge the gap between uibuilder and Dashboard. Ideally this would be non-framework specific but this seems a very unlikely goal to hit. Would be happy for this to either use web components, Svelte or VueJS.
+* Add *option* to auto-install npm dependencies on change of Template (and possibly run an install script).
 * Possibly the addition of a `uib-dashboard` node that uses data-driven composition. As a half-way house between code-driven and visual-layout approaches.
 
 ---
@@ -101,7 +86,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
   - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
 
-* **NEW NODE** - `uib-get` - Gets data from a page's DOM. Will also need change to FE library.
+* **NEW NODE** - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.
 
   e.g. Get the number of rows in a table or list. Get the ID of the first `div`. Get the current value of an input field.
 
@@ -114,42 +99,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Improve client `eventSend` to put form values into payload along with data-* attributes.
 
 ## Next - these are things that need to be done
-
-* Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
-  * Node.js v14 features - code updates to leverage the latest features
-    * Replace `||` default value tests with `??` .
-    * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
-
-    * https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
-    * [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
-    * [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)
-    * [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
-    * [calendar & numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
-    * Private Class methods (v14.5.1+)
-    * WeakReferences (v14.5.1+)
-    * Array flat and flat map
-    * Optional catch binding
-    * Object.fromEntries (helps make an object either from Map or from a key/value array)
-    * **ESM IS STILL EXPERIMENTAL**
-    * Corepack https://nodejs.org/dist/latest-v14.x/docs/api/corepack.html
-    * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
-
-  * Changes due once Node.js v16 live:
-    * JSON Modules (experimental in v14, full in 16.15.0)
-    * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
-    * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
-    * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
-    * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
-
-  * Changes due once Node.js v18 live
-    * Test Runner module (experimental 18.0.0)
-    * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
-    * Top-level await (experimental in v14 - behind flag, full in v18)
-
-  * Changes due once Node.js post v18
-    * Diagnostic channels (experimental in v14)
-    * AbortController and AbortSignal (experimental in v14)
-    * Fetch (Experimental 16.15.0, 18.0.0)
 
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
 
@@ -240,6 +189,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [x] get/set
     * [x] showMsg(boolean, parent=body)
     * [x] showStatus(boolean, parent=body)
+    * [ ] uiGet (probably better to implement the `uib-get` node?)
     * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
     * [ ] htmlSend()
     * [ ] getStore, setStore, removeStore
@@ -253,7 +203,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * `uiWatch(cssSelector)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too.
     * `uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.
     * `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
-    * `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send
+    * `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
+    * `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
 
   * Add flags to track if the optional Markdown-IT or DOMPurify libraries are loaded and available.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
@@ -408,6 +359,43 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Examples
   * Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
+
+* Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
+  * Node.js v14 features - code updates to leverage the latest features
+    * Replace `||` default value tests with `??` .
+    * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+
+    * https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
+    * [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+    * [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)
+    * [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
+    * [calendar & numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
+    * Private Class methods (v14.5.1+)
+    * WeakReferences (v14.5.1+)
+    * Array flat and flat map
+    * Optional catch binding
+    * Object.fromEntries (helps make an object either from Map or from a key/value array)
+    * **ESM IS STILL EXPERIMENTAL**
+    * Corepack https://nodejs.org/dist/latest-v14.x/docs/api/corepack.html
+    * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
+
+  * Changes due once Node.js v16 live:
+    * JSON Modules (experimental in v14, full in 16.15.0)
+    * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
+    * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
+    * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
+    * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
+
+  * Changes due once Node.js v18 live
+    * Test Runner module (experimental 18.0.0)
+    * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
+    * Top-level await (experimental in v14 - behind flag, full in v18)
+
+  * Changes due once Node.js post v18
+    * Diagnostic channels (experimental in v14)
+    * AbortController and AbortSignal (experimental in v14)
+    * Fetch (Experimental 16.15.0, 18.0.0)
+
 
 
 ## Ideas for releases further out
