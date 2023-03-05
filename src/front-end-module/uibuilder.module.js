@@ -2598,7 +2598,7 @@ export const Uib = class Uib {
         // Set up msg listener for the optional showMsg
         this.onChange('msg', (msg) => {
             if (this.#isShowMsg === true) {
-                const eMsg = document.getElementById('nrmsg')
+                const eMsg = document.getElementById('uib_last_msg')
                 if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg)
             }
         })
