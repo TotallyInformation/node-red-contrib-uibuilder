@@ -3180,7 +3180,7 @@ var Uib = (_a = class {
       showHide = !__privateGet(this, _isShowMsg);
     __privateSet(this, _isShowMsg, showHide);
     let slot = "Waiting for a message from Node-RED";
-    if (this.msg) {
+    if (this.msg && Object.keys(this.msg).length > 0) {
       slot = this.syntaxHighlight(this.msg);
     }
     if (showHide === false) {
@@ -3191,11 +3191,11 @@ var Uib = (_a = class {
       });
     } else {
       this._uiReplace({
-        parent,
         components: [
           {
             type: "pre",
             id: "uib_last_msg",
+            parent,
             attributes: {
               title: "Last message from Node-RED",
               class: "syntax-highlight"
@@ -3219,11 +3219,11 @@ var Uib = (_a = class {
       return;
     }
     const root = {
-      parent,
       components: [
         {
           type: "div",
           id: "uib_status",
+          parent,
           attributes: {
             title: "Current status of the uibuilder client",
             class: "text-smaller"
@@ -3420,7 +3420,6 @@ var Uib = (_a = class {
     }
     domevent.preventDefault();
     const target = domevent.currentTarget;
-    console.log(domevent);
     const props = {};
     Object.keys(target).forEach((key) => {
       if (key.startsWith("_"))
@@ -3441,10 +3440,12 @@ var Uib = (_a = class {
       )
     );
     const form = {};
+    const frmVals = [];
     if (target.form) {
       Object.values(target.form).forEach((frmEl, i2) => {
         const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
         if (id !== "") {
+          frmVals.push({ key: id, val: frmEl.value });
           form[id] = {
             "id": frmEl.id,
             "name": frmEl.name,
@@ -3455,7 +3456,7 @@ var Uib = (_a = class {
       });
     }
     const msg = {
-      payload: target.dataset,
+      payload: { ...target.dataset },
       _ui: {
         type: "eventSend",
         id: target.id !== "" ? target.id : void 0,
@@ -3477,8 +3478,13 @@ var Uib = (_a = class {
         tabId: this.tabId
       }
     };
+    if (frmVals.length > 0) {
+      frmVals.forEach((entry) => {
+        msg.payload[entry.key] = entry.val;
+      });
+    }
     if (domevent.type === "change")
-      msg._ui.newValue = domevent.target.value;
+      msg._ui.newValue = msg.payload.value = domevent.target.value;
     log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
     if (target.dataset.length === 0)
       log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();

@@ -1535,7 +1535,7 @@ export const Uib = class Uib {
         this.#isShowMsg = showHide
         let slot = 'Waiting for a message from Node-RED'
 
-        if (this.msg) {
+        if (this.msg && Object.keys(this.msg).length > 0) {
             slot = this.syntaxHighlight(this.msg)
         }
 
@@ -1547,11 +1547,11 @@ export const Uib = class Uib {
             })
         } else {
             this._uiReplace({
-                parent: parent,
                 components: [
                     {
                         type: 'pre',
                         id: 'uib_last_msg',
+                        parent: parent,
                         attributes: {
                             title: 'Last message from Node-RED',
                             class: 'syntax-highlight',
@@ -1583,11 +1583,11 @@ export const Uib = class Uib {
         }
 
         const root = {
-            parent: parent,
             components: [
                 {
                     type: 'div',
                     id: 'uib_status',
+                    parent: parent,
                     attributes: {
                         title: 'Current status of the uibuilder client',
                         class: 'text-smaller',
@@ -1894,7 +1894,7 @@ export const Uib = class Uib {
 
         // The target element
         const target = domevent.currentTarget
-        console.log(domevent)
+        // const targetId = target.id !== '' ? target.id : (target.name !== '' ? target.name : target.type)
 
         // Get target properties - only shows custom props not element default ones
         const props = {}
@@ -1917,6 +1917,7 @@ export const Uib = class Uib {
 
         // If target embedded in a form, include the form data
         const form = {}
+        const frmVals = []
         if ( target.form ) {
             // console.log(target.form)
             Object.values(target.form).forEach( (frmEl, i) => {
@@ -1932,6 +1933,7 @@ export const Uib = class Uib {
                 //     )
                 // )
                 if (id !== '') {
+                    frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
                     // form[id] = frmEl.value
                     form[id] = {
                         'id': frmEl.id,
@@ -1954,7 +1956,7 @@ export const Uib = class Uib {
         const msg = {
             // Each `data-xxxx` attribute is added as a property
             // - this may be an empty Object if no data attributes defined
-            payload: target.dataset,
+            payload: { ...target.dataset },
 
             _ui: {
                 type: 'eventSend',
@@ -1982,7 +1984,13 @@ export const Uib = class Uib {
             }
         }
 
-        if (domevent.type === 'change') msg._ui.newValue = domevent.target.value
+        if (frmVals.length > 0) {
+            frmVals.forEach( entry => {
+                msg.payload[entry.key] = entry.val
+            })
+        }
+
+        if (domevent.type === 'change') msg._ui.newValue = msg.payload.value = domevent.target.value
 
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
         if (target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
