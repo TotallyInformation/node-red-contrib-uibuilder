@@ -1,8 +1,10 @@
 /** Default Styles for uibuilder
  * see https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
+ * 
+ * @version: 1.17 2022-12-30
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
- * @created: 2022-01-30
+ * @created: 2022-05-02
  *
  * NOTES:
  * - Watch out for the order of loading of style sheets!
@@ -115,6 +117,7 @@ button, input[type="button" i] {
     cursor: pointer;
     text-align: center;
     transition: background 250ms ease-in-out, transform 150ms ease;
+    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
     border-radius: 8px;
@@ -238,10 +241,16 @@ a:visited {
 /*#region  Colours for Syntax Highlighted pre's */
 .syntax-highlight {
     color:white;
+    display:block;
     background-color:black;
     padding:5px 10px;
     font-family: Consolas, "ui-monospace", "Lucida Console", monospace;
+    font-size: smaller;
     white-space: pre;
+    width: 99%;
+    height: 22em;
+    overflow: auto;
+    resize: both;
 }
 .syntax-highlight > .key {color:#ffbf35}
 .syntax-highlight > .string {color:#5dff39;}

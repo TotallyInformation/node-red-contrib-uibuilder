@@ -1,8 +1,5 @@
 /** Default Styles for uibuilder - Light & Dark options
  *
- * ! WARNING: THIS VERSION IS NON-NORMATIVE !
- * ! THE LIVE VERSION WILL BE PART OF node-red-contrib-uibuilder v5.x !
- *
  * TODO: Add darker/lighter shades for variant colours for headers, etc.
  *
  * https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
@@ -11,7 +8,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 1.16 2022-05-22
+ * @version: 1.20 2023-03-04
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -30,9 +27,10 @@
  * - Include in your index.css file as `@import url("./uib-brand.css");`
  */
 
- /* :root applies to everything, :root.light is for manually selected light mode */
+/* :root applies to everything, :root.light is for manually selected light mode */
 :root, :root.light {
     color-scheme: light dark;
+    -–xxx: #00ff00;
 
     /* Create a checkable var - helps web components know if this stylesheet is loaded
      * Use this from general code: 
@@ -57,6 +55,8 @@
     --dark-lightness: calc(var(--light-lightness) * .75);
     --lightness-value: var(--light-lightness);
     --lightness: calc(var(--lightness-value) + var(--lightness-bias));
+
+    --border-radius: 0.5rem; /*8px;*/
 
     /*#region --- Brand --- */
     --brand: hsl(
@@ -391,32 +391,32 @@
     box-shadow: var(--shadow);
 }
 .info {
-    color: var(--text1);
-    background-color: var(--info);
+    color: var(--text1) !important;
+    background-color: var(--info) !important;
 }
 .success {
-    color: var(--text1);
-    background-color: var(--success);
+    color: var(--text1) !important;
+    background-color: var(--success) !important;
 }
 .warning {
-    color: var(--text1);
-    background-color: var(--warning);
+    color: var(--text1) !important;
+    background-color: var(--warning) !important;
 }
 .warn {
-    color: var(--text1);
-    background-color: var(--warn);
+    color: var(--text1) !important;
+    background-color: var(--warn) !important;
 }
 .failure {
-    color: var(--text1);
-    background-color: var(--failure);
+    color: var(--text1) !important;
+    background-color: var(--failure) !important;
 }
 .error {
-    color: var(--text1);
-    background-color: var(--error);
+    color: var(--text1) !important;
+    background-color: var(--error) !important;
 }
 .danger {
-    color: var(--text1);
-    background-color: var(--danger);
+    color: var(--text1) !important;
+    background-color: var(--danger) !important;
 }
 .primary {
     color: var(--primary-fg);
@@ -485,7 +485,8 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
     transition: background 250ms ease-in-out, transform 150ms ease;
     -webkit-appearance: none;
     -moz-appearance: none;
-    border-radius: 8px;
+    appearance: none;
+    border-radius: var(--border-radius);
     /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
     box-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
                 inset -2px -2px 3px rgba(0,0,0, .3);
@@ -503,35 +504,6 @@ button:active, input[type="button" i]:active, input[type="reset" i]:active, inpu
 input, button, textarea, select {
     font: inherit;
 }
-table {
-    border-collapse: collapse;
-    border: 1px solid var(--text3);
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-}
-thead th {
-    color: var(--text2);
-    background: var(--surface4);
-}
-tfoot th, tfoot td {
-    color: var(--text2);
-    background: var(--surface3);
-}
-th[scope=row] {
-    font-style: italic;
-    color: var(--text2);
-    background: var(--surface3);
-    background-blend-mode: lighten;
-}
-th, td {
-    padding: .5rem;
-    border: 1px solid var(--text4);
-}
-tbody tr:nth-child(even) {
-    color: var(--text2);
-    background: var(--surface2);
-    background-blend-mode: lighten;
-}
 blockquote {
     border: 1px solid var(--text3);
     padding: 0.3rem;
@@ -540,8 +512,108 @@ blockquote {
 code {
     font-size: 120%;
 }
+main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-width: 64rem;
+    margin-left:auto;
+    margin-right: auto;    
+}
+
+/* TODO odd/even li? */
 
 /*#endregion --- Basic reset --- */
+
+/*#region --- Tables --- */
+table {
+    border-collapse: collapse;
+    border: 1px solid var(--text3);
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+thead th, thead td {
+    color: var(--text2);
+    font-weight: bolder;
+    background: var(--surface4);
+}
+tfoot th, tfoot td {
+    color: var(--text2);
+    font-style: italic;
+    background: var(--surface4);
+}
+th[scope=row], tbody th {
+    font-style: italic;
+    color: var(--text2);
+    font-weight:lighter;
+    background: var(--surface4);
+    background-blend-mode: lighten;
+    text-align: left;
+}
+th, td {
+    padding: .5rem;
+    border: 1px solid var(--text4);
+}
+tbody tr:nth-child(even) {
+    color: var(--text2);
+    background-color: var(--surface3);
+    background-blend-mode: lighten;
+}
+/*#endregion --- Tables --- */
+
+/* TODO Try flexbox or grid instead of float? */
+/*#region --- Forms --- */
+form {
+    border: 1px solid var(--text3);
+    /* box-sizing: border-box; */
+    margin: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+}
+form label {
+    float: left;
+    width: 24%;
+}
+form input, form textarea, form select {
+    float: right;
+    width: 75%;
+    border-radius: var(--border-radius);
+    padding:0.2rem;
+    border: 1px solid var(--text3);
+}
+form select {
+    cursor: pointer;
+    transition: background 250ms ease-in-out, transform 150ms ease;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255, .3),
+                inset -1px -1px 2px rgba(0,0,0, .3);
+    background-color: 
+        /* var(--brand); */
+        hsl(
+            var(--brand-hue)
+            calc(60% * var(--saturation))
+            calc(100% * var(--lightness))
+        );
+}
+form div {
+    clear: both;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+form input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
+    float:none;
+    width:auto;
+}
+input[type="color"] {
+    min-height: 2.5rem;
+}
+@media screen and (max-width: 600px) {
+    form label, form input, form textarea {
+        width: 100%;
+        margin-top: 0;
+    }
+}
+/*#endregion --- Forms --- */
+
+/*#region ---- Utility ---- */
 
 .emoji { /* Nicer, cross-platform emoji's */
     font-family: 
@@ -554,6 +626,69 @@ code {
         "Android Emoji",
         sans-serif;
 }
+
+.noborder {
+    border: none;
+}
+
+.border {
+    border: 1px solid var(--text3);
+    border-radius: var(--border-radius);
+}
+
+.box {
+    border: 1px solid var(--text3);
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+}
+.box h2, .box h3, .box h4, .box h5, .box h6 {
+    margin-top: 0.5rem;
+}
+
+/* Apply to headings where you want a sub-title */
+.with-subtitle {
+    margin-bottom: 0;
+}
+/* Add the subtitle as a div with the Aria role */
+[role="doc-subtitle"] {
+    font-size: smaller;
+    font-style: italic;
+    margin-bottom: 1em;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+.centre {
+    margin-left:auto;
+    margin-right: auto;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+    50% {
+        opacity: .5;
+    }
+}
+
+.status-side-panel {
+    border-radius: 9999px;
+    width: .5rem;
+    height: 100%;
+    background-color: var(--surface1);
+}
+
+.text-smaller {
+    font-size: smaller;
+}
+.text-larger {
+    font-size: larger;
+}
+
+/*#endregion ---- Utility ---- */
 
 /*#region -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
 
@@ -569,7 +704,7 @@ code {
 .toast {
     /* all: unset;  */
     border: 4px solid var(--text3);
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow2);
     background-clip: border-box;
     box-sizing: border-box;
@@ -580,7 +715,7 @@ code {
 .toast.alert {
     /* all: unset;  */
     border: 4px solid var(--text3);
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow2);
     background-clip: border-box;
     box-sizing: border-box;
@@ -591,3 +726,71 @@ code {
 .toast-head {font-weight:bold}
 
 /*#endregion -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
+
+/*#region ---- Status Grid ---- */
+.status-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
+    gap:0.5rem;
+}
+.status-heading {
+  grid-column: 1/-1;
+}
+.status-link {
+  display:contents;
+  color:inherit;
+  text-decoration:none;
+}
+/*#endregion ---- ---- ---- */
+
+/*#region ---- Flex/Grid Layouts ---- */
+
+.grid {
+    display:grid;
+    gap:0.5rem;
+}
+.grid-2 {
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:0.5rem;
+}
+.grid-3 {
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); */
+    gap:0.5rem;
+}
+.grid-4 {
+    display:grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap:0.5rem;
+}
+
+.flex {
+    display: flex;
+    gap:0.5rem;
+}
+
+/*#endregion ---- ---- ---- */
+
+/*#region  Colours for Syntax Highlighted pre's */
+.syntax-highlight {
+    color:white;
+    display:block;
+    background-color:black;
+    padding:5px 10px;
+    font-family: Consolas, "ui-monospace", "Lucida Console", monospace;
+    font-size: smaller;
+    white-space: pre;
+    width: 99%;
+    height: 22em;
+    overflow: auto;
+    resize: both;
+}
+.syntax-highlight > .key {color:#ffbf35}
+.syntax-highlight > .string {color:#5dff39;}
+.syntax-highlight > .number {color:#70aeff;}
+.syntax-highlight > .boolean {color:#b993ff;}
+.syntax-highlight > .null {color:#93ffe4;}
+.syntax-highlight > .undefined {color:#ff93c9;}
+/*#endregion */

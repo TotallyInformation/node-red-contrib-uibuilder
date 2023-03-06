@@ -1,12 +1,12 @@
 /** This is the Front-End JavaScript for uibuilder  in HTML Module form
  * It provides a number of global objects that can be used in your own javascript.
- * @see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
+ * see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
  *
  * Please use the default index.js file for your own code and leave this as-is.
  * See Uib._meta for client version string
  */
 /*
-  Copyright (c) 2017-2022 Julian Knight (Totally Information)
+  Copyright (c) 2022-2023 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ import io from 'socket.io-client' // Note: Only works when using esbuild to bund
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.0.0-mod'
+const version = '6.1.0-mod'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -281,13 +281,15 @@ function urlJoin() {
 
 //#endregion --- Module-level utility functions --- //
 
-// Define and export the Uib class - note that an instance of the class is also exported in the wrap-up
+/** Define and export the Uib class - note that an instance of the class is also exported in the wrap-up
+ * @typicalname uibuilder
+ */
 export const Uib = class Uib {
 
     //#region private class vars
 
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
-    #connectedNum = 0
+    connectedNum = 0
     // event listener callbacks by property name
     // #events = {}
     // Socket.IO channel names
@@ -298,6 +300,10 @@ export const Uib = class Uib {
     #propChangeCallbacks = {}
     // onTopic event callbacks
     #msgRecvdByTopicCallbacks = {}
+    // Is Vue available?
+    isVue = false
+    // What version? Set in startup if Vue is loaded. Won't always work
+    vueVersion = undefined
     /** setInterval id holder for Socket.IO checkConnect
      * @type {number|null}
      */
@@ -306,6 +312,44 @@ export const Uib = class Uib {
     #MsgHandler
     // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
     _socket
+    // Placeholder for an observer that watches the whole DOM for changes - can't make a # var until # fns allowed in all browsers
+    _htmlObserver
+    // Has showMsg been turned on?
+    #isShowMsg = false
+    // Has showStatus been turned on?
+    #isShowStatus = false
+    // Externally accessible command functions (NB: Case must match)
+    #extCommands = [
+        'get', 'set', 'showMsg', 'showStatus'
+    ]
+
+    // What status variables to show via showStatus()
+    #showStatus = {
+        online: { 'var': 'online', 'label': 'Online?', 'description': 'Is the browser online?', },
+        ioConnected: { 'var': 'ioConnected', 'label': 'Socket.IO connected?', 'description': 'Is Socket.IO connected?', },
+        connectedNum: { 'var': 'connectedNum', 'label': '# reconnections', 'description': 'How many times has Socket.IO had to reconnect since last page load?', },
+
+        clientId: { 'var': 'clientId', 'label': 'Client ID', 'description': 'Static client unique id set in Node-RED. Only changes when browser is restarted.', },
+        tabId: { 'var': 'tabId', 'label': 'Browser tab ID', 'description': 'Static unique id for the browser\'s current tab', },
+        cookies: { 'var': 'cookies', 'label': 'Cookies', 'description': 'Cookies set in Node-RED', },
+        httpNodeRoot: { 'var': 'httpNodeRoot', 'label': 'httpNodeRoot', 'description': 'From Node-RED\' settings.js, affects URL\'s. May be wrong for pages in sub-folders', },
+        pageName: { 'var': 'pageName', 'label': 'Page name', 'description': 'Actual name of this page', },
+
+        ioNamespace: { 'var': 'ioNamespace', 'label': 'SIO namespace', 'description': 'Socket.IO namespace - unique to each uibuilder node instance', },
+        // ioPath: { 'var': 'ioPath', 'label': 'SIO path', 'description': '', }, // no longer needed in the modern client
+        socketError: { 'var': 'socketError', 'label': 'Socket error', 'description': 'If the Socket.IO connection has failed, says why', },
+
+        msgsSent: { 'var': 'msgsSent', 'label': '# msgs sent', 'description': 'How many standard messages have been sent to Node-RED?', },
+        msgsReceived: { 'var': 'msgsReceived', 'label': '# msgs received', 'description': 'How many standard messages have been received from Node-RED?', },
+        msgsSentCtrl: { 'var': 'msgsSentCtrl', 'label': '# control msgs sent', 'description': 'How many control messages have been sent to Node-RED?', },
+        msgsCtrlReceived: { 'var': 'msgsCtrlReceived', 'label': '# control msgs received', 'description': 'How many control messages have been received from Node-RED?', },
+        originator: { 'var': 'originator', 'label': 'Node Originator', 'description': 'If the last msg from Node-RED was from a `uib-sender` node, this will be its node id so that messasges can be returned to it', },
+        topic: { 'var': 'topic', 'label': 'Default topic', 'description': 'Optional default topic to be included in outgoing standard messages', },
+
+        started: { 'var': 'started', 'label': 'Has uibuilder client started?', 'description': 'Whether `uibuilder.start()` ran successfully. This should self-run and should not need to be run manually', },
+        version: { 'var': 'version', 'label': 'uibuilder client version', 'description': 'The version of the loaded uibuilder client library', },
+        serverTimeOffset: { 'var': 'serverTimeOffset', 'label': 'Server time offset (Hrs)', 'description': 'The number of hours difference between the Node-red server and the client', },
+    }
 
     //#endregion
 
@@ -322,6 +366,10 @@ export const Uib = class Uib {
     ctrlMsg = {}
     /** Is Socket.IO client connected to the server? */
     ioConnected = false
+    // Is the browser tab containing this page visible or not?
+    isVisible = false
+    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
+    lastNavType = ''
     /** Last std msg received from Node-RED */
     msg = {}
     /** number of messages sent to server since page load */
@@ -332,6 +380,8 @@ export const Uib = class Uib {
     msgsSentCtrl = 0
     /** number of control messages received from server since page load */
     msgsCtrlReceived = 0
+    /** Is the client online or offline? */
+    online = navigator.onLine
     /** last control msg object sent via uibuilder.send() @since v2.0.0-dev3 */
     sentCtrlMsg = {}
     /** last std msg object sent via uibuilder.send() */
@@ -340,15 +390,22 @@ export const Uib = class Uib {
     serverTimeOffset = null
     /** placeholder for a socket error message */
     socketError = null
-    /** Is the client online or offline? */
-    online = null
-    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
-    lastNavType = null
+    // tab identifier from session storage
+    tabId = ''
+    // Actual name of current page (set in constructor)
+    pageName = null
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
     //#region ---- Externally Writable (via .set method, read via .get method) ---- //
-    originator = ''     // Default originator node id
+    /** Default originator node id - empty string by default
+     * @type {string}
+     */
+    originator = ''
+    /** Default topic - used by send if set and no topic provided
+     * @type {(string|undefined)}
+     */
+    topic = undefined
     //#endregion ---- ---- ---- ---- //
 
     //#region ---- These are unlikely to be needed externally: ----
@@ -368,6 +425,8 @@ export const Uib = class Uib {
             clientId: this.clientId,
             pathName: window.location.pathname,
             pageName: undefined,
+            tabId: undefined,
+            lastNavType: undefined,
         },
         transportOptions: {
             // Can only set headers when polling
@@ -380,8 +439,6 @@ export const Uib = class Uib {
     }
     //#endregion -- not external --
 
-    //#endregion --- End of variables ---
-
     //#region ------- Static metadata ------- //
     static _meta = {
         version: version,
@@ -391,6 +448,8 @@ export const Uib = class Uib {
 
     get meta() { return Uib._meta }
     //#endregion ---- ---- ---- ---- //
+
+    //#endregion --- End of variables ---
 
     //#region ------- Getters and Setters ------- //
 
@@ -404,7 +463,7 @@ export const Uib = class Uib {
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
      * @param {*} val _
-     * @returns {*} Input value
+     * @returns {*|undefined} Input value
      */
     set(prop, val) {
         // Check for excluded properties - we don't want people to set these
@@ -430,7 +489,7 @@ export const Uib = class Uib {
     /** Function to get the value of a uibuilder property
      * Example: uibuilder.get('msg')
      * @param {string} prop The name of the property to get as long as it does not start with a _ or #
-     * @returns {*} The current value of the property
+     * @returns {*|undefined} The current value of the property
      */
     get(prop) {
         if (prop.startsWith('_') || prop.startsWith('#')) {
@@ -439,11 +498,64 @@ export const Uib = class Uib {
         }
         if (prop === 'version') return Uib._meta.version
         if (prop === 'msgsCtrl') return this.msgsCtrlReceived
-        if (prop === 'reconnections') return this.#connectedNum
+        if (prop === 'reconnections') return this.connectedNum
         if (this[prop] === undefined) {
             log('warn', 'Uib:get', `get() - property "${prop}" does not exist`)()
         }
         return this[prop]
+    }
+
+    /** Write to localStorage if possible. console error output if can't write
+     * Also uses this.storePrefix
+     * @example
+     *   uibuilder.setStore('fred', 42)
+     *   console.log(uibuilder.getStore('fred'))
+     * @param {string} id localStorage var name to be used (prefixed with 'uib_')
+     * @param {*} value value to write to localstore
+     * @returns {boolean} True if succeeded else false
+     */
+    setStore(id, value) {
+        if (typeof value === 'object') {
+            try {
+                value = JSON.stringify(value)
+            } catch (e) {
+                log('error', 'Uib:setStore', 'Cannot stringify object, not storing. ', e)()
+                return false
+            }
+        }
+        try {
+            localStorage.setItem(this.storePrefix + id, value)
+            return true
+        } catch (e) {
+            log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
+            return false
+        }
+    } // --- end of setStore --- //
+
+    /** Attempt to get and re-hydrate a key value from localStorage
+     * Note that all uib storage is automatically prefixed using this.storePrefix
+     * @param {*} id The key of the value to attempt to retrieve
+     * @returns {*|null|undefined} The re-hydrated value of the key or null if key not found, undefined on error
+     */
+    getStore(id) {
+        try {
+            // @ts-ignore
+            return JSON.parse(localStorage.getItem(this.storePrefix + id))
+        } catch (e) { }
+        try {
+            return localStorage.getItem(this.storePrefix + id)
+        } catch (e) {
+            return undefined
+        }
+    }
+
+    /** Remove a given id from the uib keys in localStorage
+     * @param {*} id The key to remove
+     */
+    removeStore(id) {
+        try {
+            localStorage.removeItem(this.storePrefix + id)
+        } catch (e) { }
     }
 
     //#endregion ------- -------- ------- //
@@ -465,7 +577,7 @@ export const Uib = class Uib {
     /** Register on-change event listeners for uibuilder tracked properties
      * Make it possible to register a function that will be run when the property changes.
      * Note that you can create listeners for non-existant properties
-     * @example: uibuilder.onChange('msg', function(msg){ console.log('uibuilder.msg changed! It is now: ', msg) })
+     * @example: uibuilder.onChange('msg', (msg) => { console.log('uibuilder.msg changed! It is now: ', msg) })
      *
      * @param {string} prop The property of uibuilder that we want to monitor
      * @param {Function} callback The function that will run when the property changes, parameter is the new value of the property after change
@@ -600,7 +712,9 @@ export const Uib = class Uib {
         }
     }
 
-    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element */
+    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+     * @type {HTMLElement}
+     */
     $ = document.querySelector.bind(document)
 
     /** Set the default originator. Set to '' to ignore. Used with uib-sender.
@@ -609,48 +723,6 @@ export const Uib = class Uib {
     setOriginator(originator = '') {
         this.set('originator', originator)
     } // ---- End of setOriginator ---- //
-
-    /** Write to localStorage if possible. console error output if can't write
-     * Also uses this.storePrefix
-     * @example
-     *   uibuilder.setStore('fred', 42)
-     *   console.log(uibuilder.getStore('fred'))
-     * @param {string} id localStorage var name to be used (prefixed with 'uib_')
-     * @param {*} value value to write to localstore
-     * @returns {boolean} True if succeeded else false
-     */
-    setStore(id, value) {
-        if (typeof value === 'object') {
-            try {
-                value = JSON.stringify(value)
-            } catch (e) {
-                log('error', 'Uib:setStore', 'Cannot stringify object, not storing. ', e)()
-                return false
-            }
-        }
-        try {
-            localStorage.setItem(this.storePrefix + id, value)
-            return true
-        } catch (e) {
-            log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
-            return false
-        }
-    } // --- end of setStore --- //
-
-    getStore(id) {
-        try {
-            // @ts-ignore
-            return JSON.parse(localStorage.getItem(this.storePrefix + id))
-        } catch (e) {
-            return localStorage.getItem(this.storePrefix + id)
-        }
-    }
-
-    removeStore(id) {
-        try {
-            localStorage.removeItem(this.storePrefix + id)
-        } catch (e) { }
-    }
 
     /** HTTP Ping/Keep-alive - makes a call back to uibuilder's ExpressJS server and receives a 204 response
      * Can be used to keep sessions alive.
@@ -695,6 +767,35 @@ export const Uib = class Uib {
         log(...arguments)()
     }
 
+    /** Convert JSON to Syntax Highlighted HTML
+     * @param {object} json A JSON/JavaScript Object
+     * @returns {html} Object reformatted as highlighted HTML
+     */
+    syntaxHighlight(json) {
+        json = JSON.stringify(json, undefined, 4)
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
+        json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) { // eslint-disable-line prefer-named-capture-group
+            let cls = 'number'
+            if ((/^"/).test(match)) {
+                if ((/:$/).test(match)) {
+                    cls = 'key'
+                } else {
+                    cls = 'string'
+                }
+            } else if ((/true|false/).test(match)) {
+                cls = 'boolean'
+            } else if ((/null/).test(match)) {
+                cls = 'null'
+            }
+            return '<span class="' + cls + '">' + match + '</span>'
+        })
+        return json
+    } // --- End of syntaxHighlight --- //
+
+    //#endregion -------- -------- -------- //
+
+    //#region ------- UI handlers --------- //
+
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
      */
@@ -707,34 +808,31 @@ export const Uib = class Uib {
         this._uiManager(msg)
     }
 
-    //#endregion -------- -------- -------- //
-
-    //#region ------- UI handlers --------- //
-
+    // TODO Add multi-slot
     /** Replace or add an HTML element's slot from text or an HTML string
      * Will use DOMPurify if that library has been loaded to window.
-     * @param {*} ui Single entry from the msg._ui property
+     * param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
      * @param {*} component The component we are trying to add/replace
      */
-    replaceSlot(ui, el, component) {
+    replaceSlot(el, component) {
+        if (!component.slot) return
+
         // If DOMPurify is loaded, apply it now
         if (window['DOMPurify']) component.slot = window['DOMPurify'].sanitize(component.slot)
         // Set the component content to the msg.payload or the slot property
-        if (component.slot !== undefined && component.slot !== null && component.slot !== '') {
-            el.innerHTML = component.slot ? component.slot : ui.payload
-        }
+        el.innerHTML = component.slot
     }
 
     /** Replace or add an HTML element's slot from a Markdown string
      * Only does something if the markdownit library has been loaded to window.
      * Will use DOMPurify if that library has been loaded to window.
-     * @param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
      * @param {*} component The component we are trying to add/replace
      */
-    replaceSlotMarkdown(ui, el, component) {
+    replaceSlotMarkdown(el, component) {
         if (!window['markdownit']) return
+        if (!component.slotMarkdown) return
 
         const opts = { // eslint-disable-line object-shorthand
             html: true,
@@ -752,13 +850,12 @@ export const Uib = class Uib {
             },
         }
         const md = window['markdownit'](opts)
+        // Convert from markdown to HTML
         component.slotMarkdown = md.render(component.slotMarkdown)
         // If DOMPurify is loaded, apply it now
         if (window['DOMPurify']) component.slotMarkdown = window['DOMPurify'].sanitize(component.slotMarkdown)
-        // Set the component content to the msg.payload or the slot property
-        if (component.slotMarkdown !== undefined && component.slotMarkdown !== null && component.slotMarkdown !== '') {
-            el.innerHTML += component.slotMarkdown ? component.slotMarkdown : ui.payload
-        }
+        // Set the component content to the the converted slotMarkdown property
+        el.innerHTML = component.slotMarkdown
     }
 
     /** Attach a new remote script to the end of HEAD synchronously
@@ -838,8 +935,8 @@ export const Uib = class Uib {
         if ( !ui.title && msg.topic ) ui.title = msg.topic
         if ( ui.title ) content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`
 
-        // Allow for variants
-        if ( !ui.variant || !['', 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'].includes(ui.variant)) ui.variant = ''
+        // Allow for variants - @since v6.1 - don't bother - since this now sets CSS class, not tied to bootstrap-vue
+        // if ( !ui.variant || !['', 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'].includes(ui.variant)) ui.variant = ''
 
         // Toasts auto-hide by default after 10s but alerts do not auto-hide
         if ( ui.noAutohide ) ui.noAutoHide = ui.noAutohide
@@ -866,6 +963,8 @@ export const Uib = class Uib {
             toaster.id = 'toaster'
             toaster.title = 'Click to clear all notifcations'
             toaster.setAttribute('class', 'toaster')
+            toaster.setAttribute('role', 'dialog')
+            toaster.setAttribute('arial-label', 'Toast message')
             toaster.onclick = function() {
                 // @ts-ignore
                 toaster.remove()
@@ -942,99 +1041,175 @@ export const Uib = class Uib {
 
     } // --- end of loadui
 
+    /** Enhance an HTML element that is being composed with ui data
+     *  such as ID, attribs, event handlers, custom props, etc.
+     * @param {HTMLElement} el HTML Element to enhance
+     * @param {*} comp Individual uibuilder ui component spec
+     */
+    _uiComposeComponent(el, comp) {
+        // Add attributes
+        if (comp.attributes) {
+            Object.keys(comp.attributes).forEach((attrib) => {
+                el.setAttribute(attrib, comp.attributes[attrib])
+            })
+        }
+
+        // ID if set
+        if (comp.id) el.setAttribute('id', comp.id)
+
+        // Add event handlers
+        if (comp.events) {
+            Object.keys(comp.events).forEach((type) => {
+                // @ts-ignore  I'm forever getting this wrong!
+                if (type.toLowerCase === 'onclick') type = 'click'
+                // Add the event listener - hate eval but it is the only way I can get it to work
+                try {
+                    el.addEventListener(type, (evt) => {
+                        // Use new Function to ensure that esbuild works: https://esbuild.github.io/content-types/#direct-eval
+                        (new Function('evt', `${comp.events[type]}(evt)`))(evt) // eslint-disable-line no-new-func
+                    })
+                    // newEl.setAttribute( 'onClick', `${comp.events[type]}()` )
+                } catch (err) {
+                    log('error', 'Uib:_uiComposeComponent', `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)()
+                }
+            })
+        }
+
+        // Add custom properties to the dataset
+        if (comp.properties) {
+            Object.keys(comp.properties).forEach((prop) => {
+                // TODO break a.b into sub properties
+                el[prop] = comp.properties[prop]
+            })
+        }
+
+        //#region Add Slot content to innerHTML
+        if (comp.slot) {
+            this.replaceSlot(el, comp)
+        }
+        //#endregion
+
+        // TODO Add multi-slot capability
+
+        //#region Add Slot Markdown content to innerHTML IF marked library is available
+        if (comp.slotMarkdown) {
+            this.replaceSlotMarkdown(el, comp)
+        }
+        //#endregion
+    }
+
+    /** Extend an HTML Element with appended elements using ui components
+     * NOTE: This fn follows a strict hierarchy of added components.
+     * @param {HTMLElement} parentEl The parent HTML Element we want to append to
+     * @param {*} components The ui component(s) we want to add
+     */
+    _uiExtendEl(parentEl, components) {
+        components.forEach( (compToAdd, i) => {
+            let newEl
+
+            if (compToAdd.type === 'html') {
+                newEl = parentEl
+                // newEl.outerHTML = compToAdd.slot
+                parentEl.innerHTML = compToAdd.slot
+            } else {
+                newEl = document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
+                // Updates newEl
+                this._uiComposeComponent(newEl, compToAdd)
+                parentEl.appendChild(newEl)
+            }
+
+            // If nested components, go again - but don't pass payload to sub-components
+            if (compToAdd.components) {
+                this._uiExtendEl(newEl, compToAdd.components)
+            }
+        } )
+    }
+
+    // Vue dynamic inserts Don't really work ...
+    // _uiAddVue(ui, isRecurse) {
+
+    //     // must be Vue
+    //     // must have only 1 root element
+    //     const compToAdd = ui.components[0]
+    //     const newEl = document.createElement(compToAdd.type)
+
+    //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
+    //     this._uiComposeComponent(newEl, compToAdd)
+
+    //     // If nested components, go again - but don't pass payload to sub-components
+    //     if (compToAdd.components) {
+    //         this._uiExtendEl(newEl, compToAdd.components)
+    //     }
+
+    //     console.log('MAGIC: ', this.magick, newEl, newEl.outerHTML)
+    //     this.set('magick', newEl.outerHTML)
+
+    //     // if (compToAdd.id) newEl.setAttribute('ref', compToAdd.id)
+    //     // if (elParent.id) newEl.setAttribute('data-parent', elParent.id)
+    // }
+
     // TODO Add check if ID already exists
     // TODO Allow single add without using components array
     /** Handle incoming msg._ui add requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+     * @param {boolean} isRecurse Is this a recursive call?
      */
-    _uiAdd(ui) {
+    _uiAdd(ui, isRecurse) {
         log('trace', 'Uib:_uiManager:add', 'Starting _uiAdd')()
 
-        // console.log('>> ui >> ', ui)
+        // Vue dynamic inserts Don't really work ...
+        // if (this.#isVue && !isRecurse) {
+        //     this._uiAddVue(ui, false)
+        //     return
+        // }
 
-        ui.components.forEach((compToAdd) => {
-            // Create the new component
-            const newEl = document.createElement(compToAdd.type)
+        ui.components.forEach((compToAdd, i) => {
 
-            // Add attributes
-            if (compToAdd.attributes) {
-                Object.keys(compToAdd.attributes).forEach((attrib) => {
-                    newEl.setAttribute(attrib, compToAdd.attributes[attrib])
-                })
-            }
+            /** @type {HTMLElement} Create the new component */
+            const newEl = document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
 
-            // ID if set
-            if (compToAdd.id) newEl.setAttribute('id', compToAdd.id)
+            if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
 
-            // Add event handlers
-            if (compToAdd.events) {
-                Object.keys(compToAdd.events).forEach((type) => {
-                    // @ts-ignore  I'm forever getting this wrong!
-                    if (type.toLowerCase === 'onclick') type = 'click'
-                    // Add the event listener - hate eval but it is the only way I can get it to work
-                    try {
-                        newEl.addEventListener(type, (evt) => {
-                            // Use new Function to ensure that esbuild works: https://esbuild.github.io/content-types/#direct-eval
-                            (new Function('evt', `${compToAdd.events[type]}(evt)`))(evt) // eslint-disable-line no-new-func
-                        })
-                        // newEl.setAttribute( 'onClick', `${compToAdd.events[type]}()` )
-                    } catch (err) {
-                        log('error', 'Uib:_uiAdd', `Add event '${type}' for element '${compToAdd.type}': Cannot add event handler. ${err.message}`)()
-                    }
-                })
-            }
+            // const parser = new DOMParser()
+            // const newDoc = parser.parseFromString(compToAdd.slot, 'text/html')
+            // console.log(compToAdd, newDoc.body)
 
-            // Add custom properties to the dataset
-            if (compToAdd.properties) {
-                Object.keys(compToAdd.properties).forEach((prop) => {
-                    // TODO break a.b into sub properties
-                    newEl[prop] = compToAdd.properties[prop]
-                })
-            }
+            this._uiComposeComponent(newEl, compToAdd)
 
-            //#region Add Slot content to innerHTML
-            if (!compToAdd.slot) compToAdd.slot = ui.payload
-            if (compToAdd.slot) {
-                this.replaceSlot(ui, newEl, compToAdd)
-            }
-            //#endregion
-
-            // TODO Add multi-slot capability
-
-            //#region Add Slot Markdown content to innerHTML IF marked library is available
-            if (compToAdd.slotMarkdown) {
-                this.replaceSlotMarkdown(ui, newEl, compToAdd)
-            }
-            //#endregion
-
-            // Where to add the new element?
+            /** @type {HTMLElement} Where to add the new element? */
             let elParent
             if (compToAdd.parentEl) {
                 elParent = compToAdd.parentEl
             } else if (ui.parentEl) {
                 elParent = ui.parentEl
-            } else if (compToAdd.parent || ui.parent) {
-                const parent = compToAdd.parent ? compToAdd.parent : ui.parent
-                elParent = document.querySelector(parent)
-                if (!elParent) {
-                    log('info', 'Uib:_uiAdd', `Parent element '${parent}' not found, adding to body`)()
-                    elParent = document.querySelector('body')
-                }
-            } else {
-                log('info', 'Uib:_uiAdd', 'No parent specified, adding to body')()
+            } else if (compToAdd.parent) {
+                elParent = document.querySelector(compToAdd.parent)
+            } else if (ui.parent) {
+                elParent = document.querySelector(ui.parent)
+            }
+            if (!elParent) {
+                log('info', 'Uib:_uiAdd', 'No parent found, adding to body')()
                 elParent = document.querySelector('body')
             }
 
-            // Append to the required parent
-            elParent.appendChild(newEl)
+            if ( compToAdd.position && compToAdd.position === 'first') {
+                // Insert new el before the first child of the parent. Ref: https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore#example_3
+                elParent.insertBefore(newEl, elParent.firstChild)
+            } else if ( compToAdd.position && Number.isInteger(Number(compToAdd.position)) ) {
+                elParent.insertBefore(newEl, elParent.children[compToAdd.position])
+            } else {
+                // Append to the required parent
+                elParent.appendChild(newEl)
+            }
 
             // If nested components, go again - but don't pass payload to sub-components
             if (compToAdd.components) {
-                this._uiAdd({
-                    method: ui.method,
-                    parentEl: newEl,
-                    components: compToAdd.components,
-                })
+                // this._uiAdd({
+                //     method: ui.method,
+                //     parentEl: newEl,
+                //     components: compToAdd.components,
+                // }, true)
+                this._uiExtendEl(newEl, compToAdd.components)
             }
         })
 
@@ -1043,41 +1218,100 @@ export const Uib = class Uib {
     // TODO Add better tests for failures (see comments)
     /** Handle incoming _ui remove requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+     * @param {boolean} all Optional, default=false. If true, will remove ALL found elements, otherwise only the 1st is removed
      */
-    _uiRemove(ui) {
+    _uiRemove(ui, all = false) {
         ui.components.forEach((compToRemove) => {
-            try {
-                document.querySelector(compToRemove).remove()
-            } catch (err) {
-                // Could not remove. Cannot read properties of null <= no need to report this one
-                // Could not remove. Failed to execute 'querySelector' on 'Document': '##testbutton1' is not a valid selector
-                log('trace', 'Uib:_uiRemove', `Could not remove. ${err.message}`)()
-            }
+            let els
+            if (all !== true) els = [document.querySelector(compToRemove)]
+            else els = document.querySelectorAll(compToRemove)
+
+            els.forEach( el => {
+                try {
+                    el.remove()
+                } catch (err) {
+                    // Could not remove. Cannot read properties of null <= no need to report this one
+                    // Could not remove. Failed to execute 'querySelector' on 'Document': '##testbutton1' is not a valid selector
+                    log('trace', 'Uib:_uiRemove', `Could not remove. ${err.message}`)()
+                }
+            })
         })
     } // --- end of _uiRemove ---
 
+    /** Handle incoming _ui replace requests
+     * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+     */
+    _uiReplace(ui) {
+        log('trace', '_uiReplace', 'Starting')()
+
+        ui.components.forEach((compToReplace, /** @type {number} */ i) => {
+            log('trace', `_uiReplace:components-forEach:${i}`, 'Component to replace: ', compToReplace)()
+
+            /** @type {HTMLElement} */
+            let elToReplace
+
+            // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. FIRST element matching is updated.
+            if ( compToReplace.id ) {
+                elToReplace = document.getElementById(compToReplace.id) // .querySelector(`#${compToReplace.id}`)
+            } else if ( compToReplace.selector || compToReplace.select ) {
+                elToReplace = document.querySelector(compToReplace.selector)
+            } else if ( compToReplace.name ) {
+                elToReplace = document.querySelector(`[name="${compToReplace.name}"]`)
+            } else if ( compToReplace.type ) {
+                elToReplace = document.querySelector(compToReplace.type)
+            }
+
+            log('trace', `_uiReplace:components-forEach:${i}`, 'Element to replace: ', elToReplace)()
+
+            // Nothing was found so ADD the element instead
+            if ( elToReplace === undefined || elToReplace === null ) {
+                log('trace', `Uib:_uiReplace:components-forEach:${i}:noReplace`, 'Cannot find the DOM element. Adding instead.', compToReplace)()
+                this._uiAdd({ components: [compToReplace] }, false)
+                return
+            }
+
+            /** @type {HTMLElement} Create the new component */
+            const newEl = document.createElement(compToReplace.type === 'html' ? 'div' : compToReplace.type)
+            // const newEl = document.createElement(compToReplace.type)
+
+            // Updates the newEl and maybe the ui
+            this._uiComposeComponent(newEl, compToReplace)
+
+            // Replace the current element
+            elToReplace.replaceWith(newEl)
+
+            // If nested components, go again - but don't pass payload to sub-components
+            if (compToReplace.components) {
+                this._uiExtendEl(newEl, compToReplace.components)
+            }
+        })
+
+    } // --- end of _uiReplace ---
+
     // TODO Allow single add without using components array
     // TODO Allow sub-components
+    // TODO Add multi-slot capability
     /** Handle incoming _ui update requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiUpdate(ui) {
         log('trace', 'Uib:_uiManager:update', 'Starting _uiUpdate')()
 
-        if ( !ui.components ) ui.components = [ui]
+        // We allow an update not to actually need to spec a component
+        if ( !ui.components ) ui.components = [Object.assign({}, ui)]
 
-        ui.components.forEach((compToUpd) => {
+        ui.components.forEach((compToUpd, i) => {
+            log('trace', '_uiUpdate:components-forEach', `Component #${i}`, compToUpd)()
 
             /** @type {NodeListOf<Element>} */
             let elToUpd
 
-            // Either the id, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
-            if ( compToUpd.parentEl ) { // Handles nested components
-                // ! NOT WORKING
-                console.log('>> parentEl >>', compToUpd.parentEl, ui)
-                elToUpd = compToUpd.parentEl[0]
-            } else if ( compToUpd.id ) {
+            // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
+            if ( compToUpd.id ) {
+                // NB We don't use get by id because this way the code is simpler later on
                 elToUpd = document.querySelectorAll(`#${compToUpd.id}`)
+            } else if ( compToUpd.selector || compToUpd.select ) {
+                elToUpd = document.querySelectorAll(compToUpd.selector)
             } else if ( compToUpd.name ) {
                 elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`)
             } else if ( compToUpd.type ) {
@@ -1086,9 +1320,11 @@ export const Uib = class Uib {
 
             // @ts-ignore Nothing was found so give up
             if ( elToUpd === undefined || elToUpd.length < 1 ) {
-                log('error', 'Uib:_uiManager:update', 'Cannot find the DOM element', compToUpd)()
+                log('warn', 'Uib:_uiManager:update', 'Cannot find the DOM element. Ignoring.', compToUpd)()
                 return
             }
+
+            log('trace', '_uiUpdate:components-forEach', `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)()
 
             // Process slot first to allow for named slots
             if (compToUpd.properties) {
@@ -1121,6 +1357,9 @@ export const Uib = class Uib {
             if (compToUpd.attributes) {
                 Object.keys(compToUpd.attributes).forEach((attrib) => {
                     elToUpd.forEach( el => {
+                        // For values, set the actual value as well since the attrib only changes the DEFAULT value
+                        // @ts-ignore
+                        if (attrib === 'value') el.value = compToUpd.attributes[attrib]
                         el.setAttribute(attrib, compToUpd.attributes[attrib])
                     })
                 })
@@ -1129,19 +1368,20 @@ export const Uib = class Uib {
             if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload
             if (compToUpd.slot) {
                 elToUpd.forEach( el => {
-                    this.replaceSlot(ui, el, compToUpd)
+                    this.replaceSlot(el, compToUpd)
                 })
             }
 
             if (compToUpd.slotMarkdown) {
                 elToUpd.forEach( el => {
-                    this.replaceSlotMarkdown(ui, el, compToUpd)
+                    this.replaceSlotMarkdown(el, compToUpd)
                 })
             }
 
             // If nested components, go again - but don't pass payload to sub-components
             if (compToUpd.components) {
                 elToUpd.forEach( el => {
+                    log('trace', '_uiUpdate:components', 'el', el)()
                     this._uiUpdate({
                         method: ui.method,
                         parentEl: el,
@@ -1232,12 +1472,22 @@ export const Uib = class Uib {
 
             switch (ui.method) {
                 case 'add': {
-                    this._uiAdd(ui)
+                    this._uiAdd(ui, false)
                     break
                 }
 
                 case 'remove': {
-                    this._uiRemove(ui)
+                    this._uiRemove(ui, false)
+                    break
+                }
+
+                case 'removeAll': {
+                    this._uiRemove(ui, true)
+                    break
+                }
+
+                case 'replace': {
+                    this._uiReplace(ui)
                     break
                 }
 
@@ -1275,6 +1525,250 @@ export const Uib = class Uib {
 
     } // --- end of _uiManager ---
 
+    /** Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
+     * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
+     * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
+     * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     */
+    showMsg(showHide, parent = 'body') {
+        if ( showHide === undefined ) showHide = !this.#isShowMsg
+        this.#isShowMsg = showHide
+        let slot = 'Waiting for a message from Node-RED'
+
+        if (this.msg && Object.keys(this.msg).length > 0) {
+            slot = this.syntaxHighlight(this.msg)
+        }
+
+        if ( showHide === false ) {
+            this._uiRemove( {
+                components: [
+                    '#uib_last_msg',
+                ],
+            })
+        } else {
+            this._uiReplace({
+                components: [
+                    {
+                        type: 'pre',
+                        id: 'uib_last_msg',
+                        parent: parent,
+                        attributes: {
+                            title: 'Last message from Node-RED',
+                            class: 'syntax-highlight',
+                        },
+                        slot: slot,
+                    }
+                ]
+            })
+        }
+    }
+
+    /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
+     * The card has the id `uib_status`.
+     * The display is updated by an event listener created in the class constructor.
+     * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
+     * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     */
+    showStatus(showHide, parent = 'body') {
+        if ( showHide === undefined ) showHide = !this.#isShowStatus
+        this.#isShowStatus = showHide
+
+        if ( showHide === false ) {
+            this._uiRemove( {
+                components: [
+                    '#uib_status',
+                ],
+            })
+            return
+        }
+
+        const root = {
+            components: [
+                {
+                    type: 'div',
+                    id: 'uib_status',
+                    parent: parent,
+                    attributes: {
+                        title: 'Current status of the uibuilder client',
+                        class: 'text-smaller',
+                    },
+                    components: [
+                        {
+                            'type': 'table',
+                            'components': [
+                                {
+                                    'type': 'tbody',
+                                    'components': []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        const details = root.components[0].components[0].components[0].components
+
+        Object.values(this.#showStatus).forEach( entry => {
+            details.push({
+                'type': 'tr',
+                'attributes': {
+                    title: entry.description,
+                },
+                'components': [
+                    {
+                        'type': 'th',
+                        'slot': entry.label,
+                    },
+                    {
+                        'type': 'td',
+                        'attributes': {
+                            'data-varType': entry.var,
+                        },
+                        'slot': entry.var === 'version' ? Uib._meta.version : JSON.stringify(this[entry.var]),
+                    }
+                ],
+            })
+        })
+
+        this._uiReplace(root)
+    }
+
+    /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
+     * @param {string} cssSelector Identify the DOM element to get data from
+     * @param {string} [propName] Optional. Specific name of property to get from the element
+     * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+     */
+    uiGet(cssSelector, propName = null) {
+        // The type cast below not really correct but it gets rid of the other typescript errors
+        const selection = /** @type {NodeListOf<HTMLInputElement>} */ (document.querySelectorAll(cssSelector))
+
+        const out = []
+
+        selection.forEach( node => {
+            // Specific property asked for ...
+            if (propName !== null && propName !== '') {
+                const prop = propName.split('.').reduce((prev, cur) => prev[cur], node)
+                // Nightmare of different object types in a DOM Element!
+                if (prop.constructor.name === 'NamedNodeMap') { // Attributes
+                    const p = {}
+                    for (const key of prop) {
+                        p[key.name] = prop[key.name].value
+                    }
+                    out.push(p)
+                } else if (!prop.constructor.name.toLowerCase().includes('map')) { // Ordinary properties
+                    out.push({
+                        [propName]: prop
+                    })
+                } else { // Other MAP types
+                    const p = {}
+                    for (const key in prop) {
+                        p[key] = prop[key]
+                    }
+                    out.push(p)
+                }
+            } else { // Otherwise, grab everything useful
+                const len = out.push({
+                    id: node.id === '' ? undefined : node.id,
+                    name: node.name,
+                    children: node.childNodes.length,
+                    type: node.nodeName,
+                    attributes: undefined,
+
+                    isUserInput: node.value === undefined ? false : true, // eslint-disable-line no-unneeded-ternary
+                    userInput: node.value === undefined ? undefined : { // eslint-disable-line multiline-ternary
+                        value: node.value,
+                        validity: undefined,
+                        willValidate: node.willValidate,
+                        valueAsDate: node.valueAsDate,
+                        valueAsNumber: node.valueAsNumber,
+                        type: node.type,
+                    },
+                })
+                const thisOut = out[len - 1]
+                if ( node.attributes.length > 0 ) thisOut.attributes = {}
+                // @ts-ignore
+                for (const attrib of node.attributes) {
+                    if (attrib.name !== 'id') {
+                        thisOut.attributes[attrib.name] = node.attributes[attrib.name].value
+                    }
+                }
+                if ( node.value !== undefined ) thisOut.userInput.validity = {}
+                for (const v in node.validity) {
+                    thisOut.userInput.validity[v] = node.validity[v]
+                }
+            }
+        })
+
+        return out
+    } // --- end of uiGet ---
+
+    //#endregion -------- -------- -------- //
+
+    //#region ------- HTML cache and DOM watch --------- //
+
+    /** Clear the saved DOM from localStorage */
+    clearHtmlCache() {
+        this.removeStore('htmlCache')
+        log('trace', 'uibuilder.module.js:clearHtmlCache', 'HTML cache cleared')()
+    }
+
+    /** Restore the complete DOM (the whole web page) from browser localStorage if available */
+    restoreHtmlFromCache() {
+        // Is the html cached? If so, restore it
+        const htmlCache = this.getStore('htmlCache')
+        if (htmlCache) {
+            const targetNode = document.getElementsByTagName('html')[0]
+            // Restore the entire HTML
+            targetNode.innerHTML = htmlCache
+            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'Restored HTML from cache')()
+        } else {
+            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'No cache to restore')()
+        }
+    }
+
+    /** Save the current DOM state to browser localStorage.
+     * localStorage is persistent and so can be recovered even after a browser restart.
+     */
+    saveHtmlCache() {
+        // Save the updated entire HTML in localStorage
+        this.setStore('htmlCache', document.documentElement.innerHTML)
+    }
+
+    /** Use the Mutation Observer browser API to watch for and save changes to the HTML
+     * Once the observer is created, it will be reused.
+     * Sending true or undefined will turn on the observer, false turns it off.
+     * saveHtmlCache is called whenever anything changes in the dom. This allows
+     * users to call restoreHtmlFromCache() on page load if desired to completely reload
+     * to the last saved state.
+     * @param {boolean} startStop true=start watching the DOM, false=stop
+     */
+    watchDom(startStop) {
+        // Select the node that will be observed for mutations
+        const targetNode = document.documentElement
+
+        // Need a ref to the Uib this
+        const that = this
+
+        // Create an observer instance
+        if (!this._htmlObserver) {
+            this._htmlObserver = new MutationObserver( function(/* mutationList, observer */) {
+                // We don't need to know the details - so kill off any outstanding mutation records
+                this.takeRecords()
+                // Save the updated entire HTML in localStorage
+                that.saveHtmlCache()
+            } )
+        }
+
+        if (startStop === true || startStop === undefined) {
+            // Start observing the target node for configured mutations
+            this._htmlObserver.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true })
+            log('trace', 'uibuilder.module.js:watchDom', 'Started Watching and saving DOM changes')()
+        } else {
+            this._htmlObserver.disconnect()
+            log('trace', 'uibuilder.module.js:watchDom', 'Stopped Watching and saving DOM changes')()
+        }
+    } // ---- End of watchDom ---- //
+
     //#endregion -------- -------- -------- //
 
     //#region ------- Message Handling (To/From Node-RED) -------- //
@@ -1303,6 +1797,15 @@ export const Uib = class Uib {
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
         msgToSend._socketId = this._socket.id
 
+        //#region ---- Update socket.io metadata ---- //
+        // Session tab id
+        this.socketOptions.auth.tabId = this.tabId
+        // How was the page last loaded?
+        this.socketOptions.auth.lastNavType = this.lastNavType
+        // How many times has the client (re)connected since page load
+        this.socketOptions.auth.connectedNum = this.connectedNum
+        //#endregion ---- ---- ---- //
+
         // Track how many messages have been sent & last msg sent
         let numMsgs
         if (channel === this._ioChannels.client) {
@@ -1316,6 +1819,18 @@ export const Uib = class Uib {
         // Add the originator metadata if required
         if (originator === '' && this.originator !== '') originator = this.originator
         if (originator !== '') Object.assign(msgToSend, { '_uib': { 'originator': originator } })
+
+        // If the msg does not have a topic - see if we want to add one
+        if ( !Object.prototype.hasOwnProperty.call(msgToSend, 'topic') ) {
+            // From the default (`uibuilder.set('topic', 'some topic')`)
+            if (this.topic !== undefined && this.topic !== '') msgToSend.topic = this.topic
+            else {
+                // Did the last inbound msg have a topic?
+                if ( Object.prototype.hasOwnProperty.call(this, 'msg') && Object.prototype.hasOwnProperty.call(this.msg, 'topic') ) {
+                    msgToSend.topic = this.msg.topic
+                }
+            }
+        }
 
         log('debug', 'Uib:_send', ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)()
 
@@ -1361,14 +1876,25 @@ export const Uib = class Uib {
             log('error', 'Uib:eventSend', '`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`' )()
             return
         }
+        if (!domevent && !event) {
+            log('warn', 'Uib:eventSend', 'Neither the domevent nor the hidden event properties are set. You probably called this function directly rather than applying to an on click event.' )()
+            return
+        }
         // Handle no argument, e.g. <button onClick="uibuilder.eventSend()"> - event is a hidden variable when fn used in addEventListener
         if (!domevent || !domevent.constructor) domevent = event
+
         // The argument must be a DOM event
         if ((!domevent.constructor.name.endsWith('Event')) || (!domevent.currentTarget)) {
             log('warn', 'Uib:eventSend', `ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data. Arg Type: ${domevent.constructor.name}`, domevent)()
             return
         }
+
+        // Prevent default event action
+        domevent.preventDefault()
+
+        // The target element
         const target = domevent.currentTarget
+        // const targetId = target.id !== '' ? target.id : (target.name !== '' ? target.name : target.type)
 
         // Get target properties - only shows custom props not element default ones
         const props = {}
@@ -1389,16 +1915,48 @@ export const Uib = class Uib {
             )
         )
 
-        let thisMsg
-        if ( !Object.prototype.hasOwnProperty.call(this, 'msg') ) thisMsg = { topic: undefined }
-        else thisMsg = this.msg
-        if ( !Object.prototype.hasOwnProperty.call(thisMsg, 'topic') ) thisMsg.topic = undefined
-        const msg = {
-            topic: thisMsg.topic,  // repeats the topic from the last inbound msg if it exists
+        // If target embedded in a form, include the form data
+        const form = {}
+        const frmVals = []
+        if ( target.form ) {
+            // console.log(target.form)
+            Object.values(target.form).forEach( (frmEl, i) => {
+                const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
+                // const attribs = Object.assign({},
+                //     ...Array.from(frmEl.attributes,
+                //         ( { name, value } ) => {
+                //             if ( !ignoreAttribs.includes(name) ) {
+                //                 return ({ [name]: value })
+                //             }
+                //             return undefined
+                //         }
+                //     )
+                // )
+                if (id !== '') {
+                    frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
+                    // form[id] = frmEl.value
+                    form[id] = {
+                        'id': frmEl.id,
+                        'name': frmEl.name,
+                        'value': frmEl.value,
+                        'data': frmEl.dataset,
+                        // 'meta': {
+                        //     'defaultValue': frmEl.defaultValue,
+                        //     'defaultChecked': frmEl.defaultChecked,
+                        //     'disabled': frmEl.disabled,
+                        //     'valid': frmEl.willValidate,
+                        //     'attributes': attribs,
+                        // },
+                    }
+                }
+            })
+        }
 
+        // Set up the msg to send - NB: Topic may be added by this._send
+        const msg = {
             // Each `data-xxxx` attribute is added as a property
             // - this may be an empty Object if no data attributes defined
-            payload: target.dataset,
+            payload: { ...target.dataset },
 
             _ui: {
                 type: 'eventSend',
@@ -1406,6 +1964,7 @@ export const Uib = class Uib {
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent !== '' ? target.textContent.substring(0, 255) : undefined,
 
+                form: form,
                 props: props,
                 attribs: attribs,
                 classes: Array.from(target.classList),
@@ -1421,8 +1980,17 @@ export const Uib = class Uib {
 
                 clientId: this.clientId,
                 pageName: this.pageName,
+                tabId: this.tabId,
             }
         }
+
+        if (frmVals.length > 0) {
+            frmVals.forEach( entry => {
+                msg.payload[entry.key] = entry.val
+            })
+        }
+
+        if (domevent.type === 'change') msg._ui.newValue = msg.payload.value = domevent.target.value
 
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
         if (target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
@@ -1446,6 +2014,51 @@ export const Uib = class Uib {
             if (msg._uib.reload === true) {
                 log('trace', 'Uib:_msgRcvdEvents:_uib:reload', 'reloading')()
                 location.reload()
+                return
+            }
+
+            /** Process msg._uib.command messages - allows Node-RED to run uibuilder FE functions */
+            if (msg._uib.command) {
+                const cmd = msg._uib.command
+                // Disallowed command request outputs error and ignores the msg (NB: Case must match)
+                if (!this.#extCommands.includes(cmd.trim())) {
+                    log('error', 'Uib:_msgRcvdEvents:_uib', `Command '${cmd} is not allowed to be called externally`)()
+                    return
+                }
+                const prop = msg._uib.prop
+                const value = msg._uib.value
+
+                // console.log('CMD FROM NODE-RED: ', cmd, ', Prop: ', prop, ', Sent Val: ', value)
+                switch (msg._uib.command) {
+                    case 'get': {
+                        msg._uib.response = this.get(prop)
+                        this.send(msg)
+                        break
+                    }
+
+                    case 'set': {
+                        msg._uib.response = this.set(prop, value)
+                        this.send(msg)
+                        break
+                    }
+
+                    case 'showMsg': {
+                        this.showMsg(value, prop)
+                        break
+                    }
+
+                    case 'showStatus': {
+                        this.showStatus(value, prop)
+                        break
+                    }
+
+                    default: {
+                        log('warning', 'Uib:_msgRcvdEvents:command', `Command '${cmd} not yet implemented`)()
+                        // msg._uib.response = this[cmd]()
+                        // this.send(msg)
+                        break
+                    }
+                }
                 return
             }
 
@@ -1497,6 +2110,9 @@ export const Uib = class Uib {
 
     } // -- End of websocket receive DATA msg from Node-RED -- //
 
+    /** Handles original control msgs (not to be confused with "new" msg._uib controls)
+     * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
+     */
     _ctrlMsgFromServer(receivedCtrlMsg) {
 
         // Make sure that msg is an object & not null
@@ -1537,10 +2153,11 @@ export const Uib = class Uib {
                 if (this.autoSendReady === true) { // eslint-disable-line no-lonely-if
                     log('trace', `Uib:ioSetup:${this._ioChannels.control}/client connect`, 'Auto-sending ready-for-content/replay msg to server')
                     // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
-                    this._send({
-                        'uibuilderCtrl': 'ready for content',
-                        'cacheControl': 'REPLAY',
-                    }, this._ioChannels.control)
+                    // @since 6.1.0 Don't bother, we use the "client connect" msg
+                    // this._send({
+                    //     'uibuilderCtrl': 'ready for content',
+                    //     'cacheControl': 'REPLAY',
+                    // }, this._ioChannels.control)
                 }
 
                 break
@@ -1554,6 +2171,34 @@ export const Uib = class Uib {
         } // ---- End of process control msg types ---- //
 
     } // -- End of websocket receive CONTROL msg from Node-RED -- //
+
+    /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
+     * @param {string} txtToSend Text string to send
+     * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
+     */
+    beaconLog(txtToSend, logLevel) {
+        if (!logLevel) logLevel = 'debug'
+        navigator.sendBeacon('./_clientLog', `${logLevel}::${txtToSend}`)
+    }
+
+    /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
+     * -@param {...*} arguments All arguments passed to the function are added to the msg.payload
+     */
+    logToServer() {
+        this.sendCtrl({
+            uibuilderCtrl: 'client log message',
+            payload: arguments,
+            // "version":"6.1.0-iife.min",
+            _socketId: this._socket.id,
+            // "ip":"::1",
+            clientId: this.clientId,
+            tabId: this.tabId,
+            // "url":"esp-test",
+            pageName: this.pageName,
+            connections: this.connectedNum,
+            lastNavType: this.lastNavType,
+        })
+    }
 
     //#endregion -------- ------------ -------- //
 
@@ -1603,7 +2248,7 @@ export const Uib = class Uib {
      * @param {number} [delay] Initial delay before checking (ms). Default=2000ms
      * @param {number} [factor] Multiplication factor for subsequent checks (delay*factor). Default=1.5
      * @param {number} [depth] Recursion depth
-     * @returns {boolean} Whether or not Socket.IO is connected to uibuilder in Node-RED
+     * @returns {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
      */
     _checkConnect(delay, factor, depth = 1) {
         if ( navigator.onLine === false ) return // Don't bother if we know we are offline
@@ -1687,8 +2332,12 @@ export const Uib = class Uib {
         // Add stable client id (static unless browser closed)
         this.socketOptions.auth.clientId = this.clientId
         this.socketOptions.transportOptions.polling.extraHeaders['x-clientid'] = `${Uib._meta.displayName}; ${Uib._meta.type}; ${Uib._meta.version}; ${this.clientId}`
+        // Session tab id
+        this.socketOptions.auth.tabId = this.tabId
+        // How was the page last loaded?
+        this.socketOptions.auth.lastNavType = this.lastNavType
         // How many times has the client (re)connected since page load
-        this.socketOptions.auth.connectedNum = this.#connectedNum
+        this.socketOptions.auth.connectedNum = this.connectedNum
         //#endregion --- ---- ---
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
@@ -1698,10 +2347,17 @@ export const Uib = class Uib {
         /** When the socket is connected - set ioConnected flag and reset connect timer  */
         this._socket.on('connect', () => {
 
-            this.#connectedNum++
-            this.socketOptions.auth.connectedNum = this.#connectedNum
-            log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.#connectedNum}\nNamespace: ${this.ioNamespace}`)()
-            this._dispatchCustomEvent('uibuilder:socket:connected', this.#connectedNum)
+            this.set('connectedNum', this.connectedNum++)
+            // How many times has the client (re)connected since page load
+            this.socketOptions.auth.connectedNum = this.connectedNum
+            // How was the page last loaded?
+            this.socketOptions.auth.lastNavType = this.lastNavType
+            // Session tab id
+            this.socketOptions.auth.tabId = this.tabId
+            this.socketOptions.auth.more = this.tabId
+
+            log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}\nNamespace: ${this.ioNamespace}`)()
+            this._dispatchCustomEvent('uibuilder:socket:connected', this.connectedNum)
 
             this._checkConnect() // resets any reconnection timers & sets connected flag
 
@@ -1813,17 +2469,55 @@ export const Uib = class Uib {
             this.cookies[splitC[0].trim()] = splitC[1]
         })
 
-        /** Client ID set by uibuilder */
-        this.clientId = this.cookies['uibuilder-client-id']
+        /** Client ID set by uibuilder - lasts until browser profile is closed, applies to all tabs */
+        this.set('clientId', this.cookies['uibuilder-client-id'])
         log('trace', 'Uib:constructor', 'Client ID: ', this.clientId)()
 
-        this.ioNamespace = this._getIOnamespace()
+        /** Tab ID - lasts while the tab is open (even if reloaded)
+         * WARNING: Duplicating a tab retains the same tabId
+         */
+        this.set('tabId', window.sessionStorage.getItem('tabId'))
+        if (!this.tabId) {
+            this.set('tabId', `t${Math.floor(Math.random() * 1000000)}`)
+            window.sessionStorage.setItem('tabId', this.tabId)
+        }
+
+        // document.addEventListener('pagehide', (event) => {
+        //     // console.log(`pagehide. From Cache?: ${event.persisted}`)
+        //     navigator.sendBeacon('./_clientLog', `pagehide. From Cache?: ${event.persisted}`)
+        // })
+        // document.addEventListener('pageshow', (event) => {
+        //     // console.log(`pageshow. From Cache?: ${event.persisted}`)
+        //     navigator.sendBeacon('./_clientLog', `pageshow. From Cache?: ${event.persisted}`)
+        // })
+        document.addEventListener('load', () => {
+            this.set('isVisible', true)
+        })
+        document.addEventListener('visibilitychange', () => {
+            // hidden=unload, minimise. visible=un-minimise (not fired on load)
+            this.set('isVisible', document.visibilityState === 'visible')
+            this.sendCtrl({ uibuilderCtrl: 'visibility', isVisible: this.isVisible })
+            // navigator.userActivation is experimental Chromium only
+            // console.log('visibilitychange', ':', `Document Event: visibilitychange. Visibility State: ${document.visibilityState}. User Activity- Has:${navigator.userActivation.hasBeenActive}, Is:${navigator.userActivation.isActive}`)
+            // navigator.sendBeacon('./_clientLog', `${(new Date()).toISOString()} Document Event: visibilitychange. Visibility State: ${document.visibilityState}. User Activity- Has:${navigator.userActivation.hasBeenActive}, Is:${navigator.userActivation.isActive}`)
+        })
+
+        // Set a listener to update showStatus table if it is active
+        document.addEventListener('uibuilder:propertyChanged', (event) => {
+            if (!this.#isShowStatus) return
+
+            if (event.detail.prop in this.#showStatus) {
+                document.querySelector(`td[data-vartype="${event.detail.prop}"]`).innerText = JSON.stringify(event.detail.value)
+            }
+        })
+
+        this.set('ioNamespace', this._getIOnamespace())
 
         //#region - Try to make sure client uses Socket.IO client version from the uibuilder module (using cookie or path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
 
         /** httpNodeRoot (to set path) */
         if ('uibuilder-webRoot' in this.cookies) {
-            this.httpNodeRoot = this.cookies['uibuilder-webRoot']
+            this.set('httpNodeRoot', this.cookies['uibuilder-webRoot'])
             log('trace', 'Uib:constructor', `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)()
         } else {
             // split current url path, eliminate any blank elements and trailing or double slashes
@@ -1831,18 +2525,20 @@ export const Uib = class Uib {
             /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
             if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
             fullPath.pop() // gives the last path section of the url
-            this.httpNodeRoot = '/' + fullPath.join('/')
+            this.set('httpNodeRoot', `/${fullPath.join('/')}`)
             log('trace', '[Uib:constructor]', `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)()
         }
-        this.ioPath = urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io')
+        this.set('ioPath', urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
         log('trace', 'Uib:constructor', `ioPath: "${this.ioPath}"`)()
 
         //#endregion
 
         // Work out pageName
-        this.pageName = window.location.pathname.replace(`${this.ioNamespace}/`, '')
-        if ( this.pageName.endsWith('/') ) this.pageName += 'index.html'
-        if ( this.pageName === '' ) this.pageName = 'index.html'
+        this.set('pageName', window.location.pathname.replace(`${this.ioNamespace}/`, ''))
+        if ( this.pageName.endsWith('/') ) this.set('pageName', `${this.pageName}index.html`)
+        if ( this.pageName === '' ) this.set('pageName', 'index.html')
+
+        this._dispatchCustomEvent('uibuilder:constructorComplete')
 
         log('trace', 'Uib:constructor', 'Ending')()
     }
@@ -1869,13 +2565,13 @@ export const Uib = class Uib {
 
         // Handle options
         if (options) {
-            if (options.ioNamespace !== undefined && options.ioNamespace !== null && options.ioNamespace !== '') this.ioNamespace = options.ioNamespace
-            if (options.ioPath !== undefined && options.ioPath !== null && options.ioPath !== '') this.ioPath = options.ioPath
+            if (options.ioNamespace !== undefined && options.ioNamespace !== null && options.ioNamespace !== '') this.set('ioNamespace', options.ioNamespace)
+            if (options.ioPath !== undefined && options.ioPath !== null && options.ioPath !== '') this.set('ioPath', options.ioPath)
             // See below for handling of options.loadStylesheet
         }
 
         // Do we need to load styles?
-        if ( document.styleSheets.length > 1 || (document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) ) {
+        if ( document.styleSheets.length >= 1 || (document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) ) {
             log('info', 'Uib:start', 'Styles already loaded so not loading uibuilder default styles.')()
         } else {
             if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
@@ -1885,7 +2581,7 @@ export const Uib = class Uib {
             }
         }
 
-        // Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents
+        /** Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents */
 
         // Track last browser navigation type: navigate, reload, back_forward, prerender
         const [entry] = performance.getEntriesByType('navigation')
@@ -1893,7 +2589,7 @@ export const Uib = class Uib {
         this.set('lastNavType', entry.type)
 
         // Start up (or restart) Socket.IO connections and listeners. Returns false if io not found
-        this.started = this._ioSetup()
+        this.set('started', this._ioSetup())
 
         if ( this.started === true ) {
             log('trace', 'Uib:start', 'Start completed. Socket.IO client library loaded.')()
@@ -1901,6 +2597,23 @@ export const Uib = class Uib {
             log('error', 'Uib:start', 'Start completed. ERROR: Socket.IO client library NOT LOADED.')()
         }
 
+        // Check if Vue is present (used for dynamic UI processing)
+        if (window['Vue']) {
+            this.set('isVue', true)
+            try {
+                this.set('vueVersion', window['Vue'].version)
+            } catch (e) { }
+        }
+
+        // Set up msg listener for the optional showMsg
+        this.onChange('msg', (msg) => {
+            if (this.#isShowMsg === true) {
+                const eMsg = document.getElementById('uib_last_msg')
+                if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg)
+            }
+        })
+
+        this._dispatchCustomEvent('uibuilder:startComplete')
     }
 
     //#endregion -------- ------------ -------- //
@@ -1920,10 +2633,13 @@ if (!window['uibuilder']) {
     log('error', 'uibuilder.module.js', 'uibuilder already assigned to window. Have you tried to load it more than once?')
 }
 
+// Assign `$` to global window object unless it is already in use.
+// Note that this is also available as `uibuilder.$`.
 if (!window['$']) {
+    /** @type {HTMLElement} */
     window['$'] = document.querySelector.bind(document)
 } else {
-    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use')
+    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.')
 }
 
 // Can import as `import uibuilder from ...` OR `import {uibuilder} from ...`

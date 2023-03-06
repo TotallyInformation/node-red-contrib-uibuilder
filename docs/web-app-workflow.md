@@ -3,31 +3,36 @@ title: Creating a web app using uibuilder and Node-RED
 description: >
    Some recommendations on how to use uibuilder to create data-driven web applications.
 created: 2022-01-05 14:36:24
-lastUpdated: 2022-03-27 13:30:35
+lastUpdated: 2023-01-04 16:50:42
 ---
 
-While it does a few other things to help as well, uibuilder primarily provides two services:
+While it does a few other things to help as well, uibuilder primarily provides these services:
 
 1. An easy way to manage and serve up front-end supporting libraries (e.g. VueJS or REACT).
 2. An easy way to exchange structured data between Node-RED and your front-end app.
+3. Easy ways to create, remove and amend HTML elements on your web page.
 
-As such, it allows you to use any front-end libraries and tooling you like.
+As such, it allows you to use any (or no) front-end libraries and whatever tooling you like.
 
-So while you _can_, for example, edit code within the Node-RED Editor using the uibuilder 
-configuration panel, this is only really useful for relatively simple editing tasks. Generally,
-you will want to use standard web development tooling to get the job done.
+## Driving a dynamic, data-driven UI - no frameworks needed!
+
+From around uibuilder v5 or so, uibuilder now really reduces or even removes the need to use a front-end framework such as Vue or REACT. These _are_ still useful for really complex UI's and processing but for the majority of uses, they can be just a millstone that you end up fighting more than they help.
+
+The main thing to learn in order to be able to ditch heavy frameworks is how to select HTML elements using [CSS Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors). uibuilder provides a very easy way to grab a reference to any HTML element via a selector (`${'selector'}`).
+
+uibuilder also provides tools to dynamically create, amend and remove HTML elements direct from node-red (the `uib-element` node available from uibuilder v6.1+ and [configuration-driven UI descriptor messages](client-docs/config-driven-ui.md)). Configuration data can even be loaded from an external JSON file and the same data can be used in your front-end code if you need to.
+
+### Where a front-end framework can still help
+
+The main reason for still wanting a front-end framework such as Vue or REACT is to access the myriad of features, extensions and add-on's that people have developed over the years. 
 
 ## Code Folders
 
-The code for your uibuilder web app lives in and under a specific folder. You will need to understand where this
-lives if you want to use anything other than the Node-RED Editor panel for managing and editing your code.
+The code for your uibuilder web app lives in and under a specific folder on your Node-RED server. You will need to understand where this lives if you want to use anything other than the Node-RED Editor panel for managing and editing your code.
 
-Most things for uibuilder live under something we refer to as the `uibRoot` folder. This folder, by default, lives
-at `<userDir>/uibuilder`. Where `<userDir>` is normally `~/.node-red` for default installations of Node-RED. The uibRoot
-folder can, however, be moved by changing the `uibuilder.uibRoot` property in your Node-RED `settings.js` file.
+Most things for uibuilder live under something we refer to as the `uibRoot` folder. This folder, by default, lives at `<userDir>/uibuilder`. Where `<userDir>` is normally `~/.node-red` for default installations of Node-RED. The uibRoot folder can, however, be moved by changing the `uibuilder.uibRoot` property in your Node-RED `settings.js` file.
 
-Each uibuilder node that you deploy, gets a sub-folder under uibRoot. That folder is named the same as the `URL` setting
-in the Editor panel. So a uibuilder node with a URL set to `mytest` will have its code folder at `~/.node-red/uibuilder/mytest` for a default installation.
+Each uibuilder node that you deploy, gets a sub-folder under uibRoot. That folder is named the same as the `URL` setting in the Editor panel. So a uibuilder node with a URL set to `mytest` will have its code folder at `~/.node-red/uibuilder/mytest` for a default installation.
 
 Within that instance root folder there will always be at least 3 things:
 
@@ -36,23 +41,22 @@ Within that instance root folder there will always be at least 3 things:
 3. A `dist` sub-folder. This is ignored unless you swap to it using the advanced setting in the uibuilder Editor panel.
    You will use this folder if you need to "compile" or "build" your source code into something that the browser can understand (or for efficiency).
 
+uibuilder from about v5.1+ is now able to serve up your front-end code from any sub-folder of the instance root folder.
+
 Other folders you might see or use are:
 
 * `node_modules` - this is the standard npm package folder and will be present if your instance needs any supporting packages for development.
 * `api` - this will be present if you are defining an instance-level API to use with your code. API's run on the Node-RED server. See the [How to use Instance API's](instance-apis) page for details.
 * `scripts` - A convenient folder to keep utility scripts that you may wish to run to get things done. Typically accessed by adding to the `scripts` property of the package.json file.
 
-Future changes to uibuilder are likely to give more freedom for using folder names.
-
 ## Code Editing
 
-Your front-end user interface (UI) consists of a lot of code. Whether that is HTML, CSS or JavaScript.
-So you will want some good tools that will let you compose and edit those types of code.
+While you _can_ edit code within the Node-RED Editor using the uibuilder configuration panel, this is only really useful for relatively simple editing tasks. Generally,
+you will want to use standard web development tooling if your front-end code starts to get bigger.
 
-My recommendation here is to use [Visual Studio Code](https://code.visualstudio.com/) (VScode). Originally developed by Microsoft
-but now a fully open source community effort. It is free and very fully featured with many extensions to further help.
+My recommendation here is to use [Visual Studio Code](https://code.visualstudio.com/) (VScode). Originally developed by Microsoft but now a fully open source community effort. It is free and very fully featured with many extensions to further help.
 
-Even if your front-end code is on a remote server, VScode can help as Microsoft have provided some remote editing extensions.
+Even where your front-end code is on a remote server, VScode can help as Microsoft have provided some remote editing extensions.
 
 ### Recommended Extensions
 
@@ -88,9 +92,7 @@ At present, only the Svelte development server will work correctly without you m
 For all other development servers, you will need to make the following changes:
 
 1. In `index.html` - replace the default `./xxxx` and `../uibuilder/xxxx` URL's with ones that start with the correct Node-RED/uibuilder server. e.g. `http://localhost:1880/xxxx`.
-2. In `indx.js` - replace the `uibuilder.start()` with `uibuilder.start('http://localhost:1880/aa')` (example) where the protocol, server name and port are your Node-RED/uibuilder server as above and `/aa` is the uibuilder node instances URL with a leading `/`. That is the Socket.io namespace.
-
-   Note that if you have set the `httpNodeRoot` in Node-RED and you are not using uibuilder's custom ExpressJS server, you **must** also include the second parameter which overrides the Socket.IO path such that it includes the httpNodeRoot. Example: if httpNodeRoot='nr', the path parameter must be `/nr/uibuilder/vendor/socket.io`.
+2. In `indx.js` - replace the `uibuilder.start()` with `uibuilder.start({ioNamespace: 'http://localhost:1880/aa'})` (example) where the protocol, server name and port are your Node-RED/uibuilder server as above and `/aa` is the uibuilder node instances URL with a leading `/`. That is the Socket.io namespace.
 
 Don't forget to change these back when you are putting your code live. Though your live code will still work, it would be more fragile and would break if you change the server details.
 

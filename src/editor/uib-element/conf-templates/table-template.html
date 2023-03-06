@@ -1,0 +1,14 @@
+<h3>Custom settings for the "Table" type</h3>
+
+<div aria-label="Caption Text. Leave blank for no caption." class="form-row">
+    <label for="conf-text-caption"><i class="fa fa-i-cursor"></i> Label</label>
+    <input type="text" id="conf-text-caption" data-uib-el-prop="caption" placeholder="Optional table caption. Blank for none">
+</div>
+
+<script>
+    console.log('Table template loaded')
+    window['uibElementConfigFns'] = {
+        type: 'table',
+    }
+    // uibElementConfigFns.myvar = 'hi'
+</script>

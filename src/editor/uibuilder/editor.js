@@ -999,7 +999,7 @@
                     'opacity': 0.3,
                 })
 
-            $('#uibuilderurl, #uibinstanceconf')
+            $('#uibuilderurl, #uibinstanceconf, #btntopopen')
                 .prop('disabled', true)
                 .css({
                     // 'pointer-events': 'none',
@@ -1523,7 +1523,7 @@
 
         // Show the root URL
         $('#uibuilderurl').prop('href', `${node.urlPrefix}${thisurl}`)
-            .text(`Open ${node.nodeRoot}${thisurl}`)
+        // .html(`<i class="fa fa-globe" aria-hidden="true"></i> Open ${node.nodeRoot}${thisurl}`)
         $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
         // NB: The index url link is only shown if the option is turned on
         $('#show-src-folder-idx-url').empty()
@@ -1675,6 +1675,20 @@
      * @param {*} node -
      */
     function onEditPrepare(node) {
+        // Add open and docs buttons to top button bar, next to Delete button
+        $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-globe" aria-hidden="true"></i> Open</button>')
+            .on('click', (evt) => {
+                evt.preventDefault()
+                window.open(`${node.urlPrefix}${$('#node-input-url').val()}`, '_blank')
+            })
+            .appendTo($('div.red-ui-tray-toolbar'))
+        $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book" aria-hidden="true"></i> Docs</button>')
+            .on('click', (evt) => {
+                evt.preventDefault()
+                RED.sidebar.help.show('uibuilder')
+                window.open('./uibuilder/docs', '_blank')
+            })
+            .appendTo($('div.red-ui-tray-toolbar'))
 
         getFolders()
 
@@ -2036,7 +2050,9 @@
         inputLabels: 'Msg to send to front-end',
         outputs: 2,
         outputLabels: ['Data from front-end', 'Control Msgs from front-end'],
-        icon: 'ui_template.png',
+        // icon: 'node-white.svg',
+        icon: 'node-blue-inverted.svg',
+        // icon: 'semanticWebWhite.svg',
         paletteLabel: nodeLabel,
         label: function () {
             const url = this.url ? `<${this.url}>` : '<no url>'

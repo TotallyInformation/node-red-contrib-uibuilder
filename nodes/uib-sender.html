@@ -103,7 +103,7 @@
         outputLabels: ['Input msg with node ID added'],
         icon: 'link-out.svg',
         paletteLabel: nodeLabel,
-        label: function () { return this.url || this.name || nodeLabel },
+        label: function () { return this.name || this.url || nodeLabel },
 
         oneditprepare: function() { onEditPrepare(this) },
 
@@ -138,7 +138,7 @@
     and a method of easily getting a response back again.
 </p>
 <p>
-    See <a href="./uibuilder/techdocs/#/sender-node" target="_blank">Tech Docs: Using the sender node</a> for more detail.
+    See <a href="./uibuilder/techdocs/#/sender-node" target="_blank">Documentation: Using the sender node</a> for more detail.
 </p>
 
 <h3>Inputs</h3>

@@ -2,7 +2,7 @@
 /* eslint-disable no-irregular-whitespace */
 /** Define typedefs for linting and JSDoc/ts checks - does not actually contain live code
  *
- * Copyright (c) 2017-2022 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2023 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -193,7 +193,7 @@
 
 /** uibuilderEditorVars
  * @typedef {object} uibuilderEditorVars The node instance variables accessible from the Editor config panel
- * 
+ *
  * @property {string} name Descriptive name, only used by Editor
  * @property {string} topic msg.topic overrides incoming msg.topic
  * @property {string} url The url path (and folder path) to be used by this instance
@@ -209,7 +209,7 @@
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
- * 
+ *
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -240,7 +240,7 @@
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
- * 
+ *
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
@@ -378,6 +378,54 @@
  *   setC: Function;
  *   _ui: any;
  * }} uibListNode
+ */
+
+/** uibElNode (Element Node)
+ * @typedef {{
+ *   name: string;
+ *   topic: string;
+ *   elementtype: string;
+ *   parent: string;
+ *   parentSource: string;
+ *   parentSourceType: string;
+ *   elementid: string;
+ *   elementId: string;
+ *   elementIdSource: string;
+ *   elementIdSourceType: string;
+ *   heading: string;
+ *   headingSource: string;
+ *   headingSourceType: string;
+ *   headingLevel: string;
+ *   position: string|number;
+ *   positionSource: string|number;
+ *   positionSourceType: string;
+ *   confData: object;
+ *   _ui: any;
+ * }} uibElNode
+ */
+
+/** uibUpdNode (Update Node)
+ * @typedef {{
+ *   name: string;
+ *   topic: string;
+ *   mode: 'update'|'delete'|'remove'|'msg.mode';
+ *   modeSource: string;
+ *   modeSourceType: string;
+ *   cssSelector: string;
+ *   cssSelectorSource: string;
+ *   cssSelectorType: string;
+ *   cssSelectorSourceType: string;
+ *   slotContent: string;
+ *   slotSourceProp: string;
+ *   slotContentSource: string;
+ *   slotContentSourceType: string;
+ *   slotSourcePropType: string;
+ *   attribs: object;
+ *   attribsSource: string;
+ *   attribsSourceType: string;
+ *   slotPropMarkdown: boolean;
+ *   _ui: any;
+ * }} uibUpdNode
  */
 
 /** MsgAuth

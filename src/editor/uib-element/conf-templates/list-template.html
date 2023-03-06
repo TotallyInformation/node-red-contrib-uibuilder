@@ -1,0 +1,18 @@
+<h3>Custom settings for the "List" types (OL/UL/DL)</h3>
+
+<div aria-label="Label Text. Leave blank for no label." class="form-row">
+    <label for="conf-text-label"><i class="fa fa-i-cursor"></i> Label</label>
+    <input type="text" id="conf-text-label" data-uib-el-prop="label" placeholder="Optional text label. Blank for none">
+</div>
+<div aria-label="Caption Text. Leave blank for no caption." class="form-row">
+    <label for="conf-text-caption"><i class="fa fa-i-cursor"></i> Label</label>
+    <input type="text" id="conf-text-caption" data-uib-el-prop="caption" placeholder="Optional table caption. Blank for none">
+</div>
+
+<script>
+    console.log('List template loaded')
+    window['uibElementConfigFns'] = {
+        type: 'list',
+    }
+    // uibElementConfigFns.myvar = 'hi'
+</script>

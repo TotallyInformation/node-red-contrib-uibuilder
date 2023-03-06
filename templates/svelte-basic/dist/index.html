@@ -7,12 +7,14 @@
     <meta name="description" content="Node-RED uibuilder - Simple Svelte template">
 	<link rel='icon' type='image/png' href='./favicon.png'>
 	
+	<!-- Your own CSS (defaults to loading uibuilders css)-->
 	<link rel='stylesheet' href='./global.css'>
 	<link rel='stylesheet' href='./build/bundle.css'>
 
-	<script defer src="../uibuilder/vendor/socket.io/socket.io.js"></script>
-    <script defer src="./uibuilderfe.min.js"></script>
-	<script defer src='./build/bundle.js'></script>
-
+	<!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
+	<script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+	<script defer src='./build/bundle.js'>/* Your custom code goes in src/, this is built */</script>
+	<!-- #endregion -->
+	
 </head><body>
 </body></html>

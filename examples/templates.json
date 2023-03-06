@@ -1,0 +1,3077 @@
+[
+    {
+        "id": "a29cf0664c167293",
+        "type": "tab",
+        "label": "Template Tests",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "fc8f1db4547ef664",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "Vue v3 IIFE client, no build - Check description in each node \\n ",
+        "style": {
+            "label": true,
+            "fill": "#ffffff",
+            "fill-opacity": "0.26",
+            "color": "#000000"
+        },
+        "nodes": [
+            "c3bd76ce441dc3e3",
+            "3439dbee433a88a8",
+            "909a45a07adf4caf",
+            "6c14431f469b8846",
+            "e47195b8eda5d40e",
+            "0c9f24ab06ee0405",
+            "89ae80c659089985",
+            "caf50be69279b624",
+            "92f0587559df7590",
+            "d48166077d1f76af",
+            "3e569dd871349f93",
+            "dd004a6a442ee6a8",
+            "ce9a12ba5070f920",
+            "c969ddb33e099a82"
+        ],
+        "x": 34,
+        "y": 1843,
+        "w": 722,
+        "h": 258
+    },
+    {
+        "id": "d7ec253e417f16b6",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "uibuilder IIFE client build with Vue v2 and bootstrap-vue (Full example) \\n ",
+        "style": {
+            "label": true,
+            "fill": "#ffffff",
+            "fill-opacity": "0.27",
+            "color": "#000000"
+        },
+        "nodes": [
+            "284121dd33dcd50b",
+            "4b0be73d7c1879b9",
+            "6f8e51db50f117dd",
+            "d7ce360f9e714a57",
+            "d32229867aa7e3c6",
+            "688f3cc99964f88d",
+            "802bd5f9321628ad",
+            "955997a9e7fb3c28",
+            "a0976141d22bd12f",
+            "9a7af1b5ee3353ba",
+            "7ee9528a1b19eb12",
+            "81bf7609272ef9af",
+            "c1d0beb7a8dcf573",
+            "1b6a3d16ed9f9995",
+            "5d26dd3c341a40b3"
+        ],
+        "x": 34,
+        "y": 1563,
+        "w": 732,
+        "h": 258
+    },
+    {
+        "id": "1f80e4a191d5322a",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "uibuilder IIFE client build with Vue v2 and bootstrap-vue (Minimal Example) \\n ",
+        "style": {
+            "label": true,
+            "fill": "#ffffff",
+            "fill-opacity": "0.27",
+            "color": "#000000"
+        },
+        "nodes": [
+            "251344c859a9f066",
+            "9df22ce79ef39e07",
+            "5028e29f49a5591f",
+            "2a3a787b6520cef9",
+            "5e40aeef2599e4e1",
+            "d8c57c9cbfba6417",
+            "5f2a84a134a770d7",
+            "c90fa14f3bcd1b5a",
+            "04b7fe83187b26ed",
+            "c8177e230bf224db",
+            "079a6828b01e3ca4",
+            "168b498f7d93b9ca",
+            "35591e8d08b9a8dc",
+            "949ddd795829e86e",
+            "2a6997fca56f2de1"
+        ],
+        "x": 774,
+        "y": 1563,
+        "w": 732,
+        "h": 258
+    },
+    {
+        "id": "946ef719ea12bc08",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "Vue v3 ESM, no build - Check description in each node - Can load components without a build step on modern browsers\\n ",
+        "style": {
+            "label": true,
+            "fill": "#ffffff",
+            "fill-opacity": "0.26",
+            "color": "#000000"
+        },
+        "nodes": [
+            "6eba307faa3c48e2",
+            "3ff7fd7992d48c25",
+            "f8f90bfd46b1f53e",
+            "e340bdc745361401",
+            "fb79d887323f47c1",
+            "169c10878b6640e4",
+            "97f0c2ea900e3055",
+            "8db08ddd2a866fb5",
+            "d66f87eca883848e",
+            "619d338c7eba7669",
+            "7ce2b59950e22ecb",
+            "b9a054a3ff5f393d",
+            "29bf34be48a50467",
+            "31310a6648a194ce"
+        ],
+        "x": 774,
+        "y": 1843,
+        "w": 754,
+        "h": 258
+    },
+    {
+        "id": "d14e5cf8cd61d8f5",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "A vanilla, blank template. Ready for anything. \\n ",
+        "style": {
+            "label": true,
+            "fill": "#ffffbf",
+            "fill-opacity": "0.33",
+            "color": "#000000"
+        },
+        "nodes": [
+            "01f14b086d7f8a11",
+            "877b43edd7251acc",
+            "17fde0242e191689",
+            "7eee677cb9a62723",
+            "d0621a8f51f507bb",
+            "f012975f0375b6c8",
+            "cb80cc034da2d8f1",
+            "736993a690bbc167",
+            "0df7b796d44d2e71",
+            "d121c8e3e56c4747",
+            "9eb1553c08864316",
+            "0368db6d7d446339",
+            "f12f44c1b6da7192",
+            "41fd7d11ae3c157d",
+            "5ac8daccaea4a291",
+            "89bf36d6fc8d1d41",
+            "e4f674b5eb32aa05",
+            "7011f3686a81d7eb",
+            "c0abb8e9c5a1262c",
+            "9cf758cd9a3eda81",
+            "3c2b5cb8448dbb64"
+        ],
+        "x": 24,
+        "y": 83,
+        "w": 692,
+        "h": 302
+    },
+    {
+        "id": "31c2d342f75d0ef8",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "Extended version of the \"blank\" template showing some additional features. \\n ",
+        "style": {
+            "label": true,
+            "fill": "#ffffbf",
+            "fill-opacity": "0.31",
+            "color": "#000000"
+        },
+        "nodes": [
+            "d0b6170b92cd6064",
+            "9a4f424c76119444",
+            "2cb6722e802cf5f1",
+            "5003addd448138c2",
+            "ba221f812ae3d84c",
+            "4020b64008bfdad5",
+            "be06a0df26c00462",
+            "f95e69f67072596b",
+            "5d1231ce8247b08a",
+            "1b7e4c189916dbec",
+            "05cb4b03058fc6f8",
+            "71fa902dccb4cb5a"
+        ],
+        "x": 24,
+        "y": 463,
+        "w": 652,
+        "h": 258
+    },
+    {
+        "id": "40dcfdd7e47f8573",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "Extended version of simple template using the ES Module version of the client \\n ",
+        "style": {
+            "fill": "#ffffbf",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "d12df878ac1b5714",
+            "b921d7d1a7e06035",
+            "8ca1a701441a31fa",
+            "598ecb0adfa8fc5a",
+            "599391803941e233",
+            "958c94c7f03a6624",
+            "5a3c5e4b8751fea2",
+            "863c33dc4dab0216",
+            "6e760e4d72cb74a7",
+            "0ce0de04fb70fda9",
+            "ca0007816b9f4419",
+            "b28745cf103fce72"
+        ],
+        "x": 34,
+        "y": 763,
+        "w": 643,
+        "h": 258
+    },
+    {
+        "id": "ae89de23bbb814c1",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "uibuilder IIFE client in conjunction with Svelte",
+        "style": {
+            "fill": "#bfc7d7",
+            "fill-opacity": "0.31",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "ec93b864b4127859",
+            "ab686ecd6ae447e3",
+            "1e26ba1f939b35a4",
+            "a9e607e92e5e2c93",
+            "53f930dee4d661c0",
+            "a75bacf5b8e676fb",
+            "c6965c37441712a2",
+            "28cb6bf6fb33f77c",
+            "1813ac9ca8eeb177",
+            "85733cc425b92915",
+            "f0c89ce59299d66c",
+            "43b416daeed4d5cb",
+            "6b8fde3712999f7e"
+        ],
+        "x": 34,
+        "y": 1079,
+        "w": 652,
+        "h": 448
+    },
+    {
+        "id": "43b416daeed4d5cb",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "Add/remove dynamic list",
+        "style": {
+            "label": true,
+            "fill": "#ffffff",
+            "fill-opacity": "0.5",
+            "color": "#777777"
+        },
+        "nodes": [
+            "7580041a7e962524",
+            "d2c23f660fba67cf",
+            "bc0a93a1ec21c077"
+        ],
+        "x": 74,
+        "y": 1379,
+        "w": 492,
+        "h": 122,
+        "info": "Demonstrates that uibuilder's dynamic ui\r\nfeatures work with Svelte."
+    },
+    {
+        "id": "cb13651b4e3aee58",
+        "type": "group",
+        "z": "a29cf0664c167293",
+        "name": "Old \"Blank\" template using uibuilderfe client - should no longer be used - kept for reference \\n ",
+        "style": {
+            "fill": "#ffbfbf",
+            "fill-opacity": "0.26",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "ddb950ebb37ff3e5",
+            "ca085978f7a1d622",
+            "7b2410170a094534",
+            "cfd5eba13fe03d51",
+            "6238dd35c69f44f6",
+            "c458491d5a2fb1e2",
+            "398b84708d487dad",
+            "e03509eff4a1c892"
+        ],
+        "x": 34,
+        "y": 2223,
+        "w": 642,
+        "h": 178
+    },
+    {
+        "id": "0368db6d7d446339",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "x": 390,
+        "y": 200,
+        "wires": [
+            [
+                "877b43edd7251acc"
+            ]
+        ]
+    },
+    {
+        "id": "d48166077d1f76af",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "x": 410,
+        "y": 1960,
+        "wires": [
+            [
+                "909a45a07adf4caf"
+            ]
+        ]
+    },
+    {
+        "id": "05cb4b03058fc6f8",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "x": 330,
+        "y": 580,
+        "wires": [
+            [
+                "d0b6170b92cd6064"
+            ]
+        ]
+    },
+    {
+        "id": "e03509eff4a1c892",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "cb13651b4e3aee58",
+        "x": 340,
+        "y": 2320,
+        "wires": [
+            [
+                "ddb950ebb37ff3e5"
+            ]
+        ]
+    },
+    {
+        "id": "ca0007816b9f4419",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "x": 340,
+        "y": 880,
+        "wires": [
+            [
+                "d12df878ac1b5714"
+            ]
+        ]
+    },
+    {
+        "id": "7ee9528a1b19eb12",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "x": 420,
+        "y": 1680,
+        "wires": [
+            [
+                "4b0be73d7c1879b9"
+            ]
+        ]
+    },
+    {
+        "id": "81bf7609272ef9af",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "x": 340,
+        "y": 1620,
+        "wires": [
+            [
+                "7ee9528a1b19eb12"
+            ]
+        ]
+    },
+    {
+        "id": "c1d0beb7a8dcf573",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "x": 340,
+        "y": 1740,
+        "wires": [
+            [
+                "7ee9528a1b19eb12"
+            ]
+        ]
+    },
+    {
+        "id": "1b6a3d16ed9f9995",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "x": 340,
+        "y": 1700,
+        "wires": [
+            [
+                "7ee9528a1b19eb12"
+            ]
+        ]
+    },
+    {
+        "id": "3e569dd871349f93",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "x": 350,
+        "y": 2020,
+        "wires": [
+            [
+                "d48166077d1f76af"
+            ]
+        ]
+    },
+    {
+        "id": "dd004a6a442ee6a8",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "x": 350,
+        "y": 1980,
+        "wires": [
+            [
+                "d48166077d1f76af"
+            ]
+        ]
+    },
+    {
+        "id": "079a6828b01e3ca4",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "x": 1160,
+        "y": 1680,
+        "wires": [
+            [
+                "9df22ce79ef39e07"
+            ]
+        ]
+    },
+    {
+        "id": "168b498f7d93b9ca",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "x": 1080,
+        "y": 1620,
+        "wires": [
+            [
+                "079a6828b01e3ca4"
+            ]
+        ]
+    },
+    {
+        "id": "35591e8d08b9a8dc",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "x": 1080,
+        "y": 1740,
+        "wires": [
+            [
+                "079a6828b01e3ca4"
+            ]
+        ]
+    },
+    {
+        "id": "949ddd795829e86e",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "x": 1080,
+        "y": 1700,
+        "wires": [
+            [
+                "079a6828b01e3ca4"
+            ]
+        ]
+    },
+    {
+        "id": "f0c89ce59299d66c",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "x": 360,
+        "y": 1240,
+        "wires": [
+            [
+                "ab686ecd6ae447e3"
+            ]
+        ]
+    },
+    {
+        "id": "d66f87eca883848e",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "x": 1160,
+        "y": 1960,
+        "wires": [
+            [
+                "31310a6648a194ce"
+            ]
+        ]
+    },
+    {
+        "id": "619d338c7eba7669",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "x": 1090,
+        "y": 2020,
+        "wires": [
+            [
+                "d66f87eca883848e"
+            ]
+        ]
+    },
+    {
+        "id": "7ce2b59950e22ecb",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "x": 1090,
+        "y": 1980,
+        "wires": [
+            [
+                "d66f87eca883848e"
+            ]
+        ]
+    },
+    {
+        "id": "f12f44c1b6da7192",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "x": 330,
+        "y": 260,
+        "wires": [
+            [
+                "0368db6d7d446339"
+            ]
+        ]
+    },
+    {
+        "id": "3c2b5cb8448dbb64",
+        "type": "junction",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "x": 610,
+        "y": 260,
+        "wires": [
+            [
+                "7011f3686a81d7eb"
+            ]
+        ]
+    },
+    {
+        "id": "d0b6170b92cd6064",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "",
+        "topic": "",
+        "url": "iife",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "iife-blank-client",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 400,
+        "y": 580,
+        "wires": [
+            [
+                "f95e69f67072596b"
+            ],
+            [
+                "5d1231ce8247b08a"
+            ]
+        ],
+        "info": "This example uses a minimal template with\r\nthe IIFE build of the front-end client.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript.\r\n\r\nThe IIFE build should be included using a link\r\ntag in your HTML."
+    },
+    {
+        "id": "d12df878ac1b5714",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "",
+        "topic": "",
+        "url": "esm",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "esm-blank-client",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 410,
+        "y": 880,
+        "wires": [
+            [
+                "863c33dc4dab0216"
+            ],
+            [
+                "6e760e4d72cb74a7"
+            ]
+        ],
+        "info": "This example uses a blank template with\r\nthe ESM build of the front-end client.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript.\r\n\r\nThe ESM build should be included using an\r\n`import` statement in your `index.js` file.\r\n\r\nESM = ECMA Script Module."
+    },
+    {
+        "id": "01f14b086d7f8a11",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "This is <b>HTML</b> from Node-RED",
+        "payloadType": "str",
+        "x": 85,
+        "y": 220,
+        "wires": [
+            [
+                "9eb1553c08864316"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "877b43edd7251acc",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "",
+        "topic": "",
+        "url": "blank",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 470,
+        "y": 200,
+        "wires": [
+            [
+                "17fde0242e191689"
+            ],
+            [
+                "7eee677cb9a62723"
+            ]
+        ],
+        "info": "This example uses the default blank template.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript."
+    },
+    {
+        "id": "17fde0242e191689",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 655,
+        "y": 160,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "7eee677cb9a62723",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 655,
+        "y": 220,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "d0621a8f51f507bb",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 460,
+        "y": 260,
+        "wires": [
+            [
+                "3c2b5cb8448dbb64"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "f012975f0375b6c8",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 85,
+        "y": 140,
+        "wires": [
+            [
+                "cb80cc034da2d8f1"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "cb80cc034da2d8f1",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "Notification",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 140,
+        "wires": [
+            [
+                "0368db6d7d446339"
+            ]
+        ],
+        "info": "Overlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
+    },
+    {
+        "id": "ddb950ebb37ff3e5",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "cb13651b4e3aee58",
+        "name": "",
+        "topic": "",
+        "url": "blank-old",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "old-blank-client",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 430,
+        "y": 2320,
+        "wires": [
+            [
+                "6238dd35c69f44f6"
+            ],
+            [
+                "c458491d5a2fb1e2"
+            ]
+        ]
+    },
+    {
+        "id": "909a45a07adf4caf",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "",
+        "topic": "",
+        "url": "IIFE-vue3-nobuild",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "iife-vue3-nobuild",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 530,
+        "y": 1960,
+        "wires": [
+            [
+                "caf50be69279b624"
+            ],
+            [
+                "92f0587559df7590"
+            ]
+        ],
+        "info": "This example uses a Vue v3 simple template with\r\nthe IIFE build of the front-end client.\r\n\r\nNo build step is needed to make this work,\r\nthe Vue library is included from a CDN on the\r\nInternet.\r\n\r\n\r\n## LIMITATIONS\r\n\r\nVue and similar front-end frameworks require UI\r\ncomponents and structure to be pre-defined \r\n_before_ the DOM is created. So you cannot \r\ndynamically insert further Vue elements easily.\r\n\r\nYou can still dynamically insert HTML elements.\r\nBut they will not be responsive Vue elements."
+    },
+    {
+        "id": "736993a690bbc167",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 85,
+        "y": 180,
+        "wires": [
+            [
+                "0df7b796d44d2e71"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "0df7b796d44d2e71",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "New Card",
+        "func": "/**\n * Adds a dynamically created \"card\" to the web page\n * using uibuilder's low-code capabilities.\n * Try sending multiple times to see the counter increment.\n */\n\nlet cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 180,
+        "wires": [
+            [
+                "0368db6d7d446339"
+            ]
+        ],
+        "info": "Inserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "d121c8e3e56c4747",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "Chk Description in each node",
+        "info": "This is the \"Blank\" template. \nIt really is blank other than an H1\nheading and the usual style & script.\n\nIt is ready to be used for anything including\nuibuilder's zero-code and low-code\ncapabilities.",
+        "x": 490,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "6c14431f469b8846",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "msg-from-nr",
+        "payload": "A Message From Node-RED",
+        "payloadType": "str",
+        "x": 150,
+        "y": 1980,
+        "wires": [
+            [
+                "dd004a6a442ee6a8"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "e47195b8eda5d40e",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 130,
+        "y": 2020,
+        "wires": [
+            [
+                "3e569dd871349f93"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "0c9f24ab06ee0405",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 95,
+        "y": 1900,
+        "wires": [
+            [
+                "89ae80c659089985"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "89ae80c659089985",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "Notification (not Vue)",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 1900,
+        "wires": [
+            [
+                "d48166077d1f76af"
+            ]
+        ],
+        "info": "**NOTE:** This uses uibuilder's vanilla HTML overlay notification\r\n(as in the non-Vue examples). **It is NOT Vue responsive**.\r\n\r\n---\r\n\r\nOverlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
+    },
+    {
+        "id": "9a4f424c76119444",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 600,
+        "wires": [
+            [
+                "05cb4b03058fc6f8"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "2cb6722e802cf5f1",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 120,
+        "y": 640,
+        "wires": [
+            [
+                "05cb4b03058fc6f8"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "5003addd448138c2",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 85,
+        "y": 520,
+        "wires": [
+            [
+                "ba221f812ae3d84c"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "ba221f812ae3d84c",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "Notification",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 520,
+        "wires": [
+            [
+                "05cb4b03058fc6f8"
+            ]
+        ],
+        "info": "Overlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
+    },
+    {
+        "id": "4020b64008bfdad5",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 85,
+        "y": 560,
+        "wires": [
+            [
+                "be06a0df26c00462"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "be06a0df26c00462",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "New Card",
+        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 560,
+        "wires": [
+            [
+                "05cb4b03058fc6f8"
+            ]
+        ],
+        "info": "Inserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "ca085978f7a1d622",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "cb13651b4e3aee58",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 2340,
+        "wires": [
+            [
+                "e03509eff4a1c892"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "7b2410170a094534",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "cb13651b4e3aee58",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 95,
+        "y": 2300,
+        "wires": [
+            [
+                "cfd5eba13fe03d51"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "cfd5eba13fe03d51",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "cb13651b4e3aee58",
+        "name": "Notification",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 210,
+        "y": 2300,
+        "wires": [
+            [
+                "e03509eff4a1c892"
+            ]
+        ],
+        "info": "Overlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
+    },
+    {
+        "id": "b921d7d1a7e06035",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 900,
+        "wires": [
+            [
+                "ca0007816b9f4419"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "8ca1a701441a31fa",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 130,
+        "y": 940,
+        "wires": [
+            [
+                "ca0007816b9f4419"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "598ecb0adfa8fc5a",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 95,
+        "y": 820,
+        "wires": [
+            [
+                "599391803941e233"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "599391803941e233",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "Notification",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 210,
+        "y": 820,
+        "wires": [
+            [
+                "ca0007816b9f4419"
+            ]
+        ],
+        "info": "Overlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
+    },
+    {
+        "id": "958c94c7f03a6624",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 95,
+        "y": 860,
+        "wires": [
+            [
+                "5a3c5e4b8751fea2"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "5a3c5e4b8751fea2",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "New Card",
+        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 860,
+        "wires": [
+            [
+                "ca0007816b9f4419"
+            ]
+        ],
+        "info": "Inserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "f95e69f67072596b",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 615,
+        "y": 540,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "5d1231ce8247b08a",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 615,
+        "y": 600,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "caf50be69279b624",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 695,
+        "y": 1920,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "92f0587559df7590",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 695,
+        "y": 1980,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "6238dd35c69f44f6",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "cb13651b4e3aee58",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 615,
+        "y": 2300,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "c458491d5a2fb1e2",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "cb13651b4e3aee58",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 615,
+        "y": 2360,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "863c33dc4dab0216",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 615,
+        "y": 860,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "6e760e4d72cb74a7",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 616,
+        "y": 920,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "1b7e4c189916dbec",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 450,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "398b84708d487dad",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "cb13651b4e3aee58",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 460,
+        "y": 2280,
+        "wires": []
+    },
+    {
+        "id": "0ce0de04fb70fda9",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 460,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "284121dd33dcd50b",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 1700,
+        "wires": [
+            [
+                "1b6a3d16ed9f9995"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "4b0be73d7c1879b9",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "",
+        "topic": "",
+        "url": "vuev2-bootstrap",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "vue2-bootstrap",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 530,
+        "y": 1680,
+        "wires": [
+            [
+                "6f8e51db50f117dd"
+            ],
+            [
+                "d7ce360f9e714a57"
+            ]
+        ],
+        "info": "This example uses the VueJS v2 and \r\nbootstrap-vue template.\r\n\r\nYou must have both `Vue@2` and `bootstrap-vue`\r\nlibraries installed to use this template.\r\n\r\nThis used to be the default in some older\r\nversions of uibuilder before the native\r\nHTML versions started to mature.\r\n\r\nIt still provides a simple starting point\r\nfor anyone with minimal front-end design\r\nskills in HTML, CSS, and JavaScript. That is \r\nbecause, bootstrap-vue is a comprehensive \r\nframework complete with pre-configured look and\r\nfeel (using Bootstrap) along with plenty of \r\nhelper components that reduce the amount of \r\nHTML you have to write.\r\n\r\nThe template provides a page that looks\r\nOK with no further configuration. Simply add\r\nyour own UI code within the \r\n`<b-container id=\"app_container\">` section.\r\n\r\nThe rest of the HTML in the template shows\r\nsome basic bootstrap-vue component examples\r\nsuch as forms and buttons along with cards.\r\n\r\n* https://bootstrap-vue.org/\r\n* https://vuejs.org/\r\n* https://getbootstrap.com/\r\n\r\n## LIMITATIONS\r\n\r\nVue and similar front-end frameworks require UI\r\ncomponents and structure to be pre-defined \r\n_before_ the DOM is created. So you cannot \r\ndynamically insert further Vue elements easily.\r\n\r\nYou can still dynamically insert HTML elements.\r\nBut they will not be responsive Vue elements."
+    },
+    {
+        "id": "6f8e51db50f117dd",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 705,
+        "y": 1640,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "d7ce360f9e714a57",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 705,
+        "y": 1700,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "d32229867aa7e3c6",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 130,
+        "y": 1740,
+        "wires": [
+            [
+                "c1d0beb7a8dcf573"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "688f3cc99964f88d",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 95,
+        "y": 1620,
+        "wires": [
+            [
+                "802bd5f9321628ad"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "802bd5f9321628ad",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "Notification",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Check out the bootstrap-vue docs for details - Note that most if not all of these are optional\n    // https://bootstrap-vue.org/docs/components/toast\n    \"options\": {\n      \"title\": \"This is the <i>title</i>\",\n\n      // This is not part of the bootstrap-vue toast options - is used as the toast content.\n      // Note the inclusion of the payload from the upstram msg\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 210,
+        "y": 1620,
+        "wires": [
+            [
+                "81bf7609272ef9af"
+            ]
+        ],
+        "info": "**NOTE:** This uses a bootstrap-vue _toast_ notification rather\r\nthan uibuilder's vanilla HTML overlay notification (as in the\r\nnon-Vue examples). If bootstrap-vue is not loaded, it will not\r\nshow anything.\r\n\r\n---\r\n\r\nOverlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message.\r\n\r\nNote the use of a workaround in the index.js file that lets\r\nthis work with VueJS and bootstrap-vue."
+    },
+    {
+        "id": "955997a9e7fb3c28",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 520,
+        "y": 1620,
+        "wires": []
+    },
+    {
+        "id": "a0976141d22bd12f",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 95,
+        "y": 1660,
+        "wires": [
+            [
+                "9a7af1b5ee3353ba"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "9a7af1b5ee3353ba",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "HTML insert (not Vue)",
+        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 1660,
+        "wires": [
+            [
+                "7ee9528a1b19eb12"
+            ]
+        ],
+        "info": "**NOTE: ** This does NOT insert a bootstrap-vue card, only\r\nan HTML block element. So the result is NOT responsive to Vue.\r\nVue and similar front-end frameworks require UI components and\r\nstructure to be pre-defined _before_ the DOM is created. So you\r\ncannot dynamically insert further Vue elements.\r\n\r\n---\r\n\r\nInserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "c3bd76ce441dc3e3",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 95,
+        "y": 1940,
+        "wires": [
+            [
+                "3439dbee433a88a8"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "3439dbee433a88a8",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "HTML insert (not Vue)",
+        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 1940,
+        "wires": [
+            [
+                "d48166077d1f76af"
+            ]
+        ],
+        "info": "**NOTE: ** This does NOT insert a bootstrap-vue card, only\r\nan HTML block element. So the result is NOT responsive to Vue.\r\nVue and similar front-end frameworks require UI components and\r\nstructure to be pre-defined _before_ the DOM is created. So you\r\ncannot dynamically insert further Vue elements.\r\n\r\n---\r\n\r\nInserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "ce9a12ba5070f920",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 510,
+        "y": 1900,
+        "wires": []
+    },
+    {
+        "id": "251344c859a9f066",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "",
+        "payloadType": "date",
+        "x": 890,
+        "y": 1700,
+        "wires": [
+            [
+                "949ddd795829e86e"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "9df22ce79ef39e07",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "",
+        "topic": "",
+        "url": "vuev2-simple",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "vue2-simple",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 1290,
+        "y": 1680,
+        "wires": [
+            [
+                "5028e29f49a5591f"
+            ],
+            [
+                "2a3a787b6520cef9"
+            ]
+        ],
+        "info": "This example uses the VueJS v2 and \r\nbootstrap-vue template.\r\n\r\nYou must have both `Vue@2` and `bootstrap-vue`\r\nlibraries installed to use this template.\r\n\r\nThis is the simplest template for Vue v2 and\r\nbootstrap-vue.\r\n\r\nIt still provides a simple starting point\r\nfor anyone with minimal front-end design\r\nskills in HTML, CSS, and JavaScript. That is \r\nbecause, bootstrap-vue is a comprehensive \r\nframework complete with pre-configured look and\r\nfeel (using Bootstrap) along with plenty of \r\nhelper components that reduce the amount of \r\nHTML you have to write.\r\n\r\nThe template provides a page that looks\r\nOK with no further configuration. Simply add\r\nyour own UI code within the \r\n`<b-container id=\"app_container\">` section.\r\n\r\nThe rest of the HTML in the template shows\r\nsome basic bootstrap-vue component examples\r\nsuch as forms and buttons along with cards.\r\n\r\n* https://bootstrap-vue.org/\r\n* https://vuejs.org/\r\n* https://getbootstrap.com/\r\n\r\n## LIMITATIONS\r\n\r\nVue and similar front-end frameworks require UI\r\ncomponents and structure to be pre-defined \r\n_before_ the DOM is created. So you cannot \r\ndynamically insert further Vue elements easily.\r\n\r\nYou can still dynamically insert HTML elements.\r\nBut they will not be responsive Vue elements."
+    },
+    {
+        "id": "5028e29f49a5591f",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 1445,
+        "y": 1640,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "2a3a787b6520cef9",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 1445,
+        "y": 1700,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "5e40aeef2599e4e1",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 870,
+        "y": 1740,
+        "wires": [
+            [
+                "35591e8d08b9a8dc"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "d8c57c9cbfba6417",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 835,
+        "y": 1620,
+        "wires": [
+            [
+                "5f2a84a134a770d7"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "5f2a84a134a770d7",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "Notification",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Check out the bootstrap-vue docs for details - Note that most if not all of these are optional\n    // https://bootstrap-vue.org/docs/components/toast\n    \"options\": {\n      \"title\": \"This is the <i>title</i>\",\n\n      // This is not part of the bootstrap-vue toast options - is used as the toast content.\n      // Note the inclusion of the payload from the upstram msg\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 1620,
+        "wires": [
+            [
+                "168b498f7d93b9ca"
+            ]
+        ],
+        "info": "**NOTE:** This uses a bootstrap-vue _toast_ notification rather\r\nthan uibuilder's vanilla HTML overlay notification (as in the\r\nnon-Vue examples). If bootstrap-vue is not loaded, it will not\r\nshow anything.\r\n\r\n---\r\n\r\nOverlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message.\r\n\r\nNote the use of a workaround in the index.js file that lets\r\nthis work with VueJS and bootstrap-vue."
+    },
+    {
+        "id": "c90fa14f3bcd1b5a",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 1260,
+        "y": 1620,
+        "wires": []
+    },
+    {
+        "id": "04b7fe83187b26ed",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 835,
+        "y": 1660,
+        "wires": [
+            [
+                "c8177e230bf224db"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "c8177e230bf224db",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "HTML insert (not Vue)",
+        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 1660,
+        "wires": [
+            [
+                "079a6828b01e3ca4"
+            ]
+        ],
+        "info": "**NOTE: ** This does NOT insert a bootstrap-vue card, only\r\nan HTML block element. So the result is NOT responsive to Vue.\r\nVue and similar front-end frameworks require UI components and\r\nstructure to be pre-defined _before_ the DOM is created. So you\r\ncannot dynamically insert further Vue elements.\r\n\r\n---\r\n\r\nInserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "ec93b864b4127859",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "Send a greeting",
+        "props": [
+            {
+                "p": "greeting",
+                "v": "Hi from Node-RED 😁🚀🎆😎",
+                "vt": "str"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "x": 160,
+        "y": 1260,
+        "wires": [
+            [
+                "f0c89ce59299d66c"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "ab686ecd6ae447e3",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "",
+        "topic": "",
+        "url": "svelte-template",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "svelte-basic",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "dist",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "x": 470,
+        "y": 1240,
+        "wires": [
+            [
+                "1e26ba1f939b35a4"
+            ],
+            [
+                "a9e607e92e5e2c93"
+            ]
+        ],
+        "info": "This example uses the default blank template.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript."
+    },
+    {
+        "id": "1e26ba1f939b35a4",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 625,
+        "y": 1200,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "a9e607e92e5e2c93",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 625,
+        "y": 1260,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "53f930dee4d661c0",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 130,
+        "y": 1300,
+        "wires": [
+            [
+                "f0c89ce59299d66c"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "a75bacf5b8e676fb",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 95,
+        "y": 1180,
+        "wires": [
+            [
+                "c6965c37441712a2"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "c6965c37441712a2",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "Notification",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      // \"autoHideDelay\": 2500,\n      \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 210,
+        "y": 1180,
+        "wires": [
+            [
+                "f0c89ce59299d66c"
+            ]
+        ],
+        "info": "Overlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
+    },
+    {
+        "id": "28cb6bf6fb33f77c",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 95,
+        "y": 1220,
+        "wires": [
+            [
+                "1813ac9ca8eeb177"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "1813ac9ca8eeb177",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "New Card",
+        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 1220,
+        "wires": [
+            [
+                "f0c89ce59299d66c"
+            ]
+        ],
+        "info": "Inserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "85733cc425b92915",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "Simple Svelte Example. Chk Description in each node. Read me too",
+        "info": "This example will work once you have set and\ndeployed the URL. However, if you want to make\nany changes to the front-end code, Svelte \nrequires you to _rebuild_ the destination\noutput.\n\n## Preparing\n1. Go to the server command line and navigate\nto the folder containing this example instance.\n2. In the instance root folder, run\n`npm install`. This will install all of the\nrequired development tools.\n3. Now run `npm run dev`. This starts a live\ndevelopment server and it gives you a URL.\n**IGNORE** the URL it gives you, because you\nare using Node-RED and uibuilder, you don't\nneed it 😎. Instead, you will now find that\nyour web page will automatically reload \nwhenever you save a change.\n\n## Making changes\nMost of the changes you will make will be to\nfiles in the `src` folder. However, if you\nneed to change the global CSS or the outer\nHTML template, these are in the root of the \n`dist` folder. Do not change anything in \n`dist/build` as this is overwritten by the \nSvelte build process.\n\n## Deploying\nOnce you have finished making changes, kill\nthe dev server then run `npm run build`.\n\nThat creates the final version of the code in\nthe dist folder.\n\nRemember: You are running your live pages from\nthe `dist` folder not the `src` folder.",
+        "x": 300,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "6eba307faa3c48e2",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 835,
+        "y": 1940,
+        "wires": [
+            [
+                "3ff7fd7992d48c25"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "3ff7fd7992d48c25",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "HTML insert (not Vue)",
+        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 1940,
+        "wires": [
+            [
+                "d66f87eca883848e"
+            ]
+        ],
+        "info": "**NOTE: ** This does NOT insert a bootstrap-vue card, only\r\nan HTML block element. So the result is NOT responsive to Vue.\r\nVue and similar front-end frameworks require UI components and\r\nstructure to be pre-defined _before_ the DOM is created. So you\r\ncannot dynamically insert further Vue elements.\r\n\r\n---\r\n\r\nInserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
+    },
+    {
+        "id": "f8f90bfd46b1f53e",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "msg-from-nr",
+        "payload": "A Message From Node-RED",
+        "payloadType": "str",
+        "x": 890,
+        "y": 1980,
+        "wires": [
+            [
+                "7ce2b59950e22ecb"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "e340bdc745361401",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 870,
+        "y": 2020,
+        "wires": [
+            [
+                "619d338c7eba7669"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "fb79d887323f47c1",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
+        "payloadType": "jsonata",
+        "x": 835,
+        "y": 1900,
+        "wires": [
+            [
+                "169c10878b6640e4"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "169c10878b6640e4",
+        "type": "function",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "Notification (not Vue)",
+        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 1900,
+        "wires": [
+            [
+                "d66f87eca883848e"
+            ]
+        ],
+        "info": "**NOTE:** This uses uibuilder's vanilla HTML overlay notification\r\n(as in the non-Vue examples). **It is NOT Vue responsive**.\r\n\r\n---\r\n\r\nOverlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
+    },
+    {
+        "id": "97f0c2ea900e3055",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 1435,
+        "y": 1920,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "8db08ddd2a866fb5",
+        "type": "debug",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 1435,
+        "y": 1980,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "b9a054a3ff5f393d",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 1250,
+        "y": 1900,
+        "wires": []
+    },
+    {
+        "id": "7580041a7e962524",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "43b416daeed4d5cb",
+        "name": "Plain DL List (Array)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-dl-list",
+        "payload": "[[\"Entry One\",\"Description One\"],[\"Entry Two\",\"Description Two a\",\"Description Two b\",\"Description Two c\"],[\"Entry Three\",\"Description Three\"],[\"Entry Four\",\"Description Four\"]]",
+        "payloadType": "json",
+        "x": 210,
+        "y": 1420,
+        "wires": [
+            [
+                "d2c23f660fba67cf"
+            ]
+        ]
+    },
+    {
+        "id": "d2c23f660fba67cf",
+        "type": "uib-element",
+        "z": "a29cf0664c167293",
+        "g": "43b416daeed4d5cb",
+        "name": "",
+        "topic": "eltest-dl",
+        "elementtype": "dl",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-dl",
+        "elementIdSourceType": "str",
+        "heading": "My DL Heading (h3)",
+        "headingSourceType": "str",
+        "headingLevel": "h3",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 450,
+        "y": 1420,
+        "wires": [
+            [
+                "f0c89ce59299d66c"
+            ]
+        ]
+    },
+    {
+        "id": "9eb1553c08864316",
+        "type": "uib-update",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "update",
+        "cssSelector": "#more",
+        "cssSelectorType": "str",
+        "slotSourceProp": "payload",
+        "slotSourcePropType": "msg",
+        "attribsSource": "{\"style\": \"border: 1px solid silver;\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 210,
+        "y": 220,
+        "wires": [
+            [
+                "0368db6d7d446339"
+            ]
+        ]
+    },
+    {
+        "id": "85bc1fad31a0dae8",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "name": "A set of flows that show off and test each of uibuilder's built-in templates and other features",
+        "info": "",
+        "x": 340,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "bc0a93a1ec21c077",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "43b416daeed4d5cb",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 240,
+        "y": 1460,
+        "wires": [
+            [
+                "d2c23f660fba67cf"
+            ]
+        ]
+    },
+    {
+        "id": "41fd7d11ae3c157d",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"body\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 300,
+        "wires": [
+            [
+                "f12f44c1b6da7192"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "5ac8daccaea4a291",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "Toggle Visible Status",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showStatus\",\"prop\":\"body\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 340,
+        "wires": [
+            [
+                "f12f44c1b6da7192"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "89bf36d6fc8d1d41",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "Log Lvl 5",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":5}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 470,
+        "y": 300,
+        "wires": [
+            [
+                "7011f3686a81d7eb"
+            ]
+        ]
+    },
+    {
+        "id": "e4f674b5eb32aa05",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "Log Lvl 0",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":0}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 470,
+        "y": 340,
+        "wires": [
+            [
+                "7011f3686a81d7eb"
+            ]
+        ]
+    },
+    {
+        "id": "7011f3686a81d7eb",
+        "type": "link out",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "link out 31",
+        "mode": "link",
+        "links": [
+            "c0abb8e9c5a1262c"
+        ],
+        "x": 655,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "c0abb8e9c5a1262c",
+        "type": "link in",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "link in 9",
+        "links": [
+            "7011f3686a81d7eb"
+        ],
+        "x": 235,
+        "y": 260,
+        "wires": [
+            [
+                "f12f44c1b6da7192"
+            ]
+        ]
+    },
+    {
+        "id": "9cf758cd9a3eda81",
+        "type": "comment",
+        "z": "a29cf0664c167293",
+        "g": "d14e5cf8cd61d8f5",
+        "name": "See \\n browser \\n console",
+        "info": "",
+        "x": 560,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "71fa902dccb4cb5a",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "31c2d342f75d0ef8",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"body\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 680,
+        "wires": [
+            [
+                "05cb4b03058fc6f8"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "b28745cf103fce72",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "40dcfdd7e47f8573",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"body\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 980,
+        "wires": [
+            [
+                "ca0007816b9f4419"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "6b8fde3712999f7e",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "ae89de23bbb814c1",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"body\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 1340,
+        "wires": [
+            [
+                "f0c89ce59299d66c"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "2a6997fca56f2de1",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "1f80e4a191d5322a",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"#app_container\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 910,
+        "y": 1780,
+        "wires": [
+            [
+                "35591e8d08b9a8dc"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "5d26dd3c341a40b3",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "d7ec253e417f16b6",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"#app_container\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 1780,
+        "wires": [
+            [
+                "c1d0beb7a8dcf573"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "c969ddb33e099a82",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "fc8f1db4547ef664",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"#app\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 2060,
+        "wires": [
+            [
+                "3e569dd871349f93"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "29bf34be48a50467",
+        "type": "inject",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"#app\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 910,
+        "y": 2060,
+        "wires": [
+            [
+                "619d338c7eba7669"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "31310a6648a194ce",
+        "type": "uibuilder",
+        "z": "a29cf0664c167293",
+        "g": "946ef719ea12bc08",
+        "name": "",
+        "topic": "",
+        "url": "esm-vue3-nobuild",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "esm-vue3-nobuild",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0-beta",
+        "showMsgUib": false,
+        "x": 1280,
+        "y": 1960,
+        "wires": [
+            [
+                "97f0c2ea900e3055"
+            ],
+            [
+                "8db08ddd2a866fb5"
+            ]
+        ]
+    }
+]

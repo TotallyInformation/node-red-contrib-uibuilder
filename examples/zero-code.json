@@ -1,0 +1,30 @@
+[
+    {
+        "id": "ede83b9af785c506",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "f6154314aee80d24",
+        "name": "",
+        "topic": "",
+        "elementtype": "sform",
+        "parent": "body",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "sform1",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 450,
+        "y": 1560,
+        "wires": [
+            [
+                "534ccd905d0adc50"
+            ]
+        ]
+    }
+]

@@ -6,20 +6,22 @@ created: 2020-09-24 18:14:00
 lastUpdated: 2022-06-18 17:17:42
 ---
 
+- [Message types](#message-types)
+  - [Control message overview](#control-message-overview)
 - [Standard msg properties used by uibuilder](#standard-msg-properties-used-by-uibuilder)
-  - [msg._ui `{Object}` (uibuilder v5.1+)](#msg_ui-object-uibuilder-v51)
-  - [msg._uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
-  - [msg.uibDomEvent `{Object}` (uibuilder v3.2+, PARTIALLY REPLACED WITH msg._ui in v5.1)](#msguibdomevent-object-uibuilder-v32-partially-replaced-with-msg_ui-in-v51)
+  - [msg.\_ui `{Object}` (uibuilder v5.1+)](#msg_ui-object-uibuilder-v51)
+  - [msg.\_uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
+  - [msg.uibDomEvent `{Object}` (uibuilder v3.2+, PARTIALLY REPLACED WITH msg.\_ui in v5.1)](#msguibdomevent-object-uibuilder-v32-partially-replaced-with-msg_ui-in-v51)
   - [msg.script `{String}` (PARTIALLY DEPRECATED IN v5.1)](#msgscript-string-partially-deprecated-in-v51)
   - [msg.style `{String}` (PARTIALLY DEPRECATED IN v5.1)](#msgstyle-string-partially-deprecated-in-v51)
-  - [msg._auth `{Object}` (~~uibuilder v3+~~ DEPRECATED IN v5.0)](#msg_auth-object-uibuilder-v3-deprecated-in-v50)
+  - [msg.\_auth `{Object}` (~~uibuilder v3+~~ DEPRECATED IN v5.0)](#msg_auth-object-uibuilder-v3-deprecated-in-v50)
 - [Messages out of uibuilder's 2nd output port](#messages-out-of-uibuilders-2nd-output-port)
   - [On client (re)connection](#on-client-reconnection)
   - [On client disconnection](#on-client-disconnection)
 - [Messages from Node-RED uibuilder node to the front-end (browser)](#messages-from-node-red-uibuilder-node-to-the-front-end-browser)
   - [Client (re)Connection (Control Message)](#client-reconnection-control-message)
   - [Errors](#errors)
-  - [UI Notification [Toast] (Control Message, PARTIALLY DEPRECATED in v5.1)](#ui-notification-toast-control-message-partially-deprecated-in-v51)
+  - [UI Notification \[Toast\] (Control Message, PARTIALLY DEPRECATED in v5.1)](#ui-notification-toast-control-message-partially-deprecated-in-v51)
     - [Simple version](#simple-version)
     - [More complex example](#more-complex-example)
   - [Browser client reload page](#browser-client-reload-page)
@@ -30,6 +32,36 @@ lastUpdated: 2022-06-18 17:17:42
 - [Messages From either Node-RED or the client](#messages-from-either-node-red-or-the-client)
   - [Clear Cache (Control Message)](#clear-cache-control-message)
 
+## Message types
+
+uibuilder has two general types of pre-defined message. 
+
+- Input UI configuration messages 
+  
+  Input messages containing a `msg._ui` property will not trigger the client libraries on-change method. Instead it is passed through the clients UI building functions and will "hydrate" the configuration data into HTML that is inserted into the browsers DOM (e.g. it updates the UI).
+
+- Output control messages
+
+  A number of standard control messages may be output from the lower output port of the uibuilder node. These may be informational, control caching, notify of errors
+
+It also has some standard message property names that are used throughout. These are described in the [next section below](#standard-msg-properties-used-by-uibuilder).
+
+### Control message overview
+
+This is a list of the possible control messages. They are described in more detail in the following sections of this page.
+
+Created by the uibuilder node:
+
+- "client connect" - When a new client connects or an existing client reloads the page or reconnects after a temporary disconnect. Contains a counter that allows discrimination between a new connection and a reconnection.
+- "client disconnect" - When an existing client disconnects or goes away.
+- "socket error" - when Socket.IO receives information that a client connection is in error.
+- "shutdown" - from server to client when Node-RED is shutting down. (Not well tested).
+
+Send by the uibuilder client library to the uibuilder node:
+
+- "cache control" - the client manually instructing a connected `uib-cache` node to either clear or replay its cache. Clear will impact all connected clients. Replay will only update the requestor.
+- "client log message" - a client can send a log message that is processed by the server. Initial implementation in v6.1, will be enhanced in future versions.
+- "visibility" - the client informs the server when the currently loaded page becomes visible or hidden.
 
 ## Standard msg properties used by uibuilder
 

@@ -52,6 +52,7 @@ const { default: esm } = require('socket.io-client')
 const feSrc = 'src/front-end'
 const feModuleSrc = 'src/front-end-module'
 const feDest = 'front-end'
+const feDestAlt = 'test-front-end'
 const nodeDest = 'nodes'
 const nodeSrcRoot = 'src/editor'
 
@@ -62,7 +63,7 @@ const stdio = 'inherit'
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 
 // npm version 4.2.1 --no-git-tag-version --allow-same-version
-const release = '6.0.0'
+const release = '6.1.0'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}`)
 
@@ -270,50 +271,186 @@ function packfeIIFE(cb) {
     cb()
 }
 
+/** Pack (Uglify) front-end IIFE ES6 task
+ * @param {Function} cb Callback
+ */
+function packfeIIFEes6(cb) {
+    try {
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.es6.min.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: true,
+                sourcemap: true,
+                target: [
+                    'es2016',
+                    // Start of 2019
+                    // 'chrome72',
+                    // 'safari12.1',
+                    // 'firefox65',
+                    // 'opera58',
+
+                    // For private class fields:
+                    // 'chrome74',   // Apr 23, 2019
+                    // 'opera62',    // Jun 27, 2019
+                    // 'edge79',     // Jan 15, 2020
+                    // 'safari14.1', // Apr 26, 2021
+                    // 'firefox90',  // Jul 13, 2021
+
+                    // If we need top-level await
+                    // 'chrome89',  // March 1, 2021
+                    // 'edge89',
+                    // 'opera75',   // Mar 24, 2021
+                    // 'firefox89', // Jun 1, 2021
+                    // 'safari15',  // Sep 20, 2021
+                ]
+            }))
+            .pipe(greplace(/="(.*)-mod"/, '="$1-es6.min"'))
+            .pipe(dest(feDestAlt))
+
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.es6.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: false,
+                sourcemap: false,
+                target: [
+                    'es2016',
+                ]
+            }))
+            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es6"'))
+            .pipe(dest(feDestAlt))
+
+        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
+    } catch (e) {
+        console.error('Could not pack uibuilder.module.js for es6', e)
+    }
+    cb()
+}
+/** Pack (Uglify) front-end IIFE ES5 task - DOES NOT WORK!
+ * @param {Function} cb Callback
+ */
+function packfeIIFEes5(cb) {
+    try {
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.es5.min.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: true,
+                sourcemap: true,
+                target: [
+                    'es5',
+                    // Start of 2019
+                    // 'chrome72',
+                    // 'safari12.1',
+                    // 'firefox65',
+                    // 'opera58',
+
+                    // For private class fields:
+                    // 'chrome74',   // Apr 23, 2019
+                    // 'opera62',    // Jun 27, 2019
+                    // 'edge79',     // Jan 15, 2020
+                    // 'safari14.1', // Apr 26, 2021
+                    // 'firefox90',  // Jul 13, 2021
+
+                    // If we need top-level await
+                    // 'chrome89',  // March 1, 2021
+                    // 'edge89',
+                    // 'opera75',   // Mar 24, 2021
+                    // 'firefox89', // Jun 1, 2021
+                    // 'safari15',  // Sep 20, 2021
+                ]
+            }))
+            .pipe(greplace(/="(.*)-mod"/, '="$1-es5.min"'))
+            .pipe(dest(feDestAlt))
+
+        src(`${feModuleSrc}/uibuilder.module.js`)
+            .pipe(gulpEsbuild({
+                outfile: 'uibuilder.es5.js',
+                bundle: true,
+                format: 'iife',
+                platform: 'browser',
+                minify: false,
+                sourcemap: false,
+                target: [
+                    'es5',
+                ]
+            }))
+            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es5"'))
+            .pipe(dest(feDestAlt))
+
+        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
+    } catch (e) {
+        console.error('Could not pack uibuilder.module.js for es5', e)
+    }
+    cb()
+}
+
 /** Combine the parts of uibuilder.html */
 function buildPanelUib1(cb) {
-    src('src/editor/uibuilder/editor.js')
-        // .pipe(debug({title:'1', minimal:true}))
-        // .pipe(once())
-        // .pipe(debug({title:'2', minimal:true}))
-        .pipe(uglify())
-        .pipe(rename('editor.min.js'))
-        .pipe(dest('src/editor/uibuilder'))
-
+    try {
+        src('src/editor/uibuilder/editor.js')
+            // .pipe(debug({title:'1', minimal:true}))
+            // .pipe(once())
+            // .pipe(debug({title:'2', minimal:true}))
+            .pipe(uglify())
+            .pipe(rename('editor.min.js'))
+            .pipe(dest('src/editor/uibuilder'))
+    } catch (e) {
+        console.error('buildPanelUib1 failed', e)
+    }
     cb()
 }
 /** compress */
 function buildPanelUib2(cb) {
-    src('src/editor/uibuilder/main.html')
-        .pipe(include())
-        // .pipe(once())
-        .pipe(rename('uibuilder.html'))
-        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-        .pipe(dest(nodeDest))
+    try {
+        src('src/editor/uibuilder/main.html')
+            .pipe(include())
+            // .pipe(once())
+            .pipe(rename('uibuilder.html'))
+            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(nodeDest))
+    } catch (e) {
+        console.error('buildPanelUib2 failed', e)
+    }
 
     cb()
 }
 
 /** Combine the parts of uib-cache.html */
 function buildPanelCache(cb) {
-    src('src/editor/uib-cache/main.html')
-        .pipe(include())
-        .pipe(once())
-        .pipe(rename('uib-cache.html'))
-        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-        .pipe(dest(nodeDest))
+    try {
+        src('src/editor/uib-cache/main.html')
+            .pipe(include())
+            .pipe(once())
+            .pipe(rename('uib-cache.html'))
+            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
+            .pipe(dest(nodeDest))
+    } catch (e) {
+        console.error('buildPanelCache failed', e)
+    }
 
     cb()
 }
 
 /** Combine the parts of uib-sender.html */
 function buildPanelSender(cb) {
-    src('src/editor/uib-sender/main.html')
-        .pipe(include())
-        .pipe(once())
-        .pipe(rename('uib-sender.html'))
-        .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-        .pipe(dest(nodeDest))
+    try {
+        src('src/editor/uib-sender/main.html')
+            .pipe(include())
+            .pipe(once())
+            .pipe(rename('uib-sender.html'))
+            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
+            .pipe(dest(nodeDest))
+    } catch (e) {
+        console.error('buildPanelSender failed', e)
+    }
 
     cb()
 }
@@ -331,24 +468,71 @@ function buildPanelSender(cb) {
 
 // For new nodes, the html & js files go in /nodes/<node-name>/ with the filename customNode.{html|js}
 function buildPanelUibList(cb) {
-    src(`${nodeSrcRoot}/uib-list/main.html`, ) // { since: lastRun(buildMe) } )
-        // .pipe(debug({title:'debug1',minimal:false}))
-        .pipe( include() )
-        // Rename output to $dirname/editor.html
-        .pipe(rename(function(thispath) {
-            // thispath.dirname = `${thispath.dirname}`
-            thispath.basename = 'customNode'
-            // thispath.extname = 'html'
-        }))
-        // Minimise HTML output
-        // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-        .pipe(dest(`${nodeDest}/uib-list/`))
+    try {
+        src(`${nodeSrcRoot}/uib-list/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-list/`))
+    } catch (e) {
+        console.error('buildPanelUibList failed', e)
+    }
+
+    cb()
+}
+/** Build the uib-element panel */
+function buildPanelUibElement(cb) {
+    try {
+        src(`${nodeSrcRoot}/uib-element/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-element/`))
+    } catch (e) {
+        console.error('buildPanelUibElement failed', e)
+    }
+
+    cb()
+}
+
+/** Combine the parts of uib-update.html */
+function buildPanelUpdate(cb) {
+    try {
+        src(`${nodeSrcRoot}/uib-update/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-update/`))
+    } catch (e) {
+        console.error('buildPanelUpdate failed', e)
+    }
 
     cb()
 }
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
-const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList)
+const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList, buildPanelUibElement, buildPanelUpdate)
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
@@ -362,6 +546,8 @@ function watchme(cb) {
     // watch('src/editor/uib-receiver/*', buildPanelReceiver)
     watch('src/editor/uib-cache/*', buildPanelCache)
     watch('src/editor/uib-list/*', buildPanelUibList)
+    watch('src/editor/uib-element/*', buildPanelUibElement)
+    watch('src/editor/uib-update/*', buildPanelUpdate)
 
     cb()
 }
@@ -375,12 +561,12 @@ function setFeVersionDev(cb) {
             .pipe(greplace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
 
                 if ( match !== release) {
-                    console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                    console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                     // git commit -m 'my notes' path/to/my/file.ext 
-                    return `self.version = '${release}'`
-                } 
+                    return `self.version = '${release}-old'`
+                }
 
-                console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
 
                 cb(new Error('setFeVersionDev: Content version same as release'))
 
@@ -398,12 +584,12 @@ function setFeVersion(cb) {
             .pipe(greplace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
 
                 if ( match !== release) {
-                    console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                    console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                     // git commit -m 'my notes' path/to/my/file.ext 
-                    return `self.version = '${release}'`
+                    return `self.version = '${release}-old'`
                 } 
 
-                console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                 cb(new Error('setFeVersion: Content version same as release'))
 
             })) // ,`self.version = '${release}'`))
@@ -419,11 +605,11 @@ function setFeVersionMin(cb) {
             // eslint-disable-next-line prefer-named-capture-group
             .pipe(greplace(/.version="(.*?)",/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
                 if ( match !== release) {
-                    console.log(`setFeVersionMin: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
-                    return `.version="${release}",`
+                    console.log(`setFeVersionMin: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
+                    return `.version="${release}-old",`
                 } 
 
-                console.log(`Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                console.log(`Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                 cb(new Error('setFeVersionMin: Content version same as release'))
             }))
             .pipe(dest(feDest))

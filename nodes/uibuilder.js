@@ -1,6 +1,6 @@
 /* eslint-disable block-scoped-var */
 /**
- * Copyright (c) 2017-2022 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2023 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -432,7 +432,7 @@ function nodeInstance(config) {
 /** 1a) All of the initialisation of the Node
  * This is only run once no matter how many uib node instances are added to a flow
  */
- function runtimeSetup() {
+function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     if ( uib.RED === null ) return
     const RED = uib.RED
 
@@ -441,7 +441,6 @@ function nodeInstance(config) {
     log.trace('[uibuilder:runtimeSetup] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
 
-    
     // When uibuilder enters runtime state, show the details in the log
     let initialised = false
     RED.events.on('runtime-event', function(event) {
@@ -552,7 +551,7 @@ function nodeInstance(config) {
         // Check if uibRoot/package.json exists and if not, create it
         const uibRootPkgJson = path.join(uib.rootFolder, 'package.json')
         if ( !fs.existsSync( uibRootPkgJson ) ) {
-            fs.writeJsonSync( uibRootPkgJson, {name: 'uib-root'} )
+            fs.writeJsonSync( uibRootPkgJson, { name: 'uib-root' } )
         }
         // We want to always overwrite the .config template files
         const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }

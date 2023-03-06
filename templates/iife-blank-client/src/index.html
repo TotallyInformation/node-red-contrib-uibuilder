@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+
+    <title>Modern IIFE client example - Node-RED uibuilder</title>
+    <meta name="description" content="Node-RED uibuilder - modern IIFE client example">
+
+    <!-- Your own CSS -->
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed  -->
+    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+    <script defer src="./index.js">/* OPTIONAL: Put your custom code in that */</script>
+    <!-- #endregion -->
+
+</head><body class="uib">
+    
+    <h1 class="with-subtitle">uibuilder Modern Client Example</h1>
+    <div role="doc-subtitle">Using the IIFE library.</div>
+
+    <div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>
+
+    <!-- A form is an easy way to input data to send to Node-RED -->
+    <form>
+        <div>
+            This is a form element, it is an easy way to get input and send it back to Node-RED.
+        </div>
+
+        <div><!-- Accessible form element -->
+            <label for="quickMsg">Quick Message:</label>
+            <!-- onchange is optional, it saves the previous value of the field -->
+            <input id="quickMsg" value="A message from the browser" onchange="this.uib_newValue = this.value" onfocus="this.uib_oldValue = this.value">
+        </div>
+
+        <div>
+            <!-- Send data back to Node-RED the simple way - automatically includes the form's inputs,
+                 `data-*` attributes, keyboard modifiers, etc. Also works with other event types. -->
+            <button onclick="uibuilder.eventSend(event)" data-type="eventSend" data-foo="Bah">eventSend</button>
+        </div>
+    </form>
+
+    <!-- Another way to send custom data back to Node-RED. fnSendToNR is defined in index.js,
+         it uses the standard `uibuilder.send` function -->
+    <button onclick="fnSendToNR('A message from the sharp end!')">Send a custom msg back to Node-RED</button>
+    
+</body></html>

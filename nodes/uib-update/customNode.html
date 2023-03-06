@@ -1,0 +1,391 @@
+<!--
+    Copyright (c) 2023-2023 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<style>
+    #uib-upd *[aria-label] {
+        position:relative;
+    }
+    #uib-upd *[aria-label]:after {
+        content: attr(aria-label);
+        position:absolute;
+        top:100%;left:50px;
+        box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--red-ui-form-input-border-color);
+        padding: 10px;
+        z-index: 999;
+        background-color: var(--red-ui-popover-background);
+        color: var(--red-ui-popover-color);
+        max-width: 350px;
+        text-decoration: none;
+        text-align: center;
+        border-radius: 6px;
+        white-space: break-spaces;
+        
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.5s ease-out;
+    }
+    #uib-upd *[aria-label]:hover:after {
+        visibility: visible;
+        opacity: 1;
+        transition: all 0.5s ease-in 1s;
+    }
+    #uib-upd .red-ui-typedInput-container {
+        width:69% !important;
+    }
+</style>
+
+<script type="text/html" class="uib-tooltip" data-template-name="uib-update">
+<div id="uib-upd">
+
+    <div aria-label="Choose update (default) or delete mode" class="form-row">
+        <label for="node-input-mode">Mode</label>
+        <input type="text" id="node-input-mode">
+        <input type="hidden" id="node-input-modeSourceType">
+    </div>
+
+    <div aria-label="The CSS Selector to find the HTML element to update" class="form-row">
+        <label for="node-input-cssSelector"><i class="fa fa-file-code-o"></i> CSS Selector</label>
+        <input type="text" id="node-input-cssSelector" placeholder="Defines the element to update">
+        <input type="hidden" id="node-input-cssSelectorType">
+    </div>
+    
+    <div><i>Update HTML slot content:</i></div>
+    <div aria-label="The source of the slot content update data" class="form-row">
+        <label for="node-input-slotSourceProp">Content Source</label>
+        <input type="text" id="node-input-slotSourceProp" placeholder="Source data to update elements content">
+        <input type="hidden" id="node-input-slotSourcePropType">
+    </div>
+    <div aria-label="Input content is Markdown rather than HTML?" class="form-row">
+        <label for="node-input-slotPropMarkdown">Markdown?</label>
+        <input type="checkbox" id="node-input-slotPropMarkdown" style="width: auto;vertical-align: top;">
+        <span id="slotPropMarkdown-unchecked" style="font-size:smaller;"> &nbsp; Input can be an HTML string</span>
+        <span id="slotPropMarkdown-checked" style="display:none;font-size:smaller;"> &nbsp; Markdown-It library must be loaded in browser</span>
+    </div>
+    
+
+    <!-- <div style="border:1px solid var(--red-ui-primary-border-color);padding: 0.1rem;"> -->
+    <div><i>Update element attributes:</i></div>
+    <div aria-label="The source of the attribute update data" class="form-row">
+        <label for="node-input-attribsSource">Attribs Source</label>
+        <input type="text" id="node-input-attribsSource" placeholder="Source data to update elements attributes">
+        <input type="hidden" id="node-input-attribsSourceType">
+    </div>
+    <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
+        <p style="font-size: smaller;">
+            The source data must be an object containing attribute name keys. e.g.
+            <code>{"class": "myclassname", <br>"style": "color:red; border: 1px solid silver;"}</code>
+        </p>    
+    </div>
+
+    <hr>
+    
+    <div aria-label="Default msg topic. Make unique if using uib-cache." class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-topic">
+    </div>
+    <div aria-label="Node name (descriptive only)" class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+    
+</div>
+
+</script>
+
+<script type="text/html" data-help-name="uib-update">
+
+<p>
+    Zero-code UI builder. Creates HTML elements from simple input data.<br><br>
+    Requires the "new" front-end client library (either the IIFE or ESM version).
+</p>
+<p>
+    Please try out the example in the import library.
+</p>
+
+<h3>Inputs</h3>
+<dl class="message-properties">
+    <dt>mode <span class="property-type">string</span></dt>
+    <dd>
+        If the <code>msg.mode</code> option is chosen in settings, this property can be set to either "update" or "delete".
+    </dd>
+
+    <dt class="optional">Other <span class="property-type">various</span></dt>
+    <dd>
+        Other msg properties may be passed into the <i>CSS Selector</i>, <i>Content Source</i> and <i>Attributes Source</i> fields if set in the settings.
+    </dd>
+</dl>
+
+<h3>Outputs</h3>
+<dl class="message-properties">
+    <dt>_ui <span class="property-type">object</span></dt>
+    <dd>
+        The _ui configuration properties that defines the creation of the element.<br>
+        Use this in your own flows or in a JSON input for an initial setup of the UI if desired.
+        <p>
+            Most commonly, simply send to the input of a <code>uibuilder</code> node or a <code>uib-cache</code>
+            node. uibuilder will automatically create the desired HTML in the client browser.
+        </p>
+    </dd>
+
+    <dt>topic <span class="property-type">string</span></dt>
+    <dd>
+        The input topic.
+    </dd>
+    <dd>
+        When chaining <code>uib-element</code>/<code>uib-update</code> nodes together, make sure that at least the final
+        output has a unique topic string so that caching using the <code>uib-cache</code> node is
+        easier.
+    </dd>
+    
+</dl>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt>Mode <span class="property-type">selection</span></dt>
+    <dd>
+        The mode of operation.
+    </dd>
+    <dd>
+        Must be one of 'update' or 'delete'. Can also be set to <code>msg.mode</code>.
+    </dd>
+
+    <dt>CSS Selector <span class="property-type">string</span></dt>
+    <dd>
+        Required. A <a href="https://developer.mozilla.org/en-US/docs/web/css/css_selectors" target="_blank">CSS selector</a> that the node will update.
+    </dd>
+    <dd>
+        Note that <b>ALL</b> matching elements will be updated/deleted not just the first.
+    </dd>
+
+    <dt class="optional">Content Source <span class="property-type">string</span></dt>
+    <dd>
+        Optional. Text, HTML or Markdown that will replace the slot content of the selected element.
+    </dd>
+    <dd>
+        If specified, the result must be a string.
+    </dd>
+
+    <dt class="optional">Markdown? <span class="property-type">boolean</span></dt>
+    <dd>
+        If set, the <i>Content Source</i> will be treated as Markdown <i>IF</i> the <a href="https://markdown-it.github.io/" target="_blank">Markdown-IT</a> library is loaded into the client web page.
+    </dd>
+
+    <dt class="optional">Attribs Source <span class="property-type">object</span></dt>
+    <dd>
+        Optional. An object containing attribute-name/value keypairs.
+    </dd>
+    <dd>
+        e.g. <code>{"class":"myclass", "data-foo":"bah"}</code>
+    </dd>
+
+    <dt>Topic <span class="property-type">string</span></dt>
+    <dd>
+        Fixed topic string. Only used if the input <code>msg</code> does not
+        contain a <code>topic</code> property.
+    </dd>
+
+    <dt class="optional">Name <span class="property-type">string</span></dt>
+    <dd>Optional short description shown in the admin interface</dd>
+</dl>
+
+<h3>Details</h3>
+<p>
+    Select the mode of operation (update or delete), provide a CSS Selector that will identify the element(s) to work on.
+    If updating, provide updated slot content and/or attributes. Then send the 
+    output to a uibuilder node to update/remove the element(s).
+</p>
+<p>
+    Multiple <code>uib-update</code> and <code>uib-element</code> nodes can be chained together for more complex needs.
+</p>
+<p>
+    The resulting output produces the dynamic, configuration-driven, low-code <code>msg._ui</code>
+    JSON configuration data used by the uibuilder front-end client library to automatically
+    create HTML on your page. So this can be further processed, saved for future use or sent 
+    direct to a uibuilder node (via a <code>uib-cache</code> node if desired).
+</p>
+
+</script>
+
+<script type="text/javascript">
+    /* eslint-disable strict, sonarjs/no-duplicate-string */
+    
+    // Isolate this code
+    (function () {
+        'use strict'
+    
+        /** Module name must match this nodes html file @constant {string} moduleName */
+        const moduleName = 'uib-update'
+        /** Node's label @constant {string} paletteCategory */
+        const nodeLabel = moduleName
+        /** Node's palette category @constant {string} paletteCategory */
+        const paletteCategory = 'uibuilder'
+        /** Node's background color @constant {string} paletteColor */
+        const paletteColor = '#E6E0F8'
+    
+        const inputTypes = [
+            'msg', 'flow', 'global',
+            'str', 'num', 'bool', 'date',
+            'env', 'jsonata', 're', 'json',
+            // 'bin', 'cred',
+        ]
+        // Standard typed input types for string fields
+        const stdStrTypes = [
+            'msg', 'flow', 'global',
+            'str', 'env', 'jsonata', 're',
+        ]
+    
+        /** Prep for edit
+         * @param {*} node A node instance as seen from the Node-RED Editor
+         */
+        function onEditPrepare(node) {
+            if (!node.mode) {
+                node.mode = 'update'
+                // $('#node-input-mode').typedInput('value', 'update')
+            }
+            $('#node-input-slotPropMarkdown').prop('checked', node.slotPropMarkdown)
+    
+            // mode typed input - https://nodered.org/docs/api/ui/typedInput/
+            $('#node-input-mode').typedInput({
+                types: [
+                    {
+                        value: 'modeType',
+                        options: [
+                            {
+                                value: 'update',
+                                label: 'Update',
+                            },
+                            {
+                                value: 'delete',
+                                label: 'Delete',
+                            },
+                            {
+                                value: 'msg.mode',
+                                label: 'msg.mode',
+                            },
+                        ],
+                    }
+                ],
+                // typeField: $('#node-input-modeSourceType'),
+            })
+    
+            // css selector typed input - https://nodered.org/docs/api/ui/typedInput/
+            $('#node-input-cssSelector').typedInput({
+                types: stdStrTypes,
+                default: 'str',
+                typeField: $('#node-input-cssSelectorType'),
+            })
+    
+            // slotSourceProp typed input - https://nodered.org/docs/api/ui/typedInput/
+            $('#node-input-slotSourceProp').typedInput({
+                types: inputTypes,
+                default: 'msg',
+                typeField: $('#node-input-slotSourcePropType')
+            })
+    
+            $('#node-input-slotPropMarkdown').on('change', function() {
+                if ($(this).is(':checked') === false) {
+                    $('#slotPropMarkdown-unchecked').show()
+                    $('#slotPropMarkdown-checked').hide()
+                } else {
+                    $('#slotPropMarkdown-unchecked').hide()
+                    $('#slotPropMarkdown-checked').show()
+                }
+            })
+    
+            // attribsSource typed input - https://nodered.org/docs/api/ui/typedInput/
+            $('#node-input-attribsSource').typedInput({
+                types: ['msg', 'flow', 'global', 'json', 'jsonata',],
+                default: 'msg',
+                typeField: $('#node-input-attribsSourceType')
+            })
+    
+        } // ----- end of onEditPrepare() ----- //
+    
+        /** Validate a typed input as a string
+         * Must not be JSON. Can be a number only if allowNum=true. Can be an empty string only if allowBlank=true
+         * Sets typedInput border to red if not valid since custom validation not available on std typedInput types
+         * @param {string} value Input value
+         * @param {string} inpName Input field name
+         * @param {boolean} allowBlank true=allow blank string. Default=true
+         * @param {boolean} allowNum true=allow numeric input. Default=false
+         * @returns {boolean} True if valid
+         */
+        function tiValidateOptString(value, inpName, allowBlank = true, allowNum = false) {
+            let isValid = true
+            let f
+            try {
+                f = value.slice(0, 1)
+            } catch (e) {}
+    
+            if (allowBlank === false && value === '') {
+                isValid = false
+                // console.log({ name: inpName, why: 'Blank failed', value: value, allowBlank: allowBlank })
+            }
+    
+            if ( allowNum === false && (value !== '' && !isNaN(Number(value))) ) {
+                isValid = false
+                // console.log({ name: inpName, why: 'Num failed', value: value, allowNum: allowNum })
+            }
+    
+            if ( f === '{' || f === '[' ) isValid = false
+    
+            $(`#node-input-${inpName} + .red-ui-typedInput-container`).css('border-color', isValid ? 'var(--red-ui-form-input-border-color)' : 'red')
+            return isValid
+        }
+    
+        // @ts-ignore
+        RED.nodes.registerType(moduleName, {
+            category: paletteCategory,
+            color: paletteColor,
+            defaults: {
+                name: { value: '' },
+                topic: { value: '' },
+    
+                mode: { value: 'update', required: true },
+                modeSourceType: { value: 'update', required: true },
+    
+                cssSelector: { value: '', validate: (v) => tiValidateOptString(v, 'cssSelector', false, true) },
+                cssSelectorType: { value: 'str', required: true },
+    
+                slotSourceProp: { value: '' },
+                slotSourcePropType: { value: 'msg' },
+    
+                attribsSource: { value: '' },
+                attribsSourceType: { value: 'msg' },
+    
+                slotPropMarkdown: { value: false },
+    
+            },
+            align: 'left',
+            inputs: 1,
+            inputLabels: 'Source data',
+            outputs: 1,
+            outputLabels: ['uibuilder dynamic UI configuration'],
+            icon: 'pencilProgressWhiteSmaller.svg',
+            paletteLabel: nodeLabel,
+            label: function () {
+                return this.name || `${this.mode}${this.cssSelectorType === 'str' ? ` ${this.cssSelector.replace(/.*::/, '')}` : ''}`  || moduleName
+            },
+    
+            /** Prepares the Editor panel */
+            oneditprepare: function () { onEditPrepare(this) },
+    
+        }) // ---- End of registerType() ---- //
+    
+    }())
+    
+</script>

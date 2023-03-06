@@ -14,6 +14,13 @@
 # Valid uibuilder instance URL
 @url = test1
 
+# @name ClientLog-Test
+# Create a new folder or file
+POST http://localhost:3000/v610/_clientLog
+HELO
+
+
+
 # @name Sample-Get
 # Get something and return it
 GET http://{{host}}/{{redAdminPath}}/{{uibPath}}/{{uibAdminPath}}/{{url}}?ping=pong

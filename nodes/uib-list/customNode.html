@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2017-2022 Julian Knight (Totally Information)
+    Copyright (c) 2017-2023 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -15,6 +15,10 @@
 -->
 
 <script type="text/html" data-template-name="uib-list">
+<div style="border:3px solid red;margin:10px;padding:10px;width:70%;text-align: center;background-color: hsla(13, 76%, 80%, 0.2);">
+    <b>THIS NODE IS NOW DEPRECATED.</b><br>PLEASE SWITCH TO USING THE <code>uib-element</code> node instead.
+</div>
+
 <div aria-label="Note: only works with new library" class="form-row" style="max-width: 450px">
     <b>NOTE:</b> This node only works if you are using the new <i>ES Module</i> version of the uibuilder front-end
     client library. It does not work with the previous <code>uibuilderfe</code> library.
@@ -100,7 +104,7 @@
 <script type="text/html" data-help-name="uib-list">
 
 <p>
-    <b>EXPERIMENTAL</b> Node demonstrating a way of building a ui element from a node.<br>
+    <b>DEPRECATING: Will be removed in a future release. Use the <code>uib-element</code> node instead</b>. Node demonstrating a way of building a ui element from a node.<br>
     <b>This node requires the "new" front-end client library</b> (either the IIFE or ESM version).
 </p>
 <p>
@@ -202,6 +206,7 @@
 <p>
     To empty the cache and remove from the connected clients, send a msg containing a <code>mode</code> property set to "remove".
 </p>
+
 </script>
 
 <script type="text/javascript">
@@ -381,7 +386,7 @@
                 cacheOn: { value: true },
                 storeName: { value: 'default', required: true },
                 storeContext: { value: 'context' },
-                varName: { value: 'uib_cache', required: true },
+                varName: { value: 'uib_list', required: true },
                 newcache: { value: true },
             },
             align: 'right',

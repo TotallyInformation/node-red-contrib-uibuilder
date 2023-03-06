@@ -2,7 +2,7 @@
  *  If it receives a cache-replay control msg, it dumps the cache.
  *  If it receives a caech-empty control msg, it empties the cache.
  *
- * Copyright (c) 2022 Julian Knight (Totally Information)
+ * Copyright (c) 2022-2023 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -193,6 +193,13 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
             sendCache(send, this, msg)
         }
     } else {
+        // Remove ExpressJS msg.res and msg.req because they are recursive objects and cannot be serialised
+        if ( Object.prototype.hasOwnProperty.call(msg, 'req') || Object.prototype.hasOwnProperty.call(msg, 'res') ) {
+            mod.RED.log.info( '[uib-cache:inputMsgHandler] msg contains Express res/req. These cannot be serialised so removing them.' )
+            delete msg.req
+            delete msg.res
+        }
+
         // Forward
         send(msg)
         // Add to cache

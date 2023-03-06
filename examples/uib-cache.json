@@ -15,7 +15,8 @@
         "style": {
             "fill": "#ffefbf",
             "fill-opacity": "0.34",
-            "label": true
+            "label": true,
+            "color": "#000000"
         },
         "nodes": [
             "4a1f0bc164fe96de",
@@ -39,9 +40,12 @@
         "id": "124607d308a0f6a6",
         "type": "group",
         "z": "f748d0e6cc78a2ba",
-        "name": "Example of using the cache with uibuilder \\n ",
+        "name": "Example of using the cache with uibuilder. Add 3 lists to the page then reload, only 2 re-appear. \\n ",
         "style": {
-            "label": true
+            "label": true,
+            "fill": "#ffffff",
+            "fill-opacity": "0.21",
+            "color": "#000000"
         },
         "nodes": [
             "9c253e4c5651a568",
@@ -58,12 +62,43 @@
             "ac3988907ad3ccaa",
             "95d8b757da5c9fd4",
             "417119b1765dd5b1",
-            "309727329638650e"
+            "309727329638650e",
+            "c13e434afccaa153",
+            "fc7585830654783a",
+            "0555cd3fcd3edcfb",
+            "5e202f9e5b6827e6",
+            "c3bdf6f53c48a1e0"
         ],
-        "x": 44,
-        "y": 403,
-        "w": 1082,
-        "h": 298
+        "x": 54,
+        "y": 383,
+        "w": 1072,
+        "h": 378
+    },
+    {
+        "id": "c13e434afccaa153",
+        "type": "junction",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "x": 320,
+        "y": 640,
+        "wires": [
+            [
+                "0555cd3fcd3edcfb"
+            ]
+        ]
+    },
+    {
+        "id": "fc7585830654783a",
+        "type": "junction",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "x": 800,
+        "y": 560,
+        "wires": [
+            [
+                "c6306e9378b9c1f2"
+            ]
+        ]
     },
     {
         "id": "4a1f0bc164fe96de",
@@ -134,9 +169,12 @@
         "g": "c582e19b78889a25",
         "cacheall": false,
         "cacheKey": "topic",
+        "newcache": true,
         "num": "4",
         "storeName": "default",
         "name": "",
+        "storeContext": "context",
+        "varName": "uib_cache",
         "x": 470,
         "y": 220,
         "wires": [
@@ -353,16 +391,12 @@
         "templateFolder": "blank",
         "extTemplate": "",
         "showfolder": true,
-        "useSecurity": false,
-        "allowUnauth": false,
-        "allowAuthAnon": false,
-        "sessionLength": 432000,
-        "tokenAutoExtend": false,
         "reload": false,
         "sourceFolder": "src",
         "deployedVersion": "5.0.0-dev.2",
+        "showMsgUib": false,
         "x": 680,
-        "y": 540,
+        "y": 480,
         "wires": [
             [
                 "49d6a6f1bd5358ee"
@@ -378,7 +412,7 @@
         "type": "inject",
         "z": "f748d0e6cc78a2ba",
         "g": "124607d308a0f6a6",
-        "name": "",
+        "name": "Empty Topic (not cached)",
         "props": [
             {
                 "p": "payload"
@@ -395,11 +429,11 @@
         "topic": "",
         "payload": "Empty Topic",
         "payloadType": "str",
-        "x": 190,
-        "y": 540,
+        "x": 210,
+        "y": 720,
         "wires": [
             [
-                "ed061d1aaea36b27"
+                "c13e434afccaa153"
             ]
         ]
     },
@@ -418,7 +452,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1065,
-        "y": 520,
+        "y": 460,
         "wires": [],
         "l": false
     },
@@ -438,7 +472,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 885,
-        "y": 580,
+        "y": 520,
         "wires": [],
         "l": false
     },
@@ -458,7 +492,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 595,
-        "y": 500,
+        "y": 440,
         "wires": [],
         "l": false
     },
@@ -469,10 +503,11 @@
         "g": "124607d308a0f6a6",
         "name": "",
         "links": [
-            "c6306e9378b9c1f2"
+            "c6306e9378b9c1f2",
+            "5e202f9e5b6827e6"
         ],
-        "x": 245,
-        "y": 580,
+        "x": 255,
+        "y": 480,
         "wires": [
             [
                 "ed061d1aaea36b27"
@@ -490,7 +525,7 @@
             "06327985e9dae780"
         ],
         "x": 845,
-        "y": 600,
+        "y": 540,
         "wires": []
     },
     {
@@ -500,11 +535,14 @@
         "g": "124607d308a0f6a6",
         "cacheall": false,
         "cacheKey": "topic",
+        "newcache": true,
         "num": "4",
         "storeName": "default",
         "name": "",
+        "storeContext": "context",
+        "varName": "uib_cache",
         "x": 440,
-        "y": 540,
+        "y": 480,
         "wires": [
             [
                 "9c253e4c5651a568",
@@ -532,13 +570,13 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "two",
-        "payload": "{\"a\":\"Number Two\",\"b\":{\"b1\":1,\"b2\":{\"b2i\":1,\"b2ii\":2}}}",
+        "payload": "{\"a\":\"Number Two\",\"b\":[\"To B\",\" Or not to B\"]}",
         "payloadType": "json",
-        "x": 210,
-        "y": 500,
+        "x": 150,
+        "y": 680,
         "wires": [
             [
-                "ed061d1aaea36b27"
+                "c13e434afccaa153"
             ]
         ]
     },
@@ -564,11 +602,11 @@
         "topic": "one",
         "payload": "Number One",
         "payloadType": "str",
-        "x": 210,
-        "y": 460,
+        "x": 150,
+        "y": 640,
         "wires": [
             [
-                "ed061d1aaea36b27"
+                "c13e434afccaa153"
             ]
         ]
     },
@@ -595,7 +633,7 @@
         "to": "",
         "reg": false,
         "x": 920,
-        "y": 520,
+        "y": 460,
         "wires": [
             [
                 "594248fc5dc5f799"
@@ -620,8 +658,8 @@
         "onceDelay": 0.1,
         "topic": "",
         "payloadType": "str",
-        "x": 105,
-        "y": 620,
+        "x": 605,
+        "y": 540,
         "wires": [
             [
                 "95d8b757da5c9fd4"
@@ -641,11 +679,11 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 200,
-        "y": 620,
+        "x": 700,
+        "y": 540,
         "wires": [
             [
-                "ed061d1aaea36b27"
+                "fc7585830654783a"
             ]
         ]
     },
@@ -666,8 +704,8 @@
         "onceDelay": 0.1,
         "topic": "",
         "payloadType": "str",
-        "x": 105,
-        "y": 660,
+        "x": 605,
+        "y": 580,
         "wires": [
             [
                 "309727329638650e"
@@ -687,12 +725,85 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 200,
-        "y": 660,
+        "x": 700,
+        "y": 580,
+        "wires": [
+            [
+                "fc7585830654783a"
+            ]
+        ]
+    },
+    {
+        "id": "0555cd3fcd3edcfb",
+        "type": "uib-element",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "topic": "",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "topic",
+        "elementId": "",
+        "elementIdSourceType": "msg",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 420,
+        "y": 640,
+        "wires": [
+            [
+                "5e202f9e5b6827e6"
+            ]
+        ]
+    },
+    {
+        "id": "5e202f9e5b6827e6",
+        "type": "link out",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "06327985e9dae780"
+        ],
+        "x": 535,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "c3bdf6f53c48a1e0",
+        "type": "inject",
+        "z": "f748d0e6cc78a2ba",
+        "g": "124607d308a0f6a6",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"body\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "toggle-visible-messages",
+        "x": 190,
+        "y": 520,
         "wires": [
             [
                 "ed061d1aaea36b27"
             ]
-        ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
     }
 ]

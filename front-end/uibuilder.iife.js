@@ -27,14 +27,6 @@
     setter ? setter.call(obj, value2) : member.set(obj, value2);
     return value2;
   };
-  var __privateWrapper = (obj, member, setter, getter) => ({
-    set _(value2) {
-      __privateSet(obj, member, value2, setter);
-    },
-    get _() {
-      return __privateGet(obj, member, getter);
-    }
-  });
 
   // node_modules/engine.io-parser/build/esm/commons.js
   var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -2261,7 +2253,7 @@
   });
 
   // src/front-end-module/uibuilder.module.js
-  var version = "6.0.0-iife";
+  var version = "6.1.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
   var logLevel = isMinified ? 0 : 1;
@@ -2404,33 +2396,69 @@
     }).join("/");
     return url2.replace("//", "/");
   }
-  var _connectedNum, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _a;
+  var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _extCommands, _showStatus, _a;
   var Uib = (_a = class {
     constructor() {
-      __privateAdd(this, _connectedNum, 0);
+      __publicField(this, "connectedNum", 0);
       __publicField(this, "_ioChannels", { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
       __privateAdd(this, _pingInterval, void 0);
       __privateAdd(this, _propChangeCallbacks, {});
       __privateAdd(this, _msgRecvdByTopicCallbacks, {});
+      __publicField(this, "isVue", false);
+      __publicField(this, "vueVersion");
       __privateAdd(this, _timerid, null);
       __privateAdd(this, _MsgHandler, void 0);
       __publicField(this, "_socket");
+      __publicField(this, "_htmlObserver");
+      __privateAdd(this, _isShowMsg, false);
+      __privateAdd(this, _isShowStatus, false);
+      __privateAdd(this, _extCommands, [
+        "get",
+        "set",
+        "showMsg",
+        "showStatus"
+      ]);
+      __privateAdd(this, _showStatus, {
+        online: { "var": "online", "label": "Online?", "description": "Is the browser online?" },
+        ioConnected: { "var": "ioConnected", "label": "Socket.IO connected?", "description": "Is Socket.IO connected?" },
+        connectedNum: { "var": "connectedNum", "label": "# reconnections", "description": "How many times has Socket.IO had to reconnect since last page load?" },
+        clientId: { "var": "clientId", "label": "Client ID", "description": "Static client unique id set in Node-RED. Only changes when browser is restarted." },
+        tabId: { "var": "tabId", "label": "Browser tab ID", "description": "Static unique id for the browser's current tab" },
+        cookies: { "var": "cookies", "label": "Cookies", "description": "Cookies set in Node-RED" },
+        httpNodeRoot: { "var": "httpNodeRoot", "label": "httpNodeRoot", "description": "From Node-RED' settings.js, affects URL's. May be wrong for pages in sub-folders" },
+        pageName: { "var": "pageName", "label": "Page name", "description": "Actual name of this page" },
+        ioNamespace: { "var": "ioNamespace", "label": "SIO namespace", "description": "Socket.IO namespace - unique to each uibuilder node instance" },
+        socketError: { "var": "socketError", "label": "Socket error", "description": "If the Socket.IO connection has failed, says why" },
+        msgsSent: { "var": "msgsSent", "label": "# msgs sent", "description": "How many standard messages have been sent to Node-RED?" },
+        msgsReceived: { "var": "msgsReceived", "label": "# msgs received", "description": "How many standard messages have been received from Node-RED?" },
+        msgsSentCtrl: { "var": "msgsSentCtrl", "label": "# control msgs sent", "description": "How many control messages have been sent to Node-RED?" },
+        msgsCtrlReceived: { "var": "msgsCtrlReceived", "label": "# control msgs received", "description": "How many control messages have been received from Node-RED?" },
+        originator: { "var": "originator", "label": "Node Originator", "description": "If the last msg from Node-RED was from a `uib-sender` node, this will be its node id so that messasges can be returned to it" },
+        topic: { "var": "topic", "label": "Default topic", "description": "Optional default topic to be included in outgoing standard messages" },
+        started: { "var": "started", "label": "Has uibuilder client started?", "description": "Whether `uibuilder.start()` ran successfully. This should self-run and should not need to be run manually" },
+        version: { "var": "version", "label": "uibuilder client version", "description": "The version of the loaded uibuilder client library" },
+        serverTimeOffset: { "var": "serverTimeOffset", "label": "Server time offset (Hrs)", "description": "The number of hours difference between the Node-red server and the client" }
+      });
       __publicField(this, "clientId", "");
       __publicField(this, "cookies", {});
       __publicField(this, "ctrlMsg", {});
       __publicField(this, "ioConnected", false);
+      __publicField(this, "isVisible", false);
+      __publicField(this, "lastNavType", "");
       __publicField(this, "msg", {});
       __publicField(this, "msgsSent", 0);
       __publicField(this, "msgsReceived", 0);
       __publicField(this, "msgsSentCtrl", 0);
       __publicField(this, "msgsCtrlReceived", 0);
+      __publicField(this, "online", navigator.onLine);
       __publicField(this, "sentCtrlMsg", {});
       __publicField(this, "sentMsg", {});
       __publicField(this, "serverTimeOffset", null);
       __publicField(this, "socketError", null);
-      __publicField(this, "online", null);
-      __publicField(this, "lastNavType", null);
+      __publicField(this, "tabId", "");
+      __publicField(this, "pageName", null);
       __publicField(this, "originator", "");
+      __publicField(this, "topic");
       __publicField(this, "autoSendReady", true);
       __publicField(this, "httpNodeRoot", "");
       __publicField(this, "ioNamespace", "");
@@ -2446,7 +2474,9 @@
           clientVersion: version,
           clientId: this.clientId,
           pathName: window.location.pathname,
-          pageName: void 0
+          pageName: void 0,
+          tabId: void 0,
+          lastNavType: void 0
         },
         transportOptions: {
           polling: {
@@ -2472,11 +2502,30 @@
         const splitC = c.split("=");
         this.cookies[splitC[0].trim()] = splitC[1];
       });
-      this.clientId = this.cookies["uibuilder-client-id"];
+      this.set("clientId", this.cookies["uibuilder-client-id"]);
       log("trace", "Uib:constructor", "Client ID: ", this.clientId)();
-      this.ioNamespace = this._getIOnamespace();
+      this.set("tabId", window.sessionStorage.getItem("tabId"));
+      if (!this.tabId) {
+        this.set("tabId", `t${Math.floor(Math.random() * 1e6)}`);
+        window.sessionStorage.setItem("tabId", this.tabId);
+      }
+      document.addEventListener("load", () => {
+        this.set("isVisible", true);
+      });
+      document.addEventListener("visibilitychange", () => {
+        this.set("isVisible", document.visibilityState === "visible");
+        this.sendCtrl({ uibuilderCtrl: "visibility", isVisible: this.isVisible });
+      });
+      document.addEventListener("uibuilder:propertyChanged", (event2) => {
+        if (!__privateGet(this, _isShowStatus))
+          return;
+        if (event2.detail.prop in __privateGet(this, _showStatus)) {
+          document.querySelector(`td[data-vartype="${event2.detail.prop}"]`).innerText = JSON.stringify(event2.detail.value);
+        }
+      });
+      this.set("ioNamespace", this._getIOnamespace());
       if ("uibuilder-webRoot" in this.cookies) {
-        this.httpNodeRoot = this.cookies["uibuilder-webRoot"];
+        this.set("httpNodeRoot", this.cookies["uibuilder-webRoot"]);
         log("trace", "Uib:constructor", `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)();
       } else {
         const fullPath = window.location.pathname.split("/").filter(function(t) {
@@ -2485,16 +2534,17 @@
         if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith(".html"))
           fullPath.pop();
         fullPath.pop();
-        this.httpNodeRoot = "/" + fullPath.join("/");
+        this.set("httpNodeRoot", `/${fullPath.join("/")}`);
         log("trace", "[Uib:constructor]", `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)();
       }
-      this.ioPath = urlJoin(this.httpNodeRoot, _a._meta.displayName, "vendor", "socket.io");
+      this.set("ioPath", urlJoin(this.httpNodeRoot, _a._meta.displayName, "vendor", "socket.io"));
       log("trace", "Uib:constructor", `ioPath: "${this.ioPath}"`)();
-      this.pageName = window.location.pathname.replace(`${this.ioNamespace}/`, "");
+      this.set("pageName", window.location.pathname.replace(`${this.ioNamespace}/`, ""));
       if (this.pageName.endsWith("/"))
-        this.pageName += "index.html";
+        this.set("pageName", `${this.pageName}index.html`);
       if (this.pageName === "")
-        this.pageName = "index.html";
+        this.set("pageName", "index.html");
+      this._dispatchCustomEvent("uibuilder:constructorComplete");
       log("trace", "Uib:constructor", "Ending")();
     }
     get meta() {
@@ -2527,11 +2577,45 @@
       if (prop === "msgsCtrl")
         return this.msgsCtrlReceived;
       if (prop === "reconnections")
-        return __privateGet(this, _connectedNum);
+        return this.connectedNum;
       if (this[prop] === void 0) {
         log("warn", "Uib:get", `get() - property "${prop}" does not exist`)();
       }
       return this[prop];
+    }
+    setStore(id, value2) {
+      if (typeof value2 === "object") {
+        try {
+          value2 = JSON.stringify(value2);
+        } catch (e) {
+          log("error", "Uib:setStore", "Cannot stringify object, not storing. ", e)();
+          return false;
+        }
+      }
+      try {
+        localStorage.setItem(this.storePrefix + id, value2);
+        return true;
+      } catch (e) {
+        log("error", "Uib:setStore", "Cannot write to localStorage. ", e)();
+        return false;
+      }
+    }
+    getStore(id) {
+      try {
+        return JSON.parse(localStorage.getItem(this.storePrefix + id));
+      } catch (e) {
+      }
+      try {
+        return localStorage.getItem(this.storePrefix + id);
+      } catch (e) {
+        return void 0;
+      }
+    }
+    removeStore(id) {
+      try {
+        localStorage.removeItem(this.storePrefix + id);
+      } catch (e) {
+      }
     }
     _dispatchCustomEvent(title, details) {
       const event2 = new CustomEvent(title, { detail: details });
@@ -2588,36 +2672,6 @@
     setOriginator(originator = "") {
       this.set("originator", originator);
     }
-    setStore(id, value2) {
-      if (typeof value2 === "object") {
-        try {
-          value2 = JSON.stringify(value2);
-        } catch (e) {
-          log("error", "Uib:setStore", "Cannot stringify object, not storing. ", e)();
-          return false;
-        }
-      }
-      try {
-        localStorage.setItem(this.storePrefix + id, value2);
-        return true;
-      } catch (e) {
-        log("error", "Uib:setStore", "Cannot write to localStorage. ", e)();
-        return false;
-      }
-    }
-    getStore(id) {
-      try {
-        return JSON.parse(localStorage.getItem(this.storePrefix + id));
-      } catch (e) {
-        return localStorage.getItem(this.storePrefix + id);
-      }
-    }
-    removeStore(id) {
-      try {
-        localStorage.removeItem(this.storePrefix + id);
-      } catch (e) {
-      }
-    }
     setPing(ms = 0) {
       const oReq = new XMLHttpRequest();
       oReq.addEventListener("load", () => {
@@ -2647,6 +2701,26 @@
     log() {
       log(...arguments)();
     }
+    syntaxHighlight(json) {
+      json = JSON.stringify(json, void 0, 4);
+      json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
+        let cls = "number";
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = "key";
+          } else {
+            cls = "string";
+          }
+        } else if (/true|false/.test(match)) {
+          cls = "boolean";
+        } else if (/null/.test(match)) {
+          cls = "null";
+        }
+        return '<span class="' + cls + '">' + match + "</span>";
+      });
+      return json;
+    }
     ui(json) {
       let msg = {};
       if (json._ui)
@@ -2655,15 +2729,17 @@
         msg._ui = json;
       this._uiManager(msg);
     }
-    replaceSlot(ui, el, component) {
+    replaceSlot(el, component) {
+      if (!component.slot)
+        return;
       if (window["DOMPurify"])
         component.slot = window["DOMPurify"].sanitize(component.slot);
-      if (component.slot !== void 0 && component.slot !== null && component.slot !== "") {
-        el.innerHTML = component.slot ? component.slot : ui.payload;
-      }
+      el.innerHTML = component.slot;
     }
-    replaceSlotMarkdown(ui, el, component) {
+    replaceSlotMarkdown(el, component) {
       if (!window["markdownit"])
+        return;
+      if (!component.slotMarkdown)
         return;
       const opts = {
         html: true,
@@ -2685,9 +2761,7 @@
       component.slotMarkdown = md.render(component.slotMarkdown);
       if (window["DOMPurify"])
         component.slotMarkdown = window["DOMPurify"].sanitize(component.slotMarkdown);
-      if (component.slotMarkdown !== void 0 && component.slotMarkdown !== null && component.slotMarkdown !== "") {
-        el.innerHTML += component.slotMarkdown ? component.slotMarkdown : ui.payload;
-      }
+      el.innerHTML = component.slotMarkdown;
     }
     loadScriptSrc(url2) {
       const newScript = document.createElement("script");
@@ -2727,8 +2801,6 @@
         ui.title = msg.topic;
       if (ui.title)
         content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
-      if (!ui.variant || !["", "primary", "secondary", "success", "info", "warn", "warning", "failure", "error", "danger"].includes(ui.variant))
-        ui.variant = "";
       if (ui.noAutohide)
         ui.noAutoHide = ui.noAutohide;
       if (ui.noAutoHide)
@@ -2752,6 +2824,8 @@
         toaster.id = "toaster";
         toaster.title = "Click to clear all notifcations";
         toaster.setAttribute("class", "toaster");
+        toaster.setAttribute("role", "dialog");
+        toaster.setAttribute("arial-label", "Toast message");
         toaster.onclick = function() {
           toaster.remove();
         };
@@ -2803,98 +2877,153 @@
         log("warn", "Uib:loadui:catch", "Error. ", err)();
       });
     }
-    _uiAdd(ui) {
+    _uiComposeComponent(el, comp) {
+      if (comp.attributes) {
+        Object.keys(comp.attributes).forEach((attrib) => {
+          el.setAttribute(attrib, comp.attributes[attrib]);
+        });
+      }
+      if (comp.id)
+        el.setAttribute("id", comp.id);
+      if (comp.events) {
+        Object.keys(comp.events).forEach((type) => {
+          if (type.toLowerCase === "onclick")
+            type = "click";
+          try {
+            el.addEventListener(type, (evt) => {
+              new Function("evt", `${comp.events[type]}(evt)`)(evt);
+            });
+          } catch (err) {
+            log("error", "Uib:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+          }
+        });
+      }
+      if (comp.properties) {
+        Object.keys(comp.properties).forEach((prop) => {
+          el[prop] = comp.properties[prop];
+        });
+      }
+      if (comp.slot) {
+        this.replaceSlot(el, comp);
+      }
+      if (comp.slotMarkdown) {
+        this.replaceSlotMarkdown(el, comp);
+      }
+    }
+    _uiExtendEl(parentEl, components) {
+      components.forEach((compToAdd, i2) => {
+        let newEl;
+        if (compToAdd.type === "html") {
+          newEl = parentEl;
+          parentEl.innerHTML = compToAdd.slot;
+        } else {
+          newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+          this._uiComposeComponent(newEl, compToAdd);
+          parentEl.appendChild(newEl);
+        }
+        if (compToAdd.components) {
+          this._uiExtendEl(newEl, compToAdd.components);
+        }
+      });
+    }
+    _uiAdd(ui, isRecurse) {
       log("trace", "Uib:_uiManager:add", "Starting _uiAdd")();
-      ui.components.forEach((compToAdd) => {
-        const newEl = document.createElement(compToAdd.type);
-        if (compToAdd.attributes) {
-          Object.keys(compToAdd.attributes).forEach((attrib) => {
-            newEl.setAttribute(attrib, compToAdd.attributes[attrib]);
-          });
-        }
-        if (compToAdd.id)
-          newEl.setAttribute("id", compToAdd.id);
-        if (compToAdd.events) {
-          Object.keys(compToAdd.events).forEach((type) => {
-            if (type.toLowerCase === "onclick")
-              type = "click";
-            try {
-              newEl.addEventListener(type, (evt) => {
-                new Function("evt", `${compToAdd.events[type]}(evt)`)(evt);
-              });
-            } catch (err) {
-              log("error", "Uib:_uiAdd", `Add event '${type}' for element '${compToAdd.type}': Cannot add event handler. ${err.message}`)();
-            }
-          });
-        }
-        if (compToAdd.properties) {
-          Object.keys(compToAdd.properties).forEach((prop) => {
-            newEl[prop] = compToAdd.properties[prop];
-          });
-        }
-        if (!compToAdd.slot)
+      ui.components.forEach((compToAdd, i2) => {
+        const newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+        if (!compToAdd.slot && ui.payload)
           compToAdd.slot = ui.payload;
-        if (compToAdd.slot) {
-          this.replaceSlot(ui, newEl, compToAdd);
-        }
-        if (compToAdd.slotMarkdown) {
-          this.replaceSlotMarkdown(ui, newEl, compToAdd);
-        }
+        this._uiComposeComponent(newEl, compToAdd);
         let elParent;
         if (compToAdd.parentEl) {
           elParent = compToAdd.parentEl;
         } else if (ui.parentEl) {
           elParent = ui.parentEl;
-        } else if (compToAdd.parent || ui.parent) {
-          const parent = compToAdd.parent ? compToAdd.parent : ui.parent;
-          elParent = document.querySelector(parent);
-          if (!elParent) {
-            log("info", "Uib:_uiAdd", `Parent element '${parent}' not found, adding to body`)();
-            elParent = document.querySelector("body");
-          }
-        } else {
-          log("info", "Uib:_uiAdd", "No parent specified, adding to body")();
+        } else if (compToAdd.parent) {
+          elParent = document.querySelector(compToAdd.parent);
+        } else if (ui.parent) {
+          elParent = document.querySelector(ui.parent);
+        }
+        if (!elParent) {
+          log("info", "Uib:_uiAdd", "No parent found, adding to body")();
           elParent = document.querySelector("body");
         }
-        elParent.appendChild(newEl);
+        if (compToAdd.position && compToAdd.position === "first") {
+          elParent.insertBefore(newEl, elParent.firstChild);
+        } else if (compToAdd.position && Number.isInteger(Number(compToAdd.position))) {
+          elParent.insertBefore(newEl, elParent.children[compToAdd.position]);
+        } else {
+          elParent.appendChild(newEl);
+        }
         if (compToAdd.components) {
-          this._uiAdd({
-            method: ui.method,
-            parentEl: newEl,
-            components: compToAdd.components
-          });
+          this._uiExtendEl(newEl, compToAdd.components);
         }
       });
     }
-    _uiRemove(ui) {
+    _uiRemove(ui, all = false) {
       ui.components.forEach((compToRemove) => {
-        try {
-          document.querySelector(compToRemove).remove();
-        } catch (err) {
-          log("trace", "Uib:_uiRemove", `Could not remove. ${err.message}`)();
+        let els;
+        if (all !== true)
+          els = [document.querySelector(compToRemove)];
+        else
+          els = document.querySelectorAll(compToRemove);
+        els.forEach((el) => {
+          try {
+            el.remove();
+          } catch (err) {
+            log("trace", "Uib:_uiRemove", `Could not remove. ${err.message}`)();
+          }
+        });
+      });
+    }
+    _uiReplace(ui) {
+      log("trace", "_uiReplace", "Starting")();
+      ui.components.forEach((compToReplace, i2) => {
+        log("trace", `_uiReplace:components-forEach:${i2}`, "Component to replace: ", compToReplace)();
+        let elToReplace;
+        if (compToReplace.id) {
+          elToReplace = document.getElementById(compToReplace.id);
+        } else if (compToReplace.selector || compToReplace.select) {
+          elToReplace = document.querySelector(compToReplace.selector);
+        } else if (compToReplace.name) {
+          elToReplace = document.querySelector(`[name="${compToReplace.name}"]`);
+        } else if (compToReplace.type) {
+          elToReplace = document.querySelector(compToReplace.type);
+        }
+        log("trace", `_uiReplace:components-forEach:${i2}`, "Element to replace: ", elToReplace)();
+        if (elToReplace === void 0 || elToReplace === null) {
+          log("trace", `Uib:_uiReplace:components-forEach:${i2}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
+          this._uiAdd({ components: [compToReplace] }, false);
+          return;
+        }
+        const newEl = document.createElement(compToReplace.type === "html" ? "div" : compToReplace.type);
+        this._uiComposeComponent(newEl, compToReplace);
+        elToReplace.replaceWith(newEl);
+        if (compToReplace.components) {
+          this._uiExtendEl(newEl, compToReplace.components);
         }
       });
     }
     _uiUpdate(ui) {
       log("trace", "Uib:_uiManager:update", "Starting _uiUpdate")();
       if (!ui.components)
-        ui.components = [ui];
-      ui.components.forEach((compToUpd) => {
+        ui.components = [Object.assign({}, ui)];
+      ui.components.forEach((compToUpd, i2) => {
+        log("trace", "_uiUpdate:components-forEach", `Component #${i2}`, compToUpd)();
         let elToUpd;
-        if (compToUpd.parentEl) {
-          console.log(">> parentEl >>", compToUpd.parentEl, ui);
-          elToUpd = compToUpd.parentEl[0];
-        } else if (compToUpd.id) {
+        if (compToUpd.id) {
           elToUpd = document.querySelectorAll(`#${compToUpd.id}`);
+        } else if (compToUpd.selector || compToUpd.select) {
+          elToUpd = document.querySelectorAll(compToUpd.selector);
         } else if (compToUpd.name) {
           elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`);
         } else if (compToUpd.type) {
           elToUpd = document.querySelectorAll(compToUpd.type);
         }
         if (elToUpd === void 0 || elToUpd.length < 1) {
-          log("error", "Uib:_uiManager:update", "Cannot find the DOM element", compToUpd)();
+          log("warn", "Uib:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
           return;
         }
+        log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
         if (compToUpd.properties) {
           Object.keys(compToUpd.properties).forEach((prop) => {
             elToUpd.forEach((el) => {
@@ -2920,6 +3049,8 @@
         if (compToUpd.attributes) {
           Object.keys(compToUpd.attributes).forEach((attrib) => {
             elToUpd.forEach((el) => {
+              if (attrib === "value")
+                el.value = compToUpd.attributes[attrib];
               el.setAttribute(attrib, compToUpd.attributes[attrib]);
             });
           });
@@ -2928,16 +3059,17 @@
           compToUpd.slot = compToUpd.payload;
         if (compToUpd.slot) {
           elToUpd.forEach((el) => {
-            this.replaceSlot(ui, el, compToUpd);
+            this.replaceSlot(el, compToUpd);
           });
         }
         if (compToUpd.slotMarkdown) {
           elToUpd.forEach((el) => {
-            this.replaceSlotMarkdown(ui, el, compToUpd);
+            this.replaceSlotMarkdown(el, compToUpd);
           });
         }
         if (compToUpd.components) {
           elToUpd.forEach((el) => {
+            log("trace", "_uiUpdate:components", "el", el)();
             this._uiUpdate({
               method: ui.method,
               parentEl: el,
@@ -3002,11 +3134,19 @@
         );
         switch (ui.method) {
           case "add": {
-            this._uiAdd(ui);
+            this._uiAdd(ui, false);
             break;
           }
           case "remove": {
-            this._uiRemove(ui);
+            this._uiRemove(ui, false);
+            break;
+          }
+          case "removeAll": {
+            this._uiRemove(ui, true);
+            break;
+          }
+          case "replace": {
+            this._uiReplace(ui);
             break;
           }
           case "update": {
@@ -3036,6 +3176,188 @@
         }
       });
     }
+    showMsg(showHide, parent = "body") {
+      if (showHide === void 0)
+        showHide = !__privateGet(this, _isShowMsg);
+      __privateSet(this, _isShowMsg, showHide);
+      let slot = "Waiting for a message from Node-RED";
+      if (this.msg && Object.keys(this.msg).length > 0) {
+        slot = this.syntaxHighlight(this.msg);
+      }
+      if (showHide === false) {
+        this._uiRemove({
+          components: [
+            "#uib_last_msg"
+          ]
+        });
+      } else {
+        this._uiReplace({
+          components: [
+            {
+              type: "pre",
+              id: "uib_last_msg",
+              parent,
+              attributes: {
+                title: "Last message from Node-RED",
+                class: "syntax-highlight"
+              },
+              slot
+            }
+          ]
+        });
+      }
+    }
+    showStatus(showHide, parent = "body") {
+      if (showHide === void 0)
+        showHide = !__privateGet(this, _isShowStatus);
+      __privateSet(this, _isShowStatus, showHide);
+      if (showHide === false) {
+        this._uiRemove({
+          components: [
+            "#uib_status"
+          ]
+        });
+        return;
+      }
+      const root = {
+        components: [
+          {
+            type: "div",
+            id: "uib_status",
+            parent,
+            attributes: {
+              title: "Current status of the uibuilder client",
+              class: "text-smaller"
+            },
+            components: [
+              {
+                "type": "table",
+                "components": [
+                  {
+                    "type": "tbody",
+                    "components": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+      const details = root.components[0].components[0].components[0].components;
+      Object.values(__privateGet(this, _showStatus)).forEach((entry) => {
+        details.push({
+          "type": "tr",
+          "attributes": {
+            title: entry.description
+          },
+          "components": [
+            {
+              "type": "th",
+              "slot": entry.label
+            },
+            {
+              "type": "td",
+              "attributes": {
+                "data-varType": entry.var
+              },
+              "slot": entry.var === "version" ? _a._meta.version : JSON.stringify(this[entry.var])
+            }
+          ]
+        });
+      });
+      this._uiReplace(root);
+    }
+    uiGet(cssSelector, propName = null) {
+      const selection = document.querySelectorAll(cssSelector);
+      const out = [];
+      selection.forEach((node) => {
+        if (propName !== null && propName !== "") {
+          const prop = propName.split(".").reduce((prev2, cur) => prev2[cur], node);
+          if (prop.constructor.name === "NamedNodeMap") {
+            const p = {};
+            for (const key of prop) {
+              p[key.name] = prop[key.name].value;
+            }
+            out.push(p);
+          } else if (!prop.constructor.name.toLowerCase().includes("map")) {
+            out.push({
+              [propName]: prop
+            });
+          } else {
+            const p = {};
+            for (const key in prop) {
+              p[key] = prop[key];
+            }
+            out.push(p);
+          }
+        } else {
+          const len = out.push({
+            id: node.id === "" ? void 0 : node.id,
+            name: node.name,
+            children: node.childNodes.length,
+            type: node.nodeName,
+            attributes: void 0,
+            isUserInput: node.value === void 0 ? false : true,
+            userInput: node.value === void 0 ? void 0 : {
+              value: node.value,
+              validity: void 0,
+              willValidate: node.willValidate,
+              valueAsDate: node.valueAsDate,
+              valueAsNumber: node.valueAsNumber,
+              type: node.type
+            }
+          });
+          const thisOut = out[len - 1];
+          if (node.attributes.length > 0)
+            thisOut.attributes = {};
+          for (const attrib of node.attributes) {
+            if (attrib.name !== "id") {
+              thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
+            }
+          }
+          if (node.value !== void 0)
+            thisOut.userInput.validity = {};
+          for (const v in node.validity) {
+            thisOut.userInput.validity[v] = node.validity[v];
+          }
+        }
+      });
+      return out;
+    }
+    clearHtmlCache() {
+      this.removeStore("htmlCache");
+      log("trace", "uibuilder.module.js:clearHtmlCache", "HTML cache cleared")();
+    }
+    restoreHtmlFromCache() {
+      const htmlCache = this.getStore("htmlCache");
+      if (htmlCache) {
+        const targetNode = document.getElementsByTagName("html")[0];
+        targetNode.innerHTML = htmlCache;
+        log("trace", "uibuilder.module.js:restoreHtmlFromCache", "Restored HTML from cache")();
+      } else {
+        log("trace", "uibuilder.module.js:restoreHtmlFromCache", "No cache to restore")();
+      }
+    }
+    saveHtmlCache() {
+      this.setStore("htmlCache", document.documentElement.innerHTML);
+    }
+    watchDom(startStop) {
+      const targetNode = document.documentElement;
+      const that = this;
+      if (!this._htmlObserver) {
+        this._htmlObserver = new MutationObserver(function() {
+          this.takeRecords();
+          that.saveHtmlCache();
+        });
+      }
+      if (startStop === true || startStop === void 0) {
+        this._htmlObserver.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
+        log("trace", "uibuilder.module.js:watchDom", "Started Watching and saving DOM changes")();
+      } else {
+        this._htmlObserver.disconnect();
+        log("trace", "uibuilder.module.js:watchDom", "Stopped Watching and saving DOM changes")();
+      }
+    }
     _send(msgToSend, channel, originator = "") {
       if (channel === null || channel === void 0)
         channel = this._ioChannels.client;
@@ -3049,6 +3371,9 @@
         msgToSend.from = "client";
       }
       msgToSend._socketId = this._socket.id;
+      this.socketOptions.auth.tabId = this.tabId;
+      this.socketOptions.auth.lastNavType = this.lastNavType;
+      this.socketOptions.auth.connectedNum = this.connectedNum;
       let numMsgs;
       if (channel === this._ioChannels.client) {
         this.set("sentMsg", msgToSend);
@@ -3061,6 +3386,15 @@
         originator = this.originator;
       if (originator !== "")
         Object.assign(msgToSend, { "_uib": { "originator": originator } });
+      if (!Object.prototype.hasOwnProperty.call(msgToSend, "topic")) {
+        if (this.topic !== void 0 && this.topic !== "")
+          msgToSend.topic = this.topic;
+        else {
+          if (Object.prototype.hasOwnProperty.call(this, "msg") && Object.prototype.hasOwnProperty.call(this.msg, "topic")) {
+            msgToSend.topic = this.msg.topic;
+          }
+        }
+      }
       log("debug", "Uib:_send", ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)();
       this._socket.emit(channel, msgToSend);
     }
@@ -3075,12 +3409,17 @@
         log("error", "Uib:eventSend", "`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`")();
         return;
       }
+      if (!domevent && !event) {
+        log("warn", "Uib:eventSend", "Neither the domevent nor the hidden event properties are set. You probably called this function directly rather than applying to an on click event.")();
+        return;
+      }
       if (!domevent || !domevent.constructor)
         domevent = event;
       if (!domevent.constructor.name.endsWith("Event") || !domevent.currentTarget) {
         log("warn", "Uib:eventSend", `ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data. Arg Type: ${domevent.constructor.name}`, domevent)();
         return;
       }
+      domevent.preventDefault();
       const target = domevent.currentTarget;
       const props = {};
       Object.keys(target).forEach((key) => {
@@ -3101,21 +3440,30 @@
           }
         )
       );
-      let thisMsg;
-      if (!Object.prototype.hasOwnProperty.call(this, "msg"))
-        thisMsg = { topic: void 0 };
-      else
-        thisMsg = this.msg;
-      if (!Object.prototype.hasOwnProperty.call(thisMsg, "topic"))
-        thisMsg.topic = void 0;
+      const form = {};
+      const frmVals = [];
+      if (target.form) {
+        Object.values(target.form).forEach((frmEl, i2) => {
+          const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
+          if (id !== "") {
+            frmVals.push({ key: id, val: frmEl.value });
+            form[id] = {
+              "id": frmEl.id,
+              "name": frmEl.name,
+              "value": frmEl.value,
+              "data": frmEl.dataset
+            };
+          }
+        });
+      }
       const msg = {
-        topic: thisMsg.topic,
-        payload: target.dataset,
+        payload: { ...target.dataset },
         _ui: {
           type: "eventSend",
           id: target.id !== "" ? target.id : void 0,
           name: target.name !== "" ? target.name : void 0,
           slotText: target.textContent !== "" ? target.textContent.substring(0, 255) : void 0,
+          form,
           props,
           attribs,
           classes: Array.from(target.classList),
@@ -3127,9 +3475,17 @@
           pointerType: domevent.pointerType,
           nodeName: target.nodeName,
           clientId: this.clientId,
-          pageName: this.pageName
+          pageName: this.pageName,
+          tabId: this.tabId
         }
       };
+      if (frmVals.length > 0) {
+        frmVals.forEach((entry) => {
+          msg.payload[entry.key] = entry.val;
+        });
+      }
+      if (domevent.type === "change")
+        msg._ui.newValue = msg.payload.value = domevent.target.value;
       log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
       if (target.dataset.length === 0)
         log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();
@@ -3143,6 +3499,40 @@
         if (msg._uib.reload === true) {
           log("trace", "Uib:_msgRcvdEvents:_uib:reload", "reloading")();
           location.reload();
+          return;
+        }
+        if (msg._uib.command) {
+          const cmd = msg._uib.command;
+          if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
+            log("error", "Uib:_msgRcvdEvents:_uib", `Command '${cmd} is not allowed to be called externally`)();
+            return;
+          }
+          const prop = msg._uib.prop;
+          const value2 = msg._uib.value;
+          switch (msg._uib.command) {
+            case "get": {
+              msg._uib.response = this.get(prop);
+              this.send(msg);
+              break;
+            }
+            case "set": {
+              msg._uib.response = this.set(prop, value2);
+              this.send(msg);
+              break;
+            }
+            case "showMsg": {
+              this.showMsg(value2, prop);
+              break;
+            }
+            case "showStatus": {
+              this.showStatus(value2, prop);
+              break;
+            }
+            default: {
+              log("warning", "Uib:_msgRcvdEvents:command", `Command '${cmd} not yet implemented`)();
+              break;
+            }
+          }
           return;
         }
         if (msg._uib.componentRef === "globalNotification") {
@@ -3193,10 +3583,6 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
           }
           if (this.autoSendReady === true) {
             log("trace", `Uib:ioSetup:${this._ioChannels.control}/client connect`, "Auto-sending ready-for-content/replay msg to server");
-            this._send({
-              "uibuilderCtrl": "ready for content",
-              "cacheControl": "REPLAY"
-            }, this._ioChannels.control);
           }
           break;
         }
@@ -3204,6 +3590,23 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
           log("trace", `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`);
         }
       }
+    }
+    beaconLog(txtToSend, logLevel2) {
+      if (!logLevel2)
+        logLevel2 = "debug";
+      navigator.sendBeacon("./_clientLog", `${logLevel2}::${txtToSend}`);
+    }
+    logToServer() {
+      this.sendCtrl({
+        uibuilderCtrl: "client log message",
+        payload: arguments,
+        _socketId: this._socket.id,
+        clientId: this.clientId,
+        tabId: this.tabId,
+        pageName: this.pageName,
+        connections: this.connectedNum,
+        lastNavType: this.lastNavType
+      });
     }
     _getIOnamespace() {
       let ioNamespace;
@@ -3272,15 +3675,20 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       this.socketOptions.auth.pageName = this.pageName;
       this.socketOptions.auth.clientId = this.clientId;
       this.socketOptions.transportOptions.polling.extraHeaders["x-clientid"] = `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`;
-      this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
+      this.socketOptions.auth.tabId = this.tabId;
+      this.socketOptions.auth.lastNavType = this.lastNavType;
+      this.socketOptions.auth.connectedNum = this.connectedNum;
       log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
       this._socket = lookup2(this.ioNamespace, this.socketOptions);
       this._socket.on("connect", () => {
-        __privateWrapper(this, _connectedNum)._++;
-        this.socketOptions.auth.connectedNum = __privateGet(this, _connectedNum);
-        log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${__privateGet(this, _connectedNum)}
+        this.set("connectedNum", this.connectedNum++);
+        this.socketOptions.auth.connectedNum = this.connectedNum;
+        this.socketOptions.auth.lastNavType = this.lastNavType;
+        this.socketOptions.auth.tabId = this.tabId;
+        this.socketOptions.auth.more = this.tabId;
+        log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}
 Namespace: ${this.ioNamespace}`)();
-        this._dispatchCustomEvent("uibuilder:socket:connected", __privateGet(this, _connectedNum));
+        this._dispatchCustomEvent("uibuilder:socket:connected", this.connectedNum);
         this._checkConnect();
       });
       this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this));
@@ -3320,11 +3728,11 @@ Client ID: ${this.clientId}`)();
 ioPath: ${this.ioPath}`)();
       if (options) {
         if (options.ioNamespace !== void 0 && options.ioNamespace !== null && options.ioNamespace !== "")
-          this.ioNamespace = options.ioNamespace;
+          this.set("ioNamespace", options.ioNamespace);
         if (options.ioPath !== void 0 && options.ioPath !== null && options.ioPath !== "")
-          this.ioPath = options.ioPath;
+          this.set("ioPath", options.ioPath);
       }
-      if (document.styleSheets.length > 1 || document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) {
+      if (document.styleSheets.length >= 1 || document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) {
         log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
       } else {
         if (options && options.loadStylesheet === false)
@@ -3336,14 +3744,29 @@ ioPath: ${this.ioPath}`)();
       }
       const [entry] = performance.getEntriesByType("navigation");
       this.set("lastNavType", entry.type);
-      this.started = this._ioSetup();
+      this.set("started", this._ioSetup());
       if (this.started === true) {
         log("trace", "Uib:start", "Start completed. Socket.IO client library loaded.")();
       } else {
         log("error", "Uib:start", "Start completed. ERROR: Socket.IO client library NOT LOADED.")();
       }
+      if (window["Vue"]) {
+        this.set("isVue", true);
+        try {
+          this.set("vueVersion", window["Vue"].version);
+        } catch (e) {
+        }
+      }
+      this.onChange("msg", (msg) => {
+        if (__privateGet(this, _isShowMsg) === true) {
+          const eMsg = document.getElementById("uib_last_msg");
+          if (eMsg)
+            eMsg.innerHTML = this.syntaxHighlight(msg);
+        }
+      });
+      this._dispatchCustomEvent("uibuilder:startComplete");
     }
-  }, _connectedNum = new WeakMap(), _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), __publicField(_a, "_meta", {
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), __publicField(_a, "_meta", {
     version,
     type: "module",
     displayName: "uibuilder"
@@ -3357,7 +3780,7 @@ ioPath: ${this.ioPath}`)();
   if (!window["$"]) {
     window["$"] = document.querySelector.bind(document);
   } else {
-    log("warn", "uibuilder.module.js", "Cannot allocate the global `$`, it is already in use");
+    log("warn", "uibuilder.module.js", "Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.");
   }
   var uibuilder_module_default = uibuilder;
   uibuilder.start();

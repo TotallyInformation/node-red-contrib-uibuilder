@@ -1,7 +1,7 @@
 /** Takes a msg input and sends it to the chosen uibuilder instance
  *  Destructured to make for easier and more consistent logic.
  *
- * Copyright (c) 2021-2022 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2023 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

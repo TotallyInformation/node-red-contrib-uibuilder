@@ -1,7 +1,7 @@
 /** Manage ExpressJS on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  *
- * Copyright (c) 2017-2022 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2023 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -162,12 +162,14 @@ class UibWeb {
         this.adminRouter.use('/admin', this.adminRouterV3)
         this.routers.admin.push( { name: 'Admin API v3', path: `${this.RED.settings.httpAdminRoot}uibuilder/admin`, desc: 'Consolidated admin APIs used by the uibuilder Editor panel', type: 'Router' } )
 
-        /** Serve up the package docs folder on /<httpAdminRoot>/uibuilder/techdocs (uses docsify)
+        /** Serve up the package docs folder on /<httpAdminRoot>/uibuilder/techdocs (uses docsify) - also make available on /uibuilder/docs
          * @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108
          */
         const techDocsPath = path.join(__dirname, '..', '..', 'docs')
+        this.adminRouter.use('/docs', express.static( techDocsPath, this.uib.staticOpts ) )
+        this.routers.admin.push( { name: 'Documentation', path: `${this.RED.settings.httpAdminRoot}uibuilder/docs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
         this.adminRouter.use('/techdocs', express.static( techDocsPath, this.uib.staticOpts ) )
-        this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/techdocs`, desc: 'Tech docs website powered by Docsify', type: 'Static', folder: techDocsPath } )
+        this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/techdocs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
 
         // TODO: Move v2 API's to V3
         this.adminRouterV2 = require('./admin-api-v2')(this.uib, this.log)
@@ -193,7 +195,6 @@ class UibWeb {
 
         log.trace('[uibuilder:web:_webSetup] Configuring ExpressJS')
 
-        
         /** We need an http server to serve the page and vendor packages. The app is used to serve up the Socket.IO client.
          * NB: uib.nodeRoot is the root URL path for http-in/out and uibuilder nodes
          * Always set to empty string if a dedicated ExpressJS app is required
@@ -286,6 +287,9 @@ class UibWeb {
         }
 
         // Note: Keep the router vars separate so that they can be used for reporting
+
+        this.app.use(express.json())
+        this.app.use(express.urlencoded({ extended: true }))
 
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
@@ -478,7 +482,7 @@ class UibWeb {
         })
     } // ---- End of removeRouter ---- //
 
-    /** Setup the web resources for a specific uibuilder instance
+    /** *️⃣ Setup the web resources for a specific uibuilder instance
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     instanceSetup(node) {
@@ -510,9 +514,11 @@ class UibWeb {
          *   (3) Master static folders - for the built-in front-end resources (css, default html, uibuilderfe, etc)
          *   (4) [Optionally] The folder lister
          *   (5) Common static folder is last
-         * TODO Make sure the above is documented in Tech Docs
+         * TODO Make sure the above is documented in Docs
          */
 
+        // (1.) Instance log route (./_clientLog)
+        this.addBeaconRoute(node)
         // (1a) httpMiddleware - Optional common middleware from a custom file (same for all instances)
         this.addMiddlewareFile(node)
         // (1b) masterMiddleware - uib's internal dynamic middleware to add uibuilder specific headers & cookie
@@ -996,6 +1002,65 @@ class UibWeb {
         return page
     } // ---- End of showInstanceDetails ---- //
 
+    /** Creates a route for logging to NR from the front-end via HTTP Beacons
+     * In FE code, use as: navigator.sendBeacon('./_clientLog', `pageshow. From Cache?: ${event.persisted}`)
+     * Only text can be sent. This fn attempts to split the text on "::". If it succedes, the 1st entry
+     * is assumed to be the log level. If no level provided, assumes "debug" level so it won't show in NR logs by default.
+     * @param {uibNode} node configuration data for this instance
+     */
+    addBeaconRoute(node) {
+        // Reference static vars
+        const uib = this.uib
+        // const RED = this.RED
+        const log = this.log
+
+        if (uib.configFolder === null) throw new Error('uib.configFolder is null')
+
+        const logUrl = '/_clientLog'   // e.g. https://red.local:1880/<httpRoot>/<url>/_clientLog
+
+        // Only the text processor is useful since navigator.sendBeacon() only seems to send text no matter what MDN says. //express.json(), express.text(), express.urlencoded({extended: true}),
+        this.instanceRouters[node.url].post(logUrl, express.text(), (req, res) => {
+            log.trace(`[uibuilder:web:addLogRoute:${node.url}] POST to client logger: ${req.body}`)
+            res.status(204) // 204 = no content
+
+            const splitBody = req.body.split('::')
+            let logLevel = 'debug'
+            let logTxt = req.body
+            if (splitBody.length > 1) {
+                logLevel = splitBody.shift()
+                logTxt = splitBody.join('::')
+            } // Else no level provided, assume "debug"
+
+            log[logLevel](`[uibuilder:clientLog:${node.url}] ${logTxt}`)
+
+            let clientId
+            try {
+                clientId = req.headers.cookie.split(';').filter( c => c.trim().startsWith('uibuilder-client-id='))[0].replace('uibuilder-client-id=', '').trim()
+            } catch (e) {}
+
+            // Send a control msg to let the flows know (via port#2) a client has logged something
+            node.send( [null, {
+                'uibuilderCtrl': 'client beacon log',
+                'topic': node.topic || undefined,
+                'payload': logTxt,
+                'logLevel': logLevel,
+                // 'version': socket.handshake.auth.clientVersion, // Let the flow know what v of uib client is in use
+                // '_socketId': socket.id,
+                // 'ip': getClientRealIpAddress(socket),
+                'ip': req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+                'clientId': clientId, // ['uibuilder-client-id'], // socket.handshake.auth.clientId,
+                // 'tabId': socket.handshake.auth.tabId,
+                'url': node.url,
+                // 'pageName': pageName,
+                // 'connections': socket.handshake.auth.connectedNum,
+                // 'lastNavType': socket.handshake.auth.lastNavType,
+            }] )
+        } )
+
+        log.trace(`[uibuilder:web:addLogRoute:${node.url}] Client Beacon Log route added`)
+        this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client beacon log back to Node-RED', type: 'POST', folder: 'N/A' } )
+    }
+
     //#endregion ====== Per-node instance processing ====== //
 
     //#region ==== ExpressJS Route & other Reporting ==== //
@@ -1116,7 +1181,7 @@ class UibWeb {
     dumpUserRoutes(print = true) {
         const routes = { 'app': [], 'uibRouter': [], 'vendorRouter': [] }
 
-        // Get the user-facing routes  
+        // Get the user-facing routes
         for ( const layer of this.app._router.stack) { this.summariseRoute(layer, routes.app) }
         if (this.uibRouter) for ( const layer of this.uibRouter.stack) { this.summariseRoute(layer, routes.uibRouter) }
         if (this.vendorRouter) for ( const layer of this.vendorRouter.stack) { this.summariseRoute(layer, routes.vendorRouter) }
