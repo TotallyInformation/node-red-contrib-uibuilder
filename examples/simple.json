@@ -1,86 +1,84 @@
 [
     {
-        "id": "17bb5138.7d1a5f",
+        "id": "2d368cb9c96bdff7",
         "type": "group",
         "z": "ff9704678e3a4b61",
+        "name": "uibuilder \"simple\" example",
         "style": {
-            "stroke": "#999999",
-            "stroke-opacity": "1",
-            "fill": "none",
-            "fill-opacity": "1",
+            "fill": "#ffffff",
+            "fill-opacity": "0.21",
             "label": true,
-            "label-position": "nw",
-            "color": "#a4a4a4"
+            "color": "#000000"
         },
         "nodes": [
-            "3a85e836.06b698",
-            "7cf5c3b2.96006c",
-            "8f8bfd94.685e6",
-            "8a35b840.a3b2d8",
-            "2cf3f051.3dd33",
-            "eb95241.bca25d8",
-            "70cf5aa5.9b03c4",
-            "4e7c2860.c5c318",
-            "16169222.b4d91e",
-            "dcbb878b.7de8c8"
+            "116a78405410289c",
+            "8ecb7d35e9edab87",
+            "312d0d91e2a9b622",
+            "a9a02535264dd9ed",
+            "fa042ed296e9de80",
+            "bb3b15c09b085da2",
+            "7845085b17f1686b",
+            "054d34fec0aa457b",
+            "cef55ea2491d8024",
+            "3e4c1bb1d26f20ce"
         ],
-        "x": 94,
-        "y": 319,
-        "w": 952,
-        "h": 222
+        "x": 54,
+        "y": 339,
+        "w": 972,
+        "h": 202
     },
     {
-        "id": "3a85e836.06b698",
+        "id": "116a78405410289c",
         "type": "comment",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
-        "name": "uibulder Simple Example: Quote of the Day. (Read me)",
+        "g": "2d368cb9c96bdff7",
+        "name": "Quote of the Day example. (Read me)",
         "info": "This flow gets a \"quote of the day\" from the Internet and passes it\nto uibuilder. It caches the result so that if you reload the page,\nyou get the last result back. The quote is updated every 30 minutes\nduring the day and evening.\n\n\"Simple\" refers to the front-end code. While the flow looks a little\ncomplex, it really isn't. On the Node-RED server side: A trigger, an Internet request,\nand uibuilder. On the client browser side: A well-formatted HTML blockquote, a simple\nfunction that updates the UI and a function that listens to messages from Node-RED,\nand finally some really simple CSS for formatting.\n\n## Configuration\n\nUpdate the files:\n\n* `index.html`\n* `index.js`\n* `index.css`\n\nAccording to the example(s) in the 3 other comment nodes in this example.\n\nPress the button on the trigger to start the flow.",
-        "x": 320,
-        "y": 360,
+        "x": 230,
+        "y": 380,
         "wires": []
     },
     {
-        "id": "7cf5c3b2.96006c",
+        "id": "8ecb7d35e9edab87",
         "type": "comment",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "index.html",
-        "info": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n    <title>Minimal modern IIFE client example - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Minimal modern IIFE client example\">\n    <link rel=\"icon\" href=\"./images/node-blue.ico\">\n\n    <!-- Your own CSS -->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed  -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <script defer src=\"./index.js\">/* OPTIONAL: Put your custom code in that */</script>\n    <!-- #endregion -->\n\n</head><body class=\"uib\">\n    \n    <h1>uibuilder example: Get and view a Quote of the Day (no framework)</h1>\n    <!-- Updated for uibuilder v6.1.0 -->\n\n    <div id=\"more\"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>\n\n    <blockquote id=\"quote\"><!-- See index.css for styling -->\n        <q id=\"quoteText\">No quote received yet.</q>\n        <cite id=\"quoteAuthor\"></cite>\n    </blockquote>\n        \n    <pre id=\"msg\" class=\"syntax-highlight\">Waiting for a message from Node-RED</pre>\n    \n</body></html>\n",
-        "x": 680,
-        "y": 360,
+        "info": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n    <title>Quote of the day - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Quote of the day\">\n    <link rel=\"icon\" href=\"./images/node-blue.ico\">\n\n    <!-- Your own CSS -->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed  -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <script defer src=\"./index.js\">/* OPTIONAL: Put your custom code in that */</script>\n    <!-- #endregion -->\n\n</head><body class=\"uib\">\n    \n    <h1>uibuilder example: Get and view a Quote of the Day</h1>\n    <div role=\"doc-subtitle\">Using the uibuilder IIFE library. No framework used.</div>\n    <!-- Updated for uibuilder v6.1.0 -->\n\n    <div id=\"more\"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>\n\n    <blockquote id=\"quote\"><!-- See index.css for styling -->\n        <q id=\"quoteText\">No quote received yet.</q>\n        <cite id=\"quoteAuthor\"></cite>\n    </blockquote>\n    \n</body></html>\n",
+        "x": 640,
+        "y": 380,
         "wires": [],
         "icon": "node-red/parser-html.svg"
     },
     {
-        "id": "8f8bfd94.685e6",
+        "id": "312d0d91e2a9b622",
         "type": "comment",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "index.js",
-        "info": "// @ts-nocheck\n\n/** Example of using the IIFE build of the uibuilder client library\n * Note that uibuilder.start() should no longer be needed.\n * See the documentation if the client doesn't start on its own.\n */\n'use strict'\n\n// logLevel 2+ shows more built-in logging. 0=error,1=warn,2=info,3=log,4=debug,5=trace.\n// uibuilder.set('logLevel', 2)\n// uibuilder.log('info', 'a prefix', 'some info', {any:'data',life:42})\n\n// Update the quote\nfunction updQuote(quote) {\n    // Update the quote\n    $('#quoteText').innerText = quote.body\n    // and the author\n    $('#quoteAuthor').innerText = quote.author\n    // And the overall quote citation\n    $('#quote').setAttribute('cite', quote.url)    \n}\n\n// Listen for incoming messages from Node-RED\nuibuilder.onChange('msg', function(msg) {\n    // Make sure we only process quotes and ignore other messages.\n    // Generally sensible to filter like this.\n    if (msg.topic === 'getQuote') updQuote(msg.payload.quote)\n\n    // Dump the msg as text to the \"msg\" html element\n    const eMsg = $('#msg')\n    if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)\n})\n",
-        "x": 810,
-        "y": 360,
+        "info": "// @ts-nocheck\n\n/** Example of using the IIFE build of the uibuilder client library\n * Note that uibuilder.start() should no longer be needed.\n * See the documentation if the client doesn't start on its own.\n */\n'use strict'\n\n// Update the quote\nfunction updQuote(quote) {\n    // Update the quote\n    $('#quoteText').innerText = quote.body\n    // and the author\n    $('#quoteAuthor').innerText = quote.author\n    // And the overall quote citation\n    $('#quote').setAttribute('cite', quote.url)    \n}\n\n// Listen for incoming messages from Node-RED\nuibuilder.onChange('msg', function(msg) {\n    // Make sure we only process quotes and ignore other messages.\n    // Generally sensible to filter like this.\n    if (msg.topic === 'getQuote') updQuote(msg.payload.quote)\n})\n",
+        "x": 770,
+        "y": 380,
         "wires": [],
         "icon": "font-awesome/fa-code"
     },
     {
-        "id": "8a35b840.a3b2d8",
+        "id": "a9a02535264dd9ed",
         "type": "comment",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "index.css",
         "info": "/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.css`\n * This version auto-adjusts for light/dark browser settings but might not be as complete.\n */\n@import url(\"./uib-brand.css\");\n\n/* OR, load the defaults from the older `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-styles.css` */\n/* @import url(\"./uib-styles.css\"); */\n\n/* Formate the quote of the day */\n#quote {\n    background-color: beige;\n    color: black;\n    padding: 1rem;\n}\n\n#quoteText {\n    font-style:italic;\n    font-size: larger;\n}\n\n#quoteAuthor {\n    display:block;\n    font-style:normal\n}\n",
-        "x": 940,
-        "y": 360,
+        "x": 900,
+        "y": 380,
         "wires": [],
         "icon": "node-red/hash.svg"
     },
     {
-        "id": "2cf3f051.3dd33",
+        "id": "fa042ed296e9de80",
         "type": "debug",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "simple-debug",
         "active": false,
         "tosidebar": true,
@@ -88,45 +86,46 @@
         "tostatus": false,
         "complete": "true",
         "targetType": "full",
-        "x": 920,
-        "y": 400,
+        "x": 900,
+        "y": 420,
         "wires": []
     },
     {
-        "id": "eb95241.bca25d8",
+        "id": "bb3b15c09b085da2",
         "type": "uibuilder",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "Simple Example",
         "topic": "",
-        "url": "example-simple",
+        "url": "uib-simple-example",
         "fwdInMessages": false,
         "allowScripts": false,
         "allowStyles": false,
         "copyIndex": true,
-        "templateFolder": "iife-blank-client",
+        "templateFolder": "blank",
         "extTemplate": "",
         "showfolder": false,
         "reload": true,
         "sourceFolder": "src",
-        "deployedVersion": "6.1.0",
+        "deployedVersion": "6.1.0-beta",
         "showMsgUib": true,
-        "x": 660,
-        "y": 420,
+        "credentials": {},
+        "x": 630,
+        "y": 440,
         "wires": [
             [
-                "2cf3f051.3dd33"
+                "fa042ed296e9de80"
             ],
             [
-                "4e7c2860.c5c318"
+                "054d34fec0aa457b"
             ]
         ]
     },
     {
-        "id": "70cf5aa5.9b03c4",
+        "id": "7845085b17f1686b",
         "type": "inject",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "",
         "props": [
             {
@@ -139,19 +138,19 @@
         "once": false,
         "onceDelay": "",
         "topic": "getQuote",
-        "x": 200,
-        "y": 420,
+        "x": 160,
+        "y": 440,
         "wires": [
             [
-                "dcbb878b.7de8c8"
+                "3e4c1bb1d26f20ce"
             ]
         ]
     },
     {
-        "id": "4e7c2860.c5c318",
+        "id": "054d34fec0aa457b",
         "type": "debug",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "uib controls",
         "active": false,
         "tosidebar": true,
@@ -159,15 +158,15 @@
         "tostatus": false,
         "complete": "true",
         "targetType": "full",
-        "x": 910,
-        "y": 440,
+        "x": 890,
+        "y": 460,
         "wires": []
     },
     {
-        "id": "16169222.b4d91e",
+        "id": "cef55ea2491d8024",
         "type": "debug",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "qotd-debug",
         "active": false,
         "tosidebar": true,
@@ -177,15 +176,15 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 590,
+        "x": 550,
         "y": 500,
         "wires": []
     },
     {
-        "id": "dcbb878b.7de8c8",
+        "id": "3e4c1bb1d26f20ce",
         "type": "http request",
         "z": "ff9704678e3a4b61",
-        "g": "17bb5138.7d1a5f",
+        "g": "2d368cb9c96bdff7",
         "name": "Quote of the day",
         "method": "GET",
         "ret": "obj",
@@ -195,12 +194,12 @@
         "persist": false,
         "proxy": "",
         "authType": "",
-        "x": 370,
-        "y": 420,
+        "x": 330,
+        "y": 440,
         "wires": [
             [
-                "eb95241.bca25d8",
-                "16169222.b4d91e"
+                "bb3b15c09b085da2",
+                "cef55ea2491d8024"
             ]
         ]
     }

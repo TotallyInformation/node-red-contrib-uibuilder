@@ -1,68 +1,65 @@
 [
     {
-        "id": "279f069488faedf5",
+        "id": "56af672c3ae066b8",
+        "type": "group",
+        "z": "ff9704678e3a4b61",
+        "name": "uibuilder report builder example \\n ",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.2",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "bdd00bc65ececfb2",
+            "b77a8ab550aef26a",
+            "4b423eb7794241f7",
+            "48bca724c94ff6ad",
+            "d0b0802620db38cd",
+            "59718b678565eb7c",
+            "bf4b37633885a3a1"
+        ],
+        "x": 44,
+        "y": 19,
+        "w": 672,
+        "h": 282
+    },
+    {
+        "id": "bdd00bc65ececfb2",
         "type": "uibuilder",
-        "z": "a70b22bf53a7ea9c",
+        "z": "ff9704678e3a4b61",
+        "g": "56af672c3ae066b8",
         "name": "",
         "topic": "",
-        "url": "ui-tests",
+        "url": "uib-report-example",
         "fwdInMessages": false,
         "allowScripts": false,
         "allowStyles": false,
         "copyIndex": true,
-        "templateFolder": "iife-blank-client",
+        "templateFolder": "blank",
         "extTemplate": "",
         "showfolder": false,
         "reload": true,
         "sourceFolder": "src",
-        "deployedVersion": "6.1.0",
+        "deployedVersion": "6.1.0-beta",
         "showMsgUib": true,
-        "x": 440,
+        "x": 400,
         "y": 220,
         "wires": [
             [
-                "2c2f7fac82a12c69"
+                "4b423eb7794241f7"
             ],
             [
-                "df4025edc7711edd"
+                "48bca724c94ff6ad"
             ]
         ],
-        "info": "This example uses a blank template with\r\nthe IIFE build of the front-end client.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript.\r\n\r\nThe IIFE build should be included using a link\r\ntag in your HTML."
+        "info": "This example uses a blank template with\r\nthe IIFE build of the front-end client.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript.\r\n"
     },
     {
-        "id": "1b2196df2b92f409",
+        "id": "b77a8ab550aef26a",
         "type": "inject",
-        "z": "a70b22bf53a7ea9c",
-        "name": "Send a msg",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "A Message From Node-RED",
-        "payload": "",
-        "payloadType": "date",
-        "x": 180,
-        "y": 240,
-        "wires": [
-            [
-                "d621dd0923f1e188"
-            ]
-        ],
-        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
-    },
-    {
-        "id": "767ae0f52380b47d",
-        "type": "inject",
-        "z": "a70b22bf53a7ea9c",
+        "z": "ff9704678e3a4b61",
+        "g": "56af672c3ae066b8",
         "name": "Reload",
         "props": [
             {
@@ -81,104 +78,19 @@
         "onceDelay": 0.1,
         "topic": "reload",
         "x": 160,
-        "y": 280,
+        "y": 240,
         "wires": [
             [
-                "d621dd0923f1e188"
+                "bf4b37633885a3a1"
             ]
         ],
         "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
     },
     {
-        "id": "e835cac509084abe",
-        "type": "inject",
-        "z": "a70b22bf53a7ea9c",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "\"This is the payload from the inject node! Random number: \" & $formatInteger($random()*100, \"0\")",
-        "payloadType": "jsonata",
-        "x": 125,
-        "y": 160,
-        "wires": [
-            [
-                "ada5575de6d2dc38"
-            ]
-        ],
-        "l": false
-    },
-    {
-        "id": "ada5575de6d2dc38",
-        "type": "function",
-        "z": "a70b22bf53a7ea9c",
-        "name": "Notification",
-        "func": "msg = {\n  \"_uib\": {\n    // This can actually be anything, if it doesn't exist, \n    // the toast will appear in the default location\n    \"componentRef\": \"globalNotification\",\n    // Note that most if not all of these are optional\n    \"options\": {\n      // These can contain HTML - note the inclusion of the payload from the upstram msg\n      \"title\": \"This is the <i>title</i>\",\n      \"content\": `This is content <span style=\\\"color:red;\\\">in addition to</span> the payload<p>${msg.payload}</p>`,\n            \n      // Use 1 of the following 2 - click msg if no auto hide:\n      \"autoHideDelay\": 2500,\n      // \"noAutoHide\": true,\n\n      // If false or not included, msgs stack above each other.\n      \"appendToast\": true,\n\n      // See \"Recommended surfaces\" in uib-brand.css. Normally\n      // 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'\n      \"variant\": \"info\",\n    }\n  }\n}\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 240,
-        "y": 160,
-        "wires": [
-            [
-                "d621dd0923f1e188"
-            ]
-        ],
-        "info": "Overlays a message on top of your UI.\r\n\r\nThe message removes itself after a couple of seconds.\r\n\r\nYou can change the options property to change the look\r\nof the displayed message."
-    },
-    {
-        "id": "96f771bbdcc816fa",
-        "type": "inject",
-        "z": "a70b22bf53a7ea9c",
-        "name": "",
-        "props": [],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "x": 125,
-        "y": 200,
-        "wires": [
-            [
-                "961d42bbb9613525"
-            ]
-        ],
-        "l": false
-    },
-    {
-        "id": "961d42bbb9613525",
-        "type": "function",
-        "z": "a70b22bf53a7ea9c",
-        "name": "New Card",
-        "func": "let cardCounter = context.get('cardCounter') ?? 0\n\nmsg = {\n    \"_ui\": [\n        {\n            \"method\": \"remove\",\n            \"components\": [\n                \"#mycard\"\n            ]\n        },\n        {\n            \"method\": \"add\",\n            \"parent\": \"#more\",\n            \"components\": [\n                {\n                    \"type\": \"div\",\n                    \"attributes\": {\n                        \"id\": \"mycard\",\n                        \"title\": \"This is my Card\",\n                        \"style\": \"max-width: 20rem;border:solid silver 1px;margin-bottom:1rem;\",\n                    },\n                    \"components\": [\n                        {\n                            \"type\": \"h2\",\n                            \"slot\": \"A New Card\",\n                            \"attributes\": {\n                                \"class\": \"complementary\",\n                                \"style\": \"text-align:center;margin-top:0;\"\n                            }\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Some text in a paragraph.\"\n                        },\n                        {\n                            \"type\": \"p\",\n                            \"slot\": \"Another paragraph. Count: \" + ++cardCounter\n                        }\n                    ]\n                }\n            ],\n        }\n    ]\n}\ncontext.set('cardCounter', cardCounter)\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 230,
-        "y": 200,
-        "wires": [
-            [
-                "d621dd0923f1e188"
-            ]
-        ],
-        "info": "Inserts a pure HTML \"card\" into a div called `#more`.\r\nIf that div does not exist, will add to the bottom of the HTML.\r\n\r\nFirstly attempts to remove the div so that you only ever have 1.\r\n\r\nAn example of using uibuilder's dynamic UI configuration-driven\r\nbuilding capabilities without the need for any fancy nodes or\r\nframeworks. Pure HTML. But you can still utilise the extra\r\nfeatures of your favourite framework too if you like!"
-    },
-    {
-        "id": "2c2f7fac82a12c69",
+        "id": "4b423eb7794241f7",
         "type": "debug",
-        "z": "a70b22bf53a7ea9c",
+        "z": "ff9704678e3a4b61",
+        "g": "56af672c3ae066b8",
         "name": "uibuilder standard output",
         "active": false,
         "tosidebar": true,
@@ -188,16 +100,17 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 655,
+        "x": 555,
         "y": 180,
         "wires": [],
         "l": false,
         "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
     },
     {
-        "id": "df4025edc7711edd",
+        "id": "48bca724c94ff6ad",
         "type": "debug",
-        "z": "a70b22bf53a7ea9c",
+        "z": "ff9704678e3a4b61",
+        "g": "56af672c3ae066b8",
         "name": "uibuilder control output",
         "active": false,
         "tosidebar": true,
@@ -207,40 +120,28 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 655,
-        "y": 240,
+        "x": 555,
+        "y": 260,
         "wires": [],
         "l": false,
         "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
     },
     {
-        "id": "5b40492405adf766",
+        "id": "d0b0802620db38cd",
         "type": "comment",
-        "z": "a70b22bf53a7ea9c",
+        "z": "ff9704678e3a4b61",
+        "g": "56af672c3ae066b8",
         "name": "Low-code report building with the help of uibuilder \\n Chk Description in each node & in here \\n You need to add a line to the HTML so that the Markdown output works correctly, see within",
         "info": "To get the Markdown outputs to display,\nplease add the following line to the html\nfile before the reference to uibuilder's\nlibrary:\n\n```\n<script defer src=\"https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js\">/* Allows Markdown to be used in msg._ui */</script>\n```\n\n---\n\nThis example starts with the standard IIFE \nuibuilder template. You will note, however,\nthat you can remove all of the body HTML\nand it will still work.\n\nThis is because all of the important text,\ntables and layout are created dynamically\nusing a standardised configuration schema.\n\nThe schema used by uibuilder is actually\nquite similar, at least in concept, to that\nused by pdfmaker which was the inspiration\nfor this example. I didn't know about pdfmaker\nwhen I designed the config-driven aspects of\nuibuilder and it is comforting to know that I\ncame up with a similar solution to a similar\nproblem.\n\nOutput to HTML is far more flexible than\noutput to PDF via pdfmaker though and it will\ncontinue to grow and improve as HMTL and CSS do.\n\nYou can still output the resulting page to\nPDF very easily though.\n\n---\n\nFull documentation for uibuilder's low-code,\nconfiguration-driven UI creation capabilities\nis available in the documentation:\n\nhttps://totallyinformation.github.io/node-red-contrib-uibuilder/#/uibuilder.module?id=dynamic-data-driven-html-content-1",
-        "x": 390,
-        "y": 80,
+        "x": 380,
+        "y": 100,
         "wires": []
     },
     {
-        "id": "e8f0471862ab3f9c",
-        "type": "uib-sender",
-        "z": "a70b22bf53a7ea9c",
-        "url": "ui-tests",
-        "name": "",
-        "topic": "",
-        "passthrough": false,
-        "return": false,
-        "outputs": 0,
-        "x": 580,
-        "y": 340,
-        "wires": []
-    },
-    {
-        "id": "73e6d30f1e961bab",
+        "id": "59718b678565eb7c",
         "type": "inject",
-        "z": "a70b22bf53a7ea9c",
+        "z": "ff9704678e3a4b61",
+        "g": "56af672c3ae066b8",
         "name": "",
         "props": [
             {
@@ -258,23 +159,25 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "tables",
-        "x": 170,
-        "y": 340,
+        "x": 160,
+        "y": 200,
         "wires": [
             [
-                "e8f0471862ab3f9c"
+                "bf4b37633885a3a1"
             ]
-        ]
+        ],
+        "info": "This example sends a bunch of TABLEs to\r\nthe front-end.\r\n\r\nIt is taken from the [pdfmake]() tables example\r\nand adapted for uibuilder.\r\n\r\nIt demonstrates how complex reports can be created\r\nas easily in uibuilder as in pdfmake. With the \r\ndifference being that uibuilder outputs vanilla\r\nHTML which can be copied/pasted into many other tools.\r\nOr printed to PDF or a printer."
     },
     {
-        "id": "d621dd0923f1e188",
+        "id": "bf4b37633885a3a1",
         "type": "junction",
-        "z": "a70b22bf53a7ea9c",
-        "x": 370,
+        "z": "ff9704678e3a4b61",
+        "g": "56af672c3ae066b8",
+        "x": 270,
         "y": 220,
         "wires": [
             [
-                "279f069488faedf5"
+                "bdd00bc65ececfb2"
             ]
         ]
     }
