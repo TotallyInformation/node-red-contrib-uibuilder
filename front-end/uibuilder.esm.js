@@ -68,7 +68,7 @@ var encodeBlobAsBase64 = (data, callback) => {
   const fileReader = new FileReader();
   fileReader.onload = function() {
     const content = fileReader.result.split(",")[1];
-    callback("b" + content);
+    callback("b" + (content || ""));
   };
   return fileReader.readAsDataURL(data);
 };
@@ -270,15 +270,15 @@ function pick(obj, ...attr) {
     return acc;
   }, {});
 }
-var NATIVE_SET_TIMEOUT = setTimeout;
-var NATIVE_CLEAR_TIMEOUT = clearTimeout;
+var NATIVE_SET_TIMEOUT = globalThisShim.setTimeout;
+var NATIVE_CLEAR_TIMEOUT = globalThisShim.clearTimeout;
 function installTimerFunctions(obj, opts) {
   if (opts.useNativeTimers) {
     obj.setTimeoutFn = NATIVE_SET_TIMEOUT.bind(globalThisShim);
     obj.clearTimeoutFn = NATIVE_CLEAR_TIMEOUT.bind(globalThisShim);
   } else {
-    obj.setTimeoutFn = setTimeout.bind(globalThisShim);
-    obj.clearTimeoutFn = clearTimeout.bind(globalThisShim);
+    obj.setTimeoutFn = globalThisShim.setTimeout.bind(globalThisShim);
+    obj.clearTimeoutFn = globalThisShim.clearTimeout.bind(globalThisShim);
   }
 }
 var BASE64_OVERHEAD = 1.33;
@@ -316,54 +316,105 @@ var TransportError = class extends Error {
   }
 };
 var Transport = class extends Emitter {
+  /**
+   * Transport abstract constructor.
+   *
+   * @param {Object} opts - options
+   * @protected
+   */
   constructor(opts) {
     super();
     this.writable = false;
     installTimerFunctions(this, opts);
     this.opts = opts;
     this.query = opts.query;
-    this.readyState = "";
     this.socket = opts.socket;
   }
+  /**
+   * Emits an error.
+   *
+   * @param {String} reason
+   * @param description
+   * @param context - the error context
+   * @return {Transport} for chaining
+   * @protected
+   */
   onError(reason, description, context) {
     super.emitReserved("error", new TransportError(reason, description, context));
     return this;
   }
+  /**
+   * Opens the transport.
+   */
   open() {
-    if ("closed" === this.readyState || "" === this.readyState) {
-      this.readyState = "opening";
-      this.doOpen();
-    }
+    this.readyState = "opening";
+    this.doOpen();
     return this;
   }
+  /**
+   * Closes the transport.
+   */
   close() {
-    if ("opening" === this.readyState || "open" === this.readyState) {
+    if (this.readyState === "opening" || this.readyState === "open") {
       this.doClose();
       this.onClose();
     }
     return this;
   }
+  /**
+   * Sends multiple packets.
+   *
+   * @param {Array} packets
+   */
   send(packets) {
-    if ("open" === this.readyState) {
+    if (this.readyState === "open") {
       this.write(packets);
     } else {
     }
   }
+  /**
+   * Called upon open
+   *
+   * @protected
+   */
   onOpen() {
     this.readyState = "open";
     this.writable = true;
     super.emitReserved("open");
   }
+  /**
+   * Called with data.
+   *
+   * @param {String} data
+   * @protected
+   */
   onData(data) {
     const packet = decodePacket_browser_default(data, this.socket.binaryType);
     this.onPacket(packet);
   }
+  /**
+   * Called with a decoded packet.
+   *
+   * @protected
+   */
   onPacket(packet) {
     super.emitReserved("packet", packet);
   }
+  /**
+   * Called upon close.
+   *
+   * @protected
+   */
   onClose(details) {
     this.readyState = "closed";
     super.emitReserved("close", details);
+  }
+  /**
+   * Pauses the transport, in order not to lose packets during an upgrade.
+   *
+   * @param onPause
+   */
+  pause(onPause) {
   }
 };
 
@@ -383,7 +434,7 @@ function encode(num) {
   return encoded;
 }
 function yeast() {
-  const now = encode(+new Date());
+  const now = encode(+/* @__PURE__ */ new Date());
   if (now !== prev)
     return seed = 0, prev = now;
   return now + "." + encode(seed++);
@@ -448,6 +499,12 @@ var hasXHR2 = function() {
   return null != xhr.responseType;
 }();
 var Polling = class extends Transport {
+  /**
+   * XHR Polling constructor.
+   *
+   * @param {Object} opts
+   * @package
+   */
   constructor(opts) {
     super(opts);
     this.polling = false;
@@ -466,9 +523,21 @@ var Polling = class extends Transport {
   get name() {
     return "polling";
   }
+  /**
+   * Opens the socket (triggers polling). We write a PING message to determine
+   * when the transport is open.
+   *
+   * @protected
+   */
   doOpen() {
     this.poll();
   }
+  /**
+   * Pauses polling.
+   *
+   * @param {Function} onPause - callback upon buffers are flushed and transport is paused
+   * @package
+   */
   pause(onPause) {
     this.readyState = "pausing";
     const pause = () => {
@@ -493,11 +562,21 @@ var Polling = class extends Transport {
       pause();
     }
   }
+  /**
+   * Starts polling cycle.
+   *
+   * @private
+   */
   poll() {
     this.polling = true;
     this.doPoll();
     this.emitReserved("poll");
   }
+  /**
+   * Overloads onData to detect payloads.
+   *
+   * @protected
+   */
   onData(data) {
     const callback = (packet) => {
       if ("opening" === this.readyState && packet.type === "open") {
@@ -519,6 +598,11 @@ var Polling = class extends Transport {
       }
     }
   }
+  /**
+   * For polling, send a close packet.
+   *
+   * @protected
+   */
   doClose() {
     const close = () => {
       this.write([{ type: "close" }]);
@@ -529,6 +613,12 @@ var Polling = class extends Transport {
       this.once("open", close);
     }
   }
+  /**
+   * Writes a packets payload.
+   *
+   * @param {Array} packets - data packets
+   * @protected
+   */
   write(packets) {
     this.writable = false;
     encodePayload(packets, (data) => {
@@ -538,6 +628,11 @@ var Polling = class extends Transport {
       });
     });
   }
+  /**
+   * Generates uri for connection.
+   *
+   * @private
+   */
   uri() {
     let query = this.query || {};
     const schema = this.opts.secure ? "https" : "http";
@@ -555,10 +650,23 @@ var Polling = class extends Transport {
     const ipv6 = this.opts.hostname.indexOf(":") !== -1;
     return schema + "://" + (ipv6 ? "[" + this.opts.hostname + "]" : this.opts.hostname) + port + this.opts.path + (encodedQuery.length ? "?" + encodedQuery : "");
   }
+  /**
+   * Creates a request.
+   *
+   * @param {String} method
+   * @private
+   */
   request(opts = {}) {
     Object.assign(opts, { xd: this.xd, xs: this.xs }, this.opts);
     return new Request(this.uri(), opts);
   }
+  /**
+   * Sends data.
+   *
+   * @param {String} data to send.
+   * @param {Function} called upon flush.
+   * @private
+   */
   doWrite(data, fn) {
     const req = this.request({
       method: "POST",
@@ -569,6 +677,11 @@ var Polling = class extends Transport {
       this.onError("xhr post error", xhrStatus, context);
     });
   }
+  /**
+   * Starts a poll cycle.
+   *
+   * @private
+   */
   doPoll() {
     const req = this.request();
     req.on("data", this.onData.bind(this));
@@ -579,6 +692,12 @@ var Polling = class extends Transport {
   }
 };
 var Request = class extends Emitter {
+  /**
+   * Request constructor
+   *
+   * @param {Object} options
+   * @package
+   */
   constructor(uri, opts) {
     super();
     installTimerFunctions(this, opts);
@@ -589,6 +708,11 @@ var Request = class extends Emitter {
     this.data = void 0 !== opts.data ? opts.data : null;
     this.create();
   }
+  /**
+   * Creates the XHR object and sends the request.
+   *
+   * @private
+   */
   create() {
     const opts = pick(this.opts, "agent", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "autoUnref");
     opts.xdomain = !!this.opts.xd;
@@ -646,10 +770,20 @@ var Request = class extends Emitter {
       Request.requests[this.index] = this;
     }
   }
+  /**
+   * Called upon error.
+   *
+   * @private
+   */
   onError(err) {
     this.emitReserved("error", err, this.xhr);
     this.cleanup(true);
   }
+  /**
+   * Cleans up house.
+   *
+   * @private
+   */
   cleanup(fromError) {
     if ("undefined" === typeof this.xhr || null === this.xhr) {
       return;
@@ -666,6 +800,11 @@ var Request = class extends Emitter {
     }
     this.xhr = null;
   }
+  /**
+   * Called upon load.
+   *
+   * @private
+   */
   onLoad() {
     const data = this.xhr.responseText;
     if (data !== null) {
@@ -674,6 +813,11 @@ var Request = class extends Emitter {
       this.cleanup();
     }
   }
+  /**
+   * Aborts the request.
+   *
+   * @package
+   */
   abort() {
     this.cleanup();
   }
@@ -712,6 +856,12 @@ var defaultBinaryType = "arraybuffer";
 // node_modules/engine.io-client/build/esm/transports/websocket.js
 var isReactNative = typeof navigator !== "undefined" && typeof navigator.product === "string" && navigator.product.toLowerCase() === "reactnative";
 var WS = class extends Transport {
+  /**
+   * WebSocket transport constructor.
+   *
+   * @param {Object} opts - connection options
+   * @protected
+   */
   constructor(opts) {
     super(opts);
     this.supportsBinary = !opts.forceBase64;
@@ -737,6 +887,11 @@ var WS = class extends Transport {
     this.ws.binaryType = this.socket.binaryType || defaultBinaryType;
     this.addEventListeners();
   }
+  /**
+   * Adds event listeners to the socket
+   *
+   * @private
+   */
   addEventListeners() {
     this.ws.onopen = () => {
       if (this.opts.autoUnref) {
@@ -763,7 +918,10 @@ var WS = class extends Transport {
             opts.compress = packet.options.compress;
           }
           if (this.opts.perMessageDeflate) {
-            const len = "string" === typeof data ? Buffer.byteLength(data) : data.length;
+            const len = (
+              // @ts-ignore
+              "string" === typeof data ? Buffer.byteLength(data) : data.length
+            );
             if (len < this.opts.perMessageDeflate.threshold) {
               opts.compress = false;
             }
@@ -792,6 +950,11 @@ var WS = class extends Transport {
       this.ws = null;
     }
   }
+  /**
+   * Generates uri for connection.
+   *
+   * @private
+   */
   uri() {
     let query = this.query || {};
     const schema = this.opts.secure ? "wss" : "ws";
@@ -809,6 +972,12 @@ var WS = class extends Transport {
     const ipv6 = this.opts.hostname.indexOf(":") !== -1;
     return schema + "://" + (ipv6 ? "[" + this.opts.hostname + "]" : this.opts.hostname) + port + this.opts.path + (encodedQuery.length ? "?" + encodedQuery : "");
   }
+  /**
+   * Feature detection for WebSocket.
+   *
+   * @return {Boolean} whether this transport is available.
+   * @private
+   */
   check() {
     return !!WebSocket;
   }
@@ -821,7 +990,7 @@ var transports = {
 };
 
 // node_modules/engine.io-client/build/esm/contrib/parseuri.js
-var re = /^(?:(?![^:@]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
+var re = /^(?:(?![^:@\/?#]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@\/?#]*)(?::([^:@\/?#]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
 var parts = [
   "source",
   "protocol",
@@ -879,8 +1048,15 @@ function queryKey(uri, query) {
 
 // node_modules/engine.io-client/build/esm/socket.js
 var Socket = class extends Emitter {
+  /**
+   * Socket constructor.
+   *
+   * @param {String|Object} uri - uri or options
+   * @param {Object} opts - options
+   */
   constructor(uri, opts = {}) {
     super();
+    this.writeBuffer = [];
     if (uri && "object" === typeof uri) {
       opts = uri;
       uri = null;
@@ -903,7 +1079,6 @@ var Socket = class extends Emitter {
     this.hostname = opts.hostname || (typeof location !== "undefined" ? location.hostname : "localhost");
     this.port = opts.port || (typeof location !== "undefined" && location.port ? location.port : this.secure ? "443" : "80");
     this.transports = opts.transports || ["polling", "websocket"];
-    this.readyState = "";
     this.writeBuffer = [];
     this.prevBufferLen = 0;
     this.opts = Object.assign({
@@ -913,6 +1088,7 @@ var Socket = class extends Emitter {
       upgrade: true,
       timestampParam: "t",
       rememberUpgrade: false,
+      addTrailingSlash: true,
       rejectUnauthorized: true,
       perMessageDeflate: {
         threshold: 1024
@@ -920,7 +1096,7 @@ var Socket = class extends Emitter {
       transportOptions: {},
       closeOnBeforeunload: true
     }, opts);
-    this.opts.path = this.opts.path.replace(/\/$/, "") + "/";
+    this.opts.path = this.opts.path.replace(/\/$/, "") + (this.opts.addTrailingSlash ? "/" : "");
     if (typeof this.opts.query === "string") {
       this.opts.query = decode2(this.opts.query);
     }
@@ -950,6 +1126,13 @@ var Socket = class extends Emitter {
     }
     this.open();
   }
+  /**
+   * Creates transport of the given type.
+   *
+   * @param {String} name - transport name
+   * @return {Transport}
+   * @private
+   */
   createTransport(name) {
     const query = Object.assign({}, this.opts.query);
     query.EIO = protocol;
@@ -965,6 +1148,11 @@ var Socket = class extends Emitter {
     });
     return new transports[name](opts);
   }
+  /**
+   * Initializes transport to use and starts probe.
+   *
+   * @private
+   */
   open() {
     let transport;
     if (this.opts.rememberUpgrade && Socket.priorWebsocketSuccess && this.transports.indexOf("websocket") !== -1) {
@@ -988,6 +1176,11 @@ var Socket = class extends Emitter {
     transport.open();
     this.setTransport(transport);
   }
+  /**
+   * Sets the current transport. Disables the existing one (if any).
+   *
+   * @private
+   */
   setTransport(transport) {
     if (this.transport) {
       this.transport.removeAllListeners();
@@ -995,6 +1188,12 @@ var Socket = class extends Emitter {
     this.transport = transport;
     transport.on("drain", this.onDrain.bind(this)).on("packet", this.onPacket.bind(this)).on("error", this.onError.bind(this)).on("close", (reason) => this.onClose("transport close", reason));
   }
+  /**
+   * Probes a transport.
+   *
+   * @param {String} name - transport name
+   * @private
+   */
   probe(name) {
     let transport = this.createTransport(name);
     let failed = false;
@@ -1071,12 +1270,17 @@ var Socket = class extends Emitter {
     this.once("upgrading", onupgrade);
     transport.open();
   }
+  /**
+   * Called when connection is deemed open.
+   *
+   * @private
+   */
   onOpen() {
     this.readyState = "open";
     Socket.priorWebsocketSuccess = "websocket" === this.transport.name;
     this.emitReserved("open");
     this.flush();
-    if ("open" === this.readyState && this.opts.upgrade && this.transport.pause) {
+    if ("open" === this.readyState && this.opts.upgrade) {
       let i2 = 0;
       const l = this.upgrades.length;
       for (; i2 < l; i2++) {
@@ -1084,6 +1288,11 @@ var Socket = class extends Emitter {
       }
     }
   }
+  /**
+   * Handles a packet.
+   *
+   * @private
+   */
   onPacket(packet) {
     if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
       this.emitReserved("packet", packet);
@@ -1111,6 +1320,12 @@ var Socket = class extends Emitter {
     } else {
     }
   }
+  /**
+   * Called upon handshake completion.
+   *
+   * @param {Object} data - handshake obj
+   * @private
+   */
   onHandshake(data) {
     this.emitReserved("handshake", data);
     this.id = data.sid;
@@ -1124,6 +1339,11 @@ var Socket = class extends Emitter {
       return;
     this.resetPingTimeout();
   }
+  /**
+   * Sets and resets ping timeout timer based on server pings.
+   *
+   * @private
+   */
   resetPingTimeout() {
     this.clearTimeoutFn(this.pingTimeoutTimer);
     this.pingTimeoutTimer = this.setTimeoutFn(() => {
@@ -1133,6 +1353,11 @@ var Socket = class extends Emitter {
       this.pingTimeoutTimer.unref();
     }
   }
+  /**
+   * Called on `drain` event
+   *
+   * @private
+   */
   onDrain() {
     this.writeBuffer.splice(0, this.prevBufferLen);
     this.prevBufferLen = 0;
@@ -1142,6 +1367,11 @@ var Socket = class extends Emitter {
       this.flush();
     }
   }
+  /**
+   * Flush write buffers.
+   *
+   * @private
+   */
   flush() {
     if ("closed" !== this.readyState && this.transport.writable && !this.upgrading && this.writeBuffer.length) {
       const packets = this.getWritablePackets();
@@ -1150,6 +1380,12 @@ var Socket = class extends Emitter {
       this.emitReserved("flush");
     }
   }
+  /**
+   * Ensure the encoded size of the writeBuffer is below the maxPayload value sent by the server (only for HTTP
+   * long-polling)
+   *
+   * @private
+   */
   getWritablePackets() {
     const shouldCheckPayloadSize = this.maxPayload && this.transport.name === "polling" && this.writeBuffer.length > 1;
     if (!shouldCheckPayloadSize) {
@@ -1168,6 +1404,14 @@ var Socket = class extends Emitter {
     }
     return this.writeBuffer;
   }
+  /**
+   * Sends a message.
+   *
+   * @param {String} msg - message.
+   * @param {Object} options.
+   * @param {Function} callback function.
+   * @return {Socket} for chaining.
+   */
   write(msg, options, fn) {
     this.sendPacket("message", msg, options, fn);
     return this;
@@ -1176,6 +1420,15 @@ var Socket = class extends Emitter {
     this.sendPacket("message", msg, options, fn);
     return this;
   }
+  /**
+   * Sends a packet.
+   *
+   * @param {String} type: packet type.
+   * @param {String} data.
+   * @param {Object} options.
+   * @param {Function} fn - callback function.
+   * @private
+   */
   sendPacket(type, data, options, fn) {
     if ("function" === typeof data) {
       fn = data;
@@ -1201,6 +1454,9 @@ var Socket = class extends Emitter {
       this.once("flush", fn);
     this.flush();
   }
+  /**
+   * Closes the connection.
+   */
   close() {
     const close = () => {
       this.onClose("forced close");
@@ -1233,11 +1489,21 @@ var Socket = class extends Emitter {
     }
     return this;
   }
+  /**
+   * Called upon transport error
+   *
+   * @private
+   */
   onError(err) {
     Socket.priorWebsocketSuccess = false;
     this.emitReserved("error", err);
     this.onClose("transport error", err);
   }
+  /**
+   * Called upon transport close.
+   *
+   * @private
+   */
   onClose(reason, description) {
     if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
       this.clearTimeoutFn(this.pingTimeoutTimer);
@@ -1255,6 +1521,12 @@ var Socket = class extends Emitter {
       this.prevBufferLen = 0;
     }
   }
+  /**
+   * Filters upgrades, returning only those matching client transports.
+   *
+   * @param {Array} upgrades - server upgrades
+   * @private
+   */
   filterUpgrades(upgrades) {
     const filteredUpgrades = [];
     let i2 = 0;
@@ -1390,7 +1662,7 @@ function _deconstructPacket(data, buffers) {
 }
 function reconstructPacket(packet, buffers) {
   packet.data = _reconstructPacket(packet.data, buffers);
-  packet.attachments = void 0;
+  delete packet.attachments;
   return packet;
 }
 function _reconstructPacket(data, buffers) {
@@ -1430,18 +1702,36 @@ var PacketType;
   PacketType2[PacketType2["BINARY_ACK"] = 6] = "BINARY_ACK";
 })(PacketType || (PacketType = {}));
 var Encoder = class {
+  /**
+   * Encoder constructor
+   *
+   * @param {function} replacer - custom replacer to pass down to JSON.parse
+   */
   constructor(replacer) {
     this.replacer = replacer;
   }
+  /**
+   * Encode a packet as a single string if non-binary, or as a
+   * buffer sequence, depending on packet type.
+   *
+   * @param {Object} obj - packet object
+   */
   encode(obj) {
     if (obj.type === PacketType.EVENT || obj.type === PacketType.ACK) {
       if (hasBinary(obj)) {
-        obj.type = obj.type === PacketType.EVENT ? PacketType.BINARY_EVENT : PacketType.BINARY_ACK;
-        return this.encodeAsBinary(obj);
+        return this.encodeAsBinary({
+          type: obj.type === PacketType.EVENT ? PacketType.BINARY_EVENT : PacketType.BINARY_ACK,
+          nsp: obj.nsp,
+          data: obj.data,
+          id: obj.id
+        });
       }
     }
     return [this.encodeAsString(obj)];
   }
+  /**
+   * Encode packet as string.
+   */
   encodeAsString(obj) {
     let str = "" + obj.type;
     if (obj.type === PacketType.BINARY_EVENT || obj.type === PacketType.BINARY_ACK) {
@@ -1458,6 +1748,11 @@ var Encoder = class {
     }
     return str;
   }
+  /**
+   * Encode packet as 'buffer sequence' by removing blobs, and
+   * deconstructing packet into object with placeholders and
+   * a list of buffers.
+   */
   encodeAsBinary(obj) {
     const deconstruction = deconstructPacket(obj);
     const pack = this.encodeAsString(deconstruction.packet);
@@ -1467,10 +1762,20 @@ var Encoder = class {
   }
 };
 var Decoder = class extends Emitter {
+  /**
+   * Decoder constructor
+   *
+   * @param {function} reviver - custom reviver to pass down to JSON.stringify
+   */
   constructor(reviver) {
     super();
     this.reviver = reviver;
   }
+  /**
+   * Decodes an encoded packet string into packet JSON.
+   *
+   * @param {String} obj - encoded packet
+   */
   add(obj) {
     let packet;
     if (typeof obj === "string") {
@@ -1478,7 +1783,9 @@ var Decoder = class extends Emitter {
         throw new Error("got plaintext data when reconstructing a packet");
       }
       packet = this.decodeString(obj);
-      if (packet.type === PacketType.BINARY_EVENT || packet.type === PacketType.BINARY_ACK) {
+      const isBinaryEvent = packet.type === PacketType.BINARY_EVENT;
+      if (isBinaryEvent || packet.type === PacketType.BINARY_ACK) {
+        packet.type = isBinaryEvent ? PacketType.EVENT : PacketType.ACK;
         this.reconstructor = new BinaryReconstructor(packet);
         if (packet.attachments === 0) {
           super.emitReserved("decoded", packet);
@@ -1500,6 +1807,12 @@ var Decoder = class extends Emitter {
       throw new Error("Unknown type: " + obj);
     }
   }
+  /**
+   * Decode a packet String (JSON data)
+   *
+   * @param {String} str
+   * @return {Object} packet
+   */
   decodeString(str) {
     let i2 = 0;
     const p = {
@@ -1578,9 +1891,13 @@ var Decoder = class extends Emitter {
         return Array.isArray(payload);
     }
   }
+  /**
+   * Deallocates a parser's resources
+   */
   destroy() {
     if (this.reconstructor) {
       this.reconstructor.finishedReconstruction();
+      this.reconstructor = null;
     }
   }
 };
@@ -1590,6 +1907,14 @@ var BinaryReconstructor = class {
     this.buffers = [];
     this.reconPack = packet;
   }
+  /**
+   * Method to be called when binary data received from connection
+   * after a BINARY_EVENT packet.
+   *
+   * @param {Buffer | ArrayBuffer} binData - the raw binary data received
+   * @return {null | Object} returns null if more binary data is expected or
+   *   a reconstructed packet object if all buffers have been received.
+   */
   takeBinaryData(binData) {
     this.buffers.push(binData);
     if (this.buffers.length === this.reconPack.attachments) {
@@ -1599,6 +1924,9 @@ var BinaryReconstructor = class {
     }
     return null;
   }
+  /**
+   * Cleans up binary packet reconstruction variables.
+   */
   finishedReconstruction() {
     this.reconPack = null;
     this.buffers = [];
@@ -1619,15 +1947,22 @@ var RESERVED_EVENTS = Object.freeze({
   connect_error: 1,
   disconnect: 1,
   disconnecting: 1,
+  // EventEmitter reserved events: https://nodejs.org/api/events.html#events_event_newlistener
   newListener: 1,
   removeListener: 1
 });
 var Socket2 = class extends Emitter {
+  /**
+   * `Socket` constructor.
+   */
   constructor(io, nsp, opts) {
     super();
     this.connected = false;
+    this.recovered = false;
     this.receiveBuffer = [];
     this.sendBuffer = [];
+    this._queue = [];
+    this._queueSeq = 0;
     this.ids = 0;
     this.acks = {};
     this.flags = {};
@@ -1636,12 +1971,32 @@ var Socket2 = class extends Emitter {
     if (opts && opts.auth) {
       this.auth = opts.auth;
     }
+    this._opts = Object.assign({}, opts);
     if (this.io._autoConnect)
       this.open();
   }
+  /**
+   * Whether the socket is currently disconnected
+   *
+   * @example
+   * const socket = io();
+   *
+   * socket.on("connect", () => {
+   *   console.log(socket.disconnected); // false
+   * });
+   *
+   * socket.on("disconnect", () => {
+   *   console.log(socket.disconnected); // true
+   * });
+   */
   get disconnected() {
     return !this.connected;
   }
+  /**
+   * Subscribe to open, close and packet events
+   *
+   * @private
+   */
   subEvents() {
     if (this.subs)
       return;
@@ -1653,9 +2008,36 @@ var Socket2 = class extends Emitter {
       on(io, "close", this.onclose.bind(this))
     ];
   }
+  /**
+   * Whether the Socket will try to reconnect when its Manager connects or reconnects.
+   *
+   * @example
+   * const socket = io();
+   *
+   * console.log(socket.active); // true
+   *
+   * socket.on("disconnect", (reason) => {
+   *   if (reason === "io server disconnect") {
+   *     // the disconnection was initiated by the server, you need to manually reconnect
+   *     console.log(socket.active); // false
+   *   }
+   *   // else the socket will automatically try to reconnect
+   *   console.log(socket.active); // true
+   * });
+   */
   get active() {
     return !!this.subs;
   }
+  /**
+   * "Opens" the socket.
+   *
+   * @example
+   * const socket = io({
+   *   autoConnect: false
+   * });
+   *
+   * socket.connect();
+   */
   connect() {
     if (this.connected)
       return this;
@@ -1666,19 +2048,58 @@ var Socket2 = class extends Emitter {
       this.onopen();
     return this;
   }
+  /**
+   * Alias for {@link connect()}.
+   */
   open() {
     return this.connect();
   }
+  /**
+   * Sends a `message` event.
+   *
+   * This method mimics the WebSocket.send() method.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send
+   *
+   * @example
+   * socket.send("hello");
+   *
+   * // this is equivalent to
+   * socket.emit("message", "hello");
+   *
+   * @return self
+   */
   send(...args) {
     args.unshift("message");
     this.emit.apply(this, args);
     return this;
   }
+  /**
+   * Override `emit`.
+   * If the event is in `events`, it's emitted normally.
+   *
+   * @example
+   * socket.emit("hello", "world");
+   *
+   * // all serializable datastructures are supported (no need to call JSON.stringify)
+   * socket.emit("hello", 1, "2", { 3: ["4"], 5: Uint8Array.from([6]) });
+   *
+   * // with an acknowledgement from the server
+   * socket.emit("hello", "world", (val) => {
+   *   // ...
+   * });
+   *
+   * @return self
+   */
   emit(ev, ...args) {
     if (RESERVED_EVENTS.hasOwnProperty(ev)) {
       throw new Error('"' + ev.toString() + '" is a reserved event name');
     }
     args.unshift(ev);
+    if (this._opts.retries && !this.flags.fromQueue && !this.flags.volatile) {
+      this._addToQueue(args);
+      return this;
+    }
     const packet = {
       type: PacketType.EVENT,
       data: args
@@ -1703,8 +2124,12 @@ var Socket2 = class extends Emitter {
     this.flags = {};
     return this;
   }
+  /**
+   * @private
+   */
   _registerAckCallback(id, ack) {
-    const timeout = this.flags.timeout;
+    var _a2;
+    const timeout = (_a2 = this.flags.timeout) !== null && _a2 !== void 0 ? _a2 : this._opts.ackTimeout;
     if (timeout === void 0) {
       this.acks[id] = ack;
       return;
@@ -1723,29 +2148,160 @@ var Socket2 = class extends Emitter {
       ack.apply(this, [null, ...args]);
     };
   }
+  /**
+   * Emits an event and waits for an acknowledgement
+   *
+   * @example
+   * // without timeout
+   * const response = await socket.emitWithAck("hello", "world");
+   *
+   * // with a specific timeout
+   * try {
+   *   const response = await socket.timeout(1000).emitWithAck("hello", "world");
+   * } catch (err) {
+   *   // the server did not acknowledge the event in the given delay
+   * }
+   *
+   * @return a Promise that will be fulfilled when the server acknowledges the event
+   */
+  emitWithAck(ev, ...args) {
+    const withErr = this.flags.timeout !== void 0 || this._opts.ackTimeout !== void 0;
+    return new Promise((resolve, reject) => {
+      args.push((arg1, arg2) => {
+        if (withErr) {
+          return arg1 ? reject(arg1) : resolve(arg2);
+        } else {
+          return resolve(arg1);
+        }
+      });
+      this.emit(ev, ...args);
+    });
+  }
+  /**
+   * Add the packet to the queue.
+   * @param args
+   * @private
+   */
+  _addToQueue(args) {
+    let ack;
+    if (typeof args[args.length - 1] === "function") {
+      ack = args.pop();
+    }
+    const packet = {
+      id: this._queueSeq++,
+      tryCount: 0,
+      pending: false,
+      args,
+      flags: Object.assign({ fromQueue: true }, this.flags)
+    };
+    args.push((err, ...responseArgs) => {
+      if (packet !== this._queue[0]) {
+        return;
+      }
+      const hasError = err !== null;
+      if (hasError) {
+        if (packet.tryCount > this._opts.retries) {
+          this._queue.shift();
+          if (ack) {
+            ack(err);
+          }
+        }
+      } else {
+        this._queue.shift();
+        if (ack) {
+          ack(null, ...responseArgs);
+        }
+      }
+      packet.pending = false;
+      return this._drainQueue();
+    });
+    this._queue.push(packet);
+    this._drainQueue();
+  }
+  /**
+   * Send the first packet of the queue, and wait for an acknowledgement from the server.
+   * @param force - whether to resend a packet that has not been acknowledged yet
+   *
+   * @private
+   */
+  _drainQueue(force = false) {
+    if (!this.connected || this._queue.length === 0) {
+      return;
+    }
+    const packet = this._queue[0];
+    if (packet.pending && !force) {
+      return;
+    }
+    packet.pending = true;
+    packet.tryCount++;
+    this.flags = packet.flags;
+    this.emit.apply(this, packet.args);
+  }
+  /**
+   * Sends a packet.
+   *
+   * @param packet
+   * @private
+   */
   packet(packet) {
     packet.nsp = this.nsp;
     this.io._packet(packet);
   }
+  /**
+   * Called upon engine `open`.
+   *
+   * @private
+   */
   onopen() {
     if (typeof this.auth == "function") {
       this.auth((data) => {
-        this.packet({ type: PacketType.CONNECT, data });
+        this._sendConnectPacket(data);
       });
     } else {
-      this.packet({ type: PacketType.CONNECT, data: this.auth });
+      this._sendConnectPacket(this.auth);
     }
   }
+  /**
+   * Sends a CONNECT packet to initiate the Socket.IO session.
+   *
+   * @param data
+   * @private
+   */
+  _sendConnectPacket(data) {
+    this.packet({
+      type: PacketType.CONNECT,
+      data: this._pid ? Object.assign({ pid: this._pid, offset: this._lastOffset }, data) : data
+    });
+  }
+  /**
+   * Called upon engine or manager `error`.
+   *
+   * @param err
+   * @private
+   */
   onerror(err) {
     if (!this.connected) {
       this.emitReserved("connect_error", err);
     }
   }
+  /**
+   * Called upon engine `close`.
+   *
+   * @param reason
+   * @param description
+   * @private
+   */
   onclose(reason, description) {
     this.connected = false;
     delete this.id;
     this.emitReserved("disconnect", reason, description);
   }
+  /**
+   * Called with socket packet.
+   *
+   * @param packet
+   * @private
+   */
   onpacket(packet) {
     const sameNamespace = packet.nsp === this.nsp;
     if (!sameNamespace)
@@ -1753,8 +2309,7 @@ var Socket2 = class extends Emitter {
     switch (packet.type) {
       case PacketType.CONNECT:
         if (packet.data && packet.data.sid) {
-          const id = packet.data.sid;
-          this.onconnect(id);
+          this.onconnect(packet.data.sid, packet.data.pid);
         } else {
           this.emitReserved("connect_error", new Error("It seems you are trying to reach a Socket.IO server in v2.x with a v3.x client, but they are not compatible (more information here: https://socket.io/docs/v3/migrating-from-2-x-to-3-0/)"));
         }
@@ -1778,6 +2333,12 @@ var Socket2 = class extends Emitter {
         break;
     }
   }
+  /**
+   * Called upon a server event.
+   *
+   * @param packet
+   * @private
+   */
   onevent(packet) {
     const args = packet.data || [];
     if (null != packet.id) {
@@ -1797,7 +2358,15 @@ var Socket2 = class extends Emitter {
       }
     }
     super.emit.apply(this, args);
+    if (this._pid && args.length && typeof args[args.length - 1] === "string") {
+      this._lastOffset = args[args.length - 1];
+    }
   }
+  /**
+   * Produces an ack callback to emit with an event.
+   *
+   * @private
+   */
   ack(id) {
     const self2 = this;
     let sent = false;
@@ -1812,6 +2381,12 @@ var Socket2 = class extends Emitter {
       });
     };
   }
+  /**
+   * Called upon a server acknowlegement.
+   *
+   * @param packet
+   * @private
+   */
   onack(packet) {
     const ack = this.acks[packet.id];
     if ("function" === typeof ack) {
@@ -1820,12 +2395,25 @@ var Socket2 = class extends Emitter {
     } else {
     }
   }
-  onconnect(id) {
+  /**
+   * Called upon server connect.
+   *
+   * @private
+   */
+  onconnect(id, pid) {
     this.id = id;
+    this.recovered = pid && this._pid === pid;
+    this._pid = pid;
     this.connected = true;
     this.emitBuffered();
     this.emitReserved("connect");
+    this._drainQueue(true);
   }
+  /**
+   * Emit buffered events (received and emitted).
+   *
+   * @private
+   */
   emitBuffered() {
     this.receiveBuffer.forEach((args) => this.emitEvent(args));
     this.receiveBuffer = [];
@@ -1835,10 +2423,22 @@ var Socket2 = class extends Emitter {
     });
     this.sendBuffer = [];
   }
+  /**
+   * Called upon server disconnect.
+   *
+   * @private
+   */
   ondisconnect() {
     this.destroy();
     this.onclose("io server disconnect");
   }
+  /**
+   * Called upon forced client/server side disconnections,
+   * this method ensures the manager stops tracking us and
+   * that reconnections don't get triggered for this.
+   *
+   * @private
+   */
   destroy() {
     if (this.subs) {
       this.subs.forEach((subDestroy) => subDestroy());
@@ -1846,6 +2446,22 @@ var Socket2 = class extends Emitter {
     }
     this.io["_destroy"](this);
   }
+  /**
+   * Disconnects the socket manually. In that case, the socket will not try to reconnect.
+   *
+   * If this is the last active Socket instance of the {@link Manager}, the low-level connection will be closed.
+   *
+   * @example
+   * const socket = io();
+   *
+   * socket.on("disconnect", (reason) => {
+   *   // console.log(reason); prints "io client disconnect"
+   * });
+   *
+   * socket.disconnect();
+   *
+   * @return self
+   */
   disconnect() {
     if (this.connected) {
       this.packet({ type: PacketType.DISCONNECT });
@@ -1856,31 +2472,107 @@ var Socket2 = class extends Emitter {
     }
     return this;
   }
+  /**
+   * Alias for {@link disconnect()}.
+   *
+   * @return self
+   */
   close() {
     return this.disconnect();
   }
+  /**
+   * Sets the compress flag.
+   *
+   * @example
+   * socket.compress(false).emit("hello");
+   *
+   * @param compress - if `true`, compresses the sending data
+   * @return self
+   */
   compress(compress) {
     this.flags.compress = compress;
     return this;
   }
+  /**
+   * Sets a modifier for a subsequent event emission that the event message will be dropped when this socket is not
+   * ready to send messages.
+   *
+   * @example
+   * socket.volatile.emit("hello"); // the server may or may not receive it
+   *
+   * @returns self
+   */
   get volatile() {
     this.flags.volatile = true;
     return this;
   }
+  /**
+   * Sets a modifier for a subsequent event emission that the callback will be called with an error when the
+   * given number of milliseconds have elapsed without an acknowledgement from the server:
+   *
+   * @example
+   * socket.timeout(5000).emit("my-event", (err) => {
+   *   if (err) {
+   *     // the server did not acknowledge the event in the given delay
+   *   }
+   * });
+   *
+   * @returns self
+   */
   timeout(timeout) {
     this.flags.timeout = timeout;
     return this;
   }
+  /**
+   * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+   * callback.
+   *
+   * @example
+   * socket.onAny((event, ...args) => {
+   *   console.log(`got ${event}`);
+   * });
+   *
+   * @param listener
+   */
   onAny(listener) {
     this._anyListeners = this._anyListeners || [];
     this._anyListeners.push(listener);
     return this;
   }
+  /**
+   * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+   * callback. The listener is added to the beginning of the listeners array.
+   *
+   * @example
+   * socket.prependAny((event, ...args) => {
+   *   console.log(`got event ${event}`);
+   * });
+   *
+   * @param listener
+   */
   prependAny(listener) {
     this._anyListeners = this._anyListeners || [];
     this._anyListeners.unshift(listener);
     return this;
   }
+  /**
+   * Removes the listener that will be fired when any event is emitted.
+   *
+   * @example
+   * const catchAllListener = (event, ...args) => {
+   *   console.log(`got event ${event}`);
+   * }
+   *
+   * socket.onAny(catchAllListener);
+   *
+   * // remove a specific listener
+   * socket.offAny(catchAllListener);
+   *
+   * // or remove all listeners
+   * socket.offAny();
+   *
+   * @param listener
+   */
   offAny(listener) {
     if (!this._anyListeners) {
       return this;
@@ -1898,19 +2590,67 @@ var Socket2 = class extends Emitter {
     }
     return this;
   }
+  /**
+   * Returns an array of listeners that are listening for any event that is specified. This array can be manipulated,
+   * e.g. to remove listeners.
+   */
   listenersAny() {
     return this._anyListeners || [];
   }
+  /**
+   * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+   * callback.
+   *
+   * Note: acknowledgements sent to the server are not included.
+   *
+   * @example
+   * socket.onAnyOutgoing((event, ...args) => {
+   *   console.log(`sent event ${event}`);
+   * });
+   *
+   * @param listener
+   */
   onAnyOutgoing(listener) {
     this._anyOutgoingListeners = this._anyOutgoingListeners || [];
     this._anyOutgoingListeners.push(listener);
     return this;
   }
+  /**
+   * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+   * callback. The listener is added to the beginning of the listeners array.
+   *
+   * Note: acknowledgements sent to the server are not included.
+   *
+   * @example
+   * socket.prependAnyOutgoing((event, ...args) => {
+   *   console.log(`sent event ${event}`);
+   * });
+   *
+   * @param listener
+   */
   prependAnyOutgoing(listener) {
     this._anyOutgoingListeners = this._anyOutgoingListeners || [];
     this._anyOutgoingListeners.unshift(listener);
     return this;
   }
+  /**
+   * Removes the listener that will be fired when any event is emitted.
+   *
+   * @example
+   * const catchAllListener = (event, ...args) => {
+   *   console.log(`sent event ${event}`);
+   * }
+   *
+   * socket.onAnyOutgoing(catchAllListener);
+   *
+   * // remove a specific listener
+   * socket.offAnyOutgoing(catchAllListener);
+   *
+   * // or remove all listeners
+   * socket.offAnyOutgoing();
+   *
+   * @param [listener] - the catch-all listener (optional)
+   */
   offAnyOutgoing(listener) {
     if (!this._anyOutgoingListeners) {
       return this;
@@ -1928,9 +2668,20 @@ var Socket2 = class extends Emitter {
     }
     return this;
   }
+  /**
+   * Returns an array of listeners that are listening for any event that is specified. This array can be manipulated,
+   * e.g. to remove listeners.
+   */
   listenersAnyOutgoing() {
     return this._anyOutgoingListeners || [];
   }
+  /**
+   * Notify the listeners for each packet sent
+   *
+   * @param packet
+   *
+   * @private
+   */
   notifyOutgoingListeners(packet) {
     if (this._anyOutgoingListeners && this._anyOutgoingListeners.length) {
       const listeners = this._anyOutgoingListeners.slice();
@@ -2049,11 +2800,24 @@ var Manager = class extends Emitter {
     this._timeout = v;
     return this;
   }
+  /**
+   * Starts trying to reconnect if reconnection is enabled and we have not
+   * started reconnecting yet
+   *
+   * @private
+   */
   maybeReconnectOnOpen() {
     if (!this._reconnecting && this._reconnection && this.backoff.attempts === 0) {
       this.reconnect();
     }
   }
+  /**
+   * Sets the current transport `socket`.
+   *
+   * @param {Function} fn - optional, callback
+   * @return self
+   * @public
+   */
   open(fn) {
     if (~this._readyState.indexOf("open"))
       return this;
@@ -2097,9 +2861,20 @@ var Manager = class extends Emitter {
     this.subs.push(errorSub);
     return this;
   }
+  /**
+   * Alias for open()
+   *
+   * @return self
+   * @public
+   */
   connect(fn) {
     return this.open(fn);
   }
+  /**
+   * Called upon transport open.
+   *
+   * @private
+   */
   onopen() {
     this.cleanup();
     this._readyState = "open";
@@ -2107,9 +2882,19 @@ var Manager = class extends Emitter {
     const socket = this.engine;
     this.subs.push(on(socket, "ping", this.onping.bind(this)), on(socket, "data", this.ondata.bind(this)), on(socket, "error", this.onerror.bind(this)), on(socket, "close", this.onclose.bind(this)), on(this.decoder, "decoded", this.ondecoded.bind(this)));
   }
+  /**
+   * Called upon a ping.
+   *
+   * @private
+   */
   onping() {
     this.emitReserved("ping");
   }
+  /**
+   * Called with data.
+   *
+   * @private
+   */
   ondata(data) {
     try {
       this.decoder.add(data);
@@ -2117,22 +2902,46 @@ var Manager = class extends Emitter {
       this.onclose("parse error", e);
     }
   }
+  /**
+   * Called when parser fully decodes a packet.
+   *
+   * @private
+   */
   ondecoded(packet) {
     nextTick(() => {
       this.emitReserved("packet", packet);
     }, this.setTimeoutFn);
   }
+  /**
+   * Called upon socket error.
+   *
+   * @private
+   */
   onerror(err) {
     this.emitReserved("error", err);
   }
+  /**
+   * Creates a new socket for the given `nsp`.
+   *
+   * @return {Socket}
+   * @public
+   */
   socket(nsp, opts) {
     let socket = this.nsps[nsp];
     if (!socket) {
       socket = new Socket2(this, nsp, opts);
       this.nsps[nsp] = socket;
+    } else if (this._autoConnect && !socket.active) {
+      socket.connect();
     }
     return socket;
   }
+  /**
+   * Called upon a socket close.
+   *
+   * @param socket
+   * @private
+   */
   _destroy(socket) {
     const nsps = Object.keys(this.nsps);
     for (const nsp of nsps) {
@@ -2143,17 +2952,33 @@ var Manager = class extends Emitter {
     }
     this._close();
   }
+  /**
+   * Writes a packet.
+   *
+   * @param packet
+   * @private
+   */
   _packet(packet) {
     const encodedPackets = this.encoder.encode(packet);
     for (let i2 = 0; i2 < encodedPackets.length; i2++) {
       this.engine.write(encodedPackets[i2], packet.options);
     }
   }
+  /**
+   * Clean up transport subscriptions and packet buffer.
+   *
+   * @private
+   */
   cleanup() {
     this.subs.forEach((subDestroy) => subDestroy());
     this.subs.length = 0;
     this.decoder.destroy();
   }
+  /**
+   * Close the current socket.
+   *
+   * @private
+   */
   _close() {
     this.skipReconnect = true;
     this._reconnecting = false;
@@ -2161,9 +2986,19 @@ var Manager = class extends Emitter {
     if (this.engine)
       this.engine.close();
   }
+  /**
+   * Alias for close()
+   *
+   * @private
+   */
   disconnect() {
     return this._close();
   }
+  /**
+   * Called upon engine close.
+   *
+   * @private
+   */
   onclose(reason, description) {
     this.cleanup();
     this.backoff.reset();
@@ -2173,6 +3008,11 @@ var Manager = class extends Emitter {
       this.reconnect();
     }
   }
+  /**
+   * Attempt a reconnection.
+   *
+   * @private
+   */
   reconnect() {
     if (this._reconnecting || this.skipReconnect)
       return this;
@@ -2208,6 +3048,11 @@ var Manager = class extends Emitter {
       });
     }
   }
+  /**
+   * Called upon successful reconnect.
+   *
+   * @private
+   */
   onreconnect() {
     const attempt = this.backoff.attempts;
     this._reconnecting = false;
@@ -2257,36 +3102,43 @@ var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
 var LOG_STYLES = {
+  // 0
   error: {
     css: "background: red; color: black;",
     txtCss: "color: red; ",
     pre: "\u26D4 ",
     console: "error"
+    // or trace
   },
+  // 1
   warn: {
     css: "background: darkorange; color: black;",
     txtCss: "color: darkorange; ",
     pre: "\u26A0 ",
     console: "warn"
   },
+  // 2
   info: {
     css: "background: aqua; color: black;",
     txtCss: "color: aqua;",
     pre: "\u2757 ",
     console: "info"
   },
+  // 3
   log: {
     css: "background: grey; color: yellow;",
     txtCss: "color: grey;",
     pre: "",
     console: "log"
   },
+  // 4
   debug: {
     css: "background: chartreuse; color: black;",
     txtCss: "color: chartreuse;",
     pre: "",
     console: "debug"
   },
+  // 5
   trace: {
     css: "background: indigo; color: yellow;",
     txtCss: "color: hotpink;",
@@ -2397,26 +3249,49 @@ function urlJoin() {
 }
 var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _extCommands, _showStatus, _a;
 var Uib = (_a = class {
+  // ---- End of ioSetup ---- //
+  //#endregion -------- ------------ -------- //
+  //#region ------- Class construction & startup method -------- //
   constructor() {
+    //#region private class vars
+    // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
     __publicField(this, "connectedNum", 0);
+    // event listener callbacks by property name
+    // #events = {}
+    // Socket.IO channel names
     __publicField(this, "_ioChannels", { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
+    /** setInterval holder for pings @type {function|undefined} */
     __privateAdd(this, _pingInterval, void 0);
+    // onChange event callbacks
     __privateAdd(this, _propChangeCallbacks, {});
+    // onTopic event callbacks
     __privateAdd(this, _msgRecvdByTopicCallbacks, {});
+    // Is Vue available?
     __publicField(this, "isVue", false);
+    // What version? Set in startup if Vue is loaded. Won't always work
     __publicField(this, "vueVersion");
+    /** setInterval id holder for Socket.IO checkConnect
+     * @type {number|null}
+     */
     __privateAdd(this, _timerid, null);
+    // Holds the reference ID for the internal msg change event handler so that it can be cancelled
     __privateAdd(this, _MsgHandler, void 0);
+    // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
     __publicField(this, "_socket");
+    // Placeholder for an observer that watches the whole DOM for changes - can't make a # var until # fns allowed in all browsers
     __publicField(this, "_htmlObserver");
+    // Has showMsg been turned on?
     __privateAdd(this, _isShowMsg, false);
+    // Has showStatus been turned on?
     __privateAdd(this, _isShowStatus, false);
+    // Externally accessible command functions (NB: Case must match)
     __privateAdd(this, _extCommands, [
       "get",
       "set",
       "showMsg",
       "showStatus"
     ]);
+    // What status variables to show via showStatus()
     __privateAdd(this, _showStatus, {
       online: { "var": "online", "label": "Online?", "description": "Is the browser online?" },
       ioConnected: { "var": "ioConnected", "label": "Socket.IO connected?", "description": "Is Socket.IO connected?" },
@@ -2427,6 +3302,7 @@ var Uib = (_a = class {
       httpNodeRoot: { "var": "httpNodeRoot", "label": "httpNodeRoot", "description": "From Node-RED' settings.js, affects URL's. May be wrong for pages in sub-folders" },
       pageName: { "var": "pageName", "label": "Page name", "description": "Actual name of this page" },
       ioNamespace: { "var": "ioNamespace", "label": "SIO namespace", "description": "Socket.IO namespace - unique to each uibuilder node instance" },
+      // ioPath: { 'var': 'ioPath', 'label': 'SIO path', 'description': '', }, // no longer needed in the modern client
       socketError: { "var": "socketError", "label": "Socket error", "description": "If the Socket.IO connection has failed, says why" },
       msgsSent: { "var": "msgsSent", "label": "# msgs sent", "description": "How many standard messages have been sent to Node-RED?" },
       msgsReceived: { "var": "msgsReceived", "label": "# msgs received", "description": "How many standard messages have been received from Node-RED?" },
@@ -2438,33 +3314,71 @@ var Uib = (_a = class {
       version: { "var": "version", "label": "uibuilder client version", "description": "The version of the loaded uibuilder client library" },
       serverTimeOffset: { "var": "serverTimeOffset", "label": "Server time offset (Hrs)", "description": "The number of hours difference between the Node-red server and the client" }
     });
+    //#endregion
+    //#region public class vars
+    // TODO Move to proper getters
+    //#region ---- Externally read-only (via .get method) ---- //
+    // version - moved to _meta
+    /** Client ID set by uibuilder on connect */
     __publicField(this, "clientId", "");
+    /** The collection of cookies provided by uibuilder */
     __publicField(this, "cookies", {});
+    /** Copy of last control msg object received from sever */
     __publicField(this, "ctrlMsg", {});
+    /** Is Socket.IO client connected to the server? */
     __publicField(this, "ioConnected", false);
+    // Is the browser tab containing this page visible or not?
     __publicField(this, "isVisible", false);
+    // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
     __publicField(this, "lastNavType", "");
+    /** Last std msg received from Node-RED */
     __publicField(this, "msg", {});
+    /** number of messages sent to server since page load */
     __publicField(this, "msgsSent", 0);
+    /** number of messages received from server since page load */
     __publicField(this, "msgsReceived", 0);
+    /** number of control messages sent to server since page load */
     __publicField(this, "msgsSentCtrl", 0);
+    /** number of control messages received from server since page load */
     __publicField(this, "msgsCtrlReceived", 0);
+    /** Is the client online or offline? */
     __publicField(this, "online", navigator.onLine);
+    /** last control msg object sent via uibuilder.send() @since v2.0.0-dev3 */
     __publicField(this, "sentCtrlMsg", {});
+    /** last std msg object sent via uibuilder.send() */
     __publicField(this, "sentMsg", {});
+    /** placeholder to track time offset from server, see fn socket.on(ioChannels.server ...) */
     __publicField(this, "serverTimeOffset", null);
+    /** placeholder for a socket error message */
     __publicField(this, "socketError", null);
+    // tab identifier from session storage
     __publicField(this, "tabId", "");
+    // Actual name of current page (set in constructor)
     __publicField(this, "pageName", null);
+    //#endregion ---- ---- ---- ---- //
+    // TODO Move to proper getters/setters
+    //#region ---- Externally Writable (via .set method, read via .get method) ---- //
+    /** Default originator node id - empty string by default
+     * @type {string}
+     */
     __publicField(this, "originator", "");
+    /** Default topic - used by send if set and no topic provided
+     * @type {(string|undefined)}
+     */
     __publicField(this, "topic");
+    //#endregion ---- ---- ---- ---- //
+    //#region ---- These are unlikely to be needed externally: ----
     __publicField(this, "autoSendReady", true);
     __publicField(this, "httpNodeRoot", "");
+    // Node-RED setting (via cookie)
     __publicField(this, "ioNamespace", "");
     __publicField(this, "ioPath", "");
     __publicField(this, "retryFactor", 1.5);
+    // starting delay factor for subsequent reconnect attempts
     __publicField(this, "retryMs", 2e3);
+    // starting retry ms period for manual socket reconnections workaround
     __publicField(this, "storePrefix", "uib_");
+    // Prefix for all uib-related localStorage
     __publicField(this, "started", false);
     __publicField(this, "socketOptions", {
       path: this.ioPath,
@@ -2478,6 +3392,7 @@ var Uib = (_a = class {
         lastNavType: void 0
       },
       transportOptions: {
+        // Can only set headers when polling
         polling: {
           extraHeaders: {
             "x-clientid": `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`
@@ -2485,6 +3400,9 @@ var Uib = (_a = class {
         }
       }
     });
+    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+     * @type {HTMLElement}
+     */
     __publicField(this, "$", document.querySelector.bind(document));
     log("trace", "Uib:constructor", "Starting")();
     window.addEventListener("offline", (e) => {
@@ -2549,6 +3467,10 @@ var Uib = (_a = class {
   get meta() {
     return _a._meta;
   }
+  //#endregion ---- ---- ---- ---- //
+  //#endregion --- End of variables ---
+  //#region ------- Getters and Setters ------- //
+  // Change logging level dynamically (affects both console. and print.)
   set logLevel(level) {
     logLevel = level;
     console.log("%c\u2757 info%c [logLevel]", `${LOG_STYLES.level} ${LOG_STYLES.info.css}`, `${LOG_STYLES.head} ${LOG_STYLES.info.txtCss}`, `Set to ${level} (${LOG_STYLES.names[level]})`);
@@ -2556,6 +3478,14 @@ var Uib = (_a = class {
   get logLevel() {
     return logLevel;
   }
+  // TODO Block setting of read-only vars
+  /** Function to set uibuilder properties to a new value - works on any property except _* or #*
+   * Also triggers any event listeners.
+   * Example: this.set('msg', {topic:'uibuilder', payload:42});
+   * @param {string} prop Any uibuilder property who's name does not start with a _ or #
+   * @param {*} val _
+   * @returns {*|undefined} Input value
+   */
   set(prop, val) {
     if (prop.startsWith("_") || prop.startsWith("#")) {
       log("warn", "Uib:set", `Cannot use set() on protected property "${prop}"`)();
@@ -2566,6 +3496,11 @@ var Uib = (_a = class {
     this._dispatchCustomEvent("uibuilder:propertyChanged", { "prop": prop, "value": val });
     return val;
   }
+  /** Function to get the value of a uibuilder property
+   * Example: uibuilder.get('msg')
+   * @param {string} prop The name of the property to get as long as it does not start with a _ or #
+   * @returns {*|undefined} The current value of the property
+   */
   get(prop) {
     if (prop.startsWith("_") || prop.startsWith("#")) {
       log("warn", "Uib:get", `Cannot use get() on protected property "${prop}"`)();
@@ -2582,6 +3517,15 @@ var Uib = (_a = class {
     }
     return this[prop];
   }
+  /** Write to localStorage if possible. console error output if can't write
+   * Also uses this.storePrefix
+   * @example
+   *   uibuilder.setStore('fred', 42)
+   *   console.log(uibuilder.getStore('fred'))
+   * @param {string} id localStorage var name to be used (prefixed with 'uib_')
+   * @param {*} value value to write to localstore
+   * @returns {boolean} True if succeeded else false
+   */
   setStore(id, value2) {
     if (typeof value2 === "object") {
       try {
@@ -2599,6 +3543,12 @@ var Uib = (_a = class {
       return false;
     }
   }
+  // --- end of setStore --- //
+  /** Attempt to get and re-hydrate a key value from localStorage
+   * Note that all uib storage is automatically prefixed using this.storePrefix
+   * @param {*} id The key of the value to attempt to retrieve
+   * @returns {*|null|undefined} The re-hydrated value of the key or null if key not found, undefined on error
+   */
   getStore(id) {
     try {
       return JSON.parse(localStorage.getItem(this.storePrefix + id));
@@ -2610,16 +3560,36 @@ var Uib = (_a = class {
       return void 0;
     }
   }
+  /** Remove a given id from the uib keys in localStorage
+   * @param {*} id The key to remove
+   */
   removeStore(id) {
     try {
       localStorage.removeItem(this.storePrefix + id);
     } catch (e) {
     }
   }
+  //#endregion ------- -------- ------- //
+  //#region ------- Our own event handling system ---------- //
+  // TODO Add option to send event details back to Node-RED as uib ctrl msg
+  /** Standard fn to create a custom event with details & dispatch it
+   * @param {string} title The event name
+   * @param {*} details Any details to pass to event output
+   */
   _dispatchCustomEvent(title, details) {
     const event2 = new CustomEvent(title, { detail: details });
     document.dispatchEvent(event2);
   }
+  // See the this.#propChangeCallbacks & msgRecvdByTopicCallbacks private vars
+  /** Register on-change event listeners for uibuilder tracked properties
+   * Make it possible to register a function that will be run when the property changes.
+   * Note that you can create listeners for non-existant properties
+   * @example: uibuilder.onChange('msg', (msg) => { console.log('uibuilder.msg changed! It is now: ', msg) })
+   *
+   * @param {string} prop The property of uibuilder that we want to monitor
+   * @param {Function} callback The function that will run when the property changes, parameter is the new value of the property after change
+   * @returns {number} A reference to the callback to cancel, save and pass to uibuilder.cancelChange if you need to remove a listener
+   */
   onChange(prop, callback) {
     if (!__privateGet(this, _propChangeCallbacks)[prop])
       __privateGet(this, _propChangeCallbacks)[prop] = { _nextRef: 1 };
@@ -2635,10 +3605,20 @@ var Uib = (_a = class {
     document.addEventListener("uibuilder:propertyChanged", propChangeCallback);
     return nextCbRef;
   }
+  // ---- End of onChange() ---- //
   cancelChange(prop, cbRef) {
     document.removeEventListener("uibuilder:propertyChanged", __privateGet(this, _propChangeCallbacks)[prop][cbRef]);
     delete __privateGet(this, _propChangeCallbacks)[prop][cbRef];
   }
+  /** Register a change callback for a specific msg.topic
+   * Similar to onChange but more convenient if needing to differentiate by msg.topic.
+   * @example: let otRef = uibuilder.onTopic('mytopic', function(){ console.log('Received a msg with msg.topic=`mytopic`. msg: ', this) })
+   * To cancel a change listener: uibuilder.cancelTopic('mytopic', otRef)
+   *
+   * @param {string} topic The msg.topic we want to listen for
+   * @param {Function} callback The function that will run when an appropriate msg is received. `this` inside the callback as well as the cb's single argument is the received msg.
+   * @returns {number} A reference to the callback to cancel, save and pass to uibuilder.cancelTopic if you need to remove a listener
+   */
   onTopic(topic, callback) {
     if (!__privateGet(this, _msgRecvdByTopicCallbacks)[topic])
       __privateGet(this, _msgRecvdByTopicCallbacks)[topic] = { _nextRef: 1 };
@@ -2658,26 +3638,75 @@ var Uib = (_a = class {
     document.removeEventListener("uibuilder:stdMsgReceived", __privateGet(this, _msgRecvdByTopicCallbacks)[topic][cbRef]);
     delete __privateGet(this, _msgRecvdByTopicCallbacks)[topic][cbRef];
   }
+  /** Trigger event listener for a given property
+   * Called when uibuilder.set is used
+   *
+   * @param {*} prop The property for which to run the callback functions
+   * arguments: Additional arguments contain the value to pass to the event callback (e.g. newValue)
+   */
+  // emit(prop) {
+  //     var evt = this.#events[prop]
+  //     if (!evt) {
+  //         return
+  //     }
+  //     var args = Array.prototype.slice.call(arguments, 1)
+  //     for (var i = 0; i < evt.length; i++) {
+  //         evt[i].apply(this, args)
+  //     }
+  //     log('trace', 'Uib:emit', `${evt.length} listeners run for prop ${prop} `)()
+  // }
+  /** Forcably removes all event listeners from the events array
+   * Use if you need to re-initialise the environment
+   */
+  // clearEventListeners() {
+  //     this.#events = []
+  // } // ---- End of clearEventListeners() ---- //
+  /** Clear a single property event listeners
+   * @param {string} prop The property of uibuilder for which we want to clear the event listener
+   */
+  // clearListener(prop) {
+  //     if (this.#events[prop]) delete this.#events[prop]
+  // }
+  //#endregion ---------- End of event handling system ---------- //
+  //#region ------- General Utility Functions -------- //
+  /** Check supplied msg from server for a timestamp - if received, work out & store difference to browser time
+   * @param {object} receivedMsg A message object recieved from Node-RED
+   * @returns {void} Updates self.serverTimeOffset if different to previous value
+   */
   _checkTimestamp(receivedMsg) {
     if (Object.prototype.hasOwnProperty.call(receivedMsg, "serverTimestamp")) {
       const serverTimestamp = new Date(receivedMsg.serverTimestamp);
-      const offset = Math.round((new Date() - serverTimestamp) / 36e5);
+      const offset = Math.round((/* @__PURE__ */ new Date() - serverTimestamp) / 36e5);
       if (offset !== this.serverTimeOffset) {
         log("trace", `Uib:checkTimestamp:${this._ioChannels.server} (server)`, `Offset changed to: ${offset} from: ${this.serverTimeOffset}`)();
         this.set("serverTimeOffset", offset);
       }
     }
   }
+  /** Set the default originator. Set to '' to ignore. Used with uib-sender.
+   * @param {string} [originator] A Node-RED node ID to return the message to
+   */
   setOriginator(originator = "") {
     this.set("originator", originator);
   }
+  // ---- End of setOriginator ---- //
+  /** HTTP Ping/Keep-alive - makes a call back to uibuilder's ExpressJS server and receives a 204 response
+   * Can be used to keep sessions alive.
+   * @example
+   *   uibuilder.setPing(2000) // repeat every 2 sec. Re-issue with ping(0) to turn off repeat.
+   *   uibuilder.onChange('ping', function(data) {
+   *      console.log('pinger', data)
+   *   })
+   * @param {number} ms Repeat interval in ms
+   */
   setPing(ms = 0) {
     const oReq = new XMLHttpRequest();
     oReq.addEventListener("load", () => {
       const headers = oReq.getAllResponseHeaders().split("\r\n");
-      const elapsedTime = Number(new Date()) - Number(oReq.responseURL.split("=")[1]);
+      const elapsedTime = Number(/* @__PURE__ */ new Date()) - Number(oReq.responseURL.split("=")[1]);
       this.set("ping", {
         success: !!(oReq.status === 201 || oReq.status === 204),
+        // true if one of the listed codes else false
         status: oReq.status,
         headers,
         url: oReq.responseURL,
@@ -2688,18 +3717,23 @@ var Uib = (_a = class {
       clearInterval(__privateGet(this, _pingInterval));
       __privateSet(this, _pingInterval, void 0);
     }
-    oReq.open("GET", `${this.httpNodeRoot}/uibuilder/ping?t=${Number(new Date())}`);
+    oReq.open("GET", `${this.httpNodeRoot}/uibuilder/ping?t=${Number(/* @__PURE__ */ new Date())}`);
     oReq.send();
     if (ms > 0) {
       __privateSet(this, _pingInterval, setInterval(() => {
-        oReq.open("GET", `${this.httpNodeRoot}/uibuilder/ping?t=${Number(new Date())}`);
+        oReq.open("GET", `${this.httpNodeRoot}/uibuilder/ping?t=${Number(/* @__PURE__ */ new Date())}`);
         oReq.send();
       }, ms));
     }
   }
+  // ---- End of ping ---- //
   log() {
     log(...arguments)();
   }
+  /** Convert JSON to Syntax Highlighted HTML
+   * @param {object} json A JSON/JavaScript Object
+   * @returns {html} Object reformatted as highlighted HTML
+   */
   syntaxHighlight(json) {
     json = JSON.stringify(json, void 0, 4);
     json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -2720,6 +3754,12 @@ var Uib = (_a = class {
     });
     return json;
   }
+  // --- End of syntaxHighlight --- //
+  //#endregion -------- -------- -------- //
+  //#region ------- UI handlers --------- //
+  /** Directly manage UI via JSON
+   * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
+   */
   ui(json) {
     let msg = {};
     if (json._ui)
@@ -2728,6 +3768,13 @@ var Uib = (_a = class {
       msg._ui = json;
     this._uiManager(msg);
   }
+  // TODO Add multi-slot
+  /** Replace or add an HTML element's slot from text or an HTML string
+   * Will use DOMPurify if that library has been loaded to window.
+   * param {*} ui Single entry from the msg._ui property
+   * @param {Element} el Reference to the element that we want to update
+   * @param {*} component The component we are trying to add/replace
+   */
   replaceSlot(el, component) {
     if (!component.slot)
       return;
@@ -2735,12 +3782,19 @@ var Uib = (_a = class {
       component.slot = window["DOMPurify"].sanitize(component.slot);
     el.innerHTML = component.slot;
   }
+  /** Replace or add an HTML element's slot from a Markdown string
+   * Only does something if the markdownit library has been loaded to window.
+   * Will use DOMPurify if that library has been loaded to window.
+   * @param {Element} el Reference to the element that we want to update
+   * @param {*} component The component we are trying to add/replace
+   */
   replaceSlotMarkdown(el, component) {
     if (!window["markdownit"])
       return;
     if (!component.slotMarkdown)
       return;
     const opts = {
+      // eslint-disable-line object-shorthand
       html: true,
       linkify: true,
       _highlight: true,
@@ -2762,12 +3816,22 @@ var Uib = (_a = class {
       component.slotMarkdown = window["DOMPurify"].sanitize(component.slotMarkdown);
     el.innerHTML = component.slotMarkdown;
   }
+  /** Attach a new remote script to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} url The url to be used in the script src attribute
+   */
   loadScriptSrc(url2) {
     const newScript = document.createElement("script");
     newScript.src = url2;
     newScript.async = false;
     document.head.appendChild(newScript);
   }
+  /** Attach a new remote stylesheet link to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} url The url to be used in the style link href attribute
+   */
   loadStyleSrc(url2) {
     const newStyle = document.createElement("link");
     newStyle.href = url2;
@@ -2775,17 +3839,37 @@ var Uib = (_a = class {
     newStyle.type = "text/css";
     document.head.appendChild(newStyle);
   }
+  /** Attach a new text script to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} textFn The text to be loaded as a script
+   */
   loadScriptTxt(textFn) {
     const newScript = document.createElement("script");
     newScript.async = false;
     newScript.textContent = textFn;
     document.head.appendChild(newScript);
   }
+  /** Attach a new text stylesheet to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} textFn The text to be loaded as a stylesheet
+   */
   loadStyleTxt(textFn) {
     const newStyle = document.createElement("style");
     newStyle.textContent = textFn;
     document.head.appendChild(newStyle);
   }
+  // TODO - Allow notify to sit in corners rather than take over the screen
+  /** Show a pop-over "toast" dialog or a modal alert
+   * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
+   *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
+   *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
+   * @param {"notify"|"alert"} type Dialog type
+   * @param {object} ui standardised ui data
+   * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+   * @returns {void}
+   */
   showDialog(type, ui, msg) {
     let content = "";
     if (msg.payload && typeof msg.payload === "string")
@@ -2854,6 +3938,10 @@ var Uib = (_a = class {
       }, ui.autoHideDelay);
     }
   }
+  // --- End of showDialog ---
+  /** Load a dynamic UI from a JSON web reponse
+   * @param {string} url URL that will return the ui JSON
+   */
   loadui(url2) {
     fetch(url2).then((response) => {
       if (response.ok === false) {
@@ -2876,6 +3964,12 @@ var Uib = (_a = class {
       log("warn", "Uib:loadui:catch", "Error. ", err)();
     });
   }
+  // --- end of loadui
+  /** Enhance an HTML element that is being composed with ui data
+   *  such as ID, attribs, event handlers, custom props, etc.
+   * @param {HTMLElement} el HTML Element to enhance
+   * @param {*} comp Individual uibuilder ui component spec
+   */
   _uiComposeComponent(el, comp) {
     if (comp.attributes) {
       Object.keys(comp.attributes).forEach((attrib) => {
@@ -2909,6 +4003,11 @@ var Uib = (_a = class {
       this.replaceSlotMarkdown(el, comp);
     }
   }
+  /** Extend an HTML Element with appended elements using ui components
+   * NOTE: This fn follows a strict hierarchy of added components.
+   * @param {HTMLElement} parentEl The parent HTML Element we want to append to
+   * @param {*} components The ui component(s) we want to add
+   */
   _uiExtendEl(parentEl, components) {
     components.forEach((compToAdd, i2) => {
       let newEl;
@@ -2925,6 +4024,29 @@ var Uib = (_a = class {
       }
     });
   }
+  // Vue dynamic inserts Don't really work ...
+  // _uiAddVue(ui, isRecurse) {
+  //     // must be Vue
+  //     // must have only 1 root element
+  //     const compToAdd = ui.components[0]
+  //     const newEl = document.createElement(compToAdd.type)
+  //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
+  //     this._uiComposeComponent(newEl, compToAdd)
+  //     // If nested components, go again - but don't pass payload to sub-components
+  //     if (compToAdd.components) {
+  //         this._uiExtendEl(newEl, compToAdd.components)
+  //     }
+  //     console.log('MAGIC: ', this.magick, newEl, newEl.outerHTML)
+  //     this.set('magick', newEl.outerHTML)
+  //     // if (compToAdd.id) newEl.setAttribute('ref', compToAdd.id)
+  //     // if (elParent.id) newEl.setAttribute('data-parent', elParent.id)
+  // }
+  // TODO Add check if ID already exists
+  // TODO Allow single add without using components array
+  /** Handle incoming msg._ui add requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   * @param {boolean} isRecurse Is this a recursive call?
+   */
   _uiAdd(ui, isRecurse) {
     log("trace", "Uib:_uiManager:add", "Starting _uiAdd")();
     ui.components.forEach((compToAdd, i2) => {
@@ -2958,6 +4080,12 @@ var Uib = (_a = class {
       }
     });
   }
+  // --- end of _uiAdd ---
+  // TODO Add better tests for failures (see comments)
+  /** Handle incoming _ui remove requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   * @param {boolean} all Optional, default=false. If true, will remove ALL found elements, otherwise only the 1st is removed
+   */
   _uiRemove(ui, all = false) {
     ui.components.forEach((compToRemove) => {
       let els;
@@ -2974,6 +4102,10 @@ var Uib = (_a = class {
       });
     });
   }
+  // --- end of _uiRemove ---
+  /** Handle incoming _ui replace requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   */
   _uiReplace(ui) {
     log("trace", "_uiReplace", "Starting")();
     ui.components.forEach((compToReplace, i2) => {
@@ -3002,6 +4134,13 @@ var Uib = (_a = class {
       }
     });
   }
+  // --- end of _uiReplace ---
+  // TODO Allow single add without using components array
+  // TODO Allow sub-components
+  // TODO Add multi-slot capability
+  /** Handle incoming _ui update requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   */
   _uiUpdate(ui) {
     log("trace", "Uib:_uiManager:update", "Starting _uiUpdate")();
     if (!ui.components)
@@ -3078,6 +4217,11 @@ var Uib = (_a = class {
       }
     });
   }
+  // --- end of _uiUpdate ---
+  // TODO Add more error handling and parameter validation
+  /** Handle incoming _ui load requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   */
   _uiLoad(ui) {
     if (ui.components) {
       if (!Array.isArray(ui.components))
@@ -3111,10 +4255,16 @@ var Uib = (_a = class {
       this.loadStyleTxt(ui.txtStyles.join("\n"));
     }
   }
+  // --- end of _uiLoad ---
+  /** Handle a reload request */
   _uiReload() {
     log("trace", "Uib:uiManager:reload", "reloading")();
     location.reload();
   }
+  /** Handle incoming _ui messages and loaded UI JSON files
+   * Called from start()
+   * @param {*} msg Standardised msg object containing a _ui property object
+   */
   _uiManager(msg) {
     if (!msg._ui)
       return;
@@ -3175,6 +4325,12 @@ var Uib = (_a = class {
       }
     });
   }
+  // --- end of _uiManager ---
+  /** Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
+   * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
+   * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
+   * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+   */
   showMsg(showHide, parent = "body") {
     if (showHide === void 0)
       showHide = !__privateGet(this, _isShowMsg);
@@ -3206,6 +4362,12 @@ var Uib = (_a = class {
       });
     }
   }
+  /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
+   * The card has the id `uib_status`.
+   * The display is updated by an event listener created in the class constructor.
+   * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
+   * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+   */
   showStatus(showHide, parent = "body") {
     if (showHide === void 0)
       showHide = !__privateGet(this, _isShowStatus);
@@ -3266,8 +4428,16 @@ var Uib = (_a = class {
     });
     this._uiReplace(root);
   }
+  /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
+   * @param {string} cssSelector Identify the DOM element to get data from
+   * @param {string} [propName] Optional. Specific name of property to get from the element
+   * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+   */
   uiGet(cssSelector, propName = null) {
-    const selection = document.querySelectorAll(cssSelector);
+    const selection = (
+      /** @type {NodeListOf<HTMLInputElement>} */
+      document.querySelectorAll(cssSelector)
+    );
     const out = [];
     selection.forEach((node) => {
       if (propName !== null && propName !== "") {
@@ -3297,7 +4467,9 @@ var Uib = (_a = class {
           type: node.nodeName,
           attributes: void 0,
           isUserInput: node.value === void 0 ? false : true,
+          // eslint-disable-line no-unneeded-ternary
           userInput: node.value === void 0 ? void 0 : {
+            // eslint-disable-line multiline-ternary
             value: node.value,
             validity: void 0,
             willValidate: node.willValidate,
@@ -3323,10 +4495,15 @@ var Uib = (_a = class {
     });
     return out;
   }
+  // --- end of uiGet ---
+  //#endregion -------- -------- -------- //
+  //#region ------- HTML cache and DOM watch --------- //
+  /** Clear the saved DOM from localStorage */
   clearHtmlCache() {
     this.removeStore("htmlCache");
     log("trace", "uibuilder.module.js:clearHtmlCache", "HTML cache cleared")();
   }
+  /** Restore the complete DOM (the whole web page) from browser localStorage if available */
   restoreHtmlFromCache() {
     const htmlCache = this.getStore("htmlCache");
     if (htmlCache) {
@@ -3337,9 +4514,20 @@ var Uib = (_a = class {
       log("trace", "uibuilder.module.js:restoreHtmlFromCache", "No cache to restore")();
     }
   }
+  /** Save the current DOM state to browser localStorage.
+   * localStorage is persistent and so can be recovered even after a browser restart.
+   */
   saveHtmlCache() {
     this.setStore("htmlCache", document.documentElement.innerHTML);
   }
+  /** Use the Mutation Observer browser API to watch for and save changes to the HTML
+   * Once the observer is created, it will be reused.
+   * Sending true or undefined will turn on the observer, false turns it off.
+   * saveHtmlCache is called whenever anything changes in the dom. This allows
+   * users to call restoreHtmlFromCache() on page load if desired to completely reload
+   * to the last saved state.
+   * @param {boolean} startStop true=start watching the DOM, false=stop
+   */
   watchDom(startStop) {
     const targetNode = document.documentElement;
     const that = this;
@@ -3357,6 +4545,15 @@ var Uib = (_a = class {
       log("trace", "uibuilder.module.js:watchDom", "Stopped Watching and saving DOM changes")();
     }
   }
+  // ---- End of watchDom ---- //
+  //#endregion -------- -------- -------- //
+  //#region ------- Message Handling (To/From Node-RED) -------- //
+  /** Internal send fn. Send a standard or control msg back to Node-RED via Socket.IO
+   * NR will generally expect the msg to contain a payload topic
+   * @param {object} msgToSend The msg object to send.
+   * @param {string} [channel=uiBuilderClient] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored
+   * @param {string} [originator] A Node-RED node ID to return the message to
+   */
   _send(msgToSend, channel, originator = "") {
     if (channel === null || channel === void 0)
       channel = this._ioChannels.client;
@@ -3397,12 +4594,38 @@ var Uib = (_a = class {
     log("debug", "Uib:_send", ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)();
     this._socket.emit(channel, msgToSend);
   }
+  // --- End of Send Msg Fn --- //
+  /** Send a standard message to NR
+   * @example uibuilder.send({payload:'Hello'})
+   * @param {object} msg Message to send
+   * @param {string} [originator] A Node-RED node ID to return the message to
+   */
   send(msg, originator = "") {
     this._send(msg, this._ioChannels.client, originator);
   }
+  /** Send a control msg to NR
+   * @param {object} msg Message to send
+   */
   sendCtrl(msg) {
     this._send(msg, this._ioChannels.control);
   }
+  /** Easily send a msg back to Node-RED on a DOM event
+   * @example In plain HTML/JavaScript
+   *    `<button id="button1" name="button 1" data-fred="jim"></button>`
+   *    $('#button1').onclick = (evt) => {
+   *      uibuilder.eventSend(evt)
+   *    }
+   * @example
+   * In VueJS: `<b-button id="myButton1" @click="doEvent" data-something="hello"></b-button>`
+   * In VueJS methods: `doEvent: uibuilder.eventSend,`
+   *
+   * All `data-` attributes will be passed back to Node-RED,
+   *    use them instead of arguments in the click function.
+   *    All target._ui custom properties are also passed back to Node-RED.
+   *
+   * @param {MouseEvent|any} domevent DOM Event object
+   * @param {string} [originator] A Node-RED node ID to return the message to
+   */
   eventSend(domevent, originator = "") {
     if (this.$attrs) {
       log("error", "Uib:eventSend", "`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`")();
@@ -3451,11 +4674,20 @@ var Uib = (_a = class {
             "name": frmEl.name,
             "value": frmEl.value,
             "data": frmEl.dataset
+            // 'meta': {
+            //     'defaultValue': frmEl.defaultValue,
+            //     'defaultChecked': frmEl.defaultChecked,
+            //     'disabled': frmEl.disabled,
+            //     'valid': frmEl.willValidate,
+            //     'attributes': attribs,
+            // },
           };
         }
       });
     }
     const msg = {
+      // Each `data-xxxx` attribute is added as a property
+      // - this may be an empty Object if no data attributes defined
       payload: { ...target.dataset },
       _ui: {
         type: "eventSend",
@@ -3490,6 +4722,7 @@ var Uib = (_a = class {
       log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();
     this._send(msg, this._ioChannels.client, originator);
   }
+  // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
   _msgRcvdEvents(msg) {
     this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
     if (msg.topic)
@@ -3547,6 +4780,14 @@ var Uib = (_a = class {
       this._uiManager(msg);
     }
   }
+  // --- end of _msgRcvdEvents ---
+  /** Callback handler for messages from Node-RED
+   * NOTE: `this` is the class here rather the `socket` as would be normal since we bind the correct `this` in the call.
+   *       Use this._socket if needing reference to the socket.
+   * @callback ioSetupFromServer Called from ioSetup/this._socket.on(this.#ioChannels.server, this.stdMsgFromServer.bind(this))
+   * @param {object} receivedMsg The msg object from Node-RED
+   * @this Uib
+   */
   _stdMsgFromServer(receivedMsg) {
     receivedMsg = makeMeAnObject(receivedMsg, "payload");
     this._checkTimestamp(receivedMsg);
@@ -3555,6 +4796,10 @@ var Uib = (_a = class {
     this._msgRcvdEvents(receivedMsg);
     log("info", "Uib:ioSetup:stdMsgFromServer", `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)();
   }
+  // -- End of websocket receive DATA msg from Node-RED -- //
+  /** Handles original control msgs (not to be confused with "new" msg._uib controls)
+   * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
+   */
   _ctrlMsgFromServer(receivedCtrlMsg) {
     if (receivedCtrlMsg === null) {
       receivedCtrlMsg = {};
@@ -3590,23 +4835,44 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       }
     }
   }
+  // -- End of websocket receive CONTROL msg from Node-RED -- //
+  /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
+   * @param {string} txtToSend Text string to send
+   * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
+   */
   beaconLog(txtToSend, logLevel2) {
     if (!logLevel2)
       logLevel2 = "debug";
     navigator.sendBeacon("./_clientLog", `${logLevel2}::${txtToSend}`);
   }
+  /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
+   * -@param {...*} arguments All arguments passed to the function are added to the msg.payload
+   */
   logToServer() {
     this.sendCtrl({
       uibuilderCtrl: "client log message",
       payload: arguments,
+      // "version":"6.1.0-iife.min",
       _socketId: this._socket.id,
+      // "ip":"::1",
       clientId: this.clientId,
       tabId: this.tabId,
+      // "url":"esp-test",
       pageName: this.pageName,
       connections: this.connectedNum,
       lastNavType: this.lastNavType
     });
   }
+  //#endregion -------- ------------ -------- //
+  //#region ------- Socket.IO -------- //
+  /** Return the Socket.IO namespace
+   * The cookie method is the most reliable but this falls back to trying to work it
+   * out from the URL if cookies not available. That won't work if page is in a sub-folder.
+   * since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
+   * since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
+   * since 2020-01-25 Removed httpRoot from namespace to prevent proxy induced errors
+   * @returns {string} Socket.IO namespace
+   */
   _getIOnamespace() {
     let ioNamespace;
     ioNamespace = this.cookies["uibuilder-namespace"];
@@ -3625,6 +4891,13 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     log("trace", "uibuilder.module.js:getIOnamespace", `Final Socket.IO namespace: ${ioNamespace}`)();
     return ioNamespace;
   }
+  // --- End of set IO namespace --- //
+  /** Function used to check whether Socket.IO is connected to the server, reconnect if not (recursive)
+   * @param {number} [delay] Initial delay before checking (ms). Default=2000ms
+   * @param {number} [factor] Multiplication factor for subsequent checks (delay*factor). Default=1.5
+   * @param {number} [depth] Recursion depth
+   * @returns {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
+   */
   _checkConnect(delay, factor, depth = 1) {
     if (navigator.onLine === false)
       return;
@@ -3654,6 +4927,12 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     }, delay));
     return false;
   }
+  // --- End of checkConnect Fn--- //
+  // See message handling section for msg receipt handlers
+  /** Setup Socket.io
+   * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
+   * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
+   */
   _ioSetup() {
     if (lookup2 === void 0) {
       log("error", "Uib:ioSetup", "Socket.IO client not loaded, Node-RED comms will not work")();
@@ -3714,6 +4993,13 @@ Namespace: ${this.ioNamespace}`)();
     this._checkConnect();
     return true;
   }
+  /** Start up Socket.IO comms and listeners
+   * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
+   * necessarily work out the correct ioPath to use.
+   * Also, if cookies aren't permitted in the browser, both ioPath and ioNamespace may need to be specified.
+   * @param {object} [options] The start options object.
+   * @returns {void}
+   */
   start(options) {
     log("trace", "Uib:start", "Starting")();
     if (__privateGet(this, _MsgHandler))
@@ -3765,7 +5051,10 @@ ioPath: ${this.ioPath}`)();
     });
     this._dispatchCustomEvent("uibuilder:startComplete");
   }
-}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), __publicField(_a, "_meta", {
+  //#endregion -------- ------------ -------- //
+}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), //#endregion -- not external --
+//#region ------- Static metadata ------- //
+__publicField(_a, "_meta", {
   version,
   type: "module",
   displayName: "uibuilder"
