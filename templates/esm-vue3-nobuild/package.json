@@ -1,0 +1,26 @@
+{
+  "name": "esm-vue3-nobuild",
+  "version": "6.1.0",
+  "private": true,
+  "description": "Vue3 template with a Vue module using the uibuilder ESM client library. No build step required.",
+  "browser": "./src/index.js",
+  "scripts": {
+    "build": "echo \"Error: no build process specified\" && exit 1"
+  },
+  "keywords": ["uibuilder", "node-red", "node-red-contrib-uibuilder"],
+  "author": "Julian Knight (Totally Information)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
+  "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TotallyInformation/node-red-contrib-uibuilder.git"
+  },
+  "browserslist": [
+    "> 0.5%",
+    "maintained versions",
+    "last 2 versions",
+    "not dead",
+    "not ie > 0"
+  ]
+}

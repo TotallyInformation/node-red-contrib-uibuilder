@@ -1,3 +1,4 @@
+/* eslint-disable object-shorthand */
 // @ts-nocheck
 
 /** Example of using the IIFE build of the uibuilder client library with VueJS v2
@@ -6,39 +7,15 @@
  */
 'use strict'
 
-// logLevel 2+ shows more built-in logging. 0=error,1=warn,2=info,3=log,4=debug,5=trace.
-// uibuilder.set('logLevel', 2)
-// uibuilder.log('info', 'a prefix', 'some info', {any:'data',life:42})
-
 // eslint-disable-next-line no-unused-vars
 const app = new Vue({
     el: '#app',
 
-    data() { 
+    data() {
         return {
-
-            lastMsg    : '[Nothing]',
-
+            // Add reactive data variables here
         }
-}, // --- End of data --- //
-
-    computed: {
-
-        // Show the last msg from Node-RED nicely formatted
-        showLastReceivedMsg: function() {
-            var lastMsg = this.lastMsg
-            if (typeof lastMsg === 'string') return 'Last Message Received = ' + lastMsg
-            return 'Last Message Received = ' + this.syntaxHighlight(lastMsg)
-        },
-
-    }, // --- End of computed --- //
-
-    methods: {
-
-        // return formatted HTML version of JSON object - No longer need custom code as now built into uibuilder client
-        syntaxHighlight: uibuilder.syntaxHighlight,
-
-    }, // --- End of methods --- //
+    }, // --- End of data --- //
 
     /** Called after the Vue app has been created. A good place to put startup code */
     created: function() {

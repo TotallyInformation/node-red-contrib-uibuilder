@@ -8,44 +8,18 @@
  * See the docs if the client doesn't start on its own.
  */
 
-// logLevel 2+ shows more built-in logging. 0=error,1=warn,2=info,3=log,4=debug,5=trace.
-// uibuilder.set('logLevel', 2)
-// uibuilder.log('info', 'a prefix', 'some info', {any:'data',life:42})
-
 const app = new Vue({ // eslint-disable-line no-unused-vars
     el: '#app',
 
     data() { return {
+        // Add reactive data variables here
 
-        startMsg: 'Vue has started, waiting for messages',
-        feVersion: '',
         counterBtn: 0,
         inputText: null,
         inputChkBox: false,
         imgProps: { width: 75, height: 75 },
 
-        msgRecvd: '[Nothing]',
-        msgsReceived: 0,
-
-        msgSent: '[Nothing]',
-        msgsSent: 0,
-
     } }, // --- End of data --- //
-
-    computed: {
-
-        hLastRcvd: function() {
-            const msgRecvd = this.msgRecvd
-            if (typeof msgRecvd === 'string') return 'Last Message Received = ' + msgRecvd
-            return 'Last Message Received = ' + this.syntaxHighlight(msgRecvd)
-        },
-        hLastSent: function() {
-            const msgSent = this.msgSent
-            if (typeof msgSent === 'string') return 'Last Message Sent = ' + msgSent
-            return 'Last Message Sent = ' + this.syntaxHighlight(msgSent)
-        },
-
-    }, // --- End of computed --- //
 
     methods: {
 
@@ -55,24 +29,13 @@ const app = new Vue({ // eslint-disable-line no-unused-vars
 
             // Increment the count by one
             this.counterBtn += 1
-            const topic = this.msgRecvd.topic || 'uibuilder/vue'
-            uibuilder.send( {
-                'topic': topic,
-                'payload': {
-                    'type': 'counterBtn',
-                    'btnCount': this.counterBtn,
-                    'message': this.inputText,
-                    'inputChkBox': this.inputChkBox
-                }
-            } )
+            // const topic = this.msgRecvd.topic || 'uibuilder/vue'
+            uibuilder.eventSend(event)
 
         }, // --- End of increment --- //
 
-        // REALLY Simple method to return DOM events back to Node-RED. See the 2nd b-button on the default html
+        // REALLY Simple method to return DOM events back to Node-RED.
         doEvent: (event) => uibuilder.eventSend(event),
-
-        // return formatted HTML version of JSON object - No longer need custom code as now built into uibuilder client
-        syntaxHighlight: uibuilder.syntaxHighlight,
 
         /** Workaround to show "toast" notifications dynamically using bootstrap-vue's toast notifications.
          * This overrides uibuilder's default notification overlay which needs one of the uib CSS files.
@@ -130,23 +93,11 @@ const app = new Vue({ // eslint-disable-line no-unused-vars
     /** Called after the Vue app has been created. A good place to put startup code */
     created: function() {
 
-        // Example of retrieving data from uibuilder
-        this.feVersion = uibuilder.get('version')
-
         // If msg changes - msg is updated when a standard msg is received from Node-RED over Socket.IO
         uibuilder.onChange('msg', (msg) => {
-            this.msgRecvd = msg
-            this.msgsReceived = uibuilder.get('msgsReceived')
 
             // Workaround to show "toast" notifications dynamically. See methods above.
             this.showToast(msg)
-        })
-
-        /** If a message is sent back to Node-RED, we can grab a copy here if we want to. Useful for debugging. */
-        uibuilder.onChange('sentMsg', (msg) => {
-            // console.info('[indexjs:uibuilder.onChange:sentMsg] msg sent to Node-RED server:', msg)
-            this.msgSent = msg
-            this.msgsSent = uibuilder.get('msgsSent')
         })
 
     }, // --- End of created hook --- //

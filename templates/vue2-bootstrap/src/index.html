@@ -27,12 +27,13 @@
         <b-container id="app_container"><!-- Wraps the bootstrap-vue formatting -->
 
             <b-img src="../uibuilder/images/node-blue-192x192.png" rounded left v-bind="imgProps" alt="Blue Node-RED" class="mt-1 mr-2"></b-img>
-            <h1>uibuilder + Vue v2 + bootstrap-vue for Node-RED</h1>
+            <h1 class="with-subtitle">uibuilder + Vue v2 + bootstrap-vue</h1>
+            <div role="doc-subtitle">Using the uibuilder IIFE library.</div>
+
             <p>
                 This is a uibuilder example using <a href="https://vuejs.org/">Vue.js</a> as a front-end library.
                 See the
-                <a
-                    href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
+                <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder">node-red-contrib-uibuilder</a>
                 README for details on how to use UIbuilder.
             </p>
 
@@ -56,40 +57,20 @@
                     </p>
 
                     <p>
-                        <b-form-input v-model="inputText" type="text" placeholder="Enter some text to send to Node-RED"></b-form-input><br>
-                        <b-form-checkbox v-model="inputChkBox">
+                        <b-form-input id="inp_text" v-model="inputText" type="text" placeholder="Enter some text to send to Node-RED"></b-form-input><br>
+                        <b-form-checkbox id="inp_chk" v-model="inputChkBox">
                             To tick or not to tick? That is the question
                         </b-form-checkbox><br>
                         <b-button id="btn_increment" pill variant="primary" v-on:click="increment">Increment</b-button>
                             &nbsp;&nbsp;Click Counter: <b>{{counterBtn}}</b>.
-                        <p>Click on the button to increment the counter. It sends the data dynamically back to Node-RED as well.</p>
+                        <p>
+                            Click on the button to increment the counter. It sends the data dynamically back to Node-RED as well.
+                            The data includes all of the form inputs.
+                        </p>
                     </p>
                 </b-form>
             </b-card>
             
-            <h2>Dynamic Data</h2>
-            <div>
-                <p>Uses Vue to dynamically update in response to messages from Node-RED.</p>
-                <p>
-                    Check out the <code>created</code> function in <code>index.js</code> to See
-                    how easy it is to update Vue data from Node-RED. Like showing the uibuilder front-end
-                    client library version: <code>{{feVersion}}</code>.
-                </p>
-
-                <b-card class="mt-3" header="Normal Messages" border-variant="primary" header-bg-variant="primary" header-text-variant="white" align="left" >
-                    <p>
-                        Messages: Received=<b>{{msgsReceived}}</b>, Sent=<b>{{msgsSent}}</b>
-                    </p>
-                    <pre v-html="hLastRcvd" class="syntax-highlight"></pre>
-                    <pre v-html="hLastSent" class="syntax-highlight"></pre>
-                    <p slot="footer" class="mb-0">
-                        The received message is from the input to the uibuilder node.
-                        The send message will appear out of port #1 of the node.
-                    </p>
-                </b-card>
-
-            </div>
-
         </b-container>
     </div>
 

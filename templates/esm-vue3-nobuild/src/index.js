@@ -1,7 +1,13 @@
 // @ts-nocheck
-'use strict'
 
-const { createApp } = Vue
+import '../uibuilder/uibuilder.esm.min.js'  // Adds `uibuilder` and `$` to globals
+
+// For Vue v3
+// import { createApp } from '../uibuilder/vendor/vue/dist/vue.esm-browser.js' // Dev ver local install. Chg to .prod.js for prod
+import { createApp } from 'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.esm-browser.js' // As above but loaded remotely
+
+// Import the custom component directly (Note that it is a .js file, not a .vue file)
+import MyComponent from './mycomponent.js'
 
 // Using the Vue options API style for beginner simplicity
 // No need to pre-define Quasar's $q when working with the options API
@@ -15,14 +21,18 @@ const app = createApp({
 
     } },
 
+    components: {
+        mycomponent: MyComponent
+    },
+
     // Dynamic data
     computed: {},
 
     // Supporting functions
     methods: {
 
-        // REALLY Simple method to return DOM events back to Node-RED.
-        doEvent: (event) => uibuilder.eventSend(event),
+        // Use the uib helper function to send something to NR
+        doEvent(event) { uibuilder.eventSend(event) },
 
     },
 

@@ -1,0 +1,7 @@
+/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.css`
+ * This version auto-adjusts for light/dark browser settings but might not be as complete.
+ */
+@import url("../uibuilder/uib-brand.css");
+
+/* OR, load the defaults from the older `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-styles.css` */
+/* @import url("../uibuilder/uib-styles.css"); */

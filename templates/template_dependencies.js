@@ -32,6 +32,12 @@ module.exports = {
         'dependencies': ['vue'],
         'description': 'Very simple Vue v3+ template that does not require a build step. Uses the IIFE uib client library.'
     },
+    'esm-vue3-nobuild': {
+        'name': 'Vue3 no build step, ESM client, Vue Module',
+        'folder': 'esm-vue3-nobuild',
+        'dependencies': ['vue'],
+        'description': 'A Vue v3+ template that includes a Vue module but does not require a build step. Uses the ESM uib client library.'
+    },
     // 'vue3-sfc-load': {
     //     'name': 'Vue3 no build step, IIFE client. SFC Loader to directly load/compile/run .vue files.',
     //     'folder': 'vue3-sfc-load',

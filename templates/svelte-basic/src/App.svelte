@@ -1,6 +1,6 @@
 <main>
 	<h1 class="with-subtitle">uibuilder + Svelte</h1>
-    <div role="doc-subtitle">Using the IIFE library - v6.1.0.</div>
+    <div role="doc-subtitle">Using the uibuilder IIFE library.</div>
 
 	<div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>
 

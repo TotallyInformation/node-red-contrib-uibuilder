@@ -12,8 +12,8 @@
     <link type="text/css" rel="stylesheet" href="./index.css" media="all">
 
     <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / - socket.io no longer needed  -->
-    <!-- <script defer src="https://cdn.jsdelivr.net/npm/vue@latest/dist/vue.global.prod.js">/* Remove .prod for development version */</script> -->
-    <script defer src="../uibuilder/vendor/vue/dist/vue.global.prod.js">/* Remove .prod for development version */</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/vue@latest/dist/vue.global.prod.js">/* Remove .prod for development version */</script>
+    <!-- <script defer src="../uibuilder/vendor/vue/dist/vue.global.prod.js">/* Remove .prod for development version */</script> -->
     <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
     <script defer src="./index.js">/* OPTIONAL: Put your custom code in that */</script>
     <!-- #endregion -->
@@ -21,30 +21,44 @@
 </head><body class="uib">
 
     <div id="app">
-        <h1>Simple Vue v3 App Using New uibuilder IIFE Client - v6.1.0</h1>
+        <h1 class="with-subtitle">Simple Vue v3 App</h1>
+        <div role="doc-subtitle">Using the uibuilder IIFE library.</div>
 
         <p>{{ message }}</p>
 
         <div id="more"><!-- '#more' is used as a parent for dynamic content in examples --></div>
 
-        <p>
-            <button @click="count++" title="Not sent back to Node-RED - this just shows that VueJS is working">
-                Simple VueJS Counter: {{ count }}
-            </button>
-        </p>
+        <div class="border">
+            <p>
+                Not sent back to Node-RED - this just shows that VueJS is working
+            </p>
+            <p>
+                <button @click="count++" title="Not sent back to Node-RED - this just shows that VueJS is working">
+                    Simple VueJS Counter: {{ count }}
+                </button>
+            </p>
+        </div>
         
-        <p>
-            <button @click="doEvent" data-mything="This is a thing" title="This is sent back to Node-RED">
-                Click to send msg to Node-RED
-            </button>
-        </p>
+        <div class="border">
+            <p>
+                This is sent back to Node-RED.
+            </p>
+            <p>
+                <button @click="doEvent" data-mything="This is a thing" title="This is sent back to Node-RED">
+                    Click to send msg to Node-RED
+                </button>
+            </p>
+            <p class="text-smaller">
+                Note that including an event button in a form will automatically send all
+                of the form inputs back to Node-RED as well.
+            </p>
+        </div>
         
         <p>
             <label for="input1">This is sent to Node-RED when you exit it: </label>
-            <input v-model="input1" @change="doInputChange" id="input1" type="text" placeholder="Type text then exit field">
+            <input v-model="input1" @change="doEvent" id="input1" type="text" placeholder="Type text then exit field">
         </p>
         
-        <pre id="msg" v-html="formatLastRcvd" class="syntax-highlight">Waiting for a message from Node-RED</pre>
     </div>
 
 </body></html>
