@@ -561,12 +561,12 @@ function setFeVersionDev(cb) {
             .pipe(greplace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
 
                 if ( match !== release) {
-                    console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                    console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                     // git commit -m 'my notes' path/to/my/file.ext 
-                    return `self.version = '${release}'`
-                } 
+                    return `self.version = '${release}-old'`
+                }
 
-                console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
 
                 cb(new Error('setFeVersionDev: Content version same as release'))
 
@@ -584,12 +584,12 @@ function setFeVersion(cb) {
             .pipe(greplace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
 
                 if ( match !== release) {
-                    console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                    console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                     // git commit -m 'my notes' path/to/my/file.ext 
-                    return `self.version = '${release}'`
+                    return `self.version = '${release}-old'`
                 } 
 
-                console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                 cb(new Error('setFeVersion: Content version same as release'))
 
             })) // ,`self.version = '${release}'`))
@@ -605,11 +605,11 @@ function setFeVersionMin(cb) {
             // eslint-disable-next-line prefer-named-capture-group
             .pipe(greplace(/.version="(.*?)",/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
                 if ( match !== release) {
-                    console.log(`setFeVersionMin: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
-                    return `.version="${release}",`
+                    console.log(`setFeVersionMin: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
+                    return `.version="${release}-old",`
                 } 
 
-                console.log(`Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}'` )
+                console.log(`Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                 cb(new Error('setFeVersionMin: Content version same as release'))
             }))
             .pipe(dest(feDest))
