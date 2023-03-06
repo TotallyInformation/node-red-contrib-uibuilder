@@ -30,7 +30,6 @@
 /* :root applies to everything, :root.light is for manually selected light mode */
 :root, :root.light {
     color-scheme: light dark;
-    -–xxx: #00ff00;
 
     /* Create a checkable var - helps web components know if this stylesheet is loaded
      * Use this from general code: 
