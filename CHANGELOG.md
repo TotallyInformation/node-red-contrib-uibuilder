@@ -6,7 +6,17 @@ typora-root-url: docs/images
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version.
 
-## Notes for the current version
+## To do/In-progress
+
+Check the [roadmap](./docs/roadmap.md) for future developments.
+
+----
+
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.0...main)
+
+Nothing currently.
+
+## [v6.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.0...v6.0.0)
 
 v6.1.0 makes the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) current and the old client library (`uibuilderfe.js`) is now no longer recommended and is not being updated, it is on the road to being deprecated (it will remain until at least v7, mahbe v8 but probably not longer unless someone calls for it). 
 
@@ -15,56 +25,6 @@ The experimental `uib-list` node is now deprecated, the features are moved to th
 The new `uib-brand.css` style library is not yet feature complete - if you find something missing or wrong, please raise an issue. It does, however, continue to develop.
 
 Dynamic content does not currently work fully with VueJS (and probably not other frameworks that rely on pre-building components). It is possible though to combine the vanilla HTML from the low-/no-code features with front-end frameworks. Such frameworks _require_ both the components and the structure to be pre-defined _before_ the DOM is fully loaded. They have their own methods to provide dynamic includes, lazy loading, etc that are very different (and generally much more complex) than uibuilder's simple to use feature. **However**, dynamic content _DOES_ work with HTML components and any frameworks that are compatible with them such as _Svelte_. The component definitions have to be loaded before you use them (that can be dynamic too!) and you _must_ use the ESM build of the uibuilder client library since HTML Components are ES Module only. 
-
-## To do/In-progress
-
-Check the [roadmap](./docs/roadmap.md) for future developments.
-
-### uibuilder node
-
-* Editor: Improve help box for _uib switch 
-
-### Examples
-
-* [x] ~~jQuery~~ - removed. No longer needed.
-* [x] ~~logging~~ - removed. Old code, superceded by newer features.
-* [x] low-code-report-builder - Replicates pdfmaker's tables example using uibuilder to demonstrate how easy it is to build complex documents using uibuilder.
-* [x] simple - Implements a very simple Quote of the Day display using vanilla HTML.
-* [x] ~~svelte-basic~~ - removed. See "templates" example instead.
-* [x] templates - "Template Tests" tab
-* [x] ~~toast-notifications~~ - removed. Needs rework in next release to use `_ui`.
-* [x] uib-cache - "uib-cache" tab. Examples of using `uib-cache` with and without uibuilder.
-* [x] ~~uib-list~~ - removed. Node is deprecated, See the "zero-code" examples instead.
-* [x] uib-sender - "uib-sender" tab.
-* [x] ~~vue~~ - removed. See the "templates" examples instead.
-* [x] zero-code - "uib-element tests" tab
-
-
-* Update all to use new libs and updated templates
-* Add example for Vue sfc loader.
-* Update/add examples for each template
-  * Add global Notification/Toast input
-  * Add dynamic HTML input
-* Ticklist
-  * Send a list
-  * Attach click handler to switch list type from bullet to ticked & msg node-red
-  * Save changes to cache on click
-* Table
-  * Weather example?
-
-### Doc updates
-
-* WIKI
-  * Update examples
-* Flows site
-  * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
-* Update caching info to include info on html cache.
-
-----
-
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.0...main)
-
-<!-- Nothing currently. -->
 
 ### Summary of notable changes
 
@@ -304,22 +264,19 @@ Please switch to using the `uib-element` node. This node will be removed in the 
 ### Examples
 
 * Report Builder. Create HTML reports direct from Node-RED. See [Forum thread](https://discourse.nodered.org/t/creating-reports-using-node-red/73664), [Flow site](https://flows.nodered.org/flow/99e1e6169b5e93b460bcbcc8f493d011#).
-* Update to use modern client
-  * [ ] jQuery
-  * [ ] logging
-  * [ ] simple - No longer uses VueJS since it really isn't needed!
-  * [ ] toast-notifications
-  * [ ] uib-cache
-  * [ ] uib-sender
-  * [ ] vue
-* New for v6.1.0
-  * [x] Zero-code: Using `uib-element`
-  * [ ] low-code-report-builder (new for v6.1.0)
-  * [ ] Svelte-basic
-  * [ ] ESM
-* Examples matching templates:
-  * Added node descriptions throughout.
-  * Added notification inputs to all and new card (dynamic UI creation) & reload inputs where appropriate.
+* Updated/New - all should have descriptive comments throughout
+  * [x] ~~jQuery~~ - removed. No longer needed.
+  * [x] ~~logging~~ - removed. Old code, superceded by newer features.
+  * [x] low-code-report-builder - **NEW** Replicates pdfmaker's tables example using uibuilder to demonstrate how easy it is to build complex documents using uibuilder.
+  * [x] simple - Implements a very simple Quote of the Day display using vanilla HTML.
+  * [x] ~~svelte-basic~~ - removed. See "templates" example instead.
+  * [x] templates - **NEW** "Template Tests" tab
+  * [x] ~~toast-notifications~~ - removed. Needs rework in next release to use `_ui`.
+  * [x] uib-cache - "uib-cache" tab. Examples of using `uib-cache` with and without uibuilder.
+  * [x] ~~uib-list~~ - removed. Node is deprecated, See the "zero-code" examples instead.
+  * [x] uib-sender - "uib-sender" tab.
+  * [x] ~~vue~~ - removed. See the "templates" examples instead.
+  * [x] zero-code - **NEW** "uib-element tests" tab
 
 ### Documentation
 

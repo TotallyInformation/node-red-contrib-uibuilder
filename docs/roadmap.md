@@ -281,6 +281,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * uibindex change "User-Facing Routes" to "Client-Facing Routes".
 
   * Editor:
+    * Improve help box for _uib switch 
     * Add template description to display.
     * Add dependency version handling to templates (e.g. vue 2/3)
     * Switch tooltips to using aria-label with hover CSS as in the new node.
@@ -352,6 +353,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
   * Add some notes about Node-RED's projects feature. It doesn't seem to add a correct .gitignore which should contain `**/node_modules`. Also add notes about the fact that projects creates a disconnect between the flows and the userDir folder.
   * Add new doc to explain the HTML document hierarchy.
+  * WIKI
+    * Update examples
+  * Flows site
+    * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
 
 
 
@@ -361,6 +366,13 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Examples
   * Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
+  * Add example for Vue sfc loader.
+  * Ticklist
+    * Send a list
+    * Attach click handler to switch list type from bullet to ticked & msg node-red
+    * Save changes to cache on click
+  * Table
+    * Weather example?
 
 * Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features
