@@ -206,6 +206,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
     * `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
 
+  * Add `window.uib` as a synonym of `window.uibuilder`.
   * Add flags to track if the optional Markdown-IT or DOMPurify libraries are loaded and available.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
@@ -281,6 +282,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
   * Editor:
     * Add template description to display.
+    * Add dependency version handling to templates (e.g. vue 2/3)
     * Switch tooltips to using aria-label with hover CSS as in the new node.
     * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
     * Change getFileList to only return files, use the separate folder list for folders. No need to run it multiple times then.

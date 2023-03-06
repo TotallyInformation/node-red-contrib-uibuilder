@@ -20,31 +20,25 @@ Dynamic content does not currently work fully with VueJS (and probably not other
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-
-### Client updates
-
-* Only add showMsg once! Allow `showMsg()` to toggle.
-* Control from Node-RED. Functions to implement:
-  * [x] get/set
-  * [x] showMsg(boolean, parent=body)
-  * [x] showStatus(boolean, parent=body)
-  * [ ] clearHtmlCache(), saveHtmlCache(), restoreHtmlFromCache()
-  * [ ] htmlSend()
-  * [ ] getStore, setStore, removeStore
-  * [ ] watchDom(startStop)
-  * [ ] reload
-  * [ ] setPing
-
 ### uibuilder node
 
 * Editor: Improve help box for _uib switch 
 
-### Templates
-* Remove all msg displays. Add comment for showMsg, commented out for blank, in for others.
-* Add `event.preventDefault()` to `fnSendToNR`
-* [TotallyInformation/uib-template-svelte-simple](https://github.com/TotallyInformation/uib-template-svelte-simple), [TotallyInformation/uib-template-test](https://github.com/TotallyInformation/uib-template-test),
-
 ### Examples
+
+* [x] ~~jQuery~~ - removed. No longer needed.
+* [x] ~~logging~~ - removed. Old code, superceded by newer features.
+* [x] low-code-report-builder - Replicates pdfmaker's tables example using uibuilder to demonstrate how easy it is to build complex documents using uibuilder.
+* [x] simple - Implements a very simple Quote of the Day display using vanilla HTML.
+* [x] ~~svelte-basic~~ - removed. See "templates" example instead.
+* [x] templates - "Template Tests" tab
+* [x] ~~toast-notifications~~ - removed. Needs rework in next release to use `_ui`.
+* [x] uib-cache - "uib-cache" tab. Examples of using `uib-cache` with and without uibuilder.
+* [x] ~~uib-list~~ - removed. Node is deprecated, See the "zero-code" examples instead.
+* [x] uib-sender - "uib-sender" tab.
+* [x] ~~vue~~ - removed. See the "templates" examples instead.
+* [x] zero-code - "uib-element tests" tab
+
 
 * Update all to use new libs and updated templates
 * Add example for Vue sfc loader.
@@ -60,19 +54,11 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Doc updates
 
-* `isVisible`, `tabId` in new client builds.
-* Updated `msg._uib` optional in standard msgs
-* Notes on limitation of dynamic UI for Vue, etc.
 * WIKI
   * Update examples
 * Flows site
   * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
 * Update caching info to include info on html cache.
-
-* uib-element Docs
-  * Parent: `#eltest-ul-ol > li:nth-child(3)`
-  * Chaining
-  * JSON msg templates for each type
 
 ----
 
@@ -82,21 +68,31 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Summary of notable changes
 
+Just a quick summary here. See the main sections for more details.
+
 > Please remember that no changes are being made to the old `uibuilderfe.js` client. Nothing listed here applies to that.
 
-* New zero-code nodes `uib-element` and `uib-update` let you use simple data to create dynamic web UI's. Including in this release: Tables, Forms and Lists.
+* New zero-code nodes `uib-element` and `uib-update` let you use simple data to create dynamic web UI's. Including in this release: tables, forms, lists, raw HTML and page title. More to come.
 
 * The client library has a number of fixes and new features
   
   * Extensions to the `eventSend` function to include **form data** and **value changes**. Should greatly simplify creating and using FORMs and providing quick inputs for Node-RED flows. Used by `uib-element` to create zero-code input forms.
 
-  * New function: `uibuilder.showMsg(true)` Displays an on-screen card at the end of the current display that automatically updates with the last msg received from Node-RED. `uibuilder.showMsg(false)` turns it off.
+  * New function: `uibuilder.showMsg()` Displays/hides an on-screen card that automatically updates with the last msg received from Node-RED. 
   
-  * New function: `uibuilder.watchDom(true)` Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can also manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
+  * New function: `uibuilder.showStatus()` Displays/hides an on-screen card that shows the current status of the uibuilder client. Use for debugging where console output is not available or not desirable (e.g. debugging pages on mobile devices).
   
-  * New functions: `uibuilder.syntaxHighlight(json)`, `uibuilder.logToServer(...)`, `uibuilder.beaconLog('text')`.
+  * Some client functions can now be controlled direct from Node-RED via simple messages. Changing log levels, show/hide message and status displays, getting uibuilder client variable values join the ability to reload the page. More to come in the next release.
+  
+  * New function: `uibuilder.uiGet(cssSelector)` Gets useful data about an HTML element direct from the DOM. Saves lots of faffing when digging through DOM details.
 
-  * The uibuilder client now reports changes of **visibility** of the page back to node-red via a new control msg.
+  * New function: `uibuilder.watchDom(true)` Starts watching the content of the page and saves it to browser localStorage so that it can be recovered at any time. Use `uibuilder.restoreHtmlFromCache()` to recover the stored HTML (e.g. on page load). Use `uibuilder.watchDom(false)` to turn off and `uibuilder.clearHtmlCache()` to remove the saved HTML. If desired, you can manually save the HTML at any point using `uibuilder.saveHtmlCache()`.
+  
+  * The uibuilder client now reports changes of **visibility** of pages back to node-red via a new control msg.
+  
+  * When using the `_ui` low-code features, you can now position a new element anywhere within its parent. Either first/last or a position number can be used.
+  
+  * There is a new mode for the `_ui` low-code features - "removeAll". This allows a selection of elements to be the target of a remove - for example, all list entries could be removed with a single command.
   
   * Creates a browser `tabId` which is reported back to node-red when messages are sent. Helps identify the origin. Future uibuilder versions will let you send messages to a specific tab id which does not change even if the page is reloaded (only if the tab is closed).
   
@@ -107,6 +103,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * uibuilder now makes a copy of its main `<uibRoot>/package.json` file to `package.json.bak` before it updates it. Trace and error messages have been added to the process.
 
 * All of the templates and example flows have been refreshed with the latest standards.
+
+* The default style-sheet `uib-brand.css` has various updates and improvements.
 
 * Plenty of documentation updates and additions.
 
@@ -168,7 +166,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   
   * Now prevents the default event action from happening.
   
-  * If the element that triggers the event is part of an HTML **form**, all of the form input values are included in `msg._ui.form`.
+  * If the element that triggers the event is part of an HTML **form**, the names and values for all input elements in the form at the time of sending will be attached as `msg.payload` properties. Extended data for all input elements inside the form are included in `msg._ui.form`.
   
   * If the event type is `change`(e.g. a user changed an input field and then moved to a new field), a `msg._ui.newValue` property is generated. 
   
@@ -209,7 +207,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
   * When triggering `showDialog()` either in the FE or by sending a toast notification from node-red, setting "variant" now allows any CSS class name to be used. Not just the previous list of names ('primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger') though since they are all included as classes in uib-brand.css, they all still work.
 
-  * Extended the standards for `msg._ui` with mode=update to include the properties `selector` or `select`. These take CSS selectors as their value (as does the `type` property) and take preference over a `name` or `type` property but not over an `id` property. Mostly for convenience and just easier to remember. Documentation also updated.
+  * Extended the standards for `msg._ui` with `mode=update` to include the properties `selector` or `select`. These take CSS selectors as their value (as does the `type` property) and take preference over a `name` or `type` property but not over an `id` property. Mostly for convenience and just easier to remember. Documentation also updated.
 
   * Added a `position` property to the `add` _ui mode. "first"/"last": Adds start/end of parent's children respectively. An integer will add the element after the nth child.
 
@@ -233,7 +231,7 @@ It creates configuration-driven dynamic additions to your front-end UI while let
 
 Has a single output. Outputs can be chained to more `uib-element` nodes. At the end of the chain, simply send to a uibuilder node input. Optionally, make sure each chain has a unique topic and send to a `uib-cache` node so that new and reloaded browser clients get the last output.
 
-> **Note**: The range of options built into the node for each element type is deliberately fairly restricted. If you want more complex layouts, you should either craft the JSON yourself (this node can output the raw JSON if you want so that you can save it and enhance it yourself. Also, this initial release is mostly driven by the input data; in future releases some options will be capable of override using configuration inputs in the node.
+> **Note**: The range of options built into the node for each element type is deliberately fairly restricted. If you want more complex layouts, you should either craft the JSON yourself. This node can output the raw JSON if you want so that you can save it and enhance it yourself. Also, this initial release is mostly driven by the input data; in future releases some options will be capable of override using configuration inputs in the node.
 > 
 > This is NOT meant as a *Dashboard* replacement. It is mostly meant for people who need a quick and simple method of dynamically creating UI elements's within a pre-defined HTML design. The element content is rebuilt every time you send data so this is certainly not the most efficient method of working with data-driven UI's. However, it will often be good-enough for relatively simple requirements.
 
