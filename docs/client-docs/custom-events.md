@@ -17,6 +17,12 @@ document.addEventListener('uibuilder:socket:connected', (event) => {
 })
 ```
 
+## `uibuilder:domChange`
+
+Triggered by `uiWatch` functions.
+
+Details contain the same data as sent back to Node-RED in `msg._ui` by that function. `details.cssSelector` shows what watched element triggered the change.
+
 ## `uibuilder:constructorComplete`
 
 When the uibuilder class constructor has completed

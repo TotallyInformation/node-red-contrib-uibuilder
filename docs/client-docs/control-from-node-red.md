@@ -24,7 +24,18 @@ Please see the [Dynamic, data-driven HTML content](config-driven-ui.md) content 
 
 Currently, only a page reload control is available. Set `msg._ui` to `{"method": "reload"}`.
 
-## Getting Information
+## Getting UI Information
+
+Sending a message containing a `msg._uib` property set as follows will result in a returned message with standard details about the requested HTML element(s).
+
+```json
+{"command": "uiGet", "prop": "#more"}
+```
+
+Where `prop` has to be set to a valid CSS Selector.
+
+
+## Getting Client Status Information
 
 Sending a message containing a `msg._uib` property set as follows will result in that property being updated with a `msg._uib.value` property.
 
@@ -76,6 +87,15 @@ Where:
 
 - `value` is *true* to turn on the status display, *false* turns it off. If not provided, toggles the display.
 - `prop` is the CSS Selector under which the display will be shown. If omitted, 'body' is used which results in the display being added to the end of the visible page.
+
+
+## Get Complete Copy of the Current Web Page
+
+To get the current web page, complete with dynamic changes back to Node-RED as a string in `msg.payload`, send a message to the uibuilder node containing:
+
+```json
+{ "_uib": { "command": "sendHtml" } }
+```
 
 
 ## Other Controls

@@ -11,6 +11,7 @@ Functions accessible in client-side user code.
 
 - [`start(options)` - (Mostly no longer needed) Starts Socket.IO communications with Node-RED](#startoptions---mostly-no-longer-needed-starts-socketio-communications-with-node-red)
 - [Message Handling](#message-handling)
+  - [`htmlSend()` - Sends the whole DOM/HTML back to Node-RED](#htmlsend---sends-the-whole-domhtml-back-to-node-red)
   - [`send(msg, originator = '')` - Send a custom message back to Node-RED](#sendmsg-originator-----send-a-custom-message-back-to-node-red)
   - [`eventSend(domevent, originator = '')` - Send a standard message back to Node-RED in response to a DOM event](#eventsenddomevent-originator-----send-a-standard-message-back-to-node-red-in-response-to-a-dom-event)
   - [`setOriginator(originator = '')` - Set/clear the default originator](#setoriginatororiginator-----setclear-the-default-originator)
@@ -29,8 +30,10 @@ Functions accessible in client-side user code.
       - [Example](#example-2)
 - [UI Handling](#ui-handling)
   - [`ui(json)` - Directly manage UI via JSON](#uijson---directly-manage-ui-via-json)
+  - [`htmlSend()` - Sends the whole DOM/HTML back to Node-RED](#htmlsend---sends-the-whole-domhtml-back-to-node-red-1)
   - [`loadui(url)` - Load a dynamic UI from a JSON web reponse](#loaduiurl---load-a-dynamic-ui-from-a-json-web-reponse)
   - [`loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously](#loadscriptsrcurl-loadstylesrcurl-loadscripttxtstring-loadstyletxtstring---attach-a-new-script-or-css-stylesheet-to-the-end-of-head-synchronously)
+  - [`nodeGet(node)` - Get standard details from a DOM node](#nodegetnode---get-standard-details-from-a-dom-node)
   - [`replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string](#replaceslotel-component---replace-or-add-an-html-elements-slot-from-text-or-an-html-string)
   - [`replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string](#replaceslotmarkdownel-component---replace-or-add-an-html-elements-slot-from-a-markdown-string)
   - [`showDialog(type, ui, msg)` - Show a toast or alert style message on the UI](#showdialogtype-ui-msg---show-a-toast-or-alert-style-message-on-the-ui)
@@ -38,6 +41,7 @@ Functions accessible in client-side user code.
   - [`showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the uibuilder client library](#showstatusboolean-parentbody---showhide-a-card-shows-the-current-status-of-the-uibuilder-client-library)
   - [`syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as formatted HTML](#syntaxhighlightjson---takes-a-javascript-object-or-json-and-outputs-as-formatted-html)
   - [`uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element](#uigetcssselector-propnamenull---get-most-useful-information-or-specific-property-from-a-dom-element)
+  - [`uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements](#uiwatchcssselector-startstoptruefalsetoggle-sendtrue-showlogtrue---watches-for-any-changes-to-the-selected-html-elements)
 - [HTML/DOM Cacheing](#htmldom-cacheing)
   - [`watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage](#watchdomstartstop---startstop-watching-for-dom-changes-changes-automatically-saved-to-browser-localstorage)
   - [`clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage](#clearhtmlcache---clears-the-html-previously-saved-to-the-browser-localstorage)
@@ -50,7 +54,7 @@ Functions accessible in client-side user code.
   - [`onTopic(topic, callbackFn)` - like onChange but directly listens for a specific topic](#ontopictopic-callbackfn---like-onchange-but-directly-listens-for-a-specific-topic)
   - [`cancelTopic(topic, cbRef)` - like cancelChange for for onTopic](#canceltopictopic-cbref---like-cancelchange-for-for-ontopic)
 - [Other](#other)
-  - [`$(css-selector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element](#css-selector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element)
+  - [`$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element](#cssselector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element)
     - [Example](#example-4)
   - [`log` - output log messages like the library does](#log---output-log-messages-like-the-library-does)
 
@@ -79,6 +83,12 @@ While multiple properties can be given in the options object, only the following
 These send or receive messages to/from Node-RED.
 
 You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-end code which instructs the client to treat the object as though it had come from Node-RED.
+
+### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
+
+Results in a standard message sent to Node-RED where `the msg.payload` contains the whole current HTML page as a string.
+
+Use with the `uib-save` node to fix the latest page complete with any dynamic updates as the html page to load for new client connections for example.
 
 ### `send(msg, originator = '')` - Send a custom message back to Node-RED
 
@@ -203,6 +213,10 @@ For functions with no descriptions, please refer to the code. In general, these 
 
 Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
 
+### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
+
+See under [Message Handling](#message-handling) above for details.
+
 ### `loadui(url)` - Load a dynamic UI from a JSON web reponse
 
 Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
@@ -210,6 +224,10 @@ Requires a valid URL that returns correct _ui data. For example, a JSON file del
 ### `loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously
 
 Either from a remote URL or from a text string.
+
+### `nodeGet(node)` - Get standard details from a DOM node
+
+Used internally by `uiGet`
 
 ### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string
 
@@ -306,6 +324,18 @@ If no `propName` supplied, will return a selection of the most useful informatio
 
 Returned data can be sent back to Node-RED using: `uibuilder.send( uibuilder.uiGet('#myelementid') )`.
 
+Uses `nodeGet` internally.
+
+### `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements
+
+Uses [Mutation Observer](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver/MutationObserver) to watch for and report on any changes to the DOM (the page).
+
+Can send the output to the console log (the `showLog` argument. Shows at log level 2 - Info) and/or back to Node-RED (the `send` argument).
+
+Uses `nodeGet` (the same as `uiGet`) to capture standard information about added/removed nodes.
+
+send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too. If `startStop` is undefined, null or 'toggle', the watch will be toggled.
+
 ## HTML/DOM Cacheing
 
 ### `watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage
@@ -373,13 +403,15 @@ uibuilder.cancelTopic('my topic', topicChgEvt)
 
 ## Other
 
-### `$(css-selector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element
+### `$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element
 
-This is a convenience method to help you select HTML DOM elements in your own custom code. All it does is use ` document.querySelector(css-selector)`. So any errors are the same as the native function.
+This is a convenience method to help you select HTML DOM elements in your own custom code. All it does is use ` document.querySelector(cssSelector)`. So any errors are the same as the native function.
 
-As per the native function, it returns a single [HTML element](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement). If the CSS Selector provided is not unique (e.g. >1 element would be returned), only the first element found in the DOM is returned. Use `document.querySelectorAll(css-selector)` if you want to get back an array of selected elements.
+As per the native function, it returns a single [HTML element](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement). If the CSS Selector provided is not unique (e.g. >1 element would be returned), only the first element found in the DOM is returned. Use `document.querySelectorAll(cssSelector)` if you want to get back an array of selected elements.
 
 If the uibuilder client finds an existing definition of `$` on startup, it will not make this global. However, it would still be usable as `uibuilder.$(...)`. This avoids clashes with libraries such as jQuery.
+
+If the selector finds a `<template>` tag, it returns its _first child_ instead of the tag. This is to ensure that if you clone it, it will be valid for applying event handlers. A template element is not visible on-page but is used for cloning multiple times or for swapping between different displays (removing the old element and replacing with a new one - not hide/show).
 
 #### Example
 
