@@ -320,7 +320,7 @@ export const Uib = class Uib {
     #isShowStatus = false
     // Externally accessible command functions (NB: Case must match)
     #extCommands = [
-        'get', 'set', 'showMsg', 'showStatus'
+        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch',
     ]
 
     // What status variables to show via showStatus()
@@ -350,6 +350,9 @@ export const Uib = class Uib {
         version: { 'var': 'version', 'label': 'uibuilder client version', 'description': 'The version of the loaded uibuilder client library', },
         serverTimeOffset: { 'var': 'serverTimeOffset', 'label': 'Server time offset (Hrs)', 'description': 'The number of hours difference between the Node-red server and the client', },
     }
+
+    // Track ui observers (see uiWatch)
+    #uiObservers = {}
 
     //#endregion
 
@@ -713,9 +716,30 @@ export const Uib = class Uib {
     }
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
-     * @type {HTMLElement}
+     * If the selected element is a <template>, returns the first child element.
+     * type {HTMLElement}
+     * @param {string} cssSelector A CSS Selector that identifies the element to return
+     * @returns {HTMLElement|HTMLTemplateElement|null}
      */
-    $ = document.querySelector.bind(document)
+    $(cssSelector) {
+        let el = document.querySelector(cssSelector)
+        
+        if (!el) {
+            log(1, 'Uib:$', `No element found for CSS selector ${cssSelector}`)()
+            return null
+        }
+
+        if ( el.nodeName === 'TEMPLATE' ) {
+            el = el.content.firstElementChild
+            if (!el) {
+                log(0, 'Uib:$', `Template selected for CSS selector ${cssSelector} but it is empty`)()
+                return null
+            }
+        }
+
+        return el
+    }
+    // $ = document.querySelector.bind(document)
 
     /** Set the default originator. Set to '' to ignore. Used with uib-sender.
      * @param {string} [originator] A Node-RED node ID to return the message to
@@ -1633,6 +1657,48 @@ export const Uib = class Uib {
         this._uiReplace(root)
     }
 
+    /** Get standard data from a DOM node.
+     * @param {*} node DOM node to examine
+     * @returns {object} Standardised data object
+     */
+    nodeGet(node) {
+        const thisOut = {
+            id: node.id === '' ? undefined : node.id,
+            name: node.name,
+            children: node.childNodes.length,
+            type: node.nodeName,
+            attributes: undefined,
+
+            isUserInput: node.validity ? true : false, // eslint-disable-line no-unneeded-ternary
+            userInput: !node.validity ? undefined : { // eslint-disable-line multiline-ternary
+                value: node.value,
+                validity: undefined,
+                willValidate: node.willValidate,
+                valueAsDate: node.valueAsDate,
+                valueAsNumber: node.valueAsNumber,
+                type: node.type,
+            },
+        }
+        if ( node.nodeName !== '#text' && node.attributes && node.attributes.length > 0 ) {
+            thisOut.attributes = {}
+            // @ts-ignore
+            for (const attrib of node.attributes) {
+                if (attrib.name !== 'id') {
+                    thisOut.attributes[attrib.name] = node.attributes[attrib.name].value
+                }
+            }
+        }
+        if ( node.nodeName === '#text') {
+            thisOut.text = node.textContent
+        }
+        if ( node.validity ) thisOut.userInput.validity = {}
+        for (const v in node.validity) {
+            thisOut.userInput.validity[v] = node.validity[v]
+        }
+
+        return thisOut
+    } // --- end of nodeGet --- //
+
     /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
      * @param {string} cssSelector Identify the DOM element to get data from
      * @param {string} [propName] Optional. Specific name of property to get from the element
@@ -1667,40 +1733,99 @@ export const Uib = class Uib {
                     out.push(p)
                 }
             } else { // Otherwise, grab everything useful
-                const len = out.push({
-                    id: node.id === '' ? undefined : node.id,
-                    name: node.name,
-                    children: node.childNodes.length,
-                    type: node.nodeName,
-                    attributes: undefined,
-
-                    isUserInput: node.value === undefined ? false : true, // eslint-disable-line no-unneeded-ternary
-                    userInput: node.value === undefined ? undefined : { // eslint-disable-line multiline-ternary
-                        value: node.value,
-                        validity: undefined,
-                        willValidate: node.willValidate,
-                        valueAsDate: node.valueAsDate,
-                        valueAsNumber: node.valueAsNumber,
-                        type: node.type,
-                    },
-                })
-                const thisOut = out[len - 1]
-                if ( node.attributes.length > 0 ) thisOut.attributes = {}
-                // @ts-ignore
-                for (const attrib of node.attributes) {
-                    if (attrib.name !== 'id') {
-                        thisOut.attributes[attrib.name] = node.attributes[attrib.name].value
-                    }
-                }
-                if ( node.value !== undefined ) thisOut.userInput.validity = {}
-                for (const v in node.validity) {
-                    thisOut.userInput.validity[v] = node.validity[v]
-                }
+                out.push(this.nodeGet(node))
             }
         })
 
         return out
-    } // --- end of uiGet ---
+    } // --- end of uiGet --- //
+
+    /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
+     * OMG! It is sooo hard to turn the data into something that successfully serialises so it can be sent back to Node-RED!
+     * NB: Each cssSelector creates a unique watcher. Sending the same selector overwrites the previous one.
+     * @param {string} cssSelector A CSS Selector that selects the element to watch for changes
+     * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
+     * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
+     * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
+     */
+    uiWatch(cssSelector, startStop = 'toggle', send = true, showLog = true) {
+        // Select the node that will be observed for mutations
+        const targetNode = document.querySelector(cssSelector)
+        if (!targetNode) {
+            console.log('[Uib:uiWatch] CSS Selector not found. ', cssSelector)
+            return
+        }
+
+        if (startStop === 'toggle' || startStop === undefined || startStop === null) {
+            if (this.#uiObservers[cssSelector]) startStop = false
+            else startStop = true
+        }
+
+        // Need a ref to the Uib this
+        const that = this
+
+        if (startStop === true || startStop === undefined) {
+            // Create an observer instance
+            this.#uiObservers[cssSelector] = new MutationObserver( function( mutationList /* , observer */ ) {
+                const out = []
+
+                mutationList.forEach( mu => {
+                    console.log({ mu })
+                    const oMu = {
+                        type: mu.type,
+                        oldValue: mu.oldValue !== null ? mu.oldValue : undefined,
+                    }
+
+                    if (mu.addedNodes.length > 0) {
+                        oMu.addedNodes = []
+                        mu.addedNodes.forEach( (an, i) => {
+                            oMu.addedNodes.push(that.nodeGet(mu.addedNodes[i]))
+                        })
+                    }
+
+                    if (mu.removedNodes.length > 0) {
+                        oMu.removedNodes = []
+                        mu.removedNodes.forEach( (an, i) => {
+                            oMu.removedNodes.push(that.nodeGet(mu.removedNodes[i]))
+                        })
+                    }
+
+                    if ( mu.type === 'attributes' ) {
+                        oMu.attributeName = mu.attributeName
+                        // @ts-ignore
+                        oMu.newValue = mu.target.attributes[mu.attributeName].value
+                    }
+
+                    out.push(oMu)
+                })
+
+                // Custom event
+                that._dispatchCustomEvent('uibuilder:domChange', out)
+                // Send a msg back to node-red
+                if (send === true) {
+                    that.send({
+                        _ui: {
+                            cssSelector: cssSelector,
+                            uiChanges: out
+                        },
+                        topic: that.topic || `DOM Changes for '${cssSelector}'`,
+                    })
+                }
+                // Log to info
+                if (showLog === true) {
+                    log('info', 'uibuilder.module.js:uiWatch', `DOM Changes for '${cssSelector}'`, { uiChanges: out }, { mutationList })()
+                }
+            } )
+
+            // Start observing the target node for configured mutations
+            this.#uiObservers[cssSelector].observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true })
+            log('trace', 'uibuilder.module.js:uiWatch', `Started Watching DOM changes for '${cssSelector}'`)()
+        } else {
+            this.#uiObservers[cssSelector].disconnect()
+            delete this.#uiObservers[cssSelector]
+            log('trace', 'uibuilder.module.js:uiWatch', `Stopped Watching DOM changes for '${cssSelector}'`)()
+        }
+    } // ---- End of watchDom ---- //
 
     //#endregion -------- -------- -------- //
 
@@ -1998,6 +2123,23 @@ export const Uib = class Uib {
         this._send(msg, this._ioChannels.client, originator)
     }
 
+    /** Easily send the entire DOM/HTML msg back to Node-RED
+     * @param {string} [originator] A Node-RED node ID to return the message to
+     */
+    htmlSend(originator = '') {
+        // @ts-ignore Han
+
+        // Set up the msg to send - NB: Topic may be added by this._send
+        const msg = {
+            payload: document.documentElement.innerHTML,
+            topic: this.topic,
+        }
+
+        log('trace', 'Uib:htmlSend', 'Sending full HTML to Node-RED', msg)()
+
+        this._send(msg, this._ioChannels.client, originator)
+    }
+
     // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
     _msgRcvdEvents(msg) {
 
@@ -2029,10 +2171,17 @@ export const Uib = class Uib {
                 const value = msg._uib.value
 
                 // console.log('CMD FROM NODE-RED: ', cmd, ', Prop: ', prop, ', Sent Val: ', value)
+                // 'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet',
                 switch (msg._uib.command) {
                     case 'get': {
-                        msg._uib.response = this.get(prop)
+                        msg.payload = msg._uib.response = this.get(prop)
+                        if (!msg.topic) msg.topic = this.topic || `uiGet for '${prop}'`
                         this.send(msg)
+                        break
+                    }
+
+                    case 'htmlSend': {
+                        this.htmlSend()
                         break
                     }
 
@@ -2049,6 +2198,19 @@ export const Uib = class Uib {
 
                     case 'showStatus': {
                         this.showStatus(value, prop)
+                        break
+                    }
+
+                    case 'uiGet': {
+                        this.send({
+                            payload: this.uiGet(prop),
+                            topic: this.topic || `uiGet for '${prop}'`,
+                        })
+                        break
+                    }
+
+                    case 'uiWatch': {
+                        this.uiWatch(prop)
                         break
                     }
 
@@ -2637,7 +2799,7 @@ if (!window['uibuilder']) {
 // Note that this is also available as `uibuilder.$`.
 if (!window['$']) {
     /** @type {HTMLElement} */
-    window['$'] = document.querySelector.bind(document)
+    window['$'] = window['uibuilder'].$ // document.querySelector.bind(document)
 } else {
     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.')
 }

@@ -107,6 +107,7 @@ function nodeInstance(config) {
     /** Allow return events? */
     this.return = config.return
     this.url = config.url || ''
+    this.uibId = config.uibId || ''
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)

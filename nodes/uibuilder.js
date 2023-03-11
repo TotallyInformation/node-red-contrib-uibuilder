@@ -284,17 +284,20 @@ function nodeInstance(config) {
      */
     this.customFolder = path.join(/** @type {string} */ (uib.rootFolder), this.url)
 
+    // TODO Need to find a way to make this more robust for when folder rename fails
     // Check whether the url has been changed. If so, rename the folder
     if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl ) {
         // rename (move) folder if possible - but don't overwrite
         try {
             fs.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.customFolder, { overwrite: false })
             log.trace(`[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
+            // Notify other nodes
+            tiEvents.emit(`node-red-contrib-uibuilder/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
         } catch (e) {
             log.trace(`[uibuilder:nodeInstance:${this.url}] Could not rename folder. ${e.message}`)
             // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
             if ( e.code !== 'ENOENT' ) {
-                log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. url=${this.url}, oldUrl=${this.oldUrl}, Fldr=${this.customFolder}. Error=${e.message}`, e)
+                log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. Manually change the URL back to the original. newUrl=${this.url}, oldUrl=${this.oldUrl}, Fldr=${this.customFolder}. Error=${e.message}`, e)
             }
         }
         // Remove the old router and remove from the routes list
