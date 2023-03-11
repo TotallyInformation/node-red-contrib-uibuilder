@@ -192,6 +192,15 @@
             + (var(--surfaces-factor) * var(--surfaces-bias)))
         )
     );
+    --surface5: hsl(
+        var(--brand-hue)
+        calc(100% * var(--surfaces-saturation))
+        calc(
+            100% * (var(--surfaces-lightness)
+            - (var(--surfaces-factor) * .20)
+            + (var(--surfaces-factor) * var(--surfaces-bias)))
+        )
+    );
     /*#endregion --- --- */
 
     /*#region === INFO === */
@@ -204,6 +213,9 @@
                 calc(100% * (var(--lightness) + var(--info-lightness-bias)));
 
     --info: hsl( var(--info-hsl) );
+    --info-intense: hsl(
+        var(--info-hue) 100% 50%
+    );
     /*#endregion --- --- */
     
     /*#region === SUCCESS === */
@@ -215,6 +227,9 @@
         var(--success-hue)
         calc(100% * (var(--saturation) + var(--success-saturation-bias)))
         calc(100% * (var(--lightness) + var(--success-lightness-bias)))
+    );
+    --success-intense: hsl(
+        var(--success-hue) 100% 50%
     );
     /*#endregion --- --- */
     
@@ -228,6 +243,9 @@
         calc(100% * (var(--saturation) + var(--warning-saturation-bias)))
         calc(100% * (var(--lightness) + var(--warning-lightness-bias)))
     );
+    --warning-intense: hsl(
+        var(--warning-hue) 100% 50%
+    );
     --warn: var(--warning);
     /*#endregion --- --- */
     
@@ -240,6 +258,9 @@
         var(--failure-hue)
         calc(100% * (var(--saturation) + var(--failure-saturation-bias)))
         calc(100% * (var(--lightness) + var(--failure-lightness-bias)))
+    );
+    --failure-intense: hsl(
+        var(--failure-hue) 100% 50%
     );
     --error: var(--failure);
     --danger: var(--failure);
