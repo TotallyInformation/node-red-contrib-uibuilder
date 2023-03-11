@@ -1,6 +1,15 @@
-# Regression tests for uibuilder
+---
+title: Regression tests for uibuilder
+description: >
+   A summary of some of the key testing available for uibuilder.
+created: 2019-05-25 09:33:00
+lastUpdated: 2023-03-06 12:36:02
+author: Julian Knight (Totally Information)
+---
 
 Here are some simple, manual tests that try to ensure that uibuilder is working as expected.
+
+In addition to the below, the `templates` and `zero-code` example flows represent tests for each template and the `uib-element` and `uib-update` nodes.
 
 ## Quick test of basic features
 
