@@ -342,6 +342,7 @@
  *   passthrough: boolean;
  *   return: boolean;
  *   url: string;
+ *   uibId: string;
  * }} senderNode1
  */
 

@@ -14,6 +14,9 @@
     /** Node's background color @constant {string} paletteColor */
     const paletteColor  = '#E6E0F8'
 
+    /** Copy of all deployed uibuilder node instances */
+    let uibInstances = null
+
     /** Get all of the current uibuilder URL's */
     function getUrls() {
         $.ajax({
@@ -25,12 +28,15 @@
                 'cmd': 'listinstances',
             },
             success: function(instances) {
-                // console.log('>>>>', instances)
+                console.log('>> Instances >>', instances, Object.entries(instances) )
 
-                Object.keys(instances).forEach( (val, i, arr) => {
+                uibInstances = instances
+
+                Object.keys(instances).forEach( (key, i, arr) => {
                     $('#node-input-url').append($('<option>', {
-                        value: instances[val],
-                        text: instances[val],
+                        value: instances[key],
+                        text: instances[key],
+                        'data-id': key,
                     }))
                 })
 
@@ -43,6 +49,8 @@
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
+        console.log('uib-sender onEditPrepare ', node)
+
         // initial checkbox states
         if (!node.passthrough) node.passthrough = false
         $('#node-input-passthrough')
@@ -73,10 +81,33 @@
 
         // Deal with the url
         getUrls()
-        // $('#node-input-url')
-        //     .on('change', function() {
-        //         console.log('>>>>', this.value)
-        //     })
+
+        if ( node.uibId in uibInstances ) {
+            // console.log( 'uibuilder node ID is known', node.url, node.uibId)
+            // We know the ID, always look up the latest name
+            const chkUrl = uibInstances[node.uibId]
+            if (chkUrl !== node.url) { // The url for this node changed so force a re-deploy
+                RED.nodes.dirty(true)
+                node.changed = true
+            }
+            node.url = uibInstances[node.uibId]
+        } else if ( Object.values(uibInstances).includes(node.url) ) {
+            // console.log( 'We didnt know the id but we found the url', node.url, node.uibId, Object.keys(uibInstances)[Object.values(uibInstances).indexOf(node.url)])
+            // We didn't know the ID but we know the last url so set the ID - always force a redeploy in this case
+            node.uibId = uibInstances[Object.keys(uibInstances)[Object.values(uibInstances).indexOf(node.url)]]
+            RED.nodes.dirty(true)
+            node.changed = true
+        } else {
+            // console.log( 'Neither id nor url found', node.url, node.uibId)
+            node.valid = false
+        }
+
+        $('#node-input-url')
+            .on('change', function() {
+                node.uibId = Object.keys(uibInstances)[Object.values(uibInstances).indexOf(this.value)]
+                // console.log('>> URL Change >>', this.value, node.uibId, Object.keys(uibInstances)[Object.values(uibInstances).indexOf(this.value)])
+            })
+
         if ( node.url && node.url.length > 0 ) {
             $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
             $('#node-input-url').val(node.url)
@@ -84,12 +115,21 @@
 
     } // ----- end of onEditPrepare() ----- //
 
+    /** When node type is added to the palette
+     * Which happens on load of the Editor
+     * @param {*} node -
+     */
+    function onPaletteAdd(node) {
+        // console.log('uib-sender onPaletteAdd ', node)
+    } // ---- End of onPaletteAdd ---- //
+
     // @ts-ignore
     RED.nodes.registerType(moduleName, {
         category: paletteCategory,
         color: paletteColor,
         defaults: {
             url: { value: '', required: true },
+            uibId: { value: '' }, // ID of selected uibuilder instance
             name: { value: '' },
             topic: { value: '' },
             passthrough: { value: false },
@@ -106,6 +146,9 @@
         label: function () { return this.name || this.url || nodeLabel },
 
         oneditprepare: function() { onEditPrepare(this) },
+
+        /** When this node is added to the palette - happens on (re)load of Editor as well */
+        onpaletteadd: function() { onPaletteAdd(this) },
 
     }) // ---- End of registerType() ---- //
 
