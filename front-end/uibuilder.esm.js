@@ -3247,7 +3247,7 @@ function urlJoin() {
   }).join("/");
   return url2.replace("//", "/");
 }
-var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _extCommands, _showStatus, _a;
+var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _extCommands, _showStatus, _uiObservers, _a;
 var Uib = (_a = class {
   // ---- End of ioSetup ---- //
   //#endregion -------- ------------ -------- //
@@ -3288,8 +3288,11 @@ var Uib = (_a = class {
     __privateAdd(this, _extCommands, [
       "get",
       "set",
+      "htmlSend",
       "showMsg",
-      "showStatus"
+      "showStatus",
+      "uiGet",
+      "uiWatch"
     ]);
     // What status variables to show via showStatus()
     __privateAdd(this, _showStatus, {
@@ -3314,6 +3317,8 @@ var Uib = (_a = class {
       version: { "var": "version", "label": "uibuilder client version", "description": "The version of the loaded uibuilder client library" },
       serverTimeOffset: { "var": "serverTimeOffset", "label": "Server time offset (Hrs)", "description": "The number of hours difference between the Node-red server and the client" }
     });
+    // Track ui observers (see uiWatch)
+    __privateAdd(this, _uiObservers, {});
     //#endregion
     //#region public class vars
     // TODO Move to proper getters
@@ -3400,10 +3405,6 @@ var Uib = (_a = class {
         }
       }
     });
-    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
-     * @type {HTMLElement}
-     */
-    __publicField(this, "$", document.querySelector.bind(document));
     log("trace", "Uib:constructor", "Starting")();
     window.addEventListener("offline", (e) => {
       this.set("online", false);
@@ -3683,6 +3684,28 @@ var Uib = (_a = class {
       }
     }
   }
+  /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+   * If the selected element is a <template>, returns the first child element.
+   * type {HTMLElement}
+   * @param {string} cssSelector A CSS Selector that identifies the element to return
+   * @returns {HTMLElement|HTMLTemplateElement|null}
+   */
+  $(cssSelector) {
+    let el = document.querySelector(cssSelector);
+    if (!el) {
+      log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
+      return null;
+    }
+    if (el.nodeName === "TEMPLATE") {
+      el = el.content.firstElementChild;
+      if (!el) {
+        log(0, "Uib:$", `Template selected for CSS selector ${cssSelector} but it is empty`)();
+        return null;
+      }
+    }
+    return el;
+  }
+  // $ = document.querySelector.bind(document)
   /** Set the default originator. Set to '' to ignore. Used with uib-sender.
    * @param {string} [originator] A Node-RED node ID to return the message to
    */
@@ -4428,6 +4451,48 @@ var Uib = (_a = class {
     });
     this._uiReplace(root);
   }
+  /** Get standard data from a DOM node.
+   * @param {*} node DOM node to examine
+   * @returns {object} Standardised data object
+   */
+  nodeGet(node) {
+    const thisOut = {
+      id: node.id === "" ? void 0 : node.id,
+      name: node.name,
+      children: node.childNodes.length,
+      type: node.nodeName,
+      attributes: void 0,
+      isUserInput: node.validity ? true : false,
+      // eslint-disable-line no-unneeded-ternary
+      userInput: !node.validity ? void 0 : {
+        // eslint-disable-line multiline-ternary
+        value: node.value,
+        validity: void 0,
+        willValidate: node.willValidate,
+        valueAsDate: node.valueAsDate,
+        valueAsNumber: node.valueAsNumber,
+        type: node.type
+      }
+    };
+    if (node.nodeName !== "#text" && node.attributes && node.attributes.length > 0) {
+      thisOut.attributes = {};
+      for (const attrib of node.attributes) {
+        if (attrib.name !== "id") {
+          thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
+        }
+      }
+    }
+    if (node.nodeName === "#text") {
+      thisOut.text = node.textContent;
+    }
+    if (node.validity)
+      thisOut.userInput.validity = {};
+    for (const v in node.validity) {
+      thisOut.userInput.validity[v] = node.validity[v];
+    }
+    return thisOut;
+  }
+  // --- end of nodeGet --- //
   /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
    * @param {string} cssSelector Identify the DOM element to get data from
    * @param {string} [propName] Optional. Specific name of property to get from the element
@@ -4460,42 +4525,83 @@ var Uib = (_a = class {
           out.push(p);
         }
       } else {
-        const len = out.push({
-          id: node.id === "" ? void 0 : node.id,
-          name: node.name,
-          children: node.childNodes.length,
-          type: node.nodeName,
-          attributes: void 0,
-          isUserInput: node.value === void 0 ? false : true,
-          // eslint-disable-line no-unneeded-ternary
-          userInput: node.value === void 0 ? void 0 : {
-            // eslint-disable-line multiline-ternary
-            value: node.value,
-            validity: void 0,
-            willValidate: node.willValidate,
-            valueAsDate: node.valueAsDate,
-            valueAsNumber: node.valueAsNumber,
-            type: node.type
-          }
-        });
-        const thisOut = out[len - 1];
-        if (node.attributes.length > 0)
-          thisOut.attributes = {};
-        for (const attrib of node.attributes) {
-          if (attrib.name !== "id") {
-            thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
-          }
-        }
-        if (node.value !== void 0)
-          thisOut.userInput.validity = {};
-        for (const v in node.validity) {
-          thisOut.userInput.validity[v] = node.validity[v];
-        }
+        out.push(this.nodeGet(node));
       }
     });
     return out;
   }
-  // --- end of uiGet ---
+  // --- end of uiGet --- //
+  /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
+   * OMG! It is sooo hard to turn the data into something that successfully serialises so it can be sent back to Node-RED!
+   * NB: Each cssSelector creates a unique watcher. Sending the same selector overwrites the previous one.
+   * @param {string} cssSelector A CSS Selector that selects the element to watch for changes
+   * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
+   * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
+   * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
+   */
+  uiWatch(cssSelector, startStop = "toggle", send = true, showLog = true) {
+    const targetNode = document.querySelector(cssSelector);
+    if (!targetNode) {
+      console.log("[Uib:uiWatch] CSS Selector not found. ", cssSelector);
+      return;
+    }
+    if (startStop === "toggle" || startStop === void 0 || startStop === null) {
+      if (__privateGet(this, _uiObservers)[cssSelector])
+        startStop = false;
+      else
+        startStop = true;
+    }
+    const that = this;
+    if (startStop === true || startStop === void 0) {
+      __privateGet(this, _uiObservers)[cssSelector] = new MutationObserver(function(mutationList) {
+        const out = [];
+        mutationList.forEach((mu) => {
+          console.log({ mu });
+          const oMu = {
+            type: mu.type,
+            oldValue: mu.oldValue !== null ? mu.oldValue : void 0
+          };
+          if (mu.addedNodes.length > 0) {
+            oMu.addedNodes = [];
+            mu.addedNodes.forEach((an, i2) => {
+              oMu.addedNodes.push(that.nodeGet(mu.addedNodes[i2]));
+            });
+          }
+          if (mu.removedNodes.length > 0) {
+            oMu.removedNodes = [];
+            mu.removedNodes.forEach((an, i2) => {
+              oMu.removedNodes.push(that.nodeGet(mu.removedNodes[i2]));
+            });
+          }
+          if (mu.type === "attributes") {
+            oMu.attributeName = mu.attributeName;
+            oMu.newValue = mu.target.attributes[mu.attributeName].value;
+          }
+          out.push(oMu);
+        });
+        that._dispatchCustomEvent("uibuilder:domChange", out);
+        if (send === true) {
+          that.send({
+            _ui: {
+              cssSelector,
+              uiChanges: out
+            },
+            topic: that.topic || `DOM Changes for '${cssSelector}'`
+          });
+        }
+        if (showLog === true) {
+          log("info", "uibuilder.module.js:uiWatch", `DOM Changes for '${cssSelector}'`, { uiChanges: out }, { mutationList })();
+        }
+      });
+      __privateGet(this, _uiObservers)[cssSelector].observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
+      log("trace", "uibuilder.module.js:uiWatch", `Started Watching DOM changes for '${cssSelector}'`)();
+    } else {
+      __privateGet(this, _uiObservers)[cssSelector].disconnect();
+      delete __privateGet(this, _uiObservers)[cssSelector];
+      log("trace", "uibuilder.module.js:uiWatch", `Stopped Watching DOM changes for '${cssSelector}'`)();
+    }
+  }
+  // ---- End of watchDom ---- //
   //#endregion -------- -------- -------- //
   //#region ------- HTML cache and DOM watch --------- //
   /** Clear the saved DOM from localStorage */
@@ -4722,6 +4828,17 @@ var Uib = (_a = class {
       log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();
     this._send(msg, this._ioChannels.client, originator);
   }
+  /** Easily send the entire DOM/HTML msg back to Node-RED
+   * @param {string} [originator] A Node-RED node ID to return the message to
+   */
+  htmlSend(originator = "") {
+    const msg = {
+      payload: document.documentElement.innerHTML,
+      topic: this.topic
+    };
+    log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg)();
+    this._send(msg, this._ioChannels.client, originator);
+  }
   // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
   _msgRcvdEvents(msg) {
     this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
@@ -4743,8 +4860,14 @@ var Uib = (_a = class {
         const value2 = msg._uib.value;
         switch (msg._uib.command) {
           case "get": {
-            msg._uib.response = this.get(prop);
+            msg.payload = msg._uib.response = this.get(prop);
+            if (!msg.topic)
+              msg.topic = this.topic || `uiGet for '${prop}'`;
             this.send(msg);
+            break;
+          }
+          case "htmlSend": {
+            this.htmlSend();
             break;
           }
           case "set": {
@@ -4758,6 +4881,17 @@ var Uib = (_a = class {
           }
           case "showStatus": {
             this.showStatus(value2, prop);
+            break;
+          }
+          case "uiGet": {
+            this.send({
+              payload: this.uiGet(prop),
+              topic: this.topic || `uiGet for '${prop}'`
+            });
+            break;
+          }
+          case "uiWatch": {
+            this.uiWatch(prop);
             break;
           }
           default: {
@@ -5052,7 +5186,7 @@ ioPath: ${this.ioPath}`)();
     this._dispatchCustomEvent("uibuilder:startComplete");
   }
   //#endregion -------- ------------ -------- //
-}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), //#endregion -- not external --
+}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#endregion -- not external --
 //#region ------- Static metadata ------- //
 __publicField(_a, "_meta", {
   version,
@@ -5066,7 +5200,7 @@ if (!window["uibuilder"]) {
   log("error", "uibuilder.module.js", "uibuilder already assigned to window. Have you tried to load it more than once?");
 }
 if (!window["$"]) {
-  window["$"] = document.querySelector.bind(document);
+  window["$"] = window["uibuilder"].$;
 } else {
   log("warn", "uibuilder.module.js", "Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.");
 }
