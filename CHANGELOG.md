@@ -16,6 +16,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Nothing currently.
 
+## [v6.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.1...v6.1.0)
+
+Bug Fix: The zero-code example only had a single node in it. Now corrected to have the full example set demonstrating most aspects of the zero-code `uib-sender` node with some examples of the zero-code `uib-update` node.
+
 ## [v6.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.0...v6.0.0)
 
 v6.1.0 makes the new client libraries (`uibuilder.esm.min.js` and `uibuilder.iife.min.js`) current and the old client library (`uibuilderfe.js`) is now no longer recommended and is not being updated, it is on the road to being deprecated (it will remain until at least v7, mahbe v8 but probably not longer unless someone calls for it). 

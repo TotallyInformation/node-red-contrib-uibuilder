@@ -3098,7 +3098,7 @@
   });
 
   // src/front-end-module/uibuilder.module.js
-  var version = "6.1.0-iife";
+  var version = "6.1.1-iife";
   var isMinified = !/param/.test(function(param) {
   });
   var logLevel = isMinified ? 0 : 1;
