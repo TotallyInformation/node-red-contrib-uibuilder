@@ -1,5 +1,1646 @@
 [
     {
+        "id": "3badb0a6906eef7f",
+        "type": "tab",
+        "label": "uib-element tests",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3cd8b7c5aae9d40b",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Base node. Change ALL URL's to match.",
+        "style": {
+            "label": true,
+            "fill": "#ffffbf",
+            "fill-opacity": "0.28",
+            "color": "#3f3f3f"
+        },
+        "nodes": [
+            "454da28ef00e68b6",
+            "90794d03f65a40d4",
+            "26fbd32ea1d00ff2",
+            "a48c0beb68e76845",
+            "c492d5d86eb0cfcb",
+            "f0f4f6c5a20a1823",
+            "195a61f93a912086",
+            "c203417099e22d29",
+            "d0ab82e45161ca1e",
+            "262ab2295096703e",
+            "88abbd5438821f7a",
+            "6221e2b8f2b50df8",
+            "0dd33ba823c0af7b"
+        ],
+        "x": 34,
+        "y": 79,
+        "w": 682,
+        "h": 242
+    },
+    {
+        "id": "e1901bb3da85dd78",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Create a Unordered or Ordered List from a simple input. Change the URL to match the base.",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.29",
+            "label": true,
+            "color": "#3f3f3f"
+        },
+        "nodes": [
+            "51db7182c8c27901",
+            "0fe568807e7bd394",
+            "496418a44a66cc5e",
+            "0f1d399c3f14e113",
+            "560371c044ee9e19"
+        ],
+        "x": 34,
+        "y": 359,
+        "w": 682,
+        "h": 162
+    },
+    {
+        "id": "0f5c35ef5c4bf8f5",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Create a Description List from a simple input. Change the URL to match the base",
+        "style": {
+            "label": true,
+            "fill": "#bfdbef",
+            "fill-opacity": "0.4",
+            "color": "#3f3f3f"
+        },
+        "nodes": [
+            "af9ee48ee4da8b11",
+            "168cfe507c55796a",
+            "03979555908332c4",
+            "d08a2076e8158929",
+            "8fc4bf76f457ae68",
+            "95a6c6f3e84b4fea"
+        ],
+        "x": 34,
+        "y": 859,
+        "w": 722,
+        "h": 202
+    },
+    {
+        "id": "0f3fbb9e84943e6b",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Create a table from simple input. Change the URL to match the base",
+        "style": {
+            "fill": "#dbcbe7",
+            "fill-opacity": "0.3",
+            "label": true,
+            "color": "#3f3f3f"
+        },
+        "nodes": [
+            "e30d349d9b3399c8",
+            "d58b7efe68a2da4d",
+            "d52bbc4c5096d4ba",
+            "4ce558165663c95b",
+            "900f97b2b079f1bf",
+            "f38d46523be0c1fe"
+        ],
+        "x": 34,
+        "y": 1147,
+        "w": 852,
+        "h": 174
+    },
+    {
+        "id": "8049618125109f32",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Chaining test. Outputs from the uib-element node can be sent onwards as long as intermediate nodes retain the msg._ui property \\n ",
+        "style": {
+            "fill": "#ffefbf",
+            "fill-opacity": "0.29",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "14ded4d1dc70efbf",
+            "d3cda6078ae9ca73",
+            "d3a95abaddc5c013",
+            "ec046fe7e55e944c",
+            "cef57eb67e055c56",
+            "b18b8a4c83135013",
+            "f042b949d4143ac6"
+        ],
+        "x": 34,
+        "y": 2183,
+        "w": 1002,
+        "h": 214
+    },
+    {
+        "id": "263bd5d828fb96be",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "HTML Passthrough. Input HTML is wrapped in a DIV \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "07f1643db81c0995",
+            "20deb97725012b7e",
+            "da18127ca09d0758",
+            "9eed5fe003f16b5e",
+            "f02b2b567a27e3bf"
+        ],
+        "x": 34,
+        "y": 1723,
+        "w": 642,
+        "h": 138
+    },
+    {
+        "id": "161798c0ebe14c60",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Dynamically change the page title, description and 1st H1 tag on the page \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "9b8878a8a530e1b9",
+            "7ed058d7900e3daa",
+            "d94e668db5709de3"
+        ],
+        "x": 34,
+        "y": 1903,
+        "w": 482,
+        "h": 98
+    },
+    {
+        "id": "65795642cec1af50",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Dynamically add a row to an existing table \\n ",
+        "style": {
+            "fill": "#dbcbe7",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "58968670b8adf81b",
+            "b8338b38fa0f261f",
+            "a05186890868f6cb"
+        ],
+        "x": 94,
+        "y": 1323,
+        "w": 482,
+        "h": 98
+    },
+    {
+        "id": "42a2b3e7d6c165bf",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Dynamically add a textbox \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "e1795c2c54ee3880",
+            "0ff90fd3f27b33be",
+            "8b561177d69cb6d3",
+            "6e5aada95fc82d83"
+        ],
+        "x": 34,
+        "y": 2023,
+        "w": 582,
+        "h": 138
+    },
+    {
+        "id": "08f358ec9af4dfc2",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Dynamically add a row to an existing list. Update the list style for an entry \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "f8db205586825dcd",
+            "474079d2dd072158",
+            "685760eb828baa61",
+            "5df757879277f3a3",
+            "c2dcca959c44112c",
+            "c87017ebcab8dc1a",
+            "e51ee02c0622e551",
+            "92af2057a4b6218f"
+        ],
+        "x": 94,
+        "y": 523,
+        "w": 722,
+        "h": 298
+    },
+    {
+        "id": "f6154314aee80d24",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Dynamically insert an input form with auto-send data to node-red via a button. \\n ",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "ede83b9af785c506",
+            "3923739d82142906",
+            "534ccd905d0adc50",
+            "85fd31019802a001",
+            "f6094a474faf5649",
+            "495d6cfe53a5351a"
+        ],
+        "x": 34,
+        "y": 1503,
+        "w": 652,
+        "h": 178
+    },
+    {
+        "id": "195a61f93a912086",
+        "type": "junction",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "x": 340,
+        "y": 160,
+        "wires": [
+            [
+                "90794d03f65a40d4"
+            ]
+        ]
+    },
+    {
+        "id": "454da28ef00e68b6",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 160,
+        "wires": [
+            [
+                "195a61f93a912086"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "90794d03f65a40d4",
+        "type": "uibuilder",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "",
+        "topic": "",
+        "url": "uib-element-test",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0-beta",
+        "showMsgUib": true,
+        "x": 510,
+        "y": 160,
+        "wires": [
+            [
+                "26fbd32ea1d00ff2"
+            ],
+            [
+                "a48c0beb68e76845"
+            ]
+        ],
+        "info": "This example uses the default blank template.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript."
+    },
+    {
+        "id": "26fbd32ea1d00ff2",
+        "type": "debug",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 655,
+        "y": 120,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "a48c0beb68e76845",
+        "type": "debug",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "uibuilder control output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 655,
+        "y": 180,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "c492d5d86eb0cfcb",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 130,
+        "y": 200,
+        "wires": [
+            [
+                "195a61f93a912086"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "f0f4f6c5a20a1823",
+        "type": "comment",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 480,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "51db7182c8c27901",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "e1901bb3da85dd78",
+        "name": "Plain UL/OL List (Array)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "[\"LI One\",\"LI Two\",[\"LI Three a\",\"LI Three b\"],\"LI Four\"]",
+        "payloadType": "json",
+        "x": 200,
+        "y": 400,
+        "wires": [
+            [
+                "496418a44a66cc5e"
+            ]
+        ]
+    },
+    {
+        "id": "0fe568807e7bd394",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "e1901bb3da85dd78",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 240,
+        "y": 480,
+        "wires": [
+            [
+                "496418a44a66cc5e"
+            ]
+        ]
+    },
+    {
+        "id": "e30d349d9b3399c8",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "0f3fbb9e84943e6b",
+        "name": "Plain Table (Object)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-table-from-object",
+        "payload": "{\"ROW1\":{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\"},\"ROW2\":{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\"}}",
+        "payloadType": "json",
+        "x": 170,
+        "y": 1200,
+        "wires": [
+            [
+                "d52bbc4c5096d4ba"
+            ]
+        ]
+    },
+    {
+        "id": "d58b7efe68a2da4d",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "0f3fbb9e84943e6b",
+        "name": "Plain Table (Array)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-table-from-array",
+        "payload": "[{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\"},{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\"}]",
+        "payloadType": "json",
+        "x": 170,
+        "y": 1240,
+        "wires": [
+            [
+                "d52bbc4c5096d4ba"
+            ]
+        ]
+    },
+    {
+        "id": "14ded4d1dc70efbf",
+        "type": "change",
+        "z": "3badb0a6906eef7f",
+        "g": "8049618125109f32",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"ROW1\":{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\"},\"ROW2\":{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\"}}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 520,
+        "y": 2240,
+        "wires": [
+            [
+                "d3a95abaddc5c013"
+            ]
+        ]
+    },
+    {
+        "id": "d3cda6078ae9ca73",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "8049618125109f32",
+        "name": "Plain List",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "Chain 1 & 2",
+        "payload": "[\"LI One\",\"LI Two\",\"LI Three\",\"LI Four\"]",
+        "payloadType": "json",
+        "x": 140,
+        "y": 2240,
+        "wires": [
+            [
+                "ec046fe7e55e944c"
+            ]
+        ]
+    },
+    {
+        "id": "d52bbc4c5096d4ba",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "0f3fbb9e84943e6b",
+        "name": "",
+        "topic": "eltest-tbl",
+        "elementtype": "table",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-tbl",
+        "elementIdSourceType": "str",
+        "heading": "My Table Heading (h4)",
+        "headingSourceType": "str",
+        "headingLevel": "h4",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 500,
+        "y": 1260,
+        "wires": [
+            [
+                "f38d46523be0c1fe"
+            ]
+        ]
+    },
+    {
+        "id": "d3a95abaddc5c013",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "8049618125109f32",
+        "name": "",
+        "topic": "chain2",
+        "elementtype": "table",
+        "parent": "#chain1 li:nth-child(3)",
+        "parentSource": "#chain1 > li:nth-child(3)",
+        "parentSourceType": "str",
+        "elementid": "chain2",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 760,
+        "y": 2240,
+        "wires": [
+            [
+                "f042b949d4143ac6"
+            ]
+        ]
+    },
+    {
+        "id": "496418a44a66cc5e",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "e1901bb3da85dd78",
+        "name": "",
+        "topic": "eltest-ul-ol",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-ul-ol",
+        "elementIdSourceType": "str",
+        "heading": "My Heading",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 520,
+        "y": 440,
+        "wires": [
+            [
+                "560371c044ee9e19"
+            ]
+        ]
+    },
+    {
+        "id": "ec046fe7e55e944c",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "8049618125109f32",
+        "name": "",
+        "topic": "chain1",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "chain1",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 330,
+        "y": 2240,
+        "wires": [
+            [
+                "14ded4d1dc70efbf"
+            ]
+        ]
+    },
+    {
+        "id": "4ce558165663c95b",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "0f3fbb9e84943e6b",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 200,
+        "y": 1280,
+        "wires": [
+            [
+                "d52bbc4c5096d4ba"
+            ]
+        ]
+    },
+    {
+        "id": "0f1d399c3f14e113",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "e1901bb3da85dd78",
+        "name": "Plain UL/OL List (Object)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-list",
+        "payload": "{\"L1\":\"LI One\",\"L2\":\"LI Two\",\"L3\":\"LI Three a\",\"L4\":[\"LI Four a\",\"LI Four b\"]}",
+        "payloadType": "json",
+        "x": 190,
+        "y": 440,
+        "wires": [
+            [
+                "496418a44a66cc5e"
+            ]
+        ]
+    },
+    {
+        "id": "af9ee48ee4da8b11",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "0f5c35ef5c4bf8f5",
+        "name": "Plain DL List (Array)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-dl-list",
+        "payload": "[[\"Entry One\",\"Description One\"],[\"Entry Two\",\"Description Two a\",\"Description Two b\",\"Description Two c\"],[\"Entry Three\",\"Description Three\"],[\"Entry Four\",\"Description Four\"]]",
+        "payloadType": "json",
+        "x": 250,
+        "y": 900,
+        "wires": [
+            [
+                "03979555908332c4"
+            ]
+        ]
+    },
+    {
+        "id": "168cfe507c55796a",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "0f5c35ef5c4bf8f5",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 280,
+        "y": 1020,
+        "wires": [
+            [
+                "03979555908332c4"
+            ]
+        ]
+    },
+    {
+        "id": "03979555908332c4",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "0f5c35ef5c4bf8f5",
+        "name": "",
+        "topic": "eltest-dl",
+        "elementtype": "dl",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-dl",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h3",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 570,
+        "y": 960,
+        "wires": [
+            [
+                "95a6c6f3e84b4fea"
+            ]
+        ]
+    },
+    {
+        "id": "d08a2076e8158929",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "0f5c35ef5c4bf8f5",
+        "name": "Plain DL List (List of Objects)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-dl-list",
+        "payload": "[{\"Entry 1\":\"Description 1\"},{\"Entry 2a\":\"Description 2a\",\"Entry 2b\":\"Description 2b - this wont show. Use List not object for multiple Descriptions.\"},{\"Entry 3\":[\"Description 3 a\",\"Description 3 b\"]},{\"Entry 4\":\"Description 4\"}]",
+        "payloadType": "json",
+        "x": 220,
+        "y": 940,
+        "wires": [
+            [
+                "03979555908332c4"
+            ]
+        ]
+    },
+    {
+        "id": "8fc4bf76f457ae68",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "0f5c35ef5c4bf8f5",
+        "name": "Plain DL List (Object of Objects)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-dl-list",
+        "payload": "{\"ONE\":{\"A\":\"LI One A\"},\"TWO\":{\"B\":[\"LI Two B1\",\"LI Two B2\"]},\"THREE\":{\"C\":{\"C1\":\"LI Three C1\",\"C2\":\"LI Three C2\"}}}",
+        "payloadType": "json",
+        "x": 210,
+        "y": 980,
+        "wires": [
+            [
+                "03979555908332c4"
+            ]
+        ]
+    },
+    {
+        "id": "900f97b2b079f1bf",
+        "type": "comment",
+        "z": "3badb0a6906eef7f",
+        "g": "0f3fbb9e84943e6b",
+        "name": "Send the UL/OL list and change the Parent to `#eltest-ul-ol *[data-row-index=\"3\"]` \\n (without the quotes) to insert the table into the list entry #3",
+        "info": "",
+        "x": 580,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "cef57eb67e055c56",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "8049618125109f32",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 2280,
+        "wires": [
+            [
+                "ec046fe7e55e944c"
+            ]
+        ]
+    },
+    {
+        "id": "b18b8a4c83135013",
+        "type": "comment",
+        "z": "3badb0a6906eef7f",
+        "g": "8049618125109f32",
+        "name": "Limitation: we have to resend everything just to update one thing. \\n Instead, consider using this to create the HTML then copy the HTML using your browser's developer tools \\n then save the HTML into the index.html file. \\n You can still update using a uib-element node with the same ID or you can use a uib-update node as appropriate.",
+        "info": "",
+        "x": 620,
+        "y": 2320,
+        "wires": []
+    },
+    {
+        "id": "c203417099e22d29",
+        "type": "link in",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "link in 7",
+        "links": [
+            "560371c044ee9e19",
+            "95a6c6f3e84b4fea",
+            "f38d46523be0c1fe",
+            "f042b949d4143ac6",
+            "afc4e1285d293ea2",
+            "20deb97725012b7e",
+            "0f9326dcaa809c08",
+            "d646582f8df58be8",
+            "7ed058d7900e3daa",
+            "a176947e40e66640",
+            "cbcaeaa33ea034ac",
+            "b8338b38fa0f261f",
+            "0ff90fd3f27b33be",
+            "474079d2dd072158",
+            "62512a9068ae52c9",
+            "534ccd905d0adc50",
+            "88abbd5438821f7a"
+        ],
+        "x": 205,
+        "y": 120,
+        "wires": [
+            [
+                "90794d03f65a40d4"
+            ]
+        ]
+    },
+    {
+        "id": "560371c044ee9e19",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "e1901bb3da85dd78",
+        "name": "link out 14",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 675,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "95a6c6f3e84b4fea",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "0f5c35ef5c4bf8f5",
+        "name": "link out 15",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 715,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "f38d46523be0c1fe",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "0f3fbb9e84943e6b",
+        "name": "link out 16",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 655,
+        "y": 1260,
+        "wires": []
+    },
+    {
+        "id": "f042b949d4143ac6",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "8049618125109f32",
+        "name": "link out 17",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 995,
+        "y": 2240,
+        "wires": []
+    },
+    {
+        "id": "07f1643db81c0995",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "263bd5d828fb96be",
+        "name": "",
+        "topic": "eltest-html",
+        "elementtype": "html",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-html",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 490,
+        "y": 1800,
+        "wires": [
+            [
+                "20deb97725012b7e"
+            ]
+        ]
+    },
+    {
+        "id": "20deb97725012b7e",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "263bd5d828fb96be",
+        "name": "link out 18",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 635,
+        "y": 1800,
+        "wires": []
+    },
+    {
+        "id": "da18127ca09d0758",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "263bd5d828fb96be",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-html-from-html",
+        "payload": "{\t    \"mystring\": \"Boo-hoo\",\t    \"mynumber\": $formatInteger($random() * 100, \"#00\")\t}\t    ",
+        "payloadType": "jsonata",
+        "x": 150,
+        "y": 1780,
+        "wires": [
+            [
+                "f02b2b567a27e3bf"
+            ]
+        ]
+    },
+    {
+        "id": "9eed5fe003f16b5e",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "263bd5d828fb96be",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 1820,
+        "wires": [
+            [
+                "07f1643db81c0995"
+            ]
+        ]
+    },
+    {
+        "id": "f02b2b567a27e3bf",
+        "type": "template",
+        "z": "3badb0a6906eef7f",
+        "g": "263bd5d828fb96be",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "This is the payload: \n<p>\n<i>{{payload.mystring}}</i>,\n</p><p>\n<b>{{payload.mynumber}}</b>.\n</p>",
+        "output": "str",
+        "x": 280,
+        "y": 1780,
+        "wires": [
+            [
+                "07f1643db81c0995"
+            ]
+        ]
+    },
+    {
+        "id": "9b8878a8a530e1b9",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "161798c0ebe14c60",
+        "name": "",
+        "topic": "eltest-title",
+        "elementtype": "title",
+        "parent": "body",
+        "parentSource": "body",
+        "parentSourceType": "str",
+        "elementid": "eltest-title",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 320,
+        "y": 1960,
+        "wires": [
+            [
+                "7ed058d7900e3daa"
+            ]
+        ]
+    },
+    {
+        "id": "7ed058d7900e3daa",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "161798c0ebe14c60",
+        "name": "link out 21",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 475,
+        "y": 1960,
+        "wires": []
+    },
+    {
+        "id": "58968670b8adf81b",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "65795642cec1af50",
+        "name": "",
+        "topic": "",
+        "elementtype": "tr",
+        "parent": "#eltest-tbl",
+        "parentSource": "#eltest-tbl",
+        "parentSourceType": "str",
+        "elementid": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "1",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 390,
+        "y": 1380,
+        "wires": [
+            [
+                "b8338b38fa0f261f"
+            ]
+        ]
+    },
+    {
+        "id": "b8338b38fa0f261f",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "65795642cec1af50",
+        "name": "link out 24",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 535,
+        "y": 1380,
+        "wires": []
+    },
+    {
+        "id": "a05186890868f6cb",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "65795642cec1af50",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-update-title",
+        "payload": "{\"COL1\":\"**\",\"COL2\":\"**\"}",
+        "payloadType": "json",
+        "x": 190,
+        "y": 1380,
+        "wires": [
+            [
+                "58968670b8adf81b"
+            ]
+        ]
+    },
+    {
+        "id": "d94e668db5709de3",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "161798c0ebe14c60",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-update-title",
+        "payload": "\"[\" & $formatInteger($random() * 100, \"#00\") & \"] Dynamic title\"",
+        "payloadType": "jsonata",
+        "x": 130,
+        "y": 1960,
+        "wires": [
+            [
+                "9b8878a8a530e1b9"
+            ]
+        ]
+    },
+    {
+        "id": "e1795c2c54ee3880",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "42a2b3e7d6c165bf",
+        "name": "",
+        "topic": "eltest-textbox",
+        "elementtype": "article",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-textbox",
+        "elementIdSourceType": "str",
+        "heading": "A <u>Manually</u> Inserted Heading",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 420,
+        "y": 2080,
+        "wires": [
+            [
+                "0ff90fd3f27b33be"
+            ]
+        ]
+    },
+    {
+        "id": "0ff90fd3f27b33be",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "42a2b3e7d6c165bf",
+        "name": "link out 25",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 575,
+        "y": 2080,
+        "wires": []
+    },
+    {
+        "id": "8b561177d69cb6d3",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "42a2b3e7d6c165bf",
+        "name": "Inject text/HTML",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-article",
+        "payload": "Some <b><u>HTML</u></b> inserted dynamically.",
+        "payloadType": "str",
+        "x": 160,
+        "y": 2080,
+        "wires": [
+            [
+                "e1795c2c54ee3880"
+            ]
+        ]
+    },
+    {
+        "id": "f8db205586825dcd",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "08f358ec9af4dfc2",
+        "name": "",
+        "topic": "",
+        "elementtype": "li",
+        "parent": "#eltest-ul-ol",
+        "parentSource": "#eltest-ul-ol",
+        "parentSourceType": "str",
+        "elementid": "",
+        "elementIdSourceType": "str",
+        "heading": "IGNORED",
+        "headingLevel": "h2",
+        "position": "last",
+        "confData": {},
+        "x": 540,
+        "y": 580,
+        "wires": [
+            [
+                "474079d2dd072158"
+            ]
+        ]
+    },
+    {
+        "id": "474079d2dd072158",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "08f358ec9af4dfc2",
+        "name": "link out 26",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 775,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "685760eb828baa61",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "08f358ec9af4dfc2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "add-to-list",
+        "payload": "A am a new list entry 😁",
+        "payloadType": "str",
+        "x": 190,
+        "y": 580,
+        "wires": [
+            [
+                "f8db205586825dcd"
+            ]
+        ]
+    },
+    {
+        "id": "5df757879277f3a3",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "08f358ec9af4dfc2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "add-to-list-array",
+        "payload": "[\"One new\", \"Two new\"]",
+        "payloadType": "json",
+        "x": 240,
+        "y": 620,
+        "wires": [
+            [
+                "f8db205586825dcd"
+            ]
+        ]
+    },
+    {
+        "id": "c2dcca959c44112c",
+        "type": "uib-update",
+        "z": "3badb0a6906eef7f",
+        "g": "08f358ec9af4dfc2",
+        "name": "",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "modeType",
+        "cssSelector": "\"#eltest-ul-ol  li:nth-child(\" & payload & \")\"",
+        "cssSelectorType": "jsonata",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "{\"style\":\"list-style: \\\"✅\\\";\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 570,
+        "y": 680,
+        "wires": [
+            [
+                "474079d2dd072158"
+            ]
+        ]
+    },
+    {
+        "id": "c87017ebcab8dc1a",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "08f358ec9af4dfc2",
+        "name": "Tick off #2",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload3",
+                "v": "\"#eltest-ul-ol  li:nth-child(2)\"",
+                "vt": "jsonata"
+            },
+            {
+                "p": "payload4",
+                "v": "#eltest-ul-o",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "tick-off-two",
+        "payload": "2",
+        "payloadType": "str",
+        "x": 200,
+        "y": 680,
+        "wires": [
+            [
+                "c2dcca959c44112c"
+            ]
+        ]
+    },
+    {
+        "id": "e51ee02c0622e551",
+        "type": "uib-update",
+        "z": "3badb0a6906eef7f",
+        "g": "08f358ec9af4dfc2",
+        "name": "",
+        "topic": "",
+        "mode": "delete",
+        "modeSourceType": "modeType",
+        "cssSelector": "\"#eltest-ul-ol  li:nth-child(\" & payload & \")\"",
+        "cssSelectorType": "jsonata",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 570,
+        "y": 780,
+        "wires": [
+            [
+                "474079d2dd072158"
+            ]
+        ]
+    },
+    {
+        "id": "92af2057a4b6218f",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "08f358ec9af4dfc2",
+        "name": "Delete #2",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "delete-#two",
+        "payload": "2",
+        "payloadType": "str",
+        "x": 200,
+        "y": 780,
+        "wires": [
+            [
+                "e51ee02c0622e551"
+            ]
+        ]
+    },
+    {
+        "id": "8a39826860e82c51",
+        "type": "uib-update",
+        "z": "3badb0a6906eef7f",
+        "name": "",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "modeType",
+        "cssSelector": "#eltest-ul-ol  li",
+        "cssSelectorType": "str",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "{\"style\":\"list-style: \\\"🚑\\\";\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 520,
+        "y": 740,
+        "wires": [
+            [
+                "474079d2dd072158"
+            ]
+        ]
+    },
+    {
+        "id": "88c5781097ea7ef5",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "name": "Update all li's",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "update-all-li",
+        "x": 210,
+        "y": 740,
+        "wires": [
+            [
+                "8a39826860e82c51"
+            ]
+        ]
+    },
+    {
         "id": "ede83b9af785c506",
         "type": "uib-element",
         "z": "3badb0a6906eef7f",
@@ -24,6 +1665,284 @@
         "wires": [
             [
                 "534ccd905d0adc50"
+            ]
+        ]
+    },
+    {
+        "id": "3923739d82142906",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "f6154314aee80d24",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "sform1",
+        "payload": "[{\"id\":\"r1\",\"type\":\"text\",\"required\":false,\"label\":\"Text Input:\",\"value\":\"Foo\"},{\"id\":\"r2\",\"type\":\"color\",\"required\":false,\"label\":\"Colour:\",\"value\":\"#427798\"},{\"id\":\"r3\",\"type\":\"date\",\"required\":true,\"label\":\"Date:\"},{\"id\":\"r4\",\"type\":\"range\",\"required\":false,\"label\":\"Range (0-100):\",\"value\":\"20\",\"min\":0,\"max\":100},{\"id\":\"r5\",\"type\":\"button\",\"label\":\"Send to Node-RED\",\"value\":\"Buttons can have values as well\"}]",
+        "payloadType": "json",
+        "x": 210,
+        "y": 1560,
+        "wires": [
+            [
+                "ede83b9af785c506"
+            ]
+        ]
+    },
+    {
+        "id": "534ccd905d0adc50",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "f6154314aee80d24",
+        "name": "link out 29",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 645,
+        "y": 1560,
+        "wires": []
+    },
+    {
+        "id": "d0ab82e45161ca1e",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 240,
+        "wires": [
+            [
+                "195a61f93a912086"
+            ]
+        ]
+    },
+    {
+        "id": "262ab2295096703e",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Toggle Visible Status",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showStatus\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 280,
+        "wires": [
+            [
+                "195a61f93a912086"
+            ]
+        ]
+    },
+    {
+        "id": "88abbd5438821f7a",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "link out 30",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 655,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "6221e2b8f2b50df8",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Log Lvl 5",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":5}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 440,
+        "y": 240,
+        "wires": [
+            [
+                "88abbd5438821f7a"
+            ]
+        ]
+    },
+    {
+        "id": "0dd33ba823c0af7b",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Log Lvl 0",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":0}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 440,
+        "y": 280,
+        "wires": [
+            [
+                "88abbd5438821f7a"
+            ]
+        ]
+    },
+    {
+        "id": "85fd31019802a001",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "f6154314aee80d24",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 200,
+        "y": 1600,
+        "wires": [
+            [
+                "ede83b9af785c506"
+            ]
+        ]
+    },
+    {
+        "id": "f6094a474faf5649",
+        "type": "uib-update",
+        "z": "3badb0a6906eef7f",
+        "g": "f6154314aee80d24",
+        "name": "",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "update",
+        "cssSelector": "topic",
+        "cssSelectorType": "msg",
+        "slotSourceProp": "",
+        "slotSourcePropType": "str",
+        "attribsSource": "{ \"value\": payload }",
+        "attribsSourceType": "jsonata",
+        "slotPropMarkdown": false,
+        "x": 410,
+        "y": 1640,
+        "wires": [
+            [
+                "534ccd905d0adc50"
+            ]
+        ]
+    },
+    {
+        "id": "495d6cfe53a5351a",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "f6154314aee80d24",
+        "name": "Change row 1 value",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "#r1",
+        "payload": "Bah",
+        "payloadType": "str",
+        "x": 170,
+        "y": 1640,
+        "wires": [
+            [
+                "f6094a474faf5649"
+            ]
+        ]
+    },
+    {
+        "id": "31f1c33627de3ec3",
+        "type": "comment",
+        "z": "3badb0a6906eef7f",
+        "name": "Zero-Code Examples. Flows for all uib-element types",
+        "info": "",
+        "x": 230,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "6e5aada95fc82d83",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "42a2b3e7d6c165bf",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 180,
+        "y": 2120,
+        "wires": [
+            [
+                "e1795c2c54ee3880"
             ]
         ]
     }
