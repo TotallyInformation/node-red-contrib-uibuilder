@@ -34,12 +34,20 @@ lastUpdated: 2022-06-18 17:17:42
 
 ## Message types
 
-uibuilder has two general types of pre-defined message. 
+uibuilder has three general types of pre-defined message. 
 
 - Input UI configuration messages 
   
-  Input messages containing a `msg._ui` property will not trigger the client libraries on-change method. Instead it is passed through the clients UI building functions and will "hydrate" the configuration data into HTML that is inserted into the browsers DOM (e.g. it updates the UI).
+  Input messages containing a `msg._ui` property are pre-processed by the client's UI building functions and will "hydrate" the configuration data into HTML that is inserted into the browsers DOM (e.g. it updates the UI).
 
+  Such messages do not trigger the `onChange('msg', ...)` or `onTopic(topic, ...)` functions.
+
+- Input command messages
+
+  Input messages containing a `msg._uib` property are pre-processed by the client's command handler. This lets you control the client and change its settings from Node-RED.
+
+  Such messages do not trigger the `onChange('msg', ...)` or `onTopic(topic, ...)` functions.
+  
 - Output control messages
 
   A number of standard control messages may be output from the lower output port of the uibuilder node. These may be informational, control caching, notify of errors
