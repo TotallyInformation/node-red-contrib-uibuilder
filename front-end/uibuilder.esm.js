@@ -5151,7 +5151,7 @@ ioPath: ${this.ioPath}`)();
       if (options.ioPath !== void 0 && options.ioPath !== null && options.ioPath !== "")
         this.set("ioPath", options.ioPath);
     }
-    if (document.styleSheets.length >= 1 || document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) {
+    if (document.styleSheets.length >= 1 || document.styleSheets.length === 1 && document.styleSheets[0].cssRules.length === 0) {
       log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
     } else {
       if (options && options.loadStylesheet === false)

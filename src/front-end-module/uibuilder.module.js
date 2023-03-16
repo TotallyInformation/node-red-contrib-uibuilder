@@ -2733,7 +2733,7 @@ export const Uib = class Uib {
         }
 
         // Do we need to load styles?
-        if ( document.styleSheets.length >= 1 || (document.styleSheets.length === 0 && document.styleSheets[0].cssRules.length === 0) ) {
+        if ( document.styleSheets.length >= 1 || (document.styleSheets.length === 1 && document.styleSheets[0].cssRules.length === 0) ) {
             log('info', 'Uib:start', 'Styles already loaded so not loading uibuilder default styles.')()
         } else {
             if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
