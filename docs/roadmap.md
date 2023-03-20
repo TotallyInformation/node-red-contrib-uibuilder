@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-03-05 18:05:36
+lastUpdated: 2023-03-06 12:56:33
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -60,6 +60,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ----
 
+## Questions that need answers
+
+* How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
+* How to provide a better log output? With a simple way to link to Node-RED log output (filtered) as well as a dedicated output node. That output's to a web page with highlighting and possibly page back/fwd through history.
+
 ## vNext - the next release after current (v6.2)
 
 * **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations
@@ -100,10 +105,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ## Next - these are things that need to be done
 
-* Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48.
+* Incorporate [Socket.IO v4.6 features](https://github.com/socketio/socket.io/releases/tag/4.6.0) - particularly connection state recovery.
+
+* Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
 
 * Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
-* Allow control of showMsg from Node-RED.
 
 * Improvements to `uib-cache` node
   * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
@@ -123,7 +129,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Disable or hide inputs when unused for a specific type.
   * As more element types are added, group into types: main, add, form, etc
   * ? Have JSON input msg templates for each type with links to copy to clipboard ?
-  * ?? update mode - change to replace mode? Replace mode looks for root id, if found, replace outerHTML, if not found add.
   * Add more elements:
     * [x] List (ul, ol, dl)
       * Future improvements:
@@ -132,6 +137,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
         * ? Optional list leading/trailing text ?
     * [x] Table
       * Future improvements:
+        * Additional field definitions in input data
         * Better validation of input data
         * Caption
         * If named row comes from a field, make sure it is the 1st col and marked as a th
@@ -153,28 +159,55 @@ To see what is currently being developed, please look at the "Unreleased" sectio
         * Eventually add extended inputs such as HTML WYSIWYG/Markdown
         * Add Auto-complete for text inputs
         * If no button added, make each input send changes direct - or possibly add that as an optional setting.
+    
     * [ ] Status Box, Status Panel - [ref](https://discourse.nodered.org/t/web-endpoint-status-dashboard-uibuilder-zero-code-example/75740)
-    * [ ] Grid/Flex-Grid (with option to turn on visible grid to help with layout)
-    * [ ] Markdown - allow raw Markdown to be sent similar to the HTML element (will require the Markdown-IT library to be loaded)
-    * [ ] Form
+      A segmented vertical/horizontal status/progress panel. For things like battery displays, etc.
+      Each status box has a coloured sidepanel to show the status.
+
+    * [ ] Toggle button, Toggle button panel
+      Similar to the status box/panel but for buttons.
+
+    * [ ] Grid/Flex-Grid
+       Standardised layout. With option to turn on visible grid to help with layout.
+
+    * [ ] Markdown
+      Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
+
+    * Individual Form Elements
+      This is to enable additional form elements to be added to an existing form.
       * [ ] Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
-      * [ ] Inputs: incl text, number, time, date, colour picker, ...
+      * [ ] Input
       * [ ] button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
-    * [ ] Para (with a section title and multiple paragraphs, optional html in text, ?optional markdown?)
+
     * [ ] tbody
-    * [ ] iFrame - https://flows.nodered.org/node/node-red-node-ui-iframe
+      Additional table body sections. [ref](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tbody#multiple_bodies)
+
+    * [ ] iFrame
+      As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
+
     * [ ] notify (globalNotification)
+
     * [ ] Modal Dialogue
-    * [ ] LED (on/off/colour/brightness) - ref: node-red-contrib-ui-led
-    * [ ] Status timeline. https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js (Maybe uPlot with timeline plugin)
-    * [ ] Image. Buffer->data uri->img tag, data uri->img tag, filename->img tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
-    * [ ] Container (with option for drag/drop of contents) [ref](https://discourse.nodered.org/t/is-there-a-pallete-that-can-do-this/75143?u=totallyinformation)
+
+    * [ ] LED (on/off/colour/brightness), LED panel
+      As for [ui-led](https://flows.nodered.org/node/node-red-contrib-ui-led)
+
+    * [ ] Status timeline
+      Maybe uPlot with timeline plugin? [ref](https://github.com/hotNipi/node-red-contrib-ui-state-trail/blob/master/ui-state-trail.js)
+
+    * [ ] Image. 
+       Allowing for buffer->data-uri->img-tag, data-uri->img-tag, URL->img-tag. [ref](https://flows.nodered.org/node/node-red-contrib-image-tools)
+
+    * [ ] Container
+      Standard layout. With option for drag/drop of contents. [ref](https://discourse.nodered.org/t/is-there-a-pallete-that-can-do-this/75143?u=totallyinformation)
+
     * [ ] Style/Theme changer.
-    * [ ] Segmented vertical/horizontal status/progress panel. For things like battery displays, etc.
+      Extended version of the one in my experimental W3C Components repo. Will let you change between light/dark mode, change base colours, etc. [Example component](https://github.com/TotallyInformation/web-components/blob/main/components/uib-theme-changer.js)
 
   * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
 * Extensions to the `uib-update` node
+  * Add props: `uibUpdated`, `uibUpdatedBy`
   * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
 
 * Continue to improve the new `uib-brand.css`
@@ -185,28 +218,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Check `input:valid` pseudo-class defaults
 
 * Extensions to FE Library
-  * Control from Node-RED. Functions to implement:
-    * [x] get/set
-    * [x] showMsg(boolean, parent=body)
-    * [x] showStatus(boolean, parent=body)
-    * [ ] uiGet (probably better to implement the `uib-get` node?)
-    * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
-    * [ ] htmlSend()
-    * [ ] getStore, setStore, removeStore
-    * [ ] watchDom(startStop), uiWatch(cssSelector)
-    * [ ] reload, navigate(url)
-    * [ ] setPing
-    * [ ] `elementExists(selector)`, `elementIsVisible(selector)`
-
-  * New functions:
-    * `htmlSend()` - sends the current web page back to Node-RED.
-    * `uiWatch(cssSelector)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too.
-    * `uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.
-    * `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
-    * `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
-    * `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
-
-  * Add `window.uib` as a synonym of `window.uibuilder`.
+  * Move UI code to separate include. To allow its use in the `uib-html` node.
   * Add flags to track if the optional Markdown-IT or DOMPurify libraries are loaded and available.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
@@ -243,6 +255,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
   * Get better control over what control messages can be sent. Centralise the list of control messages in use.
+  * Add functions for manipulating SVG's.
   
   * Allow for PWA use:
     * Check for OFFLINE use and supress transport errors
@@ -355,9 +368,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add new doc to explain the HTML document hierarchy.
   * WIKI
     * Update examples
+    * [Helmet Example](https://www.npmjs.com/package/helmet)
   * Flows site
     * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
-
+  * Videos
+    * Mix of HTML and uibuilder uib-update for simple tasks.
+    * Caching
+    * Dynamically modify CSS class for HTML elements
+    * Forms - zero-code
+    * UI updates using low-code. [ref](https://discourse.nodered.org/t/uibuilder-documentation-suggestions-and-improvements/74812/33?u=totallyinformation)
 
 
 * **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
@@ -417,6 +436,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 ### General
 
 * Optimise runtime code using esbuild (see node-build.mjs). Reduce runtime dependencies by bundling and move deps to dev deps.
+* Use uibuilder itself to manage docs webpage. Rather than docsify.
 * Allow client id to be set externally.
 * ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
 * Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
@@ -555,6 +575,18 @@ These are some thoughts about possible future direction. They need further thoug
 * Allow switch of log.trace to log.info for advanced debugging (would need new switch in Editor or setting in settings.js:uibuilder)
 * New node: allowing a socket.io "room" to be defined. Will need to pick a current main instance from a dropdown (using API)
    * Change FE to allow for rooms.
+
+* uibuilder "Knowledge Garden"
+  * Requirements
+    - Get a partial or full list of folders and/or files
+    - Display data in resizable panels
+    - Tree view for folders/files
+    - Markdown render and WYSIWYG/WYSIWFM editing - vditor
+  * References
+    - [kajero/src at master · JoelOtter/kajero (github.com)](https://github.com/JoelOtter/kajero/tree/master/src) - interactive notebook
+    - [vditor/README_en_US.md at master · Vanessa219/vditor (github.com)](https://github.com/Vanessa219/vditor/blob/master/README_en_US.md), [Demo example - Vditor (b3log.org)](https://b3log.org/vditor/demo/index.html)
+    - [How to make a resizable panel control with Web Components - DEV Community 👩‍💻👨‍💻](https://dev.to/ndesmic/how-to-make-a-resizable-panel-control-with-web-components-2cpa)
+    - [Draggable & Resizable Panel Component For Vue 3 - Vue Script](https://www.vuescript.com/draggable-resizable-panel/)
 
 
 ### Core (`uibuilder.js`)

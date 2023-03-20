@@ -10,11 +10,106 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+### TO FIX
+
+* Invalid forms not being handled properly in `eventSend`. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
+* Zero-code example needs better wording for UL/OL example. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
+
+### NEW
+
+* Example stand-alone node package as exemplar
+  * probably chart
+  * How to pass data through?
+* Video: Low-code, do anything from Node-RED
+* uib-update: change visual settings
+* Client: allow change of visual settings
+* Use alt logging for websocket disconnects, sleep, error, etc
+
+### Client library
+
+  * Stop msg._ui and (maybe) msg._uib messages from triggering `onChange` and `onTopic`.
+  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+
+  * New functions:
+    * [x] `htmlSend()` - sends the current web page back to Node-RED.
+    * [x] `nodeGet(domNode)` - gets standard data from a DOM node (used internally by uiGet and uiWatch)
+    * [x] `uiWatch(cssSelector)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too. **Set default to TOGGLE**
+    
+    * [x] `uibuilder.include(url, uiOptions)` - include external file. Includes HTML, Images, Video, PDF's and more.
+    
+    * [ ] `uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.
+    * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
+    * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
+    * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
+    * [ ] `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
+    * [ ] `uibuilder.navigate(locationUrl)` - change page
+
+  * Control from Node-RED. Functions to implement:
+    * [x] *v6.1* get/set
+    * [x] *v6.1* showMsg(boolean, parent=body)
+    * [x] *v6.1* showStatus(boolean, parent=body)
+    
+    * [x] htmlSend() - sends the complete current HTML back to node-red
+    * [x] uiGet (probably better to implement the `uib-get` node?)
+    * [ ] `include(url, uiOptions)`
+  
+    * [ ] `loadui()`
+    * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
+    * [ ] getStore, setStore, removeStore - control browser local storage
+    * [ ] watchDom(startStop), uiWatch(cssSelector)
+    * [ ] `navigate(url)`
+    * [ ] setPing
+    * [ ] `elementExists(selector)`, `elementIsVisible(selector)`
+    * [ ] `convertToUI(cssSelector)`
+    
+  * Add `window.uib` as a synonym of `window.uibuilder`.
+
+### `uib-element` Enhancements
+
+* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+* New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
+
+### `uib-update` Enhancements
+
+* New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
+* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+
+
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### General
+
+* `locales` folder with `en-US` subfolder. Ready for l8n.
+
+### Client library changes
+
+* New functions:
+  * `htmlSend()` - sends the current web page back to Node-RED.
+  * `nodeGet(domNode)` - gets standard data from a DOM node (used internally by uiGet and uiWatch)
+  * `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too. If `startStop` is undefined, null or 'toggle', the watch will be toggled.
+
+* Updated functions:
+  * `uiGet` - now uses `nodeGet` for consistency with `uiWatch`.
+  * `$` - now returns first child if selector returns a `<template>` tag. Warn/Error logging added.
+
+### `uib-sender` node changes
+
+* Add the uibuilder node link node id to config data & expand editor checks for url changes. Will mark the node instance as needing re-deployment if the linked uibuilder node changed its URL. This is done by also tracking and recording the node id of the linked uibuilder node.
+
+### `uib-brand.css` updates
+
+* Added intense (more saturated) versions of info, success, warning/warn, failure/error/danger
+* Added `center` as a synonym of `centre`
+* Added `surface5` which has higher lightness than 4.
+
+
+## [v6.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.1...v6.1.0)
+
+Bug Fix: The zero-code example only had a single node in it. Now corrected to have the full example set demonstrating most aspects of the zero-code uib-sender node with some examples of the zero-code uib-update node.
 
 ## [v6.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.0...v6.0.0)
 
