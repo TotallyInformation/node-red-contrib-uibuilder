@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-03-06 12:56:33
+lastUpdated: 2023-03-20 20:35:47
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -218,17 +218,17 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Check `input:valid` pseudo-class defaults
 
 * Extensions to FE Library
+  * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * Move UI code to separate include. To allow its use in the `uib-html` node.
   * Add flags to track if the optional Markdown-IT or DOMPurify libraries are loaded and available.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
-  * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
   * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
 
   * Add ability to save the current DOM.
     * _started_ To local storage - with option to reload on reload
-    * Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
+    * _started_ (manual request is done) Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
 
   * _UI - improvements to the config-/data-driven UI creation features
     * Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process
