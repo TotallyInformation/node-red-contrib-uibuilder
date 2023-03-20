@@ -4244,6 +4244,7 @@
     // --- end of _uiUpdate ---
     // TODO Add more error handling and parameter validation
     /** Handle incoming _ui load requests
+     * Can load JavaScript modules, JavaScript scripts and CSS.
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiLoad(ui) {
@@ -4603,6 +4604,104 @@
       }
     }
     // ---- End of watchDom ---- //
+    /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
+     * Wraps the included object in a div tag.
+     * PDF's, text or unknown MIME types are also wrapped in an iFrame.
+     * @param {string} url The URL of the source file to include
+     * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
+     * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
+     * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
+     */
+    async include(url2, uiOptions) {
+      if (!url2) {
+        log(0, "Uib:include", "url parameter must be provided, skipping.")();
+        return;
+      }
+      if (!uiOptions || !uiOptions.id) {
+        log(0, "Uib:include", "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")();
+        return;
+      }
+      let response;
+      try {
+        response = await fetch(url2);
+      } catch (error) {
+        log(0, "Uib:include", `Fetch of file '${url2}' failed. `, error.message)();
+        return;
+      }
+      if (!response.ok) {
+        log(0, "Uib:include", `Fetch of file '${url2}' failed. Status='${response.statusText}'`)();
+        return;
+      }
+      const contentType = await response.headers.get("content-type");
+      let type = null;
+      if (contentType) {
+        if (contentType.includes("text/html")) {
+          type = "html";
+        } else if (contentType.includes("application/json")) {
+          type = "json";
+        } else if (contentType.includes("multipart/form-data")) {
+          type = "form";
+        } else if (contentType.includes("image/")) {
+          type = "image";
+        } else if (contentType.includes("video/")) {
+          type = "video";
+        } else if (contentType.includes("application/pdf")) {
+          type = "pdf";
+        } else if (contentType.includes("text/plain")) {
+          type = "text";
+        }
+      }
+      let slot = "";
+      switch (type) {
+        case "html": {
+          slot = await response.text();
+          break;
+        }
+        case "json": {
+          const json = await response.json();
+          slot = '<pre class="syntax-highlight">';
+          slot += this.syntaxHighlight(json);
+          slot += "</pre>";
+          break;
+        }
+        case "form": {
+          const json = await response.formData();
+          slot = '<pre class="syntax-highlight">';
+          slot += this.syntaxHighlight(json);
+          slot += "</pre>";
+          break;
+        }
+        case "image": {
+          const myBlob = await response.blob();
+          slot = `<img src="${URL.createObjectURL(myBlob)}">`;
+          break;
+        }
+        case "video": {
+          const myBlob = await response.blob();
+          slot = `<video controls autoplay><source src="${URL.createObjectURL(myBlob)}"></video>`;
+          break;
+        }
+        case "pdf":
+        case "text":
+        default: {
+          const myBlob = await response.blob();
+          slot = `<iframe style="resize:both;" src="${URL.createObjectURL(myBlob)}">`;
+          break;
+        }
+      }
+      uiOptions.type = "div";
+      uiOptions.slot = slot;
+      if (!uiOptions.parent)
+        uiOptions.parent = "body";
+      if (!uiOptions.attributes)
+        uiOptions.attributes = { class: "included" };
+      this._uiReplace({
+        components: [
+          uiOptions
+        ]
+      });
+    }
+    // ---- End of include() ---- //
     //#endregion -------- -------- -------- //
     //#region ------- HTML cache and DOM watch --------- //
     /** Clear the saved DOM from localStorage */

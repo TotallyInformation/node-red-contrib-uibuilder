@@ -42,6 +42,7 @@ Functions accessible in client-side user code.
   - [`syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as formatted HTML](#syntaxhighlightjson---takes-a-javascript-object-or-json-and-outputs-as-formatted-html)
   - [`uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element](#uigetcssselector-propnamenull---get-most-useful-information-or-specific-property-from-a-dom-element)
   - [`uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements](#uiwatchcssselector-startstoptruefalsetoggle-sendtrue-showlogtrue---watches-for-any-changes-to-the-selected-html-elements)
+  - [`include(url, uiOptions)` - insert an external file into the web page](#includeurl-uioptions---insert-an-external-file-into-the-web-page)
 - [HTML/DOM Cacheing](#htmldom-cacheing)
   - [`watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage](#watchdomstartstop---startstop-watching-for-dom-changes-changes-automatically-saved-to-browser-localstorage)
   - [`clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage](#clearhtmlcache---clears-the-html-previously-saved-to-the-browser-localstorage)
@@ -227,7 +228,7 @@ Either from a remote URL or from a text string.
 
 ### `nodeGet(node)` - Get standard details from a DOM node
 
-Used internally by `uiGet`
+Used internally by `uiGet` and other functions. Must be passed a DOM node.
 
 ### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string
 
@@ -326,6 +327,8 @@ Returned data can be sent back to Node-RED using: `uibuilder.send( uibuilder.uiG
 
 Uses `nodeGet` internally.
 
+Can be called from Node-RED with a message like: `{"_uib: {"command": "uiGet", "prop": "#more"} }`.
+
 ### `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements
 
 Uses [Mutation Observer](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver/MutationObserver) to watch for and report on any changes to the DOM (the page).
@@ -334,7 +337,55 @@ Can send the output to the console log (the `showLog` argument. Shows at log lev
 
 Uses `nodeGet` (the same as `uiGet`) to capture standard information about added/removed nodes.
 
-send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too. If `startStop` is undefined, null or 'toggle', the watch will be toggled.
+Sends useful data back to Node-RED automatically. It also triggers a custom event (`uibuilder:domChange`) to allow front-end processing too.
+
+If `startStop` is undefined, null or 'toggle', the watch will be toggled.
+
+Can be called from Node-RED with a message like: `{"_uib: {"command": "uiWatch", "prop": "#more"} }`.
+
+### `include(url, uiOptions)` - insert an external file into the web page
+
+Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch).
+
+The `uiOptions` parameter is **required** and must contain at least an `id` property. Options are:
+
+```json
+{
+  // REQUIRED: Must be unique on the web page and is applied to the wrapping `div` tag.
+  "id": "unique99",
+  // A CSS Selector that identifies the parent element to which the included 
+  // file will be attached. If not provided, 'body' will be used
+  "parent": "#more",
+  // Optional. If the parent has multiple children, identifies where the new element
+  // will be inserted. Defaults to "last". May be "first", "last" or a number.
+  "position": "last",
+  // Optional. Attributes that will be applied to the wrapping DIV tag
+  "attributes": {
+    // NB: The "included" class is applied by default, if adding further 
+    //     classes it is generally best to include that.
+    "class": "myclass included"
+  }
+  // Other properties from the UI `replace` mode may also be included but 
+  // caution is required not to clash with properties from the included file.
+}
+```
+
+Each of the includes are wrapped in a `div` tag to which the supplied `id` attribute is applied along with a class of `included`. This makes styling of the included elements very easy. For example, to style an included image, add something like this to your `index.css` file: `.included img { width: 100%, border:5px solid silver;}`.
+
+The following file types are handled:
+
+* *HTML document/fragment* (*.html) - Will be wrapped in a div given the specified `id` attribute.
+  
+  If the `DOMPurify` library is loaded before the uibuilder client library, it will be used to sanitise the HTML.
+
+* *Image* - Any image file type recognised by the browser will be shown using an `img` tag (wrapped in the div as usual).
+* *Video* - Any video file type recognised by the browser will be shown using a `video` tag (wrapped in the div as usual). The video controls will be shown and it will auto-play if the browser allows it.
+* *JSON* - A `*.json` file will be syntax highlighted and shown in a panel. The syntax highlight CSS is contained in the `uib-brand.css` file and can be copied to your own CSS definitions if needed. The panel is defined as a `pre` tag with the `syntax-highlight` class added.
+* *PDF* - A `*.pdf` file will be shown in a resizable iFrame.
+* *Text* - The contents of the text file will be shown in a resizable iFrame.
+* *Other* - Any other file type will be shown in a resizable iFrame.
+
+Any file type that the browser cannot handle will trigger the browser to automatically download it. This is a browser limitation.
 
 ## HTML/DOM Cacheing
 

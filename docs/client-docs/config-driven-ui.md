@@ -13,17 +13,19 @@ lastUpdated: 2023-01-14 17:08:48
 - [Initial load from JSON URL](#initial-load-from-json-url)
 - [Dynamic changes via messages from Node-RED (or local set)](#dynamic-changes-via-messages-from-node-red-or-local-set)
 - [Available methods](#available-methods)
-- [Method: load](#method-load)
-  - [Caveats and limitations](#caveats-and-limitations)
-  - [Msg schema \& example](#msg-schema--example)
-  - [Example showing load in your own index.js](#example-showing-load-in-your-own-indexjs)
 - [Method: add](#method-add)
   - [Msg schema](#msg-schema)
   - [Example msgs for nested components](#example-msgs-for-nested-components)
+- [Method: load](#method-load)
+  - [Caveats and limitations](#caveats-and-limitations)
+  - [Msg schema](#msg-schema-1)
+  - [Example: Use load method fromt front-end in custom index.js file](#example-use-load-method-fromt-front-end-in-custom-indexjs-file)
+- [Method: replace](#method-replace)
+  - [Schema example](#schema-example)
 - [Method: remove](#method-remove)
 - [Method: removeAll](#method-removeall)
 - [Method: update](#method-update)
-  - [Msg schema](#msg-schema-1)
+  - [Msg schema](#msg-schema-2)
 - [Method: reload - Reloads the current page](#method-reload---reloads-the-current-page)
 - [Method: notify](#method-notify)
   - [HTML Tags](#html-tags)
@@ -74,105 +76,23 @@ All methods and components are processed in the order they appear in the message
 
 ## Available methods
 
-```js
-msg._ui.method = 'load' || 'add' || 'remove' || 'removeAll' || 'update' || 'reload' || 'notify' || 'alert'
+```javascript
+msg._ui.method = 'load' || 'add' || 'remove' || 'removeAll' || 
+                 'update' || 'reload' || 'notify' || 'alert' ||
+                 'replace'
 ```
 
-* [`load`](#method-load): Load a new UI component using `import()` so that it can be used. Used, for example, to dynamically load web components or other modules. It can also load plain JS and CSS.
 * [`add`](#method-add): Add a UI component instance to the web page dynamically.
+* [`alert`](#method-alert): Shows an overlayed alert notification.
+* [`load`](#method-load): Load a new UI component using `import()` so that it can be used. Used, for example, to dynamically load web components or other modules. It can also load plain JS and CSS.
+* [`notify`](#method-notify): Shows an overlayed notification message (toast).
+* [`reload`](#method-reload---reloads-the-current-page): Triggers the page to automatically reload.
 * [`remove`](#method-remove): Remove a UI component instance from the web page dynamically.
 * [`removeAll`](#method-removeAll): Remove a UI component instance from the web page dynamically.
+* [`replace`](#method-replace): Replace an existing element or add it if not found.
 * [`update`](#method-update): Update the settings/data of a UI component instance on the web page.
-* [`reload`](#method-reload---reloads-the-current-page): Triggers the page to automatically reload
-* [`notify`](#method-notify): Shows an overlayed notification message (toast)
-* [`alert`](#method-alert): Shows an overlayed alert notification
 
 Other future possibilities: `reset`
-
-## Method: load
-
-The load method allows you to dynamically load external web components, ECMA modules, plain JavaScript, and CSS stylesheets. It also allows loading of JavaScript and CSS Styles from given text input.
-
-!> Please take note of the limitations and caveats of the load method. It works well for loading web components before adding them dynamically to your UI. Also works well for dynamic changes to scripts and css. However, there are a lot of things that can catch you out. If having issues, use an import statement or a script tag in your front-end code instead.
-
-### Caveats and limitations
-
-* **WARNING**: Passing code dynamically **IS** a potential security issue. Make sure that only safe code is permitted to be passed. There is no way for the front-end library to check the validity or safety of the code.
-
-* If using a relative url, it is relative to the uibuilder client library and NOT relative to your code.
-
-* For the `components` array
-
-  * You cannot use this feature to load web components that you manually put into your index.html file. That is because they will load too late. Only use this where you will dynamically add a component to the page using the UI methods shown here.
-
-  * At present, only ES modules (that use `export` not `exports`) can be dynamically loaded since this feature is primarily aimed at loading [web components](https://developer.mozilla.org/en-US/docs/Web/Web_Components). This feature requires browser support for [Dynamic Imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports).
-
-  * Dynamic Imports happen asynchronously. While this isn't usually a problem, the load does not wait to complete so very occasionally with a particularly complex component or on a particularly slow network, it is possible that the load will not complete before its use. In that case, simply delay the components use or move the load to earlier in the processing.
-
-* For the `srcScripts` and `txtScripts` arrays
-  
-  * Scripts attached these ways generally finish loading too slowly. This means that you cannot use the load method and then use the script in an add method straight away. You would have to load the script in your HTML for that. However, you can load them, for example, in the `loadui` function and then use them later when sending `_ui` msgs from Node-RED. Typically, you will need a second or two before the script will have fully loaded.
-  
-  * `txtScripts` entries must be text, you cannot pass an actual JavaScript function. This is normally OK since Node-RED should convert a function to text as it pushes the data through Socket.IO.
-
-* For the `srcStyles` and `txtStyles` arrays
-  
-  * Styles loaded this way are added to the end of the HTML `head`. As such, if you try to redefine a style that an already loaded stylesheet has set, you may need to add ` !important` to the definition due to CSS specificity rules.
-
-### Msg schema & example
-
-```jsonc
-{
-    "_ui": {
-        "method": "load",
-        "components": [
-            "url1", "url2" // as needed
-        ],
-        // Styles are added to the end of the HEAD
-        "srcStyles": [
-            "https://example.com/libs/my-styles.css"
-        ],
-        "txtStyles": [
-            // Example of overwriting a brand stylesheet entry
-            ":root { --info-hue: 90 !important; }",
-            // We can try to change anything - but will need !important if the pre-loaded sheet already defines it
-            "code { font-size: 120% !important; font-family: fantasy; }"
-        ],
-        // Note that scripts finish loading too slowly which means that you cannot use the load
-        // method and then use the script in an add method. You have to load the script in your HTML for that.
-        // Typically, you will need a second or two before the script will have fully loaded.
-        "srcScripts": [
-            "https://example.com/some/script.js"
-        ],
-        "txtScripts": [
-            // Will be able to do `fred()` in the browser dev console.
-            "function fred() { console.log('HEY! This script loaded dynamically.') }",
-            // But of course, we can execute immediately as well.
-            "fred()"
-        ]
-    }
-}
-```
-
-### Example showing load in your own index.js
-
-Note how this can and usually *should* be done immediately after importing the uibuilder library.
-
-```javascript
-uibuilder.set('msg', {
-    _ui: {
-            "method": "load",
-            "components": [
-                "../uibuilder/vendor/@totallyinformation/web-components/components/definition-list.js",
-                "../uibuilder/vendor/@totallyinformation/web-components/components/data-list.js",
-            ]
-    }
-})
-
-// We don't need this normally any more but just to show
-// you can run a load before running start.
-//uibuilder.start()
-```
 
 ## Method: add
 
@@ -378,6 +298,129 @@ Each component can:
 }
 ```
 
+## Method: load
+
+The load method allows you to dynamically load JavaScript and CSS. For example, external web components, ECMA modules, plain JavaScript, and CSS stylesheets. It also allows loading of JavaScript and CSS Styles from given text input.
+
+> [!ATTENTION]
+> Please take note of the limitations and caveats of the load method for loading JavaScript. It works well for loading web components before adding them dynamically to your UI. Also works well for dynamic changes to scripts and css. However, there are a lot of things that can catch you out. If having issues, use an import statement or a script tag in your front-end code instead.
+
+### Caveats and limitations
+
+* **WARNING**: Passing code dynamically **IS** a potential security issue. Make sure that only safe code is permitted to be passed. There is no way for the front-end library to check the validity or safety of the code.
+
+* If using a relative url, it is relative to the uibuilder client library and NOT relative to your code.
+
+* For the `components` array
+
+  * You cannot use this feature to load web components that you manually put into your index.html file. That is because they will load too late. Only use this where you will dynamically add a component to the page using the UI methods shown here.
+
+  * At present, only ES modules (that use `export` not `exports`) can be dynamically loaded since this feature is primarily aimed at loading [web components](https://developer.mozilla.org/en-US/docs/Web/Web_Components). This feature requires browser support for [Dynamic Imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports).
+
+  * Dynamic Imports happen asynchronously. While this isn't usually a problem, the load does not wait to complete so very occasionally with a particularly complex component or on a particularly slow network, it is possible that the load will not complete before its use. In that case, simply delay the components use or move the load to earlier in the processing.
+
+* For the `srcScripts` and `txtScripts` arrays
+  
+  * Scripts attached these ways generally finish loading too slowly. This means that you cannot use the load method and then use the script in an add method straight away. You would have to load the script in your HTML for that. However, you can load them, for example, in the `loadui` function and then use them later when sending `_ui` msgs from Node-RED. Typically, you will need a second or two before the script will have fully loaded.
+  
+  * `txtScripts` entries must be text, you cannot pass an actual JavaScript function. This is normally OK since Node-RED should convert a function to text as it pushes the data through Socket.IO.
+
+* For the `srcStyles` and `txtStyles` arrays
+  
+  * Styles loaded this way are added to the end of the HTML `head`. As such, if you try to redefine a style that an already loaded stylesheet has set, you may need to add ` !important` to the definition due to CSS specificity rules.
+
+### Msg schema
+
+```jsonc
+{
+    "_ui": {
+        "method": "load",
+        // import() JavaScript Modules from an external URL. Imports are dynamically executed. 
+        "components": [
+            // Dynamic imports happen asynchronously.
+            "url1", "url2" // as needed
+        ],
+        // Add a style tag to the HTML referencing an external CSS file.
+        "srcStyles": [
+            // Styles are added to the end of the HEAD
+            "https://example.com/libs/my-styles.css"
+        ],
+        // Add a style tag to the HTML converting the string entries to styles dynamically.
+        "txtStyles": [
+            // Example of overwriting a brand stylesheet entry
+            ":root { --info-hue: 90 !important; }",
+            // We can try to change anything - but will need !important if the pre-loaded sheet already defines it
+            "code { font-size: 120% !important; font-family: fantasy; }"
+        ],
+        // Add script tags to the HTML referencing external JavaScript - these will be dynamically loaded & executed
+        "srcScripts": [
+            // Note that scripts finish loading too slowly which means that you cannot use the load
+            // method and then use the script in an add method. You have to load the script in your HTML for that.
+            // Typically, you will need a second or two before the script will have fully loaded.
+            "https://example.com/some/script.js"
+        ],
+        // Add script tag to HTML converting the text to JavaScript
+        "txtScripts": [
+            // Will be able to do `fred()` in the browser dev console.
+            "function fred() { console.log('HEY! This script loaded dynamically.') }",
+            // But of course, we can execute immediately as well.
+            "fred()"
+        ]
+    }
+}
+```
+
+### Example: Use load method fromt front-end in custom index.js file
+
+Note how this can and usually *should* be done immediately after importing the uibuilder library.
+
+```javascript
+uibuilder.set('msg', {
+    _ui: {
+            "method": "load",
+            "components": [
+                "../uibuilder/vendor/@totallyinformation/web-components/components/definition-list.js",
+                "../uibuilder/vendor/@totallyinformation/web-components/components/data-list.js",
+            ]
+    }
+})
+
+// We don't need this normally any more but just to show
+// you can run a load before running start.
+//uibuilder.start()
+```
+
+## Method: replace
+
+If the element is found on the page, it will be replaced. Otherwise it will be added.
+
+This is the method used by the `uib-element` node. Try dumping output from that node to the debug panel to see more examples.
+
+### Schema example
+
+```json
+{
+    "_ui": [
+        {
+            "method":"replace",
+            "components": [
+                {
+                    "id":"eltest-html",
+                    "type":"html",
+                    "parent":"#more",
+                    "position":"last",
+                    // Use EITHER slot or components, not both
+                    "slot":"<p>Some inner HTML</p>",
+                    "components": [
+                        // ...
+                    ]
+                }
+            ]
+        }
+    ]
+}
+```
+
 ## Method: remove
 
 The remove method will remove the listed HTML elements from the page assuming they can be found. The search specifier is a [CSS Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) statement.
@@ -431,6 +474,8 @@ Obviously, to update something, you must identify it. You can identify the thing
 > [!TIP]
 > 
 > Unlike the other methods, the *update method* will find **ALL** matching elements and update them. This means that you could, for example, change the text colour of all list entries on the page with a single update.
+
+This is the method used by the `uib-update` node. Dump output from that node to the debug panel to see more examples.
 
 ### Msg schema
 

@@ -26,6 +26,8 @@ Currently, only a page reload control is available. Set `msg._ui` to `{"method":
 
 ## Getting UI Information
 
+### `uiGet`
+
 Sending a message containing a `msg._uib` property set as follows will result in a returned message with standard details about the requested HTML element(s).
 
 ```json
@@ -33,6 +35,16 @@ Sending a message containing a `msg._uib` property set as follows will result in
 ```
 
 Where `prop` has to be set to a valid CSS Selector.
+
+### `uiWatch`
+
+To be automatically informed of changes to some part of the web page UI, you can send a message with `msg._uib` something like this:
+
+```json
+{"command":"uiWatch","prop":"#more"}
+```
+
+Which will watch the `<div id="more">...</div>` element for changes. Any changes to attributes or content will be reported back as standard messages.
 
 
 ## Getting Client Status Information
