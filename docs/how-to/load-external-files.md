@@ -3,8 +3,13 @@ title: How to load external files using uibuilder
 description: >
    Include external HTML, styles, JavaScript and ECMA web components from external files.
 created: 2023-01-04 20:27:33
-lastUpdated: 2023-03-19 15:23:57
+lastUpdated: 2023-03-20 20:34:52
 ---
+
+> [!NOTE]
+> All of the methods listed here can be run either from Node-RED or from custom front-end code.
+>
+> This gives you control from both the server and the browser. Use one or the other, or use both, as the need arises.
 
 ## HTML
 

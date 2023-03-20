@@ -34,7 +34,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
     * [x] `htmlSend()` - sends the current web page back to Node-RED.
     * [x] `nodeGet(domNode)` - gets standard data from a DOM node (used internally by uiGet and uiWatch)
     * [x] `uiWatch(cssSelector)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too. **Set default to TOGGLE**
-    
     * [x] `uibuilder.include(url, uiOptions)` - include external file. Includes HTML, Images, Video, PDF's and more.
     
     * [ ] `uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.
@@ -51,7 +50,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
     
     * [x] htmlSend() - sends the complete current HTML back to node-red
     * [x] uiGet (probably better to implement the `uib-get` node?)
-    * [ ] `include(url, uiOptions)`
+    * [x] `include(url, uiOptions)`
   
     * [ ] `loadui()`
     * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
@@ -87,10 +86,13 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Client library changes
 
-* New functions:
+* New functions - can be run from Node-RED as well as front-end code:
   * `htmlSend()` - sends the current web page back to Node-RED.
-  * `nodeGet(domNode)` - gets standard data from a DOM node (used internally by uiGet and uiWatch)
-  * `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too. If `startStop` is undefined, null or 'toggle', the watch will be toggled.
+  * `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected page elements and uses `uiGet` to send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too. If `startStop` is undefined, null or 'toggle', the watch will be toggled.
+  * `include(url, uiOptions)` - include external files. Includes HTML, Images, Video, PDF's and more.
+
+* New internal functions:
+  * `nodeGet(domNode)` - gets standard data from a DOM node (used internally by uiGet and uiWatch for consistency).
 
 * Updated functions:
   * `uiGet` - now uses `nodeGet` for consistency with `uiWatch`.

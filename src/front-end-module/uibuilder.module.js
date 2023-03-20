@@ -318,9 +318,9 @@ export const Uib = class Uib {
     #isShowMsg = false
     // Has showStatus been turned on?
     #isShowStatus = false
-    // Externally accessible command functions (NB: Case must match)
+    // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
-        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch',
+        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include'
     ]
 
     // What status variables to show via showStatus()
@@ -1921,7 +1921,7 @@ export const Uib = class Uib {
             case 'text':
             default: {
                 const myBlob = await response.blob()
-                slot = `<iframe style="resize:both;" src="${URL.createObjectURL(myBlob)}">`
+                slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(myBlob)}">`
                 break
             }
         }
@@ -2254,6 +2254,74 @@ export const Uib = class Uib {
         this._send(msg, this._ioChannels.client, originator)
     }
 
+    /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
+     * @param {object} msg Msg from Node-RED containing a msg._uib object
+     */
+    _uibCommand(msg) {
+        const cmd = msg._uib.command
+        // Disallowed command request outputs error and ignores the msg (NB: Case must match)
+        if (!this.#extCommands.includes(cmd.trim())) {
+            log('error', 'Uib:_uibCommand', `Command '${cmd} is not allowed to be called externally`)()
+            return
+        }
+        const prop = msg._uib.prop
+        const value = msg._uib.value
+
+        switch (msg._uib.command) {
+            case 'get': {
+                msg.payload = msg._uib.response = this.get(prop)
+                if (!msg.topic) msg.topic = this.topic || `uib get for '${prop}'`
+                this.send(msg)
+                break
+            }
+
+            case 'htmlSend': {
+                this.htmlSend()
+                break
+            }
+
+            case 'set': {
+                msg._uib.response = this.set(prop, value)
+                if (!msg.topic) msg.topic = this.topic || `uib set for '${prop}'`
+                this.send(msg)
+                break
+            }
+
+            case 'showMsg': {
+                this.showMsg(value, prop)
+                break
+            }
+
+            case 'showStatus': {
+                this.showStatus(value, prop)
+                break
+            }
+
+            case 'uiGet': {
+                this.send({
+                    payload: this.uiGet(prop),
+                    topic: this.topic || `uiGet for '${prop}'`,
+                })
+                break
+            }
+
+            case 'uiWatch': {
+                this.uiWatch(prop)
+                break
+            }
+
+            case 'include': {
+                this.include(prop, value)
+                break
+            }
+
+            default: {
+                log('warning', 'Uib:_uibCommand', `Command '${cmd}' not yet implemented`)()
+                break
+            }
+        }
+    } // --- end of _uibCommand ---
+
     // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
     _msgRcvdEvents(msg) {
 
@@ -2273,68 +2341,9 @@ export const Uib = class Uib {
                 return
             }
 
-            /** Process msg._uib.command messages - allows Node-RED to run uibuilder FE functions */
+            // Process msg._uib.command messages - allows Node-RED to run uibuilder FE functions
             if (msg._uib.command) {
-                const cmd = msg._uib.command
-                // Disallowed command request outputs error and ignores the msg (NB: Case must match)
-                if (!this.#extCommands.includes(cmd.trim())) {
-                    log('error', 'Uib:_msgRcvdEvents:_uib', `Command '${cmd} is not allowed to be called externally`)()
-                    return
-                }
-                const prop = msg._uib.prop
-                const value = msg._uib.value
-
-                // console.log('CMD FROM NODE-RED: ', cmd, ', Prop: ', prop, ', Sent Val: ', value)
-                // 'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet',
-                switch (msg._uib.command) {
-                    case 'get': {
-                        msg.payload = msg._uib.response = this.get(prop)
-                        if (!msg.topic) msg.topic = this.topic || `uiGet for '${prop}'`
-                        this.send(msg)
-                        break
-                    }
-
-                    case 'htmlSend': {
-                        this.htmlSend()
-                        break
-                    }
-
-                    case 'set': {
-                        msg._uib.response = this.set(prop, value)
-                        this.send(msg)
-                        break
-                    }
-
-                    case 'showMsg': {
-                        this.showMsg(value, prop)
-                        break
-                    }
-
-                    case 'showStatus': {
-                        this.showStatus(value, prop)
-                        break
-                    }
-
-                    case 'uiGet': {
-                        this.send({
-                            payload: this.uiGet(prop),
-                            topic: this.topic || `uiGet for '${prop}'`,
-                        })
-                        break
-                    }
-
-                    case 'uiWatch': {
-                        this.uiWatch(prop)
-                        break
-                    }
-
-                    default: {
-                        log('warning', 'Uib:_msgRcvdEvents:command', `Command '${cmd} not yet implemented`)()
-                        // msg._uib.response = this[cmd]()
-                        // this.send(msg)
-                        break
-                    }
-                }
+                this._uibCommand(msg)
                 return
             }
 

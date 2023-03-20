@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-03-05 18:05:25
+lastUpdated: 2023-03-20 20:35:15
 ---
 
 Functions accessible in client-side user code.
@@ -345,7 +345,7 @@ Can be called from Node-RED with a message like: `{"_uib: {"command": "uiWatch",
 
 ### `include(url, uiOptions)` - insert an external file into the web page
 
-Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch).
+Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch). This function is asynchronous, that should be allowed for when using in custom front-end code.
 
 The `uiOptions` parameter is **required** and must contain at least an `id` property. Options are:
 
@@ -386,6 +386,8 @@ The following file types are handled:
 * *Other* - Any other file type will be shown in a resizable iFrame.
 
 Any file type that the browser cannot handle will trigger the browser to automatically download it. This is a browser limitation.
+
+Can be called from Node-RED with a message like: `{"command":"include","prop":"./test.html","value":{"id":"incHtm","parent":"#more","attributes":{"style":"width:50%;"}}}`.
 
 ## HTML/DOM Cacheing
 

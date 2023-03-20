@@ -3284,7 +3284,7 @@ var Uib = (_a = class {
     __privateAdd(this, _isShowMsg, false);
     // Has showStatus been turned on?
     __privateAdd(this, _isShowStatus, false);
-    // Externally accessible command functions (NB: Case must match)
+    // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     __privateAdd(this, _extCommands, [
       "get",
       "set",
@@ -3292,7 +3292,8 @@ var Uib = (_a = class {
       "showMsg",
       "showStatus",
       "uiGet",
-      "uiWatch"
+      "uiWatch",
+      "include"
     ]);
     // What status variables to show via showStatus()
     __privateAdd(this, _showStatus, {
@@ -4684,7 +4685,7 @@ var Uib = (_a = class {
       case "text":
       default: {
         const myBlob = await response.blob();
-        slot = `<iframe style="resize:both;" src="${URL.createObjectURL(myBlob)}">`;
+        slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(myBlob)}">`;
         break;
       }
     }
@@ -4938,6 +4939,66 @@ var Uib = (_a = class {
     log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg)();
     this._send(msg, this._ioChannels.client, originator);
   }
+  /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
+   * @param {object} msg Msg from Node-RED containing a msg._uib object
+   */
+  _uibCommand(msg) {
+    const cmd = msg._uib.command;
+    if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
+      log("error", "Uib:_uibCommand", `Command '${cmd} is not allowed to be called externally`)();
+      return;
+    }
+    const prop = msg._uib.prop;
+    const value2 = msg._uib.value;
+    switch (msg._uib.command) {
+      case "get": {
+        msg.payload = msg._uib.response = this.get(prop);
+        if (!msg.topic)
+          msg.topic = this.topic || `uib get for '${prop}'`;
+        this.send(msg);
+        break;
+      }
+      case "htmlSend": {
+        this.htmlSend();
+        break;
+      }
+      case "set": {
+        msg._uib.response = this.set(prop, value2);
+        if (!msg.topic)
+          msg.topic = this.topic || `uib set for '${prop}'`;
+        this.send(msg);
+        break;
+      }
+      case "showMsg": {
+        this.showMsg(value2, prop);
+        break;
+      }
+      case "showStatus": {
+        this.showStatus(value2, prop);
+        break;
+      }
+      case "uiGet": {
+        this.send({
+          payload: this.uiGet(prop),
+          topic: this.topic || `uiGet for '${prop}'`
+        });
+        break;
+      }
+      case "uiWatch": {
+        this.uiWatch(prop);
+        break;
+      }
+      case "include": {
+        this.include(prop, value2);
+        break;
+      }
+      default: {
+        log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();
+        break;
+      }
+    }
+  }
+  // --- end of _uibCommand ---
   // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
   _msgRcvdEvents(msg) {
     this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
@@ -4950,54 +5011,7 @@ var Uib = (_a = class {
         return;
       }
       if (msg._uib.command) {
-        const cmd = msg._uib.command;
-        if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
-          log("error", "Uib:_msgRcvdEvents:_uib", `Command '${cmd} is not allowed to be called externally`)();
-          return;
-        }
-        const prop = msg._uib.prop;
-        const value2 = msg._uib.value;
-        switch (msg._uib.command) {
-          case "get": {
-            msg.payload = msg._uib.response = this.get(prop);
-            if (!msg.topic)
-              msg.topic = this.topic || `uiGet for '${prop}'`;
-            this.send(msg);
-            break;
-          }
-          case "htmlSend": {
-            this.htmlSend();
-            break;
-          }
-          case "set": {
-            msg._uib.response = this.set(prop, value2);
-            this.send(msg);
-            break;
-          }
-          case "showMsg": {
-            this.showMsg(value2, prop);
-            break;
-          }
-          case "showStatus": {
-            this.showStatus(value2, prop);
-            break;
-          }
-          case "uiGet": {
-            this.send({
-              payload: this.uiGet(prop),
-              topic: this.topic || `uiGet for '${prop}'`
-            });
-            break;
-          }
-          case "uiWatch": {
-            this.uiWatch(prop);
-            break;
-          }
-          default: {
-            log("warning", "Uib:_msgRcvdEvents:command", `Command '${cmd} not yet implemented`)();
-            break;
-          }
-        }
+        this._uibCommand(msg);
         return;
       }
       if (msg._uib.componentRef === "globalNotification") {

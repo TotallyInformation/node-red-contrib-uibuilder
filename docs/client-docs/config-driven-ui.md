@@ -4,7 +4,7 @@ description: >
    This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a uibuilder node where the messages contain a `msg._ui` property.
    This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-01-14 17:08:48
+lastUpdated: 2023-03-20 20:35:30
 ---
 
 - [Dynamic content limitations](#dynamic-content-limitations)
@@ -175,6 +175,9 @@ Each component can:
                 
                 // Optional. Overrides master parent. If no parent given here or in outer, will be added to <body> element
                 "parent": "html selector",
+
+                // Optional. Inserted position inside parent. first, last or a number.
+                "position": "last",
                 
                 // Optional. HTML to add to slot - if not present, the contents of msg.payload will be used. 
                 // This allows multi-components to have their own slot content. 
@@ -396,6 +399,8 @@ If the element is found on the page, it will be replaced. Otherwise it will be a
 
 This is the method used by the `uib-element` node. Try dumping output from that node to the debug panel to see more examples.
 
+Note that the `position` property will be ignored if the element already exists. The replacement element will be put back in the same place. To avoid this, simply issue a `remove` followed by an `add` - both can be issued in the same message.
+
 ### Schema example
 
 ```json
@@ -435,8 +440,9 @@ Note that generic selections such as `li` will remove the **FIRST** matching ele
         // List of component instances to remove from the page - use CSS Selector
         // - will remove the 1st match found so specify multiple times to remove more than one of same selector
         "components": [
-            "selector1",
-            "selector2"
+            "table",
+            "#myid1",
+            ".myclass"
             // and others as desired. Each will be removed in order.
         ]
     }
