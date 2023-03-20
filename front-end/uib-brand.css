@@ -407,6 +407,10 @@
     background-color: var(--surface4);
     color: var(--text1);
 }
+.surface5 {
+    background-color: var(--surface5);
+    color: var(--text1);
+}
 .rad-shadow {
     box-shadow: var(--shadow);
 }
@@ -414,29 +418,33 @@
     color: var(--text1) !important;
     background-color: var(--info) !important;
 }
+.info-intense {
+    color: var(--text1) !important;
+    background-color: var(--info-intense) !important;
+}
 .success {
     color: var(--text1) !important;
     background-color: var(--success) !important;
 }
-.warning {
+.success-intense {
+    color: var(--text1) !important;
+    background-color: var(--success-intense) !important;
+}
+.warning, .warn {
     color: var(--text1) !important;
     background-color: var(--warning) !important;
 }
-.warn {
+.warning-intense, .warn-intense {
     color: var(--text1) !important;
-    background-color: var(--warn) !important;
+    background-color: var(--warning-intense) !important;
 }
-.failure {
+.failure, .error, .danger {
     color: var(--text1) !important;
     background-color: var(--failure) !important;
 }
-.error {
+.failure-intense, .error-intense, .danger-intense {
     color: var(--text1) !important;
-    background-color: var(--error) !important;
-}
-.danger {
-    color: var(--text1) !important;
-    background-color: var(--danger) !important;
+    background-color: var(--failure-intense) !important;
 }
 .primary {
     color: var(--primary-fg);
@@ -680,9 +688,10 @@ input[type="color"] {
     text-transform: uppercase;
 }
 
-.centre {
+.centre, .center {
     margin-left:auto;
     margin-right: auto;
+    text-align: center;
 }
 
 .animate-pulse {
