@@ -2266,52 +2266,46 @@ export const Uib = class Uib {
         }
         const prop = msg._uib.prop
         const value = msg._uib.value
+        let response
 
-        switch (msg._uib.command) {
+        switch (cmd) {
             case 'get': {
-                msg.payload = msg._uib.response = this.get(prop)
-                if (!msg.topic) msg.topic = this.topic || `uib get for '${prop}'`
-                this.send(msg)
+                response = this.get(prop)
                 break
             }
 
             case 'htmlSend': {
-                this.htmlSend()
+                response = this.htmlSend()
                 break
             }
 
             case 'set': {
-                msg._uib.response = this.set(prop, value)
-                if (!msg.topic) msg.topic = this.topic || `uib set for '${prop}'`
-                this.send(msg)
+                response = this.set(prop, value)
                 break
             }
 
             case 'showMsg': {
-                this.showMsg(value, prop)
+                response = this.showMsg(value, prop)
                 break
             }
 
             case 'showStatus': {
-                this.showStatus(value, prop)
+                response = this.showStatus(value, prop)
                 break
             }
 
             case 'uiGet': {
-                this.send({
-                    payload: this.uiGet(prop),
-                    topic: this.topic || `uiGet for '${prop}'`,
-                })
+                response = this.uiGet(prop)
                 break
             }
 
             case 'uiWatch': {
-                this.uiWatch(prop)
+                response = this.uiWatch(prop)
                 break
             }
 
             case 'include': {
-                this.include(prop, value)
+                response = this.include(prop, value)
                 break
             }
 
@@ -2320,6 +2314,13 @@ export const Uib = class Uib {
                 break
             }
         }
+
+        if (response !== undefined && Object(response).constructor !== Promise) {
+            msg.payload = msg._uib.response = response
+            if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
+            this.send(msg)
+        }
+
     } // --- end of _uibCommand ---
 
     // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use

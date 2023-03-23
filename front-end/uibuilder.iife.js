@@ -4951,52 +4951,50 @@
       }
       const prop = msg._uib.prop;
       const value2 = msg._uib.value;
-      switch (msg._uib.command) {
+      let response;
+      switch (cmd) {
         case "get": {
-          msg.payload = msg._uib.response = this.get(prop);
-          if (!msg.topic)
-            msg.topic = this.topic || `uib get for '${prop}'`;
-          this.send(msg);
+          response = this.get(prop);
           break;
         }
         case "htmlSend": {
-          this.htmlSend();
+          response = this.htmlSend();
           break;
         }
         case "set": {
-          msg._uib.response = this.set(prop, value2);
-          if (!msg.topic)
-            msg.topic = this.topic || `uib set for '${prop}'`;
-          this.send(msg);
+          response = this.set(prop, value2);
           break;
         }
         case "showMsg": {
-          this.showMsg(value2, prop);
+          response = this.showMsg(value2, prop);
           break;
         }
         case "showStatus": {
-          this.showStatus(value2, prop);
+          response = this.showStatus(value2, prop);
           break;
         }
         case "uiGet": {
-          this.send({
-            payload: this.uiGet(prop),
-            topic: this.topic || `uiGet for '${prop}'`
-          });
+          response = this.uiGet(prop);
           break;
         }
         case "uiWatch": {
-          this.uiWatch(prop);
+          response = this.uiWatch(prop);
           break;
         }
         case "include": {
-          this.include(prop, value2);
+          response = this.include(prop, value2);
           break;
         }
         default: {
           log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();
           break;
         }
+      }
+      if (response !== void 0 && Object(response).constructor !== Promise) {
+        msg.payload = msg._uib.response = response;
+        if (!msg.topic)
+          msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+        this.send(msg);
       }
     }
     // --- end of _uibCommand ---
