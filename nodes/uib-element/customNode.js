@@ -762,7 +762,7 @@ async function buildUi(msg, node) {
     }
 
     // If no HMTL ID is specified, then always ADD
-    if (!node.elementId) {
+    if (node.elementtype !== 'title' && !node.elementId) {
         msg.mode = 'add'
     }
 
