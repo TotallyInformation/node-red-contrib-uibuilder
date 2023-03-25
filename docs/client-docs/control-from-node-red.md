@@ -4,7 +4,7 @@ description: >
    How to send specially formatted messages from Node-RED to the uibuilder node that
    get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-lastUpdated: 2023-03-04 18:08:46
+lastUpdated: 2023-03-25 17:35:20
 ---
 
 The uibuilder client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
@@ -12,19 +12,21 @@ The uibuilder client library can be controlled in various ways from Node-RED to 
 These ways are all summarised here. They all use a pre-formatted message sent to the appropriate `uibuilder` node in Node-RED.
 
 > [!INFO]
-> This feature was introduced in uibuilder v6.1 with only the get/set commands. Other commands will be introduced in future versions.
+> This feature was introduced in uibuilder v6.1 with only the get/set commands. Other commands are introduced in later versions.
 
-## UI Control
+Please load the "remote-commands" example from the library to test all of these out.
+
+## UI control
 
 A message containing a `msg._ui` property will be processed internally by the library with any UI configurations translated into HTML and the browser DOM updated accordingly.
 
 Please see the [Dynamic, data-driven HTML content](config-driven-ui.md) content for details.
 
-## Navigation Control
+## Navigation control
 
 Currently, only a page reload control is available. Set `msg._ui` to `{"method": "reload"}`.
 
-## Getting UI Information
+## Getting UI information
 
 ### `uiGet`
 
@@ -47,7 +49,7 @@ To be automatically informed of changes to some part of the web page UI, you can
 Which will watch the `<div id="more">...</div>` element for changes. Any changes to attributes or content will be reported back as standard messages.
 
 
-## Getting Client Status Information
+## Getting client status information
 
 Sending a message containing a `msg._uib` property set as follows will result in that property being updated with a `msg._uib.value` property.
 
@@ -59,7 +61,7 @@ See [Client Variables](variables.md) for details of what information you can get
 
 This command results in a standard message out of the top port of the uibuilder node that will contain `msg._uib.response`.
 
-## Changing Settings
+## Changing settings
 
 The following client settings can be changed from Node-RED by sending a message containing a `msg._uib` property configured as shown.
 
@@ -101,13 +103,10 @@ Where:
 - `prop` is the CSS Selector under which the display will be shown. If omitted, 'body' is used which results in the display being added to the end of the visible page.
 
 
-## Get Complete Copy of the Current Web Page
+## Get complete copy of the current web page
 
 To get the current web page, complete with dynamic changes back to Node-RED as a string in `msg.payload`, send a message to the uibuilder node containing:
 
 ```json
 { "_uib": { "command": "sendHtml" } }
 ```
-
-
-## Other Controls
