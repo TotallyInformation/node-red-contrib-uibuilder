@@ -31,11 +31,16 @@
             "262ab2295096703e",
             "88abbd5438821f7a",
             "6221e2b8f2b50df8",
-            "0dd33ba823c0af7b"
+            "0dd33ba823c0af7b",
+            "5d2fb30390013840",
+            "3fd347d2dad186ca",
+            "3b6dfa72a2767eb8",
+            "81cfdd8b1357b74c",
+            "5961e6952243291c"
         ],
         "x": 34,
         "y": 79,
-        "w": 682,
+        "w": 882,
         "h": 242
     },
     {
@@ -285,6 +290,20 @@
         ]
     },
     {
+        "id": "81cfdd8b1357b74c",
+        "type": "junction",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "x": 640,
+        "y": 180,
+        "wires": [
+            [
+                "a48c0beb68e76845",
+                "5d2fb30390013840"
+            ]
+        ]
+    },
+    {
         "id": "454da28ef00e68b6",
         "type": "inject",
         "z": "3badb0a6906eef7f",
@@ -341,7 +360,7 @@
                 "26fbd32ea1d00ff2"
             ],
             [
-                "a48c0beb68e76845"
+                "81cfdd8b1357b74c"
             ]
         ],
         "info": "This example uses the default blank template.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript."
@@ -380,8 +399,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 655,
-        "y": 180,
+        "x": 725,
+        "y": 160,
         "wires": [],
         "l": false,
         "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
@@ -980,7 +999,9 @@
             "474079d2dd072158",
             "62512a9068ae52c9",
             "534ccd905d0adc50",
-            "88abbd5438821f7a"
+            "88abbd5438821f7a",
+            "3b6dfa72a2767eb8",
+            "c5effb699b6d4bc1"
         ],
         "x": 205,
         "y": 120,
@@ -1673,7 +1694,7 @@
         "type": "inject",
         "z": "3badb0a6906eef7f",
         "g": "f6154314aee80d24",
-        "name": "",
+        "name": "Add a Form",
         "props": [
             {
                 "p": "payload"
@@ -1688,15 +1709,16 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "sform1",
-        "payload": "[{\"id\":\"r1\",\"type\":\"text\",\"required\":false,\"label\":\"Text Input:\",\"value\":\"Foo\"},{\"id\":\"r2\",\"type\":\"color\",\"required\":false,\"label\":\"Colour:\",\"value\":\"#427798\"},{\"id\":\"r3\",\"type\":\"date\",\"required\":true,\"label\":\"Date:\"},{\"id\":\"r4\",\"type\":\"range\",\"required\":false,\"label\":\"Range (0-100):\",\"value\":\"20\",\"min\":0,\"max\":100},{\"id\":\"r5\",\"type\":\"button\",\"label\":\"Send to Node-RED\",\"value\":\"Buttons can have values as well\"}]",
+        "payload": "[{\"id\":\"r1-text\",\"type\":\"text\",\"required\":false,\"label\":\"Text Input:\",\"value\":\"Foo\"},{\"id\":\"r6-email-req\",\"type\":\"email\",\"title\":\"You can add your own popup info\",\"required\":true,\"label\":\"Email:\"},{\"id\":\"r2-color\",\"type\":\"color\",\"label\":\"Colour:\",\"value\":\"#427798\"},{\"id\":\"r3-date-req\",\"type\":\"date\",\"required\":true},{\"id\":\"r3-date-month\",\"type\":\"month\",\"disabled\":true},{\"id\":\"r4-range\",\"type\":\"range\",\"required\":false,\"label\":\"Range (0-100):\",\"value\":\"20\",\"min\":0,\"max\":100}]",
         "payloadType": "json",
-        "x": 210,
+        "x": 190,
         "y": 1560,
         "wires": [
             [
                 "ede83b9af785c506"
             ]
-        ]
+        ],
+        "info": "Creates an example form showing off different features.\r\n\r\nNo buttons are included so that the `uib-element` node\r\nautomatically creates the two \"Send\" and \"Reset\" default\r\nbuttons for you.\r\n\r\nEmail & Data inputs are marked as required but left with\r\nno default value to show the invalid field/form highlights."
     },
     {
         "id": "534ccd905d0adc50",
@@ -1943,6 +1965,204 @@
         "wires": [
             [
                 "e1795c2c54ee3880"
+            ]
+        ]
+    },
+    {
+        "id": "5d2fb30390013840",
+        "type": "switch",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Connect Only",
+        "property": "uibuilderCtrl",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "client connect",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 1,
+        "x": 725,
+        "y": 220,
+        "wires": [
+            [
+                "5961e6952243291c"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "3fd347d2dad186ca",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Set title/heading on load",
+        "topic": "",
+        "elementtype": "title",
+        "parent": "body",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "myh1",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "first",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 825,
+        "y": 220,
+        "wires": [
+            [
+                "3b6dfa72a2767eb8"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "3b6dfa72a2767eb8",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Set title/heading on page load",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 875,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "5961e6952243291c",
+        "type": "change",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "Set title text",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "uib-element tests",
+                "tot": "str"
+            },
+            {
+                "t": "delete",
+                "p": "uibuilderCtrl",
+                "pt": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 775,
+        "y": 220,
+        "wires": [
+            [
+                "3fd347d2dad186ca"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "f2a7c0f95409f865",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "name": "Light",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "mark-light",
+        "payload": "{\"class\":\"light\"}",
+        "payloadType": "json",
+        "x": 890,
+        "y": 380,
+        "wires": [
+            [
+                "2663180282c358a6"
+            ]
+        ]
+    },
+    {
+        "id": "2663180282c358a6",
+        "type": "uib-update",
+        "z": "3badb0a6906eef7f",
+        "name": "Set Light/Dark mode",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "modeType",
+        "cssSelector": "html",
+        "cssSelectorType": "str",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "payload",
+        "attribsSourceType": "msg",
+        "slotPropMarkdown": false,
+        "x": 1080,
+        "y": 380,
+        "wires": [
+            [
+                "c5effb699b6d4bc1"
+            ]
+        ]
+    },
+    {
+        "id": "c5effb699b6d4bc1",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "name": "link out 38",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 1215,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "c3449025d8452e42",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "name": "Dark",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "mark-dark",
+        "payload": "{\"class\":\"dark\"}",
+        "payloadType": "json",
+        "x": 890,
+        "y": 420,
+        "wires": [
+            [
+                "2663180282c358a6"
             ]
         ]
     }
