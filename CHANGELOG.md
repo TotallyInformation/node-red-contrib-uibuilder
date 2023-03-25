@@ -14,7 +14,9 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...main)
 
-<!-- Nothing currently. -->
+Nothing currently.
+
+## [v6.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...v6.1.1)
 
 ### General
 
