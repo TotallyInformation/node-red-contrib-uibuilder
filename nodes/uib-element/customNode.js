@@ -532,6 +532,7 @@ function buildSForm(node, msg, parent) {
     // Convenient references
     const frmBody = parent.components[0]
     const frm = msg.payload
+    let btnCount = 0
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(frm).forEach( (rowRef, i) => {
@@ -550,16 +551,29 @@ function buildSForm(node, msg, parent) {
         if (!frmRow.name) frmRow.name = frmRow.id
 
         // TODO Maybe wrap all buttons in a single row at the end of the form?
-        // Create the form row
+        // Create the form row (label and input wrapped in a div)
         const rLen = frmBody.components.push( {
             'type': 'div',
             'components': [], // label and input/form/select/button - 2 for input, 1 for button
             'attributes': {},
         } )
+        const row = frmBody.components[rLen - 1]
+
+        if (frmRow.title) row.attributes.title = frmRow.title
+        else row.attributes.title = frmRow.title = `Type: ${frmRow.type}`
+
+        if (frmRow.required === true) {
+            row.attributes.class = 'required'
+            row.attributes.title = frmRow.title = `Required. ${row.attributes.title}`
+        }
+
+        if (frmRow.disabled === true) {
+            row.attributes.title = frmRow.title = `Disabled. ${row.attributes.title}`
+        }
 
         // Add the row elements
-        const row = frmBody.components[rLen - 1]
         if (frmRow.type === 'button') {
+            btnCount++ // keep track of the number of buttons
             const len = row.components.push({
                 'type': 'button',
                 'attributes': frmRow,
@@ -572,7 +586,7 @@ function buildSForm(node, msg, parent) {
                 'attributes': {
                     'for': frmRow.id,
                 },
-                'slot': frmRow.label,
+                'slot': frmRow.label ? frmRow.label : `${frmRow.type}:`,
             })
             row.components.push({
                 'type': 'input',
@@ -588,6 +602,40 @@ function buildSForm(node, msg, parent) {
             })
         }
     } )
+
+    // If user didn't specify any buttons, add them now.
+    if (btnCount < 1) {
+        frmBody.components[frmBody.components.length - 1].components.push({
+            'type': 'div',
+            'attributes': {},
+            'components': [
+                {
+                    'type': 'button',
+                    'id': `${node.elementId}-btn-send`,
+                    'attributes': {
+                        type: 'button',
+                        title: 'Send the form data back to Node-RED'
+                    },
+                    'events': {
+                        click: 'uibuilder.eventSend'
+                    },
+                    'slot': 'Send',
+                },
+                {
+                    'type': 'button',
+                    'id': `${node.elementId}-btn-reset`,
+                    'attributes': {
+                        type: 'button',
+                        title: 'Reset the form'
+                    },
+                    'events': {
+                        click: 'event.srcElement.form.reset'
+                    },
+                    'slot': 'Reset',
+                }
+            ]
+        })
+    }
 
     return err
 } // ---- End of buildTable ---- //

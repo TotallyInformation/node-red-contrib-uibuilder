@@ -145,7 +145,7 @@
     );
     /*#endregion --- --- */
 
-    /*#region --- Surface --- */
+    /*#region --- Surfaces --- */
     --surfaces-saturation: .1;
     --surfaces-bias: 0;
     --light-surfaces-lightness: .95;
@@ -381,7 +381,7 @@
     --surfaces-lightness: var(--dark-surfaces-lightness);
 }
 
-/*#region --- Recommended surfaces --- */
+/*#region --- Surface & std colour classes --- */
 
 .brand {
     color: var(--text1);
@@ -600,6 +600,7 @@ form {
 form label {
     float: left;
     width: 24%;
+    text-transform: capitalize;
 }
 form input, form textarea, form select {
     float: right;
@@ -632,6 +633,19 @@ form input[type="button" i], form input[type="reset" i], form input[type="submit
 }
 input[type="color"] {
     min-height: 2.5rem;
+}
+input:invalid {
+    border: 3px solid var(--failure);
+}
+input:valid {
+    border: 3px solid var(--success);
+}
+form:invalid button {
+    background-color: var(--warning);
+}
+div.required label::after {
+    content: " *"
+
 }
 @media screen and (max-width: 600px) {
     form label, form input, form textarea {
