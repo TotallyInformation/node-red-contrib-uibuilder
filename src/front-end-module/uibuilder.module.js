@@ -1,3 +1,4 @@
+// @ts-nocheck
 /** This is the Front-End JavaScript for uibuilder  in HTML Module form
  * It provides a number of global objects that can be used in your own javascript.
  * see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
@@ -61,7 +62,7 @@ import io from 'socket.io-client' // Note: Only works when using esbuild to bund
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.1.0-mod'
+const version = '6.2.0-mod'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -719,7 +720,7 @@ export const Uib = class Uib {
      * If the selected element is a <template>, returns the first child element.
      * type {HTMLElement}
      * @param {string} cssSelector A CSS Selector that identifies the element to return
-     * @returns {HTMLElement|HTMLTemplateElement|null}
+     * @returns {HTMLElement|HTMLTemplateElement|null} Selected element or null
      */
     $(cssSelector) {
         let el = document.querySelector(cssSelector)
@@ -1850,7 +1851,7 @@ export const Uib = class Uib {
         // Try to get the content via the URL
         let response
         try {
-            response = await fetch(url)    
+            response = await fetch(url)
         } catch (error) {
             log(0, 'Uib:include', `Fetch of file '${url}' failed. `, error.message)()
             return
@@ -1859,7 +1860,7 @@ export const Uib = class Uib {
             log(0, 'Uib:include', `Fetch of file '${url}' failed. Status='${response.statusText}'`)()
             return
         }
-        
+
         // Work out what type of data we got
         const contentType = await response.headers.get('content-type')
         let type = null
@@ -2109,7 +2110,7 @@ export const Uib = class Uib {
      * @param {MouseEvent|any} domevent DOM Event object
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
-    eventSend(domevent, originator = '') {
+    eventSend(domevent, originator = '') { // eslint-disable-line sonarjs/cognitive-complexity
         // @ts-ignore Handle case where vue messes up `this`
         if ( this.$attrs ) {
             log('error', 'Uib:eventSend', '`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`' )()
@@ -2158,7 +2159,7 @@ export const Uib = class Uib {
         const form = {}
         const frmVals = []
         if ( target.form ) {
-            // console.log(target.form)
+            form.valid = target.form.checkValidity()
             Object.values(target.form).forEach( (frmEl, i) => {
                 const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
                 // const attribs = Object.assign({},
@@ -2172,21 +2173,31 @@ export const Uib = class Uib {
                 //     )
                 // )
                 if (id !== '') {
+                    console.log(frmEl.validity)
                     frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
                     // form[id] = frmEl.value
                     form[id] = {
                         'id': frmEl.id,
                         'name': frmEl.name,
                         'value': frmEl.value,
-                        'data': frmEl.dataset,
-                        // 'meta': {
-                        //     'defaultValue': frmEl.defaultValue,
-                        //     'defaultChecked': frmEl.defaultChecked,
-                        //     'disabled': frmEl.disabled,
-                        //     'valid': frmEl.willValidate,
-                        //     'attributes': attribs,
-                        // },
+                        'valid': frmEl.checkValidity(),
                     }
+                    if (form[id].valid === false) {
+                        const v = frmEl.validity
+                        form[id].validity = {
+                            badInput: v.badInput === true ? v.badInput : undefined,
+                            customError: v.customError === true ? v.customError : undefined,
+                            patternMismatch: v.patternMismatch === true ? v.patternMismatch : undefined,
+                            rangeOverflow: v.rangeOverflow === true ? v.rangeOverflow : undefined,
+                            rangeUnderflow: v.rangeUnderflow === true ? v.rangeUnderflow : undefined,
+                            stepMismatch: v.stepMismatch === true ? v.stepMismatch : undefined,
+                            tooLong: v.tooLong === true ? v.tooLong : undefined,
+                            tooShort: v.tooShort === true ? v.tooShort : undefined,
+                            typeMismatch: v.typeMismatch === true ? v.typeMismatch : undefined,
+                            valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
+                        }
+                    }
+                    if (frmEl.dataset) form[id].data = frmEl.dataset
                 }
             })
         }

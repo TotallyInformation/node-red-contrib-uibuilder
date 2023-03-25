@@ -3097,7 +3097,7 @@ Object.assign(lookup2, {
 });
 
 // src/front-end-module/uibuilder.module.js
-var version = "6.1.0-esm";
+var version = "6.2.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
@@ -3689,7 +3689,7 @@ var Uib = (_a = class {
    * If the selected element is a <template>, returns the first child element.
    * type {HTMLElement}
    * @param {string} cssSelector A CSS Selector that identifies the element to return
-   * @returns {HTMLElement|HTMLTemplateElement|null}
+   * @returns {HTMLElement|HTMLTemplateElement|null} Selected element or null
    */
   $(cssSelector) {
     let el = document.querySelector(cssSelector);
@@ -4871,23 +4871,35 @@ var Uib = (_a = class {
     const form = {};
     const frmVals = [];
     if (target.form) {
+      form.valid = target.form.checkValidity();
       Object.values(target.form).forEach((frmEl, i2) => {
         const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
         if (id !== "") {
+          console.log(frmEl.validity);
           frmVals.push({ key: id, val: frmEl.value });
           form[id] = {
             "id": frmEl.id,
             "name": frmEl.name,
             "value": frmEl.value,
-            "data": frmEl.dataset
-            // 'meta': {
-            //     'defaultValue': frmEl.defaultValue,
-            //     'defaultChecked': frmEl.defaultChecked,
-            //     'disabled': frmEl.disabled,
-            //     'valid': frmEl.willValidate,
-            //     'attributes': attribs,
-            // },
+            "valid": frmEl.checkValidity()
           };
+          if (form[id].valid === false) {
+            const v = frmEl.validity;
+            form[id].validity = {
+              badInput: v.badInput === true ? v.badInput : void 0,
+              customError: v.customError === true ? v.customError : void 0,
+              patternMismatch: v.patternMismatch === true ? v.patternMismatch : void 0,
+              rangeOverflow: v.rangeOverflow === true ? v.rangeOverflow : void 0,
+              rangeUnderflow: v.rangeUnderflow === true ? v.rangeUnderflow : void 0,
+              stepMismatch: v.stepMismatch === true ? v.stepMismatch : void 0,
+              tooLong: v.tooLong === true ? v.tooLong : void 0,
+              tooShort: v.tooShort === true ? v.tooShort : void 0,
+              typeMismatch: v.typeMismatch === true ? v.typeMismatch : void 0,
+              valueMissing: v.valueMissing === true ? v.valueMissing : void 0
+            };
+          }
+          if (frmEl.dataset)
+            form[id].data = frmEl.dataset;
         }
       });
     }
