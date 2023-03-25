@@ -111,7 +111,14 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
 
-* Improvements to `uib-cache` node
+* Use alt logging for websocket disconnects, sleep, error, etc
+
+* **Example stand-alone node package as exemplar**
+  * probably chart
+  * How to pass data through?
+
+
+### Improvements to `uib-cache` node
   * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
   * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
   * Add cache clear button to complement the cache clear control msg
@@ -121,11 +128,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add empty cache button.
   * Think about impact of a cache clear (affects all connected clients)
 
-* Impovements to `uib-sender` node
+### Impovements to `uib-sender` node
 
   * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 
-* Extensions to the `uib-element` node
+### Extensions to the `uib-element` node
+  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+  * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
+  * "Text Box" type - allow msg.payload to be an array with each entry being a new para.
+  * Consider making the main input selectable (e.g. not just msg.payload)
   * Disable or hide inputs when unused for a specific type.
   * As more element types are added, group into types: main, add, form, etc
   * ? Have JSON input msg templates for each type with links to copy to clipboard ?
@@ -206,19 +217,48 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
   * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
-* Extensions to the `uib-update` node
+### Extensions to the `uib-update` node
   * Add props: `uibUpdated`, `uibUpdatedBy`
   * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
+  * New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
+  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 
-* Continue to improve the new `uib-brand.css`
+
+### Continue to improve the new `uib-brand.css`
   * Parameterise other aspects such as font-size, typeface, varient colours, flexbox & grid spacing. `
   * Create min version of css.
   * Something similar to the sidebar status panel but segmented. Choose number of segments.
   * Make `input[type="color"]` starting colour the brand colour. Can only be done via JavaScript.
   * Check `input:valid` pseudo-class defaults
+  * Improve input/form elements. [Ref](https://developer.mozilla.org/en-US/docs/Web/CSS/:required)
+  * Add treeview formatting. [ref](https://iamkate.com/code/tree-views/)
 
-* Extensions to FE Library
+### Extensions to client Library
+  * *New Functions* (all to be callable from Node-RED):
+    * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
+    * [ ] `uibuilder.navigate(locationUrl)` - change page. Ensure it works with SPA routers and with anchor links.
+    * [ ] `uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.
+    * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
+    * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
+    * [ ] `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
+  
+  * Control from Node-RED. Functions to implement:
+    * [ ] `elementExists(selector)`, `elementIsVisible(selector)`
+    * [ ] `navigate(url)`
+    * [ ] `loadui()`
+    * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
+    * [ ] getStore, setStore, removeStore - control browser local storage
+    * [ ] watchDom(startStop), uiWatch(cssSelector)
+    * [ ] setPing
+    * [ ] `convertToUI(cssSelector)`
+
+  * **Possibly breaking change**: Stop msg._ui and (maybe) msg._uib messages from triggering `onChange` and `onTopic`.
+
+  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
+  * Add `window.uib` as a synonym of `window.uibuilder`.
+
   * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
+  * Add treeview formatting to syntaxHighlight. [ref](https://iamkate.com/code/tree-views/).
   * Move UI code to separate include. To allow its use in the `uib-html` node.
   * Add flags to track if the optional Markdown-IT or DOMPurify libraries are loaded and available.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
@@ -250,7 +290,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       
   * Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
   * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow *sessionCache*.
-  * Add a `uibuilder.navigate(url)` function to allow a msg from node-red to change the page. Ensure it works with SPA routers and with anchor links.
   * Add a [resizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to report resize events back to Node-RED as a control msg.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
@@ -269,7 +308,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Check all auto-added elements for accessibility
     * Add count of current errors to title
 
-* Updates to `uibuilder` node
+### Updates to `uibuilder` node
 
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
     * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
@@ -344,18 +383,23 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * https://crossbario.com/blog/Websocket-Persistent-Connections/
     * https://stackoverflow.com/questions/10886910/how-to-maintain-a-websockets-connection-between-pages
 
+  * **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 
-* `package-mgt.js`
-  * Rationalise the various functions - several of them have similar tasks.
+    Currently available by adding the appropriate ExpressJS option in settings.js.
 
-* `socket.js`
+
+
+  * `package-mgt.js`
+    * Rationalise the various functions - several of them have similar tasks.
+
+  * `socket.js`
   * Add rooms: page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
   * When a new client connection is made, use `socket.emit('join', tabId)`
   * Output to a room using `io.to(tabId).emit(...)`
   * https://socket.io/docs/v4/rooms/
 
 
-* Updates to Documentation
+### Updates to Documentation (including videos)
   * Add the `replace` type to the `config-driven-ui.md` document.
   * Search for `*(This document is a work-in-progress, it is not complete)*` and update documents.
   * Update glossary with ESM, ECMA, UMD, IIFE
@@ -372,6 +416,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Flows site
     * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
   * Videos
+    * Low-code, do anything from Node-RED
+    * Easy forms
+    * Switch light/dark
     * Mix of HTML and uibuilder uib-update for simple tasks.
     * Caching
     * Dynamically modify CSS class for HTML elements
@@ -379,11 +426,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * UI updates using low-code. [ref](https://discourse.nodered.org/t/uibuilder-documentation-suggestions-and-improvements/74812/33?u=totallyinformation)
 
 
-* **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
-
-  Currently available by adding the appropriate ExpressJS option in settings.js.
-
-* Examples
+### Examples
+  * Zero-code example needs better wording for UL/OL example. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
   * Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
   * Add example for Vue sfc loader.
   * Ticklist
@@ -393,7 +437,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Table
     * Weather example?
 
-* Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
+### Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features
     * Replace `||` default value tests with `??` .
     * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
@@ -440,8 +484,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Allow client id to be set externally.
 * ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
 * Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
+* Improve editor panels with better tooltips. [ref](https://kazzkiq.github.io/balloon.css/)
 
-* Use [chokidar](https://github.com/paulmillr/chokidar) to send a control msg to the fe when files change. Change the front-end to allow the browser to automatically reload (location.reload()). Put everything behind an optional flag and don't load the chokidar library unless the flag is set. May want an auto-rebuild feature as well.
+* Use [chokidar](https://github.com/paulmillr/chokidar) to send a control msg to the fe when files change. Change the front-end to allow the browser to automatically reload (location.reload()). Put everything behind an optional flag and don't load the chokidar library unless the flag is set. May want an auto-rebuild feature as well. Alternatively, try [livereload](https://www.npmjs.com/package/livereload) which is used by rollup.
 
 * Add package.json `style` property to Instance details page and packages list if it exists.
 
@@ -473,6 +518,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Consider allowing addition of HTTP request headers to control msgs
 
 * Consider allowing control msg for each request
+
+* Consider implementing at Kroki diagram service node - https://kroki.io/ - enables delivery of diagrams from text descriptions using many different libraries.
 
 ### Editor (`uibuilder.html`)
 

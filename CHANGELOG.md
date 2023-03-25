@@ -10,70 +10,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-### TO FIX
-
-* Invalid forms not being handled properly in `eventSend`. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
-* Zero-code example needs better wording for UL/OL example. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
-
-### NEW
-
-* Example stand-alone node package as exemplar
-  * probably chart
-  * How to pass data through?
-* Video: Low-code, do anything from Node-RED
-* uib-update: change visual settings
-* Client: allow change of visual settings
-* Use alt logging for websocket disconnects, sleep, error, etc
-
-### Client library
-
-  * Stop msg._ui and (maybe) msg._uib messages from triggering `onChange` and `onTopic`.
-  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-
-  * New functions:
-    * [x] `htmlSend()` - sends the current web page back to Node-RED.
-    * [x] `nodeGet(domNode)` - gets standard data from a DOM node (used internally by uiGet and uiWatch)
-    * [x] `uiWatch(cssSelector)` - watches for any changes to the selected nodes and uses `uiGet` to send useful data back to Node-RED automatically. It should also trigger a custom event to allow front-end processing too. **Set default to TOGGLE**
-    * [x] `uibuilder.include(url, uiOptions)` - include external file. Includes HTML, Images, Video, PDF's and more.
-    
-    * [ ] `uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.
-    * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
-    * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
-    * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
-    * [ ] `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
-    * [ ] `uibuilder.navigate(locationUrl)` - change page
-
-  * Control from Node-RED. Functions to implement:
-    * [x] *v6.1* get/set
-    * [x] *v6.1* showMsg(boolean, parent=body)
-    * [x] *v6.1* showStatus(boolean, parent=body)
-    
-    * [x] htmlSend() - sends the complete current HTML back to node-red
-    * [x] uiGet (probably better to implement the `uib-get` node?)
-    * [x] `include(url, uiOptions)`
-  
-    * [ ] `loadui()`
-    * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
-    * [ ] getStore, setStore, removeStore - control browser local storage
-    * [ ] watchDom(startStop), uiWatch(cssSelector)
-    * [ ] `navigate(url)`
-    * [ ] setPing
-    * [ ] `elementExists(selector)`, `elementIsVisible(selector)`
-    * [ ] `convertToUI(cssSelector)`
-    
-  * Add `window.uib` as a synonym of `window.uibuilder`.
-
-### `uib-element` Enhancements
-
-* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-* New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
-
-### `uib-update` Enhancements
-
-* New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
-* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-
-
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...main)
@@ -85,6 +21,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * `locales` folder with `en-US` subfolder. Ready for l8n.
 
 ### Client library changes
+
+* **Bug Fix**: [Issue #201](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/201) - Incorrect logic in stylesheet load causing an error. Fixed.
 
 * New functions - can be run from Node-RED as well as front-end code:
   * `htmlSend()` - sends the current web page back to Node-RED.
@@ -98,16 +36,39 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * `uiGet` - now uses `nodeGet` for consistency with `uiWatch`.
   * `$` - now returns first child if selector returns a `<template>` tag. Warn/Error logging added.
 
+### `uib-element` node changes
+
+* **Bug Fix**: Updating the page title (with no html id set) was setting the mode to "add" which upset chained outputs. Now corrected.
+* "Form" type - improvements:
+  * Where `required` property is true in the input, add `class="required"` to the div that wraps the label and input. Add `div.required label::after` styling to `uib-brand.css`. This will add an "*" after the label text for required inputs. See the `uib-brand.css` updates for more formatting improvements.
+  * Allow `title` property to be set in input data. Also add "Required. " to start of title. If no title property specified, make it `Type: ${type}`.
+  * If no button included in the input data, add default send and reset buttons with an id of `${elementId}-btn-send` & `${elementId}-btn-reset`. The Send button uses the standard `eventSend` function. The Reset button returns all form inputs back to their defaults.
+  * Formatting improvements: Inputs are outlined with `--success` if they pass validation and with `--failure` if they do not. Any buttons on the form are given `--warning` colour if the form does not validate. The buttons still work however.
+  * Form data improvements: Using the `eventSend` within a form element includes data saying whether the form validates. The details for each input also say whether they validate and if they don't, why.
+  * The documentation for "Zero-code element types" > "Forms" completed.
+
 ### `uib-sender` node changes
 
 * Add the uibuilder node link node id to config data & expand editor checks for url changes. Will mark the node instance as needing re-deployment if the linked uibuilder node changed its URL. This is done by also tracking and recording the node id of the linked uibuilder node.
 
 ### `uib-brand.css` updates
 
-* Added intense (more saturated) versions of info, success, warning/warn, failure/error/danger
-* Added `center` as a synonym of `centre`
+* Added intense (more saturated) versions of info, success, warning/warn, failure/error/danger.
+* Added `center` as a synonym of `centre`.
 * Added `surface5` which has higher lightness than 4.
+* Forms formatting extended.
+  * Form labels are shown in Title Text (first letter of each word capitalised). If attached to a required input, an "*" is shown after the label.
+  * Input valid/invalid formatting added. Borders set to `--success`, `--failure` collours accordingly
+  * Buttons on an invalid form set to `--warning` colour.
 
+### Standard Templates
+
+* **Bug Fix**: [Issue #204](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/204) - change to `rollup.config.js` caused issues with bundled css. Fixed.
+
+### Examples
+
+* **zero-code**: Improved Forms example shows off more options. Example for light/dark mode added. On-(re)load flow attached to the control output of the uibuilder node; automatically changes the page title (an alternative to using a cache node).
+* **New Example**: _Remote-Commands_ - Demonstrates all of the uibuilder client library functions that can be called from Node-RED.
 
 ## [v6.1.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.1.1...v6.1.0)
 
