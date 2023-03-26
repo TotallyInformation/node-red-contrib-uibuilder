@@ -1075,6 +1075,9 @@ export const Uib = class Uib {
         // Add attributes
         if (comp.attributes) {
             Object.keys(comp.attributes).forEach((attrib) => {
+                // For values, set the actual value as well since the attrib only changes the DEFAULT value
+                // @ts-ignore
+                if (attrib === 'value') el.value = comp.attributes[attrib]
                 el.setAttribute(attrib, comp.attributes[attrib])
             })
         }
@@ -1087,7 +1090,7 @@ export const Uib = class Uib {
             Object.keys(comp.events).forEach((type) => {
                 // @ts-ignore  I'm forever getting this wrong!
                 if (type.toLowerCase === 'onclick') type = 'click'
-                // Add the event listener - hate eval but it is the only way I can get it to work
+                // Add the event listener
                 try {
                     el.addEventListener(type, (evt) => {
                         // Use new Function to ensure that esbuild works: https://esbuild.github.io/content-types/#direct-eval
@@ -1114,7 +1117,7 @@ export const Uib = class Uib {
         }
         //#endregion
 
-        // TODO Add multi-slot capability
+        // TODO Add multi-slot capability (default slot must always be processed first as innerHTML is replaced)
 
         //#region Add Slot Markdown content to innerHTML IF marked library is available
         if (comp.slotMarkdown) {
@@ -1127,15 +1130,23 @@ export const Uib = class Uib {
      * NOTE: This fn follows a strict hierarchy of added components.
      * @param {HTMLElement} parentEl The parent HTML Element we want to append to
      * @param {*} components The ui component(s) we want to add
+     * @param {string} [ns] Optional. The namespace to use.
      */
-    _uiExtendEl(parentEl, components) {
+    _uiExtendEl(parentEl, components, ns = '') {
         components.forEach( (compToAdd, i) => {
+            /** @type {HTMLElement} Create the new component */
             let newEl
 
             if (compToAdd.type === 'html') {
                 newEl = parentEl
                 // newEl.outerHTML = compToAdd.slot
                 parentEl.innerHTML = compToAdd.slot
+            } else if (compToAdd.type === 'svg' || ns === 'svg') {
+                ns = 'svg'
+                newEl = document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type)
+                // Updates newEl
+                this._uiComposeComponent(newEl, compToAdd)
+                parentEl.appendChild(newEl)
             } else {
                 newEl = document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
                 // Updates newEl
@@ -1189,9 +1200,30 @@ export const Uib = class Uib {
         // }
 
         ui.components.forEach((compToAdd, i) => {
+            log('trace', `_uiAdd:components-forEach:${i}`, 'Component to add: ', compToAdd)()
 
             /** @type {HTMLElement} Create the new component */
-            const newEl = document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
+            let newEl
+            let ns = '' // namespace
+            switch (compToAdd.type) {
+                // If trying to insert raw html, wrap in a div
+                case 'html': {
+                    newEl = document.createElement('div')
+                    break
+                }
+
+                // If trying to insert raw svg, need to create in namespace
+                case 'svg': {
+                    ns = 'svg'
+                    newEl = document.createElementNS("http://www.w3.org/2000/svg", 'svg')
+                    break
+                }
+
+                default: {
+                    newEl = document.createElement(compToAdd.type)
+                    break
+                }
+            }
 
             if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
 
@@ -1234,7 +1266,7 @@ export const Uib = class Uib {
                 //     parentEl: newEl,
                 //     components: compToAdd.components,
                 // }, true)
-                this._uiExtendEl(newEl, compToAdd.components)
+                this._uiExtendEl(newEl, compToAdd.components, ns)
             }
         })
 
@@ -1296,8 +1328,27 @@ export const Uib = class Uib {
             }
 
             /** @type {HTMLElement} Create the new component */
-            const newEl = document.createElement(compToReplace.type === 'html' ? 'div' : compToReplace.type)
-            // const newEl = document.createElement(compToReplace.type)
+            let newEl
+            let ns = '' // namespace
+            switch (compToReplace.type) {
+                // If trying to insert raw html, wrap in a div
+                case 'html': {
+                    newEl = document.createElement('div')
+                    break
+                }
+
+                // If trying to insert raw svg, need to create in namespace
+                case 'svg': {
+                    ns = 'svg'
+                    newEl = document.createElementNS("http://www.w3.org/2000/svg", 'svg')
+                    break
+                }
+
+                default: {
+                    newEl = document.createElement(compToReplace.type)
+                    break
+                }
+            }
 
             // Updates the newEl and maybe the ui
             this._uiComposeComponent(newEl, compToReplace)
@@ -1307,7 +1358,7 @@ export const Uib = class Uib {
 
             // If nested components, go again - but don't pass payload to sub-components
             if (compToReplace.components) {
-                this._uiExtendEl(newEl, compToReplace.components)
+                this._uiExtendEl(newEl, compToReplace.components, ns)
             }
         })
 
@@ -1351,57 +1402,13 @@ export const Uib = class Uib {
 
             log('trace', '_uiUpdate:components-forEach', `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)()
 
-            // Process slot first to allow for named slots
-            if (compToUpd.properties) {
-                Object.keys(compToUpd.properties).forEach((prop) => {
-                    elToUpd.forEach( el => {
-                        el[prop] = compToUpd.properties[prop]
-                    })
-                })
-            }
-
-            // Add event handlers
-            if (compToUpd.events) {
-                Object.keys(compToUpd.events).forEach((type) => {
-                    // @ts-ignore  I'm forever getting this wrong!
-                    if (type.toLowerCase === 'onclick') type = 'click'
-                    elToUpd.forEach( el => {
-                        // Add the event listener - hate eval but it is the only way I can get it to work
-                        try {
-                            el.addEventListener(type, (evt) => {
-                                // Use new Function to ensure that esbuild works: https://esbuild.github.io/content-types/#direct-eval
-                                (new Function('evt', `${compToUpd.events[type]}(evt)`))(evt) // eslint-disable-line no-new-func
-                            })
-                        } catch (err) {
-                            log('error', 'Uib:_uiAdd', `Add event '${type}' for element '${compToUpd.type}': Cannot add event handler. ${err.message}`)()
-                        }
-                    })
-                })
-            }
-
-            if (compToUpd.attributes) {
-                Object.keys(compToUpd.attributes).forEach((attrib) => {
-                    elToUpd.forEach( el => {
-                        // For values, set the actual value as well since the attrib only changes the DEFAULT value
-                        // @ts-ignore
-                        if (attrib === 'value') el.value = compToUpd.attributes[attrib]
-                        el.setAttribute(attrib, compToUpd.attributes[attrib])
-                    })
-                })
-            }
-
+            // If slot not specified but payload is, use the payload in the slot
             if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload
-            if (compToUpd.slot) {
-                elToUpd.forEach( el => {
-                    this.replaceSlot(el, compToUpd)
-                })
-            }
 
-            if (compToUpd.slotMarkdown) {
-                elToUpd.forEach( el => {
-                    this.replaceSlotMarkdown(el, compToUpd)
-                })
-            }
+            // Might have >1 element to update - so update them all
+            elToUpd.forEach( el => {
+                this._uiComposeComponent(el, compToUpd)
+            })
 
             // If nested components, go again - but don't pass payload to sub-components
             if (compToUpd.components) {
@@ -1414,8 +1421,6 @@ export const Uib = class Uib {
                     })
                 })
             }
-            // TODO Add multi-slot capability (default slot must always be processed first as innerHTML is replaced)
-            // ? Do we want to allow nested component lists?
 
         })
 
@@ -2173,7 +2178,6 @@ export const Uib = class Uib {
                 //     )
                 // )
                 if (id !== '') {
-                    console.log(frmEl.validity)
                     frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
                     // form[id] = frmEl.value
                     form[id] = {

@@ -3998,6 +3998,8 @@
     _uiComposeComponent(el, comp) {
       if (comp.attributes) {
         Object.keys(comp.attributes).forEach((attrib) => {
+          if (attrib === "value")
+            el.value = comp.attributes[attrib];
           el.setAttribute(attrib, comp.attributes[attrib]);
         });
       }
@@ -4032,13 +4034,19 @@
      * NOTE: This fn follows a strict hierarchy of added components.
      * @param {HTMLElement} parentEl The parent HTML Element we want to append to
      * @param {*} components The ui component(s) we want to add
+     * @param {string} [ns] Optional. The namespace to use.
      */
-    _uiExtendEl(parentEl, components) {
+    _uiExtendEl(parentEl, components, ns = "") {
       components.forEach((compToAdd, i2) => {
         let newEl;
         if (compToAdd.type === "html") {
           newEl = parentEl;
           parentEl.innerHTML = compToAdd.slot;
+        } else if (compToAdd.type === "svg" || ns === "svg") {
+          ns = "svg";
+          newEl = document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
+          this._uiComposeComponent(newEl, compToAdd);
+          parentEl.appendChild(newEl);
         } else {
           newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
           this._uiComposeComponent(newEl, compToAdd);
@@ -4075,7 +4083,24 @@
     _uiAdd(ui, isRecurse) {
       log("trace", "Uib:_uiManager:add", "Starting _uiAdd")();
       ui.components.forEach((compToAdd, i2) => {
-        const newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+        log("trace", `_uiAdd:components-forEach:${i2}`, "Component to add: ", compToAdd)();
+        let newEl;
+        let ns = "";
+        switch (compToAdd.type) {
+          case "html": {
+            newEl = document.createElement("div");
+            break;
+          }
+          case "svg": {
+            ns = "svg";
+            newEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            break;
+          }
+          default: {
+            newEl = document.createElement(compToAdd.type);
+            break;
+          }
+        }
         if (!compToAdd.slot && ui.payload)
           compToAdd.slot = ui.payload;
         this._uiComposeComponent(newEl, compToAdd);
@@ -4101,7 +4126,7 @@
           elParent.appendChild(newEl);
         }
         if (compToAdd.components) {
-          this._uiExtendEl(newEl, compToAdd.components);
+          this._uiExtendEl(newEl, compToAdd.components, ns);
         }
       });
     }
@@ -4151,11 +4176,27 @@
           this._uiAdd({ components: [compToReplace] }, false);
           return;
         }
-        const newEl = document.createElement(compToReplace.type === "html" ? "div" : compToReplace.type);
+        let newEl;
+        let ns = "";
+        switch (compToReplace.type) {
+          case "html": {
+            newEl = document.createElement("div");
+            break;
+          }
+          case "svg": {
+            ns = "svg";
+            newEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            break;
+          }
+          default: {
+            newEl = document.createElement(compToReplace.type);
+            break;
+          }
+        }
         this._uiComposeComponent(newEl, compToReplace);
         elToReplace.replaceWith(newEl);
         if (compToReplace.components) {
-          this._uiExtendEl(newEl, compToReplace.components);
+          this._uiExtendEl(newEl, compToReplace.components, ns);
         }
       });
     }
@@ -4187,49 +4228,11 @@
           return;
         }
         log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
-        if (compToUpd.properties) {
-          Object.keys(compToUpd.properties).forEach((prop) => {
-            elToUpd.forEach((el) => {
-              el[prop] = compToUpd.properties[prop];
-            });
-          });
-        }
-        if (compToUpd.events) {
-          Object.keys(compToUpd.events).forEach((type) => {
-            if (type.toLowerCase === "onclick")
-              type = "click";
-            elToUpd.forEach((el) => {
-              try {
-                el.addEventListener(type, (evt) => {
-                  new Function("evt", `${compToUpd.events[type]}(evt)`)(evt);
-                });
-              } catch (err) {
-                log("error", "Uib:_uiAdd", `Add event '${type}' for element '${compToUpd.type}': Cannot add event handler. ${err.message}`)();
-              }
-            });
-          });
-        }
-        if (compToUpd.attributes) {
-          Object.keys(compToUpd.attributes).forEach((attrib) => {
-            elToUpd.forEach((el) => {
-              if (attrib === "value")
-                el.value = compToUpd.attributes[attrib];
-              el.setAttribute(attrib, compToUpd.attributes[attrib]);
-            });
-          });
-        }
         if (!compToUpd.slot && compToUpd.payload)
           compToUpd.slot = compToUpd.payload;
-        if (compToUpd.slot) {
-          elToUpd.forEach((el) => {
-            this.replaceSlot(el, compToUpd);
-          });
-        }
-        if (compToUpd.slotMarkdown) {
-          elToUpd.forEach((el) => {
-            this.replaceSlotMarkdown(el, compToUpd);
-          });
-        }
+        elToUpd.forEach((el) => {
+          this._uiComposeComponent(el, compToUpd);
+        });
         if (compToUpd.components) {
           elToUpd.forEach((el) => {
             log("trace", "_uiUpdate:components", "el", el)();
@@ -4876,7 +4879,6 @@
         Object.values(target.form).forEach((frmEl, i2) => {
           const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
           if (id !== "") {
-            console.log(frmEl.validity);
             frmVals.push({ key: id, val: frmEl.value });
             form[id] = {
               "id": frmEl.id,
