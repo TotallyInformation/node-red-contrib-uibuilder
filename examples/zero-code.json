@@ -1921,7 +1921,7 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "topic": "#r1",
+        "topic": "#r1-text",
         "payload": "Bah",
         "payloadType": "str",
         "x": 170,
