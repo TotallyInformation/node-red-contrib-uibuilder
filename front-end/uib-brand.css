@@ -484,7 +484,7 @@ img, picture, video, canvas, svg {
     object-fit: cover;
     vertical-align: bottom;
     max-width: 100%;
-    background-color: var(--surface4);
+    background-color: var(--surface2);
 }
 p, h1, h2, h3, h4, h5, h6, heading, li, dl, dt, blockquote {
     overflow-wrap: break-word;
