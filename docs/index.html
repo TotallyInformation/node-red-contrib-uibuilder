@@ -98,12 +98,13 @@
             executeScript: true,
             // loadNavbar: true,
             // mergeNavbar: true,
-            loadSidebar: true,
             autoHeader: false,
             logo: '/images/node-blue-125x125.png',
             auto2top: true,
+            loadSidebar: './-sidebar.md',
             alias: {
-                '/.*/_sidebar.md': '/_sidebar.md', // use the same sidebar everywhere. See #301
+                '/.*/_sidebar.md': '/-sidebar.md', // use the same sidebar everywhere. See #301
+                '/.*/-sidebar.md': '/-sidebar.md', // use the same sidebar everywhere. See #301
                 '.*?/changelog': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/CHANGELOG.md',
                 '.*?/uibhome': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/README.md',
                 '/docs/(.*)': '/$1',
