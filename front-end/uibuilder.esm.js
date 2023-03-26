@@ -3097,7 +3097,7 @@ Object.assign(lookup2, {
 });
 
 // src/front-end-module/uibuilder.module.js
-var version = "6.2.0-esm";
+var version = "6.3.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
