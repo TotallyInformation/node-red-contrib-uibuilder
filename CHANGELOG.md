@@ -14,7 +14,18 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### Client library changes
+
+* `_ui` handling extended to support dynamic creation of SVG images.
+* Changed `_uiUpdate()` to use `_uiComposeComponent()` for consistency & code reduction.
+
+### Examples
+
+* zero-code: Minor correction to form example (1st input had changed id)
+
+
 
 ## [v6.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...v6.1.1)
 
