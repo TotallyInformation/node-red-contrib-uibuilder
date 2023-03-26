@@ -216,7 +216,8 @@ function buildTitle(node, msg) {
 
     node._ui[0] = ({
         'method': 'update',
-        'type': 'title',
+        // title tags can appear in SVGs as well so limit this
+        'selector': 'head title',
         'slot': msg.payload[0]
     })
 
