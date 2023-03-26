@@ -14,7 +14,16 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### `uib-element`
+
+* **Bug Fix**: Adjust selector for type "Page Title" to avoid accidentally updating `<title>` tags in SVG's.
+
+### Documentation
+
+* Renamed `_sidebar.md` to `-sidebar.md` to stop npm publish from dropping it.
+
 
 ## [v6.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.0...v6.2.0)
 
