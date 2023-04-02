@@ -33,7 +33,6 @@ Functions accessible in client-side user code.
   - [`htmlSend()` - Sends the whole DOM/HTML back to Node-RED](#htmlsend---sends-the-whole-domhtml-back-to-node-red-1)
   - [`loadui(url)` - Load a dynamic UI from a JSON web reponse](#loaduiurl---load-a-dynamic-ui-from-a-json-web-reponse)
   - [`loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously](#loadscriptsrcurl-loadstylesrcurl-loadscripttxtstring-loadstyletxtstring---attach-a-new-script-or-css-stylesheet-to-the-end-of-head-synchronously)
-  - [`nodeGet(node)` - Get standard details from a DOM node](#nodegetnode---get-standard-details-from-a-dom-node)
   - [`replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string](#replaceslotel-component---replace-or-add-an-html-elements-slot-from-text-or-an-html-string)
   - [`replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string](#replaceslotmarkdownel-component---replace-or-add-an-html-elements-slot-from-a-markdown-string)
   - [`showDialog(type, ui, msg)` - Show a toast or alert style message on the UI](#showdialogtype-ui-msg---show-a-toast-or-alert-style-message-on-the-ui)
@@ -87,9 +86,11 @@ You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-
 
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
 
-Results in a standard message sent to Node-RED where `the msg.payload` contains the whole current HTML page as a string.
+Results in a standard message sent to Node-RED where the `msg.payload` contains the whole current HTML page as a string.
 
 Use with the `uib-save` node to fix the latest page complete with any dynamic updates as the html page to load for new client connections for example.
+
+The returned message inludes `msg.length` to allow checking that the returned html payload wasn't truncated by a Socket.IO message length restriction.
 
 ### `send(msg, originator = '')` - Send a custom message back to Node-RED
 
@@ -222,6 +223,8 @@ For functions with no descriptions, please refer to the code. In general, these 
 
 Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
 
+Directly calls `_ui.ui` from the `ui.js` library.
+
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
 
 See under [Message Handling](#message-handling) above for details.
@@ -230,13 +233,13 @@ See under [Message Handling](#message-handling) above for details.
 
 Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
 
+Directly calls `_ui.loadui` from the `ui.js` library.
+
 ### `loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously
 
 Either from a remote URL or from a text string.
 
-### `nodeGet(node)` - Get standard details from a DOM node
-
-Used internally by `uiGet` and other functions. Must be passed a DOM node.
+Directly call the functions of the same name from the `ui.js` library.
 
 ### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string
 
@@ -247,6 +250,8 @@ This function is mostly for internal use.
 `component` must be a single `_ui` components entry with a `slot` property that will be used to replace the `el`s slot.
 
 Will use DOMPurify if that library has been loaded.
+
+Directly calls `_ui.replaceSlot` from the `ui.js` library.
 
 ### `replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string
 
@@ -260,7 +265,11 @@ The Markdown-IT library must be loaded for this to work, otherwise it silently f
 
 Will use DOMPurify if that library has been loaded.
 
+Directly calls `_ui.replaceSlotMarkdown` from the `ui.js` library.
+
 ### `showDialog(type, ui, msg)` - Show a toast or alert style message on the UI
+
+Directly calls `_ui.showDialog` from the `ui.js` library.
 
 `type` is either "notify" or "alert".
 
