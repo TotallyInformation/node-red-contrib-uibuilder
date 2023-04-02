@@ -10,11 +10,37 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+### Front-end library
+
+* Use esbuild to create IIFE version of `ui.js`.
+
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...main)
 
 <!-- Nothing currently. -->
+
+### Front-end client library
+
+* `_ui` handling moved to a separate utility library `ui.js` to allow use elsewhere. Currently configured as a CommonJS style module which allows use in front-end code via esbuild or in Node-RED (though another library will be needed to provide direct DOM support).
+* `ui.js`
+  * New class library containing the uibuilder _ui processing so that it can be used in the future for processing in Node-RED as well.
+    
+    Exports the Ui class. Must be used as: `const _ui = new Ui(log, syntaxHighlight)`
+
+    `log` is a logging function that, returns a function that actually logs (so it has to be called as `log(...)()`). This is normally a wrapper around console so that the correct calling location (taking into account maps) is reported.
+
+    `syntaxHighlight` is a function that returns returns an HTML string representing a highlighted version of the JSON input.
+
+    Both of those input functions are available in the uibuilder client library. If using separately, those functions will need to be reproduced.
+
+    As the library uses `module.exports`, it must currently be built into a working script using `esbuild` or it can be imported into another script that is run through esbuild.
+
+  * Additional safety checks added to ensure browser native API's present (`document`, `fetch`, etc.).
+  * Class constructor takes a `log` function as an argument, this is required. The log function is assumed to be the same as the one in the main library (which requires calling as `log(...)()` to ensure that the correct calling line is reported.)
+  * Fixed handling of `xlink` SVG attributes. Allows the use of `<use>` and other tags with `xlink:href` attributes.
+  * Auto-add correct namespaces to an `svg` tag (`xmlns` and `xmlns:xlink`) so that you don't have to remember. 😉
+  * Improved `htmlSend`. Now includes doctype and outer html tags. `msg.length` also added to allow checking that the payload wasn't truncated by a Socket.IO limit.
 
 ### `uib-element`
 

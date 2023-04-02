@@ -215,6 +215,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] Style/Theme changer.
       Extended version of the one in my experimental W3C Components repo. Will let you change between light/dark mode, change base colours, etc. [Example component](https://github.com/TotallyInformation/web-components/blob/main/components/uib-theme-changer.js)
 
+    * [ ] Accordian.
+      [ref](https://css-tricks.com/quick-reminder-that-details-summary-is-the-easiest-way-ever-to-make-an-accordion/)
+
   * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
 ### Extensions to the `uib-update` node
@@ -256,6 +259,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
   * Add `window.uib` as a synonym of `window.uibuilder`.
+  * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
 
   * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * Add treeview formatting to syntaxHighlight. [ref](https://iamkate.com/code/tree-views/).
