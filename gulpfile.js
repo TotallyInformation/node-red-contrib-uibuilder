@@ -36,7 +36,7 @@ const include = require('gulp-include')
 const once = require('gulp-once')
 // const prompt = require('gulp-prompt')
 const greplace = require('gulp-replace')
-const debug = require('gulp-debug')
+// const debug = require('gulp-debug')
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 const gulpEsbuild = require('gulp-esbuild')
@@ -44,7 +44,7 @@ const gulpEsbuild = require('gulp-esbuild')
 const execa = require('execa')
 
 const fs = require('fs-extra')
-const { default: esm } = require('socket.io-client')
+// const { default: esm } = require('socket.io-client')
 
 // const { promisify } = require('util')
 // const dotenv = require('dotenv')
@@ -198,6 +198,9 @@ function packfeModuleMin(cb) {
     // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
     // cb()
 }
+/**
+ *
+ */
 function packfeModule(cb) {
     src(`${feModuleSrc}/uibuilder.module.js`)
         .pipe(gulpEsbuild({
@@ -273,6 +276,9 @@ function packfeIIFEmin(cb) {
     // cb()
 }
 
+/**
+ *
+ */
 function packfeIIFE(cb) {
     src(`${feModuleSrc}/uibuilder.module.js`)
         .pipe(gulpEsbuild({
@@ -305,7 +311,8 @@ function packfeIIFE(cb) {
 /** Pack (Uglify) front-end IIFE ES6 task
  * @param {Function} cb Callback
  */
-function packfeIIFEes6(cb) {
+// @ts-ignore
+function packfeIIFEes6(cb) { // eslint-disable-line no-unused-vars
     try {
         src(`${feModuleSrc}/uibuilder.module.js`)
             .pipe(gulpEsbuild({
@@ -365,7 +372,8 @@ function packfeIIFEes6(cb) {
 /** Pack (Uglify) front-end IIFE ES5 task - DOES NOT WORK!
  * @param {Function} cb Callback
  */
-function packfeIIFEes5(cb) {
+// @ts-ignore
+function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
     try {
         src(`${feModuleSrc}/uibuilder.module.js`)
             .pipe(gulpEsbuild({
@@ -569,7 +577,7 @@ const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSende
 function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('src/front-end/uibuilderfe.dev.js', packfe)
-    watch('src/front-end-module/uibuilder.module.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    watch(['src/front-end-module/uibuilder.module.js', 'src/front-end-module/ui.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
     watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
@@ -593,7 +601,7 @@ function setFeVersionDev(cb) {
 
                 if ( match !== release) {
                     console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
-                    // git commit -m 'my notes' path/to/my/file.ext 
+                    // git commit -m 'my notes' path/to/my/file.ext
                     return `self.version = '${release}-old'`
                 }
 
@@ -616,9 +624,9 @@ function setFeVersion(cb) {
 
                 if ( match !== release) {
                     console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
-                    // git commit -m 'my notes' path/to/my/file.ext 
+                    // git commit -m 'my notes' path/to/my/file.ext
                     return `self.version = '${release}-old'`
-                } 
+                }
 
                 console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                 cb(new Error('setFeVersion: Content version same as release'))
@@ -638,7 +646,7 @@ function setFeVersionMin(cb) {
                 if ( match !== release) {
                     console.log(`setFeVersionMin: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                     return `.version="${release}-old",`
-                } 
+                }
 
                 console.log(`Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
                 cb(new Error('setFeVersionMin: Content version same as release'))
@@ -680,11 +688,11 @@ async function createTag(cb) {
     } catch (e) {
         lastTag = ''
     }
-    
+
     console.log(`Last committed tag: ${lastTag}`)
 
     // If the last committed tag is different to the required release ...
-    if ( lastTag.replace('v','') !== release ) {
+    if ( lastTag.replace('v', '') !== release ) {
         // const commitMsg = `chore: release ${release}`
         // await execa('git', ['add', '.'], { stdio })
         // await execa('git', ['commit', '--message', commitMsg], { stdio })
