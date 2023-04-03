@@ -3,7 +3,7 @@ title: Custom document events used in the modern client
 description: >
    Details about the custom `document` events used in the uibuilder modern front-end client library.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-03-02 20:28:34
+lastUpdated: 2023-04-02 18:45:49
 ---
 
 
@@ -73,9 +73,3 @@ The message content is provided on the events `detail` object.
 When a std msg with a msg._ui property is received
 
 The message content is provided on the events `detail` object.
-
-## `uibuilder:msg:_ui:${action.method}${action.id ? `:${action.id}` : ''}`
-
-Output for each action on receipt of a std msg with a msg._ui property
-
-The action details are provided on the events `detail` object.

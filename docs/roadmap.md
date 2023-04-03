@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-03-20 20:35:47
+lastUpdated: 2023-04-02 17:34:38
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -65,7 +65,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
 * How to provide a better log output? With a simple way to link to Node-RED log output (filtered) as well as a dedicated output node. That output's to a web page with highlighting and possibly page back/fwd through history.
 
-## vNext - the next release after current (v6.2)
+## vNext - the next release after current (v6.4)
 
 * **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations
 
@@ -91,9 +91,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
   - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
 
-* **NEW NODE** - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.
-
-  e.g. Get the number of rows in a table or list. Get the ID of the first `div`. Get the current value of an input field.
+* ~~**NEW NODE** - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.~~ No longer needed, use `msg._uib` commands in std msg.
 
 * Continuing documentation improvements
   * `README.md`: Add more links to the Features section so that each feature points to appropriate documentation. Add a landing-page link to "includes many helper features" to signpost to relavent detailed documentation.
@@ -101,7 +99,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Reorg docs to make more sense to new starters & make more logical.
 
 * Update _ui handling to allow filtering on page name. Add `pageName` as an option to all ui instructions. Change client to check for pageName and ignore if it doesn't match.
-* Improve client `eventSend` to put form values into payload along with data-* attributes.
 
 ## Next - these are things that need to be done
 
@@ -404,10 +401,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 
 ### Updates to Documentation (including videos)
-  * Add the `replace` type to the `config-driven-ui.md` document.
   * Search for `*(This document is a work-in-progress, it is not complete)*` and update documents.
-  * Update glossary with ESM, ECMA, UMD, IIFE
-  * Add CSS Selectors how-to with typical examples. e.g. element with id, element with class, nth list entry/table row.
   * Split the new client library, move _ui features to separate page.
   * Add message interaction diagram to "pre-defined-msgs.md"
   * Add note to documentation for the library manager that you can install LOCAL folders.

@@ -13,6 +13,11 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Front-end library
 
 * Use esbuild to create IIFE version of `ui.js`.
+* For `uiGet`, add number of list/table rows.
+
+### `uibuilder` node
+
+* Add `vscode:` link to instance root folder if the admin i/f is running on localhost
 
 ----
 
@@ -41,6 +46,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Fixed handling of `xlink` SVG attributes. Allows the use of `<use>` and other tags with `xlink:href` attributes.
   * Auto-add correct namespaces to an `svg` tag (`xmlns` and `xmlns:xlink`) so that you don't have to remember. 😉
   * Improved `htmlSend`. Now includes doctype and outer html tags. `msg.length` also added to allow checking that the payload wasn't truncated by a Socket.IO limit.
+  * A custom event is no longer fired for each method invoked in a `msg._ui`. Very unlikely anyone ever found that useful and it simplifies the code.
 
 ### `uib-element`
 
@@ -49,6 +55,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Documentation
 
 * Renamed `_sidebar.md` to `-sidebar.md` to stop npm publish from dropping it.
+* Added new how-to explaining CSS Selectors and giving common examples.
 
 
 ## [v6.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.0...v6.2.0)
