@@ -12,9 +12,15 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.2.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...main)
 
 <!-- Nothing currently. -->
+
+## [v6.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...v6.3.0)
+
+### Front-end library
+
+* **BUG FIX** for [Issue #207](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/207) - `eventSend` function failing when in a form and when using Svelte.
 
 ### `uib-element`
 
@@ -23,7 +29,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Documentation
 
 * Renamed `_sidebar.md` to `-sidebar.md` to stop npm publish from dropping it.
-
 
 ## [v6.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.0...v6.2.0)
 
