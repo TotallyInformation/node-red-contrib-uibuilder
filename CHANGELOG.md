@@ -25,18 +25,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 <!-- Nothing currently. -->
 
-## [v6.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...v6.3.0)
-
-### Front-end library
-
-* **BUG FIX** for [Issue #207](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/207) - `eventSend` function failing when in a form and when using Svelte.
-
-## [v6.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...v6.3.0)
-
-### Front-end library
-
-* **BUG FIX** for [Issue #207](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/207) - `eventSend` function failing when in a form and when using Svelte.
-
 ### Front-end client library
 
 * `_ui` handling moved to a separate utility library `ui.js` to allow use elsewhere. Currently configured as a CommonJS style module which allows use in front-end code via esbuild or in Node-RED (though another library will be needed to provide direct DOM support).
@@ -60,6 +48,17 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Improved `htmlSend`. Now includes doctype and outer html tags. `msg.length` also added to allow checking that the payload wasn't truncated by a Socket.IO limit.
   * A custom event is no longer fired for each method invoked in a `msg._ui`. Very unlikely anyone ever found that useful and it simplifies the code.
 
+### Documentation
+
+* Added new how-to explaining CSS Selectors and giving common examples.
+
+
+## [v6.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...v6.3.0)
+
+### Front-end library
+
+* **BUG FIX** for [Issue #207](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/207) - `eventSend` function failing when in a form and when using Svelte.
+
 ### `uib-element`
 
 * **Bug Fix**: Adjust selector for type "Page Title" to avoid accidentally updating `<title>` tags in SVG's.
@@ -67,7 +66,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Documentation
 
 * Renamed `_sidebar.md` to `-sidebar.md` to stop npm publish from dropping it.
-* Added new how-to explaining CSS Selectors and giving common examples.
 
 
 ## [v6.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.0...v6.2.0)
