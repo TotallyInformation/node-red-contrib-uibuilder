@@ -1356,19 +1356,11 @@ export const Uib = class Uib {
             form.valid = target.form.checkValidity()
             Object.values(target.form).forEach( (frmEl, i) => {
                 const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
-                // const attribs = Object.assign({},
-                //     ...Array.from(frmEl.attributes,
-                //         ( { name, value } ) => {
-                //             if ( !ignoreAttribs.includes(name) ) {
-                //                 return ({ [name]: value })
-                //             }
-                //             return undefined
-                //         }
-                //     )
-                // )
-                if (id !== '') {
+
+                // We must have both an element id (we may have forced one above) AND
+                // the element type MUST be not undefined - to allow for the extra properties added by frameworks such as Svelte
+                if (id !== '' && frmEl.type) {
                     frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
-                    // form[id] = frmEl.value
                     form[id] = {
                         'id': frmEl.id,
                         'name': frmEl.name,

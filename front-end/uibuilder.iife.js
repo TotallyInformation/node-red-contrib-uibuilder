@@ -5055,7 +5055,7 @@
         form.valid = target.form.checkValidity();
         Object.values(target.form).forEach((frmEl, i2) => {
           const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
-          if (id !== "") {
+          if (id !== "" && frmEl.type) {
             frmVals.push({ key: id, val: frmEl.value });
             form[id] = {
               "id": frmEl.id,
