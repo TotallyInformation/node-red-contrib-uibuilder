@@ -19,6 +19,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Add `vscode:` link to instance root folder if the admin i/f is running on localhost
 
+### Documentation
+
+* New doc for using `ui.js` outside of uibuilder.
+
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...main)
@@ -47,6 +51,16 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Auto-add correct namespaces to an `svg` tag (`xmlns` and `xmlns:xlink`) so that you don't have to remember. 😉
   * Improved `htmlSend`. Now includes doctype and outer html tags. `msg.length` also added to allow checking that the payload wasn't truncated by a Socket.IO limit.
   * A custom event is no longer fired for each method invoked in a `msg._ui`. Very unlikely anyone ever found that useful and it simplifies the code.
+
+### `uibuilder` node
+
+* [Socket.IO v4.6 connection state recovery](https://socket.io/docs/v4/connection-state-recovery) added - Allows a client to recover from a temporary disconnection (up to 2 minutes). `msg.recovered` added to the connection control msg. Is set to true if the client connection is a recovery. 
+  
+  This change should reduce the number of times that a client's `_socketId` property changes value. Note that the socket id will always change if the user reloads the page.
+
+  It also ensures that packets sent from the server while the connection was broken will be sent to the client after reconnection.
+
+* [Socket.IO v4.6 disconnect description](https://github.com/socketio/socket.io/releases/tag/4.6.0) added - Adds more details about the disconnection reason to the disconnect control message.
 
 ### Documentation
 

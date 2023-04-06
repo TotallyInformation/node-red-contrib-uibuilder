@@ -102,8 +102,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ## Next - these are things that need to be done
 
-* Incorporate [Socket.IO v4.6 features](https://github.com/socketio/socket.io/releases/tag/4.6.0) - particularly connection state recovery.
-
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
 
 * Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
