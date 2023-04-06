@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this, sonarjs/no-duplicate-string, max-params */
 /** Manage Socket.IO on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  *
@@ -17,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* eslint-disable class-methods-use-this, sonarjs/no-duplicate-string, max-params */
 'use strict'
 
 /** --- Type Defs ---
@@ -211,11 +211,17 @@ class UibSockets {
         let ioOptions = {
             'path': uibSocketPath,
             serveClient: true, // Needed for backwards compatibility
+            connectionStateRecovery: {
+                // the backup duration of the sessions and the packets
+                maxDisconnectionDuration: 120000, // Default = 2 * 60 * 1000 = 120000,
+                // whether to skip middlewares upon successful recovery
+                skipMiddlewares: true, // Default = true
+            },
             // https://github.com/expressjs/cors#configuration-options, https://socket.io/docs/v3/handling-cors/
             cors: {
                 origin: '*',
                 // allowedHeaders: ['x-clientid'],
-            }
+            },
             /* // Socket.Io 3+ CORS is disabled by default, also options have changed.
             // for CORS need to handle preflight request explicitly 'cause there's an
             // Allow-Headers:X-ClientId in there.  see https://socket.io/docs/v4/handling-cors/
@@ -362,6 +368,8 @@ class UibSockets {
             'connectedTimestamp': (new Date(socket.handshake.issued)).toISOString(),
             /** THe referring webpage, should be the full URL of the uibuilder page */
             'referer': socket.request.headers.referer,
+            /** Is this client reconnected after temp loss? */
+            'recovered': socket.recovered,
 
             // ? client time offset ?
         }
@@ -479,12 +487,12 @@ class UibSockets {
 
         const that = this
 
-        ioNs.on('connection', function(socket) {
+        ioNs.on('connection', (socket) => {
 
             //#region ----- Event Handlers ----- //
 
             // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
-            socket.on('disconnect', function(reason) {
+            socket.on('disconnect', (reason, description) => {
 
                 // ioNs.clientLog[socket.handshake.auth.clientId].connected = false
 
@@ -498,10 +506,11 @@ class UibSockets {
                 // Let the control output port know a client has disconnected
                 const ctrlMsg = {
                     ...{
-                        uibuilderCtrl: 'client disconnect',
-                        reason: reason,
-                        topic: node.topic || undefined,
-                        from: 'server',
+                        'uibuilderCtrl': 'client disconnect',
+                        'reason': reason,
+                        'topic': node.topic || undefined,
+                        'from': 'server',
+                        'description': description,
                     },
                     ...that.getClientDetails(socket, node),
                 }
@@ -573,7 +582,7 @@ class UibSockets {
             node.ioClientsCount = ioNs.sockets.size
 
             log.trace(
-                `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}, Client Version: ${socket.handshake.auth.clientVersion}. For node ${node.id}`
+                `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}, Recovered?: ${socket.recovered}, Client Version: ${socket.handshake.auth.clientVersion}. For node ${node.id}`
             )
 
             if (uib.configFolder === null) throw new Error('uib.configFolder is undefined')
