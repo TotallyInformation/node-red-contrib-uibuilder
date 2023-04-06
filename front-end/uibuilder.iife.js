@@ -5406,9 +5406,9 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         this.socketOptions.auth.lastNavType = this.lastNavType;
         this.socketOptions.auth.tabId = this.tabId;
         this.socketOptions.auth.more = this.tabId;
-        log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}
+        log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
 Namespace: ${this.ioNamespace}`)();
-        this._dispatchCustomEvent("uibuilder:socket:connected", this.connectedNum);
+        this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
         this._checkConnect();
       });
       this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this));

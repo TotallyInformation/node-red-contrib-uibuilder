@@ -1841,8 +1841,8 @@ export const Uib = class Uib {
             this.socketOptions.auth.tabId = this.tabId
             this.socketOptions.auth.more = this.tabId
 
-            log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}\nNamespace: ${this.ioNamespace}`)()
-            this._dispatchCustomEvent('uibuilder:socket:connected', this.connectedNum)
+            log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. \nNamespace: ${this.ioNamespace}`)()
+            this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered })
 
             this._checkConnect() // resets any reconnection timers & sets connected flag
 
