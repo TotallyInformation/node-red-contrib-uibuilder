@@ -5,7 +5,9 @@
 (function () { // eslint-disable-line sonarjs/cognitive-complexity
     'use strict'
 
-    const uibDebug = location.hostname === '127.0.0.1'
+    const localHost = ['localhost', '127.0.0.1', '::1', ''].includes(window.location.hostname) || window.location.hostname.endsWith('.localhost')
+    const uibDebug = localHost
+    console.log({localHost, uibDebug}, window['hostname'], window.location.hostname)
     const mylog = uibDebug ? console.log : function() {}
     mylog('[uibuilder] DEBUG ON (because running on localhost)')
 
@@ -1736,6 +1738,9 @@
 
         // TODO Move to separate function
         //#region ---- File Editor ---- //
+
+        // If on localhost, add clickable label that opens in vscode
+
 
         // Mark edit save/reset buttons as disabled by default
         fileIsClean(true)
