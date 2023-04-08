@@ -62,6 +62,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * [Socket.IO v4.6 disconnect description](https://github.com/socketio/socket.io/releases/tag/4.6.0) added - Adds more details about the disconnection reason to the disconnect control message.
 
+* When running Node-RED on localhost, the editor panel automatically turns on debug output. This used to be the case previously but the lookup to determine whether running locally was not comprehensive enough, now fixed.
+
+* Added links to open the instance's front-end code folder in a new VSCode window. They only appear if running Node-RED on localhost. A button is added to the top of the config panel and to the Core tab where the folder name is shown.
+
 ### Documentation
 
 * Added new how-to explaining CSS Selectors and giving common examples.

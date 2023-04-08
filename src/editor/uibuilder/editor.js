@@ -7,7 +7,6 @@
 
     const localHost = ['localhost', '127.0.0.1', '::1', ''].includes(window.location.hostname) || window.location.hostname.endsWith('.localhost')
     const uibDebug = localHost
-    console.log({localHost, uibDebug}, window['hostname'], window.location.hostname)
     const mylog = uibDebug ? console.log : function() {}
     mylog('[uibuilder] DEBUG ON (because running on localhost)')
 
@@ -1483,6 +1482,27 @@
         $('#node-input-showMsgUib').prop('checked', node.showMsgUib)
     }
 
+    /** Create the wrapping HTML string that provides a link to open the instance folder in vscode
+     * @param {object} node A reference to the panel's `this` object
+     * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
+     */
+    function vscodeLink(node) {
+        let pre, post
+        if (localHost) {
+            pre = `<a href="vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank" title="Open in VScode">`
+            post = '</a>'
+        } else {
+            pre = '<b>'
+            post = '</b>'
+        }
+        return {
+            pre: pre,
+            post: post,
+            url: `vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`,
+            icon: '<img src="resources/node-red-contrib-uibuilder/vscode.svg" style="width:20px" >',
+        }
+    }
+
     /** Show what server is in use
      * @param {object} node A reference to the panel's `this` object
      */
@@ -1511,8 +1531,10 @@
 
         node.urlPrefix = `${eUrlSplit.join(':')}/${node.nodeRoot}`
 
+        const vslink = vscodeLink(node)
+
         $('#info-webserver')
-            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank">${node.urlPrefix}</a><br>Server folder: <b>${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/</b> </div>`)
+            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank" title="Open in new window">${node.urlPrefix}</a><br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`)
 
     } // ---- end of showServerInUse ---- //
 
@@ -1673,75 +1695,8 @@
 
     } // ---- End of preTabs ---- //
 
-    /** Prep for edit
-     * @param {*} node -
-     */
-    function onEditPrepare(node) {
-        // Add open and docs buttons to top button bar, next to Delete button
-        $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-globe" aria-hidden="true"></i> Open</button>')
-            .on('click', (evt) => {
-                evt.preventDefault()
-                window.open(`${node.urlPrefix}${$('#node-input-url').val()}`, '_blank')
-            })
-            .appendTo($('div.red-ui-tray-toolbar'))
-        $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book" aria-hidden="true"></i> Docs</button>')
-            .on('click', (evt) => {
-                evt.preventDefault()
-                RED.sidebar.help.show('uibuilder')
-                window.open('./uibuilder/docs', '_blank')
-            })
-            .appendTo($('div.red-ui-tray-toolbar'))
-
-        getFolders()
-
-        packageList()
-
-        // console.log('>> ONEDITPREPARE: NODE >>', node)
-
-        // Show uibuilder version
-        $('#uib_version').text(RED.settings.uibuilderCurrentVersion)
-
-        // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
-        if ( node.templateFolder === undefined || node.templateFolder === '' ) node.templateFolder = defaultTemplate
-
-        // Set the checkbox initial states
-        setInitialStates(node)
-
-        prepTabs(node)
-
-        // Set sourceFolder dropdown
-        $(`#node-input-sourceFolder option[value="${node.sourceFolder || 'src'}"]`).prop('selected', true)
-        $('#node-input-sourceFolder').val(node.sourceFolder || 'src')
-
-        // When the show web view (index) of source files changes
-        $('#node-input-showfolder').on('change', function() {
-            if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
-            else $('#show-src-folder-idx-url').show()
-        })
-
-        // Configure the template dropdown & setup button handlers
-        templateSettings(node)
-
-        // security settings
-        // securitySettings()
-
-        // Show the server in use
-        showServerInUse(node)
-
-        // Update web links on url change
-        $('#node-input-url').on('change', function() {
-            urlChange.call(this, node)
-        })
-        // Show url errors for 1 time when panel 1st opens (after that, the verify fn takes over)
-        if ( node.url === undefined || node.url === '' ) {
-            enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1) }
-
-        // TODO Move to separate function
-        //#region ---- File Editor ---- //
-
-        // If on localhost, add clickable label that opens in vscode
-
-
+    /** File Editor */
+    function fileEditor() {
         // Mark edit save/reset buttons as disabled by default
         fileIsClean(true)
 
@@ -2013,7 +1968,82 @@
 
         })
 
-        //#endregion ---- File Editor ---- //
+    } // ---- End of fileEditor ----
+
+    /** Prep for edit
+     * @param {*} node -
+     */
+    function onEditPrepare(node) {
+        // Add open and docs buttons to top button bar, next to Delete button
+        $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-globe" aria-hidden="true"></i> Open</button>')
+            .on('click', (evt) => {
+                evt.preventDefault()
+                window.open(`${node.urlPrefix}${$('#node-input-url').val()}`, '_blank')
+            })
+            .appendTo($('div.red-ui-tray-toolbar'))
+        $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book" aria-hidden="true"></i> Docs</button>')
+            .on('click', (evt) => {
+                evt.preventDefault()
+                RED.sidebar.help.show('uibuilder')
+                window.open('./uibuilder/docs', '_blank')
+            })
+            .appendTo($('div.red-ui-tray-toolbar'))
+        // If on localhost, add clickable label that opens in vscode
+        if (localHost) {
+            let vsc = vscodeLink(node)
+            $(`<button type="button" title="Open instance code folder in VSCode" aria-label="Link that opens the instance code folder in VSCode." class="ui-button ui-corner-all ui-widget leftButton">${vsc.icon}</button>`)
+                .on('click', (evt) => {
+                    evt.preventDefault()
+                    window.open(vsc.url)
+                })
+                .appendTo($('div.red-ui-tray-toolbar'))
+        }
+
+        getFolders()
+
+        packageList()
+
+        // console.log('>> ONEDITPREPARE: NODE >>', node)
+
+        // Show uibuilder version
+        $('#uib_version').text(RED.settings.uibuilderCurrentVersion)
+
+        // Bug fix for messed up recording of template up to uib v3.3, fixed in v4
+        if ( node.templateFolder === undefined || node.templateFolder === '' ) node.templateFolder = defaultTemplate
+
+        // Set the checkbox initial states
+        setInitialStates(node)
+
+        prepTabs(node)
+
+        // Set sourceFolder dropdown
+        $(`#node-input-sourceFolder option[value="${node.sourceFolder || 'src'}"]`).prop('selected', true)
+        $('#node-input-sourceFolder').val(node.sourceFolder || 'src')
+
+        // When the show web view (index) of source files changes
+        $('#node-input-showfolder').on('change', function() {
+            if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
+            else $('#show-src-folder-idx-url').show()
+        })
+
+        // Configure the template dropdown & setup button handlers
+        templateSettings(node)
+
+        // security settings
+        // securitySettings()
+
+        // Show the server in use
+        showServerInUse(node)
+
+        // Update web links on url change
+        $('#node-input-url').on('change', function() {
+            urlChange.call(this, node)
+        })
+        // Show url errors for 1 time when panel 1st opens (after that, the verify fn takes over)
+        if ( node.url === undefined || node.url === '' ) {
+            enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1) }
+
+        fileEditor()
 
         dumpUibSettings()
 
