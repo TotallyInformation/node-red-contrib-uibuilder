@@ -326,7 +326,7 @@
 
     /** RemoveItem function for package list
      * @param {string} packageName Name of the npm package to remove
-     * @returns {string} Result text
+     * @returns {string|null} Result text
      */
     function removePackageRow(packageName) {
 
@@ -369,6 +369,7 @@
                 // TODO otherwise highlight input
             })
 
+        return null
     } // ---- End of removePackageRow ---- //
 
     /** Get list of installed packages via v2 API - save to master list */
@@ -1990,7 +1991,7 @@
             .appendTo($('div.red-ui-tray-toolbar'))
         // If on localhost, add clickable label that opens in vscode
         if (localHost) {
-            let vsc = vscodeLink(node)
+            const vsc = vscodeLink(node)
             $(`<button type="button" title="Open instance code folder in VSCode" aria-label="Link that opens the instance code folder in VSCode." class="ui-button ui-corner-all ui-widget leftButton">${vsc.icon}</button>`)
                 .on('click', (evt) => {
                     evt.preventDefault()
