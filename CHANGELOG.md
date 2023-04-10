@@ -10,10 +10,14 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+### General
+
+* Add ability to limit _ui/_uib commands to a specific page/clientId/_socketId/tabId.
+* Allow file uploads
+
 ### Front-end library
 
 * Use esbuild to create IIFE version of `ui.js`.
-* For `uiGet`, add number of list/table rows.
 
 ### `uibuilder` node
 
@@ -31,6 +35,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Front-end client library
 
+* A received msg containing a `msg._ui` property no longer triggers `onChange` or `onTopic` event handlers.
+  
 * `_ui` handling moved to a separate utility library `ui.js` to allow use elsewhere. Currently configured as a CommonJS style module which allows use in front-end code via esbuild or in Node-RED (though another library will be needed to provide direct DOM support).
 * `ui.js`
   * New class library containing the uibuilder _ui processing so that it can be used in the future for processing in Node-RED as well.
@@ -50,7 +56,16 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Fixed handling of `xlink` SVG attributes. Allows the use of `<use>` and other tags with `xlink:href` attributes.
   * Auto-add correct namespaces to an `svg` tag (`xmlns` and `xmlns:xlink`) so that you don't have to remember. 😉
   * Improved `htmlSend`. Now includes doctype and outer html tags. `msg.length` also added to allow checking that the payload wasn't truncated by a Socket.IO limit.
-  * A custom event is no longer fired for each method invoked in a `msg._ui`. Very unlikely anyone ever found that useful and it simplifies the code.
+  * A custom event is no longer fired for each method invoked in a `msg._ui`. Very unlikely anyone ever found that useful and it simplifies the code. So `onChange` and `onTopic` event handler's are not called.
+
+* For `uiGet` function:
+  * Added number of list/table rows where appropriate.
+  * Corrected the single attribute code.
+  * Extended single attribute get such that:
+    * If the property requested is either an element attribute OR an element property, a key/value pair will be returned.
+    * If the property requested is "value" and the selected element is not an input element, the element's inner text will be retured instead.
+
+* Extended the `uiGet` _uib command to allow getting a specific property. e.g. send a msg like: `{ "_uib": {"command":"uiGet","prop":"#eltest", "value": "class"} }` to get the classes applied.
 
 ### `uibuilder` node
 

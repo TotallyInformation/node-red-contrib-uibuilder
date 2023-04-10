@@ -38,6 +38,17 @@ Sending a message containing a `msg._uib` property set as follows will result in
 
 Where `prop` has to be set to a valid CSS Selector.
 
+Alternatively, you can ask for a specific property from the selected element like this:
+
+```json
+{"command":"uiGet","prop":"#eltest table", "value": "class"}
+```
+
+Which will return the class attribute value from a `<table>` tag within a tag having an id of `eltest`.
+
+With this format, if you ask for the `value` attribute - `{"command":"uiGet","prop":"#eltest", "value": "value"}` - if the selected element is an `input` type, the input's value attribute will be returned. But if it is some other kind of element type, the element's inner text will be returned.
+
+
 ### `uiWatch`
 
 To be automatically informed of changes to some part of the web page UI, you can send a message with `msg._uib` something like this:

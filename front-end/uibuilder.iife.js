@@ -60,12 +60,10 @@
         /** Called when `new Ui(...)` is called
          * @param {*} extLog A fn that returns a fn for logging
          * @param {*} jsonHighlight A function that returns a highlighted HTML of JSON input
-         * @returns {null} Early exit if the global `document` object does not exist
          */
         constructor(extLog, jsonHighlight) {
           if (!document) {
             log2(0, "Ui:constructor", "Current environment does not include `document`, UI functions cannot be used.")();
-            return;
           }
           log2 = extLog;
           this.syntaxHighlight = jsonHighlight;
@@ -671,9 +669,10 @@
         // --- end of _uiManager ---
         /** Get standard data from a DOM node.
          * @param {*} node DOM node to examine
+         * @param {string} cssSelector Identify the DOM element to get data from
          * @returns {object} Standardised data object
          */
-        nodeGet(node) {
+        nodeGet(node, cssSelector) {
           const thisOut = {
             id: node.id === "" ? void 0 : node.id,
             name: node.name,
@@ -692,6 +691,34 @@
               type: node.type
             }
           };
+          if (["UL", "OL"].includes(node.nodeName)) {
+            const listEntries = document.querySelectorAll(`${cssSelector} li`);
+            if (listEntries) {
+              thisOut.list = {
+                "entries": listEntries.length
+              };
+            }
+          }
+          if (node.nodeName === "DL") {
+            const listEntries = document.querySelectorAll(`${cssSelector} dt`);
+            if (listEntries) {
+              thisOut.list = {
+                "entries": listEntries.length
+              };
+            }
+          }
+          if (node.nodeName === "TABLE") {
+            const bodyEntries = document.querySelectorAll(`${cssSelector} > tbody > tr`);
+            const headEntries = document.querySelectorAll(`${cssSelector} > thead > tr`);
+            const cols = document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+            if (bodyEntries || headEntries || cols) {
+              thisOut.table = {
+                "headRows": headEntries ? headEntries.length : 0,
+                "bodyRows": bodyEntries ? bodyEntries.length : 0,
+                "columns": cols ? cols.length : 0
+              };
+            }
+          }
           if (node.nodeName !== "#text" && node.attributes && node.attributes.length > 0) {
             thisOut.attributes = {};
             for (const attrib of node.attributes) {
@@ -724,26 +751,39 @@
           const out = [];
           selection.forEach((node) => {
             if (propName !== null && propName !== "") {
-              const prop = propName.split(".").reduce((prev2, cur) => prev2[cur], node);
-              if (prop.constructor.name === "NamedNodeMap") {
-                const p = {};
-                for (const key of prop) {
-                  p[key.name] = prop[key.name].value;
+              let prop = node.getAttribute(propName);
+              if (prop === void 0 || prop === null) {
+                try {
+                  prop = node[propName];
+                } catch (error) {
                 }
-                out.push(p);
-              } else if (!prop.constructor.name.toLowerCase().includes("map")) {
-                out.push({
-                  [propName]: prop
-                });
+              }
+              if (prop === void 0 || prop === null) {
+                if (propName.toLowerCase() === "value")
+                  out.push(node.innerText);
+                else
+                  out.push(`Property '${propName}' not found`);
               } else {
-                const p = {};
-                for (const key in prop) {
-                  p[key] = prop[key];
+                if (prop.constructor.name === "NamedNodeMap") {
+                  const p = {};
+                  for (const key of prop) {
+                    p[key.name] = prop[key.name].value;
+                  }
+                  out.push(p);
+                } else if (!prop.constructor.name.toLowerCase().includes("map")) {
+                  out.push({
+                    [propName]: prop
+                  });
+                } else {
+                  const p = {};
+                  for (const key in prop) {
+                    p[key] = prop[key];
+                  }
+                  out.push(p);
                 }
-                out.push(p);
               }
             } else {
-              out.push(this.nodeGet(node));
+              out.push(this.nodeGet(node, cssSelector));
             }
           });
           return out;
@@ -5168,7 +5208,7 @@ ${document.documentElement.outerHTML}`;
           break;
         }
         case "uiGet": {
-          response = _ui.uiGet(prop);
+          response = _ui.uiGet(prop, value2);
           break;
         }
         case "uiWatch": {
@@ -5185,6 +5225,8 @@ ${document.documentElement.outerHTML}`;
         }
       }
       if (response !== void 0 && Object(response).constructor !== Promise) {
+        if (response.length === 0)
+          response = `'${prop}' not found`;
         msg.payload = msg._uib.response = response;
         if (!msg.topic)
           msg.topic = this.topic || `uib ${cmd} for '${prop}'`;

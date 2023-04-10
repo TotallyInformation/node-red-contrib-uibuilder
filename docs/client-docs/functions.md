@@ -342,9 +342,11 @@ If no `propName` supplied, will return a selection of the most useful informatio
 
 Returned data can be sent back to Node-RED using: `uibuilder.send( uibuilder.uiGet('#myelementid') )`.
 
-Uses `nodeGet` internally.
+Where a propName is supplied, if you ask for the `value` attribute - `uibuilder.uiGet("#eltest", "value"}` - if the selected element is an `input` type, the input's value attribute will be returned. But if it is some other kind of element type, the element's inner text will be returned.
 
 Can be called from Node-RED with a message like: `{"_uib: {"command": "uiGet", "prop": "#more"} }`.
+
+Uses `nodeGet` internally.
 
 ### `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements
 

@@ -1492,7 +1492,7 @@ export const Uib = class Uib {
             }
 
             case 'uiGet': {
-                response = _ui.uiGet(prop)
+                response = _ui.uiGet(prop, value)
                 break
             }
 
@@ -1513,6 +1513,7 @@ export const Uib = class Uib {
         }
 
         if (response !== undefined && Object(response).constructor !== Promise) {
+            if (response.length === 0) response = `'${prop}' not found`
             msg.payload = msg._uib.response = response
             if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
             this.send(msg)
