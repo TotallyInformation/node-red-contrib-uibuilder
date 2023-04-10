@@ -745,6 +745,7 @@ export const Uib = class Uib {
     }
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+     * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
      * If the selected element is a <template>, returns the first child element.
      * type {HTMLElement}
      * @param {string} cssSelector A CSS Selector that identifies the element to return
@@ -769,7 +770,15 @@ export const Uib = class Uib {
 
         return el
     }
-    // $ = document.querySelector.bind(document)
+
+    /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
+     * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
+     * @param {*} cssSelector A CSS Selector that identifies the elements to return
+     * @returns {Array} Array of DOM elements/nodes. Array is empty if selector is not found.
+     */
+    $$(cssSelector) {
+        return Array.from(document.querySelectorAll(cssSelector))
+    }
 
     /** Set the default originator. Set to '' to ignore. Used with uib-sender.
      * @param {string} [originator] A Node-RED node ID to return the message to
@@ -1589,7 +1598,7 @@ export const Uib = class Uib {
         // Handle msg._ui requests
         if ( msg._ui ) {
             // Don't process if the inbound msg is not for us
-            if (!this._forThis(msg._uib)) return
+            if (!this._forThis(msg._ui)) return
 
             log('trace', 'Uib:_msgRcvdEvents:_ui', 'Calling _uiManager')()
             this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
@@ -2162,6 +2171,14 @@ if (!window['$']) {
     window['$'] = window['uibuilder'].$ // document.querySelector.bind(document)
 } else {
     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.')
+}
+// Assign `$$` to global window object unless it is already in use.
+// Note that this is also available as `uibuilder.$$`.
+if (!window['$$']) {
+    /** @type {HTMLElement} */
+    window['$$'] = window['uibuilder'].$$ // document.querySelectorAll.bind(document)
+} else {
+    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$$`, it is already in use. Use `uibuilder.$$` instead.')
 }
 
 // Can import as `import uibuilder from ...` OR `import {uibuilder} from ...`
