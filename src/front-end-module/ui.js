@@ -25,12 +25,10 @@ const Ui = class Ui {
     /** Called when `new Ui(...)` is called
      * @param {*} extLog A fn that returns a fn for logging
      * @param {*} jsonHighlight A function that returns a highlighted HTML of JSON input
-     * @returns {null} Early exit if the global `document` object does not exist
      */
     constructor(extLog, jsonHighlight) {
         if (!document) {
             log(0, 'Ui:constructor', 'Current environment does not include `document`, UI functions cannot be used.')()
-            return
         }
         log = extLog
         this.syntaxHighlight = jsonHighlight
@@ -800,9 +798,10 @@ const Ui = class Ui {
 
     /** Get standard data from a DOM node.
      * @param {*} node DOM node to examine
+     * @param {string} cssSelector Identify the DOM element to get data from
      * @returns {object} Standardised data object
      */
-    nodeGet(node) {
+    nodeGet(node, cssSelector) {
         const thisOut = {
             id: node.id === '' ? undefined : node.id,
             name: node.name,
@@ -819,6 +818,35 @@ const Ui = class Ui {
                 valueAsNumber: node.valueAsNumber,
                 type: node.type,
             },
+        }
+
+        if (['UL', 'OL'].includes(node.nodeName)) {
+            const listEntries = document.querySelectorAll(`${cssSelector} li`)
+            if (listEntries) {
+                thisOut.list = {
+                    'entries': listEntries.length
+                }
+            }
+        }
+        if (node.nodeName === 'DL') {
+            const listEntries = document.querySelectorAll(`${cssSelector} dt`)
+            if (listEntries) {
+                thisOut.list = {
+                    'entries': listEntries.length
+                }
+            }
+        }
+        if (node.nodeName === 'TABLE') {
+            const bodyEntries = document.querySelectorAll(`${cssSelector} > tbody > tr`)
+            const headEntries = document.querySelectorAll(`${cssSelector} > thead > tr`)
+            const cols = document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`)  // #eltest > table > tbody > tr:nth-child(3)
+            if (bodyEntries || headEntries || cols) {
+                thisOut.table = {
+                    'headRows': headEntries ? headEntries.length : 0,
+                    'bodyRows': bodyEntries ? bodyEntries.length : 0,
+                    'columns': cols ? cols.length : 0,
+                }
+            }
         }
         if (node.nodeName !== '#text' && node.attributes && node.attributes.length > 0) {
             thisOut.attributes = {}
@@ -854,27 +882,44 @@ const Ui = class Ui {
         selection.forEach(node => {
             // Specific property asked for ...
             if (propName !== null && propName !== '') {
-                const prop = propName.split('.').reduce((prev, cur) => prev[cur], node)
-                // Nightmare of different object types in a DOM Element!
-                if (prop.constructor.name === 'NamedNodeMap') { // Attributes
-                    const p = {}
-                    for (const key of prop) {
-                        p[key.name] = prop[key.name].value
-                    }
-                    out.push(p)
-                } else if (!prop.constructor.name.toLowerCase().includes('map')) { // Ordinary properties
-                    out.push({
-                        [propName]: prop
-                    })
-                } else { // Other MAP types
-                    const p = {}
-                    for (const key in prop) {
-                        p[key] = prop[key]
-                    }
-                    out.push(p)
+                // Try assuming the prop is an attribute first (will return null or "" if not present)
+                let prop = node.getAttribute(propName)
+                // If not an attribute, try getting as a property of the element
+                if (prop === undefined || prop === null) {
+                    try {
+                        prop = node[propName]
+                    } catch (error) {}
                 }
+                // We didn't find as either an attribute or a property
+                if (prop === undefined || prop === null) {
+                    // If 'value' was requested, return the innerText
+                    if (propName.toLowerCase() === 'value') out.push(node.innerText)
+                    else out.push(`Property '${propName}' not found`)
+                } else {
+                    // Nightmare of different object types in a DOM Element!
+                    if (prop.constructor.name === 'NamedNodeMap') { // Attributes
+                        const p = {}
+                        for (const key of prop) {
+                            // @ts-ignore
+                            p[key.name] = prop[key.name].value
+                        }
+                        out.push(p)
+                    } else if (!prop.constructor.name.toLowerCase().includes('map')) { // Ordinary properties
+                        out.push({
+                            [propName]: prop
+                        })
+                    } else { // Other MAP types
+                        const p = {}
+                        // @ts-ignore
+                        for (const key in prop) {
+                            p[key] = prop[key]
+                        }
+                        out.push(p)
+                    }
+                }
+
             } else { // Otherwise, grab everything useful
-                out.push(this.nodeGet(node))
+                out.push(this.nodeGet(node, cssSelector))
             }
         })
 
