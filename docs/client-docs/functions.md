@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-03-25 17:07:28
+lastUpdated: 2023-04-10 13:35:12
 ---
 
 Functions accessible in client-side user code.

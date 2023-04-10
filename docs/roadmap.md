@@ -98,8 +98,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Node-specific docs.
   * Reorg docs to make more sense to new starters & make more logical.
 
-* Update _ui handling to allow filtering on page name. Add `pageName` as an option to all ui instructions. Change client to check for pageName and ignore if it doesn't match.
-
 ## Next - these are things that need to be done
 
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)

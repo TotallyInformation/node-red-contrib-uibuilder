@@ -5234,12 +5234,34 @@ ${document.documentElement.outerHTML}`;
       }
     }
     // --- end of _uibCommand ---
+    /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
+     * @param {*} obj Either a msg._ui or msg._uib object to check
+     * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+     */
+    _forThis(obj) {
+      let r = true;
+      if (obj.pageName && obj.pageName !== this.pageName) {
+        log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this page")();
+        r = false;
+      }
+      if (obj.clientId && obj.clientId !== this.clientId) {
+        log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this clientId")();
+        r = false;
+      }
+      if (obj.tabId && obj.tabId !== this.tabId) {
+        log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this tabId")();
+        r = false;
+      }
+      return r;
+    }
     // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
     _msgRcvdEvents(msg) {
       this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
       if (msg.topic)
         this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
       if (msg._uib) {
+        if (!this._forThis(msg._uib))
+          return;
         if (msg._uib.reload === true) {
           log("trace", "Uib:_msgRcvdEvents:_uib:reload", "reloading")();
           location.reload();
@@ -5257,6 +5279,8 @@ ${document.documentElement.outerHTML}`;
         }
       }
       if (msg._ui) {
+        if (!this._forThis(msg._uib))
+          return;
         log("trace", "Uib:_msgRcvdEvents:_ui", "Calling _uiManager")();
         this._dispatchCustomEvent("uibuilder:msg:_ui", msg);
         _ui._uiManager(msg);

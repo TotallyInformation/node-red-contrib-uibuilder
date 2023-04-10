@@ -12,7 +12,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### General
 
-* Add ability to limit _ui/_uib commands to a specific page/clientId/_socketId/tabId.
 * Allow file uploads
 
 ### Front-end library
@@ -22,6 +21,14 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### `uibuilder` node
 
 * Add `vscode:` link to instance root folder if the admin i/f is running on localhost
+
+### `uib-element` node
+
+* Add input to allow restriction by pageName/clientId/tabId
+
+### `uib-update` node
+
+* Add input to allow restriction by pageName/clientId/tabId
 
 ### Documentation
 
@@ -68,6 +75,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Extended the `uiGet` _uib command to allow getting a specific property. e.g. send a msg like: `{ "_uib": {"command":"uiGet","prop":"#eltest", "value": "class"} }` to get the classes applied.
 
 ### `uibuilder` node
+
+* Added ability to limit _ui/_uib commands to a specific pageName/clientId/tabId. Simply add a property of the matching name and the commands will be ignored on any browser page not matching. You can use 1 or more of the properties, all will be checked. You can, of course still use `msg._socketId`, if present, the msg being sent is only sent to the single browser tab matching that socket.io id.
 
 * [Socket.IO v4.6 connection state recovery](https://socket.io/docs/v4/connection-state-recovery) added - Allows a client to recover from a temporary disconnection (up to 2 minutes). `msg.recovered` added to the connection control msg. Is set to true if the client connection is a recovery. 
   

@@ -1521,6 +1521,34 @@ export const Uib = class Uib {
 
     } // --- end of _uibCommand ---
 
+    /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
+     * @param {*} obj Either a msg._ui or msg._uib object to check
+     * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+     */
+    _forThis(obj) {
+        let r = true
+
+        // Is this msg for this pageName?
+        if (obj.pageName && obj.pageName !== this.pageName) {
+            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this page')()
+            r = false
+        }
+
+        // Is this msg for this clientId?
+        if (obj.clientId && obj.clientId !== this.clientId) {
+            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this clientId')()
+            r = false
+        }
+
+        // Is this msg for this tabId?
+        if (obj.tabId && obj.tabId !== this.tabId) {
+            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this tabId')()
+            r = false
+        }
+
+        return r
+    }
+
     // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
     _msgRcvdEvents(msg) {
 
@@ -1532,6 +1560,9 @@ export const Uib = class Uib {
 
         // Handle msg._uib special requests
         if (msg._uib) {
+            // Don't process if the inbound msg is not for us
+            if (!this._forThis(msg._uib)) return
+
             /** Process a client reload request from Node-RED - as the page is reloaded, everything else is ignored
              * Note that msg._ui.reload is also actioned via the _ui processing below */
             if (msg._uib.reload === true) {
@@ -1557,6 +1588,9 @@ export const Uib = class Uib {
 
         // Handle msg._ui requests
         if ( msg._ui ) {
+            // Don't process if the inbound msg is not for us
+            if (!this._forThis(msg._uib)) return
+
             log('trace', 'Uib:_msgRcvdEvents:_ui', 'Calling _uiManager')()
             this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
             _ui._uiManager(msg)
