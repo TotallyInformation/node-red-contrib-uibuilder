@@ -269,7 +269,7 @@ function buildTitle(node, msg) {
  */
 function buildUlOlList(node, msg, parent) {
     // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
+    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
 
     const err = ''
 
@@ -317,7 +317,7 @@ function buildUlOlList(node, msg, parent) {
  */
 function buildDlList(node, msg, parent) {
     // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
+    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
 
     const err = ''
 
@@ -396,8 +396,9 @@ function buildDlList(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildTable(node, msg, parent) {
+    node.warn(msg.payload.constructor.name)
     // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
+    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
 
     let cols = []
     const err = ''
@@ -520,7 +521,7 @@ function buildTable(node, msg, parent) {
  */
 function buildSForm(node, msg, parent) {
     // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(msg.payload instanceof Object)) msg.payload = [msg.payload]
+    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
 
     const err = ''
 
