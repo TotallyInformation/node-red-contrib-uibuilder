@@ -485,6 +485,7 @@ img, picture, video, canvas, svg {
     vertical-align: bottom;
     max-width: 100%;
     background-color: var(--surface2);
+    margin:1rem;
 }
 p, h1, h2, h3, h4, h5, h6, heading, li, dl, dt, blockquote {
     overflow-wrap: break-word;
@@ -775,6 +776,7 @@ div.required label::after {
     display:grid;
     grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
     gap:0.5rem;
+    list-style-position: inside;
 }
 .status-heading {
   grid-column: 1/-1;

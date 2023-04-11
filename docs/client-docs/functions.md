@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-03-25 17:07:28
+lastUpdated: 2023-04-10 13:35:12
 ---
 
 Functions accessible in client-side user code.
@@ -33,7 +33,6 @@ Functions accessible in client-side user code.
   - [`htmlSend()` - Sends the whole DOM/HTML back to Node-RED](#htmlsend---sends-the-whole-domhtml-back-to-node-red-1)
   - [`loadui(url)` - Load a dynamic UI from a JSON web reponse](#loaduiurl---load-a-dynamic-ui-from-a-json-web-reponse)
   - [`loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously](#loadscriptsrcurl-loadstylesrcurl-loadscripttxtstring-loadstyletxtstring---attach-a-new-script-or-css-stylesheet-to-the-end-of-head-synchronously)
-  - [`nodeGet(node)` - Get standard details from a DOM node](#nodegetnode---get-standard-details-from-a-dom-node)
   - [`replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string](#replaceslotel-component---replace-or-add-an-html-elements-slot-from-text-or-an-html-string)
   - [`replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string](#replaceslotmarkdownel-component---replace-or-add-an-html-elements-slot-from-a-markdown-string)
   - [`showDialog(type, ui, msg)` - Show a toast or alert style message on the UI](#showdialogtype-ui-msg---show-a-toast-or-alert-style-message-on-the-ui)
@@ -57,6 +56,7 @@ Functions accessible in client-side user code.
 - [Other](#other)
   - [`$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element](#cssselector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element)
     - [Example](#example-4)
+  - [`$$(cssSelector)` - Returns an array of HTML elements properties](#cssselector---returns-an-array-of-html-elements-properties)
   - [`log` - output log messages like the library does](#log---output-log-messages-like-the-library-does)
 
 
@@ -87,9 +87,11 @@ You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-
 
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
 
-Results in a standard message sent to Node-RED where `the msg.payload` contains the whole current HTML page as a string.
+Results in a standard message sent to Node-RED where the `msg.payload` contains the whole current HTML page as a string.
 
 Use with the `uib-save` node to fix the latest page complete with any dynamic updates as the html page to load for new client connections for example.
+
+The returned message inludes `msg.length` to allow checking that the returned html payload wasn't truncated by a Socket.IO message length restriction.
 
 ### `send(msg, originator = '')` - Send a custom message back to Node-RED
 
@@ -222,6 +224,8 @@ For functions with no descriptions, please refer to the code. In general, these 
 
 Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
 
+Directly calls `_ui.ui` from the `ui.js` library.
+
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
 
 See under [Message Handling](#message-handling) above for details.
@@ -230,13 +234,13 @@ See under [Message Handling](#message-handling) above for details.
 
 Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
 
+Directly calls `_ui.loadui` from the `ui.js` library.
+
 ### `loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously
 
 Either from a remote URL or from a text string.
 
-### `nodeGet(node)` - Get standard details from a DOM node
-
-Used internally by `uiGet` and other functions. Must be passed a DOM node.
+Directly call the functions of the same name from the `ui.js` library.
 
 ### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string
 
@@ -247,6 +251,8 @@ This function is mostly for internal use.
 `component` must be a single `_ui` components entry with a `slot` property that will be used to replace the `el`s slot.
 
 Will use DOMPurify if that library has been loaded.
+
+Directly calls `_ui.replaceSlot` from the `ui.js` library.
 
 ### `replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string
 
@@ -260,7 +266,11 @@ The Markdown-IT library must be loaded for this to work, otherwise it silently f
 
 Will use DOMPurify if that library has been loaded.
 
+Directly calls `_ui.replaceSlotMarkdown` from the `ui.js` library.
+
 ### `showDialog(type, ui, msg)` - Show a toast or alert style message on the UI
+
+Directly calls `_ui.showDialog` from the `ui.js` library.
 
 `type` is either "notify" or "alert".
 
@@ -333,9 +343,11 @@ If no `propName` supplied, will return a selection of the most useful informatio
 
 Returned data can be sent back to Node-RED using: `uibuilder.send( uibuilder.uiGet('#myelementid') )`.
 
-Uses `nodeGet` internally.
+Where a propName is supplied, if you ask for the `value` attribute - `uibuilder.uiGet("#eltest", "value"}` - if the selected element is an `input` type, the input's value attribute will be returned. But if it is some other kind of element type, the element's inner text will be returned.
 
 Can be called from Node-RED with a message like: `{"_uib: {"command": "uiGet", "prop": "#more"} }`.
+
+Uses `nodeGet` internally.
 
 ### `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements
 
@@ -474,12 +486,25 @@ If the uibuilder client finds an existing definition of `$` on startup, it will 
 
 If the selector finds a `<template>` tag, it returns its _first child_ instead of the tag. This is to ensure that if you clone it, it will be valid for applying event handlers. A template element is not visible on-page but is used for cloning multiple times or for swapping between different displays (removing the old element and replacing with a new one - not hide/show).
 
+> [!NOTE]
+> Worth noting that the Chromium DevTools console also uses the same definition of `$()` that uibuilder does. [Reference](https://developer.chrome.com/docs/devtools/console/utilities/#querySelector-function). uibuilder's definition supercedes that of the DevTools console however. The devtools version allows a 2nd parameter which uibuilder does not.
+>
+> In addition, uibuilder's version gracefully handles the selection of a `<template>` tag where it returns the template's first child rather than the template itself.
+
 #### Example
 
 ```javascript
 const eMsg = $('#msg')
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
+
+### `$$(cssSelector)` - Returns an array of HTML elements properties
+
+This function is a convenience wrapper around `Array.from(document.querySelectorAll(cssSelector))`. So it returns an array. The array has an entry for each found element (an empty array if nothing found). Each entry in the array returns the _properties_ of the found element.
+
+This means that it returns different data to the `$()` function.
+
+This is very similar to the function of the same name in the Chromium DevTools. The only difference being that uibuilder's function does not accept a 2nd parameter. uibuilder's function supercedes that of the DevTools.
 
 ### `log` - output log messages like the library does
 

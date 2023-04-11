@@ -44,6 +44,7 @@
   * [How & why to use the sender node](sender-node.md)
   * [How & why to use the list node](list-node.md)
   * [Use the cache node](cache-node.md)
+  * [CSS Selectors](how-to/css-selectors.md)
   * [Change the root folder (uibRoot)](changing-uibroot.md)
   * [Create instance-specific API's](instance-apis.md)
   * [Other How-To's](how-to/README.md)

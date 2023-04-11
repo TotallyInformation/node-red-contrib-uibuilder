@@ -12,9 +12,74 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...main)
 
-<!-- Nothing currently. -->
+Nothing currently.
+
+## [v6.4.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...v6.3.1)
+
+### Front-end client library
+
+* A received msg containing a `msg._ui` property no longer triggers `onChange` or `onTopic` event handlers.
+  
+* `_ui` handling moved to a separate utility library `ui.js` to allow use elsewhere. Currently configured as a CommonJS style module which allows use in front-end code via esbuild or in Node-RED (though another library will be needed to provide direct DOM support).
+
+* `ui.js`
+  * New class library containing the uibuilder _ui processing so that it can be used in the future for processing in Node-RED as well.
+    
+    Exports the Ui class. Must be used as: `const _ui = new Ui(log, syntaxHighlight)`
+
+    `log` is a logging function that, returns a function that actually logs (so it has to be called as `log(...)()`). This is normally a wrapper around console so that the correct calling location (taking into account maps) is reported.
+
+    `syntaxHighlight` is a function that returns returns an HTML string representing a highlighted version of the JSON input.
+
+    Both of those input functions are available in the uibuilder client library. If using separately, those functions will need to be reproduced.
+
+    As the library uses `module.exports`, it must currently be built into a working script using `esbuild` or it can be imported into another script that is run through esbuild.
+  
+  * Additional safety checks added to ensure browser native API's present (`document`, `fetch`, etc.).
+  * Class constructor takes a `log` function as an argument, this is required. The log function is assumed to be the same as the one in the main library (which requires calling as `log(...)()` to ensure that the correct calling line is reported.)
+  * Fixed handling of `xlink` SVG attributes. Allows the use of `<use>` and other tags with `xlink:href` attributes.
+  * Auto-add correct namespaces to an `svg` tag (`xmlns` and `xmlns:xlink`) so that you don't have to remember. 😉
+  * Improved `htmlSend`. Now includes doctype and outer html tags. `msg.length` also added to allow checking that the payload wasn't truncated by a Socket.IO limit.
+  * A custom event is no longer fired for each method invoked in a `msg._ui`. Very unlikely anyone ever found that useful and it simplifies the code. So `onChange` and `onTopic` event handler's are not called.
+
+* For `uiGet` function:
+  * Added number of list/table rows where appropriate.
+  * Corrected the single attribute code.
+  * Extended single attribute get such that:
+    * If the property requested is either an element attribute OR an element property, a key/value pair will be returned.
+    * If the property requested is "value" and the selected element is not an input element, the element's inner text will be retured instead.
+
+* Extended the `uiGet` _uib command to allow getting a specific property. e.g. send a msg like: `{ "_uib": {"command":"uiGet","prop":"#eltest", "value": "class"} }` to get the classes applied.
+
+### `uibuilder` node
+
+* Added ability to limit _ui/_uib commands to a specific pageName/clientId/tabId. Simply add a property of the matching name and the commands will be ignored on any browser page not matching. You can use 1 or more of the properties, all will be checked. You can, of course still use `msg._socketId`, if present, the msg being sent is only sent to the single browser tab matching that socket.io id.
+
+* [Socket.IO v4.6 connection state recovery](https://socket.io/docs/v4/connection-state-recovery) added - Allows a client to recover from a temporary disconnection (up to 2 minutes). `msg.recovered` added to the connection control msg. Is set to true if the client connection is a recovery. 
+  
+  This change should reduce the number of times that a client's `_socketId` property changes value. Note that the socket id will always change if the user reloads the page.
+
+  It also ensures that packets sent from the server while the connection was broken will be sent to the client after reconnection.
+
+* [Socket.IO v4.6 disconnect description](https://github.com/socketio/socket.io/releases/tag/4.6.0) added - Adds more details about the disconnection reason to the disconnect control message.
+
+* When running Node-RED on localhost, the editor panel automatically turns on debug output. This used to be the case previously but the lookup to determine whether running locally was not comprehensive enough, now fixed.
+
+* Added links to open the instance's front-end code folder in a new VSCode window. They only appear if running Node-RED on localhost. A button is added to the top of the config panel and to the Core tab where the folder name is shown.
+
+* Added `$$(cssSelector)` function. This matches the function of the same name available in the Chromium DevTools console. It returns ALL elements that match the selector (unlike `$(cssSelector)` which only returns the first). In addition, whereas `$(cssSelector)` returns the DOM element (like jQuery), `$$(cssSelector)` returns an array of the properties of each element.
+
+### `uib-element` node
+
+* **Bug-fix** - msg.payload is normally an instance of Object if created as an array or object via JSON/JSONata inputs from inject and change nodes. However, it turns out that is NOT the case if created in a function node. Corrected to a more robust detection method. Thanks to Rami Yeger for spotting the bug and reporting via YouTube comments.
+
+### Documentation
+
+* Added new how-to explaining CSS Selectors and giving common examples.
+* Updated for the new `$$(cssSelector)` function.
+
 
 ## [v6.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...v6.3.0)
 
@@ -29,6 +94,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Documentation
 
 * Renamed `_sidebar.md` to `-sidebar.md` to stop npm publish from dropping it.
+
 
 ## [v6.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.0...v6.2.0)
 

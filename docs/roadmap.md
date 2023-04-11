@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-03-20 20:35:47
+lastUpdated: 2023-04-02 17:34:38
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -65,7 +65,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
 * How to provide a better log output? With a simple way to link to Node-RED log output (filtered) as well as a dedicated output node. That output's to a web page with highlighting and possibly page back/fwd through history.
 
-## vNext - the next release after current (v6.2)
+## Next - these are things that need to be done
 
 * **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations
 
@@ -91,21 +91,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
   - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
 
-* **NEW NODE** - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.
-
-  e.g. Get the number of rows in a table or list. Get the ID of the first `div`. Get the current value of an input field.
+* ~~**NEW NODE** - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.~~ No longer needed, use `msg._uib` commands in std msg.
 
 * Continuing documentation improvements
   * `README.md`: Add more links to the Features section so that each feature points to appropriate documentation. Add a landing-page link to "includes many helper features" to signpost to relavent detailed documentation.
   * Node-specific docs.
   * Reorg docs to make more sense to new starters & make more logical.
-
-* Update _ui handling to allow filtering on page name. Add `pageName` as an option to all ui instructions. Change client to check for pageName and ignore if it doesn't match.
-* Improve client `eventSend` to put form values into payload along with data-* attributes.
-
-## Next - these are things that need to be done
-
-* Incorporate [Socket.IO v4.6 features](https://github.com/socketio/socket.io/releases/tag/4.6.0) - particularly connection state recovery.
 
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
 
@@ -133,6 +124,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 
 ### Extensions to the `uib-element` node
+  * Add input to allow restriction by pageName/clientId/tabId
+
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
   * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
   * "Text Box" type - allow msg.payload to be an array with each entry being a new para.
@@ -215,9 +208,14 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] Style/Theme changer.
       Extended version of the one in my experimental W3C Components repo. Will let you change between light/dark mode, change base colours, etc. [Example component](https://github.com/TotallyInformation/web-components/blob/main/components/uib-theme-changer.js)
 
+    * [ ] Accordian.
+      [ref](https://css-tricks.com/quick-reminder-that-details-summary-is-the-easiest-way-ever-to-make-an-accordion/)
+
   * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
 ### Extensions to the `uib-update` node
+  * Add input to allow restriction by pageName/clientId/tabId
+  
   * Add props: `uibUpdated`, `uibUpdatedBy`
   * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
   * New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
@@ -235,27 +233,30 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Extensions to client Library
   * *New Functions* (all to be callable from Node-RED):
-    * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
     * [ ] `uibuilder.navigate(locationUrl)` - change page. Ensure it works with SPA routers and with anchor links.
-    * [ ] `uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.
+    * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
     * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
     * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
-    * [ ] `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
+    * [ ] **HARD** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
+    * [ ] ~~`uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.~~ Not really needed since if you are already writing front-end code, you can simply use the `uibuilder.ui` function directly.
   
   * Control from Node-RED. Functions to implement:
+    * [ ] watchDom(startStop), uiWatch(cssSelector)
+    * [ ] setPing
     * [ ] `elementExists(selector)`, `elementIsVisible(selector)`
     * [ ] `navigate(url)`
     * [ ] `loadui()`
     * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
     * [ ] getStore, setStore, removeStore - control browser local storage
-    * [ ] watchDom(startStop), uiWatch(cssSelector)
-    * [ ] setPing
     * [ ] `convertToUI(cssSelector)`
 
-  * **Possibly breaking change**: Stop msg._ui and (maybe) msg._uib messages from triggering `onChange` and `onTopic`.
-
+  * Use esbuild to create IIFE version of `ui.js`.
+  * Allow file uploads
+  
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
+  
   * Add `window.uib` as a synonym of `window.uibuilder`.
+  * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
 
   * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * Add treeview formatting to syntaxHighlight. [ref](https://iamkate.com/code/tree-views/).
@@ -310,6 +311,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Updates to `uibuilder` node
 
+  * Editor panel: Remove the "Allow passing to the front-end" from Advanced tab - no longer needed. Use `msg._ui` features with the updated client instead.
+  * Allow file uploads
+
+  * Move all filing system handling to a separate library module. Should help work out how to support implementations with limited filing systems.
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
     * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
     * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
@@ -400,10 +405,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 
 ### Updates to Documentation (including videos)
-  * Add the `replace` type to the `config-driven-ui.md` document.
+  * New doc for using `ui.js` outside of uibuilder.
+
   * Search for `*(This document is a work-in-progress, it is not complete)*` and update documents.
-  * Update glossary with ESM, ECMA, UMD, IIFE
-  * Add CSS Selectors how-to with typical examples. e.g. element with id, element with class, nth list entry/table row.
   * Split the new client library, move _ui features to separate page.
   * Add message interaction diagram to "pre-defined-msgs.md"
   * Add note to documentation for the library manager that you can install LOCAL folders.

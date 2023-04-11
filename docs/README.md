@@ -3,7 +3,7 @@ title: uibuilder Documentation
 description: >
   uibuilder provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.
 created: 2019-06-16 16:16:00
-lastUpdated: 2023-02-08 10:17:10
+lastUpdated: 2023-04-02 18:06:21
 ---
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces for Node-RED.
@@ -120,6 +120,7 @@ Working with uibuilder and specific front-end frameworks.
 * [How & why to use the sender node](sender-node.md)
 * [How & why to use the list node](list-node.md)
 * [How to use the cache node](cache-node.md)
+* [CSS Selectors](how-to/css-selectors.md)
 * [Changing the root folder (uibRoot)](changing-uibroot.md)
 * [Create instance-specific API's](instance-apis.md)
 * [Other How-To's](how-to/README.md)

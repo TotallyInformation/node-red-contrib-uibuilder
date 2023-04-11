@@ -4,7 +4,7 @@ description: >
    How to send specially formatted messages from Node-RED to the uibuilder node that
    get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-lastUpdated: 2023-03-25 17:35:20
+lastUpdated: 2023-04-10 13:34:57
 ---
 
 The uibuilder client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
@@ -37,6 +37,16 @@ Sending a message containing a `msg._uib` property set as follows will result in
 ```
 
 Where `prop` has to be set to a valid CSS Selector.
+
+Alternatively, you can ask for a specific property from the selected element like this:
+
+```json
+{"command":"uiGet","prop":"#eltest table", "value": "class"}
+```
+
+Which will return the class attribute value from a `<table>` tag within a tag having an id of `eltest`.
+
+With this format, if you ask for the `value` attribute - `{"command":"uiGet","prop":"#eltest", "value": "value"}` - if the selected element is an `input` type, the input's value attribute will be returned. But if it is some other kind of element type, the element's inner text will be returned.
 
 ### `uiWatch`
 
@@ -110,3 +120,17 @@ To get the current web page, complete with dynamic changes back to Node-RED as a
 ```json
 { "_uib": { "command": "sendHtml" } }
 ```
+
+## Restricting to specific pages, users, tabs
+
+Any of the `_ui` and `_uib` messages can be limited to operate only against specific page names, client ID's and browser tab ID's.
+
+One or more of the following property names can be added to the `_ui` or `_uib` properties: `pageName`, `clientId`, `tabId` (noting that the character case needs to be exact).
+
+You can find values for these from an inbound control msg such as the "client connect" control msg. They are also contained in the `_uib` property of standard messages if you have turned on the advanced feature "Include msg._uib in standard msg output".
+
+You can, of course still use `msg._socketId`. If present, the msg being sent is only sent to the single browser tab matching that socket.io id. However, the socket id can change at any time, for example if the browser tab temporarily loses connection to the server - maybe because the tab went to sleep.
+
+The client ID should remain constant while the browser stays open. The tab ID should remain until the tab or the browser is closed.
+
+For the page name, note that the default name (e.g. when the browser address bar is only showing the folder and not a specific `xxxx.html`) is `index.html`. uibuilder allows you to have any number of pages defined under a single node however.

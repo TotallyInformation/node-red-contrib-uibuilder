@@ -4,11 +4,10 @@ description: >
    This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a uibuilder node where the messages contain a `msg._ui` property.
    This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-03-20 20:35:30
+lastUpdated: 2023-04-10 13:34:47
 ---
 
-- [Dynamic content limitations](#dynamic-content-limitations)
-  - [Updates and sub-components](#updates-and-sub-components)
+- [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
 - [Dynamic content details](#dynamic-content-details)
 - [Initial load from JSON URL](#initial-load-from-json-url)
 - [Dynamic changes via messages from Node-RED (or local set)](#dynamic-changes-via-messages-from-node-red-or-local-set)
@@ -32,17 +31,22 @@ lastUpdated: 2023-03-20 20:35:30
     - [Schema](#schema)
 - [Method: alert](#method-alert)
 - [References \& examples](#references--examples)
+- [Dynamic content limitations](#dynamic-content-limitations)
+  - [Updates and sub-components](#updates-and-sub-components)
 
-## Dynamic content limitations
+## Restricting actions to specific pages, users, tabs
 
-There are currently a small number of limitations of this approach that you should be aware of.
+Any of the `_ui` and `_uib` messages sent from Node-RED can be limited to operate only against specific page names, client ID's and browser tab ID's.
 
+One or more of the following property names can be added to the `_ui` or `_uib` properties: `pageName`, `clientId`, `tabId` (noting that the character case needs to be exact).
 
+You can find values for these from an inbound control msg such as the "client connect" control msg. They are also contained in the `_uib` property of standard messages if you have turned on the advanced feature "Include msg._uib in standard msg output".
 
-### Updates and sub-components
+You can, of course still use `msg._socketId`. If present, the msg being sent is only sent to the single browser tab matching that socket.io id. However, the socket id can change at any time, for example if the browser tab temporarily loses connection to the server - maybe because the tab went to sleep.
 
-If you want to `update` an existing element and update a sub-component (such as a specific list entry), the sub-components MUST already exist (because this is an update action). If that is not the case and instead you want to add a new sub-component, you must have a separate `add` action and select the parent component.
+The client ID should remain constant while the browser stays open. The tab ID should remain until the tab or the browser is closed.
 
+For the page name, note that the default name (e.g. when the browser address bar is only showing the folder and not a specific `xxxx.html`) is `index.html`. uibuilder allows you to have any number of pages defined under a single node however.
 
 ## Dynamic content details
 
@@ -587,3 +591,11 @@ Uses the same schema and styles as the `notify` method. Except that autohide is 
 ## References & examples
 
 * A flow that reproduces the TABLES example from [pdfmake](http://pdfmake.org/index.html#/) (which works in a similar way to this to produce PDF reports) using uibuilder and data sent direct from Node-RED is available on the [Node-RED Flows site](https://flows.nodered.org/flow/99e1e6169b5e93b460bcbcc8f493d011#).
+
+## Dynamic content limitations
+
+There are currently a small number of limitations of this approach that you should be aware of.
+
+### Updates and sub-components
+
+If you want to `update` an existing element and update a sub-component (such as a specific list entry), the sub-components MUST already exist (because this is an update action). If that is not the case and instead you want to add a new sub-component, you must have a separate `add` action and select the parent component.
