@@ -56,6 +56,7 @@ Functions accessible in client-side user code.
 - [Other](#other)
   - [`$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element](#cssselector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element)
     - [Example](#example-4)
+  - [`$$(cssSelector)` - Returns an array of HTML elements properties](#cssselector---returns-an-array-of-html-elements-properties)
   - [`log` - output log messages like the library does](#log---output-log-messages-like-the-library-does)
 
 
@@ -485,12 +486,25 @@ If the uibuilder client finds an existing definition of `$` on startup, it will 
 
 If the selector finds a `<template>` tag, it returns its _first child_ instead of the tag. This is to ensure that if you clone it, it will be valid for applying event handlers. A template element is not visible on-page but is used for cloning multiple times or for swapping between different displays (removing the old element and replacing with a new one - not hide/show).
 
+> [!NOTE]
+> Worth noting that the Chromium DevTools console also uses the same definition of `$()` that uibuilder does. [Reference](https://developer.chrome.com/docs/devtools/console/utilities/#querySelector-function). uibuilder's definition supercedes that of the DevTools console however. The devtools version allows a 2nd parameter which uibuilder does not.
+>
+> In addition, uibuilder's version gracefully handles the selection of a `<template>` tag where it returns the template's first child rather than the template itself.
+
 #### Example
 
 ```javascript
 const eMsg = $('#msg')
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
+
+### `$$(cssSelector)` - Returns an array of HTML elements properties
+
+This function is a convenience wrapper around `Array.from(document.querySelectorAll(cssSelector))`. So it returns an array. The array has an entry for each found element (an empty array if nothing found). Each entry in the array returns the _properties_ of the found element.
+
+This means that it returns different data to the `$()` function.
+
+This is very similar to the function of the same name in the Chromium DevTools. The only difference being that uibuilder's function does not accept a 2nd parameter. uibuilder's function supercedes that of the DevTools.
 
 ### `log` - output log messages like the library does
 
