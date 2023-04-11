@@ -10,17 +10,15 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-### General
-
-* Allow file uploads
-
 ### Front-end library
 
 * Use esbuild to create IIFE version of `ui.js`.
+* Allow file uploads
 
 ### `uibuilder` node
 
-* Add `vscode:` link to instance root folder if the admin i/f is running on localhost
+* Editor panel: Remove the "Allow passing to the front-end" from Advanced tab - no longer needed. Use `msg._ui` features with the updated client instead.
+* Allow file uploads
 
 ### `uib-element` node
 
@@ -90,9 +88,16 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Added links to open the instance's front-end code folder in a new VSCode window. They only appear if running Node-RED on localhost. A button is added to the top of the config panel and to the Core tab where the folder name is shown.
 
+* Added `$$(cssSelector)` function. This matches the function of the same name available in the Chromium DevTools console. It returns ALL elements that match the selector (unlike `$(cssSelector)` which only returns the first). In addition, whereas `$(cssSelector)` returns the DOM element (like jQuery), `$$(cssSelector)` returns an array of the properties of each element.
+
+### `uib-element` node
+
+* **Bug-fix** - msg.payload is normally an instance of Object if created as an array or object via JSON/JSONata inputs from inject and change nodes. However, it turns out that is NOT the case if created in a function node. Corrected to a more robust detection method. Thanks to Rami Yeger for spotting the bug and reporting via YouTube comments.
+
 ### Documentation
 
 * Added new how-to explaining CSS Selectors and giving common examples.
+* Updated for the new `$$(cssSelector)` function.
 
 
 ## [v6.3.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...v6.3.0)

@@ -65,7 +65,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
 * How to provide a better log output? With a simple way to link to Node-RED log output (filtered) as well as a dedicated output node. That output's to a web page with highlighting and possibly page back/fwd through history.
 
-## vNext - the next release after current (v6.4)
+## Next - these are things that need to be done
 
 * **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations
 
@@ -97,8 +97,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * `README.md`: Add more links to the Features section so that each feature points to appropriate documentation. Add a landing-page link to "includes many helper features" to signpost to relavent detailed documentation.
   * Node-specific docs.
   * Reorg docs to make more sense to new starters & make more logical.
-
-## Next - these are things that need to be done
 
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
 
@@ -231,21 +229,21 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Extensions to client Library
   * *New Functions* (all to be callable from Node-RED):
-    * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
     * [ ] `uibuilder.navigate(locationUrl)` - change page. Ensure it works with SPA routers and with anchor links.
-    * [ ] `uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.
+    * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
     * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
     * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
-    * [ ] `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
+    * [ ] **HARD** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
+    * [ ] ~~`uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.~~ Not really needed since if you are already writing front-end code, you can simply use the `uibuilder.ui` function directly.
   
   * Control from Node-RED. Functions to implement:
+    * [ ] watchDom(startStop), uiWatch(cssSelector)
+    * [ ] setPing
     * [ ] `elementExists(selector)`, `elementIsVisible(selector)`
     * [ ] `navigate(url)`
     * [ ] `loadui()`
     * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
     * [ ] getStore, setStore, removeStore - control browser local storage
-    * [ ] watchDom(startStop), uiWatch(cssSelector)
-    * [ ] setPing
     * [ ] `convertToUI(cssSelector)`
 
   * **Possibly breaking change**: Stop msg._ui and (maybe) msg._uib messages from triggering `onChange` and `onTopic`.
