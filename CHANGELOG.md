@@ -10,39 +10,20 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-### Front-end library
-
-* Use esbuild to create IIFE version of `ui.js`.
-* Allow file uploads
-
-### `uibuilder` node
-
-* Editor panel: Remove the "Allow passing to the front-end" from Advanced tab - no longer needed. Use `msg._ui` features with the updated client instead.
-* Allow file uploads
-
-### `uib-element` node
-
-* Add input to allow restriction by pageName/clientId/tabId
-
-### `uib-update` node
-
-* Add input to allow restriction by pageName/clientId/tabId
-
-### Documentation
-
-* New doc for using `ui.js` outside of uibuilder.
-
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.3.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...main)
 
-<!-- Nothing currently. -->
+Nothing currently.
+
+## [v6.4.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...v6.3.1)
 
 ### Front-end client library
 
 * A received msg containing a `msg._ui` property no longer triggers `onChange` or `onTopic` event handlers.
   
 * `_ui` handling moved to a separate utility library `ui.js` to allow use elsewhere. Currently configured as a CommonJS style module which allows use in front-end code via esbuild or in Node-RED (though another library will be needed to provide direct DOM support).
+
 * `ui.js`
   * New class library containing the uibuilder _ui processing so that it can be used in the future for processing in Node-RED as well.
     
@@ -55,7 +36,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
     Both of those input functions are available in the uibuilder client library. If using separately, those functions will need to be reproduced.
 
     As the library uses `module.exports`, it must currently be built into a working script using `esbuild` or it can be imported into another script that is run through esbuild.
-
+  
   * Additional safety checks added to ensure browser native API's present (`document`, `fetch`, etc.).
   * Class constructor takes a `log` function as an argument, this is required. The log function is assumed to be the same as the one in the main library (which requires calling as `log(...)()` to ensure that the correct calling line is reported.)
   * Fixed handling of `xlink` SVG attributes. Allows the use of `<use>` and other tags with `xlink:href` attributes.

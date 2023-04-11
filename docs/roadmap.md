@@ -124,6 +124,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 
 ### Extensions to the `uib-element` node
+  * Add input to allow restriction by pageName/clientId/tabId
+
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
   * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
   * "Text Box" type - allow msg.payload to be an array with each entry being a new para.
@@ -212,6 +214,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
 ### Extensions to the `uib-update` node
+  * Add input to allow restriction by pageName/clientId/tabId
+  
   * Add props: `uibUpdated`, `uibUpdatedBy`
   * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
   * New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
@@ -246,9 +250,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] getStore, setStore, removeStore - control browser local storage
     * [ ] `convertToUI(cssSelector)`
 
-  * **Possibly breaking change**: Stop msg._ui and (maybe) msg._uib messages from triggering `onChange` and `onTopic`.
-
+  * Use esbuild to create IIFE version of `ui.js`.
+  * Allow file uploads
+  
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
+  
   * Add `window.uib` as a synonym of `window.uibuilder`.
   * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
 
@@ -304,6 +310,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Add count of current errors to title
 
 ### Updates to `uibuilder` node
+
+  * Editor panel: Remove the "Allow passing to the front-end" from Advanced tab - no longer needed. Use `msg._ui` features with the updated client instead.
+  * Allow file uploads
 
   * Move all filing system handling to a separate library module. Should help work out how to support implementations with limited filing systems.
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
@@ -396,6 +405,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 
 ### Updates to Documentation (including videos)
+  * New doc for using `ui.js` outside of uibuilder.
+
   * Search for `*(This document is a work-in-progress, it is not complete)*` and update documents.
   * Split the new client library, move _ui features to separate page.
   * Add message interaction diagram to "pre-defined-msgs.md"
