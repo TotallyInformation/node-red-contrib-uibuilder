@@ -3967,7 +3967,7 @@
 
   // src/front-end-module/uibuilder.module.js
   var import_ui = __toESM(require_ui());
-  var version = "6.4.0-iife";
+  var version = "6.5.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
   var logLevel = isMinified ? 0 : 1;
@@ -5579,7 +5579,12 @@ ioPath: ${this.ioPath}`)();
   if (!window["uibuilder"]) {
     window["uibuilder"] = uibuilder;
   } else {
-    log("error", "uibuilder.module.js", "uibuilder already assigned to window. Have you tried to load it more than once?");
+    log("error", "uibuilder.module.js", "`uibuilder` already assigned to window. Have you tried to load it more than once?");
+  }
+  if (!window["uib"]) {
+    window["uib"] = uibuilder;
+  } else {
+    log("warn", "uibuilder.module.js", "`uib` shortcut already assigned to window.");
   }
   if (!window["$"]) {
     window["$"] = window["uibuilder"].$;

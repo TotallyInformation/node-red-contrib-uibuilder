@@ -3,7 +3,7 @@ title: How to use the modern uibuilder front-end library
 description: >
    This version of the library can either be used in the same style as the old `uibuilderfe.js` client (loading in a script link in the HTML) using the `uibuilder.iife.js` version or as a modern [ES Module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) using the `uibuilder.esm.js` version. Both builds of the library have identical features but are called differently as shown below.
 created: 2023-01-28 15:19:38
-lastUpdated: 2023-01-28 15:39:16
+lastUpdated: 2023-04-14 16:02:09
 ---
 
 
@@ -16,7 +16,7 @@ There are two templates that you can use the will provide minimal, pre-configure
 
 ### IIFE version
 
-This version will add `uibuilder` and `$` objects to the `window` (global) object so that they are available to all code in all `script`s. `$` will not be added if it has already been defined by a library loaded before uibuilder (e.g. jQuery).
+This version will add `uibuilder`, `uib`, `$$` and `$` objects to the `window` (global) object so that they are available to all code in all `script`s. `$` will not be added if it has already been defined by a library loaded before uibuilder (e.g. jQuery). `uib` is a synonym of `uibuilder`.
 
 In `index.html`:
 
@@ -61,7 +61,7 @@ window.onload = (evt) => {
 ```
 
 > [!note]
-> As you can see, you don't really need any custom JavaScript to use uibuilder. But you will probably _want_ to use some eventually.
+> As you can see, you don't really need any custom JavaScript to use uibuilder.
 > uibuilder can now be entirely driven from Node-RED using the no-code (`uib-element` and `uib-update` nodes) and low-code (`msg._ui` configuration data) approaches if you prefer.
 > Whilst this is not the most machine efficient approach, it allows you to get started very quickly. You can later convert gradually to custom code if you need more complexity or more
 > efficiency.
@@ -72,7 +72,7 @@ window.onload = (evt) => {
 > [!note]
 > [ES Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) work quite differently to "traditional" JavaScript and you will find it _very_ beneficial to do some background reading on them if you are not familiar.
 
-This version will add the `uibuilder` and `$` objects to your custom module script's local namespace.
+This version will add `uibuilder`, `uib`, `$$` and `$` objects to your custom module script's local namespace. `uib` is a synonym of `uibuilder`.
 
 In `index.html`:
 
@@ -150,7 +150,9 @@ In addition to the main, compressed, file, uncompressed versions are available a
 
 The library consists of a new class `Uib`. That class is auto-instanciated on load.
 
-It also adds `window.$` as long as it doesn't already exist (e.g. if you already loaded jQuery). `$` is bound to `document.querySelector` which means that you can use it as a shortcut to easily reference HTML entities in a similar way to a very simplistic jQuery. e.g. `$('#button1').innerHTML = 'boo!'`.
+It also adds `$` as long as it doesn't already exist (e.g. if you already loaded jQuery). `$` is bound to `document.querySelector` which means that you can use it as a shortcut to easily reference HTML entities in a similar way to a very simplistic jQuery. e.g. `$('#button1').innerHTML = 'boo!'`. [Ref.](client-docs/functions#cssselector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element)
+
+`$$` is added and is bound to `Array.from(document.querySelectorAll(cssSelector))` so that it returns the properties of all elements discovered by the selector. [Ref.](client-docs/functions#cssselector---returns-an-array-of-html-elements-properties)
 
 > [!attention]
 > Please note that this version requires a browser since early 2019. This is probably only an issue if you are stuck on Internet Explorer or on a version of Apple Safari <12.1.

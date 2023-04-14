@@ -105,6 +105,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Use alt logging for websocket disconnects, sleep, error, etc
 
 * **Example stand-alone node package as exemplar**
+  * https://github.com/TotallyInformation/nr-uibuilder-uplot
   * probably chart
   * How to pass data through?
 
@@ -124,12 +125,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 
 ### Extensions to the `uib-element` node
-  * Add input to allow restriction by pageName/clientId/tabId
-
-  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-  * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
   * "Text Box" type - allow msg.payload to be an array with each entry being a new para.
-  * Consider making the main input selectable (e.g. not just msg.payload)
   * Disable or hide inputs when unused for a specific type.
   * As more element types are added, group into types: main, add, form, etc
   * ? Have JSON input msg templates for each type with links to copy to clipboard ?
@@ -174,20 +170,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] Grid/Flex-Grid
        Standardised layout. With option to turn on visible grid to help with layout.
 
-    * [ ] Markdown
-      Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
-
-    * Individual Form Elements
-      This is to enable additional form elements to be added to an existing form.
-      * [ ] Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
-      * [ ] Input
-      * [ ] button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
-
     * [ ] tbody
       Additional table body sections. [ref](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tbody#multiple_bodies)
-
-    * [ ] iFrame
-      As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
 
     * [ ] notify (globalNotification)
 
@@ -214,12 +198,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
 ### Extensions to the `uib-update` node
-  * Add input to allow restriction by pageName/clientId/tabId
-  
   * Add props: `uibUpdated`, `uibUpdatedBy`
   * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
   * New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
-  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 
 
 ### Continue to improve the new `uib-brand.css`
@@ -239,6 +220,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
     * [ ] **HARD** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
     * [ ] ~~`uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.~~ Not really needed since if you are already writing front-end code, you can simply use the `uibuilder.ui` function directly.
+    * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   
   * Control from Node-RED. Functions to implement:
     * [ ] watchDom(startStop), uiWatch(cssSelector)
@@ -252,20 +234,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
   * Use esbuild to create IIFE version of `ui.js`.
   * Allow file uploads
-  
-  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
-  
-  * Add `window.uib` as a synonym of `window.uibuilder`.
   * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
 
-  * Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * Add treeview formatting to syntaxHighlight. [ref](https://iamkate.com/code/tree-views/).
-  * Move UI code to separate include. To allow its use in the `uib-html` node.
-  * Add flags to track if the optional Markdown-IT or DOMPurify libraries are loaded and available.
   * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
   * Option for a pop-over notification to manually reconnect the websocket.
   * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
-  * Fix start options load style sheet https://discourse.nodered.org/t/uibuilder-new-release-v5-1-1-some-nice-new-features-and-illustration-of-future-features/64479/16?u=totallyinformation
 
   * Add ability to save the current DOM.
     * _started_ To local storage - with option to reload on reload
@@ -277,8 +251,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special 
        name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
     * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
-    * Add HTML loader capability to _ui handling (see html-loader web component)
-    * Allow adding to more locations: ~~1st child rather than last~~ (done), next/previous sibling
+    * Allow adding to more locations: next/previous sibling
     * Add click coordinates to return msgs where appropriate. See https://discourse.nodered.org/t/contextmenu-location/22780/51
   
   * Extend logging functions:

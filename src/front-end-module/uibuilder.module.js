@@ -62,7 +62,7 @@ import Ui from './ui'
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.4.0-mod'
+const version = '6.5.0-mod'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -2161,7 +2161,12 @@ const uibuilder = new Uib()
 if (!window['uibuilder']) {
     window['uibuilder'] = uibuilder
 } else {
-    log('error', 'uibuilder.module.js', 'uibuilder already assigned to window. Have you tried to load it more than once?')
+    log('error', 'uibuilder.module.js', '`uibuilder` already assigned to window. Have you tried to load it more than once?')
+}
+if (!window['uib']) {
+    window['uib'] = uibuilder
+} else {
+    log('warn', 'uibuilder.module.js', '`uib` shortcut already assigned to window.')
 }
 
 // Assign `$` to global window object unless it is already in use.
