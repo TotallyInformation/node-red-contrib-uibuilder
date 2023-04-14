@@ -10,11 +10,42 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+### Extensions to client Library
+  * Add `window.uib` as a synonym of `window.uibuilder`.
+  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
+  * Add flags to track if the optional Markdown-IT or DOMPurify libraries are loaded and available.
+
+
+### Extensions to the `uib-element` node
+  * Add input to allow restriction by pageName/clientId/tabId
+  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+  * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
+  * Consider making the main input selectable (e.g. not just msg.payload)
+  * Add more elements:
+    * [ ] Markdown
+      Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
+    * Individual Form Elements
+      This is to enable additional form elements to be added to an existing form.
+      * [ ] Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
+      * [ ] Input
+      * [ ] button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
+      * [ ] iFrame
+        As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
+
+### Extensions to the `uib-update` node
+  * Add input to allow restriction by pageName/clientId/tabId
+  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+
+
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...main)
 
 Nothing currently.
+
+### Changes to uibuilder client Library
+  * Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
+
 
 ## [v6.4.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...v6.3.1)
 
