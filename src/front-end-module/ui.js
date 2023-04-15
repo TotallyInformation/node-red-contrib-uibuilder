@@ -933,20 +933,21 @@ const Ui = class Ui {
      * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
      * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
      * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
+     * @returns {Promise<any>} Status
      */
     async include(url, uiOptions) { // eslint-disable-line sonarjs/cognitive-complexity
         // TODO: src, id, parent must all be a strings
         if (!fetch) {
             log(0, 'Ui:include', 'Current environment does not include `fetch`, skipping.')()
-            return
+            return 'Current environment does not include `fetch`, skipping.'
         }
         if (!url) {
             log(0, 'Ui:include', 'url parameter must be provided, skipping.')()
-            return
+            return 'url parameter must be provided, skipping.'
         }
         if (!uiOptions || !uiOptions.id) {
             log(0, 'Ui:include', 'uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.')()
-            return
+            return 'uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.'
         }
 
         // Try to get the content via the URL
@@ -955,11 +956,11 @@ const Ui = class Ui {
             response = await fetch(url)
         } catch (error) {
             log(0, 'Ui:include', `Fetch of file '${url}' failed. `, error.message)()
-            return
+            return error.message
         }
         if (!response.ok) {
             log(0, 'Ui:include', `Fetch of file '${url}' failed. Status='${response.statusText}'`)()
-            return
+            return response.statusText
         }
 
         // Work out what type of data we got
@@ -985,45 +986,60 @@ const Ui = class Ui {
 
         // Create the HTML to include on the page based on type
         let slot = ''
+        let txtReturn = 'Include successful'
+        let data
         switch (type) {
             case 'html': {
-                slot = await response.text()
+                data = await response.text()
+                slot = data
                 break
             }
 
             case 'json': {
-                const json = await response.json()
+                data = await response.json()
                 slot = '<pre class="syntax-highlight">'
-                slot += this.syntaxHighlight(json)
+                slot += this.syntaxHighlight(data)
                 slot += '</pre>'
                 break
             }
 
             case 'form': {
-                const json = await response.formData()
+                data = await response.formData()
                 slot = '<pre class="syntax-highlight">'
-                slot += this.syntaxHighlight(json)
+                slot += this.syntaxHighlight(data)
                 slot += '</pre>'
                 break
             }
 
             case 'image': {
-                const myBlob = await response.blob()
-                slot = `<img src="${URL.createObjectURL(myBlob)}">`
+                data = await response.blob()
+                slot = `<img src="${URL.createObjectURL(data)}">`
+                if (window && window['DOMPurify']) {
+                    txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
+                    log('warn', 'Ui:include:image', txtReturn)()
+                }
                 break
             }
 
             case 'video': {
-                const myBlob = await response.blob()
-                slot = `<video controls autoplay><source src="${URL.createObjectURL(myBlob)}"></video>`
+                data = await response.blob()
+                slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`
+                if (window && window['DOMPurify']) {
+                    txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
+                    log('warn', 'Ui:include:video', txtReturn)()
+                }
                 break
             }
 
             case 'pdf':
             case 'text':
             default: {
-                const myBlob = await response.blob()
-                slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(myBlob)}">`
+                data = await response.blob()
+                slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`
+                if (window && window['DOMPurify']) {
+                    txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
+                    log('warn', `Ui:include:${type}`, txtReturn)()
+                }
                 break
             }
         }
@@ -1040,6 +1056,9 @@ const Ui = class Ui {
                 uiOptions
             ]
         })
+
+        log('trace', `Ui:include:${type}`, txtReturn)()
+        return txtReturn
 
     } // ---- End of include() ---- //
 
