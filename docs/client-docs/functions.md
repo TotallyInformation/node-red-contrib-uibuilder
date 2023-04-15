@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-04-10 13:35:12
+lastUpdated: 2023-04-15 13:56:59
 ---
 
 Functions accessible in client-side user code.
@@ -250,7 +250,7 @@ This function is mostly for internal use.
 
 `component` must be a single `_ui` components entry with a `slot` property that will be used to replace the `el`s slot.
 
-Will use DOMPurify if that library has been loaded.
+Will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if that library has been loaded.
 
 Directly calls `_ui.replaceSlot` from the `ui.js` library.
 
@@ -258,13 +258,13 @@ Directly calls `_ui.replaceSlot` from the `ui.js` library.
 
 This function is mostly for internal use.
 
-The Markdown-IT library must be loaded for this to work, otherwise it silently fails.
+The [Markdown-IT](client-docs/readme#_2-markdown-it-converts-markdown-markup-into-html) library must be loaded for this to work, otherwise it silently fails.
 
 `el` must be an HTML Element, its slot content will be replaced.
 
 `component` must be a single `_ui` components entry with a `markdownSlot` property that will be used to replace the `el`s slot after being run through Markdown-IT to turn it into HTML.
 
-Will use DOMPurify if that library has been loaded.
+Will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if that library has been loaded.
 
 Directly calls `_ui.replaceSlotMarkdown` from the `ui.js` library.
 
@@ -366,6 +366,9 @@ Can be called from Node-RED with a message like: `{"_uib: {"command": "uiWatch",
 ### `include(url, uiOptions)` - insert an external file into the web page
 
 Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch). This function is asynchronous, that should be allowed for when using in custom front-end code.
+
+> [!NOTE]
+> This function uses the standard [`replaceSlot`](#replaceslotel-component-replace-or-add-an-html-element39s-slot-from-text-or-an-html-string) internal function. As such, it will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if loaded. DOMPurify will block the loading of most file types.
 
 The `uiOptions` parameter is **required** and must contain at least an `id` property. Options are:
 

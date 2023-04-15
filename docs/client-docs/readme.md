@@ -31,6 +31,48 @@ So for all of its initial simplicity, the library does enable a wealth of featur
   - [Custom Events](client-docs/custom-events.md)
   - [Troubleshooting](client-docs/troubleshooting.md)
 
+## Optional helper libraries
+
+While the uibuilder client library works with no other libraries needed, it can optionally make use of either or both of 2 additional libraries if desired.
+
+### 1. DOMPurify - Sanitises HTML to ensure safety and security
+
+The [DOMPurify library](https://github.com/cure53/DOMPurify) is an HTML (and MathML, SVG) sanitser that helps prevent things like cross-site scripting attacks. It is therefore especially useful to use with uibuilder where you are dynamically building content, particularly where that content may be guided by end-users.
+
+Once added, the library will be automatically used by the `_ui` processes and functions to ensure that the resulting HTML and SVG is safe. Obviously, you can also use the library directly in your own custom front-end code. The client functions [`replaceSlot()`](client-docs/functions#replaceslotel-component-replace-or-add-an-html-element39s-slot-from-text-or-an-html-string) and [`replaceSlotMarkdown()`](client-docs/functions#replaceslotmarkdownel-component-replace-or-add-an-html-element39s-slot-from-a-markdown-string) are used internally for this and can be called directly if desired.
+
+Simply add the following to your `index.html` file if you have added the library to uibuilder using the *Library manager tab* (add `dompurify`). Then add the script tag to your HTML before the tag that loads the uibuilder library (so that the uibuilder client library can discover it).
+
+For the IIFE version of the uibuilder client:
+
+```html
+<script defer src="../uibuilder/vendor/dompurify/dist/purify.min.js"></script>
+```
+
+For the ESM version of the uibuilder client, you need to load the library in your `index.js` file instead of `index.html`. Again, before the uibuilder client import:
+
+```javascript
+import * as DOMPurify from '../uibuilder/vendor/dompurify/dist/purify.min.js'
+```
+
+If you prefer to use the library from a cloud download (instead of installing via the uibuilder node), replace the location with `https://cdn.jsdelivr.net/npm/dompurify@latest/dist/purify.min.js`.
+
+If correctly loaded, `window.DOMPurify` will exist.
+
+To check whether DOMPurify is active, you can use this function in your front-end code: `if ( uibuilder.get('purify') ) ....`. From Node-RED, you can send a msg containing: `{"_uib": {"command":"get","prop":"purify"}`.
+
+### 2. Markdown-IT - Converts Markdown markup into HTML
+
+The [Markdown-IT](https://markdown-it.github.io/) library
+
+### 3. VueJS - Front-end framework
+
+uibuilder has long had an affinity with VueJS and for a long time, it was the preferred framework for front-end development. With the ongoing maturity of uibuilder and HTML, such frameworks are needed less and less. As such, most of the special VueJS handling functions have been removed from the client library.
+
+However, as it is still commonly used in conjunction with uibuilder and can be useful for more complex apps, the client library does have a check to see if it is loaded. This code in your custom front-end JavaScript will detect if Vue is loaded: `if ( uibuilder.get('isVue') ) ....`. To discover that from Node-RED, send a msg containing: `{"_uib": {"command":"get","prop":"isVue"}`.
+
+Because the VueJS project forced an early default version change from v2 to v3 while many of its extension libraries had not had a chance to migrate, a lot of people can get caught out accidentally loading the wrong version of Vue. Because of this, if the uibuilder client library discovers that Vue is loaded, it will note the version. To get the version from your front-end code: `uibuilder.get('vueVersion')`. Or from Node-RED, send a msg containing: `{"_uib": {"command":"get","prop":"vueVersion"}`
+
 ## Library size
 
 If the library seems a little large, it is because it comes with the correct version of the Socket.IO client built-in.
