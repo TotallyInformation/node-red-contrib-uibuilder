@@ -426,6 +426,10 @@ export const Uib = class Uib {
     tabId = ''
     // Actual name of current page (set in constructor)
     pageName = null
+    // Is the DOMPurify library loaded? Updated in start()
+    purify = false
+    // Is the Markdown-IT library loaded? Updated in start()
+    markdown = false
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -494,15 +498,15 @@ export const Uib = class Uib {
      * Also triggers any event listeners.
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
-     * @param {*} val _
-     * @returns {*|undefined} Input value
+     * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
+     * @returns {*} Input value
      */
     set(prop, val) {
         // Check for excluded properties - we don't want people to set these
         // if (this.#excludedSet.indexOf(prop) !== -1) {
         if (prop.startsWith('_') || prop.startsWith('#')) {
             log('warn', 'Uib:set', `Cannot use set() on protected property "${prop}"`)()
-            return
+            return `Cannot use set() on protected property "${prop}"`
         }
 
         this[prop] = val
@@ -532,7 +536,7 @@ export const Uib = class Uib {
         if (prop === 'msgsCtrl') return this.msgsCtrlReceived
         if (prop === 'reconnections') return this.connectedNum
         if (this[prop] === undefined) {
-            log('warn', 'Uib:get', `get() - property "${prop}" does not exist`)()
+            log('warn', 'Uib:get', `get() - property "${prop}" is undefined`)()
         }
         return this[prop]
     }
@@ -954,6 +958,7 @@ export const Uib = class Uib {
      * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     * @returns {boolean} New state
      */
     showMsg(showHide, parent = 'body') {
         if ( showHide === undefined ) showHide = !this.#isShowMsg
@@ -986,6 +991,8 @@ export const Uib = class Uib {
                 ]
             })
         }
+
+        return showHide
     }
 
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
@@ -993,6 +1000,7 @@ export const Uib = class Uib {
      * The display is updated by an event listener created in the class constructor.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     * @returns {boolean} New state
      */
     showStatus(showHide, parent = 'body') {
         if ( showHide === undefined ) showHide = !this.#isShowStatus
@@ -1004,7 +1012,7 @@ export const Uib = class Uib {
                     '#uib_status',
                 ],
             })
-            return
+            return showHide
         }
 
         const root = {
@@ -1056,6 +1064,8 @@ export const Uib = class Uib {
         })
 
         _ui._uiReplace(root)
+
+        return showHide
     }
 
     /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
@@ -1065,13 +1075,14 @@ export const Uib = class Uib {
      * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
      * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
      * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
+     * @returns {boolean} True if the watch is on, false otherwise
      */
     uiWatch(cssSelector, startStop = 'toggle', send = true, showLog = true) {
         // Select the node that will be observed for mutations
         const targetNode = document.querySelector(cssSelector)
         if (!targetNode) {
             console.log('[Uib:uiWatch] CSS Selector not found. ', cssSelector)
-            return
+            return false
         }
 
         if (startStop === 'toggle' || startStop === undefined || startStop === null) {
@@ -1082,7 +1093,7 @@ export const Uib = class Uib {
         // Need a ref to the Uib this
         const that = this
 
-        if (startStop === true || startStop === undefined) {
+        if (startStop === true) {
             // Create an observer instance
             this.#uiObservers[cssSelector] = new MutationObserver( function( mutationList /* , observer */ ) {
                 const out = []
@@ -1143,6 +1154,8 @@ export const Uib = class Uib {
             delete this.#uiObservers[cssSelector]
             log('trace', 'uibuilder.module.js:uiWatch', `Stopped Watching DOM changes for '${cssSelector}'`)()
         }
+
+        return startStop
     } // ---- End of watchDom ---- //
 
     //#endregion -------- -------- -------- //
@@ -1511,6 +1524,7 @@ export const Uib = class Uib {
             }
 
             case 'include': {
+                // include is async
                 response = _ui.include(prop, value)
                 break
             }
@@ -1521,8 +1535,22 @@ export const Uib = class Uib {
             }
         }
 
-        if (response !== undefined && Object(response).constructor !== Promise) {
-            if (response.length === 0) response = `'${prop}' not found`
+        if (response === undefined) {
+            response = `'${prop}' is undefined`
+        }
+        if (Object(response).constructor === Promise) {
+            // response = `'${cmd} ${prop}' submitted. Cmd is async, no response available`
+            response
+                .then( (/** @type {any} */ data) => {
+                    msg.payload = msg._uib.response = data
+                    if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
+                    this.send(msg)
+                    return true
+                })
+                .catch( err => {
+                    log(0, 'Uib:_uibCommand', 'Error: ', err)()
+                })
+        } else {
             msg.payload = msg._uib.response = response
             if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
             this.send(msg)
@@ -2134,7 +2162,25 @@ export const Uib = class Uib {
             try {
                 this.set('vueVersion', window['Vue'].version)
             } catch (e) { }
+            log('trace', 'Uib:start', `VueJS is loaded. Version: ${this.vueVersion}`)()
+        } else {
+            log('trace', 'Uib:start', 'VueJS is not loaded.')()
         }
+
+        // Check if DOMPurify or Markdown-IT libraries are loaded
+        if (window['DOMPurify']) {
+            this.set('purify', true)
+            log('trace', 'Uib:start', 'DOMPurify is loaded.')()
+        } else {
+            log('trace', 'Uib:start', 'DOMPurify is not loaded.')()
+        }
+
+        // if (window['DOMPurify']) {
+        //     this.set('purify', true)
+        //     log('trace', 'Uib:start', 'DOMPurify is loaded.')
+        // } else {
+        //     log('trace', 'Uib:start', 'DOMPurify is not loaded.')
+        // }
 
         // Set up msg listener for the optional showMsg
         this.onChange('msg', (msg) => {

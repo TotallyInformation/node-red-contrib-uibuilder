@@ -796,30 +796,31 @@
          * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
          * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
          * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
+         * @returns {Promise<any>} Status
          */
         async include(url2, uiOptions) {
           if (!fetch) {
             log2(0, "Ui:include", "Current environment does not include `fetch`, skipping.")();
-            return;
+            return "Current environment does not include `fetch`, skipping.";
           }
           if (!url2) {
             log2(0, "Ui:include", "url parameter must be provided, skipping.")();
-            return;
+            return "url parameter must be provided, skipping.";
           }
           if (!uiOptions || !uiOptions.id) {
             log2(0, "Ui:include", "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")();
-            return;
+            return "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.";
           }
           let response;
           try {
             response = await fetch(url2);
           } catch (error) {
             log2(0, "Ui:include", `Fetch of file '${url2}' failed. `, error.message)();
-            return;
+            return error.message;
           }
           if (!response.ok) {
             log2(0, "Ui:include", `Fetch of file '${url2}' failed. Status='${response.statusText}'`)();
-            return;
+            return response.statusText;
           }
           const contentType = await response.headers.get("content-type");
           let type = null;
@@ -841,40 +842,55 @@
             }
           }
           let slot = "";
+          let txtReturn = "Include successful";
+          let data;
           switch (type) {
             case "html": {
-              slot = await response.text();
+              data = await response.text();
+              slot = data;
               break;
             }
             case "json": {
-              const json = await response.json();
+              data = await response.json();
               slot = '<pre class="syntax-highlight">';
-              slot += this.syntaxHighlight(json);
+              slot += this.syntaxHighlight(data);
               slot += "</pre>";
               break;
             }
             case "form": {
-              const json = await response.formData();
+              data = await response.formData();
               slot = '<pre class="syntax-highlight">';
-              slot += this.syntaxHighlight(json);
+              slot += this.syntaxHighlight(data);
               slot += "</pre>";
               break;
             }
             case "image": {
-              const myBlob = await response.blob();
-              slot = `<img src="${URL.createObjectURL(myBlob)}">`;
+              data = await response.blob();
+              slot = `<img src="${URL.createObjectURL(data)}">`;
+              if (window && window["DOMPurify"]) {
+                txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+                log2("warn", "Ui:include:image", txtReturn)();
+              }
               break;
             }
             case "video": {
-              const myBlob = await response.blob();
-              slot = `<video controls autoplay><source src="${URL.createObjectURL(myBlob)}"></video>`;
+              data = await response.blob();
+              slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
+              if (window && window["DOMPurify"]) {
+                txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+                log2("warn", "Ui:include:video", txtReturn)();
+              }
               break;
             }
             case "pdf":
             case "text":
             default: {
-              const myBlob = await response.blob();
-              slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(myBlob)}">`;
+              data = await response.blob();
+              slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
+              if (window && window["DOMPurify"]) {
+                txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+                log2("warn", `Ui:include:${type}`, txtReturn)();
+              }
               break;
             }
           }
@@ -889,6 +905,8 @@
               uiOptions
             ]
           });
+          log2("trace", `Ui:include:${type}`, txtReturn)();
+          return txtReturn;
         }
         // ---- End of include() ---- //
       };
@@ -4252,6 +4270,10 @@
       __publicField(this, "tabId", "");
       // Actual name of current page (set in constructor)
       __publicField(this, "pageName", null);
+      // Is the DOMPurify library loaded? Updated in start()
+      __publicField(this, "purify", false);
+      // Is the Markdown-IT library loaded? Updated in start()
+      __publicField(this, "markdown", false);
       //#endregion ---- ---- ---- ---- //
       // TODO Move to proper getters/setters
       //#region ---- Externally Writable (via .set method, read via .get method) ---- //
@@ -4376,13 +4398,13 @@
      * Also triggers any event listeners.
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
-     * @param {*} val _
-     * @returns {*|undefined} Input value
+     * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
+     * @returns {*} Input value
      */
     set(prop, val) {
       if (prop.startsWith("_") || prop.startsWith("#")) {
         log("warn", "Uib:set", `Cannot use set() on protected property "${prop}"`)();
-        return;
+        return `Cannot use set() on protected property "${prop}"`;
       }
       this[prop] = val;
       log("trace", "Uib:set", `prop set - prop: ${prop}, val: `, val)();
@@ -4406,7 +4428,7 @@
       if (prop === "reconnections")
         return this.connectedNum;
       if (this[prop] === void 0) {
-        log("warn", "Uib:get", `get() - property "${prop}" does not exist`)();
+        log("warn", "Uib:get", `get() - property "${prop}" is undefined`)();
       }
       return this[prop];
     }
@@ -4762,6 +4784,7 @@
      * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     * @returns {boolean} New state
      */
     showMsg(showHide, parent = "body") {
       if (showHide === void 0)
@@ -4793,12 +4816,14 @@
           ]
         });
       }
+      return showHide;
     }
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
      * The card has the id `uib_status`.
      * The display is updated by an event listener created in the class constructor.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     * @returns {boolean} New state
      */
     showStatus(showHide, parent = "body") {
       if (showHide === void 0)
@@ -4810,7 +4835,7 @@
             "#uib_status"
           ]
         });
-        return;
+        return showHide;
       }
       const root = {
         components: [
@@ -4859,6 +4884,7 @@
         });
       });
       _ui._uiReplace(root);
+      return showHide;
     }
     /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
      * OMG! It is sooo hard to turn the data into something that successfully serialises so it can be sent back to Node-RED!
@@ -4867,12 +4893,13 @@
      * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
      * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
      * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
+     * @returns {boolean} True if the watch is on, false otherwise
      */
     uiWatch(cssSelector, startStop = "toggle", send = true, showLog = true) {
       const targetNode = document.querySelector(cssSelector);
       if (!targetNode) {
         console.log("[Uib:uiWatch] CSS Selector not found. ", cssSelector);
-        return;
+        return false;
       }
       if (startStop === "toggle" || startStop === void 0 || startStop === null) {
         if (__privateGet(this, _uiObservers)[cssSelector])
@@ -4881,7 +4908,7 @@
           startStop = true;
       }
       const that = this;
-      if (startStop === true || startStop === void 0) {
+      if (startStop === true) {
         __privateGet(this, _uiObservers)[cssSelector] = new MutationObserver(function(mutationList) {
           const out = [];
           mutationList.forEach((mu) => {
@@ -4929,6 +4956,7 @@
         delete __privateGet(this, _uiObservers)[cssSelector];
         log("trace", "uibuilder.module.js:uiWatch", `Stopped Watching DOM changes for '${cssSelector}'`)();
       }
+      return startStop;
     }
     // ---- End of watchDom ---- //
     //#endregion -------- -------- -------- //
@@ -5232,9 +5260,20 @@ ${document.documentElement.outerHTML}`;
           break;
         }
       }
-      if (response !== void 0 && Object(response).constructor !== Promise) {
-        if (response.length === 0)
-          response = `'${prop}' not found`;
+      if (response === void 0) {
+        response = `'${prop}' is undefined`;
+      }
+      if (Object(response).constructor === Promise) {
+        response.then((data) => {
+          msg.payload = msg._uib.response = data;
+          if (!msg.topic)
+            msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+          this.send(msg);
+          return true;
+        }).catch((err) => {
+          log(0, "Uib:_uibCommand", "Error: ", err)();
+        });
+      } else {
         msg.payload = msg._uib.response = response;
         if (!msg.topic)
           msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
@@ -5557,6 +5596,15 @@ ioPath: ${this.ioPath}`)();
           this.set("vueVersion", window["Vue"].version);
         } catch (e) {
         }
+        log("trace", "Uib:start", `VueJS is loaded. Version: ${this.vueVersion}`)();
+      } else {
+        log("trace", "Uib:start", "VueJS is not loaded.")();
+      }
+      if (window["DOMPurify"]) {
+        this.set("purify", true);
+        log("trace", "Uib:start", "DOMPurify is loaded.")();
+      } else {
+        log("trace", "Uib:start", "DOMPurify is not loaded.")();
       }
       this.onChange("msg", (msg) => {
         if (__privateGet(this, _isShowMsg) === true) {
