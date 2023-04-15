@@ -2167,12 +2167,19 @@ export const Uib = class Uib {
             log('trace', 'Uib:start', 'VueJS is not loaded.')()
         }
 
-        // Check if DOMPurify or Markdown-IT libraries are loaded
+        // Check if DOMPurify library is loaded
         if (window['DOMPurify']) {
             this.set('purify', true)
             log('trace', 'Uib:start', 'DOMPurify is loaded.')()
         } else {
             log('trace', 'Uib:start', 'DOMPurify is not loaded.')()
+        }
+        // Check if Markdown-IT library is loaded
+        if (window['markdownit']) {
+            this.set('markdown', true)
+            log('trace', 'Uib:start', 'Markdown-IT is loaded.')()
+        } else {
+            log('trace', 'Uib:start', 'Markdown-IT is not loaded.')()
         }
 
         // if (window['DOMPurify']) {

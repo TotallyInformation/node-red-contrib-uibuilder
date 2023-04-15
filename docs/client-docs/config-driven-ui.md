@@ -4,7 +4,7 @@ description: >
    This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a uibuilder node where the messages contain a `msg._ui` property.
    This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-04-15 11:50:37
+lastUpdated: 2023-04-15 17:59:04
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
@@ -140,17 +140,19 @@ Each component can:
   
   Feeding HTML into a web page can be a security issue. However, these features absolutely need to do just that. Because you are sending data from Node-RED for the most part, there is a good chance that you have control over the data being sent and therefore the risk should be low. However, if you need/want to reduce the risk further, you can simply load the [DOMPurify](https://github.com/cure53/DOMPurify) library before you load this uibuilder front-end library. If available to the library, it will be automatically used, you don't need to do anything.
 
-  Simply add this to your HTML before you load your uibuilder/index.js file `<script defer src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>`. DOMPurify cannot be loaded as an ECMA module. Make sure, therefore that it loads before you load the uibuilder library.
+  See the [front-end client introduction page](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) for details on how to use the DOMPurify library.
 
 * _Make use of the [Markdown-IT](client-docs/readme#_2-markdown-it-converts-markdown-markup-into-html) library_. To convert Markdown to HTML dynamically.
   
-  By loading the `markdown-it` library into your index.html head `<script defer src="https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js"></script>`, uibuilder client will let you specify a `slotMarkdown` in addition to the `slot`. 
+  By loading the `markdown-it` library, the uibuilder client will let you specify a `slotMarkdown` in addition to the `slot`. 
 
   `slotMarkdown` will be rendered into HTML as the element is rendered dynamically. The rendered HTML is inserted after any `slot` HTML.
 
+  See the [front-end client introduction page](client-docs/readme#_2-markdown-it-converts-markdown-markup-into-html) for details on how to use the Markdown-IT library.
+
   Notes
   
-  * Little work has been done on this feature as yet so while it works, it does not have all of the highlighting and extra features you might expect from something like Docsify.
+  * Does not have all of the highlighting and extra features you might expect from something like Docsify. However, you can add Markdown-IT extensions and configuration as desired. Just make sure that extensions are loaded before the uibuilder client.
   * If available, `DOMPurify` will be used to sanitise the resulting HTML.
   * You can also make use of [HighlightJS](https://highlightjs.org/) to add code highlighting inside the usual back-tick blocks. Add a reference to the library AND an appropriate CSS file in your index.js file.
 

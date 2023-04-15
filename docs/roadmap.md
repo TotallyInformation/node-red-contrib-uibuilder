@@ -232,6 +232,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] getStore, setStore, removeStore - control browser local storage
     * [ ] `convertToUI(cssSelector)`
 
+  * Add small button to showMsg output to allow user to turn off the display.
+  * Add small button to showStatus output to allow user to turn off the display.
   * Use esbuild to create IIFE version of `ui.js`.
   * Allow file uploads
   * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.

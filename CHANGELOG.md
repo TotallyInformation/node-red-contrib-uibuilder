@@ -12,8 +12,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Extensions to client Library
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
-  * Add flags to track if the optional Markdown-IT or DOMPurify libraries are loaded and available.
-
 
 ### Extensions to the `uib-element` node
   * Add input to allow restriction by pageName/clientId/tabId
@@ -40,11 +38,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
 
 ### Changes to uibuilder client Library
   * Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
-  * Added flag to indicate if the DOMPurify library is loaded. Added warnings to the `include()` function when it is loaded since some includes will be filtered by the purify process for safety. Updated the front-end client introduction with details about DOMPurify, how to load it and use it.
+  * Added flag to indicate if the *DOMPurify* library is loaded. Added warnings to the `include()` function when it is loaded since some includes will be filtered by the purify process for safety. Updated the front-end client introduction document with details about DOMPurify, how to load it and use it.
+  * Added flag to indicate if the *Markdown-IT* library is loaded. Updated the front-end client introduction document with details about how to load the library and use it.
 
 ### Documentation updates
 

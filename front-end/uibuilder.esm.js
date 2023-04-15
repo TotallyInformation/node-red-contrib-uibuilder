@@ -5605,6 +5605,12 @@ ioPath: ${this.ioPath}`)();
     } else {
       log("trace", "Uib:start", "DOMPurify is not loaded.")();
     }
+    if (window["markdownit"]) {
+      this.set("markdown", true);
+      log("trace", "Uib:start", "Markdown-IT is loaded.")();
+    } else {
+      log("trace", "Uib:start", "Markdown-IT is not loaded.")();
+    }
     this.onChange("msg", (msg) => {
       if (__privateGet(this, _isShowMsg) === true) {
         const eMsg = document.getElementById("uib_last_msg");
