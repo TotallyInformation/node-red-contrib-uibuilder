@@ -49,6 +49,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Details and links for using the DOMPurify external library.
 
+## [v6.4.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...v6.4.0)
+
+* **BUG FIX** `uib-element` When creating a form, if a heading was specified, the form inputs went into the heading instead of the form.
+
 ## [v6.4.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...v6.3.1)
 
 ### Front-end client library
