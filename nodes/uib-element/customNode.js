@@ -532,7 +532,7 @@ function buildSForm(node, msg, parent) {
     })
 
     // Convenient references
-    const frmBody = parent.components[0]
+    const frmBody = parent.components[parent.components.length - 1]
     const frm = msg.payload
     let btnCount = 0
 

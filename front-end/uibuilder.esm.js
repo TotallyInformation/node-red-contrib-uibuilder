@@ -3966,7 +3966,7 @@ Object.assign(lookup2, {
 
 // src/front-end-module/uibuilder.module.js
 var import_ui = __toESM(require_ui());
-var version = "6.4.0-esm";
+var version = "6.4.1-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
