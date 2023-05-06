@@ -63,7 +63,7 @@ const stdio = 'inherit'
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 
 // npm version 4.2.1 --no-git-tag-version --allow-same-version
-const release = '6.4.1'
+const release = '6.5.0'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}`)
 
@@ -103,6 +103,8 @@ console.log(`Current Version: ${version}. Requested Version: ${release}`)
  *  - Add text replace to ensure 2021 in (c) blocks is current year
  *  - In packfe, set the source version string to the current package.json version
  */
+
+//#region ---- packing FE ----
 
 /** Pack (Uglify) front-end task
  * @param {Function} cb Callback
@@ -431,6 +433,10 @@ function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
     cb()
 }
 
+//#endregion ---- ---- ----
+
+//#region ---- Build node panels ----
+
 /** Combine the parts of uibuilder.html */
 function buildPanelUib1(cb) {
     try {
@@ -570,6 +576,8 @@ function buildPanelUpdate(cb) {
     cb()
 }
 
+//#endregion ---- ---- ----
+
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
 const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList, buildPanelUibElement, buildPanelUpdate)
 
@@ -590,6 +598,8 @@ function watchme(cb) {
 
     cb()
 }
+
+//#region ---- set versions ----
 
 /** Set the version string for uibuilderfe.js */
 function setFeVersionDev(cb) {
@@ -678,6 +688,8 @@ function setPackageLockVersion(cb) {
     }
     cb()
 }
+
+//#endregion ---- ---- ----
 
 /** Create a new GitHub tag for a release (only if release ver # different to last committed tag) */
 async function createTag(cb) {
