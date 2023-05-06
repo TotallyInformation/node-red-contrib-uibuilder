@@ -255,6 +255,8 @@
  * @property {Function=} on Event handler
  * @property {Function=} removeListener Event handling
  * @property {Function=} context Function that accesses the nodes context vars or the flow/global vars
+ * @property {Function=} emit Function that emits an event
+ * @property {Function=} receive Function that ???
  * @property {object=} credentials Optional secured credentials
  * @property {object=} z Internal
  * @property {object=} wires Internal. The wires attached to this node instance (uid's)
