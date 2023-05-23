@@ -40,6 +40,7 @@ const greplace = require('gulp-replace')
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 const gulpEsbuild = require('gulp-esbuild')
+const cleanCSS = require('gulp-clean-css')
 
 const execa = require('execa')
 
@@ -435,6 +436,27 @@ function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
 
 //#endregion ---- ---- ----
 
+// Pack CSS
+/**
+ *
+ */
+function minifyBrandCSS(cb) {
+    src(`${feDest}/uib-brand.css`)
+        .pipe(cleanCSS())
+        .on('error', function(err) {
+            console.error('[packfeIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(rename('uib-brand.min.css'))
+        .pipe(dest(feDest))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+
+    // cb()
+}
+
 //#region ---- Build node panels ----
 
 /** Combine the parts of uibuilder.html */
@@ -595,6 +617,7 @@ function watchme(cb) {
     watch('src/editor/uib-list/*', buildPanelUibList)
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
+    watch('front-end/uib-brand.css', minifyBrandCSS)
 
     cb()
 }
