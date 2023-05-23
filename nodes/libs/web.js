@@ -528,6 +528,9 @@ class UibWeb {
         if (uib.instanceApiAllowed === true ) this.addInstanceApiRouter(node)
         else log.trace(`[uibuilder:webjs:instanceSetup] Instance API's not permitted. '${node.url}'`)
 
+        // ! IN-PROGRESS (1d) Add user-provided router middleware
+        this.addInstanceCustomRoutes(node)
+
         if (uib.rootFolder === null) throw new Error('uib.rootFolder has no value')
         const rootFolder = uib.rootFolder
 
@@ -782,6 +785,7 @@ class UibWeb {
                 return false
             }
 
+            // TODO Add to this.routers.instances[node.url]
             // if instanceApi is a function, simply .use it on /api
             if ( instanceApi && typeof instanceApi === 'function' ) {
                 log.trace(`[uibuilder:webjs:addInstanceApiRouter] ${node.url} function api added`)
@@ -808,6 +812,7 @@ class UibWeb {
                 instanceApi.apiSetup(node, uib)
             }
 
+            // ! TODO: FIX THIS, IT DOES NOT WORK!
             // Each property in the imported object MUST match an ExpressJS method or `use` & must be a function
             keys.forEach( fnName => {
                 if ( fnName === 'path' || fnName === 'apiSetup' ) return // ignore this
@@ -1059,6 +1064,47 @@ class UibWeb {
 
         log.trace(`[uibuilder:web:addLogRoute:${node.url}] Client Beacon Log route added`)
         this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client beacon log back to Node-RED', type: 'POST', folder: 'N/A' } )
+    }
+
+    /** If allowed and if any exist, add instance custom routes from <uibRoot>/<node.url>/routes/*.js */
+    addInstanceCustomRoutes(node) {
+        // Reference static vars
+        const uib = this.uib
+        // const RED = this.RED
+        const log = this.log
+
+        // Is this capability turned on in settings.js?
+
+        // Add routers from each <uibRoot>/<node.url>/routes/*.js file (Empty list if fldr doesn't exist or no files)
+        const routeFiles = fg.sync(`${uib.rootFolder}/${node.url}/routes/*.js`)
+        routeFiles.forEach( routeFilePath => {
+            let instanceRouteFile = {}
+            let routeKeys = []
+            try {
+                instanceRouteFile = require(routeFilePath)
+                routeKeys = Object.keys(instanceRouteFile)
+            } catch (e) {
+                log.error(`[uibuilder:webjs:addInstanceCustomRoutes:${node.url}] Could not require instance route file. '${routeFilePath}'. ${e.message}`)
+                return false
+            }
+
+            routeKeys.forEach( routeFnName => {
+                const route = instanceRouteFile[routeFnName]
+                // Route must contain all 3 properties, callback must EITHER be a function or an array of functions
+                if ( !(route.method && route.path && route.callback) ) {
+                    log.warn(`[uibuilder:webjs:addInstanceApiRouter:${node.url}] Cannot add route from '${routeFilePath}'. '${routeFnName}' has invalid data. Ensure it has 'method', 'path' and 'callback' properties.`)
+                } else {
+                    // if (!route.path.startsWith('/')) route.path = `/${route.path}` // Must start with a /
+
+                    log.trace(`[uibuilder:webjs:addInstanceApiRouter:${node.url}] Custom route added. '${routeFilePath}', '${routeFnName}'`)
+
+                    this.instanceRouters[node.url][route.method]( route.path, route.callback )
+
+                    // Track routes
+                    this.routers.instances[node.url].push( { name: `Custom route: ${routeFnName}`, path: `${this.uib.httpRoot}/${node.url}${route.path}`, desc: `Custom route from '${routeFilePath}'`, type: route.method.toUpperCase(), folder: routeFilePath } )
+                }
+            })
+        })
     }
 
     //#endregion ====== Per-node instance processing ====== //
