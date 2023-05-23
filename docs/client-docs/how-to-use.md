@@ -31,7 +31,7 @@ In `index.html`:
     <meta name="description" content="Node-RED uibuilder - TotallyInformation">
     <link rel="icon" href="./images/node-blue.ico"> 
 
-    <link type="text/css" rel="stylesheet" href="./uib-brand.css" media="all">
+    <link type="text/css" rel="stylesheet" href="./uib-brand.min.css" media="all">
 
     <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
     <script defer src="./index.js"></script>
@@ -87,7 +87,7 @@ In `index.html`:
     <meta name="description" content="Node-RED uibuilder - TotallyInformation">
     <link rel="icon" href="./images/node-blue.ico"> 
 
-    <link type="text/css" rel="stylesheet" href="./uib-brand.css" media="all">
+    <link type="text/css" rel="stylesheet" href="./uib-brand.min.css" media="all">
 
     <script type="module" async src="./index.js"></script> 
 

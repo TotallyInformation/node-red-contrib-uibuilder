@@ -5578,7 +5578,7 @@ ioPath: ${this.ioPath}`)();
         log("info", "Uib:start", "No styles loaded & options.loadStylesheet === false.")();
       else {
         log("info", "Uib:start", "No styles loaded, loading uibuilder default styles.")();
-        this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`);
+        this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.min.css`);
       }
     }
     const [entry] = performance.getEntriesByType("navigation");

@@ -25,7 +25,7 @@
  * NOTES:
  * - Watch out for the order of loading of style sheets!
  * - uibuilder attempts to auto-load this sheet BUT you may need to do it manually to get the right order.
- * - Include in your index.css file as `@import url("./uib-brand.css");`
+ * - Include in your index.css file as `@import url("./uib-brand.min.css");`
  */
 
 /* :root applies to everything, :root.light is for manually selected light mode */
