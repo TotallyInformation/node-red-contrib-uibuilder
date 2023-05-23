@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-04-11 18:04:53
+lastUpdated: 2023-04-23 12:00:51
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -81,16 +81,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   - Output to an `http-out` node as a response to a request
   - Output to a `ui_template` node for incorporation in Dashboard UI's
 
-* **NEW NODE** - `uib-save` - Easily save files to uibuilder-specific locations
-
-  Select a deployed uibuilder node as the "parent" and the server folder location will be set for you so that you don't need to remember it.
-
-  Why?
-
-  - Save `msg._ui` configuration data to a static JSON which can then be used to load an entire UI on page load.
-  - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
-  - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
-
 * ~~**NEW NODE** - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.~~ No longer needed, use `msg._uib` commands in std msg.
 
 * Continuing documentation improvements
@@ -129,6 +119,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Disable or hide inputs when unused for a specific type.
   * As more element types are added, group into types: main, add, form, etc
   * ? Have JSON input msg templates for each type with links to copy to clipboard ?
+  * Check out: https://www.w3.org/WAI/ARIA/apg/patterns/
+  * Think about having a `linkInputs([idList])` fn that allows easy linking of different inputs?
+  * Consider adding the ability to have some tag other than `div` as the wrapper. [ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/210)
   * Add more elements:
     * [x] List (ul, ol, dl)
       * Future improvements:
@@ -142,6 +135,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
         * Caption
         * If named row comes from a field, make sure it is the 1st col and marked as a th
         * Add data-row-name to td's as well
+        * See also: https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/data-grids/
+    * [ ] TTS text-to-speach output
     * [x] HTML - allow raw html to be sent - e.g. from template node
     * [x] Page Title
     * [x] tr - Add a row to an existing table
@@ -154,6 +149,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
         * Better layout, more optional internal structure (footer, etc)
     * [x] Simple Form - Input types: button, checkbox, color, date, detetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week
       * Future Improvements:
+        * **Improve range slider** - with min/max and current value indicator (possibly as a separate, linked number input box) - may need an `oninput` handler
         * Better validation of input data
         * Additional input types: select, combo, file, image, textarea.
         * Eventually add extended inputs such as HTML WYSIWYG/Markdown
@@ -164,8 +160,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       A segmented vertical/horizontal status/progress panel. For things like battery displays, etc.
       Each status box has a coloured sidepanel to show the status.
 
-    * [ ] Toggle button, Toggle button panel
-      Similar to the status box/panel but for buttons.
+    * [ ] Toggle button, Toggle button panel (AKA Switch)
+      Similar to the status box/panel but for buttons. https://www.w3.org/WAI/ARIA/apg/patterns/switch/
 
     * [ ] Grid/Flex-Grid
        Standardised layout. With option to turn on visible grid to help with layout.
@@ -176,6 +172,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] notify (globalNotification)
 
     * [ ] Modal Dialogue
+      `window.prompt`, `window.confirm`, `<dialog>`
 
     * [ ] LED (on/off/colour/brightness), LED panel
       As for [ui-led](https://flows.nodered.org/node/node-red-contrib-ui-led)
@@ -195,6 +192,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] Accordian.
       [ref](https://css-tricks.com/quick-reminder-that-details-summary-is-the-easiest-way-ever-to-make-an-accordion/)
 
+  * Other thoughts:
+    * Pill list, scrollable search - https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/layout-grids/
   * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
 ### Extensions to the `uib-update` node
@@ -204,23 +203,30 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 
 ### Continue to improve the new `uib-brand.css`
-  * Parameterise other aspects such as font-size, typeface, varient colours, flexbox & grid spacing. `
-  * Create min version of css.
   * Something similar to the sidebar status panel but segmented. Choose number of segments.
   * Make `input[type="color"]` starting colour the brand colour. Can only be done via JavaScript.
   * Check `input:valid` pseudo-class defaults
   * Improve input/form elements. [Ref](https://developer.mozilla.org/en-US/docs/Web/CSS/:required)
   * Add treeview formatting. [ref](https://iamkate.com/code/tree-views/)
+  * Consider an "Easy Read" variation:
+    * Easy read means:
+      * wide margins
+      * images on the left
+      * larger text (14 to 16pt)
+      * bigger spaces between lines (1.5 spacing in a word processor for example) - already done in the base.
+      * 1 idea per image
 
 ### Extensions to client Library
   * *New Functions* (all to be callable from Node-RED):
+    * [ ] Show/hide page controls (light/dark, colours, etc. Easy Read option?)
     * [ ] `uibuilder.navigate(locationUrl)` - change page. Ensure it works with SPA routers and with anchor links.
     * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
     * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
     * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
-    * [ ] **HARD** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
+    * [ ] **HARD - may be impossible?** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
     * [ ] ~~`uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.~~ Not really needed since if you are already writing front-end code, you can simply use the `uibuilder.ui` function directly.
     * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
+    * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others) buttons. [ref](https://codereview.stackexchange.com/questions/192138/buttons-that-expand-or-collapse-all-the-details-within-the-document)
   
   * Control from Node-RED. Functions to implement:
     * [ ] watchDom(startStop), uiWatch(cssSelector)
@@ -231,6 +237,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
     * [ ] getStore, setStore, removeStore - control browser local storage
     * [ ] `convertToUI(cssSelector)`
+    * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others)
 
   * Add small button to showMsg output to allow user to turn off the display.
   * Add small button to showStatus output to allow user to turn off the display.
@@ -248,8 +255,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * _started_ (manual request is done) Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
 
   * _UI - improvements to the config-/data-driven UI creation features
-    * Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process
-       - probably needs list and wildcard though.
+    * **Started** Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process - needs list and wildcard capabilities.
+    * Content editor capability - to set editable content blocks. [ref 1](https://editorjs.io/)
     * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special 
        name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
     * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
@@ -286,6 +293,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Updates to `uibuilder` node
 
+  * Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
   * Editor panel: Remove the "Allow passing to the front-end" from Advanced tab - no longer needed. Use `msg._ui` features with the updated client instead.
   * Allow file uploads
 
@@ -404,7 +412,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Forms - zero-code
     * UI updates using low-code. [ref](https://discourse.nodered.org/t/uibuilder-documentation-suggestions-and-improvements/74812/33?u=totallyinformation)
 
-
 ### Examples
   * Zero-code example needs better wording for UL/OL example. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
   * Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
@@ -415,6 +422,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Save changes to cache on click
   * Table
     * Weather example?
+  * Telegram web app. [ref1](https://github.com/revenkroz/telegram-web-app-bot-example)
 
 ### Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features

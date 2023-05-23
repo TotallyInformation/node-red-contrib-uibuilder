@@ -10,8 +10,25 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+### Fixes required
+
+* VSCode link not always working
+  
+  `vscode://fileC:\src\nr3\data\uibuilder/uib-dynamic-svg-eg/?windowId=_blank`
+  `vscode://file/src/uibRoot/work/?windowId=_blank`
+
+* [Issue #213](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/213) - SVG flow example not working `_uiComposeComponent is not a function at htmlClone index.js:52:15`
+  
+  Caused by the move of all ui fns to a separate class. So `_uiComposeComponent` is no longer accessible. It should not have been used in the example anyway since anything starting with an underscore should be for internal use only. My bad.
+
+  Fixed by replacing with manual enhancement until a future solution can be introduced, probably a new function `uibuilder.uiEnhanceElement(clone, ui)` which will call `_uiComposeComponent` internally.
+
+* Form checkbox output from auto-send is always "on"
+
 ### Extensions to client Library
-  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
+
+* Compare ui.js with radar version - see if changes to watch fn need to be brought over. Also add observe options.
+* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
 
 ### Extensions to the `uib-element` node
   * Add input to allow restriction by pageName/clientId/tabId
@@ -33,6 +50,17 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Add input to allow restriction by pageName/clientId/tabId
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 
+* **NEW NODE** - `uib-save` - Easily save files to uibuilder-specific locations
+
+  Select a deployed uibuilder node as the "parent" and the server folder location will be set for you so that you don't need to remember it.
+
+  Why?
+
+  - Save `msg._ui` configuration data to a static JSON which can then be used to load an entire UI on page load.
+  - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
+  - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
+
+
 
 ----
 
@@ -40,14 +68,49 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 <!-- Nothing currently. -->
 
+### **NEW** Features
+
+* Instance routes/middleware
+
+  You can now add ExpressJS routes and other middleware to a single instance of uibuilder (a specific uibuilder node), not just to all nodes. Especially useful if you want to add custom security (login, registration, etc) to just one instance.
+
+  The new feature lets you specify the sub-url-path, the HTTP method and the callback function. Paths can include wildcards and parameters too. The routes are always added to the instance router which forces them to only ever be sub-url-paths of the specified instance. e.g. if your instance url is `test`, a route with a path of `/foo/:bah` will ALWAYS be `.../test/foo/...`. This is for security. Note that you are responsible for creating unique URL paths, no checking is done and ExpressJS is quite happy to have multiple path handlers but if you provide a terminating response (e.g. `res.status(200)`) and no `next()` call, the call stack is obviously terminated. If you include a call to `next()`, overlapping route callbacks will also be triggered. In that case, make sure you do not do any more `res.xxxx()` responses otherwise you will get an `ERR_HTTP_HEADERS_SENT` error.
+
+  To add route handlers, create 1 or more .js files in the `<instanceRoot>/routes/` folder. See the docs for details.
+
+  What can I do? Authentication, authorisation, http headers, dynamic html changes/additions, js inserts, logging, server-side includes, server-side rendering (e.g. Jade, ...) ...
+
 ### Changes to uibuilder client Library
-  * Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
-  * Added flag to indicate if the *DOMPurify* library is loaded. Added warnings to the `include()` function when it is loaded since some includes will be filtered by the purify process for safety. Updated the front-end client introduction document with details about DOMPurify, how to load it and use it.
-  * Added flag to indicate if the *Markdown-IT* library is loaded. Updated the front-end client introduction document with details about how to load the library and use it.
+
+* Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
+* Added flag to indicate if the *DOMPurify* library is loaded. Added warnings to the `include()` function when it is loaded since some includes will be filtered by the purify process for safety. Updated the front-end client introduction document with details about DOMPurify, how to load it and use it.
+* Added flag to indicate if the *Markdown-IT* library is loaded. Updated the front-end client introduction document with details about how to load the library and use it.
+
+### Changes to uibuilder main node
+
+* **NEW** Instance route/middleware handlers - allows you to create custom url routes and custom middleware functions that only impact routes for a single instance of uibuilder.
+
+### Changes to CSS styles (`uib-brand.css`)
+
+* **NEW** Minified version included, use as `@import url("../uibuilder/uib-brand.min.css");`
+* Reduced thickness of error border on input fields.
+* CSS Variables
+  * **NEW** `--mode` - "light" or "dark" according to the current browser preference or html class override.
+  * **NEW** `--text-hue` and `--surface-hue` allows independent colour control of standard text and backgrounds. Defaults to `--brand-hue`.
+  * **NEW** `--complementary-offset` - defaults to 180, you are unlikely to want to change this.
+  * **NEW** `--font-style` - set to `sans-serif` by default.
+* CSS Classes
+  * **NEW** `.flex-wrap` - auto-wrapping flex layout.
+  * **NEW** `.grid-fit` - auto-columns with number set by `--grid-fit-min`.
+
+### Changes to uibuilder templates
+
+* Replaced all references to `uib-brand.css` with `uib-brand.min.css` for efficiency.
 
 ### Documentation updates
 
 * Details and links for using the DOMPurify external library.
+* Lots more detail added to the `uib-brand.css` documentation.
 
 ## [v6.4.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...v6.4.0)
 
