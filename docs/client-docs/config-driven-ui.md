@@ -4,7 +4,7 @@ description: >
    This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a uibuilder node where the messages contain a `msg._ui` property.
    This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-04-15 17:59:04
+lastUpdated: 2023-07-01 18:27:21
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
@@ -30,6 +30,7 @@ lastUpdated: 2023-04-15 17:59:04
   - [HTML Tags](#html-tags)
     - [Schema](#schema)
 - [Method: alert](#method-alert)
+- [Manipulating `msg._ui`](#manipulating-msg_ui)
 - [References \& examples](#references--examples)
 - [Dynamic content limitations](#dynamic-content-limitations)
   - [Updates and sub-components](#updates-and-sub-components)
@@ -589,6 +590,74 @@ Old-style `msg._uib.componentRef = 'globalAlert'` also works. But this method is
 Uses the same schema and styles as the `notify` method. Except that autohide is set to false, modal is set to true and the content is prefixed by an alert symbol.
 
 ---
+
+## Manipulating `msg._ui`
+
+`msg._ui` holds the low-code configuration that defines/changes front-end web pages. It is a standardised schema that is described above. Even when using the `uib-element` or `uib-update` zero-code nodes, you can still further change and enhance the code since no framework will ever fully be able to meet all needs.
+
+It should be noted that `msg._ui` mirrors the hierarchy of the HTML you are creating/changing so, while the structure does tend to be complex and deep, a little patience will enable it to be understood.
+
+In order to help when processing `msg._ui` in Node-RED, a utility function is provided that can be used in Function nodes. That utility is `RED.util.uib.deepObjFind`. It is defined as:
+
+```javascript
+/** Recursive object deep find
+ * @param {*} obj The object to be searched
+ * @param {Function} matcher Function that, if returns true, will result in cb(obj) being called
+ * @param {Function} cb Callback function that takes a single arg `obj`
+ */
+deepObjFind: (obj, matcher, cb) => {
+    if (matcher(obj)) {
+        cb(obj)
+    }
+    for (const key in obj) {
+        if (typeof obj[key] === 'object') {
+            RED.util.uib.deepObjFind(obj[key], matcher, cb)
+        }
+    }
+}
+```
+
+Here is an example of it being used in a function node:
+
+```javascript
+/**
+ * Update the STYLE of the uib low-code table definition
+ * if the NoRead column is >= 20
+ * 
+ * Using CSS variables from uib-brand.css.
+ * 
+ * In the example, we use a style attribute
+ * but in live, best to define and use a class.
+ */
+
+// Search for the first `tbody` definition
+const matcher = (obj) => obj.type === 'tbody'
+
+// If found, process each row of the table body
+const cb = (obj) => {
+  // node.warn(obj.components)
+  const tblRows = obj.components
+
+  // Process every table row
+  tblRows.forEach(row => {
+    // ref to the row's NoRead column (10th column)
+    const noRead = row.components[9]
+
+    // Get the "slot" which is the data displayed in the cell
+    if (noRead.slot >= 20) {
+      // If the data >= 20, add some extra style just to the cell
+      noRead.attributes.style = 'background-color: var(--failure); font-weight: bold;'
+
+      // And/OR add formatting to the whole row
+      row.attributes.style = 'background-color: var(--warning);'
+    }
+  })
+
+  node.send(msg)
+}
+
+RED.util.uib.deepObjFind(msg._ui, matcher, cb)
+```
 
 ## References & examples
 
