@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-04-23 12:00:51
+lastUpdated: 2023-05-23 18:08:27
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -102,6 +102,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Improvements to `uib-cache` node
   * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
+  * Add DELAY and EXPIRY features.
   * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
   * Add cache clear button to complement the cache clear control msg
   * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
@@ -198,6 +199,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Extensions to the `uib-update` node
   * Add props: `uibUpdated`, `uibUpdatedBy`
+  * Add status in Editor: # input msgs
   * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
   * New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
 
@@ -217,6 +219,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * 1 idea per image
 
 ### Extensions to client Library
+  * Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
   * *New Functions* (all to be callable from Node-RED):
     * [ ] Show/hide page controls (light/dark, colours, etc. Easy Read option?)
     * [ ] `uibuilder.navigate(locationUrl)` - change page. Ensure it works with SPA routers and with anchor links.
@@ -423,6 +426,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Table
     * Weather example?
   * Telegram web app. [ref1](https://github.com/revenkroz/telegram-web-app-bot-example)
+
+### Other changes
+
+* Consider adding a virtual file system to enable uibuilder to work with FlowForge. [ref](https://discourse.nodered.org/t/ui-builder-and-flowforge-device-agent/79373/7)
 
 ### Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features

@@ -12,6 +12,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Fixes required
 
+* uib-element:
+  * issuing a `node.warn` showing the input type (happening on v6.1 as well) - only for table type?
+  * Chaining to a page title deletes the previous chain - putting title first is ok.
+
 * VSCode link not always working
   
   `vscode://fileC:\src\nr3\data\uibuilder/uib-dynamic-svg-eg/?windowId=_blank`
@@ -27,10 +31,14 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Extensions to client Library
 
+* Add on-load option to check for query parameters on the called URL and automatically send them to Node-RED.
 * Compare ui.js with radar version - see if changes to watch fn need to be brought over. Also add observe options.
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
 
 ### Extensions to the `uib-element` node
+  * Add option to select input other than msg.payload
+  * Add option to pass through msg.payload & maybe other props.
+  * Add option to trigger onChange
   * Add input to allow restriction by pageName/clientId/tabId
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
   * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
@@ -47,6 +55,9 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
         As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
 
 ### Extensions to the `uib-update` node
+  * Add option to select input other than msg.payload
+  * Add option to pass through msg.payload & maybe other props.
+  * Add option to trigger onChange
   * Add input to allow restriction by pageName/clientId/tabId
   * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 
@@ -64,7 +75,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...main)
 
 <!-- Nothing currently. -->
 
@@ -82,6 +93,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Changes to uibuilder client Library
 
+* **NEW FUNCTION** `uibuilder.notify(config)` - If possible (not all browsers yet fully support it), use the [browser Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API) to show an *operating system notification*. Supports a simple click reponse which can be used with `uibuilder.eventSend` to notify Node-RED that a user clicked the notification. Note that there are significant inconsistencies in how/whether this API is handled by browsers. It may not always work.
 * Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
 * Added flag to indicate if the *DOMPurify* library is loaded. Added warnings to the `include()` function when it is loaded since some includes will be filtered by the purify process for safety. Updated the front-end client introduction document with details about DOMPurify, how to load it and use it.
 * Added flag to indicate if the *Markdown-IT* library is loaded. Updated the front-end client introduction document with details about how to load the library and use it.
@@ -102,6 +114,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * CSS Classes
   * **NEW** `.flex-wrap` - auto-wrapping flex layout.
   * **NEW** `.grid-fit` - auto-columns with number set by `--grid-fit-min`.
+  * **NEW** `.compact` - removes margin and reduces top/bottom padding to a minimum (0.2rem).
+  * **NEW** `button.compact` - Removes rounded corners and reverts background to parent. Minimises margin and padding.
 
 ### Changes to uibuilder templates
 
@@ -111,6 +125,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Details and links for using the DOMPurify external library.
 * Lots more detail added to the `uib-brand.css` documentation.
+
+### Other updates
+
+* Remove dependency on `express-validator` as this is no longer used.
 
 ## [v6.4.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...v6.4.0)
 
