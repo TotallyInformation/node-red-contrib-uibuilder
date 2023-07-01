@@ -232,7 +232,6 @@ function buildTitle(node, msg, parent) {
         },
         'slot': msg.payload.shift(),
     })
-    node.warn(parent)
 
     if (msg.payload.length > 0) {
         msg.payload.forEach( (element, i) => {
