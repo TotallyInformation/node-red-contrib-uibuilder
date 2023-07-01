@@ -12,10 +12,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Fixes required
 
-* uib-element:
-  * issuing a `node.warn` showing the input type (happening on v6.1 as well) - only for table type?
-  * Chaining to a page title deletes the previous chain - putting title first is ok.
-
 * VSCode link not always working
   
   `vscode://fileC:\src\nr3\data\uibuilder/uib-dynamic-svg-eg/?windowId=_blank`
@@ -101,6 +97,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Changes to uibuilder main node
 
 * **NEW** Instance route/middleware handlers - allows you to create custom url routes and custom middleware functions that only impact routes for a single instance of uibuilder.
+* **NEW** Deep object find function added as `RED.util.uib.deepObjFind` so that it can be used in function nodes. Useful for manipulating `msg._ui` objects which can get very deep. See [Manipulating `msg._ui`](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui#manipulating-msg_ui) for details.
+
+### Changes to uib-element node
+
+* **FIX** Was issuing a `node.warn` showing the input type (happening on v6.1 as well) - only for table type. Now removed.
+* **FIX** Chaining to a page title deleted the previous chain - putting title first was ok. Now works either way.
 
 ### Changes to CSS styles (`uib-brand.css`)
 
@@ -126,7 +128,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Details and links for using the DOMPurify external library.
 * Lots more detail added to the `uib-brand.css` documentation.
 
-### Other updates
+### Other Changes
 
 * Remove dependency on `express-validator` as this is no longer used.
 
