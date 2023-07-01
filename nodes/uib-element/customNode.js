@@ -204,9 +204,10 @@ function buildHTML(node, msg, parent) {
 /** Build the UI config instructions for the Title and leading H1
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildTitle(node, msg) {
+function buildTitle(node, msg, parent) {
     // Must be a string or array/object of strings
     // If array/object, then add LAST entry entry as <div role="doc-subtitle">
 
@@ -214,45 +215,36 @@ function buildTitle(node, msg) {
 
     const err = ''
 
-    node._ui[0] = ({
-        'method': 'update',
+    parent.components.push({
+        'type': 'title',
         // title tags can appear in SVGs as well so limit this
         'selector': 'head title',
         'slot': msg.payload[0]
     })
 
-    node._ui.push({
-        'method': 'replace',
-        'components': [
-            {
-                'type': 'h1',
-                'selector': 'h1',
-                'parent': node.parent ? node.parent : 'body',
-                'position': 'first',
-                'attributes': {
-                    'class': 'with-subtitle',
-                },
-                'slot': msg.payload.shift()
-            },
-        ],
+    parent.components.push({
+        'type': 'h1',
+        'selector': 'h1',
+        'parent': node.parent ? node.parent : 'body',
+        'position': 'first',
+        'attributes': {
+            'class': 'with-subtitle',
+        },
+        'slot': msg.payload.shift(),
     })
+    node.warn(parent)
 
     if (msg.payload.length > 0) {
         msg.payload.forEach( (element, i) => {
-            node._ui.push({
-                'method': 'replace',
-                'components': [
-                    {
-                        'type': 'div',
-                        'selector': 'div[role="doc-subtitle"] ',
-                        'parent': node.parent ? node.parent : 'body',
-                        'position': 'last',
-                        'attributes': {
-                            'role': 'doc-subtitle',
-                        },
-                        'slot': element
-                    },
-                ],
+            parent.components.push({
+                'type': 'div',
+                'selector': 'div[role="doc-subtitle"] ',
+                'parent': node.parent ? node.parent : 'body',
+                'position': 'last',
+                'attributes': {
+                    'role': 'doc-subtitle',
+                },
+                'slot': element,
             })
         } )
     }
@@ -396,7 +388,6 @@ function buildDlList(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildTable(node, msg, parent) {
-    node.warn(msg.payload.constructor.name)
     // Make sure msg.payload is an object or an array - if not, force to array
     if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
 
@@ -880,7 +871,7 @@ async function buildUi(msg, node) {
 
         case 'title': {
             // In this case, we do not want a wrapping div
-            err = buildTitle(node, msg)
+            err = buildTitle(node, msg, parent)
             break
         }
 
