@@ -439,6 +439,25 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     if ( uib.RED === null ) return
     const RED = uib.RED
 
+    // Add deep find utility function to RED.util so it can be used inside function nodes
+    RED.util.uib = {
+        /** Recursive object deep find
+         * @param {*} obj The object to be searched
+         * @param {Function} matcher Function that, if returns true, will result in cb(obj) being called
+         * @param {Function} cb Callback function that takes a single arg `obj`
+         */
+        deepObjFind: (obj, matcher, cb) => {
+            if (matcher(obj)) {
+                cb(obj)
+            }
+            for (const key in obj) {
+                if (typeof obj[key] === 'object') {
+                    RED.util.uib.deepObjFind(obj[key], matcher, cb)
+                }
+            }
+        }
+    }
+
     //#region ----- back-end debugging ----- //
     log = RED.log
     log.trace('[uibuilder:runtimeSetup] ----------------- uibuilder - module started -----------------')
@@ -601,7 +620,6 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     /** Pass core objects to the Socket.IO handler module */
     // @ts-ignore
     sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
-
 } // --- end of runtimeSetup --- //
 
 //#endregion ----- End of mod-level fns ----- //
@@ -643,7 +661,6 @@ function Uib(RED) {
     //     tilib.dumpMem('Module')
     //     web.dumpRoutes(true)
     // }, 2000)
-
 } // ==== End of Uib ==== //
 
 /** Export the function that defines the node */
