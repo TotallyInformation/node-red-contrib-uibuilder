@@ -246,6 +246,66 @@ const Ui = class Ui {
 
     } // --- End of showDialog ---
 
+    /** Show a browser notification if the browser and the user allows it
+     * @param {object} config Notification config data
+     * @returns {Promise} Resolves on close or click event, returns the event.
+     */
+    _showNotification(config) {
+        if ( config.topic && !config.title ) config.title = config.topic
+        if ( !config.title ) config.title = 'uibuilder notification'
+        if ( config.payload && !config.body ) config.body = config.payload
+        if ( !config.body ) config.body = ' No message given.'
+        // Wrap in try/catch since Chrome Android may throw an error
+        try {
+            const notify = new Notification(config.title, config)
+            return new Promise( (resolve, reject) => {
+                // Doesn't ever seem to fire (at least in Chromium)
+                notify.addEventListener('close', ev => {
+                    ev.currentTarget.userAction = 'close'
+                    resolve(ev)
+                })
+                notify.addEventListener('click', ev => {
+                    ev.currentTarget.userAction = 'click'
+                    resolve(ev)
+                })
+                notify.addEventListener('error', ev => {
+                    ev.currentTarget.userAction = 'error'
+                    reject(ev)
+                })
+            })
+        } catch (e) {
+            return Promise.reject(new Error('Browser refused to create a Notification'))
+        }
+    }
+
+    /** Show a browser notification if possible. Returns a promise
+     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+     * or a Notifications API options object + config.title string.
+     * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+     * @param {object|string} config Notification config object or simple message string
+     * @returns {Promise} Resolves on close or click event, returns the event.
+     */
+    async notification(config) {
+        if (typeof config === 'string') {
+            config = { body: config }
+        }
+        // Are notifications available?
+        if (typeof Notification === 'undefined') return Promise.reject(new Error('Notifications not available in this browser'))
+        // Do we have permission? If not, ask for permission
+        let permit = Notification.permission
+        if (permit === 'denied') {
+            return Promise.reject(new Error('Notifications not permitted by user')) // eslint-disable-line no-useless-return
+        } else if (permit === 'granted') {
+            return this._showNotification(config)
+        } else { // if (permit === 'default') {
+            permit = await Notification.requestPermission()
+            if (permit === 'granted') {
+                return this._showNotification(config)
+            }
+            return Promise.reject(new Error('Notifications not permitted by user'))
+        }
+    }
+
     /** Load a dynamic UI from a JSON web reponse
      * @param {string} url URL that will return the ui JSON
      */
@@ -287,7 +347,6 @@ const Ui = class Ui {
             .catch(err => {
                 log('warn', 'Ui:loadui:catch', 'Error. ', err)()
             })
-
     } // --- end of loadui
 
     // Namespaces - See https://stackoverflow.com/a/52572048/1309986
