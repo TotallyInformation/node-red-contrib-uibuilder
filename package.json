@@ -12,13 +12,15 @@
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
     "buildSidebar": "node ./bin/docsify-auto-sidebar.js"
   },
+  "deprecated-dependencies": {
+    "express-validator": "^6.13.0"
+  },
   "dependencies": {
     "@totallyinformation/ti-common-event-handler": "^1.0.0",
     "degit": "^2.8.4",
     "ejs": "^3.1.6",
     "execa": "^5",
     "express": "^4.17.1",
-    "express-validator": "^6.13.0",
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
     "nanoid": "^3",
@@ -36,8 +38,8 @@
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^7.1.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^40.0.1",
-    "eslint-plugin-n": "^15.2.1",
+    "eslint-plugin-jsdoc": "^46.4.2",
+    "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-sonarjs": "^0",
     "gulp": "^4.0.2",
