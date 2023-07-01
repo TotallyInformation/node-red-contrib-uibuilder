@@ -743,6 +743,18 @@ form > div.btn-row { /* full width for button rows */
     font-size: larger;
 }
 
+.compact {
+    margin: 0;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+button.compact {
+    padding: 2px 5px;
+    border-radius: 0;
+    background: inherit;
+    margin: 2px;
+}
+
 /*#endregion ---- Utility ---- */
 
 /*#region -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
