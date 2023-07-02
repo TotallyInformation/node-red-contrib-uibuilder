@@ -1414,13 +1414,19 @@ export const Uib = class Uib {
                 // We must have both an element id (we may have forced one above) AND
                 // the element type MUST be not undefined - to allow for the extra properties added by frameworks such as Svelte
                 if (id !== '' && frmEl.type) {
+                    // Stupid HTML doesn't use value attrib for checkboxes. So override if value is set to default
+                    if ('checked' in frmEl && frmEl.value === 'on') frmEl.value = frmEl.checked.toString()
+
                     frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
+
                     form[id] = {
                         'id': frmEl.id,
                         'name': frmEl.name,
                         'value': frmEl.value,
                         'valid': frmEl.checkValidity(),
+                        'type': frmEl.type,
                     }
+
                     if (form[id].valid === false) {
                         const v = frmEl.validity
                         form[id].validity = {
@@ -1436,6 +1442,7 @@ export const Uib = class Uib {
                             valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
                         }
                     }
+
                     if (frmEl.dataset) form[id].data = frmEl.dataset
                 }
             })

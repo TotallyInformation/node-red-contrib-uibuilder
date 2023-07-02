@@ -5362,12 +5362,15 @@ var Uib = (_a = class {
       Object.values(target.form).forEach((frmEl, i2) => {
         const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
         if (id !== "" && frmEl.type) {
+          if ("checked" in frmEl && frmEl.value === "on")
+            frmEl.value = frmEl.checked.toString();
           frmVals.push({ key: id, val: frmEl.value });
           form[id] = {
             "id": frmEl.id,
             "name": frmEl.name,
             "value": frmEl.value,
-            "valid": frmEl.checkValidity()
+            "valid": frmEl.checkValidity(),
+            "type": frmEl.type
           };
           if (form[id].valid === false) {
             const v = frmEl.validity;
