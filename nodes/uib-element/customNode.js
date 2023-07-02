@@ -534,16 +534,32 @@ function buildSForm(node, msg, parent) {
     Object.keys(frm).forEach( (rowRef, i) => {
         // Data for this row/element of the form: id, type
         const frmRow = frm[rowRef]
+
         // TODO Check that required properties are present
+
+        // Handle non-input inputs
+        let tag = 'input'
+        if (frmRow.type === 'textarea') tag = 'textarea'
+        else if (frmRow.type === 'select') tag = 'select'
+
         // Add event handlers
         if (frmRow.type === 'button') {
             // Automatically submit form data on click
             frmRow.onclick = 'uibuilder.eventSend(event)'
+        } else if (frmRow.type === 'checkbox') {
+            // ! Stupid HTML checkbox input does not set the value attribute!
+
+            frmRow.onchange = 'this.dataset.oldValue=this.value;this.value=this.checked.toString();this.dataset.newValue=this.value'
+
+            if ('value' in frmRow) frmRow.checked = frmRow.value.toString()
+            else if ('checked' in frmRow) frmRow.value = frmRow.checked.toString()
+            else frmRow.value = 'false'
         } else {
             // Tracks old/new values on data atrributes for input fields
             frmRow.onchange = 'this.dataset.newValue = this.value'
             frmRow.onfocus = 'this.dataset.oldValue = this.value'
         }
+
         if (!frmRow.name) frmRow.name = frmRow.id
 
         // TODO Maybe wrap all buttons in a single row at the end of the form?
@@ -584,24 +600,32 @@ function buildSForm(node, msg, parent) {
                 },
                 'slot': frmRow.label ? frmRow.label : `${frmRow.type}:`,
             })
-            row.components.push({
-                'type': 'input',
+            const n = row.components.push({
+                'type': tag,
                 'id': frmRow.id,
-                'attributes': frmRow
-                // 'attributes': {
-                //     'name': frmRow.id,
-                //     'type': frmRow.type,
-                //     'value': frmRow.value,
-                //     'required': frmRow.required ? 'required' : undefined,
-                //     // Other attribs: minlength, maxlength, size, checked, disabled, max, min, multiple, pattern, step
-                // }
+                'attributes': frmRow,
             })
+            // Dropdown select - add selection options
+            if ( frmRow.type === 'select' && 'options' in frmRow ) {
+                row.components[n - 1].components = []
+                frmRow.options.forEach( opt => {
+                    row.components[n - 1].components.push({
+                        type: 'option',
+                        attributes: {
+                            value: opt.value,
+                            selected: opt.value === frmRow.value ? 'selected' : undefined,
+                        },
+                        slot: opt.label,
+                    })
+                })
+            }
         }
     } )
 
     // If user didn't specify any buttons, add them now.
     if (btnCount < 1) {
-        frmBody.components[frmBody.components.length - 1].components.push({
+        // frmBody.components[frmBody.components.length - 1].components.push({
+        frmBody.components.push({
             'type': 'div',
             'attributes': {},
             'components': [
