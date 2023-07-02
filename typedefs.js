@@ -403,6 +403,7 @@
  *   positionSource: string|number;
  *   positionSourceType: string;
  *   confData: object;
+ *   passthrough: boolean;
  *   _ui: any;
  * }} uibElNode
  */

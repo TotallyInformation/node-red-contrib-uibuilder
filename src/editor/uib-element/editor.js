@@ -237,6 +237,9 @@
             node.position = 'last'
         }
 
+        // initial checkbox states
+        if (!node.passthrough) node.passthrough = false
+
         // Define element types for drop-down
         $('#node-input-elementtype').typedInput({
             types: [
@@ -449,6 +452,8 @@
             position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true) },
             positionSourceType: { value: 'str' },
 
+            passthrough: { value: false },
+
             // Configuration data specific to the chosen type
             confData: { value: {} },
         },
@@ -472,7 +477,5 @@
         /** Runs before cancel - oneditcancel */
         /** Handle window resizing for the editor - oneditresize */
         /** Show notification warning before allowing delete - oneditdelete */
-
     }) // ---- End of registerType() ---- //
-
 }())

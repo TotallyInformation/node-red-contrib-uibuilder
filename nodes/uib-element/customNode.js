@@ -50,16 +50,18 @@ const mod = {
  * @param {runtimeNode & uibElNode} node reference to node instance
  */
 function emitMsg(msg, node) {
-    if ( node._ui === undefined ) return
+    if ( node._ui === undefined && node.passthrough === true) return
 
-    // Use event to send msg to uibuilder front-end.
+    // Merge input msg and ._ui to create new output msg
     const msg2 = {
         ...msg,
         ...{
             _ui: node._ui,
         }
     }
-    delete msg2.payload
+
+    // Remove payload unless requested
+    if (node.passthrough !== true) delete msg2.payload
 
     // Add default topic if defined and if not overridden by input msg
     // NB: Needs to be unique if using uib-cache
@@ -136,6 +138,8 @@ function nodeInstance(config) {
 
     // Configuration data specific to the chosen type
     this.confData = config.confData ?? {}
+
+    this.passthrough = config.passthrough ?? false
 
     this._ui = undefined // set in buildUI()
 

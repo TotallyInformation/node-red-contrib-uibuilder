@@ -106,6 +106,11 @@
                 <input type="text" id="node-input-heading" placeholder="Optional heading">
                 <input type="hidden" id="node-input-headingSourceType">
             </div>
+
+            <div aria-label="Will pass msg.payload through to the output.&#10;When not checked (default), payload is not passed.&#10;If checked, the front-end library will trigger the onMsg event handler." class="form-row">
+                <input type="checkbox" id="node-input-passthrough" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-input-passthrough" style="width: 90%;">Pass <code>msg.payload</code> to output?</label>
+            </div>
             
             <hr>
             
@@ -280,6 +285,15 @@
     </dd>
     <dd>
         Heading level 2 is the default. Levels 2-6 are available.
+    </dd>
+
+    <dt class="optional">Passthrough <span class="property-type">boolean</span></dt>
+    <dd>
+        If checked, pass <code>msg.payload</code> to output. By default, <code>msg.payload</code> is removed.
+    </dd>
+    <dd>
+        Checking this option will also tell the uibuilder client to enable <code>uibuilder.onChange('msg', fn)</code> processing
+        which is normally disabled when a msg with a <code>_ui</code> property is received.
     </dd>
 
     <dt class="optional">Topic <span class="property-type">string</span></dt>
@@ -560,6 +574,9 @@
                 node.position = 'last'
             }
     
+            // initial checkbox states
+            if (!node.passthrough) node.passthrough = false
+    
             // Define element types for drop-down
             $('#node-input-elementtype').typedInput({
                 types: [
@@ -772,6 +789,8 @@
                 position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true) },
                 positionSourceType: { value: 'str' },
     
+                passthrough: { value: false },
+    
                 // Configuration data specific to the chosen type
                 confData: { value: {} },
             },
@@ -795,9 +814,7 @@
             /** Runs before cancel - oneditcancel */
             /** Handle window resizing for the editor - oneditresize */
             /** Show notification warning before allowing delete - oneditdelete */
-    
         }) // ---- End of registerType() ---- //
-    
     }())
     
 </script>

@@ -126,6 +126,15 @@
         Heading level 2 is the default. Levels 2-6 are available.
     </dd>
 
+    <dt class="optional">Passthrough <span class="property-type">boolean</span></dt>
+    <dd>
+        If checked, pass <code>msg.payload</code> to output. By default, <code>msg.payload</code> is removed.
+    </dd>
+    <dd>
+        Checking this option will also tell the uibuilder client to enable <code>uibuilder.onChange('msg', fn)</code> processing
+        which is normally disabled when a msg with a <code>_ui</code> property is received.
+    </dd>
+
     <dt class="optional">Topic <span class="property-type">string</span></dt>
     <dd>
         Optional. Fixed topic string. Only used if the input <code>msg</code> does not
