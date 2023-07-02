@@ -995,6 +995,34 @@ export const Uib = class Uib {
         return showHide
     }
 
+    /** Show a browser notification if possible.
+     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+     * or a Notifications API options object + config.title string.
+     * @example uibuilder.notify( 'My simple message to the user' )
+     * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
+     * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
+     * @example // If config.return = true, a promise is returned.
+     * // The resolved promise is only returned if the notification is clicked by the user.
+     * // Can be used to send the response back to Node-RED
+     * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
+     * @ref https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+     * @param {object|string} config Notification config data or simple message string
+     * @returns {Promise<Event>|null} A promise that resolves to the click event or null
+     */
+    notify(config) {
+        if (config.return) return _ui.notification(config)
+
+        _ui.notification(config)
+            .then( res => { // eslint-disable-line promise/always-return
+                log('info', 'Uib:notification', 'Notification completed event', res)()
+                // if (config.return) return res
+            })
+            .catch( err => {
+                log('error', 'Uib:notification', 'Notification error event', err)()
+            })
+        return null
+    }
+
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
      * The card has the id `uib_status`.
      * The display is updated by an event listener created in the class constructor.
@@ -1081,7 +1109,7 @@ export const Uib = class Uib {
         // Select the node that will be observed for mutations
         const targetNode = document.querySelector(cssSelector)
         if (!targetNode) {
-            console.log('[Uib:uiWatch] CSS Selector not found. ', cssSelector)
+            log('warn', 'uibuilder.module.js:uiWatch', `CSS Selector '${cssSelector}' not found.`)()
             return false
         }
 
@@ -1099,7 +1127,7 @@ export const Uib = class Uib {
                 const out = []
 
                 mutationList.forEach( mu => {
-                    console.log({ mu })
+                    // console.log({ mu })
                     const oMu = {
                         type: mu.type,
                         oldValue: mu.oldValue !== null ? mu.oldValue : undefined,
@@ -1350,7 +1378,6 @@ export const Uib = class Uib {
 
         // The target element
         const target = domevent.currentTarget
-        // const targetId = target.id !== '' ? target.id : (target.name !== '' ? target.name : target.type)
 
         // Get target properties - only shows custom props not element default ones
         const props = {}
@@ -1359,22 +1386,27 @@ export const Uib = class Uib {
             props[key] = target[key]
         })
 
+        // Attempt to get target attributs - can fail for certain target types
         const ignoreAttribs = ['class', 'id', 'name']
-        const attribs = Object.assign({},
-            ...Array.from(target.attributes,
-                ( { name, value } ) => {
-                    if ( !ignoreAttribs.includes(name) ) {
-                        return ({ [name]: value })
+        let attribs
+        try {
+            attribs = Object.assign({},
+                ...Array.from(target.attributes,
+                    ( { name, value } ) => {
+                        if ( !ignoreAttribs.includes(name) ) {
+                            return ({ [name]: value })
+                        }
+                        return undefined
                     }
-                    return undefined
-                }
+                )
             )
-        )
+        } catch (e) {}
 
         // If target embedded in a form, include the form data
-        const form = {}
+        let form
         const frmVals = []
         if ( target.form ) {
+            form = {}
             form.valid = target.form.checkValidity()
             Object.values(target.form).forEach( (frmEl, i) => {
                 const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
@@ -1409,22 +1441,59 @@ export const Uib = class Uib {
             })
         }
 
+        // Check for CSS Classes
+        let classes
+        try {
+            classes = Array.from(target.classList)
+        } catch (e) {}
+
+        // Each `data-xxxx` attribute is added as a property
+        let payload = { ...target.dataset }
+
+        // Handle Notification events
+        let nprops
+        if ( Object.prototype.toString.call(target) === '[object Notification]') {
+            // Fixed payload for convenience
+            payload = `notification-${target.userAction}`
+            // Capture the notification properties
+            nprops = {
+                // userAction: target.userAction, // uib custom prop: click, close or error
+                actions: target.actions,
+                badge: target.badge,
+                body: target.body,
+                data: target.data,
+                dir: target.dir,
+                icon: target.icon,
+                image: target.image,
+                lang: target.lang,
+                renotify: target.renotify,
+                requireInteraction: target.requireInteraction,
+                silent: target.silent,
+                tag: target.tag,
+                timestamp: target.timestamp,
+                title: target.title,
+                vibrate: target.vibrate,
+            }
+        }
+        // console.log(Object.prototype.toString.call(target))
+
         // Set up the msg to send - NB: Topic may be added by this._send
         const msg = {
-            // Each `data-xxxx` attribute is added as a property
             // - this may be an empty Object if no data attributes defined
-            payload: { ...target.dataset },
+            payload: payload,
 
             _ui: {
                 type: 'eventSend',
                 id: target.id !== '' ? target.id : undefined,
                 name: target.name !== '' ? target.name : undefined,
-                slotText: target.textContent !== '' ? target.textContent.substring(0, 255) : undefined,
+                slotText: target.textContent && target.textContent !== '' ? target.textContent.substring(0, 255) : undefined,
 
                 form: form,
                 props: props,
                 attribs: attribs,
-                classes: Array.from(target.classList),
+                classes: classes,
+
+                notification: nprops,
 
                 event: domevent.type,
                 altKey: domevent.altKey,
@@ -1450,7 +1519,7 @@ export const Uib = class Uib {
         if (domevent.type === 'change') msg._ui.newValue = msg.payload.value = domevent.target.value
 
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
-        if (target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
+        if (target.dataset && target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
 
         this._send(msg, this._ioChannels.client, originator)
     }
@@ -1647,6 +1716,10 @@ export const Uib = class Uib {
         // Make sure that msg is an object & not null
         receivedMsg = makeMeAnObject(receivedMsg, 'payload')
 
+        // Don't process if the inbound msg is not for us
+        if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
+        if (receivedMsg._ui && !this._forThis(receivedMsg._ui)) return
+
         // @since 2018-10-07 v1.0.9: Work out local time offset from server
         this._checkTimestamp(receivedMsg)
 
@@ -1656,7 +1729,7 @@ export const Uib = class Uib {
         // Emit specific document events on msg receipt that make it easy for coders to use
         this._msgRcvdEvents(receivedMsg)
 
-        if (!('_ui' in receivedMsg)) {
+        if ( !('_ui' in receivedMsg && !('payload' in receivedMsg)) ) {
             // Save the msg for further processing
             this.set('msg', receivedMsg)
         }
