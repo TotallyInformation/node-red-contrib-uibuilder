@@ -27,7 +27,7 @@ To process a message in your browser, you can use one of the event handling uibu
 
 You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-end code which instructs the client to treat the object as though it had come from Node-RED.
 
-You can use one or more of the `msg.uib.pageName`, `msg.uib.clientId`, or `msg.uib.tabId` properties to control whether a specific page, client or browser tab will process an inbound message. Use this where you have multiple pages or clients and need to target a message to a specific one.
+You can use one or more of the `msg._uib.pageName`, `msg._uib.clientId`, or `msg._uib.tabId` properties to control whether a specific page, client or browser tab will process an inbound message. Use this where you have multiple pages or clients and need to target a message to a specific one.
 
 ## Sending Messages to Node-RED
 
@@ -428,7 +428,7 @@ You can ensure that the page display looks exactly like the last update upon pag
 ## Event Handling
 
 > [!NOTE]
-> You can use one or more of the `msg.uib.pageName`, `msg.uib.clientId`, or `msg.uib.tabId` properties
+> You can use one or more of the `msg._uib.pageName`, `msg._uib.clientId`, or `msg._uib.tabId` properties
 > to control whether a specific page, client or browser tab will process an inbound message.
 > Use this where you have multiple pages or clients and need to target a message to a specific one.
 
@@ -477,7 +477,7 @@ uibuilder.cancelTopic('my topic', topicChgEvt)
 
 The uibuilder library also issues a number of custom events. These can be handled using the standard `document.addEventListener` JavaScript function.
 
-* `uibuilder:stdMsgReceived` - triggered whenever a normal msg is received from Node-RED. Passes the msg in the data parameter. Happens before any processing of `msg.uib`, `msg._ui` or page/client/tab filtering.
+* `uibuilder:stdMsgReceived` - triggered whenever a normal msg is received from Node-RED. Passes the msg in the data parameter. Happens before any processing of `msg._uib`, `msg._ui` or page/client/tab filtering.
 * `uibuilder:msg:topic:${msg.topic}` - triggered immediately after the above event if the `msg.topic` property is set. Passes the msg in the data parameter.
 * `uibuilder:msg:_ui` - triggered immediately before the library processes `msg._ui`. Passes the msg in the data parameter.
 * `uibuilder:socket:connected` - triggered when a socket.io (websocket) connection is made to Node-RED. Passes some custom data for debugging connection issues.
