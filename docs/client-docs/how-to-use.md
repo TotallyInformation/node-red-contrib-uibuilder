@@ -3,7 +3,7 @@ title: How to use the modern uibuilder front-end library
 description: >
    This version of the library can either be used in the same style as the old `uibuilderfe.js` client (loading in a script link in the HTML) using the `uibuilder.iife.js` version or as a modern [ES Module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) using the `uibuilder.esm.js` version. Both builds of the library have identical features but are called differently as shown below.
 created: 2023-01-28 15:19:38
-lastUpdated: 2023-04-14 16:02:09
+lastUpdated: 2023-07-02 13:48:04
 ---
 
 
@@ -12,9 +12,13 @@ lastUpdated: 2023-04-14 16:02:09
 > [!note]
 > Note that you no longer need to load the socket.io client library separately since that is embedded in the client library.
 
-There are two templates that you can use the will provide minimal, pre-configured front-end code. "No framework, modern IIFE client", "No framework, modern ESM client". In addition, there is an example that you can access by doing an import in Node-RED and navigating to the uibuilder examples and selecting "uib-list". Importing that example will add a new "uib-list examples" tab in Node-RED with both IIFE and ESM examples.
+The default template no longer loads `index.js` though it has the code for it commented out in `index.html`. This is because many people will no longer need front-end JavaScript code thanks to the zero-code and low-code features of uibuilder. The default template uses the IIFE version of the library, loads `uib-brand.css` and the HTML contains a heading, sub-heading and an empty `div` with an ID of `more` which can be used for any content and is used by the examples.
 
-### IIFE version
+There are two additional templates that you can use the will provide minimal, pre-configured front-end code. "No framework, modern IIFE client", "No framework, modern ESM client". In addition, there is an example that you can access by doing an import in Node-RED and navigating to the uibuilder examples and selecting "uib-list". Importing that example will add a new "uib-list examples" tab in Node-RED with both IIFE and ESM examples. 
+
+Further templates are available and should be self-explanatory.
+
+### IIFE library version
 
 This version will add `uibuilder`, `uib`, `$$` and `$` objects to the `window` (global) object so that they are available to all code in all `script`s. `$` will not be added if it has already been defined by a library loaded before uibuilder (e.g. jQuery). `uib` is a synonym of `uibuilder`.
 
@@ -67,7 +71,7 @@ window.onload = (evt) => {
 > efficiency.
 
 
-### ESM version
+### ESM library version
 
 > [!note]
 > [ES Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) work quite differently to "traditional" JavaScript and you will find it _very_ beneficial to do some background reading on them if you are not familiar.
@@ -148,11 +152,11 @@ In addition to the main, compressed, file, uncompressed versions are available a
 
 ## More information
 
-The library consists of a new class `Uib`. That class is auto-instanciated on load.
+The library consists of a new class `Uib`. That class is auto-instanciated globally as `uibuilder` on load. `uib` is also created as a shortcut to `uibuilder`.
 
-It also adds `$` as long as it doesn't already exist (e.g. if you already loaded jQuery). `$` is bound to `document.querySelector` which means that you can use it as a shortcut to easily reference HTML entities in a similar way to a very simplistic jQuery. e.g. `$('#button1').innerHTML = 'boo!'`. [Ref.](client-docs/functions#cssselector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element)
+It also adds the global `$` as long as it doesn't already exist (e.g. if you already loaded jQuery). `$` is bound to `document.querySelector` which means that you can use it as a shortcut to easily reference HTML entities in a similar way to a very simplistic jQuery. e.g. `$('#button1').innerHTML = 'boo!'`. [Ref.](client-docs/functions#cssselector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element). This is also available as `uibuilder.$` in case the global `$` is already defined.
 
-`$$` is added and is bound to `Array.from(document.querySelectorAll(cssSelector))` so that it returns the properties of all elements discovered by the selector. [Ref.](client-docs/functions#cssselector---returns-an-array-of-html-elements-properties)
+`$$` is added and is bound to `Array.from(document.querySelectorAll(cssSelector))` so that it returns the properties of all elements discovered by the selector. [Ref.](client-docs/functions#cssselector---returns-an-array-of-html-elements-properties). This is also available as `uibuilder.$$` in case the global `$$` is already defined.
 
 > [!attention]
 > Please note that this version requires a browser since early 2019. This is probably only an issue if you are stuck on Internet Explorer or on a version of Apple Safari <12.1.
