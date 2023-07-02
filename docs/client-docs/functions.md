@@ -4,86 +4,32 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-04-15 13:56:59
+lastUpdated: 2023-07-02 14:23:47
 ---
 
 Functions accessible in client-side user code.
 
-- [`start(options)` - (Mostly no longer needed) Starts Socket.IO communications with Node-RED](#startoptions---mostly-no-longer-needed-starts-socketio-communications-with-node-red)
-- [Message Handling](#message-handling)
-  - [`htmlSend()` - Sends the whole DOM/HTML back to Node-RED](#htmlsend---sends-the-whole-domhtml-back-to-node-red)
-  - [`send(msg, originator = '')` - Send a custom message back to Node-RED](#sendmsg-originator-----send-a-custom-message-back-to-node-red)
-  - [`eventSend(domevent, originator = '')` - Send a standard message back to Node-RED in response to a DOM event](#eventsenddomevent-originator-----send-a-standard-message-back-to-node-red-in-response-to-a-dom-event)
-  - [`setOriginator(originator = '')` - Set/clear the default originator](#setoriginatororiginator-----setclear-the-default-originator)
-  - [`sendCtrl(msg)` - Send a custom control message back to Node-RED](#sendctrlmsg---send-a-custom-control-message-back-to-node-red)
-  - [`beaconLog(txtToSend, logLevel)` - Send a short log message to Node-RED](#beaconlogtxttosend-loglevel---send-a-short-log-message-to-node-red)
-  - [~~logToServer()~~ - Not yet reliable. Will cause the input to appear in Node-RED logs](#logtoserver---not-yet-reliable-will-cause-the-input-to-appear-in-node-red-logs)
+- [Receiving Messages from Node-RED](#receiving-messages-from-node-red)
+- [Sending Messages to Node-RED](#sending-messages-to-node-red)
 - [Variable Handling](#variable-handling)
-  - [`get(prop)` - Get a uibuilder property](#getprop---get-a-uibuilder-property)
-      - [Example](#example)
-  - [`set(prop, val)` - Set a uibuilder property and dispatch a change event](#setprop-val---set-a-uibuilder-property-and-dispatch-a-change-event)
-      - [Example](#example-1)
-  - [`getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage](#getstoreid---attempt-to-get-and-re-hydrate-a-key-value-from-browser-localstorage)
-  - [`setStore(id, val)` - Attempt to save to the browsers localStorage](#setstoreid-val---attempt-to-save-to-the-browsers-localstorage)
-  - [`removeStore(id)` - Attempt to remove a uibuilder key from browser localStorage](#removestoreid---attempt-to-remove-a-uibuilder-key-from-browser-localstorage)
-  - [`setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED](#setpingms---set-a-repeating-pingkeep-alive-http-call-to-node-red)
-      - [Example](#example-2)
 - [UI Handling](#ui-handling)
-  - [`ui(json)` - Directly manage UI via JSON](#uijson---directly-manage-ui-via-json)
-  - [`htmlSend()` - Sends the whole DOM/HTML back to Node-RED](#htmlsend---sends-the-whole-domhtml-back-to-node-red-1)
-  - [`loadui(url)` - Load a dynamic UI from a JSON web reponse](#loaduiurl---load-a-dynamic-ui-from-a-json-web-reponse)
-  - [`loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously](#loadscriptsrcurl-loadstylesrcurl-loadscripttxtstring-loadstyletxtstring---attach-a-new-script-or-css-stylesheet-to-the-end-of-head-synchronously)
-  - [`replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string](#replaceslotel-component---replace-or-add-an-html-elements-slot-from-text-or-an-html-string)
-  - [`replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string](#replaceslotmarkdownel-component---replace-or-add-an-html-elements-slot-from-a-markdown-string)
-  - [`showDialog(type, ui, msg)` - Show a toast or alert style message on the UI](#showdialogtype-ui-msg---show-a-toast-or-alert-style-message-on-the-ui)
-  - [`showMsg(boolean, parent=body)` - Show/hide a card that automatically updates and shows the last incoming msg from Node-RED](#showmsgboolean-parentbody---showhide-a-card-that-automatically-updates-and-shows-the-last-incoming-msg-from-node-red)
-  - [`showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the uibuilder client library](#showstatusboolean-parentbody---showhide-a-card-shows-the-current-status-of-the-uibuilder-client-library)
-  - [`syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as formatted HTML](#syntaxhighlightjson---takes-a-javascript-object-or-json-and-outputs-as-formatted-html)
-  - [`uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element](#uigetcssselector-propnamenull---get-most-useful-information-or-specific-property-from-a-dom-element)
-  - [`uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements](#uiwatchcssselector-startstoptruefalsetoggle-sendtrue-showlogtrue---watches-for-any-changes-to-the-selected-html-elements)
-  - [`include(url, uiOptions)` - insert an external file into the web page](#includeurl-uioptions---insert-an-external-file-into-the-web-page)
 - [HTML/DOM Cacheing](#htmldom-cacheing)
-  - [`watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage](#watchdomstartstop---startstop-watching-for-dom-changes-changes-automatically-saved-to-browser-localstorage)
-  - [`clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage](#clearhtmlcache---clears-the-html-previously-saved-to-the-browser-localstorage)
-  - [`restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage](#restorehtmlfromcache---swaps-the-currently-displayed-html-to-the-version-last-saved-in-the-browser-localstorage)
-  - [`saveHtmlCache()` - Manually saves the currently displayed HTML to the browser localStorage](#savehtmlcache---manually-saves-the-currently-displayed-html-to-the-browser-localstorage)
 - [Event Handling](#event-handling)
-  - [`onChange(prop, callbackFn)` - Register on-change event listeners for uibuilder tracked properties](#onchangeprop-callbackfn---register-on-change-event-listeners-for-uibuilder-tracked-properties)
-      - [Example](#example-3)
-  - [`cancelChange(prop, cbRef)` - remove all the onchange listeners for a given property](#cancelchangeprop-cbref---remove-all-the-onchange-listeners-for-a-given-property)
-  - [`onTopic(topic, callbackFn)` - like onChange but directly listens for a specific topic](#ontopictopic-callbackfn---like-onchange-but-directly-listens-for-a-specific-topic)
-  - [`cancelTopic(topic, cbRef)` - like cancelChange for for onTopic](#canceltopictopic-cbref---like-cancelchange-for-for-ontopic)
-- [Other](#other)
-  - [`$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element](#cssselector---simplistic-jquery-like-document-css-query-selector-returns-an-html-element)
-    - [Example](#example-4)
-  - [`$$(cssSelector)` - Returns an array of HTML elements properties](#cssselector---returns-an-array-of-html-elements-properties)
-  - [`log` - output log messages like the library does](#log---output-log-messages-like-the-library-does)
+- [Utility](#utility)
+- [Startup](#startup)
 
 
-## `start(options)` - (Mostly no longer needed) Starts Socket.IO communications with Node-RED
+## Receiving Messages from Node-RED
 
-> [!NOTE]
-> In most cases, you no longer need to call this yourself. The client startup is now more robust and should rarely need any help. The exception will be if you are loading a page from an external server instead of from Node-RED.
->
-> Use the `uibuilder.showStatus()` function to display the status of the client library on-page. This can show when the start function has failed and show what you need to change.
+uibuilder automatically creates a live websocket channel from the Node-RED server to your browser when you open a uibuilder page. By sending a msg to a uibuilder node, it will be transferred to ALL connected clients unless you specify otherwise.
 
-Unlike the original uibuilder client, this version:
-
-* Rarely needs to be manually called. It should work for all page locations including in sub-folders as long as the client allows cookies.
-* Only allows passing of a single options object.
-* Allows being called again which will reset the Socket.IO connection and internal msg event handlers.
-
-While multiple properties can be given in the options object, only the following are currently used:
-
-* `ioNamespace` - This is normally calculated for you. However, if using an external server to serve the page, you may need to manually set this. Check the uibuilder node details page in the Node-RED Editor for what this should be set to.
-* `ioPath` - As above.
-* `loadStylesheet` - (default=true). Set to false if you don't want the uibuilder default stylesheet (`uib-brand.css`) to be loaded if you haven't loaded your own. Checks to see if any stylesheet has already been loaded and if it has, does not load.
-
-## Message Handling
-
-These send or receive messages to/from Node-RED.
+To process a message in your browser, you can use one of the event handling uibuilder library functions such as [`onChange`](#event-handling) or [`onTopic`](#event-handling). Alternatively, you can use the standard `document.addEventListener` function to listen for one of the uibuilder library's custom events.
 
 You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-end code which instructs the client to treat the object as though it had come from Node-RED.
+
+You can use one or more of the `msg.uib.pageName`, `msg.uib.clientId`, or `msg.uib.tabId` properties to control whether a specific page, client or browser tab will process an inbound message. Use this where you have multiple pages or clients and need to target a message to a specific one.
+
+## Sending Messages to Node-RED
 
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
 
@@ -241,6 +187,51 @@ Directly calls `_ui.loadui` from the `ui.js` library.
 Either from a remote URL or from a text string.
 
 Directly call the functions of the same name from the `ui.js` library.
+
+### `notify(config)` - Use the browser and OS notification API to show a message to the user
+
+Requires a browser that supports the [Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification).
+
+> [!WARNING]
+> Users will almost certainly have to spot that their browser initially blocks notifications for a particular web endpoint.
+> They will need to allow notifications manually before they will work.
+
+#### Examples
+
+```javascript
+// Simple string input
+uibuilder.notify( 'My simple message to the user' )
+// Node-RED msg object style input
+uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
+// Notification API style input
+uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
+
+// If notifyConfig.return = true, a promise is returned.
+// The resolved promise is only returned if the notification is clicked by the user.
+// Can be used to send the response back to Node-RED
+uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
+```
+
+When returning the response to Node-RED, the following style of msg is output:
+
+```json
+{
+  "payload":"notification-click",
+  "_ui": {
+    "type":"eventSend", 
+    "props": {"userAction":"click"}, 
+    "notification": {
+      "actions":[],"badge":"","body":"My simple message to the user",
+      "data":null,"dir":"auto","icon":"","image":"","lang":"",
+      "renotify":false,"requireInteraction":false,"silent":false,
+      "tag":"","timestamp":1688303511972,"title":"My Title","vibrate":[]
+    },
+    "event":"click",
+    "clientId":"-4MmSwnSrvJIOzVWgqcQv","pageName":"index.html","tabId":"t588851"
+  },
+  "_socketId":"RlLfI6HDnhbcttB5AAAH","topic":"title","_msgid":"64a614702ff90fff"
+}
+```
 
 ### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string
 
@@ -436,6 +427,11 @@ You can ensure that the page display looks exactly like the last update upon pag
 
 ## Event Handling
 
+> [!NOTE]
+> You can use one or more of the `msg.uib.pageName`, `msg.uib.clientId`, or `msg.uib.tabId` properties
+> to control whether a specific page, client or browser tab will process an inbound message.
+> Use this where you have multiple pages or clients and need to target a message to a specific one.
+
 ### `onChange(prop, callbackFn)` - Register on-change event listeners for uibuilder tracked properties
 
 Returns a reference to the callback so that it can be cancelled if needed.
@@ -452,7 +448,7 @@ const msgChgEvt = uibuilder.onChange('msg', (msg) => {
 })
 ```
 
-### `cancelChange(prop, cbRef)` - remove all the onchange listeners for a given property
+### `cancelChange(prop, cbRef)` - remove all the onChange listeners for a given property
 
 Both arguments must be provided. With `cbRef` having been saved when the listener was set up.
 
@@ -477,7 +473,27 @@ Both arguments must be provided. With `cbRef` having been saved when the listene
 uibuilder.cancelTopic('my topic', topicChgEvt)
 ```
 
-## Other
+### Custom Events
+
+The uibuilder library also issues a number of custom events. These can be handled using the standard `document.addEventListener` JavaScript function.
+
+* `uibuilder:stdMsgReceived` - triggered whenever a normal msg is received from Node-RED. Passes the msg in the data parameter. Happens before any processing of `msg.uib`, `msg._ui` or page/client/tab filtering.
+* `uibuilder:msg:topic:${msg.topic}` - triggered immediately after the above event if the `msg.topic` property is set. Passes the msg in the data parameter.
+* `uibuilder:msg:_ui` - triggered immediately before the library processes `msg._ui`. Passes the msg in the data parameter.
+* `uibuilder:socket:connected` - triggered when a socket.io (websocket) connection is made to Node-RED. Passes some custom data for debugging connection issues.
+* `uibuilder:socket:disconnected` - triggered whenever the socket.io connection to Node-RED is lost. Passes either the disconnect reason text or a JavaScript error object. Can be used for debugging connection issues. Note that it is normal for disconnections to happen if the client device goes to sleep.
+* `uibuilder:constructorComplete` - triggered when the library is at the end of its construction phase. No data is passed.
+* `uibuilder:startComplete` - triggered when the library is at the end of its startup phase. No data is passed. At this point, communications with Node-RED are either established or could not be established.
+* `uibuilder:propertyChanged` - triggered when any managed property is changed. The `uibuilder.set` function is used to trigger managed property updates. Passes the object `{ 'prop': prop, 'value': val }` as data which can be used to filter actions if needed. It is generally easier to use the `uibuilder.onChange` function.
+* `uibuilder:domChange` - triggered if `uibuilder.uiWatch` has been set, if a watched HTML element is changed. The passed data is the same object as would be passed back to Node-RED. Allows easy processing of DOM changes in front-end code if needed. Avoids the need to juggle with the complex Mutation Observer browser API.
+
+```javascript
+document.addEventListener("uibuilder:propertyChanged", (event) => {
+    console.log("uibuilder:propertyChanged. ", 'Property: ', event.details.prop, 'Value: ', event.details.value)
+})
+```
+
+## Utility
 
 ### `$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element
 
@@ -521,3 +537,25 @@ The first 2 arguments are required. All remaining arguments are included in the 
 To set the log level to display in your code, use `uibuilder.logLevel = 5` or `uibuilder.logLevel = 'trace'`. Set to your desired level.
 
 Future versions of this function after v6.1 will extend it to output to an on-page visible log and/or log back to Node-RED.
+
+## Startup
+
+### `start(options)` - Mostly no longer needed - Starts Socket.IO communications with Node-RED
+
+> [!NOTE]
+> In most cases, you no longer need to call this yourself. The client startup is now more robust and should rarely need any help. The exception will be if you are loading a page from an external server instead of from Node-RED.
+>
+> Use the `uibuilder.showStatus()` function to display the status of the client library on-page. This can show when the start function has failed and show what you need to change.
+
+Unlike the original uibuilder client, this version:
+
+* Rarely needs to be manually called. It should work for all page locations including in sub-folders as long as the client allows cookies.
+* Only allows passing of a single options object.
+* Allows being called again which will reset the Socket.IO connection and internal msg event handlers.
+
+While multiple properties can be given in the options object, only the following are currently used:
+
+* `ioNamespace` - This is normally calculated for you. However, if using an external server to serve the page, you may need to manually set this. Check the uibuilder node details page in the Node-RED Editor for what this should be set to.
+* `ioPath` - As above.
+* `loadStylesheet` - (default=true). Set to false if you don't want the uibuilder default stylesheet (`uib-brand.css`) to be loaded if you haven't loaded your own. Checks to see if any stylesheet has already been loaded and if it has, does not load.
+
