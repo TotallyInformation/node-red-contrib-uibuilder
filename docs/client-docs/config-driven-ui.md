@@ -4,7 +4,7 @@ description: >
    This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a uibuilder node where the messages contain a `msg._ui` property.
    This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-07-01 18:27:21
+lastUpdated: 2023-07-02 14:41:10
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
@@ -13,27 +13,17 @@ lastUpdated: 2023-07-01 18:27:21
 - [Dynamic changes via messages from Node-RED (or local set)](#dynamic-changes-via-messages-from-node-red-or-local-set)
 - [Available methods](#available-methods)
 - [Method: add](#method-add)
-  - [Msg schema](#msg-schema)
-  - [Example msgs for nested components](#example-msgs-for-nested-components)
 - [Method: load](#method-load)
-  - [Caveats and limitations](#caveats-and-limitations)
-  - [Msg schema](#msg-schema-1)
-  - [Example: Use load method fromt front-end in custom index.js file](#example-use-load-method-fromt-front-end-in-custom-indexjs-file)
 - [Method: replace](#method-replace)
-  - [Schema example](#schema-example)
 - [Method: remove](#method-remove)
 - [Method: removeAll](#method-removeall)
 - [Method: update](#method-update)
-  - [Msg schema](#msg-schema-2)
 - [Method: reload - Reloads the current page](#method-reload---reloads-the-current-page)
 - [Method: notify](#method-notify)
-  - [HTML Tags](#html-tags)
-    - [Schema](#schema)
 - [Method: alert](#method-alert)
 - [Manipulating `msg._ui`](#manipulating-msg_ui)
 - [References \& examples](#references--examples)
 - [Dynamic content limitations](#dynamic-content-limitations)
-  - [Updates and sub-components](#updates-and-sub-components)
 
 ## Restricting actions to specific pages, users, tabs
 
