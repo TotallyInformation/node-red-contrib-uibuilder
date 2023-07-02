@@ -12,34 +12,44 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Fixes required
 
-* VSCode link not always working
+* Form layout messed up
   
-  `vscode://fileC:\src\nr3\data\uibuilder/uib-dynamic-svg-eg/?windowId=_blank`
-  `vscode://file/src/uibRoot/work/?windowId=_blank`
-
 * [Issue #213](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/213) - SVG flow example not working `_uiComposeComponent is not a function at htmlClone index.js:52:15`
   
   Caused by the move of all ui fns to a separate class. So `_uiComposeComponent` is no longer accessible. It should not have been used in the example anyway since anything starting with an underscore should be for internal use only. My bad.
 
   Fixed by replacing with manual enhancement until a future solution can be introduced, probably a new function `uibuilder.uiEnhanceElement(clone, ui)` which will call `_uiComposeComponent` internally.
 
-* Form checkbox output from auto-send is always "on"
-
 ### Extensions to client Library
 
+* Forms (eventSend): 
+  * Allow for multi-select sending array of selected options.
+  * Allow for multi-select pre-selecting array of options.
+  * Allow for "selected" `true` on option entries.
+* Get _uib/_ui notify features to use Notification API if available
 * Add on-load option to check for query parameters on the called URL and automatically send them to Node-RED.
 * Compare ui.js with radar version - see if changes to watch fn need to be brought over. Also add observe options.
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
 
+### Extensions to `uib-brand.css`
+
+* Forms:
+  * Fix height for all 1-line inputs, including text,colour,month, file checkbox and select-single.
+  * Make end button row span the whole grid.
+  * Allow for blank line spanning the grid width.
+
 ### Extensions to the `uib-element` node
-  * Add option to select input other than msg.payload
-  * Add option to pass through msg.payload & maybe other props.
-  * Add option to trigger onChange
-  * Add input to allow restriction by pageName/clientId/tabId
-  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-  * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
-  * Consider making the main input selectable (e.g. not just msg.payload)
-  * Add more elements:
+
+* Forms:
+  * Check if textarea sizes can be changed - specifically the number of lines. Similarly for select-multiple.
+  * Add option for blank line and blank grid div entry
+  * Add option to set #grid columns
+* Add option to select input other than msg.payload
+* Add input to allow restriction by pageName/clientId/tabId
+* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+* New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
+* Consider making the main input selectable (e.g. not just msg.payload)
+* Add more elements:
     * [ ] Markdown
       Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
     * Individual Form Elements
@@ -51,11 +61,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
         As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
 
 ### Extensions to the `uib-update` node
-  * Add option to select input other than msg.payload
-  * Add option to pass through msg.payload & maybe other props.
-  * Add option to trigger onChange
-  * Add input to allow restriction by pageName/clientId/tabId
-  * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+
+* Add option to select input other than msg.payload
+* Add option to pass through msg.payload & maybe other props.
+* Add option to trigger onChange
+* Add input to allow restriction by pageName/clientId/tabId
+* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 
 * **NEW NODE** - `uib-save` - Easily save files to uibuilder-specific locations
 
@@ -77,6 +88,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### **NEW** Features
 
+* The client library now filters inbound messages according to `pageName`, `clientId`, and/or `tabId` set in either `msg._uib` or `msg._ui`.
 * Instance routes/middleware
 
   You can now add ExpressJS routes and other middleware to a single instance of uibuilder (a specific uibuilder node), not just to all nodes. Especially useful if you want to add custom security (login, registration, etc) to just one instance.
@@ -90,9 +102,13 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Changes to uibuilder client Library
 
 * **NEW FUNCTION** `uibuilder.notify(config)` - If possible (not all browsers yet fully support it), use the [browser Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API) to show an *operating system notification*. Supports a simple click reponse which can be used with `uibuilder.eventSend` to notify Node-RED that a user clicked the notification. Note that there are significant inconsistencies in how/whether this API is handled by browsers. It may not always work.
+* Do not process input messages if either `msg._uib` or `msg._ui` includes either `pageName`, `clientId`, and/or `tabId` and where those parameters do not match the current page or client.
+* Improvements and corrections to the `eventSend` function. Allowing more event types to be sensible handled (including the Notify response). Also added CSS class information & specific outputs for notifications.
 * Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
 * Added flag to indicate if the *DOMPurify* library is loaded. Added warnings to the `include()` function when it is loaded since some includes will be filtered by the purify process for safety. Updated the front-end client introduction document with details about DOMPurify, how to load it and use it.
 * Added flag to indicate if the *Markdown-IT* library is loaded. Updated the front-end client introduction document with details about how to load the library and use it.
+* Trigger onChange when payload received along with _ui. Previous update turned this off completely but that is too restrictive. Use the Passthrough option in `uib-element` for example so that data can be further processed in the front-end if required.
+* `eventSend` function: Added input field types to form outputs
 
 ### Changes to uibuilder main node
 
@@ -103,6 +119,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * **FIX** Was issuing a `node.warn` showing the input type (happening on v6.1 as well) - only for table type. Now removed.
 * **FIX** Chaining to a page title deleted the previous chain - putting title first was ok. Now works either way.
+* **FIX** Form checkbox "value" output from auto-send was always "on". Because HTML is sometimes utterly stupid! Input tags of type "checkbox" do not set a value like other inputs! They only set the "checked" attribute. Fixed by forcing the value attribute to be set.
+* Added an option to pass through msg.payload. When sent to the front-end, the client library will trigger standard events to allow further processing of the data in the front-end. This means that you can use `uibuilder.onChange` etc in the front-end even though the msg contains `msg._ui` which would normally prevent this from happening.
+* Form additions:
+  * Textarea input.
+  * Select options drop-down input. 
+
 
 ### Changes to CSS styles (`uib-brand.css`)
 
@@ -127,6 +149,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Details and links for using the DOMPurify external library.
 * Lots more detail added to the `uib-brand.css` documentation.
+* The usual set of documentation improvements, slowly improving things and trying to ensure that the documentation matches the actual implementation. 😁
 
 ### Other Changes
 

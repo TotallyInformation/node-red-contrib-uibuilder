@@ -152,7 +152,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * Future Improvements:
         * **Improve range slider** - with min/max and current value indicator (possibly as a separate, linked number input box) - may need an `oninput` handler
         * Better validation of input data
-        * Additional input types: select, combo, file, image, textarea.
+        * Additional input types: file (need to process uploads to NR), combo, image.
         * Eventually add extended inputs such as HTML WYSIWYG/Markdown
         * Add Auto-complete for text inputs
         * If no button added, make each input send changes direct - or possibly add that as an optional setting.
