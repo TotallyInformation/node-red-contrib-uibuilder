@@ -3,7 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: >
    Description of the main features.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-03-04 15:37:14
+lastUpdated: 2023-07-02 15:34:39
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -21,17 +21,11 @@ lastUpdated: 2023-03-04 15:37:14
 - [setStore, getStore, removeStore functions](#setstore-getstore-removestore-functions)
 - [send function](#send-function)
 - [eventSend function](#eventsend-function)
-  - [Plain html/javascript example.](#plain-htmljavascript-example)
-  - [VueJS/bootstrap-vue example](#vuejsbootstrap-vue-example)
 - [Auto-loading of the uibuilder default stylesheet](#auto-loading-of-the-uibuilder-default-stylesheet)
 - [Initial connection message now shows whether the page is newly loaded or not](#initial-connection-message-now-shows-whether-the-page-is-newly-loaded-or-not)
 - [Stable client identifier](#stable-client-identifier)
 - [Number of connections is tracked and sent to server on (re)connect](#number-of-connections-is-tracked-and-sent-to-server-on-reconnect)
-  - [Example client connect control msg](#example-client-connect-control-msg)
 - [Client connection/disconnection control messages](#client-connectiondisconnection-control-messages)
-  - [Client Connect message](#client-connect-message)
-  - [Client Disconnect (and error) message](#client-disconnect-and-error-message)
-  - [Message from server to client](#message-from-server-to-client)
 - [ui function](#ui-function)
 - [Controlling from Node-RED](#controlling-from-node-red)
 
