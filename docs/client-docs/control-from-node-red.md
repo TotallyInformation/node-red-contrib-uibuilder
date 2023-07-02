@@ -4,7 +4,7 @@ description: >
    How to send specially formatted messages from Node-RED to the uibuilder node that
    get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-lastUpdated: 2023-04-10 13:34:57
+lastUpdated: 2023-07-02 15:50:23
 ---
 
 The uibuilder client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
@@ -15,6 +15,14 @@ These ways are all summarised here. They all use a pre-formatted message sent to
 > This feature was introduced in uibuilder v6.1 with only the get/set commands. Other commands are introduced in later versions.
 
 Please load the "remote-commands" example from the library to test all of these out.
+
+## Responses
+
+When a command is issued from Node-RED to the clients via a `msg._uib` command, the client library will respond with a standard message of its own.
+
+The `msg._uib` block of the response will contain `msg._uib.command` showing what command was issued and `msg._uib.response` showing the client library's (or browsers) response to the command. `msg.payload` also contains a copy of the response.
+
+If the uibuilder node has the "Include msg._uib in standard msg output" flag set, `msg._uib` will also contain all of the client details.
 
 ## UI control
 
