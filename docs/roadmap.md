@@ -67,6 +67,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ## Next - these are things that need to be done
 
+* Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
+* Restructure uibuilder node to remove fs-extra dependency to its own library module.
+* Restructure other nodes to move server file handling to a separate library module.
+* Consider adding a default CSS override to the uibuilder node. To be used when no CSS specificed and also to be used in admin/generated uib pages. Defaulting to `../uibuilder/uib-brand.css`.
+
 * **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations
 
   Uses the same code as the client library. Outputs HTML on `msg.payload`, removes the input `msg._ui`.
@@ -299,6 +304,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
   * Editor panel: Remove the "Allow passing to the front-end" from Advanced tab - no longer needed. Use `msg._ui` features with the updated client instead.
   * Allow file uploads
+  * Add instance title and description fields. Extend record of instances to include these and update the `apps` page.
 
   * Move all filing system handling to a separate library module. Should help work out how to support implementations with limited filing systems.
   * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
