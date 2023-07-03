@@ -218,6 +218,8 @@
  * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ * @property {string} title Short descriptive title for the instance
+ * @property {string} descr Longer description for the instance
  */
 
 /** uibNode
@@ -270,6 +272,9 @@
  * @property {string} statusDisplay.text Text to display
  * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
  * @property {string} statusDisplay.shape dot or ring
+ *
+ * @property {string} title Short descriptive title for the instance
+ * @property {string} descr Longer description for the instance
  */
 
 /** uibConfig - THe module-level `uib` configuration variable
@@ -287,6 +292,8 @@
  *  url then add processing to ensure that the URL's are unique.
  *
  *  Schema: `{<node.id>: <url>}`
+ * @property {object} apps Instance details
+ *  Schema: `{url: {node.id, node.title, node.desc}}
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  *
  *  Default `../template`

@@ -89,6 +89,9 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### **NEW** Features
 
 * The client library now filters inbound messages according to `pageName`, `clientId`, and/or `tabId` set in either `msg._uib` or `msg._ui`.
+  
+* There is a new, dynamic page at `../uibuilder/apps` that lists (with links) all uibuilder instance endpoints. Currently only a very simple list but the plan is to add an instance title and description field to uibuilder which would then be populated into this page. Use as an index of all of your main web pages (strictly, this is a list of all of the uibuilder-driven web apps. Apps may have multiple pages of course).
+
 * Instance routes/middleware
 
   You can now add ExpressJS routes and other middleware to a single instance of uibuilder (a specific uibuilder node), not just to all nodes. Especially useful if you want to add custom security (login, registration, etc) to just one instance.
@@ -113,7 +116,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Changes to uibuilder main node
 
 * **NEW** Instance route/middleware handlers - allows you to create custom url routes and custom middleware functions that only impact routes for a single instance of uibuilder.
+
 * **NEW** Deep object find function added as `RED.util.uib.deepObjFind` so that it can be used in function nodes. Useful for manipulating `msg._ui` objects which can get very deep. See [Manipulating `msg._ui`](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui#manipulating-msg_ui) for details.
+
+* **NEW** A dynamically generated list of all uibuilder apps is now available at `../uibuilder/apps`. In addition, title and description fields have been added to the Advanced tab in the uibuilder node. These are used on the apps page. You can also output the detailed list in Node-RED using a function node with `RED.util.uib.listAllApps()`. The detailed list also shows what node defines the app.
 
 ### Changes to uib-element node
 

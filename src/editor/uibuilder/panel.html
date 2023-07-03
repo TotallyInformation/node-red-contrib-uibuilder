@@ -219,6 +219,16 @@
             It is reset when the browser restarts. Control msgs always include <code>msg.clientId</code>.
         </div>
 
+        <div aria-label="Description text for this instance" class="form-row">
+            <label for="node-input-title" style="display:block;width:100%;">Short description for this uibuilder instance:</label>
+            <input id="node-input-title" type="text" style="width:100%;">
+        </div>
+
+        <div aria-label="More description text for this instance" class="form-row">
+            <label for="node-input-title" style="display:block;width:100%;">Long description for this uibuilder instance:</label>
+            <textarea id="node-input-descr" style="width:100%;"></textarea>
+        </div>
+
         <div aria-label="Provide a searchable file index view?" class="form-row" 
                 title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
             <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
@@ -226,14 +236,14 @@
             <span id="show-src-folder-idx-url">_</span>.
         </div>
 
-        <div aria-label="For old client library only. Allow scripts/styles to be passed to front-end?" class="form-row"
+        <!-- <div aria-label="For old client library only. Allow scripts/styles to be passed to front-end?" class="form-row"
                 title="Add msg.script&sol;msg.style to the input msg. This can be a security issue as the data is NOT VETTED.">
             Allow passing to the front-end<br>(old client library only, use msg._ui for new libraries): <br>
             <input type="checkbox" id="node-input-allowScripts" style="display: inline-block; width: auto; vertical-align: top;">
             <label for="node-input-allowScripts">Scripts? (JS)</label>
             <input type="checkbox" id="node-input-allowStyles" style="display: inline-block; width: auto; vertical-align: top;">
             <label for="node-input-allowStyles">Styles? (CSS)</label>
-        </div>
+        </div> -->
 
         <div aria-label="Forward flag" class="form-row" title="forward inbound msg's direct to the output">
             <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">

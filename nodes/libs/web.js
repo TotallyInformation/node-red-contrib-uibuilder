@@ -294,6 +294,9 @@ class UibWeb {
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
 
+        // Add auto-generated index page to uibRouter showing all uibuilder user app endpoints at `../uibuilder/apps`
+        this._serveUserUibIndex()
+
         // Add masterStatic to ../uibuilder - serves up front-end/... uib-styles.css, uibuilderfe...
         if ( this.masterStatic !== undefined ) {
             this.uibRouter.use( express.static( this.masterStatic, uib.staticOpts ) )
@@ -316,6 +319,66 @@ class UibWeb {
         this.app.use( tilib.urlJoin(uib.moduleName), this.uibRouter )
 
     } // --- End of webSetup() --- //
+
+    // TODO Add instance title & description to uibuilder node.
+    /** Return a dynamic index page of all uibuilder user-accessible endpoints
+     * @param {express.Request} req Express request object
+     * @param {express.Response} res Express response object
+     * @param {Function} next Function to pass to next handler
+     */
+    _serveUserUibIndex() {
+        this.uibRouter.get('/apps', (req, res, next) => {
+            // Build the web page
+            let page = `
+                <!doctype html><html lang="en"><head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>App Index</title>
+                    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+                    <link type="text/css" rel="stylesheet" href="../uibuilder/uib-brand.min.css">
+                    <style>
+                        li > div {
+                            border-left:5px solid var(--surface5);
+                            padding-left: 5px;
+                        }
+                    </style>
+                </head><body class="uib"><div class="container">
+                    <h1>List of available apps</h1>
+                    <div><ul>
+            `
+
+            if ( Object.keys(this.uib.instances).length === 0 ) {
+                page += '<p>Instance list not yet ready, please try again</p>'
+            } else {
+                for (let [url, data] of Object.entries(this.uib.apps)) {
+                    const title = data.title.length === 0 ? '' : `: ${data.title}`
+                    const descr = data.descr.length === 0 ? '' : `<div>${data.descr}</div>`
+                    page += `
+                        <li>
+                            <a href="../${url}">${url}${title}</a>${descr}
+                        </li>
+                    `
+                }
+            }
+
+            page += `
+                    </ul></div>
+                </div></body></html>
+            `
+
+            res.statusMessage = 'Instances listed'
+            res.status(200).send( page )
+        })
+
+        // Record this endpoint for use on details page
+        this.routers.user.push( {
+            name: 'Endpoints',
+            path: `${this.uib.httpRoot}/uibuilder/endpoints`,
+            desc: 'List of all uibuilder endpoints',
+            type: 'Get',
+            // folder: uib.commonFolder
+        } )
+    } // --- End of serveUserUibIndex --- //
 
     /** Set folder to use for the central, static, front-end resources
      *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
