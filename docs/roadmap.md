@@ -71,6 +71,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Restructure uibuilder node to remove fs-extra dependency to its own library module.
 * Restructure other nodes to move server file handling to a separate library module.
 * Consider adding a default CSS override to the uibuilder node. To be used when no CSS specificed and also to be used in admin/generated uib pages. Defaulting to `../uibuilder/uib-brand.css`.
+* Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
 
 * **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations
 
@@ -328,6 +329,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'". "sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
   * Introduce standard events: url-change (so that all uib related nodes can be notified if a uib endpoint changes url).
   * uibindex change "User-Facing Routes" to "Client-Facing Routes".
+  * Add index web page for the `common` folder.
 
   * Editor:
     * Improve help box for _uib switch 
@@ -342,10 +344,13 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * NEW TAB: `Build` - run npm scripts, install instance libraries (for dev or dependencies - just dev initially)
     * Add visual error when changing advanced/Serve to a folder with no index.html.
     * Option for project folder storage.
+    * Add (advanced) flag to make use of project folder optional.
     * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
     * Libraries tab
       * Add update indicator to Libraries tab.
       * Trigger indicator to Libraries to show if new major version available when switching to the tab.
+      * Add npm package delete confirmation - probably via std NR notifications.
+      * When adding a package, make sure that the input field gets focus & add <keyb>Enter</keyb> & <keyb>Esc</keyb> key processing.
     * Consider adding an action for when a uibuilder node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
     * Add optional sidebar (or drop-down menu on NR header bar) displaying list of all uib URLs (and link to nodes).
     * Move folder management to a popup dialog (to save vertical space)
@@ -360,6 +365,19 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * Add a file upload button.
       * Method to import/export front-end files. Needs ZIP/Unzip functions at the back-end.
       * Add a reminder to the Editor help about examples. Add an onclick to that <a> icon that calls RED.actions.invoke('core:show-import-dialog'); as a quick action to get the user to the import dialog. See [here](https://discourse.nodered.org/t/documentation-example-flows-for-contributed-nodes/44198/2?u=totallyinformation) for more info.
+      * Add option to keep backups for edited files + button to reset to backup + hide backup files
+    * Add GIT processing? Or maybe just handle via npm scripts?
+       * Is git command available?
+       * is front-end src folder a git repository?
+       * git commit
+       * git push
+    * Template handling:
+      * Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?) - using the pluggable libraries feature of Node-RED v2.1+?
+      * Add option to auto-load npm dependencies on change of Template. [Issue #165](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/165)
+      * Maybe move dependencies and other template meta-data into the template package.json file.
+        Would require making sure that package.json always exists (e.g. after template change). May need to be able to reload package.json file as well.
+        Couldn't use the dependencies prop because we dont want to install libraries in the instance root but rather the uibRoot. 
+        Will need matching code in the Editor panel & a suitable API.
 
   * Details index page
     * Make sure that the ExpressJS `views` folder is shown.
@@ -383,8 +401,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 
     Currently available by adding the appropriate ExpressJS option in settings.js.
-
-
 
   * `package-mgt.js`
     * Rationalise the various functions - several of them have similar tasks.
@@ -479,6 +495,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### General
 
+* `uib-sender` node not really needed any more - consider putting a "deprecated" node.warn message prior to removing.
 * Optimise runtime code using esbuild (see node-build.mjs). Reduce runtime dependencies by bundling and move deps to dev deps.
 * Use uibuilder itself to manage docs webpage. Rather than docsify.
 * Allow client id to be set externally.
@@ -523,31 +540,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Editor (`uibuilder.html`)
 
-* Show template (instance root) folder
-* Editor Help: Change output msgs headers to include guidance to say that port 1 is the upper port and port 2 the lower port.
-* Check for new versions of installed packages when entering the library manager.
 * Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
 * When a template changes, optionally install required front-end packages. Probably use a new property in package.json - note, don't use the dependencies property as these are for local dependencies not for packages that uibuilder will make available to the front-end via ExpressJS. Or possibly make this a button for easy install?
-* Allow custom locations for delivery folder (normally `src/` or `dist/`) and for api's folder (normally `api/`)
-  * Allow the use of `public` as well as `src` and `dist`. Svelte outputs to the public folder by default. Also add warnings if no index.html file exists in the folder in use.
 * Method to show output from npm package handling.
 * Add optional plugin displaying drop-down in Editors header bar - listing links to all deployed uib URLs. See example: https://github.com/kazuhitoyokoi/node-red-contrib-plugin-header
 * If instance folder doesn't exist - need to mark node as changed to force deploy.
-
-### Front-End new ESM library (`uibuilder.esm.js`/`uibuilder.module.js`)
-
-* Allow add/change to use a.b prop names
-* Document `loadScriptSrc` and `loadScriptTxt`
-* UI
-  * Add prop validation
-  * keep track of added ids?
-  * Handle script and style types
-  * Swap from marked to markdown-it
-* ?? Maybe:
-  * Add msg # to outgoing messages to act as a sequence number
-  * Option to allow log msgs to be returned to Node-RED as uibuilder control messages
-  * Option to allow custom events to be returned to Node-RED as uibuilder control messages
-  * Do we need a confirmation (ctrl?) msg back to node-red?
 
 ### Package Manager Class
 
@@ -577,12 +574,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * watch - dict of watches: `{'path':'scriptname'}` or `{['path1',...]:'scriptname'}`
   * add `dependencies` to `../uibuilder/vendor/` path
 
-### uib-sender node
-
-* Track undeployed uib nodes via RED.events
-* Store links by node.id not url since url may change
-* Bind ctrl-s to save button
-
 ### uib-cache node
 
 * On close, delete cache
@@ -591,6 +582,13 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 ## *Maybe*
 
 These are some thoughts about possible future direction. They need further thought and design.
+
+### Front-End library
+
+* Add msg # to outgoing messages to act as a sequence number
+* Option to allow log msgs to be returned to Node-RED as uibuilder control messages
+* Option to allow custom events to be returned to Node-RED as uibuilder control messages
+* Do we need a confirmation (ctrl?) msg back to node-red?
 
 ### General
 
@@ -635,48 +633,6 @@ These are some thoughts about possible future direction. They need further thoug
     - [How to make a resizable panel control with Web Components - DEV Community 👩‍💻👨‍💻](https://dev.to/ndesmic/how-to-make-a-resizable-panel-control-with-web-components-2cpa)
     - [Draggable & Resizable Panel Component For Vue 3 - Vue Script](https://www.vuescript.com/draggable-resizable-panel/)
 
-
-### Core (`uibuilder.js`)
-
-* Add index web page for the `common` folder.
-
-### Templates
-
-* Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?) - using the pluggable libraries feature of Node-RED v2.1?
-* Add option to auto-load npm dependencies on change of Template. [Issue #165](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/165)
-* Maybe move dependencies and other template meta-data into the template package.json file.
-  Would require making sure that package.json always exists (e.g. after template change). May need to be able to reload package.json file as well.
-  Couldn't use the dependencies prop because we dont want to install libraries in the instance root but rather the uibRoot. 
-  Will need matching code in the Editor panel & a suitable API.
-
-
-### Editor (`uibuilder.html`)
-
-* Add option to allow new front-end code files to be input via inbound msg.
-  Allows a flow to read a file and save to the server. Optional because it could be a security issue. Allow folder name as well as file name.
-* Add (advanced) flag to make use of project folder optional.
-* Add option to keep backups for edited files + button to reset to backup + hide backup files
-* Add npm package delete confirmation - probably via std NR notifications
-* When adding a package, make sure that the input field gets focus & add <keyb>Enter</keyb> & <keyb>Esc</keyb> key processing.
-* Add GIT processing? Or maybe just handle via npm scripts?
-   * Is git command available?
-   * is front-end src folder a git repository?
-   * git commit
-   * git push
-
-### uib-sender Node
-
-* Allow multi-instance sending - send to multiple uibuilder nodes.
-* Include schema checks - filter on available schema's from uib compatible components
-* Allow sending to a cache node rather than just a uibuilder node.
-
-### uib-cache Node
-
-* ? Option to constrain cache/cache-clear to socketid/clientid
-
-### New Nodes
-
-* add alternate `uib-dashboard` node that uses web components and data-driven composition.
 
 ### Testing
 
