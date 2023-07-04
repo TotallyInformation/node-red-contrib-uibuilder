@@ -589,12 +589,11 @@ form {
     margin: 0.5rem;
     padding: 0.5rem;
     border-radius: var(--border-radius);
-
-    display: grid;
-    grid-template-columns: minmax(10%, max-content) auto;
-    gap: .5em 1em;
-    grid-auto-flow: row;
+    display: flex;
+    gap: 1em;
+    flex-direction: column;
 }
+
 input[type="color"] {
     width: 100%;
     height: 2.5rem;
@@ -609,6 +608,7 @@ input:invalid, textarea:invalid, select:invalid {
 /* at any level of nesting */
 form input, form textarea, form select {
     /* width: 75%; */
+    flex: 2;
     border-radius: var(--border-radius);
     padding:0.2rem;
     border: 1px solid var(--text3);
@@ -626,16 +626,27 @@ form select {
             calc(100% * var(--lightness))
         );
 }
-form input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
+form button, input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
     width:auto;
+    margin-left: .2em;
+    margin-right: .2em;
+}
+form input[type="checkbox" i] {
+    height:1.5em;
 }
 form:invalid button {
     background-color: var(--warning);
+}
+form label {
+    flex: 1;
 }
 form label[required]::after {
     content: " *"
 }
 /* first level only */
+form > div {
+    display: inherit;
+}
 form > label {
     align-self: center;
     text-transform: capitalize;
@@ -643,28 +654,36 @@ form > label {
 form > label:focus-within {
     font-weight: bold;
 }
-form > div { /* sub-grid */
-    display: grid;
-    gap: .1em 1em;
-    grid-template-columns: minmax(1em, 4em) auto;
-}
 form > div.btn-row { /* full width for button rows */
-    grid-column: 1 / span 2;
-    display: revert;
+    /* display: revert; */
 }
 /* Small screen */
 @media screen and (max-width: 600px) {
-    form, form > * {
+    form, form * {
         display:block;
         width:100%;
+    }
+    form > div {
+        /* display: revert; */
+    }
+    form > :not(div) {
+        /* flex: auto; */
     }
     form > label, form > div.btn-row {
         margin-top: .8rem;
     }
     form > :not(label) {
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.5rem;
     }
 }
+
+/* @media (max-width:600px) {
+    form label, form input, form select, form textarea {
+        width: 100%;
+        flex: auto;
+    }
+} */
+
 /*#endregion --- Forms --- */
 
 /*#region ---- Utility ---- */

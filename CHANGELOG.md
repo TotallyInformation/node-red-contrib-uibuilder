@@ -12,8 +12,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Fixes required
 
-* Form layout messed up
-  
 * [Issue #213](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/213) - SVG flow example not working `_uiComposeComponent is not a function at htmlClone index.js:52:15`
   
   Caused by the move of all ui fns to a separate class. So `_uiComposeComponent` is no longer accessible. It should not have been used in the example anyway since anything starting with an underscore should be for internal use only. My bad.
@@ -34,19 +32,20 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Extensions to `uib-brand.css`
 
 * Forms:
-  * Fix height for all 1-line inputs, including text,colour,month, file checkbox and select-single.
-  * Make end button row span the whole grid.
-  * Allow for blank line spanning the grid width.
+  * Allow for blank line spanning the form width.
+  * Allow for information line spanning the form width.
 
 ### Extensions to the `uib-element` node
 
 * Forms:
   * Check if textarea sizes can be changed - specifically the number of lines. Similarly for select-multiple.
-  * Add option for blank line and blank grid div entry
-  * Add option to set #grid columns
+  * Add option for blank line.
+  * Add option for an info line (supporting HTML? Markdown?)
+  * Add a "Simple Form Immediate" version where every element sends its own changes back to Node-RED and where send/reset buttons are not added.
 * Add option to select input other than msg.payload
 * Add input to allow restriction by pageName/clientId/tabId
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+* New Types for CSS and JS files?
 * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
 * Consider making the main input selectable (e.g. not just msg.payload)
 * Add more elements:
@@ -125,17 +124,18 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * **FIX** Was issuing a `node.warn` showing the input type (happening on v6.1 as well) - only for table type. Now removed.
 * **FIX** Chaining to a page title deleted the previous chain - putting title first was ok. Now works either way.
-* **FIX** Form checkbox "value" output from auto-send was always "on". Because HTML is sometimes utterly stupid! Input tags of type "checkbox" do not set a value like other inputs! They only set the "checked" attribute. Fixed by forcing the value attribute to be set.
+* **FIX** Form checkbox "value" output from auto-send was always "on". Because HTML is sometimes utterly stupid! Input tags of type "checkbox" do not set a value like other inputs! They only set the "checked" attribute. Fixed by forcing the value attribute to be set. [Issue #221](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/221), [Discussion #219](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/219).
 * Added an option to pass through msg.payload. When sent to the front-end, the client library will trigger standard events to allow further processing of the data in the front-end. This means that you can use `uibuilder.onChange` etc in the front-end even though the msg contains `msg._ui` which would normally prevent this from happening.
 * Form additions:
   * Textarea input.
   * Select options drop-down input. 
 
 
-### Changes to CSS styles (`uib-brand.css`)
+### Changes to CSS styles (uib-brand.css)
 
 * **NEW** Minified version included, use as `@import url("../uibuilder/uib-brand.min.css");`
-* Reduced thickness of error border on input fields.
+* Reduced thickness of error border on form input fields.
+* Switched form layout from Float to Flex. Added breakpoint at width=600px where layout becomes vertical instead of horizontal.
 * CSS Variables
   * **NEW** `--mode` - "light" or "dark" according to the current browser preference or html class override.
   * **NEW** `--text-hue` and `--surface-hue` allows independent colour control of standard text and backgrounds. Defaults to `--brand-hue`.
