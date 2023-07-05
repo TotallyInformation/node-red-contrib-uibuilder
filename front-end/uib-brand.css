@@ -654,20 +654,11 @@ form > label {
 form > label:focus-within {
     font-weight: bold;
 }
-form > div.btn-row { /* full width for button rows */
-    /* display: revert; */
-}
 /* Small screen */
 @media screen and (max-width: 600px) {
     form, form * {
         display:block;
         width:100%;
-    }
-    form > div {
-        /* display: revert; */
-    }
-    form > :not(div) {
-        /* flex: auto; */
     }
     form > label, form > div.btn-row {
         margin-top: .8rem;
@@ -676,13 +667,6 @@ form > div.btn-row { /* full width for button rows */
         margin-bottom: 0.5rem;
     }
 }
-
-/* @media (max-width:600px) {
-    form label, form input, form select, form textarea {
-        width: 100%;
-        flex: auto;
-    }
-} */
 
 /*#endregion --- Forms --- */
 
