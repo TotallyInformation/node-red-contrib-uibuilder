@@ -601,7 +601,14 @@ function buildPanelUpdate(cb) {
 //#endregion ---- ---- ----
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
-const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList, buildPanelUibElement, buildPanelUpdate)
+const buildme = parallel(
+    series(buildPanelUib1, buildPanelUib2),
+    buildPanelSender,
+    buildPanelCache,
+    buildPanelUibList,
+    buildPanelUibElement,
+    buildPanelUpdate
+)
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
