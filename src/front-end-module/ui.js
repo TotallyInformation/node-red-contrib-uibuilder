@@ -794,7 +794,7 @@ const Ui = class Ui {
 
         msg._ui.forEach((ui, i) => {
             if (!ui.method) {
-                log('warn', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring`)()
+                log('error', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring`)()
                 return
             }
 
