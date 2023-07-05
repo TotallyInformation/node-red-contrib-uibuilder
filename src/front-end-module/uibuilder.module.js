@@ -1935,6 +1935,38 @@ export const Uib = class Uib {
 
     // See message handling section for msg receipt handlers
 
+    /** Called by _ioSetup when Socket.IO connects to Node-RED */
+    _onConnect() {
+        this.set('connectedNum', this.connectedNum++)
+        // How many times has the client (re)connected since page load
+        this.socketOptions.auth.connectedNum = this.connectedNum
+        // How was the page last loaded?
+        this.socketOptions.auth.lastNavType = this.lastNavType
+        // Session tab id
+        this.socketOptions.auth.tabId = this.tabId
+        this.socketOptions.auth.more = this.tabId
+
+        log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. \nNamespace: ${this.ioNamespace}`)()
+        this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered })
+
+        this._checkConnect() // resets any reconnection timers & sets connected flag
+    }
+
+    /** Called by _ioSetup when Socket.IO disconnects from Node-RED
+     * @param {string} reason Disconnection title
+     */
+    _onDisconnect(reason) {
+        // reason === 'io server disconnect' - redeploy of Node instance
+        // reason === 'transport close' - Node-RED terminating
+        // reason === 'ping timeout' - didn't receive a pong response?
+        log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`)()
+
+        this._dispatchCustomEvent('uibuilder:socket:disconnected', reason)
+
+        /** A workaround for SIO's failure to reconnect after a disconnection */
+        this._checkConnect()
+    }
+
     /** Setup Socket.io
      * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
      * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
@@ -1982,23 +2014,7 @@ export const Uib = class Uib {
         this._socket = io(this.ioNamespace, this.socketOptions)
 
         /** When the socket is connected - set ioConnected flag and reset connect timer  */
-        this._socket.on('connect', () => {
-
-            this.set('connectedNum', this.connectedNum++)
-            // How many times has the client (re)connected since page load
-            this.socketOptions.auth.connectedNum = this.connectedNum
-            // How was the page last loaded?
-            this.socketOptions.auth.lastNavType = this.lastNavType
-            // Session tab id
-            this.socketOptions.auth.tabId = this.tabId
-            this.socketOptions.auth.more = this.tabId
-
-            log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. \nNamespace: ${this.ioNamespace}`)()
-            this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered })
-
-            this._checkConnect() // resets any reconnection timers & sets connected flag
-
-        }) // --- End of socket connection processing ---
+        this._socket.on('connect', this._onConnect.bind(this))
 
         // RECEIVE a STANDARD, non-control msg from Node-RED server
         this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this))
@@ -2007,17 +2023,7 @@ export const Uib = class Uib {
         this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this))
 
         // When the socket is disconnected ..............
-        this._socket.on('disconnect', (reason) => {
-            // reason === 'io server disconnect' - redeploy of Node instance
-            // reason === 'transport close' - Node-RED terminating
-            // reason === 'ping timeout' - didn't receive a pong response?
-            log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`)()
-
-            this._dispatchCustomEvent('uibuilder:socket:disconnected', reason)
-
-            /** A workaround for SIO's failure to reconnect after a disconnection */
-            this._checkConnect()
-        }) // --- End of socket disconnect processing ---
+        this._socket.on('disconnect', this._onDisconnect.bind(this))
 
         // Socket.io connection error - probably the wrong ioPath - or client is offline
         this._socket.on('connect_error', (err) => {
