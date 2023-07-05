@@ -460,6 +460,7 @@ export const Uib = class Uib {
             clientVersion: version,
             clientId: this.clientId,
             pathName: window.location.pathname,
+            urlParams: Object.fromEntries(new URLSearchParams(location.search)),
             pageName: undefined,
             tabId: undefined,
             lastNavType: undefined,

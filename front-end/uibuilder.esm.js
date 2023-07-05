@@ -675,7 +675,7 @@ var require_ui = __commonJS({
           msg._ui = [msg._ui];
         msg._ui.forEach((ui, i2) => {
           if (!ui.method) {
-            log2("warn", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
+            log2("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
             return;
           }
           ui.payload = msg.payload;
@@ -4508,6 +4508,7 @@ var Uib = (_a = class {
         clientVersion: version,
         clientId: this.clientId,
         pathName: window.location.pathname,
+        urlParams: Object.fromEntries(new URLSearchParams(location.search)),
         pageName: void 0,
         tabId: void 0,
         lastNavType: void 0
@@ -5749,6 +5750,26 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
   }
   // --- End of checkConnect Fn--- //
   // See message handling section for msg receipt handlers
+  /** Called by _ioSetup when Socket.IO connects to Node-RED */
+  _onConnect() {
+    this.set("connectedNum", this.connectedNum++);
+    this.socketOptions.auth.connectedNum = this.connectedNum;
+    this.socketOptions.auth.lastNavType = this.lastNavType;
+    this.socketOptions.auth.tabId = this.tabId;
+    this.socketOptions.auth.more = this.tabId;
+    log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
+Namespace: ${this.ioNamespace}`)();
+    this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
+    this._checkConnect();
+  }
+  /** Called by _ioSetup when Socket.IO disconnects from Node-RED
+   * @param {string} reason Disconnection title
+   */
+  _onDisconnect(reason) {
+    log("info", "Uib:ioSetup:socket-disconnect", `\u26D4 Socket Disconnected. Reason: ${reason}`)();
+    this._dispatchCustomEvent("uibuilder:socket:disconnected", reason);
+    this._checkConnect();
+  }
   /** Setup Socket.io
    * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
    * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
@@ -5778,24 +5799,10 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     this.socketOptions.auth.connectedNum = this.connectedNum;
     log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
     this._socket = lookup2(this.ioNamespace, this.socketOptions);
-    this._socket.on("connect", () => {
-      this.set("connectedNum", this.connectedNum++);
-      this.socketOptions.auth.connectedNum = this.connectedNum;
-      this.socketOptions.auth.lastNavType = this.lastNavType;
-      this.socketOptions.auth.tabId = this.tabId;
-      this.socketOptions.auth.more = this.tabId;
-      log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
-Namespace: ${this.ioNamespace}`)();
-      this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
-      this._checkConnect();
-    });
+    this._socket.on("connect", this._onConnect.bind(this));
     this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this));
     this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this));
-    this._socket.on("disconnect", (reason) => {
-      log("info", "Uib:ioSetup:socket-disconnect", `\u26D4 Socket Disconnected. Reason: ${reason}`)();
-      this._dispatchCustomEvent("uibuilder:socket:disconnected", reason);
-      this._checkConnect();
-    });
+    this._socket.on("disconnect", this._onDisconnect.bind(this));
     this._socket.on("connect_error", (err) => {
       if (navigator.onLine === false)
         return;
