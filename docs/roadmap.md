@@ -302,6 +302,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Updates to `uibuilder` node
 
+  * Auto-generate web manifest.
   * Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
   * Editor panel: Remove the "Allow passing to the front-end" from Advanced tab - no longer needed. Use `msg._ui` features with the updated client instead.
   * Allow file uploads

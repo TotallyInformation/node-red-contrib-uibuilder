@@ -25,7 +25,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Allow for multi-select pre-selecting array of options.
   * Allow for "selected" `true` on option entries.
 * Get _uib/_ui notify features to use Notification API if available
-* Add on-load option to check for query parameters on the called URL and automatically send them to Node-RED.
 * Compare ui.js with radar version - see if changes to watch fn need to be brought over. Also add observe options.
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
 
@@ -90,6 +89,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * The client library now filters inbound messages according to `pageName`, `clientId`, and/or `tabId` set in either `msg._uib` or `msg._ui`.
   
 * There is a new, dynamic page at `../uibuilder/apps` that lists (with links) all uibuilder instance endpoints. Currently only a very simple list but the plan is to add an instance title and description field to uibuilder which would then be populated into this page. Use as an index of all of your main web pages (strictly, this is a list of all of the uibuilder-driven web apps. Apps may have multiple pages of course).
+* The uibuilder client connection control msg now reports the URL parameters (AKA search parameters) for the connection from the client. This is another way of passing data from a client to the server. Obviously, you should _never_ trust user input - always limit, check and validate user input.
 
 * Instance routes/middleware
 
@@ -103,7 +103,10 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Changes to uibuilder client Library
 
+* **FIX** Change warn msg "[Ui:_uiManager] No method defined for msg._ui[0]. Ignoring" to an error so it is more visible.
+
 * **NEW FUNCTION** `uibuilder.notify(config)` - If possible (not all browsers yet fully support it), use the [browser Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API) to show an *operating system notification*. Supports a simple click reponse which can be used with `uibuilder.eventSend` to notify Node-RED that a user clicked the notification. Note that there are significant inconsistencies in how/whether this API is handled by browsers. It may not always work.
+
 * Do not process input messages if either `msg._uib` or `msg._ui` includes either `pageName`, `clientId`, and/or `tabId` and where those parameters do not match the current page or client.
 * Improvements and corrections to the `eventSend` function. Allowing more event types to be sensible handled (including the Notify response). Also added CSS class information & specific outputs for notifications.
 * Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
