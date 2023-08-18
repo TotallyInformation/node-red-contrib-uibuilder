@@ -12,12 +12,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Fixes required
 
-* [Issue #213](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/213) - SVG flow example not working `_uiComposeComponent is not a function at htmlClone index.js:52:15`
-  
-  Caused by the move of all ui fns to a separate class. So `_uiComposeComponent` is no longer accessible. It should not have been used in the example anyway since anything starting with an underscore should be for internal use only. My bad.
-
-  Fixed by replacing with manual enhancement until a future solution can be introduced, probably a new function `uibuilder.uiEnhanceElement(clone, ui)` which will call `_uiComposeComponent` internally.
-
 ### Extensions to client Library
 
 * Forms (eventSend): 
@@ -41,7 +35,6 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * Add option for blank line.
   * Add option for an info line (supporting HTML? Markdown?)
   * Add a "Simple Form Immediate" version where every element sends its own changes back to Node-RED and where send/reset buttons are not added.
-* Add option to select input other than msg.payload
 * Add input to allow restriction by pageName/clientId/tabId
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 * New Types for CSS and JS files?
@@ -86,14 +79,17 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### **NEW** Features
 
-* The client library now filters inbound messages according to `pageName`, `clientId`, and/or `tabId` set in either `msg._uib` or `msg._ui`.
+* The client library now **filters inbound messages** according to `pageName`, `clientId`, and/or `tabId` set in either `msg._uib` or `msg._ui`.
   
-* There is a new, dynamic page at `../uibuilder/apps` that lists (with links) all uibuilder instance endpoints. Currently only a very simple list but the plan is to add an instance title and description field to uibuilder which would then be populated into this page. Use as an index of all of your main web pages (strictly, this is a list of all of the uibuilder-driven web apps. Apps may have multiple pages of course).
-* The uibuilder client connection control msg now reports the URL parameters (AKA search parameters) for the connection from the client. This is another way of passing data from a client to the server. Obviously, you should _never_ trust user input - always limit, check and validate user input.
+* There is **a new, dynamic page** at `../uibuilder/apps` that lists (with links) all uibuilder instance endpoints. Currently only a very simple list but the plan is to add an instance title and description field to uibuilder which would then be populated into this page. Use as an index of all of your main web pages (strictly, this is a list of all of the uibuilder-driven web apps. Apps may have multiple pages of course).
 
-* Instance routes/middleware
+* The uibuilder client connection control msg now **reports the URL parameters** (AKA search parameters) for the connection from the client. This is another way of passing data from a client to the server. Obviously, you should _never_ trust user input - always limit, check and validate user input.
 
-  You can now add ExpressJS routes and other middleware to a single instance of uibuilder (a specific uibuilder node), not just to all nodes. Especially useful if you want to add custom security (login, registration, etc) to just one instance.
+* `uib-element` now allows the core data for the element to be defined in the node or on a context variable and other locations, you are **no longer forced to use `msg.payload`**. It also now allows the incoming `msg.payload` to be sent to the client to allow for local processing if required.
+
+* uibuilder Instance routes/middleware
+
+  You can now **add ExpressJS routes and other middleware to a single instance** of uibuilder (a specific uibuilder node), not just to all nodes. Especially useful if you want to add custom security (login, registration, etc) to just one instance.
 
   The new feature lets you specify the sub-url-path, the HTTP method and the callback function. Paths can include wildcards and parameters too. The routes are always added to the instance router which forces them to only ever be sub-url-paths of the specified instance. e.g. if your instance url is `test`, a route with a path of `/foo/:bah` will ALWAYS be `.../test/foo/...`. This is for security. Note that you are responsible for creating unique URL paths, no checking is done and ExpressJS is quite happy to have multiple path handlers but if you provide a terminating response (e.g. `res.status(200)`) and no `next()` call, the call stack is obviously terminated. If you include a call to `next()`, overlapping route callbacks will also be triggered. In that case, make sure you do not do any more `res.xxxx()` responses otherwise you will get an `ERR_HTTP_HEADERS_SENT` error.
 
@@ -104,6 +100,11 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Changes to uibuilder client Library
 
 * **FIX** Change warn msg "[Ui:_uiManager] No method defined for msg._ui[0]. Ignoring" to an error so it is more visible.
+* **FIX** [Issue #213](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/213) - SVG flow example not working `_uiComposeComponent is not a function at htmlClone index.js:52:15`
+  
+  Caused by the move of all ui fns to a separate class. So `_uiComposeComponent` is no longer accessible. It should not have been used in the example anyway since anything starting with an underscore should be for internal use only. My bad.
+
+  `uibuilder.uiEnhanceElement(el, component)`` added. Example will be updated again once this is released
 
 * **NEW FUNCTION** `uibuilder.notify(config)` - If possible (not all browsers yet fully support it), use the [browser Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API) to show an *operating system notification*. Supports a simple click reponse which can be used with `uibuilder.eventSend` to notify Node-RED that a user clicked the notification. Note that there are significant inconsistencies in how/whether this API is handled by browsers. It may not always work.
 
@@ -128,7 +129,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * **FIX** Was issuing a `node.warn` showing the input type (happening on v6.1 as well) - only for table type. Now removed.
 * **FIX** Chaining to a page title deleted the previous chain - putting title first was ok. Now works either way.
 * **FIX** Form checkbox "value" output from auto-send was always "on". Because HTML is sometimes utterly stupid! Input tags of type "checkbox" do not set a value like other inputs! They only set the "checked" attribute. Fixed by forcing the value attribute to be set. [Issue #221](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/221), [Discussion #219](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/219).
-* Added an option to pass through msg.payload. When sent to the front-end, the client library will trigger standard events to allow further processing of the data in the front-end. This means that you can use `uibuilder.onChange` etc in the front-end even though the msg contains `msg._ui` which would normally prevent this from happening.
+
+* **KEY CHANGE** Added option to select core data input other than msg.payload.
+  This means that you can define the UI element directly in the node if you want. This includes the use of JSONata for dynamically defined elements, allowing for even simpler msg inputs should this be desired.
+
+* **KEY CHANGE** Added an option to pass through msg.payload. When sent to the front-end, the client library will trigger standard events to allow further processing of the data in the front-end. This means that you can use `uibuilder.onChange` etc in the front-end even though the msg contains `msg._ui` which would normally prevent this from happening.
+
 * Form additions:
   * Textarea input.
   * Select options drop-down input. 

@@ -130,6 +130,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Think about having a `linkInputs([idList])` fn that allows easy linking of different inputs?
   * Consider adding the ability to have some tag other than `div` as the wrapper. [ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/210)
   * Add more elements:
+    * [ ] Custom tag
+      * Extra field for tag name.
     * [x] List (ul, ol, dl)
       * Future improvements:
         * Better validation of input data
@@ -143,6 +145,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
         * If named row comes from a field, make sure it is the 1st col and marked as a th
         * Add data-row-name to td's as well
         * See also: https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/data-grids/
+        * Consider: https://github.com/tofsjonas/sortable - perhaps adopt data-sort attribs?
     * [ ] TTS text-to-speach output
     * [x] HTML - allow raw html to be sent - e.g. from template node
     * [x] Page Title
@@ -169,6 +172,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
     * [ ] Toggle button, Toggle button panel (AKA Switch)
       Similar to the status box/panel but for buttons. https://www.w3.org/WAI/ARIA/apg/patterns/switch/
+
+    * [ ] Tab container and tabs
+      Include events that trigger and send msgs back to Node-RED on tab change.
+      What is the best way to hide/unload the non-current tabs?
 
     * [ ] Grid/Flex-Grid
        Standardised layout. With option to turn on visible grid to help with layout.
@@ -333,6 +340,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add index web page for the `common` folder.
 
   * Editor:
+    * Add Homepage link to each package in the Libraries tab.
     * Improve help box for _uib switch 
     * Add template description to display.
     * Add dependency version handling to templates (e.g. vue 2/3)
@@ -384,6 +392,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Make sure that the ExpressJS `views` folder is shown.
 
   * Templates
+    * Add `class="dark"` to all template html file `html` tags. Remove `class="uib"` from body tag.
     * Add group/category to `template_dependencies.js`. Add grouping to drop-down in editor. Allow for no group specified (for backwards compatibility).
     * Add option for external templates in `template_dependencies.js`.
     * Consider allowing a local version of `template_dependencies.js`.
@@ -429,6 +438,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Flows site
     * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
   * Videos
+    * uibuilder reactive variables (set, get, onChange)
     * Low-code, do anything from Node-RED
     * Easy forms
     * Switch light/dark
@@ -539,6 +549,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Consider implementing at Kroki diagram service node - https://kroki.io/ - enables delivery of diagrams from text descriptions using many different libraries.
 
+* Create a `uib-router` node. This would connect a route handler flow to an existing `uibuilder` node. A bit like an `http-in` node but not needing an `http-out` because the out is via the `uibuilder` node. Would allow wildcard routing and ability to restrict by method. The defined path(s) would be added as a new router to the uibuilder routes. Consider whether this needs to be a `uib-router-in`/`uib-router-out` pair instead? 
+
 ### Editor (`uibuilder.html`)
 
 * Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
@@ -627,7 +639,7 @@ These are some thoughts about possible future direction. They need further thoug
     - Get a partial or full list of folders and/or files
     - Display data in resizable panels
     - Tree view for folders/files
-    - Markdown render and WYSIWYG/WYSIWFM editing - vditor
+    - Markdown render and WYSIWYG/WYSIWFM editing - [mdxeditor](https://mdxeditor.dev/editor/demo), or vditor
   * References
     - [kajero/src at master · JoelOtter/kajero (github.com)](https://github.com/JoelOtter/kajero/tree/master/src) - interactive notebook
     - [vditor/README_en_US.md at master · Vanessa219/vditor (github.com)](https://github.com/Vanessa219/vditor/blob/master/README_en_US.md), [Demo example - Vditor (b3log.org)](https://b3log.org/vditor/demo/index.html)
