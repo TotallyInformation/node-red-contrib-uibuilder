@@ -953,6 +953,15 @@ export const Uib = class Uib {
         _ui.include(url, uiOptions)
     }
 
+    /** Enhance an HTML element that is being composed with ui data
+     *  such as ID, attribs, event handlers, custom props, etc.
+     * @param {*} el HTML Element to enhance
+     * @param {*} component Individual uibuilder ui component spec
+     */
+    uiEnhanceElement(el, component) {
+        _ui.uiEnhanceElement(el, component)
+    }
+
     //#endregion -- direct to _ui --
 
     /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
