@@ -143,7 +143,7 @@
             label: 'HTML',
             description: `
                 <p>
-                    Pass-through HTML. When sent to the uibuilder node, will be reproduced in your page(s). <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
+                    Pass-through HTML from <code>msg.payload</code>. When sent to the uibuilder node, will be reproduced in your page(s). <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
                 </p>
                 <p>
                     May be used with the Node-RED core <code>template</code> node.
@@ -292,12 +292,28 @@
             typeField: $('#node-input-headingSourceType'),
         }).typedInput('width', '56.5%')
 
-        // position typed input - https://nodered.org/docs/api/ui/typedInput/
+        // core data typed input
+        $('#node-input-data').typedInput({
+            // types: stdStrTypes,
+            default: 'msg',
+            typeField: $('#node-input-dataSourceType'),
+        }).typedInput('width', tiWidth)
+
+        // position typed input
         $('#node-input-position').typedInput({
             types: stdStrTypes,
             default: 'str',
             typeField: $('#node-input-positionSourceType'),
         }).typedInput('width', tiWidth)
+
+        // Ensure data value never blank
+        $('#node-input-data').on('change', function(event, type, value) {
+            console.log('change')
+            if ( !value ) {
+                if ( type === 'msg' ) $('#node-input-data').typedInput('value', 'payload')
+                console.log('change 2')
+            }
+        } )
 
         // Make position of aria-labels dynamic to cursor
         // $('#uib-el *[aria-label]').on('mousemove', function(event) {
@@ -448,6 +464,9 @@
             heading: { value: '', validate: (v) => tiValidateOptString(v, 'heading', true, false) },
             headingSourceType: { value: 'str' },
             headingLevel: { value: 'h2', required: true },
+
+            data: { value: 'payload', required: true },
+            dataSourceType: { value: 'msg' },
 
             position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true) },
             positionSourceType: { value: 'str' },

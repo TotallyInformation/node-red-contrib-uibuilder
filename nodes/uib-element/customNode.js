@@ -127,6 +127,10 @@ function nodeInstance(config) {
     this.elementIdSourceType = config.elementIdSourceType ?? 'str'
     this.elementId = undefined
 
+    this.dataSource = config.data ?? 'payload'
+    this.dataSourceType = config.dataSourceType ?? 'msg'
+    this.data = undefined
+
     this.positionSource = config.position ?? 'last'
     this.positionSourceType = config.positionSourceType ?? 'str'
     this.position = undefined
@@ -166,7 +170,7 @@ function buildArticle(node, msg, parent) {
     // Add the ol/ul tag
     parent.components.push({
         'type': node.elementtype,
-        'slot': msg.payload,
+        'slot': node.data,
     })
 
     return err
@@ -180,12 +184,12 @@ function buildArticle(node, msg, parent) {
  */
 function buildHTML(node, msg, parent) {
     // Must be a string so convert arrays/objects
-    let data = msg.payload
-    if (!msg.payload) data = ''
-    else if (Array.isArray(msg.payload)) data = msg.payload.join('/n')
-    else if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+    let data = node.data
+    if (!node.data) data = ''
+    else if (Array.isArray(node.data)) data = node.data.join('/n')
+    else if ( node.data !== null && node.data.constructor.name === 'Object' ) {
         try {
-            data = JSON.stringify(msg.payload)
+            data = JSON.stringify(node.data)
         } catch (e) {
             data = 'ERROR: Could not parse input data'
         }
@@ -215,7 +219,7 @@ function buildTitle(node, msg, parent) {
     // Must be a string or array/object of strings
     // If array/object, then add LAST entry entry as <div role="doc-subtitle">
 
-    if (!Array.isArray(msg.payload)) msg.payload = [msg.payload]
+    if (!Array.isArray(node.data)) node.data = [node.data]
 
     const err = ''
 
@@ -223,7 +227,7 @@ function buildTitle(node, msg, parent) {
         'type': 'title',
         // title tags can appear in SVGs as well so limit this
         'selector': 'head title',
-        'slot': msg.payload[0]
+        'slot': node.data[0]
     })
 
     parent.components.push({
@@ -234,11 +238,11 @@ function buildTitle(node, msg, parent) {
         'attributes': {
             'class': 'with-subtitle',
         },
-        'slot': msg.payload.shift(),
+        'slot': node.data.shift(),
     })
 
-    if (msg.payload.length > 0) {
-        msg.payload.forEach( (element, i) => {
+    if (node.data.length > 0) {
+        node.data.forEach( (element, i) => {
             parent.components.push({
                 'type': 'div',
                 'selector': 'div[role="doc-subtitle"] ',
@@ -263,8 +267,8 @@ function buildTitle(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildUlOlList(node, msg, parent) {
-    // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
+    // Make sure node.data is an object or an array - if not, force to array
+    if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
     const err = ''
 
@@ -276,7 +280,7 @@ function buildUlOlList(node, msg, parent) {
 
     // Convenient references
     const listRows = parent.components[parent.components.length - 1].components
-    const tbl = msg.payload
+    const tbl = node.data
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
@@ -295,7 +299,7 @@ function buildUlOlList(node, msg, parent) {
             'slot': tbl[row]
         } )
         // Add a row name attrib from the object key if the input is an object
-        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+        if ( node.data !== null && node.data.constructor.name === 'Object' ) {
             listRows[i].attributes['data-row-name'] = row
         }
     } )
@@ -311,8 +315,8 @@ function buildUlOlList(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildDlList(node, msg, parent) {
-    // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
+    // Make sure node.data is an object or an array - if not, force to array
+    if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
     const err = ''
 
@@ -324,7 +328,7 @@ function buildDlList(node, msg, parent) {
 
     // Convenient references
     const listRows = parent.components[parent.components.length - 1].components
-    const tbl = msg.payload
+    const tbl = node.data
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
@@ -351,7 +355,7 @@ function buildDlList(node, msg, parent) {
             'components': [],
         } )
         // Add a row name attrib from the object key if the input is an object
-        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+        if ( node.data !== null && node.data.constructor.name === 'Object' ) {
             listRows[listIndex - 1].attributes['data-row-name'] = row
         }
 
@@ -391,8 +395,8 @@ function buildDlList(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildTable(node, msg, parent) {
-    // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
+    // Make sure node.data is an object or an array - if not, force to array
+    if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
     let cols = []
     const err = ''
@@ -415,7 +419,7 @@ function buildTable(node, msg, parent) {
     // Convenient references
     const thead = parent.components[parent.components.length - 1].components[0]
     const tbody = parent.components[parent.components.length - 1].components[1]
-    const tbl = msg.payload
+    const tbl = node.data
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
@@ -478,7 +482,7 @@ function buildTable(node, msg, parent) {
         //     // 'class': (rLen % 2  === 0) ? 'even' : 'odd'
         // }
         // Add a row name attrib from the object key if the input is an object
-        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+        if ( node.data !== null && node.data.constructor.name === 'Object' ) {
             tbody.components[rLen - 1].attributes['data-row-name'] = row
         }
         // TODO If tbl is an object - get the row names and apply to data-rowname attrib
@@ -514,8 +518,8 @@ function buildTable(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildSForm(node, msg, parent) {
-    // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
+    // Make sure node.data is an object or an array - if not, force to array
+    if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
     const err = ''
 
@@ -527,7 +531,7 @@ function buildSForm(node, msg, parent) {
 
     // Convenient references
     const frmBody = parent.components[parent.components.length - 1]
-    const frm = msg.payload
+    const frm = node.data
     let btnCount = 0
 
     // Walk through the inbound msg payload (works as both object or array)
@@ -681,7 +685,7 @@ function buildTableRow(node, msg, parent) {
         'components': [],
     })
     // const rowNum = -10
-    Object.keys(msg.payload).forEach(  (colName, j) => {
+    Object.keys(node.data).forEach(  (colName, j) => {
         const colNum = j + 1
 
         parent.components[rLen - 1].components.push({
@@ -690,7 +694,7 @@ function buildTableRow(node, msg, parent) {
                 'data-col-index': colNum,
                 'data-col-name': colName,
             },
-            'slot': msg.payload[colName],
+            'slot': node.data[colName],
         })
     } )
 
@@ -706,14 +710,14 @@ function buildTableRow(node, msg, parent) {
  */
 function buildUlOlRow(node, msg, parent) {
     // Payload must be a a string
-    if ( !Array.isArray(msg.payload) ) msg.payload = [msg.payload]
+    if ( !Array.isArray(node.data) ) node.data = [node.data]
 
     const err = ''
 
     parent.method = 'add'
 
     // const rowNum = -10
-    Object.keys(msg.payload).forEach(  (rowName, j) => {
+    Object.keys(node.data).forEach(  (rowName, j) => {
         parent.components.push({
             'type': 'li',
             'parent': `${node.parent} > ul`,
@@ -721,7 +725,7 @@ function buildUlOlRow(node, msg, parent) {
             // 'attributes': {
             //     'data-row-name': rowName,
             // },
-            'slot': msg.payload[j],
+            'slot': node.data[j],
         })
     } )
 
@@ -803,9 +807,11 @@ async function buildUi(msg, node) {
         getSource('parent', node, msg),
         getSource('elementId', node, msg),
         getSource('heading', node, msg),
+        getSource('data', node, msg), // contains core data
         getSource('position', node, msg),
     ])
 
+    // console.log('NODE DATA', node.data)
     // console.log('NODE', node)
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes

@@ -88,6 +88,12 @@
             
             <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
             
+            <div aria-label="The core data content to process." class="form-row">
+                <label for="node-input-data"><i class="fa fa-hashtag"></i> Data</label>
+                <input type="text" id="node-input-data" placeholder="">
+                <input type="hidden" id="node-input-dataSourceType">
+            </div>
+
             <div aria-label="Relative position inside the parent.&#10;'first', 'last' or a number.&#10;Ignored if no HTML ID provided." class="form-row">
                 <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
                 <input type="text" id="node-input-position" placeholder="Last, first or a number">
@@ -174,7 +180,8 @@
     <dd>
         The string, array or object that defines the output.<br>
         Each element type has its own input data definition.<br>
-        See the info box for each type.
+        See the info box for each type.<br>
+        Other inputs can be used instead, see settings.
     </dd>
 
     <dt class="optional">mode <span class="property-type">string</span></dt>
@@ -264,6 +271,11 @@
             Developer Tools to select the appropriate element and copy the CSS selector.
         </p>
     </div>
+
+    <dt>Data <span class="property-type">any</span></dt>
+    <dd>
+        Required. Either a msg or context property containing the core data or .
+    </dd>
 
     <dt>Position <span class="property-type">string</span></dt>
     <dd>
@@ -480,7 +492,7 @@
                 label: 'HTML',
                 description: `
                     <p>
-                        Pass-through HTML. When sent to the uibuilder node, will be reproduced in your page(s). <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
+                        Pass-through HTML from <code>msg.payload</code>. When sent to the uibuilder node, will be reproduced in your page(s). <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
                     </p>
                     <p>
                         May be used with the Node-RED core <code>template</code> node.
@@ -629,12 +641,28 @@
                 typeField: $('#node-input-headingSourceType'),
             }).typedInput('width', '56.5%')
     
-            // position typed input - https://nodered.org/docs/api/ui/typedInput/
+            // core data typed input
+            $('#node-input-data').typedInput({
+                // types: stdStrTypes,
+                default: 'msg',
+                typeField: $('#node-input-dataSourceType'),
+            }).typedInput('width', tiWidth)
+    
+            // position typed input
             $('#node-input-position').typedInput({
                 types: stdStrTypes,
                 default: 'str',
                 typeField: $('#node-input-positionSourceType'),
             }).typedInput('width', tiWidth)
+    
+            // Ensure data value never blank
+            $('#node-input-data').on('change', function(event, type, value) {
+                console.log('change')
+                if ( !value ) {
+                    if ( type === 'msg' ) $('#node-input-data').typedInput('value', 'payload')
+                    console.log('change 2')
+                }
+            } )
     
             // Make position of aria-labels dynamic to cursor
             // $('#uib-el *[aria-label]').on('mousemove', function(event) {
@@ -785,6 +813,9 @@
                 heading: { value: '', validate: (v) => tiValidateOptString(v, 'heading', true, false) },
                 headingSourceType: { value: 'str' },
                 headingLevel: { value: 'h2', required: true },
+    
+                data: { value: 'payload', required: true },
+                dataSourceType: { value: 'msg' },
     
                 position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true) },
                 positionSourceType: { value: 'str' },
