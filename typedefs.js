@@ -406,6 +406,9 @@
  *   headingSource: string;
  *   headingSourceType: string;
  *   headingLevel: string;
+ *   data: any;
+ *   dataSource: string|number;
+ *   dataSourceType: string;
  *   position: string|number;
  *   positionSource: string|number;
  *   positionSourceType: string;
