@@ -425,6 +425,10 @@ const Ui = class Ui {
         //#endregion
     }
 
+    uiEnhanceElement(el, comp) {
+        this._uiComposeComponent(el, comp)
+    }
+
     /** Extend an HTML Element with appended elements using ui components
      * NOTE: This fn follows a strict hierarchy of added components.
      * @param {HTMLElement} parentEl The parent HTML Element we want to append to
