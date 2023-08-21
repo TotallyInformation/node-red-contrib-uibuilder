@@ -418,6 +418,36 @@
  * }} uibElNode
  */
 
+/** uibTagNode (Tag Node)
+ * @typedef {{
+ *   name: string;
+ *   topic: string;
+ *   tag: string;
+ *   tagSource: string;
+ *   tagSourceType: string;
+ *   elementId: string;
+ *   elementIdSource: string;
+ *   elementIdSourceType: string;
+ *   parent: string;
+ *   parentSource: string;
+ *   parentSourceType: string;
+ *   position: string|number;
+ *   positionSource: string|number;
+ *   positionSourceType: string;
+ * 
+ *   slotContent: string;
+ *   slotSourceProp: string;
+ *   slotContentSource: string;
+ *   slotContentSourceType: string;
+ *   slotSourcePropType: string;
+ *   attribs: object;
+ *   attribsSource: string;
+ *   attribsSourceType: string;
+ *   slotPropMarkdown: boolean;
+ *   _ui: any;
+ * }} uibTagNode
+ */
+
 /** uibUpdNode (Update Node)
  * @typedef {{
  *   name: string;
