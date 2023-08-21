@@ -36,18 +36,19 @@
             "3fd347d2dad186ca",
             "3b6dfa72a2767eb8",
             "81cfdd8b1357b74c",
-            "5961e6952243291c"
+            "5961e6952243291c",
+            "c928f8a757e6370e"
         ],
         "x": 34,
-        "y": 79,
+        "y": 59,
         "w": 882,
-        "h": 242
+        "h": 262
     },
     {
         "id": "e1901bb3da85dd78",
         "type": "group",
         "z": "3badb0a6906eef7f",
-        "name": "Create a Unordered or Ordered List from a simple input. Change the URL to match the base.",
+        "name": "Create a Unordered or Ordered List from a simple input. \\n ",
         "style": {
             "fill": "#bfdbef",
             "fill-opacity": "0.29",
@@ -62,15 +63,15 @@
             "560371c044ee9e19"
         ],
         "x": 34,
-        "y": 359,
-        "w": 682,
-        "h": 162
+        "y": 463,
+        "w": 742,
+        "h": 178
     },
     {
         "id": "0f5c35ef5c4bf8f5",
         "type": "group",
         "z": "3badb0a6906eef7f",
-        "name": "Create a Description List from a simple input. Change the URL to match the base",
+        "name": "Create a Description List from a simple input. \\n ",
         "style": {
             "label": true,
             "fill": "#bfdbef",
@@ -86,15 +87,15 @@
             "95a6c6f3e84b4fea"
         ],
         "x": 34,
-        "y": 859,
-        "w": 722,
-        "h": 202
+        "y": 963,
+        "w": 662,
+        "h": 218
     },
     {
         "id": "0f3fbb9e84943e6b",
         "type": "group",
         "z": "3badb0a6906eef7f",
-        "name": "Create a table from simple input. Change the URL to match the base",
+        "name": "Create a table from simple input. \\n ",
         "style": {
             "fill": "#dbcbe7",
             "fill-opacity": "0.3",
@@ -106,13 +107,12 @@
             "d58b7efe68a2da4d",
             "d52bbc4c5096d4ba",
             "4ce558165663c95b",
-            "900f97b2b079f1bf",
             "f38d46523be0c1fe"
         ],
         "x": 34,
-        "y": 1147,
-        "w": 852,
-        "h": 174
+        "y": 1203,
+        "w": 662,
+        "h": 178
     },
     {
         "id": "8049618125109f32",
@@ -135,7 +135,7 @@
             "f042b949d4143ac6"
         ],
         "x": 34,
-        "y": 2183,
+        "y": 2243,
         "w": 1002,
         "h": 214
     },
@@ -158,8 +158,8 @@
             "f02b2b567a27e3bf"
         ],
         "x": 34,
-        "y": 1723,
-        "w": 642,
+        "y": 1783,
+        "w": 662,
         "h": 138
     },
     {
@@ -179,8 +179,8 @@
             "d94e668db5709de3"
         ],
         "x": 34,
-        "y": 1903,
-        "w": 482,
+        "y": 1963,
+        "w": 662,
         "h": 98
     },
     {
@@ -197,12 +197,14 @@
         "nodes": [
             "58968670b8adf81b",
             "b8338b38fa0f261f",
-            "a05186890868f6cb"
+            "a05186890868f6cb",
+            "bb2e25bc515bcbd6",
+            "ae31874849f0bc47"
         ],
         "x": 94,
-        "y": 1323,
-        "w": 482,
-        "h": 98
+        "y": 1383,
+        "w": 602,
+        "h": 138
     },
     {
         "id": "42a2b3e7d6c165bf",
@@ -222,8 +224,8 @@
             "6e5aada95fc82d83"
         ],
         "x": 34,
-        "y": 2023,
-        "w": 582,
+        "y": 2083,
+        "w": 662,
         "h": 138
     },
     {
@@ -248,9 +250,9 @@
             "92af2057a4b6218f"
         ],
         "x": 94,
-        "y": 523,
-        "w": 722,
-        "h": 298
+        "y": 643,
+        "w": 682,
+        "h": 278
     },
     {
         "id": "f6154314aee80d24",
@@ -272,9 +274,133 @@
             "495d6cfe53a5351a"
         ],
         "x": 34,
-        "y": 1503,
-        "w": 652,
+        "y": 1563,
+        "w": 662,
         "h": 178
+    },
+    {
+        "id": "59a2614f0a755654",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Extended version of simple template using the ES Module version of the client \\n ",
+        "style": {
+            "fill": "#dbcbe7",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "6b8e19a607d6f0ec",
+            "a0b06621c07398b3",
+            "add2bdd8bebe5b03",
+            "b6a6e078c7a153c2",
+            "ea5182145ff56087",
+            "daa1504f2685319f",
+            "b73520be76a16375",
+            "410e148e289e3a7a",
+            "36f1c2cc9ef194db",
+            "f030437d5a7e5dee",
+            "95ca4e82137d3438",
+            "c639fd1e7f3a6df6",
+            "168eb9ab00594028"
+        ],
+        "x": 934,
+        "y": 63,
+        "w": 652,
+        "h": 258
+    },
+    {
+        "id": "2bf4b6af49f039ff",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "External library support",
+        "style": {
+            "fill": "#dbcbe7",
+            "fill-opacity": "0.09",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "c1b89704c05fce56",
+            "c5b8417d9c02b24d",
+            "9e4db07a14720c37",
+            "85e73c64c66a2f76",
+            "a3f355b96aeb5228",
+            "8156a1051ff2380f",
+            "c2ac84fbddaba1d2"
+        ],
+        "x": 994,
+        "y": 339,
+        "w": 592,
+        "h": 342
+    },
+    {
+        "id": "527bf7938fced52c",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Create a Description List from a simple array in node. \\n Data is specified in the uib-element node instead of externally as an example \\n ",
+        "style": {
+            "label": true,
+            "fill": "#bfdbef",
+            "fill-opacity": "0.4",
+            "color": "#3f3f3f"
+        },
+        "nodes": [
+            "d49663a49059ee64",
+            "5c4d5b5e27f107dd",
+            "3197fab9ed7deac5",
+            "4459ed2147acfb03"
+        ],
+        "x": 714,
+        "y": 967,
+        "w": 532,
+        "h": 154
+    },
+    {
+        "id": "e32ba9f821a3e9f2",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Add a <div> tag contining some dynamic text, an <hr>, and an <a> tag using uib-tag nodes \\n <hr> has no ID so cannot be removed on its own, only via its parent. <a> tag's slot text is defined in the node so no extra change node needed. \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "bbc98d588f537ebe",
+            "50bd68a804728c63",
+            "0551e90124f1644a",
+            "30c550e25667339a",
+            "411f46b6e8198d5a",
+            "f5f1c92f67f79b61",
+            "870f9db775b0e44a"
+        ],
+        "x": 34,
+        "y": 2607,
+        "w": 992,
+        "h": 154
+    },
+    {
+        "id": "1a0c9ab3c2f839e0",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Dynamically add a button that sends a msg back here using eventSend. \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true
+        },
+        "nodes": [
+            "c083601aa040378a",
+            "293d0b3149c64d12",
+            "ddedd347be10cd4b",
+            "1a1fdf8d6401b8b1"
+        ],
+        "x": 34,
+        "y": 2783,
+        "w": 992,
+        "h": 138
     },
     {
         "id": "195a61f93a912086",
@@ -300,6 +426,19 @@
             [
                 "a48c0beb68e76845",
                 "5d2fb30390013840"
+            ]
+        ]
+    },
+    {
+        "id": "b73520be76a16375",
+        "type": "junction",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "x": 1250,
+        "y": 180,
+        "wires": [
+            [
+                "6b8e19a607d6f0ec"
             ]
         ]
     },
@@ -353,6 +492,8 @@
         "sourceFolder": "src",
         "deployedVersion": "6.1.0-beta",
         "showMsgUib": true,
+        "title": "Zero-code examples",
+        "descr": "A collection of flows that demonstrate and test all of the uib-element node's output types.",
         "x": 510,
         "y": 160,
         "wires": [
@@ -470,7 +611,7 @@
         "payload": "[\"LI One\",\"LI Two\",[\"LI Three a\",\"LI Three b\"],\"LI Four\"]",
         "payloadType": "json",
         "x": 200,
-        "y": 400,
+        "y": 520,
         "wires": [
             [
                 "496418a44a66cc5e"
@@ -496,7 +637,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 240,
-        "y": 480,
+        "y": 600,
         "wires": [
             [
                 "496418a44a66cc5e"
@@ -526,7 +667,7 @@
         "payload": "{\"ROW1\":{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\"},\"ROW2\":{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\"}}",
         "payloadType": "json",
         "x": 170,
-        "y": 1200,
+        "y": 1260,
         "wires": [
             [
                 "d52bbc4c5096d4ba"
@@ -553,10 +694,10 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "auto-create-table-from-array",
-        "payload": "[{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\"},{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\"}]",
+        "payload": "[{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\",\"COL3\":\"R1C3\"},{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\",\"COL3\":\"R2C3\"},{\"COL1\":\"R3C1\",\"COL2\":\"R3C2\",\"COL3\":\"R3C3\"}]",
         "payloadType": "json",
         "x": 170,
-        "y": 1240,
+        "y": 1300,
         "wires": [
             [
                 "d52bbc4c5096d4ba"
@@ -584,7 +725,7 @@
         "to": "",
         "reg": false,
         "x": 520,
-        "y": 2240,
+        "y": 2300,
         "wires": [
             [
                 "d3a95abaddc5c013"
@@ -614,7 +755,7 @@
         "payload": "[\"LI One\",\"LI Two\",\"LI Three\",\"LI Four\"]",
         "payloadType": "json",
         "x": 140,
-        "y": 2240,
+        "y": 2300,
         "wires": [
             [
                 "ec046fe7e55e944c"
@@ -637,11 +778,14 @@
         "heading": "My Table Heading (h4)",
         "headingSourceType": "str",
         "headingLevel": "h4",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
         "x": 500,
-        "y": 1260,
+        "y": 1300,
         "wires": [
             [
                 "f38d46523be0c1fe"
@@ -664,11 +808,14 @@
         "heading": "",
         "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
         "x": 760,
-        "y": 2240,
+        "y": 2300,
         "wires": [
             [
                 "f042b949d4143ac6"
@@ -691,11 +838,14 @@
         "heading": "My Heading",
         "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
         "x": 520,
-        "y": 440,
+        "y": 560,
         "wires": [
             [
                 "560371c044ee9e19"
@@ -718,11 +868,14 @@
         "heading": "",
         "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
         "x": 330,
-        "y": 2240,
+        "y": 2300,
         "wires": [
             [
                 "14ded4d1dc70efbf"
@@ -748,7 +901,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 200,
-        "y": 1280,
+        "y": 1340,
         "wires": [
             [
                 "d52bbc4c5096d4ba"
@@ -778,7 +931,7 @@
         "payload": "{\"L1\":\"LI One\",\"L2\":\"LI Two\",\"L3\":\"LI Three a\",\"L4\":[\"LI Four a\",\"LI Four b\"]}",
         "payloadType": "json",
         "x": 190,
-        "y": 440,
+        "y": 560,
         "wires": [
             [
                 "496418a44a66cc5e"
@@ -808,7 +961,7 @@
         "payload": "[[\"Entry One\",\"Description One\"],[\"Entry Two\",\"Description Two a\",\"Description Two b\",\"Description Two c\"],[\"Entry Three\",\"Description Three\"],[\"Entry Four\",\"Description Four\"]]",
         "payloadType": "json",
         "x": 250,
-        "y": 900,
+        "y": 1020,
         "wires": [
             [
                 "03979555908332c4"
@@ -834,7 +987,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 280,
-        "y": 1020,
+        "y": 1140,
         "wires": [
             [
                 "03979555908332c4"
@@ -857,11 +1010,14 @@
         "heading": "",
         "headingSourceType": "str",
         "headingLevel": "h3",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
-        "x": 570,
-        "y": 960,
+        "x": 510,
+        "y": 1080,
         "wires": [
             [
                 "95a6c6f3e84b4fea"
@@ -891,7 +1047,7 @@
         "payload": "[{\"Entry 1\":\"Description 1\"},{\"Entry 2a\":\"Description 2a\",\"Entry 2b\":\"Description 2b - this wont show. Use List not object for multiple Descriptions.\"},{\"Entry 3\":[\"Description 3 a\",\"Description 3 b\"]},{\"Entry 4\":\"Description 4\"}]",
         "payloadType": "json",
         "x": 220,
-        "y": 940,
+        "y": 1060,
         "wires": [
             [
                 "03979555908332c4"
@@ -921,23 +1077,12 @@
         "payload": "{\"ONE\":{\"A\":\"LI One A\"},\"TWO\":{\"B\":[\"LI Two B1\",\"LI Two B2\"]},\"THREE\":{\"C\":{\"C1\":\"LI Three C1\",\"C2\":\"LI Three C2\"}}}",
         "payloadType": "json",
         "x": 210,
-        "y": 980,
+        "y": 1100,
         "wires": [
             [
                 "03979555908332c4"
             ]
         ]
-    },
-    {
-        "id": "900f97b2b079f1bf",
-        "type": "comment",
-        "z": "3badb0a6906eef7f",
-        "g": "0f3fbb9e84943e6b",
-        "name": "Send the UL/OL list and change the Parent to `#eltest-ul-ol *[data-row-index=\"3\"]` \\n (without the quotes) to insert the table into the list entry #3",
-        "info": "",
-        "x": 580,
-        "y": 1200,
-        "wires": []
     },
     {
         "id": "cef57eb67e055c56",
@@ -958,7 +1103,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 140,
-        "y": 2280,
+        "y": 2340,
         "wires": [
             [
                 "ec046fe7e55e944c"
@@ -973,7 +1118,7 @@
         "name": "Limitation: we have to resend everything just to update one thing. \\n Instead, consider using this to create the HTML then copy the HTML using your browser's developer tools \\n then save the HTML into the index.html file. \\n You can still update using a uib-element node with the same ID or you can use a uib-update node as appropriate.",
         "info": "",
         "x": 620,
-        "y": 2320,
+        "y": 2380,
         "wires": []
     },
     {
@@ -1001,13 +1146,19 @@
             "534ccd905d0adc50",
             "88abbd5438821f7a",
             "3b6dfa72a2767eb8",
-            "c5effb699b6d4bc1"
+            "c5effb699b6d4bc1",
+            "4459ed2147acfb03",
+            "5650c4119fb86c22",
+            "bbc98d588f537ebe",
+            "5dcb54122d456b2e",
+            "1a1fdf8d6401b8b1"
         ],
         "x": 205,
         "y": 120,
         "wires": [
             [
-                "90794d03f65a40d4"
+                "90794d03f65a40d4",
+                "c928f8a757e6370e"
             ]
         ]
     },
@@ -1021,8 +1172,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 675,
-        "y": 440,
+        "x": 735,
+        "y": 560,
         "wires": []
     },
     {
@@ -1035,8 +1186,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 715,
-        "y": 960,
+        "x": 655,
+        "y": 1080,
         "wires": []
     },
     {
@@ -1050,7 +1201,7 @@
             "c203417099e22d29"
         ],
         "x": 655,
-        "y": 1260,
+        "y": 1300,
         "wires": []
     },
     {
@@ -1064,7 +1215,7 @@
             "c203417099e22d29"
         ],
         "x": 995,
-        "y": 2240,
+        "y": 2300,
         "wires": []
     },
     {
@@ -1075,6 +1226,7 @@
         "name": "",
         "topic": "eltest-html",
         "elementtype": "html",
+        "tag": "",
         "parent": "#more",
         "parentSource": "#more",
         "parentSourceType": "str",
@@ -1083,11 +1235,14 @@
         "heading": "",
         "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
-        "x": 490,
-        "y": 1800,
+        "x": 510,
+        "y": 1860,
         "wires": [
             [
                 "20deb97725012b7e"
@@ -1104,8 +1259,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 635,
-        "y": 1800,
+        "x": 655,
+        "y": 1860,
         "wires": []
     },
     {
@@ -1131,7 +1286,7 @@
         "payload": "{\t    \"mystring\": \"Boo-hoo\",\t    \"mynumber\": $formatInteger($random() * 100, \"#00\")\t}\t    ",
         "payloadType": "jsonata",
         "x": 150,
-        "y": 1780,
+        "y": 1840,
         "wires": [
             [
                 "f02b2b567a27e3bf"
@@ -1157,7 +1312,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 140,
-        "y": 1820,
+        "y": 1880,
         "wires": [
             [
                 "07f1643db81c0995"
@@ -1177,7 +1332,7 @@
         "template": "This is the payload: \n<p>\n<i>{{payload.mystring}}</i>,\n</p><p>\n<b>{{payload.mynumber}}</b>.\n</p>",
         "output": "str",
         "x": 280,
-        "y": 1780,
+        "y": 1840,
         "wires": [
             [
                 "07f1643db81c0995"
@@ -1200,11 +1355,14 @@
         "heading": "",
         "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
-        "x": 320,
-        "y": 1960,
+        "x": 500,
+        "y": 2020,
         "wires": [
             [
                 "7ed058d7900e3daa"
@@ -1221,8 +1379,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 475,
-        "y": 1960,
+        "x": 655,
+        "y": 2020,
         "wires": []
     },
     {
@@ -1241,11 +1399,14 @@
         "heading": "",
         "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "1",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
         "x": 390,
-        "y": 1380,
+        "y": 1440,
         "wires": [
             [
                 "b8338b38fa0f261f"
@@ -1262,8 +1423,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 535,
-        "y": 1380,
+        "x": 655,
+        "y": 1440,
         "wires": []
     },
     {
@@ -1289,7 +1450,7 @@
         "payload": "{\"COL1\":\"**\",\"COL2\":\"**\"}",
         "payloadType": "json",
         "x": 190,
-        "y": 1380,
+        "y": 1440,
         "wires": [
             [
                 "58968670b8adf81b"
@@ -1319,7 +1480,7 @@
         "payload": "\"[\" & $formatInteger($random() * 100, \"#00\") & \"] Dynamic title\"",
         "payloadType": "jsonata",
         "x": 130,
-        "y": 1960,
+        "y": 2020,
         "wires": [
             [
                 "9b8878a8a530e1b9"
@@ -1342,11 +1503,14 @@
         "heading": "A <u>Manually</u> Inserted Heading",
         "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
-        "x": 420,
-        "y": 2080,
+        "x": 480,
+        "y": 2140,
         "wires": [
             [
                 "0ff90fd3f27b33be"
@@ -1363,8 +1527,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 575,
-        "y": 2080,
+        "x": 655,
+        "y": 2140,
         "wires": []
     },
     {
@@ -1390,7 +1554,7 @@
         "payload": "Some <b><u>HTML</u></b> inserted dynamically.",
         "payloadType": "str",
         "x": 160,
-        "y": 2080,
+        "y": 2140,
         "wires": [
             [
                 "e1795c2c54ee3880"
@@ -1411,11 +1575,16 @@
         "elementid": "",
         "elementIdSourceType": "str",
         "heading": "IGNORED",
+        "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
-        "x": 540,
-        "y": 580,
+        "x": 500,
+        "y": 700,
         "wires": [
             [
                 "474079d2dd072158"
@@ -1432,8 +1601,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 775,
-        "y": 580,
+        "x": 735,
+        "y": 700,
         "wires": []
     },
     {
@@ -1459,7 +1628,7 @@
         "payload": "A am a new list entry 😁",
         "payloadType": "str",
         "x": 190,
-        "y": 580,
+        "y": 700,
         "wires": [
             [
                 "f8db205586825dcd"
@@ -1489,7 +1658,7 @@
         "payload": "[\"One new\", \"Two new\"]",
         "payloadType": "json",
         "x": 240,
-        "y": 620,
+        "y": 740,
         "wires": [
             [
                 "f8db205586825dcd"
@@ -1513,7 +1682,7 @@
         "attribsSourceType": "json",
         "slotPropMarkdown": false,
         "x": 570,
-        "y": 680,
+        "y": 820,
         "wires": [
             [
                 "474079d2dd072158"
@@ -1553,7 +1722,7 @@
         "payload": "2",
         "payloadType": "str",
         "x": 200,
-        "y": 680,
+        "y": 820,
         "wires": [
             [
                 "c2dcca959c44112c"
@@ -1577,7 +1746,7 @@
         "attribsSourceType": "json",
         "slotPropMarkdown": false,
         "x": 570,
-        "y": 780,
+        "y": 880,
         "wires": [
             [
                 "474079d2dd072158"
@@ -1607,7 +1776,7 @@
         "payload": "2",
         "payloadType": "str",
         "x": 200,
-        "y": 780,
+        "y": 880,
         "wires": [
             [
                 "e51ee02c0622e551"
@@ -1630,7 +1799,7 @@
         "attribsSourceType": "json",
         "slotPropMarkdown": false,
         "x": 520,
-        "y": 740,
+        "y": 780,
         "wires": [
             [
                 "474079d2dd072158"
@@ -1654,7 +1823,7 @@
         "onceDelay": 0.1,
         "topic": "update-all-li",
         "x": 210,
-        "y": 740,
+        "y": 780,
         "wires": [
             [
                 "8a39826860e82c51"
@@ -1675,14 +1844,17 @@
         "elementid": "sform1",
         "elementId": "",
         "elementIdSourceType": "str",
-        "heading": "",
+        "heading": "My Form",
         "headingSourceType": "str",
         "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
         "position": "last",
         "positionSourceType": "str",
+        "passthrough": false,
         "confData": {},
         "x": 450,
-        "y": 1560,
+        "y": 1620,
         "wires": [
             [
                 "534ccd905d0adc50"
@@ -1709,10 +1881,10 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "sform1",
-        "payload": "[{\"id\":\"r1-text\",\"type\":\"text\",\"required\":false,\"label\":\"Text Input:\",\"value\":\"Foo\"},{\"id\":\"r6-email-req\",\"type\":\"email\",\"title\":\"You can add your own popup info\",\"required\":true,\"label\":\"Email:\"},{\"id\":\"r2-color\",\"type\":\"color\",\"label\":\"Colour:\",\"value\":\"#427798\"},{\"id\":\"r3-date-req\",\"type\":\"date\",\"required\":true},{\"id\":\"r3-date-month\",\"type\":\"month\",\"disabled\":true},{\"id\":\"r4-range\",\"type\":\"range\",\"required\":false,\"label\":\"Range (0-100):\",\"value\":\"20\",\"min\":0,\"max\":100}]",
+        "payload": "[{\"id\":\"r1-text\",\"type\":\"text\",\"required\":false,\"label\":\"Text Input:\",\"value\":\"Foo\"},{\"id\":\"r6-email-req\",\"type\":\"email\",\"title\":\"You can add your own popup info\",\"required\":true,\"label\":\"Email:\"},{\"id\":\"r2-color\",\"type\":\"color\",\"label\":\"Colour:\",\"value\":\"#427798\"},{\"id\":\"r3-date-req\",\"type\":\"date\",\"required\":true},{\"id\":\"r3-date-month\",\"type\":\"month\",\"disabled\":true},{\"id\":\"r4-range\",\"type\":\"range\",\"required\":false,\"label\":\"Range (0-100):\",\"value\":\"20\",\"min\":0,\"max\":100},{\"id\":\"r3-file\",\"type\":\"file\"},{\"id\":\"r4-check\",\"label\":\"Checkbox (true/false):\",\"type\":\"checkbox\",\"value\":\"false\"},{\"id\":\"r5-check\",\"label\":\"Checkbox selected (true/false):\",\"type\":\"checkbox\",\"checked\":true},{\"id\":\"r5-textarea\",\"label\":\"Text area:\",\"type\":\"textarea\",\"value\":\"Some text. Sorry, no HTML.\"},{\"id\":\"r6-select\",\"label\":\"Select (two):\",\"type\":\"select\",\"options\":[{\"label\":\"Option 1\",\"value\":\"one\"},{\"label\":\"Option 2\",\"value\":\"two\"},{\"label\":\"Option 3\"}],\"value\":\"two\"},{\"id\":\"r7-select\",\"label\":\"Select (multi):\",\"type\":\"select\",\"options\":[{\"label\":\"Option 1a\",\"value\":\"one a\"},{\"label\":\"Option 2a\",\"value\":\"two a\"},{\"label\":\"Option 3a\",\"value\":\"three a\"}],\"value\":\"three a\",\"multiple\":true}]",
         "payloadType": "json",
         "x": 190,
-        "y": 1560,
+        "y": 1620,
         "wires": [
             [
                 "ede83b9af785c506"
@@ -1730,8 +1902,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 645,
-        "y": 1560,
+        "x": 655,
+        "y": 1620,
         "wires": []
     },
     {
@@ -1871,7 +2043,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 200,
-        "y": 1600,
+        "y": 1660,
         "wires": [
             [
                 "ede83b9af785c506"
@@ -1894,8 +2066,8 @@
         "attribsSource": "{ \"value\": payload }",
         "attribsSourceType": "jsonata",
         "slotPropMarkdown": false,
-        "x": 410,
-        "y": 1640,
+        "x": 490,
+        "y": 1700,
         "wires": [
             [
                 "534ccd905d0adc50"
@@ -1925,7 +2097,7 @@
         "payload": "Bah",
         "payloadType": "str",
         "x": 170,
-        "y": 1640,
+        "y": 1700,
         "wires": [
             [
                 "f6094a474faf5649"
@@ -1961,7 +2133,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 180,
-        "y": 2120,
+        "y": 2180,
         "wires": [
             [
                 "e1795c2c54ee3880"
@@ -2093,8 +2265,8 @@
         "topic": "mark-light",
         "payload": "{\"class\":\"light\"}",
         "payloadType": "json",
-        "x": 890,
-        "y": 380,
+        "x": 130,
+        "y": 360,
         "wires": [
             [
                 "2663180282c358a6"
@@ -2116,8 +2288,8 @@
         "attribsSource": "payload",
         "attribsSourceType": "msg",
         "slotPropMarkdown": false,
-        "x": 1080,
-        "y": 380,
+        "x": 320,
+        "y": 360,
         "wires": [
             [
                 "c5effb699b6d4bc1"
@@ -2133,8 +2305,8 @@
         "links": [
             "c203417099e22d29"
         ],
-        "x": 1215,
-        "y": 380,
+        "x": 455,
+        "y": 360,
         "wires": []
     },
     {
@@ -2158,12 +2330,994 @@
         "topic": "mark-dark",
         "payload": "{\"class\":\"dark\"}",
         "payloadType": "json",
-        "x": 890,
-        "y": 420,
+        "x": 130,
+        "y": 400,
         "wires": [
             [
                 "2663180282c358a6"
             ]
         ]
+    },
+    {
+        "id": "bb2e25bc515bcbd6",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "65795642cec1af50",
+        "name": "Update specific cell (R2C2)",
+        "props": [
+            {
+                "p": "cell",
+                "v": "#eltest-tbl tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(2)",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-update-r2c2",
+        "payload": "Updated R2C2",
+        "payloadType": "str",
+        "x": 250,
+        "y": 1480,
+        "wires": [
+            [
+                "ae31874849f0bc47"
+            ]
+        ]
+    },
+    {
+        "id": "ae31874849f0bc47",
+        "type": "uib-update",
+        "z": "3badb0a6906eef7f",
+        "g": "65795642cec1af50",
+        "name": "",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "update",
+        "cssSelector": "cell",
+        "cssSelectorType": "msg",
+        "slotSourceProp": "payload",
+        "slotSourcePropType": "msg",
+        "attribsSource": "",
+        "attribsSourceType": "jsonata",
+        "slotPropMarkdown": false,
+        "x": 450,
+        "y": 1480,
+        "wires": [
+            [
+                "b8338b38fa0f261f"
+            ]
+        ]
+    },
+    {
+        "id": "6b8e19a607d6f0ec",
+        "type": "uibuilder",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "",
+        "topic": "",
+        "url": "esm-element-test",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "esm-blank-client",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.4.0",
+        "showMsgUib": true,
+        "x": 1360,
+        "y": 180,
+        "wires": [
+            [
+                "b6a6e078c7a153c2"
+            ],
+            [
+                "ea5182145ff56087"
+            ]
+        ],
+        "info": "This example uses a blank template with\r\nthe ESM build of the front-end client.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript.\r\n\r\nThe ESM build should be included using an\r\n`import` statement in your `index.js` file.\r\n\r\nESM = ECMA Script Module."
+    },
+    {
+        "id": "a0b06621c07398b3",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "Send a msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Message From Node-RED",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1090,
+        "y": 160,
+        "wires": [
+            [
+                "b73520be76a16375"
+            ]
+        ],
+        "info": "Send a simply msg to the front-end.\r\n\r\nThe default front-end template code will display the msg\r\nusing HTML formatting, no coding required."
+    },
+    {
+        "id": "add2bdd8bebe5b03",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 1110,
+        "y": 200,
+        "wires": [
+            [
+                "b73520be76a16375"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "b6a6e078c7a153c2",
+        "type": "debug",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 1525,
+        "y": 140,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "ea5182145ff56087",
+        "type": "debug",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "uibuilder control output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 1525,
+        "y": 200,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "daa1504f2685319f",
+        "type": "comment",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 1340,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "410e148e289e3a7a",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"body\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1070,
+        "y": 240,
+        "wires": [
+            [
+                "b73520be76a16375"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "36f1c2cc9ef194db",
+        "type": "link in",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "esm-element-test-in",
+        "links": [
+            "168eb9ab00594028",
+            "c5b8417d9c02b24d"
+        ],
+        "x": 1145,
+        "y": 120,
+        "wires": [
+            [
+                "b73520be76a16375"
+            ]
+        ]
+    },
+    {
+        "id": "f030437d5a7e5dee",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "Toggle Visible Status",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showStatus\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1070,
+        "y": 280,
+        "wires": [
+            [
+                "b73520be76a16375"
+            ]
+        ]
+    },
+    {
+        "id": "95ca4e82137d3438",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "Log Lvl 5",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":5}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1320,
+        "y": 240,
+        "wires": [
+            [
+                "168eb9ab00594028"
+            ]
+        ]
+    },
+    {
+        "id": "c639fd1e7f3a6df6",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "Log Lvl 0",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":0}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1320,
+        "y": 280,
+        "wires": [
+            [
+                "168eb9ab00594028"
+            ]
+        ]
+    },
+    {
+        "id": "168eb9ab00594028",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "59a2614f0a755654",
+        "name": "link out 48",
+        "mode": "link",
+        "links": [
+            "36f1c2cc9ef194db"
+        ],
+        "x": 1445,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "c1b89704c05fce56",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "2bf4b6af49f039ff",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"include\",\"prop\":\"./SmallCat.jpg\",\"value\":{\"id\":\"incImg\",\"parent\":\"#more\",\"attributes\":{\"style\":\"width:10em;\"}}}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "include-jpg-file",
+        "x": 1160,
+        "y": 380,
+        "wires": [
+            [
+                "c5b8417d9c02b24d"
+            ]
+        ]
+    },
+    {
+        "id": "c5b8417d9c02b24d",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "2bf4b6af49f039ff",
+        "name": "link out 49",
+        "mode": "link",
+        "links": [
+            "36f1c2cc9ef194db"
+        ],
+        "x": 1545,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "9e4db07a14720c37",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "2bf4b6af49f039ff",
+        "name": "GET Vue version",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"vueVersion\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1160,
+        "y": 540,
+        "wires": [
+            [
+                "c5b8417d9c02b24d"
+            ]
+        ]
+    },
+    {
+        "id": "85e73c64c66a2f76",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "2bf4b6af49f039ff",
+        "name": "Is Vue loaded?",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"isVue\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1160,
+        "y": 500,
+        "wires": [
+            [
+                "c5b8417d9c02b24d"
+            ]
+        ]
+    },
+    {
+        "id": "a3f355b96aeb5228",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "2bf4b6af49f039ff",
+        "name": "Is DOMPurify loaded?",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"purify\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1140,
+        "y": 440,
+        "wires": [
+            [
+                "c5b8417d9c02b24d"
+            ]
+        ]
+    },
+    {
+        "id": "8156a1051ff2380f",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "2bf4b6af49f039ff",
+        "name": "Is Markdown-IT loaded?",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"markdown\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1140,
+        "y": 600,
+        "wires": [
+            [
+                "c5b8417d9c02b24d"
+            ]
+        ]
+    },
+    {
+        "id": "c2ac84fbddaba1d2",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "2bf4b6af49f039ff",
+        "name": "Markdown",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"replace\",\"components\":[{\"type\":\"div\",\"id\":\"md\",\"parent\":\"#more\",\"attributes\":{},\"slotMarkdown\":\"## H2 - Markdown input\\n\\nSome text in a para\\n\\n* List #1\\n* List #2\\n\"}]}]",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1180,
+        "y": 640,
+        "wires": [
+            [
+                "c5b8417d9c02b24d"
+            ]
+        ]
+    },
+    {
+        "id": "d49663a49059ee64",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "527bf7938fced52c",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "auto-create-dl-list2",
+        "x": 775,
+        "y": 1040,
+        "wires": [
+            [
+                "3197fab9ed7deac5"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "5c4d5b5e27f107dd",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "527bf7938fced52c",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 820,
+        "y": 1080,
+        "wires": [
+            [
+                "3197fab9ed7deac5"
+            ]
+        ]
+    },
+    {
+        "id": "3197fab9ed7deac5",
+        "type": "uib-element",
+        "z": "3badb0a6906eef7f",
+        "g": "527bf7938fced52c",
+        "name": "",
+        "topic": "eltest-dl",
+        "elementtype": "dl",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-dl2",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h3",
+        "data": "[[\"Entry One\",\"Description One\"],[\"Entry Two\",\"Description Two a\",\"Description Two b\",\"Description Two c\"],[\"Entry Three\",\"Description Three\"],[\"Entry Four\",\"Description Four\"]]",
+        "dataSourceType": "json",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 1030,
+        "y": 1040,
+        "wires": [
+            [
+                "4459ed2147acfb03"
+            ]
+        ]
+    },
+    {
+        "id": "4459ed2147acfb03",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "527bf7938fced52c",
+        "name": "link out 52",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 1205,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "bbc98d588f537ebe",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "e32ba9f821a3e9f2",
+        "name": "link out 54",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 985,
+        "y": 2680,
+        "wires": []
+    },
+    {
+        "id": "50bd68a804728c63",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "e32ba9f821a3e9f2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uib-tag",
+        "payload": "\"[\" & $formatInteger($random() * 100, \"#00\") & \"] Dynamic title\"",
+        "payloadType": "jsonata",
+        "x": 150,
+        "y": 2680,
+        "wires": [
+            [
+                "0551e90124f1644a"
+            ]
+        ]
+    },
+    {
+        "id": "0551e90124f1644a",
+        "type": "uib-tag",
+        "z": "3badb0a6906eef7f",
+        "g": "e32ba9f821a3e9f2",
+        "name": "",
+        "topic": "",
+        "tag": "div",
+        "parent": "body",
+        "parentSourceType": "str",
+        "elementId": "tag-div1",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "payload",
+        "slotSourcePropType": "msg",
+        "attribsSource": "{\"style\":\"border:1px solid red;padding:1em;background-color:var(--surface3);\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 330,
+        "y": 2680,
+        "wires": [
+            [
+                "f5f1c92f67f79b61"
+            ]
+        ]
+    },
+    {
+        "id": "c928f8a757e6370e",
+        "type": "debug",
+        "z": "3badb0a6906eef7f",
+        "g": "3cd8b7c5aae9d40b",
+        "name": "uibuilder standard output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 315,
+        "y": 100,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "30c550e25667339a",
+        "type": "uib-tag",
+        "z": "3badb0a6906eef7f",
+        "g": "e32ba9f821a3e9f2",
+        "name": "",
+        "topic": "",
+        "tag": "a",
+        "parent": "#tag-div1",
+        "parentSourceType": "str",
+        "elementId": "tag-a1",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "A Link",
+        "slotSourcePropType": "str",
+        "attribsSource": "{\"href\":\"http://example.com\",\"title\":\"A link\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 800,
+        "y": 2680,
+        "wires": [
+            [
+                "bbc98d588f537ebe"
+            ]
+        ]
+    },
+    {
+        "id": "411f46b6e8198d5a",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "e32ba9f821a3e9f2",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 2720,
+        "wires": [
+            [
+                "0551e90124f1644a"
+            ]
+        ]
+    },
+    {
+        "id": "f5f1c92f67f79b61",
+        "type": "uib-tag",
+        "z": "3badb0a6906eef7f",
+        "g": "e32ba9f821a3e9f2",
+        "name": "",
+        "topic": "",
+        "tag": "hr",
+        "parent": "#tag-div1",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "",
+        "attribsSourceType": "msg",
+        "slotPropMarkdown": false,
+        "x": 550,
+        "y": 2680,
+        "wires": [
+            [
+                "30c550e25667339a"
+            ]
+        ]
+    },
+    {
+        "id": "870f9db775b0e44a",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "e32ba9f821a3e9f2",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 590,
+        "y": 2720,
+        "wires": [
+            [
+                "30c550e25667339a"
+            ]
+        ]
+    },
+    {
+        "id": "2de54e9a477d0182",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "name": "Dynamic load MarkdownIT from CDN",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"load\",\"srcScripts\":[\"https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js\"]}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "load-markdownit-cdn",
+        "x": 690,
+        "y": 360,
+        "wires": [
+            [
+                "5dcb54122d456b2e"
+            ]
+        ]
+    },
+    {
+        "id": "5dcb54122d456b2e",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "name": "link out 55",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 895,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "82c02ab0a364c239",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "name": "Remove MarkdownIT",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"removeAll\",\"components\":[\"head > script[src*='markdown-it']\"]}]",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 740,
+        "y": 400,
+        "wires": [
+            [
+                "5dcb54122d456b2e"
+            ]
+        ]
+    },
+    {
+        "id": "f5891d10dc837fd3",
+        "type": "comment",
+        "z": "3badb0a6906eef7f",
+        "name": "uib-tag example - similar to uib-element but adds/replaces a single HTML or web component element (tag)",
+        "info": "",
+        "x": 400,
+        "y": 2580,
+        "wires": []
+    },
+    {
+        "id": "c083601aa040378a",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "1a0c9ab3c2f839e0",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uib-tag",
+        "payload": "\"[\" & $formatInteger($random() * 100, \"#00\") & \"] Dynamic title\"",
+        "payloadType": "jsonata",
+        "x": 150,
+        "y": 2840,
+        "wires": [
+            [
+                "ddedd347be10cd4b"
+            ]
+        ]
+    },
+    {
+        "id": "293d0b3149c64d12",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "1a0c9ab3c2f839e0",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 2880,
+        "wires": [
+            [
+                "ddedd347be10cd4b"
+            ]
+        ]
+    },
+    {
+        "id": "ddedd347be10cd4b",
+        "type": "uib-tag",
+        "z": "3badb0a6906eef7f",
+        "g": "1a0c9ab3c2f839e0",
+        "name": "",
+        "topic": "",
+        "tag": "button",
+        "parent": "body",
+        "parentSourceType": "str",
+        "elementId": "tag-btn1",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "A Button",
+        "slotSourcePropType": "str",
+        "attribsSource": "{\"onclick\":\"uibuilder.eventSend(event)\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 560,
+        "y": 2840,
+        "wires": [
+            [
+                "1a1fdf8d6401b8b1"
+            ]
+        ]
+    },
+    {
+        "id": "1a1fdf8d6401b8b1",
+        "type": "link out",
+        "z": "3badb0a6906eef7f",
+        "g": "1a0c9ab3c2f839e0",
+        "name": "link out 56",
+        "mode": "link",
+        "links": [
+            "c203417099e22d29"
+        ],
+        "x": 985,
+        "y": 2840,
+        "wires": []
     }
 ]
