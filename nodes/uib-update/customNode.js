@@ -92,9 +92,11 @@ async function buildUi(msg, node) {
     }
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes
-    if ( msg._ui ) node._ui = msg._ui
-    else node._ui = []
-
+    if ( msg._ui ) {
+        if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
+        node._ui = msg._ui
+    } else node._ui = []
+    
     if (node.mode === 'delete' || node.mode === 'remove') {
         node._ui.push({
             'method': 'removeAll',
@@ -152,6 +154,17 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // const RED = mod.RED
 
+    // TODO: Accept cache-replay and cache-clear
+    // Is this a uib control msg? If so, ignore it since this is connected to uib via event handler
+    if ( msg.uibuilderCtrl ) {
+        // this.warn('Received a uibuilder control msg, ignoring')
+        done()
+        return
+    }
+
+    // If msg has _ui property - is it from the client? If so, remove it.
+    if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
+    
     // Save the last input msg for replay to new client connections, creates/update this._ui
     await buildUi(msg, this)
 
