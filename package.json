@@ -62,6 +62,7 @@
       "uib-cache": "nodes/uib-cache.js",
       "uib-element": "nodes/uib-element/customNode.js",
       "uib-update": "nodes/uib-update/customNode.js",
+      "uib-tag": "nodes/uib-tag/customNode.js",
       "uib-sender": "nodes/uib-sender.js",
       "uib-list": "nodes/uib-list/customNode.js"
     },
