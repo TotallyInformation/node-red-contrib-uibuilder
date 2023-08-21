@@ -36,7 +36,7 @@ const include = require('gulp-include')
 const once = require('gulp-once')
 // const prompt = require('gulp-prompt')
 const greplace = require('gulp-replace')
-// const debug = require('gulp-debug')
+const debug = require('gulp-debug')
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 const gulpEsbuild = require('gulp-esbuild')
@@ -49,6 +49,10 @@ const fs = require('fs-extra')
 
 // const { promisify } = require('util')
 // const dotenv = require('dotenv')
+
+if (!process.cwd().startsWith('D:')) {
+    throw new Error('NOT RUNNING FROM THE D: DRIVE')
+}
 
 const feSrc = 'src/front-end'
 const feModuleSrc = 'src/front-end-module'
@@ -283,6 +287,7 @@ function packfeIIFEmin(cb) {
  *
  */
 function packfeIIFE(cb) {
+    console.log(feDest)
     src(`${feModuleSrc}/uibuilder.module.js`)
         .pipe(gulpEsbuild({
             outfile: 'uibuilder.iife.js',
@@ -300,7 +305,9 @@ function packfeIIFE(cb) {
             cb(err)
         })
         .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-iife"'))
-        .pipe(dest(feDest))
+        .pipe(debug({title: 'unicorn:'}))
+        .pipe(dest('front-end/'))
+        // .pipe(dest(`${feDest}/`))
         .on('end', function() {
             // in case of success
             cb()
@@ -598,6 +605,28 @@ function buildPanelUpdate(cb) {
     cb()
 }
 
+/** Combine the parts of uib-tag.html */
+function buildPanelTag(cb) {
+    try {
+        src(`${nodeSrcRoot}/uib-tag/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-tag/`))
+    } catch (e) {
+        console.error('buildPanelUpdate failed', e)
+    }
+
+    cb()
+}
+
 //#endregion ---- ---- ----
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
@@ -607,7 +636,12 @@ const buildme = parallel(
     buildPanelCache,
     buildPanelUibList,
     buildPanelUibElement,
-    buildPanelUpdate
+    buildPanelUpdate,
+    buildPanelTag,
+)
+
+const buildNewFe = parallel(
+    packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE
 )
 
 /** Watch for changes during development of uibuilderfe & editor */
@@ -624,6 +658,7 @@ function watchme(cb) {
     watch('src/editor/uib-list/*', buildPanelUibList)
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
+    watch('src/editor/uib-tag/*', buildPanelTag)
     watch('front-end/uib-brand.css', minifyBrandCSS)
 
     cb()
@@ -751,7 +786,9 @@ exports.default     = series( packfe, packfeModule, buildme ) // series(runLinte
 exports.watch       = watchme
 exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
 exports.build       = buildme
+exports.buildFe     = buildNewFe
 exports.packfe      = packfe
 exports.packfeModule = packfeModule
+exports.packfeIIFE  = packfeIIFE
 exports.createTag   = createTag
 exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin )
