@@ -184,6 +184,9 @@ function inputMsgHandler (msg, send, done) {
     // If the input msg is a uibuilder control msg, then drop it to prevent loops
     if ( Object.prototype.hasOwnProperty.call(msg, 'uibuilderCtrl') ) return null
 
+    // If msg has _ui property - is it from the client? If so, remove it.
+    if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
+
     // setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + this.rcvMsgCount}, node)
 
     // Remove script/style content if admin settings don't allow
