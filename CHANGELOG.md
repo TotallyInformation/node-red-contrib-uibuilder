@@ -10,74 +10,19 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-### Fixes required
-
-### Extensions to client Library
-
-* Forms (eventSend): 
-  * Allow for multi-select sending array of selected options.
-  * Allow for multi-select pre-selecting array of options.
-  * Allow for "selected" `true` on option entries.
-* Get _uib/_ui notify features to use Notification API if available
-* Compare ui.js with radar version - see if changes to watch fn need to be brought over. Also add observe options.
-* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
-
-### Extensions to `uib-brand.css`
-
-* Forms:
-  * Allow for blank line spanning the form width.
-  * Allow for information line spanning the form width.
-
-### Extensions to the `uib-element` node
-
-* Forms:
-  * Check if textarea sizes can be changed - specifically the number of lines. Similarly for select-multiple.
-  * Add option for blank line.
-  * Add option for an info line (supporting HTML? Markdown?)
-  * Add a "Simple Form Immediate" version where every element sends its own changes back to Node-RED and where send/reset buttons are not added.
-* Add input to allow restriction by pageName/clientId/tabId
-* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-* New Types for CSS and JS files?
-* New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
-* Consider making the main input selectable (e.g. not just msg.payload)
-* Add more elements:
-    * [ ] Markdown
-      Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
-    * Individual Form Elements
-      This is to enable additional form elements to be added to an existing form.
-      * [ ] Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
-      * [ ] Input
-      * [ ] button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
-      * [ ] iFrame
-        As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
-
-### Extensions to the `uib-update` node
-
-* Add option to select input other than msg.payload
-* Add option to pass through msg.payload & maybe other props.
-* Add option to trigger onChange
-* Add input to allow restriction by pageName/clientId/tabId
-* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-
-* **NEW NODE** - `uib-save` - Easily save files to uibuilder-specific locations
-
-  Select a deployed uibuilder node as the "parent" and the server folder location will be set for you so that you don't need to remember it.
-
-  Why?
-
-  - Save `msg._ui` configuration data to a static JSON which can then be used to load an entire UI on page load.
-  - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
-  - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
-
-
-
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...main)
 
-<!-- Nothing currently. -->
+Nothing currently.
+
+## [v6.5.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.4.1)
+
+Apologies, the documentation has fallen a little behind with this release as things took longer and more new features were added than expected. But I needed to get this release out as it contains some important bug fixes as well.
 
 ### **NEW** Features
+
+* New zero-code node `uib-tag` - creates a single html element based on the given tag name (e.g. create a link element from an `a` tag). Also works with web component custom tags. Use this when you want to add something not covered by `uib-element`. Lets you specify slot content (html or Markdown) and attributes at the same time.
 
 * The client library now **filters inbound messages** according to `pageName`, `clientId`, and/or `tabId` set in either `msg._uib` or `msg._ui`.
   
@@ -89,13 +34,23 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * uibuilder Instance routes/middleware
 
-  You can now **add ExpressJS routes and other middleware to a single instance** of uibuilder (a specific uibuilder node), not just to all nodes. Especially useful if you want to add custom security (login, registration, etc) to just one instance.
+  You can now **add ExpressJS routes and other middleware to a _single instance_** of uibuilder (a specific uibuilder node), not just to all nodes. Especially useful if you want to add custom security (login, registration, etc) to just one instance.
 
   The new feature lets you specify the sub-url-path, the HTTP method and the callback function. Paths can include wildcards and parameters too. The routes are always added to the instance router which forces them to only ever be sub-url-paths of the specified instance. e.g. if your instance url is `test`, a route with a path of `/foo/:bah` will ALWAYS be `.../test/foo/...`. This is for security. Note that you are responsible for creating unique URL paths, no checking is done and ExpressJS is quite happy to have multiple path handlers but if you provide a terminating response (e.g. `res.status(200)`) and no `next()` call, the call stack is obviously terminated. If you include a call to `next()`, overlapping route callbacks will also be triggered. In that case, make sure you do not do any more `res.xxxx()` responses otherwise you will get an `ERR_HTTP_HEADERS_SENT` error.
 
   To add route handlers, create 1 or more .js files in the `<instanceRoot>/routes/` folder. See the docs for details.
 
   What can I do? Authentication, authorisation, http headers, dynamic html changes/additions, js inserts, logging, server-side includes, server-side rendering (e.g. Jade, ...) ...
+
+### NEW NODE: uib-tag
+
+* New zero-code node
+* Creates a single html element based on the given tag name (e.g. create a link element from an `a` tag). 
+* Works with web component custom tags.
+* Lets you specify slot content (html or Markdown) and attributes at the same time.
+* Filters out `msg._ui` from input if it includes `msg._ui.from` set to "client". We don't want to loop from output to input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
+
+Use this when you want to add something not covered by `uib-element`.
 
 ### Changes to uibuilder client Library
 
@@ -108,13 +63,13 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * **NEW FUNCTION** `uibuilder.notify(config)` - If possible (not all browsers yet fully support it), use the [browser Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API) to show an *operating system notification*. Supports a simple click reponse which can be used with `uibuilder.eventSend` to notify Node-RED that a user clicked the notification. Note that there are significant inconsistencies in how/whether this API is handled by browsers. It may not always work.
 
-* Do not process input messages if either `msg._uib` or `msg._ui` includes either `pageName`, `clientId`, and/or `tabId` and where those parameters do not match the current page or client.
-* Improvements and corrections to the `eventSend` function. Allowing more event types to be sensible handled (including the Notify response). Also added CSS class information & specific outputs for notifications.
+* No longer processes input messages if either `msg._uib` or `msg._ui` includes either `pageName`, `clientId`, and/or `tabId` and where those parameters do not match the current page or client.
+* Improvements and corrections to the `eventSend` function. Allowing more event types to be sensible handled (including the Notify response). Also added CSS class information & specific outputs for notifications. Also, added input field types to form outputs.
 * Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
 * Added flag to indicate if the *DOMPurify* library is loaded. Added warnings to the `include()` function when it is loaded since some includes will be filtered by the purify process for safety. Updated the front-end client introduction document with details about DOMPurify, how to load it and use it.
 * Added flag to indicate if the *Markdown-IT* library is loaded. Updated the front-end client introduction document with details about how to load the library and use it.
-* Trigger onChange when payload received along with _ui. Previous update turned this off completely but that is too restrictive. Use the Passthrough option in `uib-element` for example so that data can be further processed in the front-end if required.
-* `eventSend` function: Added input field types to form outputs
+* Trigger onChange when `msg.payload` received along with `msg._ui`. Previous update turned this off completely but that is too restrictive. Use the Passthrough option in `uib-element` for example so that data can be further processed in the front-end if required.
+* When the client sends a msg back to Node-RED that includes `msg._ui` properties, the client adds `msg._ui.from` set to "client". This lets the `uib-element`, `uib-update`, and `uib-tag` nodes filter them out when flow editors have looped an output msg back to the input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
 
 ### Changes to uibuilder main node
 
@@ -124,6 +79,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * **NEW** A dynamically generated list of all uibuilder apps is now available at `../uibuilder/apps`. In addition, title and description fields have been added to the Advanced tab in the uibuilder node. These are used on the apps page. You can also output the detailed list in Node-RED using a function node with `RED.util.uib.listAllApps()`. The detailed list also shows what node defines the app.
 
+* Filter out `msg._ui` from input if it includes `msg._ui.from` set to "client". We don't want to loop from output to input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
+
 ### Changes to uib-element node
 
 * **FIX** Was issuing a `node.warn` showing the input type (happening on v6.1 as well) - only for table type. Now removed.
@@ -131,14 +88,23 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * **FIX** Form checkbox "value" output from auto-send was always "on". Because HTML is sometimes utterly stupid! Input tags of type "checkbox" do not set a value like other inputs! They only set the "checked" attribute. Fixed by forcing the value attribute to be set. [Issue #221](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/221), [Discussion #219](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/219).
 
 * **KEY CHANGE** Added option to select core data input other than msg.payload.
+  
   This means that you can define the UI element directly in the node if you want. This includes the use of JSONata for dynamically defined elements, allowing for even simpler msg inputs should this be desired.
 
-* **KEY CHANGE** Added an option to pass through msg.payload. When sent to the front-end, the client library will trigger standard events to allow further processing of the data in the front-end. This means that you can use `uibuilder.onChange` etc in the front-end even though the msg contains `msg._ui` which would normally prevent this from happening.
+* **KEY CHANGE** Added an option to pass through msg.payload. When sent to the front-end, the client library will trigger standard events to allow further processing of the data in the front-end. 
+  
+  This means that you can use `uibuilder.onChange` etc in the front-end even though the msg contains `msg._ui` which would normally prevent this from happening.
+
+* Order of node properties changed in the Editor. Hopefully more logical.
+* Filter out `msg._ui` from input if it includes `msg._ui.from` set to "client". We don't want to loop from output to input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
 
 * Form additions:
   * Textarea input.
   * Select options drop-down input. 
 
+### Changes to the uib-update node
+
+* Filter out `msg._ui` from input if it includes `msg._ui.from` set to "client". We don't want to loop from output to input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
 
 ### Changes to CSS styles (uib-brand.css)
 
