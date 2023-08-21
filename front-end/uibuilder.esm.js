@@ -401,6 +401,9 @@ var require_ui = __commonJS({
           this.replaceSlotMarkdown(el, comp);
         }
       }
+      uiEnhanceElement(el, comp) {
+        this._uiComposeComponent(el, comp);
+      }
       /** Extend an HTML Element with appended elements using ui components
        * NOTE: This fn follows a strict hierarchy of added components.
        * @param {HTMLElement} parentEl The parent HTML Element we want to append to
@@ -1148,13 +1151,118 @@ var decodePayload = (encodedPayload, binaryType) => {
   }
   return packets;
 };
+function createPacketEncoderStream() {
+  return new TransformStream({
+    transform(packet, controller) {
+      encodePacketToBinary(packet, (encodedPacket) => {
+        const payloadLength = encodedPacket.length;
+        let header;
+        if (payloadLength < 126) {
+          header = new Uint8Array(1);
+          new DataView(header.buffer).setUint8(0, payloadLength);
+        } else if (payloadLength < 65536) {
+          header = new Uint8Array(3);
+          const view = new DataView(header.buffer);
+          view.setUint8(0, 126);
+          view.setUint16(1, payloadLength);
+        } else {
+          header = new Uint8Array(9);
+          const view = new DataView(header.buffer);
+          view.setUint8(0, 127);
+          view.setBigUint64(1, BigInt(payloadLength));
+        }
+        if (packet.data && typeof packet.data !== "string") {
+          header[0] |= 128;
+        }
+        controller.enqueue(header);
+        controller.enqueue(encodedPacket);
+      });
+    }
+  });
+}
 var TEXT_DECODER;
-function decodePacketFromBinary(data, isBinary2, binaryType) {
+function totalLength(chunks) {
+  return chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+}
+function concatChunks(chunks, size) {
+  if (chunks[0].length === size) {
+    return chunks.shift();
+  }
+  const buffer = new Uint8Array(size);
+  let j = 0;
+  for (let i2 = 0; i2 < size; i2++) {
+    buffer[i2] = chunks[0][j++];
+    if (j === chunks[0].length) {
+      chunks.shift();
+      j = 0;
+    }
+  }
+  if (chunks.length && j < chunks[0].length) {
+    chunks[0] = chunks[0].slice(j);
+  }
+  return buffer;
+}
+function createPacketDecoderStream(maxPayload, binaryType) {
   if (!TEXT_DECODER) {
     TEXT_DECODER = new TextDecoder();
   }
-  const isPlainBinary = isBinary2 || data[0] < 48 || data[0] > 54;
-  return decodePacket(isPlainBinary ? data : TEXT_DECODER.decode(data), binaryType);
+  const chunks = [];
+  let state = 0;
+  let expectedLength = -1;
+  let isBinary2 = false;
+  return new TransformStream({
+    transform(chunk, controller) {
+      chunks.push(chunk);
+      while (true) {
+        if (state === 0) {
+          if (totalLength(chunks) < 1) {
+            break;
+          }
+          const header = concatChunks(chunks, 1);
+          isBinary2 = (header[0] & 128) === 128;
+          expectedLength = header[0] & 127;
+          if (expectedLength < 126) {
+            state = 3;
+          } else if (expectedLength === 126) {
+            state = 1;
+          } else {
+            state = 2;
+          }
+        } else if (state === 1) {
+          if (totalLength(chunks) < 2) {
+            break;
+          }
+          const headerArray = concatChunks(chunks, 2);
+          expectedLength = new DataView(headerArray.buffer, headerArray.byteOffset, headerArray.length).getUint16(0);
+          state = 3;
+        } else if (state === 2) {
+          if (totalLength(chunks) < 8) {
+            break;
+          }
+          const headerArray = concatChunks(chunks, 8);
+          const view = new DataView(headerArray.buffer, headerArray.byteOffset, headerArray.length);
+          const n = view.getUint32(0);
+          if (n > Math.pow(2, 53 - 32) - 1) {
+            controller.enqueue(ERROR_PACKET);
+            break;
+          }
+          expectedLength = n * Math.pow(2, 32) + view.getUint32(4);
+          state = 3;
+        } else {
+          if (totalLength(chunks) < expectedLength) {
+            break;
+          }
+          const data = concatChunks(chunks, expectedLength);
+          controller.enqueue(decodePacket(isBinary2 ? data : TEXT_DECODER.decode(data), binaryType));
+          state = 0;
+        }
+        if (expectedLength === 0 || expectedLength > maxPayload) {
+          controller.enqueue(ERROR_PACKET);
+          break;
+        }
+      }
+    }
+  });
 }
 var protocol = 4;
 
@@ -1886,7 +1994,7 @@ var WS = class extends Transport {
     } catch (err) {
       return this.emitReserved("error", err);
     }
-    this.ws.binaryType = this.socket.binaryType || defaultBinaryType;
+    this.ws.binaryType = this.socket.binaryType;
     this.addEventListeners();
   }
   /**
@@ -1980,9 +2088,6 @@ var WS = class extends Transport {
 };
 
 // node_modules/engine.io-client/build/esm/transports/webtransport.js
-function shouldIncludeBinaryHeader(packet, encoded) {
-  return packet.type === "message" && typeof packet.data !== "string" && encoded[0] >= 48 && encoded[0] <= 54;
-}
 var WT = class extends Transport {
   get name() {
     return "webtransport";
@@ -1999,27 +2104,27 @@ var WT = class extends Transport {
     });
     this.transport.ready.then(() => {
       this.transport.createBidirectionalStream().then((stream) => {
-        const reader = stream.readable.getReader();
-        this.writer = stream.writable.getWriter();
-        let binaryFlag;
+        const decoderStream = createPacketDecoderStream(Number.MAX_SAFE_INTEGER, this.socket.binaryType);
+        const reader = stream.readable.pipeThrough(decoderStream).getReader();
+        const encoderStream = createPacketEncoderStream();
+        encoderStream.readable.pipeTo(stream.writable);
+        this.writer = encoderStream.writable.getWriter();
         const read = () => {
           reader.read().then(({ done, value: value2 }) => {
             if (done) {
               return;
             }
-            if (!binaryFlag && value2.byteLength === 1 && value2[0] === 54) {
-              binaryFlag = true;
-            } else {
-              this.onPacket(decodePacketFromBinary(value2, binaryFlag, "arraybuffer"));
-              binaryFlag = false;
-            }
+            this.onPacket(value2);
             read();
           }).catch((err) => {
           });
         };
         read();
-        const handshake = this.query.sid ? `0{"sid":"${this.query.sid}"}` : "0";
-        this.writer.write(new TextEncoder().encode(handshake)).then(() => this.onOpen());
+        const packet = { type: "open" };
+        if (this.query.sid) {
+          packet.data = `{"sid":"${this.query.sid}"}`;
+        }
+        this.writer.write(packet).then(() => this.onOpen());
       });
     });
   }
@@ -2028,18 +2133,13 @@ var WT = class extends Transport {
     for (let i2 = 0; i2 < packets.length; i2++) {
       const packet = packets[i2];
       const lastPacket = i2 === packets.length - 1;
-      encodePacketToBinary(packet, (data) => {
-        if (shouldIncludeBinaryHeader(packet, data)) {
-          this.writer.write(Uint8Array.of(54));
+      this.writer.write(packet).then(() => {
+        if (lastPacket) {
+          nextTick(() => {
+            this.writable = true;
+            this.emitReserved("drain");
+          }, this.setTimeoutFn);
         }
-        this.writer.write(data).then(() => {
-          if (lastPacket) {
-            nextTick(() => {
-              this.writable = true;
-              this.emitReserved("drain");
-            }, this.setTimeoutFn);
-          }
-        });
       });
     }
   }
@@ -2123,6 +2223,7 @@ var Socket = class _Socket extends Emitter {
    */
   constructor(uri, opts = {}) {
     super();
+    this.binaryType = defaultBinaryType;
     this.writeBuffer = [];
     if (uri && "object" === typeof uri) {
       opts = uri;
@@ -2376,12 +2477,12 @@ var Socket = class _Socket extends Emitter {
     if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
       this.emitReserved("packet", packet);
       this.emitReserved("heartbeat");
+      this.resetPingTimeout();
       switch (packet.type) {
         case "open":
           this.onHandshake(JSON.parse(packet.data));
           break;
         case "ping":
-          this.resetPingTimeout();
           this.sendPacket("pong");
           this.emitReserved("ping");
           this.emitReserved("pong");
@@ -4982,6 +5083,14 @@ var Uib = (_a = class {
   async include(url2, uiOptions) {
     _ui.include(url2, uiOptions);
   }
+  /** Enhance an HTML element that is being composed with ui data
+   *  such as ID, attribs, event handlers, custom props, etc.
+   * @param {*} el HTML Element to enhance
+   * @param {*} component Individual uibuilder ui component spec
+   */
+  uiEnhanceElement(el, component) {
+    _ui.uiEnhanceElement(el, component);
+  }
   //#endregion -- direct to _ui --
   /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
    * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
@@ -5259,14 +5368,6 @@ var Uib = (_a = class {
     this.socketOptions.auth.tabId = this.tabId;
     this.socketOptions.auth.lastNavType = this.lastNavType;
     this.socketOptions.auth.connectedNum = this.connectedNum;
-    let numMsgs;
-    if (channel === this._ioChannels.client) {
-      this.set("sentMsg", msgToSend);
-      numMsgs = this.set("msgsSent", ++this.msgsSent);
-    } else if (channel === this._ioChannels.control) {
-      this.set("sentCtrlMsg", msgToSend);
-      numMsgs = this.set("msgsSentCtrl", ++this.msgsSentCtrl);
-    }
     if (originator === "" && this.originator !== "")
       originator = this.originator;
     if (originator !== "")
@@ -5280,7 +5381,17 @@ var Uib = (_a = class {
         }
       }
     }
-    log("debug", "Uib:_send", ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)();
+    if (msgToSend._ui)
+      msgToSend._ui.from = "client";
+    let numMsgs;
+    if (channel === this._ioChannels.client) {
+      this.set("sentMsg", msgToSend);
+      numMsgs = this.set("msgsSent", ++this.msgsSent);
+    } else if (channel === this._ioChannels.control) {
+      this.set("sentCtrlMsg", msgToSend);
+      numMsgs = this.set("msgsSentCtrl", ++this.msgsSentCtrl);
+    }
+    log("trace", "Uib:_send", ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)();
     this._socket.emit(channel, msgToSend);
   }
   // --- End of Send Msg Fn --- //

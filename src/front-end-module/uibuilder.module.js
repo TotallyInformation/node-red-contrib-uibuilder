@@ -1290,7 +1290,7 @@ export const Uib = class Uib {
 
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
         msgToSend._socketId = this._socket.id
-
+        
         //#region ---- Update socket.io metadata ---- //
         // Session tab id
         this.socketOptions.auth.tabId = this.tabId
@@ -1299,16 +1299,6 @@ export const Uib = class Uib {
         // How many times has the client (re)connected since page load
         this.socketOptions.auth.connectedNum = this.connectedNum
         //#endregion ---- ---- ---- //
-
-        // Track how many messages have been sent & last msg sent
-        let numMsgs
-        if (channel === this._ioChannels.client) {
-            this.set('sentMsg', msgToSend)
-            numMsgs = this.set('msgsSent', ++this.msgsSent)
-        } else if (channel === this._ioChannels.control) {
-            this.set('sentCtrlMsg', msgToSend)
-            numMsgs = this.set('msgsSentCtrl', ++this.msgsSentCtrl)
-        }
 
         // Add the originator metadata if required
         if (originator === '' && this.originator !== '') originator = this.originator
@@ -1326,7 +1316,19 @@ export const Uib = class Uib {
             }
         }
 
-        log('debug', 'Uib:_send', ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)()
+        // If a standard send & _ui property exists, make sure to add _ui.from = 'client'        
+        if (msgToSend._ui) msgToSend._ui.from = 'client'
+        
+        // Track how many messages have been sent & last msg sent
+        let numMsgs
+        if (channel === this._ioChannels.client) {
+            this.set('sentMsg', msgToSend)
+            numMsgs = this.set('msgsSent', ++this.msgsSent)
+        } else if (channel === this._ioChannels.control) {
+            this.set('sentCtrlMsg', msgToSend)
+            numMsgs = this.set('msgsSentCtrl', ++this.msgsSentCtrl)
+        }
+        log('trace', 'Uib:_send', ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)()
 
         this._socket.emit(channel, msgToSend)
     } // --- End of Send Msg Fn --- //
