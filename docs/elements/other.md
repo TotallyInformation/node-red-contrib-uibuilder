@@ -3,8 +3,10 @@ title: Generate miscelaneous HTML elements from simple input data
 description: >
    Page headings, text boxes, etc.
 created: 2023-02-24 16:49:49
-lastUpdated: 2023-02-26 16:04:46
+lastUpdated: 2023-08-19 17:00:55
 ---
+
+Note that `msg.payload` as the data input can be changed to any msg property, a context variable, manually defined string, number, or JSON or dynamic JSONata as desired in the node's settings.
 
 ## Text Box
 

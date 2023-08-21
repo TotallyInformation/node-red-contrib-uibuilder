@@ -22,7 +22,7 @@
                 <p>
                     A simple but accessible table. <b><a href="./uibuilder/docs/#/elements/tables" target="_blank">Docs</a></b>.
                 </p><p>
-                    Set the incoming <code>msg.payload</code> to an <i>Array of Objects<i>.
+                    Set the input data to an <i>Array of Objects<i>.
                     Each array entry will be a new row. Each property of the first array entry
                     will be used for the column names.
                 </p><p>
@@ -44,7 +44,7 @@
                 <p>
                     A simple but accessible Form with inputs and buttons. <b><a href="./uibuilder/docs/#/elements/forms" target="_blank">Docs</a></b>.
                 </p><p>
-                    Set the incoming <code>msg.payload</code> to an <i>Array of Objects<i>.
+                    Set the input data to an <i>Array of Objects<i>.
                     Each array entry will be a new form input or button.
                     An Object of Objects can also be used where the outer object is key'd by the ID of the entry.
                 </p><p>
@@ -78,7 +78,7 @@
                 <p>
                     Outputs a simple, accessible, bullet list.  <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
                 </p><p>
-                    Input <code>msg.payload</code> should be an array of strings.
+                    Input data should be an array of strings.
                     An object of key/values can also be used.
                 </p>
             `,
@@ -93,7 +93,7 @@
                 <p>
                     Outputs a simple, accessible, numbered list. <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
                 </p><p>
-                    Input <code>msg.payload</code> should be an array of strings.
+                    Input data should be an array of strings.
                     An object of key/values can also be used.
                 </p>
             `,
@@ -109,7 +109,7 @@
                     Outputs a simple, accessible, description list. <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
                 </p>
                 <p>
-                    Set the incoming <code>msg.payload</code> to be an Array of Array's. The outer array representing each row 
+                    Set the input data to be an Array of Array's. The outer array representing each row 
                     and the inner array containing at least 2 string entries representing the term/description pair.
                     Additional entries in the inner array are added as secondary descriptions (<code>dd</code> tags).
                 </p>
@@ -143,7 +143,7 @@
             label: 'HTML',
             description: `
                 <p>
-                    Pass-through HTML from <code>msg.payload</code>. When sent to the uibuilder node, will be reproduced in your page(s). <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
+                    Pass-through HTML from the input data. When sent to the uibuilder node, will be reproduced in your page(s). <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
                 </p>
                 <p>
                     May be used with the Node-RED core <code>template</code> node.
@@ -171,7 +171,7 @@
                     The <b>Parent</b> and <b>HTML ID</b> are ignored in this case
                 </p>
                 <p>
-                    <code>msg.payload</code> must be a simple string.
+                    The input data must be a simple string.
                 </p>
             `,
             allowsParent: false,
@@ -187,7 +187,7 @@
                 </p><p>
                     Set the <b>Parent</b> to the id of the existing table.
                 </p><p>
-                    Set the incoming <code>msg.payload</code> to a string.
+                    Set the input data to a string.
                 </p><p>
                     Set the <b>Position</b> to "first", "last" or a number.
                 </p>
@@ -205,7 +205,7 @@
                 </p><p>
                     Set the <b>Parent</b> to the id of the existing table.
                 </p><p>
-                    Set the incoming <code>msg.payload</code> to an <i>Object<i>.
+                    Set the input data to an <i>Object<i>.
                     The properties of the object must match the column definitions of the existing table.
                 </p><p>
                     Set the <b>Position</b> to "first", "last" or a number.
@@ -292,12 +292,18 @@
             typeField: $('#node-input-headingSourceType'),
         }).typedInput('width', '56.5%')
 
-        // core data typed input
+        // @ts-ignore core data typed input
         $('#node-input-data').typedInput({
             // types: stdStrTypes,
             default: 'msg',
             typeField: $('#node-input-dataSourceType'),
-        }).typedInput('width', tiWidth)
+        }).on('change', function(event, type, value) {
+            // console.log('change')
+            if ( type === 'msg' && !this.value ) {
+                $('#node-input-data').typedInput('value', 'payload')
+                // console.log('change 2')
+            }
+        } ).typedInput('width', tiWidth)
 
         // position typed input
         $('#node-input-position').typedInput({
@@ -307,13 +313,11 @@
         }).typedInput('width', tiWidth)
 
         // Ensure data value never blank
-        $('#node-input-data').on('change', function(event, type, value) {
-            console.log('change')
-            if ( !value ) {
-                if ( type === 'msg' ) $('#node-input-data').typedInput('value', 'payload')
-                console.log('change 2')
-            }
-        } )
+        // $('#node-input-data').on('change', function(event, type, value) {
+        //     if ( !value ) {
+        //         if ( type === 'msg' ) $('#node-input-data').typedInput('value', 'payload')
+        //     }
+        // } )
 
         // Make position of aria-labels dynamic to cursor
         // $('#uib-el *[aria-label]').on('mousemove', function(event) {
@@ -465,7 +469,7 @@
             headingSourceType: { value: 'str' },
             headingLevel: { value: 'h2', required: true },
 
-            data: { value: 'payload', required: true },
+            data: { value: 'payload' },
             dataSourceType: { value: 'msg' },
 
             position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true) },

@@ -3,7 +3,7 @@ title: Generate input forms from simple input data
 description: >
    Turns an array/object of objects into a simple, accessible form.
 created: 2023-02-24 16:49:49
-lastUpdated: 2023-03-25 17:07:37
+lastUpdated: 2023-08-19 17:01:20
 ---
 
 The `uib-element` node, set to the "Simple Form" type, outputs a simple but accessible Form with inputs and buttons. Most HTML features of inputs and forms are supported.
@@ -11,6 +11,8 @@ The `uib-element` node, set to the "Simple Form" type, outputs a simple but acce
 ## Input data
 
 Set the incoming msg.payload to an Array of Objects. Each array entry will be a new form input or button. An Object of Objects can also be used where the outer object is key'd by the ID of the entry. See below for an example input array showing input properties.
+
+Note that `msg.payload` as the data input can be changed to any msg property, a context variable, manually defined JSON or dynamic JSONata as desired in the node's settings.
 
 ### Example input message payload
 

@@ -87,6 +87,9 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         return
     }
 
+    // If msg has _ui property - is it from the client? If so, remove it.
+    if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
+
     // Save the last input msg for replay to new client connections, creates/update this._ui
     await buildUi(msg, this)
 
@@ -95,7 +98,6 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // We are done
     done()
-
 } // ----- end of inputMsgHandler ----- //
 
 /** 2) This is run when an actual instance of our node is committed to a flow
@@ -118,6 +120,7 @@ function nodeInstance(config) {
     this.topic = config.topic ?? ''
 
     this.elementtype = config.elementtype
+    this.tag = config.tag
 
     this.parentSource = config.parent ?? 'body' // Swap to source naming
     this.parentSourceType = config.parentSourceType ?? 'str'
@@ -149,7 +152,6 @@ function nodeInstance(config) {
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
-
 } // ---- End of nodeInstance ---- //
 
 //#endregion ----- Module-level support functions ----- //
@@ -267,6 +269,7 @@ function buildTitle(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildUlOlList(node, msg, parent) {
+    console.log(node.data)
     // Make sure node.data is an object or an array - if not, force to array
     if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
@@ -732,6 +735,59 @@ function buildUlOlRow(node, msg, parent) {
     return err
 } // ---- End of buildUlOlRow ---- //
 
+/** Build the UI config instructions for any HTML/custom tag element
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildTag(node, msg, parent) {
+    // Must be a string or array/object of strings
+    // If array/object, then add LAST entry entry as <div role="doc-subtitle">
+
+    if (!Array.isArray(node.data)) node.data = [node.data]
+
+    let err = ''
+
+    if (node.tag === '') {
+        err = 'tag name must be provided'
+        return err
+    }
+
+    parent.components.push({
+        'type': node.tag,
+        'slot': node.data[0]
+    })
+
+    // parent.components.push({
+    //     'type': 'h1',
+    //     'selector': 'h1',
+    //     'parent': node.parent ? node.parent : 'body',
+    //     'position': 'first',
+    //     'attributes': {
+    //         'class': 'with-subtitle',
+    //     },
+    //     'slot': node.data.shift(),
+    // })
+
+    // if (node.data.length > 0) {
+    //     node.data.forEach( (element, i) => {
+    //         parent.components.push({
+    //             'type': 'div',
+    //             'selector': 'div[role="doc-subtitle"] ',
+    //             'parent': node.parent ? node.parent : 'body',
+    //             'position': 'last',
+    //             'attributes': {
+    //                 'role': 'doc-subtitle',
+    //             },
+    //             'slot': element,
+    //         })
+    //     } )
+    // }
+
+    return err
+} // ---- End of buildTag ---- //
+
 /** Adds a wrapping DIV tag
  * @param {object} parent The parent JSON node that we will add components to
  * @param {runtimeNode & uibElNode} node reference to node instance
@@ -815,27 +871,31 @@ async function buildUi(msg, node) {
     // console.log('NODE', node)
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes
-    if ( msg._ui ) node._ui = msg._ui
-    else node._ui = []
+    if ( msg._ui ) {
+        if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
+        node._ui = msg._ui
+    } else node._ui = []
 
     // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
     if ( !msg.mode ) msg.mode = 'update'
 
     // If mode is remove, then simply do that and return
-    if ( msg.mode === 'remove' ) {
+    if ( msg.mode === 'delete' || msg.mode === 'remove' ) {
         if (!node.elementId) {
             node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
             return
         }
 
         node._ui.push({
-            method: 'remove',
-            components: [`#${node.elementId}`] // remove uses css selector, not raw id
+            'method': 'removeAll',
+            'components': [
+                `#${node.elementId}`,
+            ]
         })
         return
     }
 
-    // If no HMTL ID is specified, then always ADD
+    // If no HMTL ID is specified & not deleting & type isn't "title", then always ADD
     if (node.elementtype !== 'title' && !node.elementId) {
         msg.mode = 'add'
     }
@@ -918,6 +978,13 @@ async function buildUi(msg, node) {
             break
         }
 
+        case 'tag': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildTag(node, msg, parent)
+            break
+        }
+
         // Unknown type. Issue warning and exit
         default: {
             err = `Type "${node.elementtype}" is unknown. Cannot process.`
@@ -928,7 +995,6 @@ async function buildUi(msg, node) {
     if (err.length > 0) {
         node.error(err, node)
     }
-
 } // -- end of buildUI -- //
 
 //#endregion ----- ui functions ----- //
