@@ -1,0 +1,65 @@
+<div id="uib-upd">
+
+    <div aria-label="Required. The tag/element name (without the opening/closing brackets. eg. `a` not `&lt;a>`)." class="form-row" id="row-tag">
+        <label for="node-input-tag"><i class="fa fa-tag"></i> Tag</label>
+        <input type="text" id="node-input-tag">
+        <input type="hidden" id="node-input-tagSourceType">
+    </div>
+
+    <div aria-label="If supplied, must be unique on the page & retrigger of the node will REPLACE the element.&#10;If not supplied, element will always be ADDED to page." class="form-row">
+        <label for="node-input-elementId"><i class="fa fa-file-code-o"></i> HTML ID</label>
+        <input type="text" id="node-input-elementId" placeholder="Valid unique HTML element id string">
+        <input type="hidden" id="node-input-elementIdSourceType">
+    </div>
+
+    <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;Must be a non-blank string" class="form-row">
+        <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
+        <input type="text" id="node-input-parent" placeholder="CSS Selector">
+        <input type="hidden" id="node-input-parentSourceType">
+    </div>
+    
+    <div aria-label="Relative position inside the parent.&#10;'first', 'last' or a number.&#10;Ignored if no HTML ID provided." class="form-row">
+        <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
+        <input type="text" id="node-input-position" placeholder="Last, first or a number">
+        <input type="hidden" id="node-input-positionSourceType">
+    </div>
+  
+    <div><i>Element slot content (can be HTML):</i></div>
+    <div aria-label="The source of the slot content update data" class="form-row">
+        <label for="node-input-slotSourceProp">Content Source</label>
+        <input type="text" id="node-input-slotSourceProp" placeholder="Source data to update elements content">
+        <input type="hidden" id="node-input-slotSourcePropType">
+    </div>
+    <div aria-label="Input content is Markdown rather than HTML?" class="form-row">
+        <label for="node-input-slotPropMarkdown">Markdown?</label>
+        <input type="checkbox" id="node-input-slotPropMarkdown" style="width: auto;vertical-align: top;">
+        <span id="slotPropMarkdown-unchecked" style="font-size:smaller;"> &nbsp; Input can be an HTML string</span>
+        <span id="slotPropMarkdown-checked" style="display:none;font-size:smaller;"> &nbsp; Markdown-It library must be loaded in browser</span>
+    </div>
+    
+    <!-- <div style="border:1px solid var(--red-ui-primary-border-color);padding: 0.1rem;"> -->
+    <div><i>Element attributes:</i></div>
+    <div aria-label="The source of the attribute update data" class="form-row">
+        <label for="node-input-attribsSource">Attribs Source</label>
+        <input type="text" id="node-input-attribsSource" placeholder="Source data to update elements attributes">
+        <input type="hidden" id="node-input-attribsSourceType">
+    </div>
+    <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
+        <p style="font-size: smaller;">
+            The attributes source data must be an object containing attribute name keys. e.g.
+            <code>{"class": "class1 class2", <br>"style": "color:red; border: 1px solid silver;"}</code>
+        </p>    
+    </div>
+
+    <hr>
+    
+    <div aria-label="Default msg topic. Make unique if using uib-cache." class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-topic">
+    </div>
+    <div aria-label="Node name (descriptive only)" class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+    
+</div>
