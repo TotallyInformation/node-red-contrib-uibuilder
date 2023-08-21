@@ -135,6 +135,7 @@ Use this when you want to add something not covered by `uib-element`.
 ### Other Changes
 
 * Remove dependency on `express-validator` as this is no longer used.
+* Add `.keep` empty files to template folders that should be empty because GIT doesn't think anyone needs to keep empty folders - stupid!
 
 ## [v6.4.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...v6.4.0)
 
