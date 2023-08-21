@@ -62,7 +62,7 @@ import Ui from './ui'
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.4.1-mod'
+const version = '6.5.0-mod'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -426,6 +426,10 @@ export const Uib = class Uib {
     tabId = ''
     // Actual name of current page (set in constructor)
     pageName = null
+    // Is the DOMPurify library loaded? Updated in start()
+    purify = false
+    // Is the Markdown-IT library loaded? Updated in start()
+    markdown = false
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -456,6 +460,7 @@ export const Uib = class Uib {
             clientVersion: version,
             clientId: this.clientId,
             pathName: window.location.pathname,
+            urlParams: Object.fromEntries(new URLSearchParams(location.search)),
             pageName: undefined,
             tabId: undefined,
             lastNavType: undefined,
@@ -494,15 +499,15 @@ export const Uib = class Uib {
      * Also triggers any event listeners.
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
-     * @param {*} val _
-     * @returns {*|undefined} Input value
+     * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
+     * @returns {*} Input value
      */
     set(prop, val) {
         // Check for excluded properties - we don't want people to set these
         // if (this.#excludedSet.indexOf(prop) !== -1) {
         if (prop.startsWith('_') || prop.startsWith('#')) {
             log('warn', 'Uib:set', `Cannot use set() on protected property "${prop}"`)()
-            return
+            return `Cannot use set() on protected property "${prop}"`
         }
 
         this[prop] = val
@@ -532,7 +537,7 @@ export const Uib = class Uib {
         if (prop === 'msgsCtrl') return this.msgsCtrlReceived
         if (prop === 'reconnections') return this.connectedNum
         if (this[prop] === undefined) {
-            log('warn', 'Uib:get', `get() - property "${prop}" does not exist`)()
+            log('warn', 'Uib:get', `get() - property "${prop}" is undefined`)()
         }
         return this[prop]
     }
@@ -948,12 +953,22 @@ export const Uib = class Uib {
         _ui.include(url, uiOptions)
     }
 
+    /** Enhance an HTML element that is being composed with ui data
+     *  such as ID, attribs, event handlers, custom props, etc.
+     * @param {*} el HTML Element to enhance
+     * @param {*} component Individual uibuilder ui component spec
+     */
+    uiEnhanceElement(el, component) {
+        _ui.uiEnhanceElement(el, component)
+    }
+
     //#endregion -- direct to _ui --
 
     /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
      * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     * @returns {boolean} New state
      */
     showMsg(showHide, parent = 'body') {
         if ( showHide === undefined ) showHide = !this.#isShowMsg
@@ -986,6 +1001,36 @@ export const Uib = class Uib {
                 ]
             })
         }
+
+        return showHide
+    }
+
+    /** Show a browser notification if possible.
+     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+     * or a Notifications API options object + config.title string.
+     * @example uibuilder.notify( 'My simple message to the user' )
+     * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
+     * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
+     * @example // If config.return = true, a promise is returned.
+     * // The resolved promise is only returned if the notification is clicked by the user.
+     * // Can be used to send the response back to Node-RED
+     * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
+     * @ref https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+     * @param {object|string} config Notification config data or simple message string
+     * @returns {Promise<Event>|null} A promise that resolves to the click event or null
+     */
+    notify(config) {
+        if (config.return) return _ui.notification(config)
+
+        _ui.notification(config)
+            .then( res => { // eslint-disable-line promise/always-return
+                log('info', 'Uib:notification', 'Notification completed event', res)()
+                // if (config.return) return res
+            })
+            .catch( err => {
+                log('error', 'Uib:notification', 'Notification error event', err)()
+            })
+        return null
     }
 
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
@@ -993,6 +1038,7 @@ export const Uib = class Uib {
      * The display is updated by an event listener created in the class constructor.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     * @returns {boolean} New state
      */
     showStatus(showHide, parent = 'body') {
         if ( showHide === undefined ) showHide = !this.#isShowStatus
@@ -1004,7 +1050,7 @@ export const Uib = class Uib {
                     '#uib_status',
                 ],
             })
-            return
+            return showHide
         }
 
         const root = {
@@ -1056,6 +1102,8 @@ export const Uib = class Uib {
         })
 
         _ui._uiReplace(root)
+
+        return showHide
     }
 
     /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
@@ -1065,13 +1113,14 @@ export const Uib = class Uib {
      * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
      * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
      * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
+     * @returns {boolean} True if the watch is on, false otherwise
      */
     uiWatch(cssSelector, startStop = 'toggle', send = true, showLog = true) {
         // Select the node that will be observed for mutations
         const targetNode = document.querySelector(cssSelector)
         if (!targetNode) {
-            console.log('[Uib:uiWatch] CSS Selector not found. ', cssSelector)
-            return
+            log('warn', 'uibuilder.module.js:uiWatch', `CSS Selector '${cssSelector}' not found.`)()
+            return false
         }
 
         if (startStop === 'toggle' || startStop === undefined || startStop === null) {
@@ -1082,13 +1131,13 @@ export const Uib = class Uib {
         // Need a ref to the Uib this
         const that = this
 
-        if (startStop === true || startStop === undefined) {
+        if (startStop === true) {
             // Create an observer instance
             this.#uiObservers[cssSelector] = new MutationObserver( function( mutationList /* , observer */ ) {
                 const out = []
 
                 mutationList.forEach( mu => {
-                    console.log({ mu })
+                    // console.log({ mu })
                     const oMu = {
                         type: mu.type,
                         oldValue: mu.oldValue !== null ? mu.oldValue : undefined,
@@ -1143,6 +1192,8 @@ export const Uib = class Uib {
             delete this.#uiObservers[cssSelector]
             log('trace', 'uibuilder.module.js:uiWatch', `Stopped Watching DOM changes for '${cssSelector}'`)()
         }
+
+        return startStop
     } // ---- End of watchDom ---- //
 
     //#endregion -------- -------- -------- //
@@ -1239,7 +1290,7 @@ export const Uib = class Uib {
 
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
         msgToSend._socketId = this._socket.id
-
+        
         //#region ---- Update socket.io metadata ---- //
         // Session tab id
         this.socketOptions.auth.tabId = this.tabId
@@ -1248,16 +1299,6 @@ export const Uib = class Uib {
         // How many times has the client (re)connected since page load
         this.socketOptions.auth.connectedNum = this.connectedNum
         //#endregion ---- ---- ---- //
-
-        // Track how many messages have been sent & last msg sent
-        let numMsgs
-        if (channel === this._ioChannels.client) {
-            this.set('sentMsg', msgToSend)
-            numMsgs = this.set('msgsSent', ++this.msgsSent)
-        } else if (channel === this._ioChannels.control) {
-            this.set('sentCtrlMsg', msgToSend)
-            numMsgs = this.set('msgsSentCtrl', ++this.msgsSentCtrl)
-        }
 
         // Add the originator metadata if required
         if (originator === '' && this.originator !== '') originator = this.originator
@@ -1275,7 +1316,19 @@ export const Uib = class Uib {
             }
         }
 
-        log('debug', 'Uib:_send', ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)()
+        // If a standard send & _ui property exists, make sure to add _ui.from = 'client'        
+        if (msgToSend._ui) msgToSend._ui.from = 'client'
+        
+        // Track how many messages have been sent & last msg sent
+        let numMsgs
+        if (channel === this._ioChannels.client) {
+            this.set('sentMsg', msgToSend)
+            numMsgs = this.set('msgsSent', ++this.msgsSent)
+        } else if (channel === this._ioChannels.control) {
+            this.set('sentCtrlMsg', msgToSend)
+            numMsgs = this.set('msgsSentCtrl', ++this.msgsSentCtrl)
+        }
+        log('trace', 'Uib:_send', ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)()
 
         this._socket.emit(channel, msgToSend)
     } // --- End of Send Msg Fn --- //
@@ -1337,7 +1390,6 @@ export const Uib = class Uib {
 
         // The target element
         const target = domevent.currentTarget
-        // const targetId = target.id !== '' ? target.id : (target.name !== '' ? target.name : target.type)
 
         // Get target properties - only shows custom props not element default ones
         const props = {}
@@ -1346,22 +1398,27 @@ export const Uib = class Uib {
             props[key] = target[key]
         })
 
+        // Attempt to get target attributs - can fail for certain target types
         const ignoreAttribs = ['class', 'id', 'name']
-        const attribs = Object.assign({},
-            ...Array.from(target.attributes,
-                ( { name, value } ) => {
-                    if ( !ignoreAttribs.includes(name) ) {
-                        return ({ [name]: value })
+        let attribs
+        try {
+            attribs = Object.assign({},
+                ...Array.from(target.attributes,
+                    ( { name, value } ) => {
+                        if ( !ignoreAttribs.includes(name) ) {
+                            return ({ [name]: value })
+                        }
+                        return undefined
                     }
-                    return undefined
-                }
+                )
             )
-        )
+        } catch (e) {}
 
         // If target embedded in a form, include the form data
-        const form = {}
+        let form
         const frmVals = []
         if ( target.form ) {
+            form = {}
             form.valid = target.form.checkValidity()
             Object.values(target.form).forEach( (frmEl, i) => {
                 const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
@@ -1369,13 +1426,19 @@ export const Uib = class Uib {
                 // We must have both an element id (we may have forced one above) AND
                 // the element type MUST be not undefined - to allow for the extra properties added by frameworks such as Svelte
                 if (id !== '' && frmEl.type) {
+                    // Stupid HTML doesn't use value attrib for checkboxes. So override if value is set to default
+                    if ('checked' in frmEl && frmEl.value === 'on') frmEl.value = frmEl.checked.toString()
+
                     frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
+
                     form[id] = {
                         'id': frmEl.id,
                         'name': frmEl.name,
                         'value': frmEl.value,
                         'valid': frmEl.checkValidity(),
+                        'type': frmEl.type,
                     }
+
                     if (form[id].valid === false) {
                         const v = frmEl.validity
                         form[id].validity = {
@@ -1391,27 +1454,65 @@ export const Uib = class Uib {
                             valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
                         }
                     }
+
                     if (frmEl.dataset) form[id].data = frmEl.dataset
                 }
             })
         }
 
+        // Check for CSS Classes
+        let classes
+        try {
+            classes = Array.from(target.classList)
+        } catch (e) {}
+
+        // Each `data-xxxx` attribute is added as a property
+        let payload = { ...target.dataset }
+
+        // Handle Notification events
+        let nprops
+        if ( Object.prototype.toString.call(target) === '[object Notification]') {
+            // Fixed payload for convenience
+            payload = `notification-${target.userAction}`
+            // Capture the notification properties
+            nprops = {
+                // userAction: target.userAction, // uib custom prop: click, close or error
+                actions: target.actions,
+                badge: target.badge,
+                body: target.body,
+                data: target.data,
+                dir: target.dir,
+                icon: target.icon,
+                image: target.image,
+                lang: target.lang,
+                renotify: target.renotify,
+                requireInteraction: target.requireInteraction,
+                silent: target.silent,
+                tag: target.tag,
+                timestamp: target.timestamp,
+                title: target.title,
+                vibrate: target.vibrate,
+            }
+        }
+        // console.log(Object.prototype.toString.call(target))
+
         // Set up the msg to send - NB: Topic may be added by this._send
         const msg = {
-            // Each `data-xxxx` attribute is added as a property
             // - this may be an empty Object if no data attributes defined
-            payload: { ...target.dataset },
+            payload: payload,
 
             _ui: {
                 type: 'eventSend',
                 id: target.id !== '' ? target.id : undefined,
                 name: target.name !== '' ? target.name : undefined,
-                slotText: target.textContent !== '' ? target.textContent.substring(0, 255) : undefined,
+                slotText: target.textContent && target.textContent !== '' ? target.textContent.substring(0, 255) : undefined,
 
                 form: form,
                 props: props,
                 attribs: attribs,
-                classes: Array.from(target.classList),
+                classes: classes,
+
+                notification: nprops,
 
                 event: domevent.type,
                 altKey: domevent.altKey,
@@ -1437,7 +1538,7 @@ export const Uib = class Uib {
         if (domevent.type === 'change') msg._ui.newValue = msg.payload.value = domevent.target.value
 
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
-        if (target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
+        if (target.dataset && target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
 
         this._send(msg, this._ioChannels.client, originator)
     }
@@ -1511,6 +1612,7 @@ export const Uib = class Uib {
             }
 
             case 'include': {
+                // include is async
                 response = _ui.include(prop, value)
                 break
             }
@@ -1521,8 +1623,22 @@ export const Uib = class Uib {
             }
         }
 
-        if (response !== undefined && Object(response).constructor !== Promise) {
-            if (response.length === 0) response = `'${prop}' not found`
+        if (response === undefined) {
+            response = `'${prop}' is undefined`
+        }
+        if (Object(response).constructor === Promise) {
+            // response = `'${cmd} ${prop}' submitted. Cmd is async, no response available`
+            response
+                .then( (/** @type {any} */ data) => {
+                    msg.payload = msg._uib.response = data
+                    if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
+                    this.send(msg)
+                    return true
+                })
+                .catch( err => {
+                    log(0, 'Uib:_uibCommand', 'Error: ', err)()
+                })
+        } else {
             msg.payload = msg._uib.response = response
             if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
             this.send(msg)
@@ -1619,6 +1735,10 @@ export const Uib = class Uib {
         // Make sure that msg is an object & not null
         receivedMsg = makeMeAnObject(receivedMsg, 'payload')
 
+        // Don't process if the inbound msg is not for us
+        if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
+        if (receivedMsg._ui && !this._forThis(receivedMsg._ui)) return
+
         // @since 2018-10-07 v1.0.9: Work out local time offset from server
         this._checkTimestamp(receivedMsg)
 
@@ -1628,7 +1748,7 @@ export const Uib = class Uib {
         // Emit specific document events on msg receipt that make it easy for coders to use
         this._msgRcvdEvents(receivedMsg)
 
-        if (!('_ui' in receivedMsg)) {
+        if ( !('_ui' in receivedMsg && !('payload' in receivedMsg)) ) {
             // Save the msg for further processing
             this.set('msg', receivedMsg)
         }
@@ -1827,6 +1947,38 @@ export const Uib = class Uib {
 
     // See message handling section for msg receipt handlers
 
+    /** Called by _ioSetup when Socket.IO connects to Node-RED */
+    _onConnect() {
+        this.set('connectedNum', this.connectedNum++)
+        // How many times has the client (re)connected since page load
+        this.socketOptions.auth.connectedNum = this.connectedNum
+        // How was the page last loaded?
+        this.socketOptions.auth.lastNavType = this.lastNavType
+        // Session tab id
+        this.socketOptions.auth.tabId = this.tabId
+        this.socketOptions.auth.more = this.tabId
+
+        log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. \nNamespace: ${this.ioNamespace}`)()
+        this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered })
+
+        this._checkConnect() // resets any reconnection timers & sets connected flag
+    }
+
+    /** Called by _ioSetup when Socket.IO disconnects from Node-RED
+     * @param {string} reason Disconnection title
+     */
+    _onDisconnect(reason) {
+        // reason === 'io server disconnect' - redeploy of Node instance
+        // reason === 'transport close' - Node-RED terminating
+        // reason === 'ping timeout' - didn't receive a pong response?
+        log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`)()
+
+        this._dispatchCustomEvent('uibuilder:socket:disconnected', reason)
+
+        /** A workaround for SIO's failure to reconnect after a disconnection */
+        this._checkConnect()
+    }
+
     /** Setup Socket.io
      * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
      * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
@@ -1874,23 +2026,7 @@ export const Uib = class Uib {
         this._socket = io(this.ioNamespace, this.socketOptions)
 
         /** When the socket is connected - set ioConnected flag and reset connect timer  */
-        this._socket.on('connect', () => {
-
-            this.set('connectedNum', this.connectedNum++)
-            // How many times has the client (re)connected since page load
-            this.socketOptions.auth.connectedNum = this.connectedNum
-            // How was the page last loaded?
-            this.socketOptions.auth.lastNavType = this.lastNavType
-            // Session tab id
-            this.socketOptions.auth.tabId = this.tabId
-            this.socketOptions.auth.more = this.tabId
-
-            log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. \nNamespace: ${this.ioNamespace}`)()
-            this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered })
-
-            this._checkConnect() // resets any reconnection timers & sets connected flag
-
-        }) // --- End of socket connection processing ---
+        this._socket.on('connect', this._onConnect.bind(this))
 
         // RECEIVE a STANDARD, non-control msg from Node-RED server
         this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this))
@@ -1899,17 +2035,7 @@ export const Uib = class Uib {
         this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this))
 
         // When the socket is disconnected ..............
-        this._socket.on('disconnect', (reason) => {
-            // reason === 'io server disconnect' - redeploy of Node instance
-            // reason === 'transport close' - Node-RED terminating
-            // reason === 'ping timeout' - didn't receive a pong response?
-            log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`)()
-
-            this._dispatchCustomEvent('uibuilder:socket:disconnected', reason)
-
-            /** A workaround for SIO's failure to reconnect after a disconnection */
-            this._checkConnect()
-        }) // --- End of socket disconnect processing ---
+        this._socket.on('disconnect', this._onDisconnect.bind(this))
 
         // Socket.io connection error - probably the wrong ioPath - or client is offline
         this._socket.on('connect_error', (err) => {
@@ -2108,7 +2234,7 @@ export const Uib = class Uib {
             if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
             else {
                 log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
-                this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`)
+                this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.min.css`)
             }
         }
 
@@ -2134,7 +2260,32 @@ export const Uib = class Uib {
             try {
                 this.set('vueVersion', window['Vue'].version)
             } catch (e) { }
+            log('trace', 'Uib:start', `VueJS is loaded. Version: ${this.vueVersion}`)()
+        } else {
+            log('trace', 'Uib:start', 'VueJS is not loaded.')()
         }
+
+        // Check if DOMPurify library is loaded
+        if (window['DOMPurify']) {
+            this.set('purify', true)
+            log('trace', 'Uib:start', 'DOMPurify is loaded.')()
+        } else {
+            log('trace', 'Uib:start', 'DOMPurify is not loaded.')()
+        }
+        // Check if Markdown-IT library is loaded
+        if (window['markdownit']) {
+            this.set('markdown', true)
+            log('trace', 'Uib:start', 'Markdown-IT is loaded.')()
+        } else {
+            log('trace', 'Uib:start', 'Markdown-IT is not loaded.')()
+        }
+
+        // if (window['DOMPurify']) {
+        //     this.set('purify', true)
+        //     log('trace', 'Uib:start', 'DOMPurify is loaded.')
+        // } else {
+        //     log('trace', 'Uib:start', 'DOMPurify is not loaded.')
+        // }
 
         // Set up msg listener for the optional showMsg
         this.onChange('msg', (msg) => {
@@ -2161,7 +2312,12 @@ const uibuilder = new Uib()
 if (!window['uibuilder']) {
     window['uibuilder'] = uibuilder
 } else {
-    log('error', 'uibuilder.module.js', 'uibuilder already assigned to window. Have you tried to load it more than once?')
+    log('error', 'uibuilder.module.js', '`uibuilder` already assigned to window. Have you tried to load it more than once?')
+}
+if (!window['uib']) {
+    window['uib'] = uibuilder
+} else {
+    log('warn', 'uibuilder.module.js', '`uib` shortcut already assigned to window.')
 }
 
 // Assign `$` to global window object unless it is already in use.

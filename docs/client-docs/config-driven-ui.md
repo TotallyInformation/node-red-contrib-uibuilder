@@ -4,7 +4,7 @@ description: >
    This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a uibuilder node where the messages contain a `msg._ui` property.
    This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-04-10 13:34:47
+lastUpdated: 2023-07-02 14:41:10
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
@@ -13,26 +13,17 @@ lastUpdated: 2023-04-10 13:34:47
 - [Dynamic changes via messages from Node-RED (or local set)](#dynamic-changes-via-messages-from-node-red-or-local-set)
 - [Available methods](#available-methods)
 - [Method: add](#method-add)
-  - [Msg schema](#msg-schema)
-  - [Example msgs for nested components](#example-msgs-for-nested-components)
 - [Method: load](#method-load)
-  - [Caveats and limitations](#caveats-and-limitations)
-  - [Msg schema](#msg-schema-1)
-  - [Example: Use load method fromt front-end in custom index.js file](#example-use-load-method-fromt-front-end-in-custom-indexjs-file)
 - [Method: replace](#method-replace)
-  - [Schema example](#schema-example)
 - [Method: remove](#method-remove)
 - [Method: removeAll](#method-removeall)
 - [Method: update](#method-update)
-  - [Msg schema](#msg-schema-2)
 - [Method: reload - Reloads the current page](#method-reload---reloads-the-current-page)
 - [Method: notify](#method-notify)
-  - [HTML Tags](#html-tags)
-    - [Schema](#schema)
 - [Method: alert](#method-alert)
+- [Manipulating `msg._ui`](#manipulating-msg_ui)
 - [References \& examples](#references--examples)
 - [Dynamic content limitations](#dynamic-content-limitations)
-  - [Updates and sub-components](#updates-and-sub-components)
 
 ## Restricting actions to specific pages, users, tabs
 
@@ -136,21 +127,23 @@ Each component can:
   
   The `uibuilder.eventSend` built-in function can also be specified. This is designed to automatically send `data-*` attributes and custom properties of the element back to Node-RED without any coding required. All of the `data-*` attributes are attached as a collection to the `msg.payload`, all of the custom properties are attached to `msg.props`.
 
-* _Make use of [DOMPurify](https://github.com/cure53/DOMPurify)_. To sanitise `slot` HTML entries.
+* _Make use of [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security)_. To sanitise `slot` HTML entries.
   
   Feeding HTML into a web page can be a security issue. However, these features absolutely need to do just that. Because you are sending data from Node-RED for the most part, there is a good chance that you have control over the data being sent and therefore the risk should be low. However, if you need/want to reduce the risk further, you can simply load the [DOMPurify](https://github.com/cure53/DOMPurify) library before you load this uibuilder front-end library. If available to the library, it will be automatically used, you don't need to do anything.
 
-  Simply add this to your HTML before you load your uibuilder/index.js file `<script defer src="https://cdn.jsdelivr.net/npm/dompurify@2.3.6/dist/purify.min.js"></script>`. DOMPurify cannot be loaded as an ECMA module. Make sure, therefore that it loads before you load the uibuilder library.
+  See the [front-end client introduction page](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) for details on how to use the DOMPurify library.
 
-* _Make use of the [Markdown-IT](https://markdown-it.github.io/) library_. To convert Markdown to HTML dynamically.
+* _Make use of the [Markdown-IT](client-docs/readme#_2-markdown-it-converts-markdown-markup-into-html) library_. To convert Markdown to HTML dynamically.
   
-  By loading the `markdown-it` library into your index.html head `<script defer src="https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js"></script>`, uibuilder client will let you specify a `slotMarkdown` in addition to the `slot`. 
+  By loading the `markdown-it` library, the uibuilder client will let you specify a `slotMarkdown` in addition to the `slot`. 
 
   `slotMarkdown` will be rendered into HTML as the element is rendered dynamically. The rendered HTML is inserted after any `slot` HTML.
 
+  See the [front-end client introduction page](client-docs/readme#_2-markdown-it-converts-markdown-markup-into-html) for details on how to use the Markdown-IT library.
+
   Notes
   
-  * Little work has been done on this feature as yet so while it works, it does not have all of the highlighting and extra features you might expect from something like Docsify.
+  * Does not have all of the highlighting and extra features you might expect from something like Docsify. However, you can add Markdown-IT extensions and configuration as desired. Just make sure that extensions are loaded before the uibuilder client.
   * If available, `DOMPurify` will be used to sanitise the resulting HTML.
   * You can also make use of [HighlightJS](https://highlightjs.org/) to add code highlighting inside the usual back-tick blocks. Add a reference to the library AND an appropriate CSS file in your index.js file.
 
@@ -587,6 +580,74 @@ Old-style `msg._uib.componentRef = 'globalAlert'` also works. But this method is
 Uses the same schema and styles as the `notify` method. Except that autohide is set to false, modal is set to true and the content is prefixed by an alert symbol.
 
 ---
+
+## Manipulating `msg._ui`
+
+`msg._ui` holds the low-code configuration that defines/changes front-end web pages. It is a standardised schema that is described above. Even when using the `uib-element` or `uib-update` zero-code nodes, you can still further change and enhance the code since no framework will ever fully be able to meet all needs.
+
+It should be noted that `msg._ui` mirrors the hierarchy of the HTML you are creating/changing so, while the structure does tend to be complex and deep, a little patience will enable it to be understood.
+
+In order to help when processing `msg._ui` in Node-RED, a utility function is provided that can be used in Function nodes. That utility is `RED.util.uib.deepObjFind`. It is defined as:
+
+```javascript
+/** Recursive object deep find
+ * @param {*} obj The object to be searched
+ * @param {Function} matcher Function that, if returns true, will result in cb(obj) being called
+ * @param {Function} cb Callback function that takes a single arg `obj`
+ */
+deepObjFind: (obj, matcher, cb) => {
+    if (matcher(obj)) {
+        cb(obj)
+    }
+    for (const key in obj) {
+        if (typeof obj[key] === 'object') {
+            RED.util.uib.deepObjFind(obj[key], matcher, cb)
+        }
+    }
+}
+```
+
+Here is an example of it being used in a function node:
+
+```javascript
+/**
+ * Update the STYLE of the uib low-code table definition
+ * if the NoRead column is >= 20
+ * 
+ * Using CSS variables from uib-brand.css.
+ * 
+ * In the example, we use a style attribute
+ * but in live, best to define and use a class.
+ */
+
+// Search for the first `tbody` definition
+const matcher = (obj) => obj.type === 'tbody'
+
+// If found, process each row of the table body
+const cb = (obj) => {
+  // node.warn(obj.components)
+  const tblRows = obj.components
+
+  // Process every table row
+  tblRows.forEach(row => {
+    // ref to the row's NoRead column (10th column)
+    const noRead = row.components[9]
+
+    // Get the "slot" which is the data displayed in the cell
+    if (noRead.slot >= 20) {
+      // If the data >= 20, add some extra style just to the cell
+      noRead.attributes.style = 'background-color: var(--failure); font-weight: bold;'
+
+      // And/OR add formatting to the whole row
+      row.attributes.style = 'background-color: var(--warning);'
+    }
+  })
+
+  node.send(msg)
+}
+
+RED.util.uib.deepObjFind(msg._ui, matcher, cb)
+```
 
 ## References & examples
 

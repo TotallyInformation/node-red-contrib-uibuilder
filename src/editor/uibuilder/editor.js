@@ -2078,6 +2078,8 @@
             sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)
             deployedVersion: { validate: validateVersion },
             showMsgUib: { value: false },    // Show msg._uib in standard msgs (client id, ip, page name)
+            title: { value: '' },    // Optional short description for this instance
+            descr: { value: '' },    // Optional long description for this instance
         },
         credentials: {
             jwtSecret: { type: 'password' },  // text or password
@@ -2134,9 +2136,7 @@
             }
 
             // If something has changed or if something must change, update the deployed version
-            if ( this.changed || this.mustChange ) {
-                this.deployedVersion = RED.settings.uibuilderCurrentVersion }
-
+            if ( this.changed || this.mustChange ) this.deployedVersion = RED.settings.uibuilderCurrentVersion
         }, // ---- End of oneditsave ---- //
 
         /** Runs before cancel */
@@ -2161,7 +2161,6 @@
             try {
                 $('#node-input-packageList').editableList('height', getLibrariesListHeight())
             } catch (e) {}
-
         }, // ---- End of oneditcancel ---- //
 
         /** Show notification warning before allowing delete */
@@ -2213,7 +2212,5 @@
                 })
             }
         }, // ---- End of oneditdelete ---- //
-
     }) // ---- End of registerType() ---- //
-
 }())

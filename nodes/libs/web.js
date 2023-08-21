@@ -294,6 +294,9 @@ class UibWeb {
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
 
+        // Add auto-generated index page to uibRouter showing all uibuilder user app endpoints at `../uibuilder/apps`
+        this._serveUserUibIndex()
+
         // Add masterStatic to ../uibuilder - serves up front-end/... uib-styles.css, uibuilderfe...
         if ( this.masterStatic !== undefined ) {
             this.uibRouter.use( express.static( this.masterStatic, uib.staticOpts ) )
@@ -316,6 +319,66 @@ class UibWeb {
         this.app.use( tilib.urlJoin(uib.moduleName), this.uibRouter )
 
     } // --- End of webSetup() --- //
+
+    // TODO Add instance title & description to uibuilder node.
+    /** Return a dynamic index page of all uibuilder user-accessible endpoints
+     * @param {express.Request} req Express request object
+     * @param {express.Response} res Express response object
+     * @param {Function} next Function to pass to next handler
+     */
+    _serveUserUibIndex() {
+        this.uibRouter.get('/apps', (req, res, next) => {
+            // Build the web page
+            let page = `
+                <!doctype html><html lang="en"><head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>App Index</title>
+                    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+                    <link type="text/css" rel="stylesheet" href="../uibuilder/uib-brand.min.css">
+                    <style>
+                        li > div {
+                            border-left:5px solid var(--surface5);
+                            padding-left: 5px;
+                        }
+                    </style>
+                </head><body class="uib"><div class="container">
+                    <h1>List of available apps</h1>
+                    <div><ul>
+            `
+
+            if ( Object.keys(this.uib.instances).length === 0 ) {
+                page += '<p>Instance list not yet ready, please try again</p>'
+            } else {
+                for (let [url, data] of Object.entries(this.uib.apps)) {
+                    const title = data.title.length === 0 ? '' : `: ${data.title}`
+                    const descr = data.descr.length === 0 ? '' : `<div>${data.descr}</div>`
+                    page += `
+                        <li>
+                            <a href="../${url}">${url}${title}</a>${descr}
+                        </li>
+                    `
+                }
+            }
+
+            page += `
+                    </ul></div>
+                </div></body></html>
+            `
+
+            res.statusMessage = 'Instances listed'
+            res.status(200).send( page )
+        })
+
+        // Record this endpoint for use on details page
+        this.routers.user.push( {
+            name: 'Endpoints',
+            path: `${this.uib.httpRoot}/uibuilder/endpoints`,
+            desc: 'List of all uibuilder endpoints',
+            type: 'Get',
+            // folder: uib.commonFolder
+        } )
+    } // --- End of serveUserUibIndex --- //
 
     /** Set folder to use for the central, static, front-end resources
      *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
@@ -527,6 +590,9 @@ class UibWeb {
         // (1c) Add user-provided API middleware
         if (uib.instanceApiAllowed === true ) this.addInstanceApiRouter(node)
         else log.trace(`[uibuilder:webjs:instanceSetup] Instance API's not permitted. '${node.url}'`)
+
+        // ! IN-PROGRESS (1d) Add user-provided router middleware
+        this.addInstanceCustomRoutes(node)
 
         if (uib.rootFolder === null) throw new Error('uib.rootFolder has no value')
         const rootFolder = uib.rootFolder
@@ -782,6 +848,7 @@ class UibWeb {
                 return false
             }
 
+            // TODO Add to this.routers.instances[node.url]
             // if instanceApi is a function, simply .use it on /api
             if ( instanceApi && typeof instanceApi === 'function' ) {
                 log.trace(`[uibuilder:webjs:addInstanceApiRouter] ${node.url} function api added`)
@@ -808,6 +875,7 @@ class UibWeb {
                 instanceApi.apiSetup(node, uib)
             }
 
+            // ! TODO: FIX THIS, IT DOES NOT WORK!
             // Each property in the imported object MUST match an ExpressJS method or `use` & must be a function
             keys.forEach( fnName => {
                 if ( fnName === 'path' || fnName === 'apiSetup' ) return // ignore this
@@ -1059,6 +1127,47 @@ class UibWeb {
 
         log.trace(`[uibuilder:web:addLogRoute:${node.url}] Client Beacon Log route added`)
         this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client beacon log back to Node-RED', type: 'POST', folder: 'N/A' } )
+    }
+
+    /** If allowed and if any exist, add instance custom routes from <uibRoot>/<node.url>/routes/*.js */
+    addInstanceCustomRoutes(node) {
+        // Reference static vars
+        const uib = this.uib
+        // const RED = this.RED
+        const log = this.log
+
+        // Is this capability turned on in settings.js?
+
+        // Add routers from each <uibRoot>/<node.url>/routes/*.js file (Empty list if fldr doesn't exist or no files)
+        const routeFiles = fg.sync(`${uib.rootFolder}/${node.url}/routes/*.js`)
+        routeFiles.forEach( routeFilePath => {
+            let instanceRouteFile = {}
+            let routeKeys = []
+            try {
+                instanceRouteFile = require(routeFilePath)
+                routeKeys = Object.keys(instanceRouteFile)
+            } catch (e) {
+                log.error(`[uibuilder:webjs:addInstanceCustomRoutes:${node.url}] Could not require instance route file. '${routeFilePath}'. ${e.message}`)
+                return false
+            }
+
+            routeKeys.forEach( routeFnName => {
+                const route = instanceRouteFile[routeFnName]
+                // Route must contain all 3 properties, callback must EITHER be a function or an array of functions
+                if ( !(route.method && route.path && route.callback) ) {
+                    log.warn(`[uibuilder:webjs:addInstanceApiRouter:${node.url}] Cannot add route from '${routeFilePath}'. '${routeFnName}' has invalid data. Ensure it has 'method', 'path' and 'callback' properties.`)
+                } else {
+                    // if (!route.path.startsWith('/')) route.path = `/${route.path}` // Must start with a /
+
+                    log.trace(`[uibuilder:webjs:addInstanceApiRouter:${node.url}] Custom route added. '${routeFilePath}', '${routeFnName}'`)
+
+                    this.instanceRouters[node.url][route.method]( route.path, route.callback )
+
+                    // Track routes
+                    this.routers.instances[node.url].push( { name: `Custom route: ${routeFnName}`, path: `${this.uib.httpRoot}/${node.url}${route.path}`, desc: `Custom route from '${routeFilePath}'`, type: route.method.toUpperCase(), folder: routeFilePath } )
+                }
+            })
+        })
     }
 
     //#endregion ====== Per-node instance processing ====== //

@@ -13,7 +13,8 @@
     <dd>
         The string, array or object that defines the output.<br>
         Each element type has its own input data definition.<br>
-        See the info box for each type.
+        See the info box for each type.<br>
+        Other inputs can be used instead, see settings.
     </dd>
 
     <dt class="optional">mode <span class="property-type">string</span></dt>
@@ -104,6 +105,11 @@
         </p>
     </div>
 
+    <dt>Data <span class="property-type">any</span></dt>
+    <dd>
+        Required. Either a msg or context property containing the core data or .
+    </dd>
+
     <dt>Position <span class="property-type">string</span></dt>
     <dd>
         Required. Position of the resulting UI element relative to the selected <i>Parent</i> element.
@@ -124,6 +130,15 @@
     </dd>
     <dd>
         Heading level 2 is the default. Levels 2-6 are available.
+    </dd>
+
+    <dt class="optional">Passthrough <span class="property-type">boolean</span></dt>
+    <dd>
+        If checked, pass <code>msg.payload</code> to output. By default, <code>msg.payload</code> is removed.
+    </dd>
+    <dd>
+        Checking this option will also tell the uibuilder client to enable <code>uibuilder.onChange('msg', fn)</code> processing
+        which is normally disabled when a msg with a <code>_ui</code> property is received.
     </dd>
 
     <dt class="optional">Topic <span class="property-type">string</span></dt>

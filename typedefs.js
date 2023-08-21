@@ -218,6 +218,8 @@
  * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
  * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ * @property {string} title Short descriptive title for the instance
+ * @property {string} descr Longer description for the instance
  */
 
 /** uibNode
@@ -255,6 +257,8 @@
  * @property {Function=} on Event handler
  * @property {Function=} removeListener Event handling
  * @property {Function=} context Function that accesses the nodes context vars or the flow/global vars
+ * @property {Function=} emit Function that emits an event
+ * @property {Function=} receive Function that ???
  * @property {object=} credentials Optional secured credentials
  * @property {object=} z Internal
  * @property {object=} wires Internal. The wires attached to this node instance (uid's)
@@ -268,6 +272,9 @@
  * @property {string} statusDisplay.text Text to display
  * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
  * @property {string} statusDisplay.shape dot or ring
+ *
+ * @property {string} title Short descriptive title for the instance
+ * @property {string} descr Longer description for the instance
  */
 
 /** uibConfig - THe module-level `uib` configuration variable
@@ -285,6 +292,8 @@
  *  url then add processing to ensure that the URL's are unique.
  *
  *  Schema: `{<node.id>: <url>}`
+ * @property {object} apps Instance details
+ *  Schema: `{url: {node.id, node.title, node.desc}}
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  *
  *  Default `../template`
@@ -397,12 +406,46 @@
  *   headingSource: string;
  *   headingSourceType: string;
  *   headingLevel: string;
+ *   data: any;
+ *   dataSource: string|number;
+ *   dataSourceType: string;
  *   position: string|number;
  *   positionSource: string|number;
  *   positionSourceType: string;
  *   confData: object;
+ *   passthrough: boolean;
  *   _ui: any;
  * }} uibElNode
+ */
+
+/** uibTagNode (Tag Node)
+ * @typedef {{
+ *   name: string;
+ *   topic: string;
+ *   tag: string;
+ *   tagSource: string;
+ *   tagSourceType: string;
+ *   elementId: string;
+ *   elementIdSource: string;
+ *   elementIdSourceType: string;
+ *   parent: string;
+ *   parentSource: string;
+ *   parentSourceType: string;
+ *   position: string|number;
+ *   positionSource: string|number;
+ *   positionSourceType: string;
+ * 
+ *   slotContent: string;
+ *   slotSourceProp: string;
+ *   slotContentSource: string;
+ *   slotContentSourceType: string;
+ *   slotSourcePropType: string;
+ *   attribs: object;
+ *   attribsSource: string;
+ *   attribsSourceType: string;
+ *   slotPropMarkdown: boolean;
+ *   _ui: any;
+ * }} uibTagNode
  */
 
 /** uibUpdNode (Update Node)

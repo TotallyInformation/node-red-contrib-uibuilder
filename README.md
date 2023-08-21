@@ -1,3 +1,4 @@
+[![Discussion](https://img.shields.io/static/v1.svg?label=Discussion&message=Node-RED%20Forum&color=green)](https://discourse.nodered.org/tag/node-red-contrib-uibuilder)
 [![NPM Version](https://img.shields.io/npm/v/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![NPM Total Downloads](https://img.shields.io/npm/dt/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![NPM Downloads per month](https://img.shields.io/npm/dm/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)

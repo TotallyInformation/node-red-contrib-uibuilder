@@ -50,16 +50,18 @@ const mod = {
  * @param {runtimeNode & uibElNode} node reference to node instance
  */
 function emitMsg(msg, node) {
-    if ( node._ui === undefined ) return
+    if ( node._ui === undefined && node.passthrough === true) return
 
-    // Use event to send msg to uibuilder front-end.
+    // Merge input msg and ._ui to create new output msg
     const msg2 = {
         ...msg,
         ...{
             _ui: node._ui,
         }
     }
-    delete msg2.payload
+
+    // Remove payload unless requested
+    if (node.passthrough !== true) delete msg2.payload
 
     // Add default topic if defined and if not overridden by input msg
     // NB: Needs to be unique if using uib-cache
@@ -85,6 +87,9 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         return
     }
 
+    // If msg has _ui property - is it from the client? If so, remove it.
+    if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
+
     // Save the last input msg for replay to new client connections, creates/update this._ui
     await buildUi(msg, this)
 
@@ -93,7 +98,6 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // We are done
     done()
-
 } // ----- end of inputMsgHandler ----- //
 
 /** 2) This is run when an actual instance of our node is committed to a flow
@@ -116,6 +120,7 @@ function nodeInstance(config) {
     this.topic = config.topic ?? ''
 
     this.elementtype = config.elementtype
+    this.tag = config.tag
 
     this.parentSource = config.parent ?? 'body' // Swap to source naming
     this.parentSourceType = config.parentSourceType ?? 'str'
@@ -124,6 +129,10 @@ function nodeInstance(config) {
     this.elementIdSource = config.elementid ?? config.elementId ?? '' // Swap to source naming
     this.elementIdSourceType = config.elementIdSourceType ?? 'str'
     this.elementId = undefined
+
+    this.dataSource = config.data ?? 'payload'
+    this.dataSourceType = config.dataSourceType ?? 'msg'
+    this.data = undefined
 
     this.positionSource = config.position ?? 'last'
     this.positionSourceType = config.positionSourceType ?? 'str'
@@ -137,11 +146,12 @@ function nodeInstance(config) {
     // Configuration data specific to the chosen type
     this.confData = config.confData ?? {}
 
+    this.passthrough = config.passthrough ?? false
+
     this._ui = undefined // set in buildUI()
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
-
 } // ---- End of nodeInstance ---- //
 
 //#endregion ----- Module-level support functions ----- //
@@ -162,7 +172,7 @@ function buildArticle(node, msg, parent) {
     // Add the ol/ul tag
     parent.components.push({
         'type': node.elementtype,
-        'slot': msg.payload,
+        'slot': node.data,
     })
 
     return err
@@ -176,12 +186,12 @@ function buildArticle(node, msg, parent) {
  */
 function buildHTML(node, msg, parent) {
     // Must be a string so convert arrays/objects
-    let data = msg.payload
-    if (!msg.payload) data = ''
-    else if (Array.isArray(msg.payload)) data = msg.payload.join('/n')
-    else if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+    let data = node.data
+    if (!node.data) data = ''
+    else if (Array.isArray(node.data)) data = node.data.join('/n')
+    else if ( node.data !== null && node.data.constructor.name === 'Object' ) {
         try {
-            data = JSON.stringify(msg.payload)
+            data = JSON.stringify(node.data)
         } catch (e) {
             data = 'ERROR: Could not parse input data'
         }
@@ -204,55 +214,46 @@ function buildHTML(node, msg, parent) {
 /** Build the UI config instructions for the Title and leading H1
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
  * @returns {string} Error description or empty error string
  */
-function buildTitle(node, msg) {
+function buildTitle(node, msg, parent) {
     // Must be a string or array/object of strings
     // If array/object, then add LAST entry entry as <div role="doc-subtitle">
 
-    if (!Array.isArray(msg.payload)) msg.payload = [msg.payload]
+    if (!Array.isArray(node.data)) node.data = [node.data]
 
     const err = ''
 
-    node._ui[0] = ({
-        'method': 'update',
+    parent.components.push({
+        'type': 'title',
         // title tags can appear in SVGs as well so limit this
         'selector': 'head title',
-        'slot': msg.payload[0]
+        'slot': node.data[0]
     })
 
-    node._ui.push({
-        'method': 'replace',
-        'components': [
-            {
-                'type': 'h1',
-                'selector': 'h1',
+    parent.components.push({
+        'type': 'h1',
+        'selector': 'h1',
+        'parent': node.parent ? node.parent : 'body',
+        'position': 'first',
+        'attributes': {
+            'class': 'with-subtitle',
+        },
+        'slot': node.data.shift(),
+    })
+
+    if (node.data.length > 0) {
+        node.data.forEach( (element, i) => {
+            parent.components.push({
+                'type': 'div',
+                'selector': 'div[role="doc-subtitle"] ',
                 'parent': node.parent ? node.parent : 'body',
-                'position': 'first',
+                'position': 'last',
                 'attributes': {
-                    'class': 'with-subtitle',
+                    'role': 'doc-subtitle',
                 },
-                'slot': msg.payload.shift()
-            },
-        ],
-    })
-
-    if (msg.payload.length > 0) {
-        msg.payload.forEach( (element, i) => {
-            node._ui.push({
-                'method': 'replace',
-                'components': [
-                    {
-                        'type': 'div',
-                        'selector': 'div[role="doc-subtitle"] ',
-                        'parent': node.parent ? node.parent : 'body',
-                        'position': 'last',
-                        'attributes': {
-                            'role': 'doc-subtitle',
-                        },
-                        'slot': element
-                    },
-                ],
+                'slot': element,
             })
         } )
     }
@@ -268,8 +269,9 @@ function buildTitle(node, msg) {
  * @returns {string} Error description or empty error string
  */
 function buildUlOlList(node, msg, parent) {
-    // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
+    console.log(node.data)
+    // Make sure node.data is an object or an array - if not, force to array
+    if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
     const err = ''
 
@@ -281,7 +283,7 @@ function buildUlOlList(node, msg, parent) {
 
     // Convenient references
     const listRows = parent.components[parent.components.length - 1].components
-    const tbl = msg.payload
+    const tbl = node.data
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
@@ -300,7 +302,7 @@ function buildUlOlList(node, msg, parent) {
             'slot': tbl[row]
         } )
         // Add a row name attrib from the object key if the input is an object
-        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+        if ( node.data !== null && node.data.constructor.name === 'Object' ) {
             listRows[i].attributes['data-row-name'] = row
         }
     } )
@@ -316,8 +318,8 @@ function buildUlOlList(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildDlList(node, msg, parent) {
-    // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
+    // Make sure node.data is an object or an array - if not, force to array
+    if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
     const err = ''
 
@@ -329,7 +331,7 @@ function buildDlList(node, msg, parent) {
 
     // Convenient references
     const listRows = parent.components[parent.components.length - 1].components
-    const tbl = msg.payload
+    const tbl = node.data
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
@@ -356,7 +358,7 @@ function buildDlList(node, msg, parent) {
             'components': [],
         } )
         // Add a row name attrib from the object key if the input is an object
-        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+        if ( node.data !== null && node.data.constructor.name === 'Object' ) {
             listRows[listIndex - 1].attributes['data-row-name'] = row
         }
 
@@ -396,9 +398,8 @@ function buildDlList(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildTable(node, msg, parent) {
-    node.warn(msg.payload.constructor.name)
-    // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
+    // Make sure node.data is an object or an array - if not, force to array
+    if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
     let cols = []
     const err = ''
@@ -421,7 +422,7 @@ function buildTable(node, msg, parent) {
     // Convenient references
     const thead = parent.components[parent.components.length - 1].components[0]
     const tbody = parent.components[parent.components.length - 1].components[1]
-    const tbl = msg.payload
+    const tbl = node.data
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
@@ -484,7 +485,7 @@ function buildTable(node, msg, parent) {
         //     // 'class': (rLen % 2  === 0) ? 'even' : 'odd'
         // }
         // Add a row name attrib from the object key if the input is an object
-        if ( msg.payload !== null && msg.payload.constructor.name === 'Object' ) {
+        if ( node.data !== null && node.data.constructor.name === 'Object' ) {
             tbody.components[rLen - 1].attributes['data-row-name'] = row
         }
         // TODO If tbl is an object - get the row names and apply to data-rowname attrib
@@ -520,8 +521,8 @@ function buildTable(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildSForm(node, msg, parent) {
-    // Make sure msg.payload is an object or an array - if not, force to array
-    if (!(Array.isArray(msg.payload) || msg.payload.constructor.name === 'Object')) msg.payload = [msg.payload]
+    // Make sure node.data is an object or an array - if not, force to array
+    if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
     const err = ''
 
@@ -533,23 +534,39 @@ function buildSForm(node, msg, parent) {
 
     // Convenient references
     const frmBody = parent.components[parent.components.length - 1]
-    const frm = msg.payload
+    const frm = node.data
     let btnCount = 0
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(frm).forEach( (rowRef, i) => {
         // Data for this row/element of the form: id, type
         const frmRow = frm[rowRef]
+
         // TODO Check that required properties are present
+
+        // Handle non-input inputs
+        let tag = 'input'
+        if (frmRow.type === 'textarea') tag = 'textarea'
+        else if (frmRow.type === 'select') tag = 'select'
+
         // Add event handlers
         if (frmRow.type === 'button') {
             // Automatically submit form data on click
             frmRow.onclick = 'uibuilder.eventSend(event)'
+        } else if (frmRow.type === 'checkbox') {
+            // ! Stupid HTML checkbox input does not set the value attribute!
+
+            frmRow.onchange = 'this.dataset.oldValue=this.value;this.value=this.checked.toString();this.dataset.newValue=this.value'
+
+            if ('value' in frmRow) frmRow.checked = frmRow.value.toString()
+            else if ('checked' in frmRow) frmRow.value = frmRow.checked.toString()
+            else frmRow.value = 'false'
         } else {
             // Tracks old/new values on data atrributes for input fields
             frmRow.onchange = 'this.dataset.newValue = this.value'
             frmRow.onfocus = 'this.dataset.oldValue = this.value'
         }
+
         if (!frmRow.name) frmRow.name = frmRow.id
 
         // TODO Maybe wrap all buttons in a single row at the end of the form?
@@ -590,24 +607,32 @@ function buildSForm(node, msg, parent) {
                 },
                 'slot': frmRow.label ? frmRow.label : `${frmRow.type}:`,
             })
-            row.components.push({
-                'type': 'input',
+            const n = row.components.push({
+                'type': tag,
                 'id': frmRow.id,
-                'attributes': frmRow
-                // 'attributes': {
-                //     'name': frmRow.id,
-                //     'type': frmRow.type,
-                //     'value': frmRow.value,
-                //     'required': frmRow.required ? 'required' : undefined,
-                //     // Other attribs: minlength, maxlength, size, checked, disabled, max, min, multiple, pattern, step
-                // }
+                'attributes': frmRow,
             })
+            // Dropdown select - add selection options
+            if ( frmRow.type === 'select' && 'options' in frmRow ) {
+                row.components[n - 1].components = []
+                frmRow.options.forEach( opt => {
+                    row.components[n - 1].components.push({
+                        type: 'option',
+                        attributes: {
+                            value: opt.value,
+                            selected: opt.value === frmRow.value ? 'selected' : undefined,
+                        },
+                        slot: opt.label,
+                    })
+                })
+            }
         }
     } )
 
     // If user didn't specify any buttons, add them now.
     if (btnCount < 1) {
-        frmBody.components[frmBody.components.length - 1].components.push({
+        // frmBody.components[frmBody.components.length - 1].components.push({
+        frmBody.components.push({
             'type': 'div',
             'attributes': {},
             'components': [
@@ -663,7 +688,7 @@ function buildTableRow(node, msg, parent) {
         'components': [],
     })
     // const rowNum = -10
-    Object.keys(msg.payload).forEach(  (colName, j) => {
+    Object.keys(node.data).forEach(  (colName, j) => {
         const colNum = j + 1
 
         parent.components[rLen - 1].components.push({
@@ -672,7 +697,7 @@ function buildTableRow(node, msg, parent) {
                 'data-col-index': colNum,
                 'data-col-name': colName,
             },
-            'slot': msg.payload[colName],
+            'slot': node.data[colName],
         })
     } )
 
@@ -688,14 +713,14 @@ function buildTableRow(node, msg, parent) {
  */
 function buildUlOlRow(node, msg, parent) {
     // Payload must be a a string
-    if ( !Array.isArray(msg.payload) ) msg.payload = [msg.payload]
+    if ( !Array.isArray(node.data) ) node.data = [node.data]
 
     const err = ''
 
     parent.method = 'add'
 
     // const rowNum = -10
-    Object.keys(msg.payload).forEach(  (rowName, j) => {
+    Object.keys(node.data).forEach(  (rowName, j) => {
         parent.components.push({
             'type': 'li',
             'parent': `${node.parent} > ul`,
@@ -703,12 +728,65 @@ function buildUlOlRow(node, msg, parent) {
             // 'attributes': {
             //     'data-row-name': rowName,
             // },
-            'slot': msg.payload[j],
+            'slot': node.data[j],
         })
     } )
 
     return err
 } // ---- End of buildUlOlRow ---- //
+
+/** Build the UI config instructions for any HTML/custom tag element
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ * @param {*} msg The msg data in the custom event
+ * @param {object} parent The parent JSON node that we will add components to
+ * @returns {string} Error description or empty error string
+ */
+function buildTag(node, msg, parent) {
+    // Must be a string or array/object of strings
+    // If array/object, then add LAST entry entry as <div role="doc-subtitle">
+
+    if (!Array.isArray(node.data)) node.data = [node.data]
+
+    let err = ''
+
+    if (node.tag === '') {
+        err = 'tag name must be provided'
+        return err
+    }
+
+    parent.components.push({
+        'type': node.tag,
+        'slot': node.data[0]
+    })
+
+    // parent.components.push({
+    //     'type': 'h1',
+    //     'selector': 'h1',
+    //     'parent': node.parent ? node.parent : 'body',
+    //     'position': 'first',
+    //     'attributes': {
+    //         'class': 'with-subtitle',
+    //     },
+    //     'slot': node.data.shift(),
+    // })
+
+    // if (node.data.length > 0) {
+    //     node.data.forEach( (element, i) => {
+    //         parent.components.push({
+    //             'type': 'div',
+    //             'selector': 'div[role="doc-subtitle"] ',
+    //             'parent': node.parent ? node.parent : 'body',
+    //             'position': 'last',
+    //             'attributes': {
+    //                 'role': 'doc-subtitle',
+    //             },
+    //             'slot': element,
+    //         })
+    //     } )
+    // }
+
+    return err
+} // ---- End of buildTag ---- //
 
 /** Adds a wrapping DIV tag
  * @param {object} parent The parent JSON node that we will add components to
@@ -785,33 +863,39 @@ async function buildUi(msg, node) {
         getSource('parent', node, msg),
         getSource('elementId', node, msg),
         getSource('heading', node, msg),
+        getSource('data', node, msg), // contains core data
         getSource('position', node, msg),
     ])
 
+    // console.log('NODE DATA', node.data)
     // console.log('NODE', node)
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes
-    if ( msg._ui ) node._ui = msg._ui
-    else node._ui = []
+    if ( msg._ui ) {
+        if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
+        node._ui = msg._ui
+    } else node._ui = []
 
     // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
     if ( !msg.mode ) msg.mode = 'update'
 
     // If mode is remove, then simply do that and return
-    if ( msg.mode === 'remove' ) {
+    if ( msg.mode === 'delete' || msg.mode === 'remove' ) {
         if (!node.elementId) {
             node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
             return
         }
 
         node._ui.push({
-            method: 'remove',
-            components: [`#${node.elementId}`] // remove uses css selector, not raw id
+            'method': 'removeAll',
+            'components': [
+                `#${node.elementId}`,
+            ]
         })
         return
     }
 
-    // If no HMTL ID is specified, then always ADD
+    // If no HMTL ID is specified & not deleting & type isn't "title", then always ADD
     if (node.elementtype !== 'title' && !node.elementId) {
         msg.mode = 'add'
     }
@@ -880,7 +964,7 @@ async function buildUi(msg, node) {
 
         case 'title': {
             // In this case, we do not want a wrapping div
-            err = buildTitle(node, msg)
+            err = buildTitle(node, msg, parent)
             break
         }
 
@@ -894,6 +978,13 @@ async function buildUi(msg, node) {
             break
         }
 
+        case 'tag': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildTag(node, msg, parent)
+            break
+        }
+
         // Unknown type. Issue warning and exit
         default: {
             err = `Type "${node.elementtype}" is unknown. Cannot process.`
@@ -904,7 +995,6 @@ async function buildUi(msg, node) {
     if (err.length > 0) {
         node.error(err, node)
     }
-
 } // -- end of buildUI -- //
 
 //#endregion ----- ui functions ----- //

@@ -74,6 +74,7 @@ const uib = {
     nodeRoot: '',
     deployments: {},
     instances: {},
+    apps: {},
     masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
     masterStaticFeFolder: path.join( __dirname, '..', 'front-end' ),
     rootFolder: null,
@@ -183,6 +184,9 @@ function inputMsgHandler (msg, send, done) {
     // If the input msg is a uibuilder control msg, then drop it to prevent loops
     if ( Object.prototype.hasOwnProperty.call(msg, 'uibuilderCtrl') ) return null
 
+    // If msg has _ui property - is it from the client? If so, remove it.
+    if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
+
     // setNodeStatus({fill: 'yellow', shape: 'dot', text: 'Message Received #' + this.rcvMsgCount}, node)
 
     // Remove script/style content if admin settings don't allow
@@ -237,7 +241,9 @@ function nodeInstance(config) {
     this.reload          = config.reload === undefined ? false : config.reload
     this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:setupInstanceStatic
     this.deployedVersion = config.deployedVersion
-    this.showMsgUib    = config.showMsgUib // Show additional client id in standard msgs (see socket.js)
+    this.showMsgUib      = config.showMsgUib // Show additional client id in standard msgs (see socket.js)
+    this.title           = config.title ?? ''
+    this.descr           = config.descr ?? ''
     //#endregion ====== Local node config copy ====== //
 
     log.trace(`[uibuilder:nodeInstance:${this.url}] ================ instance registered ================`)
@@ -264,6 +270,12 @@ function nodeInstance(config) {
     // Keep a log of the active uib.instances @since 2019-02-02
     uib.instances[this.id] = this.url
     log.trace(`[uibuilder:nodeInstance:${this.url}] Node uib.Instances Registered: ${JSON.stringify(uib.instances)}`)
+    uib.apps[this.url] = {
+        node: this.id,
+        url: this.url,
+        title: this.title,
+        descr: this.descr,
+    }
 
     // Keep track of the number of times each instance is deployed.
     // The initial deployment = 1
@@ -300,6 +312,7 @@ function nodeInstance(config) {
                 log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. Manually change the URL back to the original. newUrl=${this.url}, oldUrl=${this.oldUrl}, Fldr=${this.customFolder}. Error=${e.message}`, e)
             }
         }
+        // TODO Move this to a function in web.js
         // Remove the old router and remove from the routes list
         delete web.routers.instances[this.oldUrl]
         delete web.instanceRouters[this.oldUrl]
@@ -438,6 +451,31 @@ function nodeInstance(config) {
 function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     if ( uib.RED === null ) return
     const RED = uib.RED
+
+    // Add deep find utility function to RED.util so it can be used inside function nodes
+    RED.util.uib = {
+        /** Recursive object deep find
+         * @param {*} obj The object to be searched
+         * @param {Function} matcher Function that, if returns true, will result in cb(obj) being called
+         * @param {Function} cb Callback function that takes a single arg `obj`
+         */
+        deepObjFind: (obj, matcher, cb) => {
+            if (matcher(obj)) {
+                cb(obj)
+            }
+            for (const key in obj) {
+                if (typeof obj[key] === 'object') {
+                    RED.util.uib.deepObjFind(obj[key], matcher, cb)
+                }
+            }
+        },
+        /** Return a list of all instances
+         * @returns {object} List of all registered uibuilder instances
+         */
+        listAllApps: () => {
+            return uib.apps
+        }
+    }
 
     //#region ----- back-end debugging ----- //
     log = RED.log
@@ -601,7 +639,6 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     /** Pass core objects to the Socket.IO handler module */
     // @ts-ignore
     sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
-
 } // --- end of runtimeSetup --- //
 
 //#endregion ----- End of mod-level fns ----- //
@@ -643,7 +680,6 @@ function Uib(RED) {
     //     tilib.dumpMem('Module')
     //     web.dumpRoutes(true)
     // }, 2000)
-
 } // ==== End of Uib ==== //
 
 /** Export the function that defines the node */

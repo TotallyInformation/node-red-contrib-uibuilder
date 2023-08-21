@@ -358,6 +358,8 @@ class UibSockets {
             'url': node.url,
             /** What was the originating page name (for SPA's) */
             'pageName': pageName,
+            /** The browser's URL parameters */
+            'urlParams': socket.handshake.auth.urlParams,
             /** How many times has this client reconnected (e.g. after sleep) */
             'connections': socket.handshake.auth.connectedNum,
             /** What type of client nav happened previously */

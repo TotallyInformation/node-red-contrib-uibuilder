@@ -246,6 +246,66 @@ const Ui = class Ui {
 
     } // --- End of showDialog ---
 
+    /** Show a browser notification if the browser and the user allows it
+     * @param {object} config Notification config data
+     * @returns {Promise} Resolves on close or click event, returns the event.
+     */
+    _showNotification(config) {
+        if ( config.topic && !config.title ) config.title = config.topic
+        if ( !config.title ) config.title = 'uibuilder notification'
+        if ( config.payload && !config.body ) config.body = config.payload
+        if ( !config.body ) config.body = ' No message given.'
+        // Wrap in try/catch since Chrome Android may throw an error
+        try {
+            const notify = new Notification(config.title, config)
+            return new Promise( (resolve, reject) => {
+                // Doesn't ever seem to fire (at least in Chromium)
+                notify.addEventListener('close', ev => {
+                    ev.currentTarget.userAction = 'close'
+                    resolve(ev)
+                })
+                notify.addEventListener('click', ev => {
+                    ev.currentTarget.userAction = 'click'
+                    resolve(ev)
+                })
+                notify.addEventListener('error', ev => {
+                    ev.currentTarget.userAction = 'error'
+                    reject(ev)
+                })
+            })
+        } catch (e) {
+            return Promise.reject(new Error('Browser refused to create a Notification'))
+        }
+    }
+
+    /** Show a browser notification if possible. Returns a promise
+     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+     * or a Notifications API options object + config.title string.
+     * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+     * @param {object|string} config Notification config object or simple message string
+     * @returns {Promise} Resolves on close or click event, returns the event.
+     */
+    async notification(config) {
+        if (typeof config === 'string') {
+            config = { body: config }
+        }
+        // Are notifications available?
+        if (typeof Notification === 'undefined') return Promise.reject(new Error('Notifications not available in this browser'))
+        // Do we have permission? If not, ask for permission
+        let permit = Notification.permission
+        if (permit === 'denied') {
+            return Promise.reject(new Error('Notifications not permitted by user')) // eslint-disable-line no-useless-return
+        } else if (permit === 'granted') {
+            return this._showNotification(config)
+        } else { // if (permit === 'default') {
+            permit = await Notification.requestPermission()
+            if (permit === 'granted') {
+                return this._showNotification(config)
+            }
+            return Promise.reject(new Error('Notifications not permitted by user'))
+        }
+    }
+
     /** Load a dynamic UI from a JSON web reponse
      * @param {string} url URL that will return the ui JSON
      */
@@ -287,7 +347,6 @@ const Ui = class Ui {
             .catch(err => {
                 log('warn', 'Ui:loadui:catch', 'Error. ', err)()
             })
-
     } // --- end of loadui
 
     // Namespaces - See https://stackoverflow.com/a/52572048/1309986
@@ -364,6 +423,10 @@ const Ui = class Ui {
             this.replaceSlotMarkdown(el, comp)
         }
         //#endregion
+    }
+
+    uiEnhanceElement(el, comp) {
+        this._uiComposeComponent(el, comp)
     }
 
     /** Extend an HTML Element with appended elements using ui components
@@ -735,7 +798,7 @@ const Ui = class Ui {
 
         msg._ui.forEach((ui, i) => {
             if (!ui.method) {
-                log('warn', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring`)()
+                log('error', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring`)()
                 return
             }
 
@@ -933,20 +996,21 @@ const Ui = class Ui {
      * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
      * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
      * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
+     * @returns {Promise<any>} Status
      */
     async include(url, uiOptions) { // eslint-disable-line sonarjs/cognitive-complexity
         // TODO: src, id, parent must all be a strings
         if (!fetch) {
             log(0, 'Ui:include', 'Current environment does not include `fetch`, skipping.')()
-            return
+            return 'Current environment does not include `fetch`, skipping.'
         }
         if (!url) {
             log(0, 'Ui:include', 'url parameter must be provided, skipping.')()
-            return
+            return 'url parameter must be provided, skipping.'
         }
         if (!uiOptions || !uiOptions.id) {
             log(0, 'Ui:include', 'uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.')()
-            return
+            return 'uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.'
         }
 
         // Try to get the content via the URL
@@ -955,11 +1019,11 @@ const Ui = class Ui {
             response = await fetch(url)
         } catch (error) {
             log(0, 'Ui:include', `Fetch of file '${url}' failed. `, error.message)()
-            return
+            return error.message
         }
         if (!response.ok) {
             log(0, 'Ui:include', `Fetch of file '${url}' failed. Status='${response.statusText}'`)()
-            return
+            return response.statusText
         }
 
         // Work out what type of data we got
@@ -985,45 +1049,60 @@ const Ui = class Ui {
 
         // Create the HTML to include on the page based on type
         let slot = ''
+        let txtReturn = 'Include successful'
+        let data
         switch (type) {
             case 'html': {
-                slot = await response.text()
+                data = await response.text()
+                slot = data
                 break
             }
 
             case 'json': {
-                const json = await response.json()
+                data = await response.json()
                 slot = '<pre class="syntax-highlight">'
-                slot += this.syntaxHighlight(json)
+                slot += this.syntaxHighlight(data)
                 slot += '</pre>'
                 break
             }
 
             case 'form': {
-                const json = await response.formData()
+                data = await response.formData()
                 slot = '<pre class="syntax-highlight">'
-                slot += this.syntaxHighlight(json)
+                slot += this.syntaxHighlight(data)
                 slot += '</pre>'
                 break
             }
 
             case 'image': {
-                const myBlob = await response.blob()
-                slot = `<img src="${URL.createObjectURL(myBlob)}">`
+                data = await response.blob()
+                slot = `<img src="${URL.createObjectURL(data)}">`
+                if (window && window['DOMPurify']) {
+                    txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
+                    log('warn', 'Ui:include:image', txtReturn)()
+                }
                 break
             }
 
             case 'video': {
-                const myBlob = await response.blob()
-                slot = `<video controls autoplay><source src="${URL.createObjectURL(myBlob)}"></video>`
+                data = await response.blob()
+                slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`
+                if (window && window['DOMPurify']) {
+                    txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
+                    log('warn', 'Ui:include:video', txtReturn)()
+                }
                 break
             }
 
             case 'pdf':
             case 'text':
             default: {
-                const myBlob = await response.blob()
-                slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(myBlob)}">`
+                data = await response.blob()
+                slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`
+                if (window && window['DOMPurify']) {
+                    txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
+                    log('warn', `Ui:include:${type}`, txtReturn)()
+                }
                 break
             }
         }
@@ -1040,6 +1119,9 @@ const Ui = class Ui {
                 uiOptions
             ]
         })
+
+        log('trace', `Ui:include:${type}`, txtReturn)()
+        return txtReturn
 
     } // ---- End of include() ---- //
 

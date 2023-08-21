@@ -12,19 +12,19 @@
                 <input type="text" id="node-input-elementtype" style="width:70%;"></input>
             </div>
 
-            <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;Must be a non-blank string" class="form-row">
-                <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
-                <input type="text" id="node-input-parent" placeholder="CSS Selector">
-                <input type="hidden" id="node-input-parentSourceType">
-            </div>
+            <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
             
-            <div aria-label="The HMTL id to apply to the created element.&#10;If supplied, must be unique on the page.&#10;If not supplied, element will always be ADDED to page." class="form-row">
+            <div aria-label="If supplied, must be unique on the page & retrigger of the node will REPLACE the element.&#10;If not supplied, element will always be ADDED to page." class="form-row">
                 <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> HTML ID</label>
                 <input type="text" id="node-input-elementid" placeholder="Valid unique HTML element id string">
                 <input type="hidden" id="node-input-elementIdSourceType">
             </div>
             
-            <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
+            <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;Must be a non-blank string" class="form-row">
+                <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
+                <input type="text" id="node-input-parent" placeholder="CSS Selector">
+                <input type="hidden" id="node-input-parentSourceType">
+            </div>
             
             <div aria-label="Relative position inside the parent.&#10;'first', 'last' or a number.&#10;Ignored if no HTML ID provided." class="form-row">
                 <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
@@ -32,6 +32,12 @@
                 <input type="hidden" id="node-input-positionSourceType">
             </div>
                         
+            <div aria-label="The core data content to process." class="form-row">
+                <label for="node-input-data"><i class="fa fa-database"></i> Data</label>
+                <input type="text" id="node-input-data" placeholder="">
+                <input type="hidden" id="node-input-dataSourceType">
+            </div>
+
             <div aria-label="Optional heading. Leave blank for no heading." class="form-row">
                 <label for="node-input-heading"><i class="fa fa-header"></i> Heading</label>
                 <select id="node-input-headingLevel" style="width:3.7em;">
@@ -43,6 +49,11 @@
                 </select>
                 <input type="text" id="node-input-heading" placeholder="Optional heading">
                 <input type="hidden" id="node-input-headingSourceType">
+            </div>
+
+            <div aria-label="Will pass msg.payload through to the output.&#10;When not checked (default), payload is not passed.&#10;If checked, the front-end library will trigger the onMsg event handler." class="form-row">
+                <input type="checkbox" id="node-input-passthrough" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-input-passthrough" style="width: 90%;">Pass <code>msg.payload</code> to output?</label>
             </div>
             
             <hr>

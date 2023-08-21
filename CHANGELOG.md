@@ -12,9 +12,130 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ----
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...main)
 
 Nothing currently.
+
+## [v6.5.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.4.1)
+
+Apologies, the documentation has fallen a little behind with this release as things took longer and more new features were added than expected. But I needed to get this release out as it contains some important bug fixes as well.
+
+### **NEW** Features
+
+* New zero-code node `uib-tag` - creates a single html element based on the given tag name (e.g. create a link element from an `a` tag). Also works with web component custom tags. Use this when you want to add something not covered by `uib-element`. Lets you specify slot content (html or Markdown) and attributes at the same time.
+
+* The client library now **filters inbound messages** according to `pageName`, `clientId`, and/or `tabId` set in either `msg._uib` or `msg._ui`.
+  
+* There is **a new, dynamic page** at `../uibuilder/apps` that lists (with links) all uibuilder instance endpoints. Currently only a very simple list but the plan is to add an instance title and description field to uibuilder which would then be populated into this page. Use as an index of all of your main web pages (strictly, this is a list of all of the uibuilder-driven web apps. Apps may have multiple pages of course).
+
+* The uibuilder client connection control msg now **reports the URL parameters** (AKA search parameters) for the connection from the client. This is another way of passing data from a client to the server. Obviously, you should _never_ trust user input - always limit, check and validate user input.
+
+* `uib-element` now allows the core data for the element to be defined in the node or on a context variable and other locations, you are **no longer forced to use `msg.payload`**. It also now allows the incoming `msg.payload` to be sent to the client to allow for local processing if required.
+
+* uibuilder Instance routes/middleware
+
+  You can now **add ExpressJS routes and other middleware to a _single instance_** of uibuilder (a specific uibuilder node), not just to all nodes. Especially useful if you want to add custom security (login, registration, etc) to just one instance.
+
+  The new feature lets you specify the sub-url-path, the HTTP method and the callback function. Paths can include wildcards and parameters too. The routes are always added to the instance router which forces them to only ever be sub-url-paths of the specified instance. e.g. if your instance url is `test`, a route with a path of `/foo/:bah` will ALWAYS be `.../test/foo/...`. This is for security. Note that you are responsible for creating unique URL paths, no checking is done and ExpressJS is quite happy to have multiple path handlers but if you provide a terminating response (e.g. `res.status(200)`) and no `next()` call, the call stack is obviously terminated. If you include a call to `next()`, overlapping route callbacks will also be triggered. In that case, make sure you do not do any more `res.xxxx()` responses otherwise you will get an `ERR_HTTP_HEADERS_SENT` error.
+
+  To add route handlers, create 1 or more .js files in the `<instanceRoot>/routes/` folder. See the docs for details.
+
+  What can I do? Authentication, authorisation, http headers, dynamic html changes/additions, js inserts, logging, server-side includes, server-side rendering (e.g. Jade, ...) ...
+
+### NEW NODE: uib-tag
+
+* New zero-code node
+* Creates a single html element based on the given tag name (e.g. create a link element from an `a` tag). 
+* Works with web component custom tags.
+* Lets you specify slot content (html or Markdown) and attributes at the same time.
+* Filters out `msg._ui` from input if it includes `msg._ui.from` set to "client". We don't want to loop from output to input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
+
+Use this when you want to add something not covered by `uib-element`.
+
+### Changes to uibuilder client Library
+
+* **FIX** Change warn msg "[Ui:_uiManager] No method defined for msg._ui[0]. Ignoring" to an error so it is more visible.
+* **FIX** [Issue #213](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/213) - SVG flow example not working `_uiComposeComponent is not a function at htmlClone index.js:52:15`
+  
+  Caused by the move of all ui fns to a separate class. So `_uiComposeComponent` is no longer accessible. It should not have been used in the example anyway since anything starting with an underscore should be for internal use only. My bad.
+
+  `uibuilder.uiEnhanceElement(el, component)`` added. Example will be updated again once this is released
+
+* **NEW FUNCTION** `uibuilder.notify(config)` - If possible (not all browsers yet fully support it), use the [browser Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API) to show an *operating system notification*. Supports a simple click reponse which can be used with `uibuilder.eventSend` to notify Node-RED that a user clicked the notification. Note that there are significant inconsistencies in how/whether this API is handled by browsers. It may not always work.
+
+* No longer processes input messages if either `msg._uib` or `msg._ui` includes either `pageName`, `clientId`, and/or `tabId` and where those parameters do not match the current page or client.
+* Improvements and corrections to the `eventSend` function. Allowing more event types to be sensible handled (including the Notify response). Also added CSS class information & specific outputs for notifications. Also, added input field types to form outputs.
+* Added `window.uib` as a synonym of `window.uibuilder`. So you can do things like `uib.logLevel = 5` instead of `uibuilder.logLevel = 5`
+* Added flag to indicate if the *DOMPurify* library is loaded. Added warnings to the `include()` function when it is loaded since some includes will be filtered by the purify process for safety. Updated the front-end client introduction document with details about DOMPurify, how to load it and use it.
+* Added flag to indicate if the *Markdown-IT* library is loaded. Updated the front-end client introduction document with details about how to load the library and use it.
+* Trigger onChange when `msg.payload` received along with `msg._ui`. Previous update turned this off completely but that is too restrictive. Use the Passthrough option in `uib-element` for example so that data can be further processed in the front-end if required.
+* When the client sends a msg back to Node-RED that includes `msg._ui` properties, the client adds `msg._ui.from` set to "client". This lets the `uib-element`, `uib-update`, and `uib-tag` nodes filter them out when flow editors have looped an output msg back to the input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
+
+### Changes to uibuilder main node
+
+* **NEW** Instance route/middleware handlers - allows you to create custom url routes and custom middleware functions that only impact routes for a single instance of uibuilder.
+
+* **NEW** Deep object find function added as `RED.util.uib.deepObjFind` so that it can be used in function nodes. Useful for manipulating `msg._ui` objects which can get very deep. See [Manipulating `msg._ui`](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui#manipulating-msg_ui) for details.
+
+* **NEW** A dynamically generated list of all uibuilder apps is now available at `../uibuilder/apps`. In addition, title and description fields have been added to the Advanced tab in the uibuilder node. These are used on the apps page. You can also output the detailed list in Node-RED using a function node with `RED.util.uib.listAllApps()`. The detailed list also shows what node defines the app.
+
+* Filter out `msg._ui` from input if it includes `msg._ui.from` set to "client". We don't want to loop from output to input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
+
+### Changes to uib-element node
+
+* **FIX** Was issuing a `node.warn` showing the input type (happening on v6.1 as well) - only for table type. Now removed.
+* **FIX** Chaining to a page title deleted the previous chain - putting title first was ok. Now works either way.
+* **FIX** Form checkbox "value" output from auto-send was always "on". Because HTML is sometimes utterly stupid! Input tags of type "checkbox" do not set a value like other inputs! They only set the "checked" attribute. Fixed by forcing the value attribute to be set. [Issue #221](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/221), [Discussion #219](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/219).
+
+* **KEY CHANGE** Added option to select core data input other than msg.payload.
+  
+  This means that you can define the UI element directly in the node if you want. This includes the use of JSONata for dynamically defined elements, allowing for even simpler msg inputs should this be desired.
+
+* **KEY CHANGE** Added an option to pass through msg.payload. When sent to the front-end, the client library will trigger standard events to allow further processing of the data in the front-end. 
+  
+  This means that you can use `uibuilder.onChange` etc in the front-end even though the msg contains `msg._ui` which would normally prevent this from happening.
+
+* Order of node properties changed in the Editor. Hopefully more logical.
+* Filter out `msg._ui` from input if it includes `msg._ui.from` set to "client". We don't want to loop from output to input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
+
+* Form additions:
+  * Textarea input.
+  * Select options drop-down input. 
+
+### Changes to the uib-update node
+
+* Filter out `msg._ui` from input if it includes `msg._ui.from` set to "client". We don't want to loop from output to input. [ref](https://discourse.nodered.org/t/uibuilder-table-implementation-2-0/80618/16)
+
+### Changes to CSS styles (uib-brand.css)
+
+* **NEW** Minified version included, use as `@import url("../uibuilder/uib-brand.min.css");`
+* Reduced thickness of error border on form input fields.
+* Switched form layout from Float to Flex. Added breakpoint at width=600px where layout becomes vertical instead of horizontal.
+* CSS Variables
+  * **NEW** `--mode` - "light" or "dark" according to the current browser preference or html class override.
+  * **NEW** `--text-hue` and `--surface-hue` allows independent colour control of standard text and backgrounds. Defaults to `--brand-hue`.
+  * **NEW** `--complementary-offset` - defaults to 180, you are unlikely to want to change this.
+  * **NEW** `--font-style` - set to `sans-serif` by default.
+* CSS Classes
+  * **NEW** `.flex-wrap` - auto-wrapping flex layout.
+  * **NEW** `.grid-fit` - auto-columns with number set by `--grid-fit-min`.
+  * **NEW** `.compact` - removes margin and reduces top/bottom padding to a minimum (0.2rem).
+  * **NEW** `button.compact` - Removes rounded corners and reverts background to parent. Minimises margin and padding.
+
+### Changes to uibuilder templates
+
+* Replaced all references to `uib-brand.css` with `uib-brand.min.css` for efficiency.
+
+### Documentation updates
+
+* Details and links for using the DOMPurify external library.
+* Lots more detail added to the `uib-brand.css` documentation.
+* The usual set of documentation improvements, slowly improving things and trying to ensure that the documentation matches the actual implementation. 😁
+
+### Other Changes
+
+* Remove dependency on `express-validator` as this is no longer used.
+* Add `.keep` empty files to template folders that should be empty because GIT doesn't think anyone needs to keep empty folders - stupid!
 
 ## [v6.4.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...v6.4.0)
 

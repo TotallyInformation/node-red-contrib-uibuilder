@@ -3,7 +3,7 @@ title: Generate input forms from simple input data
 description: >
    Turns an array/object of objects into a simple, accessible form.
 created: 2023-02-24 16:49:49
-lastUpdated: 2023-03-25 17:07:37
+lastUpdated: 2023-08-19 17:01:20
 ---
 
 The `uib-element` node, set to the "Simple Form" type, outputs a simple but accessible Form with inputs and buttons. Most HTML features of inputs and forms are supported.
@@ -11,6 +11,8 @@ The `uib-element` node, set to the "Simple Form" type, outputs a simple but acce
 ## Input data
 
 Set the incoming msg.payload to an Array of Objects. Each array entry will be a new form input or button. An Object of Objects can also be used where the outer object is key'd by the ID of the entry. See below for an example input array showing input properties.
+
+Note that `msg.payload` as the data input can be changed to any msg property, a context variable, manually defined JSON or dynamic JSONata as desired in the node's settings.
 
 ### Example input message payload
 
@@ -56,9 +58,9 @@ Set the incoming msg.payload to an Array of Objects. Each array entry will be a 
 
 ## Available input types
 
-Available input types are: `button`, `checkbox`, [`color`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/color), `date`, `detetime-local`, `email`, `hidden`, `month`, `number`, `password`, `radio`, [`range`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/range), `tel`, `text`, `time`, `url`, `week`. See [this explanation of the types and properties](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input#input_types) for more details.
+Available input types are: `button`, `checkbox`, [`color`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/color), `date`, `detetime-local`, `email`, `hidden`, `month`, `number`, `password`, `radio`, [`range`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/range), `select`, `tel`, `text`, `textarea`, `time`, `url`, `week`. See [this explanation of the types and properties](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input#input_types) for more details.
 
-Some additional types will be made available in the future: `select`, `combo`, `file`, `image`, `textarea`. Auto-complete will also be added eventually.
+Some additional types will be made available in the future: `combo`, `file`, `image`. Auto-complete will also be added eventually.
 
 If a `button` type is included, pressing the button will automatically send a message from the client back to Node-RED All of the form data will be included in that message in `msg._ui.form`. If no button is included, a pair of default buttons will be added to the end of the form: "Send" will use the `eventSend` function to provide details of the form data and its validation state. "Reset" will set all of the inputs back to their default state.
 
@@ -129,5 +131,105 @@ As mentioned above, any buttons added to the form (or the default "Send" button)
         // ...
     }
     // ...
+}
+```
+
+## Form element type specifics
+
+Some of the form elements have specific requirements or additional settings. Specific settings are defined in the input message.
+
+Also remember that any property supplied will be turned into an attribute on the corresponding input HTML tag. So any attributes available for that input type should be usable.
+
+### Checkbox
+
+Either the `value` or `checked` properties can be used to pre-set the default.
+
+By default, HTML checkbox inputs do not set the `value` attribute (which is totally mad and inconsistent!). uibuilder sets the `value` attribute for you and also adds some code to each checkbox to ensure that the `value` attribute is always correct. If you use low-code to create your own forms, you should replicate this if you want to use the `uibuilder.eventSend(event)` function.
+
+```json
+{
+    {
+        "id": "r4-check",
+        "label": "Checkbox (true/false):",
+        "type": "checkbox",
+        "value": "false"
+    },
+    {
+        "id": "r5-check",
+        "label": "Checkbox selected (true/false):",
+        "type": "checkbox",
+        "checked": true
+    },
+}
+```
+
+### Range
+
+```json
+{
+    {
+        "id": "r4-range",
+        "type": "range",
+        "required": false,
+        "label": "Range (0-100):",
+        "value": "20",
+        "min": 0,
+        "max": 100
+    }
+}
+```
+
+### Select (drop-down)
+
+> [!ATTENTION]
+> As of uibuilder v6.5.0-Dev, multi-select can be defined but only the first selected option is returned.
+> In addition, you cannot currently pre-select multiples.
+> Hopefully this will be fixed before v6.5 is released.
+
+When an option is selected, the option's `value` entry is returned, not the label. Except when a value is not specified on an option. In that case, the label is returned.
+
+The `value` property is used to pre-select one of the options. For this to work, the pre-selected option must also have a matching `value` property.
+
+```json
+{
+    {
+        "id": "r6-select",
+        "label": "Select (pre-selected option):",
+        "type": "select",
+        "options": [
+            {
+                "label": "Option 1",
+                "value": "one"
+            },
+            {
+                "label": "Option 2",
+                "value": "two"
+            },
+            {
+                "label": "Option 3"
+            }
+        ],
+        "value": "two"
+    },
+    {
+        "id": "r7-select",
+        "label": "Select (no pre-selected option, multiple select is true):",
+        "type": "select",
+        "options": [
+            {
+                "label": "Option 1a",
+                "value": "one a"
+            },
+            {
+                "label": "Option 2a",
+                "value": "two a"
+            },
+            {
+                "label": "Option 3a",
+                "value": "three a"
+            }
+        ],
+        "multiple": true
+    }
 }
 ```

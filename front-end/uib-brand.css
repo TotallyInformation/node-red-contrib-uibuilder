@@ -8,15 +8,16 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 1.20 2023-03-04
+ * @version: 1.31 2023-05-23
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
  *
  * USAGE:
+ * - https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/uib-brand-css
  * - Reference directly or via import in own CSS
  * - Will auto pick up browser preference for light/dark if set
- * - Or manually set with `class="light"` or `class="dark` on the html tag
+ * - Or manually set with `class="light"` or `class="dark"` on the html tag
  * - Or create a manual switcher feature - see css-test.html or brand-test.html for examples
  * - A simple CSS reset is provided to get reasonably looking HTML in any browser
  * - Some special classes are provided - see the "Recommended surfaces" section
@@ -24,12 +25,13 @@
  * NOTES:
  * - Watch out for the order of loading of style sheets!
  * - uibuilder attempts to auto-load this sheet BUT you may need to do it manually to get the right order.
- * - Include in your index.css file as `@import url("./uib-brand.css");`
+ * - Include in your index.css file as `@import url("./uib-brand.min.css");`
  */
 
 /* :root applies to everything, :root.light is for manually selected light mode */
 :root, :root.light {
     color-scheme: light dark;
+    --mode: light;
 
     /* Create a checkable var - helps web components know if this stylesheet is loaded
      * Use this from general code: 
@@ -39,8 +41,13 @@
      * NOTE: no space between : and text!
      */
     --uib-css:uib-brand;
+    /* Sans-serif is much easier to read on-screen */
+    --font-family: sans-serif;
 
     --brand-hue: 200;
+    --text-hue: var(--brand-hue);
+    --surface-hue: var(--brand-hue);
+    --complementary-offset: 180;
     --accent-offset: 30; /* 30=Split complementary, 60=Triadic */
 
     --saturation-bias: 0;
@@ -56,6 +63,8 @@
     --lightness: calc(var(--lightness-value) + var(--lightness-bias));
 
     --border-radius: 0.5rem; /*8px;*/
+    /* For the .grid-fit class, the minimum child element size */
+    --grid-fit-min: 15rem;
 
     /*#region --- Brand --- */
     --brand: hsl(
@@ -109,7 +118,7 @@
     --text-lightness: var(--light-text-lightness);
 
     --text1: hsl(
-        var(--brand-hue)
+        var(--text-hue)
         calc(100% * var(--text-saturation))
         calc(
             100% * (var(--text-lightness)
@@ -118,7 +127,7 @@
         )
     );
     --text2: hsl(
-        var(--brand-hue)
+        var(--text-hue)
         calc(100% * (var(--text-saturation) / 2))
         calc(
             100% * (var(--text-lightness)
@@ -127,7 +136,7 @@
         )
     );
     --text3: hsl(
-        var(--brand-hue)
+        var(--text-hue)
         calc(100% * (var(--text-saturation) / 2))
         calc(
             100% * (var(--text-lightness)
@@ -136,7 +145,7 @@
         )
     );
     --text4: hsl(
-        var(--brand-hue) 
+        var(--text-hue) 
         10% 
         calc(
             50% 
@@ -157,7 +166,7 @@
     --surfaces-lightness: var(--light-surfaces-lightness);
     
     --surface1: hsl(
-        var(--brand-hue)
+        var(--surface-hue)
         calc(100% * var(--surfaces-saturation))
         calc(
             100% * (var(--surfaces-lightness)
@@ -166,7 +175,7 @@
         )
     );
     --surface2: hsl(
-        var(--brand-hue)
+        var(--surface-hue)
         calc(100% * var(--surfaces-saturation))
         calc(
             100% * (var(--surfaces-lightness)
@@ -175,7 +184,7 @@
         )
     );
     --surface3: hsl(
-        var(--brand-hue)
+        var(--surface-hue)
         calc(100% * var(--surfaces-saturation))
         calc(
             100% * (var(--surfaces-lightness)
@@ -184,7 +193,7 @@
         )
     );
     --surface4: hsl(
-        var(--brand-hue)
+        var(--surface-hue)
         calc(100% * var(--surfaces-saturation))
         calc(
             100% * (var(--surfaces-lightness)
@@ -193,7 +202,7 @@
         )
     );
     --surface5: hsl(
-        var(--brand-hue)
+        var(--surface-hue)
         calc(100% * var(--surfaces-saturation))
         calc(
             100% * (var(--surfaces-lightness)
@@ -267,7 +276,7 @@
     /*#endregion --- --- */
     
     /*#region === Complementary ACCENT === */
-    --complementary-hue: calc(var(--brand-hue) + 180);
+    --complementary-hue: calc(var(--brand-hue) + var(--complementary-offset));
 
     --complementary-fg: hsl(
         var(--brand-hue)
@@ -287,10 +296,10 @@
     /*#endregion --- --- */
     
     /*#region === PRIMARY ACCENT === */
-    --primary-hue: calc(var(--brand-hue) + 180 + var(--accent-offset));
+    --primary-hue: calc(var(--brand-hue) + var(--complementary-offset) + var(--accent-offset));
 
     --primary-fg: hsl(
-        calc(var(--primary-hue) + 180)
+        calc(var(--primary-hue) + var(--complementary-offset))
         calc(100% * var(--saturation))
         calc(100% * var(--lightness))
     );
@@ -303,10 +312,10 @@
     /*#endregion --- --- */
     
     /*#region === SECONDARY ACCENT === */
-    --secondary-hue: calc(var(--brand-hue) + 180 - var(--accent-offset));
+    --secondary-hue: calc(var(--brand-hue) + var(--complementary-offset) - var(--accent-offset));
     
     --secondary-fg: hsl(
-        calc(var(--secondary-hue) + 180)
+        calc(var(--secondary-hue) + var(--complementary-offset))
         calc(100% * var(--saturation))
         calc(100% * var(--lightness))
     );
@@ -325,13 +334,16 @@
  */
 @media (prefers-color-scheme: light) {
     :root {
-        color-scheme: light;
+        color-scheme: light dark;
+        --mode: light;
     }
 }
 @media (prefers-color-scheme: dark) {
     :root {
         /* ---- Active Theme (Dark) ---- */
-        color-scheme: dark;
+        color-scheme: dark light;
+        --mode: dark;
+
         --saturation-value: var(--dark-saturation);
         --lightness-value: var(--dark-lightness);
         
@@ -346,28 +358,11 @@
     }
 }
 
-/* Or if the user requests a particular colour theme */
-[color-scheme="light"] {
-    color-scheme: light;
-}
-[color-scheme="dark"] {
-    color-scheme: dark;
-    --saturation-value: var(--dark-saturation);
-    --lightness-value: var(--dark-lightness);
-    
-    --surface-shadow: var(--surface-shadow-dark);
-    --shadow-strength: var(--shadow-strength-dark);
-
-    --text-factor: var(--dark-text-factor);
-    --text-lightness: var(--dark-text-lightness);
-
-    --surfaces-factor: var(--dark-surfaces-factor);
-    --surfaces-lightness: var(--dark-surfaces-lightness);
-}
-
 /* Or if the user manually requests a dark colour theme by setting class="dark" on html tag */
 :root.dark {
     color-scheme: dark light;
+    --mode: dark;
+
     --saturation-value: var(--dark-saturation);
     --lightness-value: var(--dark-lightness);
     
@@ -474,7 +469,7 @@ body {
     margin-left: 1rem;
     margin-right: 1rem;
     /* padding: 0.3rem; */
-    font-family: sans-serif;
+    font-family: var(--font-family);
 }
 h1, h2, h3, h4, h5, h6, heading {
     line-height: 1.3;
@@ -549,8 +544,6 @@ main {
     margin-right: auto;    
 }
 
-/* TODO odd/even li? */
-
 /*#endregion --- Basic reset --- */
 
 /*#region --- Tables --- */
@@ -593,19 +586,29 @@ tbody tr:nth-child(even) {
 /*#region --- Forms --- */
 form {
     border: 1px solid var(--text3);
-    /* box-sizing: border-box; */
     margin: 0.5rem;
     padding: 0.5rem;
     border-radius: var(--border-radius);
+    display: flex;
+    gap: 1em;
+    flex-direction: column;
 }
-form label {
-    float: left;
-    width: 24%;
-    text-transform: capitalize;
+
+input[type="color"] {
+    width: 100%;
+    height: 2.5rem;
 }
+input:invalid, textarea:invalid, select:invalid {
+    /* outline: 2px solid var(--failure); */
+    border: 2px solid var(--failure);
+}
+/* input:valid, textarea:valid, select:valid {
+    border: 3px solid var(--success);
+} */
+/* at any level of nesting */
 form input, form textarea, form select {
-    float: right;
-    width: 75%;
+    /* width: 75%; */
+    flex: 2;
     border-radius: var(--border-radius);
     padding:0.2rem;
     border: 1px solid var(--text3);
@@ -623,37 +626,48 @@ form select {
             calc(100% * var(--lightness))
         );
 }
-form div {
-    clear: both;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-}
-form input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
-    float:none;
+form button, input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
     width:auto;
+    margin-left: .2em;
+    margin-right: .2em;
 }
-input[type="color"] {
-    min-height: 2.5rem;
-}
-input:invalid {
-    border: 3px solid var(--failure);
-}
-input:valid {
-    border: 3px solid var(--success);
+form input[type="checkbox" i] {
+    height:1.5em;
 }
 form:invalid button {
     background-color: var(--warning);
 }
-div.required label::after {
-    content: " *"
-
+form label {
+    flex: 1;
 }
+form label[required]::after {
+    content: " *"
+}
+/* first level only */
+form > div {
+    display: inherit;
+}
+form > label {
+    align-self: center;
+    text-transform: capitalize;
+}
+form > label:focus-within {
+    font-weight: bold;
+}
+/* Small screen */
 @media screen and (max-width: 600px) {
-    form label, form input, form textarea {
-        width: 100%;
-        margin-top: 0;
+    form, form * {
+        display:block;
+        width:100%;
+    }
+    form > label, form > div.btn-row {
+        margin-top: .8rem;
+    }
+    form > :not(label) {
+        margin-bottom: 0.5rem;
     }
 }
+
 /*#endregion --- Forms --- */
 
 /*#region ---- Utility ---- */
@@ -730,6 +744,18 @@ div.required label::after {
 }
 .text-larger {
     font-size: larger;
+}
+
+.compact {
+    margin: 0;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+button.compact {
+    padding: 2px 5px;
+    border-radius: 0;
+    background: inherit;
+    margin: 2px;
 }
 
 /*#endregion ---- Utility ---- */
@@ -810,9 +836,19 @@ div.required label::after {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap:0.5rem;
 }
+.grid-fit {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-fit-min), 100%), 1fr));
+}
 
 .flex {
     display: flex;
+    gap:0.5rem;
+}
+.flex-wrap {
+    display: flex;
+    flex-wrap: wrap;
     gap:0.5rem;
 }
 

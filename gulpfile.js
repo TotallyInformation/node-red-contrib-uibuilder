@@ -36,10 +36,11 @@ const include = require('gulp-include')
 const once = require('gulp-once')
 // const prompt = require('gulp-prompt')
 const greplace = require('gulp-replace')
-// const debug = require('gulp-debug')
+const debug = require('gulp-debug')
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 const gulpEsbuild = require('gulp-esbuild')
+const cleanCSS = require('gulp-clean-css')
 
 const execa = require('execa')
 
@@ -48,6 +49,10 @@ const fs = require('fs-extra')
 
 // const { promisify } = require('util')
 // const dotenv = require('dotenv')
+
+if (!process.cwd().startsWith('D:')) {
+    throw new Error('NOT RUNNING FROM THE D: DRIVE')
+}
 
 const feSrc = 'src/front-end'
 const feModuleSrc = 'src/front-end-module'
@@ -63,7 +68,7 @@ const stdio = 'inherit'
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 
 // npm version 4.2.1 --no-git-tag-version --allow-same-version
-const release = '6.4.1'
+const release = '6.5.0'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}`)
 
@@ -103,6 +108,8 @@ console.log(`Current Version: ${version}. Requested Version: ${release}`)
  *  - Add text replace to ensure 2021 in (c) blocks is current year
  *  - In packfe, set the source version string to the current package.json version
  */
+
+//#region ---- packing FE ----
 
 /** Pack (Uglify) front-end task
  * @param {Function} cb Callback
@@ -280,6 +287,7 @@ function packfeIIFEmin(cb) {
  *
  */
 function packfeIIFE(cb) {
+    console.log(feDest)
     src(`${feModuleSrc}/uibuilder.module.js`)
         .pipe(gulpEsbuild({
             outfile: 'uibuilder.iife.js',
@@ -297,7 +305,9 @@ function packfeIIFE(cb) {
             cb(err)
         })
         .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-iife"'))
-        .pipe(dest(feDest))
+        .pipe(debug({title: 'unicorn:'}))
+        .pipe(dest('front-end/'))
+        // .pipe(dest(`${feDest}/`))
         .on('end', function() {
             // in case of success
             cb()
@@ -430,6 +440,31 @@ function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
     }
     cb()
 }
+
+//#endregion ---- ---- ----
+
+// Pack CSS
+/**
+ *
+ */
+function minifyBrandCSS(cb) {
+    src(`${feDest}/uib-brand.css`)
+        .pipe(cleanCSS())
+        .on('error', function(err) {
+            console.error('[packfeIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(rename('uib-brand.min.css'))
+        .pipe(dest(feDest))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+
+    // cb()
+}
+
+//#region ---- Build node panels ----
 
 /** Combine the parts of uibuilder.html */
 function buildPanelUib1(cb) {
@@ -570,8 +605,44 @@ function buildPanelUpdate(cb) {
     cb()
 }
 
+/** Combine the parts of uib-tag.html */
+function buildPanelTag(cb) {
+    try {
+        src(`${nodeSrcRoot}/uib-tag/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-tag/`))
+    } catch (e) {
+        console.error('buildPanelUpdate failed', e)
+    }
+
+    cb()
+}
+
+//#endregion ---- ---- ----
+
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
-const buildme = parallel(series(buildPanelUib1, buildPanelUib2), buildPanelSender, buildPanelCache, buildPanelUibList, buildPanelUibElement, buildPanelUpdate)
+const buildme = parallel(
+    series(buildPanelUib1, buildPanelUib2),
+    buildPanelSender,
+    buildPanelCache,
+    buildPanelUibList,
+    buildPanelUibElement,
+    buildPanelUpdate,
+    buildPanelTag,
+)
+
+const buildNewFe = parallel(
+    packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE
+)
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
@@ -587,9 +658,13 @@ function watchme(cb) {
     watch('src/editor/uib-list/*', buildPanelUibList)
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
+    watch('src/editor/uib-tag/*', buildPanelTag)
+    watch('front-end/uib-brand.css', minifyBrandCSS)
 
     cb()
 }
+
+//#region ---- set versions ----
 
 /** Set the version string for uibuilderfe.js */
 function setFeVersionDev(cb) {
@@ -679,6 +754,8 @@ function setPackageLockVersion(cb) {
     cb()
 }
 
+//#endregion ---- ---- ----
+
 /** Create a new GitHub tag for a release (only if release ver # different to last committed tag) */
 async function createTag(cb) {
     // Get the last committed tag: git describe --tags --abbrev=0
@@ -709,7 +786,9 @@ exports.default     = series( packfe, packfeModule, buildme ) // series(runLinte
 exports.watch       = watchme
 exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
 exports.build       = buildme
+exports.buildFe     = buildNewFe
 exports.packfe      = packfe
 exports.packfeModule = packfeModule
+exports.packfeIIFE  = packfeIIFE
 exports.createTag   = createTag
 exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin )

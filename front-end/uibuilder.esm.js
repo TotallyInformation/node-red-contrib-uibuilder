@@ -253,6 +253,65 @@ var require_ui = __commonJS({
         }
       }
       // --- End of showDialog ---
+      /** Show a browser notification if the browser and the user allows it
+       * @param {object} config Notification config data
+       * @returns {Promise} Resolves on close or click event, returns the event.
+       */
+      _showNotification(config) {
+        if (config.topic && !config.title)
+          config.title = config.topic;
+        if (!config.title)
+          config.title = "uibuilder notification";
+        if (config.payload && !config.body)
+          config.body = config.payload;
+        if (!config.body)
+          config.body = " No message given.";
+        try {
+          const notify = new Notification(config.title, config);
+          return new Promise((resolve, reject) => {
+            notify.addEventListener("close", (ev) => {
+              ev.currentTarget.userAction = "close";
+              resolve(ev);
+            });
+            notify.addEventListener("click", (ev) => {
+              ev.currentTarget.userAction = "click";
+              resolve(ev);
+            });
+            notify.addEventListener("error", (ev) => {
+              ev.currentTarget.userAction = "error";
+              reject(ev);
+            });
+          });
+        } catch (e) {
+          return Promise.reject(new Error("Browser refused to create a Notification"));
+        }
+      }
+      /** Show a browser notification if possible. Returns a promise
+       * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+       * or a Notifications API options object + config.title string.
+       * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+       * @param {object|string} config Notification config object or simple message string
+       * @returns {Promise} Resolves on close or click event, returns the event.
+       */
+      async notification(config) {
+        if (typeof config === "string") {
+          config = { body: config };
+        }
+        if (typeof Notification === "undefined")
+          return Promise.reject(new Error("Notifications not available in this browser"));
+        let permit = Notification.permission;
+        if (permit === "denied") {
+          return Promise.reject(new Error("Notifications not permitted by user"));
+        } else if (permit === "granted") {
+          return this._showNotification(config);
+        } else {
+          permit = await Notification.requestPermission();
+          if (permit === "granted") {
+            return this._showNotification(config);
+          }
+          return Promise.reject(new Error("Notifications not permitted by user"));
+        }
+      }
       /** Load a dynamic UI from a JSON web reponse
        * @param {string} url URL that will return the ui JSON
        */
@@ -341,6 +400,9 @@ var require_ui = __commonJS({
         if (comp.slotMarkdown) {
           this.replaceSlotMarkdown(el, comp);
         }
+      }
+      uiEnhanceElement(el, comp) {
+        this._uiComposeComponent(el, comp);
       }
       /** Extend an HTML Element with appended elements using ui components
        * NOTE: This fn follows a strict hierarchy of added components.
@@ -616,7 +678,7 @@ var require_ui = __commonJS({
           msg._ui = [msg._ui];
         msg._ui.forEach((ui, i2) => {
           if (!ui.method) {
-            log2("warn", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
+            log2("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
             return;
           }
           ui.payload = msg.payload;
@@ -795,30 +857,31 @@ var require_ui = __commonJS({
        * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
        * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
        * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
+       * @returns {Promise<any>} Status
        */
       async include(url2, uiOptions) {
         if (!fetch) {
           log2(0, "Ui:include", "Current environment does not include `fetch`, skipping.")();
-          return;
+          return "Current environment does not include `fetch`, skipping.";
         }
         if (!url2) {
           log2(0, "Ui:include", "url parameter must be provided, skipping.")();
-          return;
+          return "url parameter must be provided, skipping.";
         }
         if (!uiOptions || !uiOptions.id) {
           log2(0, "Ui:include", "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")();
-          return;
+          return "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.";
         }
         let response;
         try {
           response = await fetch(url2);
         } catch (error) {
           log2(0, "Ui:include", `Fetch of file '${url2}' failed. `, error.message)();
-          return;
+          return error.message;
         }
         if (!response.ok) {
           log2(0, "Ui:include", `Fetch of file '${url2}' failed. Status='${response.statusText}'`)();
-          return;
+          return response.statusText;
         }
         const contentType = await response.headers.get("content-type");
         let type = null;
@@ -840,40 +903,55 @@ var require_ui = __commonJS({
           }
         }
         let slot = "";
+        let txtReturn = "Include successful";
+        let data;
         switch (type) {
           case "html": {
-            slot = await response.text();
+            data = await response.text();
+            slot = data;
             break;
           }
           case "json": {
-            const json = await response.json();
+            data = await response.json();
             slot = '<pre class="syntax-highlight">';
-            slot += this.syntaxHighlight(json);
+            slot += this.syntaxHighlight(data);
             slot += "</pre>";
             break;
           }
           case "form": {
-            const json = await response.formData();
+            data = await response.formData();
             slot = '<pre class="syntax-highlight">';
-            slot += this.syntaxHighlight(json);
+            slot += this.syntaxHighlight(data);
             slot += "</pre>";
             break;
           }
           case "image": {
-            const myBlob = await response.blob();
-            slot = `<img src="${URL.createObjectURL(myBlob)}">`;
+            data = await response.blob();
+            slot = `<img src="${URL.createObjectURL(data)}">`;
+            if (window && window["DOMPurify"]) {
+              txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+              log2("warn", "Ui:include:image", txtReturn)();
+            }
             break;
           }
           case "video": {
-            const myBlob = await response.blob();
-            slot = `<video controls autoplay><source src="${URL.createObjectURL(myBlob)}"></video>`;
+            data = await response.blob();
+            slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
+            if (window && window["DOMPurify"]) {
+              txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+              log2("warn", "Ui:include:video", txtReturn)();
+            }
             break;
           }
           case "pdf":
           case "text":
           default: {
-            const myBlob = await response.blob();
-            slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(myBlob)}">`;
+            data = await response.blob();
+            slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
+            if (window && window["DOMPurify"]) {
+              txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+              log2("warn", `Ui:include:${type}`, txtReturn)();
+            }
             break;
           }
         }
@@ -888,6 +966,8 @@ var require_ui = __commonJS({
             uiOptions
           ]
         });
+        log2("trace", `Ui:include:${type}`, txtReturn)();
+        return txtReturn;
       }
       // ---- End of include() ---- //
     };
@@ -940,7 +1020,29 @@ var encodeBlobAsBase64 = (data, callback) => {
   };
   return fileReader.readAsDataURL(data);
 };
-var encodePacket_browser_default = encodePacket;
+function toArray(data) {
+  if (data instanceof Uint8Array) {
+    return data;
+  } else if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data);
+  } else {
+    return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+  }
+}
+var TEXT_ENCODER;
+function encodePacketToBinary(packet, callback) {
+  if (withNativeBlob && packet.data instanceof Blob) {
+    return packet.data.arrayBuffer().then(toArray).then(callback);
+  } else if (withNativeArrayBuffer && (packet.data instanceof ArrayBuffer || isView(packet.data))) {
+    return callback(toArray(packet.data));
+  }
+  encodePacket(packet, false, (encoded) => {
+    if (!TEXT_ENCODER) {
+      TEXT_ENCODER = new TextEncoder();
+    }
+    callback(TEXT_ENCODER.encode(encoded));
+  });
+}
 
 // node_modules/engine.io-parser/build/esm/contrib/base64-arraybuffer.js
 var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -1007,13 +1109,20 @@ var decodeBase64Packet = (data, binaryType) => {
 var mapBinary = (data, binaryType) => {
   switch (binaryType) {
     case "blob":
-      return data instanceof ArrayBuffer ? new Blob([data]) : data;
+      if (data instanceof Blob) {
+        return data;
+      } else {
+        return new Blob([data]);
+      }
     case "arraybuffer":
     default:
-      return data;
+      if (data instanceof ArrayBuffer) {
+        return data;
+      } else {
+        return data.buffer;
+      }
   }
 };
-var decodePacket_browser_default = decodePacket;
 
 // node_modules/engine.io-parser/build/esm/index.js
 var SEPARATOR = String.fromCharCode(30);
@@ -1022,7 +1131,7 @@ var encodePayload = (packets, callback) => {
   const encodedPackets = new Array(length2);
   let count = 0;
   packets.forEach((packet, i2) => {
-    encodePacket_browser_default(packet, false, (encodedPacket) => {
+    encodePacket(packet, false, (encodedPacket) => {
       encodedPackets[i2] = encodedPacket;
       if (++count === length2) {
         callback(encodedPackets.join(SEPARATOR));
@@ -1034,7 +1143,7 @@ var decodePayload = (encodedPayload, binaryType) => {
   const encodedPackets = encodedPayload.split(SEPARATOR);
   const packets = [];
   for (let i2 = 0; i2 < encodedPackets.length; i2++) {
-    const decodedPacket = decodePacket_browser_default(encodedPackets[i2], binaryType);
+    const decodedPacket = decodePacket(encodedPackets[i2], binaryType);
     packets.push(decodedPacket);
     if (decodedPacket.type === "error") {
       break;
@@ -1042,6 +1151,119 @@ var decodePayload = (encodedPayload, binaryType) => {
   }
   return packets;
 };
+function createPacketEncoderStream() {
+  return new TransformStream({
+    transform(packet, controller) {
+      encodePacketToBinary(packet, (encodedPacket) => {
+        const payloadLength = encodedPacket.length;
+        let header;
+        if (payloadLength < 126) {
+          header = new Uint8Array(1);
+          new DataView(header.buffer).setUint8(0, payloadLength);
+        } else if (payloadLength < 65536) {
+          header = new Uint8Array(3);
+          const view = new DataView(header.buffer);
+          view.setUint8(0, 126);
+          view.setUint16(1, payloadLength);
+        } else {
+          header = new Uint8Array(9);
+          const view = new DataView(header.buffer);
+          view.setUint8(0, 127);
+          view.setBigUint64(1, BigInt(payloadLength));
+        }
+        if (packet.data && typeof packet.data !== "string") {
+          header[0] |= 128;
+        }
+        controller.enqueue(header);
+        controller.enqueue(encodedPacket);
+      });
+    }
+  });
+}
+var TEXT_DECODER;
+function totalLength(chunks) {
+  return chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+}
+function concatChunks(chunks, size) {
+  if (chunks[0].length === size) {
+    return chunks.shift();
+  }
+  const buffer = new Uint8Array(size);
+  let j = 0;
+  for (let i2 = 0; i2 < size; i2++) {
+    buffer[i2] = chunks[0][j++];
+    if (j === chunks[0].length) {
+      chunks.shift();
+      j = 0;
+    }
+  }
+  if (chunks.length && j < chunks[0].length) {
+    chunks[0] = chunks[0].slice(j);
+  }
+  return buffer;
+}
+function createPacketDecoderStream(maxPayload, binaryType) {
+  if (!TEXT_DECODER) {
+    TEXT_DECODER = new TextDecoder();
+  }
+  const chunks = [];
+  let state = 0;
+  let expectedLength = -1;
+  let isBinary2 = false;
+  return new TransformStream({
+    transform(chunk, controller) {
+      chunks.push(chunk);
+      while (true) {
+        if (state === 0) {
+          if (totalLength(chunks) < 1) {
+            break;
+          }
+          const header = concatChunks(chunks, 1);
+          isBinary2 = (header[0] & 128) === 128;
+          expectedLength = header[0] & 127;
+          if (expectedLength < 126) {
+            state = 3;
+          } else if (expectedLength === 126) {
+            state = 1;
+          } else {
+            state = 2;
+          }
+        } else if (state === 1) {
+          if (totalLength(chunks) < 2) {
+            break;
+          }
+          const headerArray = concatChunks(chunks, 2);
+          expectedLength = new DataView(headerArray.buffer, headerArray.byteOffset, headerArray.length).getUint16(0);
+          state = 3;
+        } else if (state === 2) {
+          if (totalLength(chunks) < 8) {
+            break;
+          }
+          const headerArray = concatChunks(chunks, 8);
+          const view = new DataView(headerArray.buffer, headerArray.byteOffset, headerArray.length);
+          const n = view.getUint32(0);
+          if (n > Math.pow(2, 53 - 32) - 1) {
+            controller.enqueue(ERROR_PACKET);
+            break;
+          }
+          expectedLength = n * Math.pow(2, 32) + view.getUint32(4);
+          state = 3;
+        } else {
+          if (totalLength(chunks) < expectedLength) {
+            break;
+          }
+          const data = concatChunks(chunks, expectedLength);
+          controller.enqueue(decodePacket(isBinary2 ? data : TEXT_DECODER.decode(data), binaryType));
+          state = 0;
+        }
+        if (expectedLength === 0 || expectedLength > maxPayload) {
+          controller.enqueue(ERROR_PACKET);
+          break;
+        }
+      }
+    }
+  });
+}
 var protocol = 4;
 
 // node_modules/@socket.io/component-emitter/index.mjs
@@ -1174,6 +1396,28 @@ function utf8Length(str) {
   return length2;
 }
 
+// node_modules/engine.io-client/build/esm/contrib/parseqs.js
+function encode(obj) {
+  let str = "";
+  for (let i2 in obj) {
+    if (obj.hasOwnProperty(i2)) {
+      if (str.length)
+        str += "&";
+      str += encodeURIComponent(i2) + "=" + encodeURIComponent(obj[i2]);
+    }
+  }
+  return str;
+}
+function decode2(qs) {
+  let qry = {};
+  let pairs = qs.split("&");
+  for (let i2 = 0, l = pairs.length; i2 < l; i2++) {
+    let pair = pairs[i2].split("=");
+    qry[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+  }
+  return qry;
+}
+
 // node_modules/engine.io-client/build/esm/transport.js
 var TransportError = class extends Error {
   constructor(reason, description, context) {
@@ -1257,7 +1501,7 @@ var Transport = class extends Emitter {
    * @protected
    */
   onData(data) {
-    const packet = decodePacket_browser_default(data, this.socket.binaryType);
+    const packet = decodePacket(data, this.socket.binaryType);
     this.onPacket(packet);
   }
   /**
@@ -1284,6 +1528,24 @@ var Transport = class extends Emitter {
    */
   pause(onPause) {
   }
+  createUri(schema, query = {}) {
+    return schema + "://" + this._hostname() + this._port() + this.opts.path + this._query(query);
+  }
+  _hostname() {
+    const hostname = this.opts.hostname;
+    return hostname.indexOf(":") === -1 ? hostname : "[" + hostname + "]";
+  }
+  _port() {
+    if (this.opts.port && (this.opts.secure && Number(this.opts.port !== 443) || !this.opts.secure && Number(this.opts.port) !== 80)) {
+      return ":" + this.opts.port;
+    } else {
+      return "";
+    }
+  }
+  _query(query) {
+    const encodedQuery = encode(query);
+    return encodedQuery.length ? "?" + encodedQuery : "";
+  }
 };
 
 // node_modules/engine.io-client/build/esm/contrib/yeast.js
@@ -1293,7 +1555,7 @@ var map = {};
 var seed = 0;
 var i = 0;
 var prev;
-function encode(num) {
+function encode2(num) {
   let encoded = "";
   do {
     encoded = alphabet[num % length] + encoded;
@@ -1302,35 +1564,13 @@ function encode(num) {
   return encoded;
 }
 function yeast() {
-  const now = encode(+/* @__PURE__ */ new Date());
+  const now = encode2(+/* @__PURE__ */ new Date());
   if (now !== prev)
     return seed = 0, prev = now;
-  return now + "." + encode(seed++);
+  return now + "." + encode2(seed++);
 }
 for (; i < length; i++)
   map[alphabet[i]] = i;
-
-// node_modules/engine.io-client/build/esm/contrib/parseqs.js
-function encode2(obj) {
-  let str = "";
-  for (let i2 in obj) {
-    if (obj.hasOwnProperty(i2)) {
-      if (str.length)
-        str += "&";
-      str += encodeURIComponent(i2) + "=" + encodeURIComponent(obj[i2]);
-    }
-  }
-  return str;
-}
-function decode2(qs) {
-  let qry = {};
-  let pairs = qs.split("&");
-  for (let i2 = 0, l = pairs.length; i2 < l; i2++) {
-    let pair = pairs[i2].split("=");
-    qry[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
-  }
-  return qry;
-}
 
 // node_modules/engine.io-client/build/esm/contrib/has-cors.js
 var value = false;
@@ -1355,6 +1595,8 @@ function XHR(opts) {
     } catch (e) {
     }
   }
+}
+function createCookieJar() {
 }
 
 // node_modules/engine.io-client/build/esm/transports/polling.js
@@ -1383,10 +1625,12 @@ var Polling = class extends Transport {
         port = isSSL ? "443" : "80";
       }
       this.xd = typeof location !== "undefined" && opts.hostname !== location.hostname || port !== opts.port;
-      this.xs = opts.secure !== isSSL;
     }
     const forceBase64 = opts && opts.forceBase64;
     this.supportsBinary = hasXHR2 && !forceBase64;
+    if (this.opts.withCredentials) {
+      this.cookieJar = createCookieJar();
+    }
   }
   get name() {
     return "polling";
@@ -1502,21 +1746,15 @@ var Polling = class extends Transport {
    * @private
    */
   uri() {
-    let query = this.query || {};
     const schema = this.opts.secure ? "https" : "http";
-    let port = "";
+    const query = this.query || {};
     if (false !== this.opts.timestampRequests) {
       query[this.opts.timestampParam] = yeast();
     }
     if (!this.supportsBinary && !query.sid) {
       query.b64 = 1;
     }
-    if (this.opts.port && ("https" === schema && Number(this.opts.port) !== 443 || "http" === schema && Number(this.opts.port) !== 80)) {
-      port = ":" + this.opts.port;
-    }
-    const encodedQuery = encode2(query);
-    const ipv6 = this.opts.hostname.indexOf(":") !== -1;
-    return schema + "://" + (ipv6 ? "[" + this.opts.hostname + "]" : this.opts.hostname) + port + this.opts.path + (encodedQuery.length ? "?" + encodedQuery : "");
+    return this.createUri(schema, query);
   }
   /**
    * Creates a request.
@@ -1525,7 +1763,7 @@ var Polling = class extends Transport {
    * @private
    */
   request(opts = {}) {
-    Object.assign(opts, { xd: this.xd, xs: this.xs }, this.opts);
+    Object.assign(opts, { xd: this.xd, cookieJar: this.cookieJar }, this.opts);
     return new Request(this.uri(), opts);
   }
   /**
@@ -1559,7 +1797,7 @@ var Polling = class extends Transport {
     this.pollXhr = req;
   }
 };
-var Request = class extends Emitter {
+var Request = class _Request extends Emitter {
   /**
    * Request constructor
    *
@@ -1572,7 +1810,6 @@ var Request = class extends Emitter {
     this.opts = opts;
     this.method = opts.method || "GET";
     this.uri = uri;
-    this.async = false !== opts.async;
     this.data = void 0 !== opts.data ? opts.data : null;
     this.create();
   }
@@ -1582,12 +1819,12 @@ var Request = class extends Emitter {
    * @private
    */
   create() {
+    var _a2;
     const opts = pick(this.opts, "agent", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "autoUnref");
     opts.xdomain = !!this.opts.xd;
-    opts.xscheme = !!this.opts.xs;
     const xhr = this.xhr = new XHR(opts);
     try {
-      xhr.open(this.method, this.uri, this.async);
+      xhr.open(this.method, this.uri, true);
       try {
         if (this.opts.extraHeaders) {
           xhr.setDisableHeaderCheck && xhr.setDisableHeaderCheck(true);
@@ -1609,6 +1846,7 @@ var Request = class extends Emitter {
         xhr.setRequestHeader("Accept", "*/*");
       } catch (e) {
       }
+      (_a2 = this.opts.cookieJar) === null || _a2 === void 0 ? void 0 : _a2.addCookies(xhr);
       if ("withCredentials" in xhr) {
         xhr.withCredentials = this.opts.withCredentials;
       }
@@ -1616,6 +1854,10 @@ var Request = class extends Emitter {
         xhr.timeout = this.opts.requestTimeout;
       }
       xhr.onreadystatechange = () => {
+        var _a3;
+        if (xhr.readyState === 3) {
+          (_a3 = this.opts.cookieJar) === null || _a3 === void 0 ? void 0 : _a3.parseCookies(xhr);
+        }
         if (4 !== xhr.readyState)
           return;
         if (200 === xhr.status || 1223 === xhr.status) {
@@ -1634,8 +1876,8 @@ var Request = class extends Emitter {
       return;
     }
     if (typeof document !== "undefined") {
-      this.index = Request.requestsCount++;
-      Request.requests[this.index] = this;
+      this.index = _Request.requestsCount++;
+      _Request.requests[this.index] = this;
     }
   }
   /**
@@ -1664,7 +1906,7 @@ var Request = class extends Emitter {
       }
     }
     if (typeof document !== "undefined") {
-      delete Request.requests[this.index];
+      delete _Request.requests[this.index];
     }
     this.xhr = null;
   }
@@ -1752,7 +1994,7 @@ var WS = class extends Transport {
     } catch (err) {
       return this.emitReserved("error", err);
     }
-    this.ws.binaryType = this.socket.binaryType || defaultBinaryType;
+    this.ws.binaryType = this.socket.binaryType;
     this.addEventListeners();
   }
   /**
@@ -1779,7 +2021,7 @@ var WS = class extends Transport {
     for (let i2 = 0; i2 < packets.length; i2++) {
       const packet = packets[i2];
       const lastPacket = i2 === packets.length - 1;
-      encodePacket_browser_default(packet, this.supportsBinary, (data) => {
+      encodePacket(packet, this.supportsBinary, (data) => {
         const opts = {};
         if (!usingBrowserWebSocket) {
           if (packet.options) {
@@ -1824,21 +2066,15 @@ var WS = class extends Transport {
    * @private
    */
   uri() {
-    let query = this.query || {};
     const schema = this.opts.secure ? "wss" : "ws";
-    let port = "";
-    if (this.opts.port && ("wss" === schema && Number(this.opts.port) !== 443 || "ws" === schema && Number(this.opts.port) !== 80)) {
-      port = ":" + this.opts.port;
-    }
+    const query = this.query || {};
     if (this.opts.timestampRequests) {
       query[this.opts.timestampParam] = yeast();
     }
     if (!this.supportsBinary) {
       query.b64 = 1;
     }
-    const encodedQuery = encode2(query);
-    const ipv6 = this.opts.hostname.indexOf(":") !== -1;
-    return schema + "://" + (ipv6 ? "[" + this.opts.hostname + "]" : this.opts.hostname) + port + this.opts.path + (encodedQuery.length ? "?" + encodedQuery : "");
+    return this.createUri(schema, query);
   }
   /**
    * Feature detection for WebSocket.
@@ -1851,9 +2087,72 @@ var WS = class extends Transport {
   }
 };
 
+// node_modules/engine.io-client/build/esm/transports/webtransport.js
+var WT = class extends Transport {
+  get name() {
+    return "webtransport";
+  }
+  doOpen() {
+    if (typeof WebTransport !== "function") {
+      return;
+    }
+    this.transport = new WebTransport(this.createUri("https"), this.opts.transportOptions[this.name]);
+    this.transport.closed.then(() => {
+      this.onClose();
+    }).catch((err) => {
+      this.onError("webtransport error", err);
+    });
+    this.transport.ready.then(() => {
+      this.transport.createBidirectionalStream().then((stream) => {
+        const decoderStream = createPacketDecoderStream(Number.MAX_SAFE_INTEGER, this.socket.binaryType);
+        const reader = stream.readable.pipeThrough(decoderStream).getReader();
+        const encoderStream = createPacketEncoderStream();
+        encoderStream.readable.pipeTo(stream.writable);
+        this.writer = encoderStream.writable.getWriter();
+        const read = () => {
+          reader.read().then(({ done, value: value2 }) => {
+            if (done) {
+              return;
+            }
+            this.onPacket(value2);
+            read();
+          }).catch((err) => {
+          });
+        };
+        read();
+        const packet = { type: "open" };
+        if (this.query.sid) {
+          packet.data = `{"sid":"${this.query.sid}"}`;
+        }
+        this.writer.write(packet).then(() => this.onOpen());
+      });
+    });
+  }
+  write(packets) {
+    this.writable = false;
+    for (let i2 = 0; i2 < packets.length; i2++) {
+      const packet = packets[i2];
+      const lastPacket = i2 === packets.length - 1;
+      this.writer.write(packet).then(() => {
+        if (lastPacket) {
+          nextTick(() => {
+            this.writable = true;
+            this.emitReserved("drain");
+          }, this.setTimeoutFn);
+        }
+      });
+    }
+  }
+  doClose() {
+    var _a2;
+    (_a2 = this.transport) === null || _a2 === void 0 ? void 0 : _a2.close();
+  }
+};
+
 // node_modules/engine.io-client/build/esm/transports/index.js
 var transports = {
   websocket: WS,
+  webtransport: WT,
   polling: Polling
 };
 
@@ -1915,7 +2214,7 @@ function queryKey(uri, query) {
 }
 
 // node_modules/engine.io-client/build/esm/socket.js
-var Socket = class extends Emitter {
+var Socket = class _Socket extends Emitter {
   /**
    * Socket constructor.
    *
@@ -1924,6 +2223,7 @@ var Socket = class extends Emitter {
    */
   constructor(uri, opts = {}) {
     super();
+    this.binaryType = defaultBinaryType;
     this.writeBuffer = [];
     if (uri && "object" === typeof uri) {
       opts = uri;
@@ -1946,7 +2246,11 @@ var Socket = class extends Emitter {
     }
     this.hostname = opts.hostname || (typeof location !== "undefined" ? location.hostname : "localhost");
     this.port = opts.port || (typeof location !== "undefined" && location.port ? location.port : this.secure ? "443" : "80");
-    this.transports = opts.transports || ["polling", "websocket"];
+    this.transports = opts.transports || [
+      "polling",
+      "websocket",
+      "webtransport"
+    ];
     this.writeBuffer = [];
     this.prevBufferLen = 0;
     this.opts = Object.assign({
@@ -1962,7 +2266,7 @@ var Socket = class extends Emitter {
         threshold: 1024
       },
       transportOptions: {},
-      closeOnBeforeunload: true
+      closeOnBeforeunload: false
     }, opts);
     this.opts.path = this.opts.path.replace(/\/$/, "") + (this.opts.addTrailingSlash ? "/" : "");
     if (typeof this.opts.query === "string") {
@@ -2007,13 +2311,13 @@ var Socket = class extends Emitter {
     query.transport = name;
     if (this.id)
       query.sid = this.id;
-    const opts = Object.assign({}, this.opts.transportOptions[name], this.opts, {
+    const opts = Object.assign({}, this.opts, {
       query,
       socket: this,
       hostname: this.hostname,
       secure: this.secure,
       port: this.port
-    });
+    }, this.opts.transportOptions[name]);
     return new transports[name](opts);
   }
   /**
@@ -2023,7 +2327,7 @@ var Socket = class extends Emitter {
    */
   open() {
     let transport;
-    if (this.opts.rememberUpgrade && Socket.priorWebsocketSuccess && this.transports.indexOf("websocket") !== -1) {
+    if (this.opts.rememberUpgrade && _Socket.priorWebsocketSuccess && this.transports.indexOf("websocket") !== -1) {
       transport = "websocket";
     } else if (0 === this.transports.length) {
       this.setTimeoutFn(() => {
@@ -2065,7 +2369,7 @@ var Socket = class extends Emitter {
   probe(name) {
     let transport = this.createTransport(name);
     let failed = false;
-    Socket.priorWebsocketSuccess = false;
+    _Socket.priorWebsocketSuccess = false;
     const onTransportOpen = () => {
       if (failed)
         return;
@@ -2078,7 +2382,7 @@ var Socket = class extends Emitter {
           this.emitReserved("upgrading", transport);
           if (!transport)
             return;
-          Socket.priorWebsocketSuccess = "websocket" === transport.name;
+          _Socket.priorWebsocketSuccess = "websocket" === transport.name;
           this.transport.pause(() => {
             if (failed)
               return;
@@ -2136,7 +2440,15 @@ var Socket = class extends Emitter {
     transport.once("close", onTransportClose);
     this.once("close", onclose);
     this.once("upgrading", onupgrade);
-    transport.open();
+    if (this.upgrades.indexOf("webtransport") !== -1 && name !== "webtransport") {
+      this.setTimeoutFn(() => {
+        if (!failed) {
+          transport.open();
+        }
+      }, 200);
+    } else {
+      transport.open();
+    }
   }
   /**
    * Called when connection is deemed open.
@@ -2145,7 +2457,7 @@ var Socket = class extends Emitter {
    */
   onOpen() {
     this.readyState = "open";
-    Socket.priorWebsocketSuccess = "websocket" === this.transport.name;
+    _Socket.priorWebsocketSuccess = "websocket" === this.transport.name;
     this.emitReserved("open");
     this.flush();
     if ("open" === this.readyState && this.opts.upgrade) {
@@ -2165,12 +2477,12 @@ var Socket = class extends Emitter {
     if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
       this.emitReserved("packet", packet);
       this.emitReserved("heartbeat");
+      this.resetPingTimeout();
       switch (packet.type) {
         case "open":
           this.onHandshake(JSON.parse(packet.data));
           break;
         case "ping":
-          this.resetPingTimeout();
           this.sendPacket("pong");
           this.emitReserved("ping");
           this.emitReserved("pong");
@@ -2363,7 +2675,7 @@ var Socket = class extends Emitter {
    * @private
    */
   onError(err) {
-    Socket.priorWebsocketSuccess = false;
+    _Socket.priorWebsocketSuccess = false;
     this.emitReserved("error", err);
     this.onClose("transport error", err);
   }
@@ -2558,6 +2870,15 @@ function _reconstructPacket(data, buffers) {
 }
 
 // node_modules/socket.io-parser/build/esm/index.js
+var RESERVED_EVENTS = [
+  "connect",
+  "connect_error",
+  "disconnect",
+  "disconnecting",
+  "newListener",
+  "removeListener"
+  // used by the Node.js EventEmitter
+];
 var protocol3 = 5;
 var PacketType;
 (function(PacketType2) {
@@ -2629,7 +2950,10 @@ var Encoder = class {
     return buffers;
   }
 };
-var Decoder = class extends Emitter {
+function isObject(value2) {
+  return Object.prototype.toString.call(value2) === "[object Object]";
+}
+var Decoder = class _Decoder extends Emitter {
   /**
    * Decoder constructor
    *
@@ -2728,7 +3052,7 @@ var Decoder = class extends Emitter {
     }
     if (str.charAt(++i2)) {
       const payload = this.tryParse(str.substr(i2));
-      if (Decoder.isPayloadValid(p.type, payload)) {
+      if (_Decoder.isPayloadValid(p.type, payload)) {
         p.data = payload;
       } else {
         throw new Error("invalid payload");
@@ -2746,14 +3070,14 @@ var Decoder = class extends Emitter {
   static isPayloadValid(type, payload) {
     switch (type) {
       case PacketType.CONNECT:
-        return typeof payload === "object";
+        return isObject(payload);
       case PacketType.DISCONNECT:
         return payload === void 0;
       case PacketType.CONNECT_ERROR:
-        return typeof payload === "string" || typeof payload === "object";
+        return typeof payload === "string" || isObject(payload);
       case PacketType.EVENT:
       case PacketType.BINARY_EVENT:
-        return Array.isArray(payload) && payload.length > 0;
+        return Array.isArray(payload) && (typeof payload[0] === "number" || typeof payload[0] === "string" && RESERVED_EVENTS.indexOf(payload[0]) === -1);
       case PacketType.ACK:
       case PacketType.BINARY_ACK:
         return Array.isArray(payload);
@@ -2810,7 +3134,7 @@ function on(obj, ev, fn) {
 }
 
 // node_modules/socket.io-client/build/esm/socket.js
-var RESERVED_EVENTS = Object.freeze({
+var RESERVED_EVENTS2 = Object.freeze({
   connect: 1,
   connect_error: 1,
   disconnect: 1,
@@ -2960,7 +3284,7 @@ var Socket2 = class extends Emitter {
    * @return self
    */
   emit(ev, ...args) {
-    if (RESERVED_EVENTS.hasOwnProperty(ev)) {
+    if (RESERVED_EVENTS2.hasOwnProperty(ev)) {
       throw new Error('"' + ev.toString() + '" is a reserved event name');
     }
     args.unshift(ev);
@@ -3698,31 +4022,29 @@ var Manager = class extends Emitter {
       self2.onopen();
       fn && fn();
     });
-    const errorSub = on(socket, "error", (err) => {
-      self2.cleanup();
-      self2._readyState = "closed";
+    const onError = (err) => {
+      this.cleanup();
+      this._readyState = "closed";
       this.emitReserved("error", err);
       if (fn) {
         fn(err);
       } else {
-        self2.maybeReconnectOnOpen();
+        this.maybeReconnectOnOpen();
       }
-    });
+    };
+    const errorSub = on(socket, "error", onError);
     if (false !== this._timeout) {
       const timeout = this._timeout;
-      if (timeout === 0) {
-        openSubDestroy();
-      }
       const timer = this.setTimeoutFn(() => {
         openSubDestroy();
+        onError(new Error("timeout"));
         socket.close();
-        socket.emit("error", new Error("timeout"));
       }, timeout);
       if (this.opts.autoUnref) {
         timer.unref();
       }
-      this.subs.push(function subDestroy() {
-        clearTimeout(timer);
+      this.subs.push(() => {
+        this.clearTimeoutFn(timer);
       });
     }
     this.subs.push(openSubDestroy);
@@ -3911,8 +4233,8 @@ var Manager = class extends Emitter {
       if (this.opts.autoUnref) {
         timer.unref();
       }
-      this.subs.push(function subDestroy() {
-        clearTimeout(timer);
+      this.subs.push(() => {
+        this.clearTimeoutFn(timer);
       });
     }
   }
@@ -3966,7 +4288,7 @@ Object.assign(lookup2, {
 
 // src/front-end-module/uibuilder.module.js
 var import_ui = __toESM(require_ui());
-var version = "6.4.1-esm";
+var version = "6.5.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
@@ -4251,6 +4573,10 @@ var Uib = (_a = class {
     __publicField(this, "tabId", "");
     // Actual name of current page (set in constructor)
     __publicField(this, "pageName", null);
+    // Is the DOMPurify library loaded? Updated in start()
+    __publicField(this, "purify", false);
+    // Is the Markdown-IT library loaded? Updated in start()
+    __publicField(this, "markdown", false);
     //#endregion ---- ---- ---- ---- //
     // TODO Move to proper getters/setters
     //#region ---- Externally Writable (via .set method, read via .get method) ---- //
@@ -4283,6 +4609,7 @@ var Uib = (_a = class {
         clientVersion: version,
         clientId: this.clientId,
         pathName: window.location.pathname,
+        urlParams: Object.fromEntries(new URLSearchParams(location.search)),
         pageName: void 0,
         tabId: void 0,
         lastNavType: void 0
@@ -4375,13 +4702,13 @@ var Uib = (_a = class {
    * Also triggers any event listeners.
    * Example: this.set('msg', {topic:'uibuilder', payload:42});
    * @param {string} prop Any uibuilder property who's name does not start with a _ or #
-   * @param {*} val _
-   * @returns {*|undefined} Input value
+   * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
+   * @returns {*} Input value
    */
   set(prop, val) {
     if (prop.startsWith("_") || prop.startsWith("#")) {
       log("warn", "Uib:set", `Cannot use set() on protected property "${prop}"`)();
-      return;
+      return `Cannot use set() on protected property "${prop}"`;
     }
     this[prop] = val;
     log("trace", "Uib:set", `prop set - prop: ${prop}, val: `, val)();
@@ -4405,7 +4732,7 @@ var Uib = (_a = class {
     if (prop === "reconnections")
       return this.connectedNum;
     if (this[prop] === void 0) {
-      log("warn", "Uib:get", `get() - property "${prop}" does not exist`)();
+      log("warn", "Uib:get", `get() - property "${prop}" is undefined`)();
     }
     return this[prop];
   }
@@ -4756,11 +5083,20 @@ var Uib = (_a = class {
   async include(url2, uiOptions) {
     _ui.include(url2, uiOptions);
   }
+  /** Enhance an HTML element that is being composed with ui data
+   *  such as ID, attribs, event handlers, custom props, etc.
+   * @param {*} el HTML Element to enhance
+   * @param {*} component Individual uibuilder ui component spec
+   */
+  uiEnhanceElement(el, component) {
+    _ui.uiEnhanceElement(el, component);
+  }
   //#endregion -- direct to _ui --
   /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
    * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
    * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
    * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+   * @returns {boolean} New state
    */
   showMsg(showHide, parent = "body") {
     if (showHide === void 0)
@@ -4792,12 +5128,38 @@ var Uib = (_a = class {
         ]
       });
     }
+    return showHide;
+  }
+  /** Show a browser notification if possible.
+   * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+   * or a Notifications API options object + config.title string.
+   * @example uibuilder.notify( 'My simple message to the user' )
+   * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
+   * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
+   * @example // If config.return = true, a promise is returned.
+   * // The resolved promise is only returned if the notification is clicked by the user.
+   * // Can be used to send the response back to Node-RED
+   * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
+   * @ref https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+   * @param {object|string} config Notification config data or simple message string
+   * @returns {Promise<Event>|null} A promise that resolves to the click event or null
+   */
+  notify(config) {
+    if (config.return)
+      return _ui.notification(config);
+    _ui.notification(config).then((res) => {
+      log("info", "Uib:notification", "Notification completed event", res)();
+    }).catch((err) => {
+      log("error", "Uib:notification", "Notification error event", err)();
+    });
+    return null;
   }
   /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
    * The card has the id `uib_status`.
    * The display is updated by an event listener created in the class constructor.
    * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
    * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+   * @returns {boolean} New state
    */
   showStatus(showHide, parent = "body") {
     if (showHide === void 0)
@@ -4809,7 +5171,7 @@ var Uib = (_a = class {
           "#uib_status"
         ]
       });
-      return;
+      return showHide;
     }
     const root = {
       components: [
@@ -4858,6 +5220,7 @@ var Uib = (_a = class {
       });
     });
     _ui._uiReplace(root);
+    return showHide;
   }
   /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
    * OMG! It is sooo hard to turn the data into something that successfully serialises so it can be sent back to Node-RED!
@@ -4866,12 +5229,13 @@ var Uib = (_a = class {
    * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
    * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
    * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
+   * @returns {boolean} True if the watch is on, false otherwise
    */
   uiWatch(cssSelector, startStop = "toggle", send = true, showLog = true) {
     const targetNode = document.querySelector(cssSelector);
     if (!targetNode) {
-      console.log("[Uib:uiWatch] CSS Selector not found. ", cssSelector);
-      return;
+      log("warn", "uibuilder.module.js:uiWatch", `CSS Selector '${cssSelector}' not found.`)();
+      return false;
     }
     if (startStop === "toggle" || startStop === void 0 || startStop === null) {
       if (__privateGet(this, _uiObservers)[cssSelector])
@@ -4880,11 +5244,10 @@ var Uib = (_a = class {
         startStop = true;
     }
     const that = this;
-    if (startStop === true || startStop === void 0) {
+    if (startStop === true) {
       __privateGet(this, _uiObservers)[cssSelector] = new MutationObserver(function(mutationList) {
         const out = [];
         mutationList.forEach((mu) => {
-          console.log({ mu });
           const oMu = {
             type: mu.type,
             oldValue: mu.oldValue !== null ? mu.oldValue : void 0
@@ -4928,6 +5291,7 @@ var Uib = (_a = class {
       delete __privateGet(this, _uiObservers)[cssSelector];
       log("trace", "uibuilder.module.js:uiWatch", `Stopped Watching DOM changes for '${cssSelector}'`)();
     }
+    return startStop;
   }
   // ---- End of watchDom ---- //
   //#endregion -------- -------- -------- //
@@ -5004,14 +5368,6 @@ var Uib = (_a = class {
     this.socketOptions.auth.tabId = this.tabId;
     this.socketOptions.auth.lastNavType = this.lastNavType;
     this.socketOptions.auth.connectedNum = this.connectedNum;
-    let numMsgs;
-    if (channel === this._ioChannels.client) {
-      this.set("sentMsg", msgToSend);
-      numMsgs = this.set("msgsSent", ++this.msgsSent);
-    } else if (channel === this._ioChannels.control) {
-      this.set("sentCtrlMsg", msgToSend);
-      numMsgs = this.set("msgsSentCtrl", ++this.msgsSentCtrl);
-    }
     if (originator === "" && this.originator !== "")
       originator = this.originator;
     if (originator !== "")
@@ -5025,7 +5381,17 @@ var Uib = (_a = class {
         }
       }
     }
-    log("debug", "Uib:_send", ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)();
+    if (msgToSend._ui)
+      msgToSend._ui.from = "client";
+    let numMsgs;
+    if (channel === this._ioChannels.client) {
+      this.set("sentMsg", msgToSend);
+      numMsgs = this.set("msgsSent", ++this.msgsSent);
+    } else if (channel === this._ioChannels.control) {
+      this.set("sentCtrlMsg", msgToSend);
+      numMsgs = this.set("msgsSentCtrl", ++this.msgsSentCtrl);
+    }
+    log("trace", "Uib:_send", ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)();
     this._socket.emit(channel, msgToSend);
   }
   // --- End of Send Msg Fn --- //
@@ -5084,31 +5450,39 @@ var Uib = (_a = class {
       props[key] = target[key];
     });
     const ignoreAttribs = ["class", "id", "name"];
-    const attribs = Object.assign(
-      {},
-      ...Array.from(
-        target.attributes,
-        ({ name, value: value2 }) => {
-          if (!ignoreAttribs.includes(name)) {
-            return { [name]: value2 };
+    let attribs;
+    try {
+      attribs = Object.assign(
+        {},
+        ...Array.from(
+          target.attributes,
+          ({ name, value: value2 }) => {
+            if (!ignoreAttribs.includes(name)) {
+              return { [name]: value2 };
+            }
+            return void 0;
           }
-          return void 0;
-        }
-      )
-    );
-    const form = {};
+        )
+      );
+    } catch (e) {
+    }
+    let form;
     const frmVals = [];
     if (target.form) {
+      form = {};
       form.valid = target.form.checkValidity();
       Object.values(target.form).forEach((frmEl, i2) => {
         const id = frmEl.id !== "" ? frmEl.id : frmEl.name !== "" ? frmEl.name : `${i2}-${frmEl.type}`;
         if (id !== "" && frmEl.type) {
+          if ("checked" in frmEl && frmEl.value === "on")
+            frmEl.value = frmEl.checked.toString();
           frmVals.push({ key: id, val: frmEl.value });
           form[id] = {
             "id": frmEl.id,
             "name": frmEl.name,
             "value": frmEl.value,
-            "valid": frmEl.checkValidity()
+            "valid": frmEl.checkValidity(),
+            "type": frmEl.type
           };
           if (form[id].valid === false) {
             const v = frmEl.validity;
@@ -5130,19 +5504,47 @@ var Uib = (_a = class {
         }
       });
     }
+    let classes;
+    try {
+      classes = Array.from(target.classList);
+    } catch (e) {
+    }
+    let payload = { ...target.dataset };
+    let nprops;
+    if (Object.prototype.toString.call(target) === "[object Notification]") {
+      payload = `notification-${target.userAction}`;
+      nprops = {
+        // userAction: target.userAction, // uib custom prop: click, close or error
+        actions: target.actions,
+        badge: target.badge,
+        body: target.body,
+        data: target.data,
+        dir: target.dir,
+        icon: target.icon,
+        image: target.image,
+        lang: target.lang,
+        renotify: target.renotify,
+        requireInteraction: target.requireInteraction,
+        silent: target.silent,
+        tag: target.tag,
+        timestamp: target.timestamp,
+        title: target.title,
+        vibrate: target.vibrate
+      };
+    }
     const msg = {
-      // Each `data-xxxx` attribute is added as a property
       // - this may be an empty Object if no data attributes defined
-      payload: { ...target.dataset },
+      payload,
       _ui: {
         type: "eventSend",
         id: target.id !== "" ? target.id : void 0,
         name: target.name !== "" ? target.name : void 0,
-        slotText: target.textContent !== "" ? target.textContent.substring(0, 255) : void 0,
+        slotText: target.textContent && target.textContent !== "" ? target.textContent.substring(0, 255) : void 0,
         form,
         props,
         attribs,
-        classes: Array.from(target.classList),
+        classes,
+        notification: nprops,
         event: domevent.type,
         altKey: domevent.altKey,
         ctrlKey: domevent.ctrlKey,
@@ -5163,7 +5565,7 @@ var Uib = (_a = class {
     if (domevent.type === "change")
       msg._ui.newValue = msg.payload.value = domevent.target.value;
     log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
-    if (target.dataset.length === 0)
+    if (target.dataset && target.dataset.length === 0)
       log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();
     this._send(msg, this._ioChannels.client, originator);
   }
@@ -5231,9 +5633,20 @@ ${document.documentElement.outerHTML}`;
         break;
       }
     }
-    if (response !== void 0 && Object(response).constructor !== Promise) {
-      if (response.length === 0)
-        response = `'${prop}' not found`;
+    if (response === void 0) {
+      response = `'${prop}' is undefined`;
+    }
+    if (Object(response).constructor === Promise) {
+      response.then((data) => {
+        msg.payload = msg._uib.response = data;
+        if (!msg.topic)
+          msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+        this.send(msg);
+        return true;
+      }).catch((err) => {
+        log(0, "Uib:_uibCommand", "Error: ", err)();
+      });
+    } else {
       msg.payload = msg._uib.response = response;
       if (!msg.topic)
         msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
@@ -5303,10 +5716,14 @@ ${document.documentElement.outerHTML}`;
    */
   _stdMsgFromServer(receivedMsg) {
     receivedMsg = makeMeAnObject(receivedMsg, "payload");
+    if (receivedMsg._uib && !this._forThis(receivedMsg._uib))
+      return;
+    if (receivedMsg._ui && !this._forThis(receivedMsg._ui))
+      return;
     this._checkTimestamp(receivedMsg);
     this.set("msgsReceived", ++this.msgsReceived);
     this._msgRcvdEvents(receivedMsg);
-    if (!("_ui" in receivedMsg)) {
+    if (!("_ui" in receivedMsg && !("payload" in receivedMsg))) {
       this.set("msg", receivedMsg);
     }
     log("info", "Uib:ioSetup:stdMsgFromServer", `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)();
@@ -5444,6 +5861,26 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
   }
   // --- End of checkConnect Fn--- //
   // See message handling section for msg receipt handlers
+  /** Called by _ioSetup when Socket.IO connects to Node-RED */
+  _onConnect() {
+    this.set("connectedNum", this.connectedNum++);
+    this.socketOptions.auth.connectedNum = this.connectedNum;
+    this.socketOptions.auth.lastNavType = this.lastNavType;
+    this.socketOptions.auth.tabId = this.tabId;
+    this.socketOptions.auth.more = this.tabId;
+    log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
+Namespace: ${this.ioNamespace}`)();
+    this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
+    this._checkConnect();
+  }
+  /** Called by _ioSetup when Socket.IO disconnects from Node-RED
+   * @param {string} reason Disconnection title
+   */
+  _onDisconnect(reason) {
+    log("info", "Uib:ioSetup:socket-disconnect", `\u26D4 Socket Disconnected. Reason: ${reason}`)();
+    this._dispatchCustomEvent("uibuilder:socket:disconnected", reason);
+    this._checkConnect();
+  }
   /** Setup Socket.io
    * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
    * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
@@ -5473,24 +5910,10 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     this.socketOptions.auth.connectedNum = this.connectedNum;
     log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
     this._socket = lookup2(this.ioNamespace, this.socketOptions);
-    this._socket.on("connect", () => {
-      this.set("connectedNum", this.connectedNum++);
-      this.socketOptions.auth.connectedNum = this.connectedNum;
-      this.socketOptions.auth.lastNavType = this.lastNavType;
-      this.socketOptions.auth.tabId = this.tabId;
-      this.socketOptions.auth.more = this.tabId;
-      log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
-Namespace: ${this.ioNamespace}`)();
-      this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
-      this._checkConnect();
-    });
+    this._socket.on("connect", this._onConnect.bind(this));
     this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this));
     this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this));
-    this._socket.on("disconnect", (reason) => {
-      log("info", "Uib:ioSetup:socket-disconnect", `\u26D4 Socket Disconnected. Reason: ${reason}`)();
-      this._dispatchCustomEvent("uibuilder:socket:disconnected", reason);
-      this._checkConnect();
-    });
+    this._socket.on("disconnect", this._onDisconnect.bind(this));
     this._socket.on("connect_error", (err) => {
       if (navigator.onLine === false)
         return;
@@ -5539,7 +5962,7 @@ ioPath: ${this.ioPath}`)();
         log("info", "Uib:start", "No styles loaded & options.loadStylesheet === false.")();
       else {
         log("info", "Uib:start", "No styles loaded, loading uibuilder default styles.")();
-        this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.css`);
+        this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.min.css`);
       }
     }
     const [entry] = performance.getEntriesByType("navigation");
@@ -5556,6 +5979,21 @@ ioPath: ${this.ioPath}`)();
         this.set("vueVersion", window["Vue"].version);
       } catch (e) {
       }
+      log("trace", "Uib:start", `VueJS is loaded. Version: ${this.vueVersion}`)();
+    } else {
+      log("trace", "Uib:start", "VueJS is not loaded.")();
+    }
+    if (window["DOMPurify"]) {
+      this.set("purify", true);
+      log("trace", "Uib:start", "DOMPurify is loaded.")();
+    } else {
+      log("trace", "Uib:start", "DOMPurify is not loaded.")();
+    }
+    if (window["markdownit"]) {
+      this.set("markdown", true);
+      log("trace", "Uib:start", "Markdown-IT is loaded.")();
+    } else {
+      log("trace", "Uib:start", "Markdown-IT is not loaded.")();
     }
     this.onChange("msg", (msg) => {
       if (__privateGet(this, _isShowMsg) === true) {
@@ -5578,7 +6016,12 @@ var uibuilder = new Uib();
 if (!window["uibuilder"]) {
   window["uibuilder"] = uibuilder;
 } else {
-  log("error", "uibuilder.module.js", "uibuilder already assigned to window. Have you tried to load it more than once?");
+  log("error", "uibuilder.module.js", "`uibuilder` already assigned to window. Have you tried to load it more than once?");
+}
+if (!window["uib"]) {
+  window["uib"] = uibuilder;
+} else {
+  log("warn", "uibuilder.module.js", "`uib` shortcut already assigned to window.");
 }
 if (!window["$"]) {
   window["$"] = window["uibuilder"].$;

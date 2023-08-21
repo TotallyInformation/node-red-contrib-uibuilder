@@ -3,7 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: >
    Description of the main features.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-03-04 15:37:14
+lastUpdated: 2023-07-05 21:56:42
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -21,17 +21,11 @@ lastUpdated: 2023-03-04 15:37:14
 - [setStore, getStore, removeStore functions](#setstore-getstore-removestore-functions)
 - [send function](#send-function)
 - [eventSend function](#eventsend-function)
-  - [Plain html/javascript example.](#plain-htmljavascript-example)
-  - [VueJS/bootstrap-vue example](#vuejsbootstrap-vue-example)
 - [Auto-loading of the uibuilder default stylesheet](#auto-loading-of-the-uibuilder-default-stylesheet)
 - [Initial connection message now shows whether the page is newly loaded or not](#initial-connection-message-now-shows-whether-the-page-is-newly-loaded-or-not)
 - [Stable client identifier](#stable-client-identifier)
 - [Number of connections is tracked and sent to server on (re)connect](#number-of-connections-is-tracked-and-sent-to-server-on-reconnect)
-  - [Example client connect control msg](#example-client-connect-control-msg)
 - [Client connection/disconnection control messages](#client-connectiondisconnection-control-messages)
-  - [Client Connect message](#client-connect-message)
-  - [Client Disconnect (and error) message](#client-disconnect-and-error-message)
-  - [Message from server to client](#message-from-server-to-client)
 - [ui function](#ui-function)
 - [Controlling from Node-RED](#controlling-from-node-red)
 
@@ -426,7 +420,7 @@ This is particularly useful as if the number is >0, you don't need to resend any
     "clientId": "xeXBgHDfAEdqwy13P6gJY",
     "pageName": "index.html",
     "connections": 0
-    }
+}
 ```
 
 As can be seen from the example message above, the source page, client version, client IP address and client id (see below) are also added to the connection message.
@@ -454,16 +448,26 @@ This information is also built into the `uib-cache` node from v5.1 to reduce unn
 ```jsonc
 {
     "uibuilderCtrl": "client connect",
-    "_msgid": "5b76892838dd47e3",
-    "_socketId": "k2hSBp3GPzviHfcQAAAk",
-
-    // These are new as of v5.1
-    "version": "5.1.0-iife.min",
+    "from": "server",
+    "_socketId": "D2ynn6nsx7sIQkijAAAF",
+    "version": "6.5.0-iife.min",
     "ip": "::ffff:127.0.0.1",
-    "clientId": "xeXBgHDfAEdqwy13P6gJY",
+    "clientId": "Vui4PXZvq9T7AVlAumIwD",
+    "tabId": "t97382",
+    "url": "hp_apcc",
     "pageName": "index.html",
-    "connections": 0
-    }
+    "urlParams": {
+        "foo": "bah",
+        "life": "42"
+    },
+    "connections": 0,
+    "lastNavType": "reload",
+    "tls": false,
+    "connectedTimestamp": "2023-07-05T20:52:18.149Z",
+    "referer": "http://127.0.0.1:3001/hp_apcc/?fred=jim&life=42",
+    "recovered": false,
+    "_msgid": "dc53a764480cfd16"
+}
 ```
 
 ## Client connection/disconnection control messages
@@ -479,16 +483,26 @@ The client also receives an initial message from the server
 ```jsonc
 {
     "uibuilderCtrl": "client connect",
-    "_msgid": "5b76892838dd47e3",
-    "_socketId": "k2hSBp3GPzviHfcQAAAk",
-
-    // These are new as of v5.1
-    "version": "5.1.0-iife.min",
+    "from": "server",
+    "_socketId": "D2ynn6nsx7sIQkijAAAF",
+    "version": "6.5.0-iife.min",
     "ip": "::ffff:127.0.0.1",
-    "clientId": "xeXBgHDfAEdqwy13P6gJY",
+    "clientId": "Vui4PXZvq9T7AVlAumIwD",
+    "tabId": "t97382",
+    "url": "hp_apcc",
     "pageName": "index.html",
-    "connections": 0
-    }
+    "urlParams": {
+        "foo": "bah",
+        "life": "42"
+    },
+    "connections": 0,
+    "lastNavType": "reload",
+    "tls": false,
+    "connectedTimestamp": "2023-07-05T20:52:18.149Z",
+    "referer": "http://127.0.0.1:3001/hp_apcc/?fred=jim&life=42",
+    "recovered": false,
+    "_msgid": "dc53a764480cfd16"
+}
 ```
 
 ### Client Disconnect (and error) message
@@ -499,17 +513,26 @@ Unfortunately, due to the asynchronous nature of the Socket.IO client and server
 {
     "uibuilderCtrl": "client disconnect",
     "reason": "transport close",
-    "_socketId": "iKGQBLc3ruVKANUPAAAC",
     "from": "server",
-    "_msgid": "3866378eb12bf981",
-
-    // These are new as of v5.1
-    "version": "5.1.0-iife.min",
+    "_socketId": "xmfdqRE3gv1MsOnXAAAC",
+    "version": "6.5.0-mod1",
     "ip": "::ffff:127.0.0.1",
-    "clientId": "xeXBgHDfAEdqwy13P6gJY",
+    "clientId": "Vui4PXZvq9T7AVlAumIwD",
+    "tabId": "t97382",
+    "url": "hp_apcc",
     "pageName": "index.html",
-    "connections": 18
-    }
+    "urlParams": {
+        "fred": "jim",
+        "life": "42"
+    },
+    "connections": 18,
+    "lastNavType": "reload",
+    "tls": false,
+    "connectedTimestamp": "2023-07-05T20:41:48.541Z",
+    "referer": "http://127.0.0.1:3001/hp_apcc/?fred=jim&life=42",
+    "recovered": false,
+    "_msgid": "cd4702e7ab242b67"
+}
 ```
 
 ### Message from server to client
