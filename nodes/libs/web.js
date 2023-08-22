@@ -938,7 +938,7 @@ class UibWeb {
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
                 <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
-                <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-brand.css" media="screen">
+                <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-brand.min.css" media="screen">
                 <style type="text/css" rel="stylesheet" media="all">
                     h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                     .col3i tbody>tr>:nth-child(3){ font-style:italic; }
