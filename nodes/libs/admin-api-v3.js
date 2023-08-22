@@ -29,6 +29,7 @@ const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra
 const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
 const uiblib = require('./uiblib')  // Utility library for uibuilder
 const web = require('./web')
+const sockets = require('./socket')
 const templateConf  = require('../../templates/template_dependencies') // Template configuration metadata
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap
@@ -450,6 +451,14 @@ function adminRouterV3(uib, log) {
                         res.statusMessage = resp.statusMessage
                         if ( resp.status === 200 ) res.status(200).json(resp.json)
                         else res.status(resp.status).end()
+                        // Reload connected clients if required by sending them a reload msg
+                        if ( params.reload === 'true' ) {
+                            sockets.sendToFe2({
+                                '_uib': {
+                                    'reload': true,
+                                }
+                            }, params.url)
+                        }
                         return true
                     })
                     .catch( err => {
