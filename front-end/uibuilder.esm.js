@@ -4288,7 +4288,7 @@ Object.assign(lookup2, {
 
 // src/front-end-module/uibuilder.module.js
 var import_ui = __toESM(require_ui());
-var version = "6.5.0-esm";
+var version = "6.6.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
@@ -5109,21 +5109,48 @@ var Uib = (_a = class {
     if (showHide === false) {
       _ui._uiRemove({
         components: [
-          "#uib_last_msg"
+          "#uib_last_msg_wrap"
         ]
       });
     } else {
       _ui._uiReplace({
         components: [
           {
-            type: "pre",
-            id: "uib_last_msg",
+            type: "div",
+            id: "uib_last_msg_wrap",
             parent,
             attributes: {
-              title: "Last message from Node-RED",
-              class: "syntax-highlight"
+              title: "Last message from Node-RED"
             },
-            slot
+            components: [
+              {
+                type: "button",
+                attributes: {
+                  onclick: 'uibuilder.copyToClipboard("msg")',
+                  class: "compact",
+                  style: "right:3em;"
+                },
+                slot: "\u{1F4CB}"
+              },
+              {
+                type: "button",
+                attributes: {
+                  onclick: "uibuilder.showMsg()",
+                  class: "compact",
+                  style: "right:.5em;"
+                },
+                slot: "\u26D4"
+              },
+              {
+                type: "pre",
+                id: "uib_last_msg",
+                // parent: 'uib_last_msg_wrap',
+                attributes: {
+                  class: "syntax-highlight"
+                },
+                slot
+              }
+            ]
           }
         ]
       });
@@ -5294,6 +5321,19 @@ var Uib = (_a = class {
     return startStop;
   }
   // ---- End of watchDom ---- //
+  /** Copies a uibuilder variable to the browser clipboard
+   * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
+   */
+  copyToClipboard(varToCopy) {
+    let data = "";
+    try {
+      console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)));
+      data = JSON.stringify(this.get(varToCopy));
+    } catch (e) {
+      log("error", "copyToClipboard", `Could not copy "${varToCopy}" to clipboard.`, e.message)();
+    }
+    navigator.clipboard.writeText(data);
+  }
   //#endregion -------- -------- -------- //
   //#region ------- HTML cache and DOM watch --------- //
   /** Clear the saved DOM from localStorage */

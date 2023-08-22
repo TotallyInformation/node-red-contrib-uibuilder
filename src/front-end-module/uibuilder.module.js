@@ -62,7 +62,7 @@ import Ui from './ui'
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.5.0-mod'
+const version = '6.6.0-mod'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -982,23 +982,50 @@ export const Uib = class Uib {
         if ( showHide === false ) {
             _ui._uiRemove( {
                 components: [
-                    '#uib_last_msg',
+                    '#uib_last_msg_wrap',
                 ],
             })
         } else {
             _ui._uiReplace({
                 components: [
                     {
-                        type: 'pre',
-                        id: 'uib_last_msg',
+                        type: 'div',
+                        id: 'uib_last_msg_wrap',
                         parent: parent,
                         attributes: {
                             title: 'Last message from Node-RED',
-                            class: 'syntax-highlight',
                         },
-                        slot: slot,
-                    }
-                ]
+                        components: [
+                            {
+                                type: 'button',
+                                attributes: {
+                                    onclick: 'uibuilder.copyToClipboard("msg")',
+                                    class: 'compact',
+                                    style: 'right:3em;',
+                                },
+                                slot: '📋',
+                            },
+                            {
+                                type: 'button',
+                                attributes: {
+                                    onclick: 'uibuilder.showMsg()',
+                                    class: 'compact',
+                                    style: 'right:.5em;',
+                                },
+                                slot: '⛔',
+                            },
+                            {
+                                type: 'pre',
+                                id: 'uib_last_msg',
+                                // parent: 'uib_last_msg_wrap',
+                                attributes: {
+                                    class: 'syntax-highlight',
+                                },
+                                slot: slot,
+                            },
+                        ],
+                    },
+                ],
             })
         }
 
@@ -1195,6 +1222,20 @@ export const Uib = class Uib {
 
         return startStop
     } // ---- End of watchDom ---- //
+
+    /** Copies a uibuilder variable to the browser clipboard
+     * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
+     */
+    copyToClipboard(varToCopy) {
+        let data = ''
+        try {
+            console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)))
+            data = JSON.stringify(this.get(varToCopy))
+        } catch(e) {
+            log('error', 'copyToClipboard', `Could not copy "${varToCopy}" to clipboard.`, e.message)()
+        }
+        navigator.clipboard.writeText(data)
+    }
 
     //#endregion -------- -------- -------- //
 
@@ -2299,7 +2340,6 @@ export const Uib = class Uib {
     }
 
     //#endregion -------- ------------ -------- //
-
 } // ==== End of Class Uib
 
 //#region --- Wrap up - get things started ---
