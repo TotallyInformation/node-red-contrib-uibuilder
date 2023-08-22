@@ -1338,6 +1338,7 @@
         const template = $('#node-input-templateFolder').val()
         const extTemplate = $('#node-input-extTemplate').val()
         const url = $('#node-input-url').val()
+        const reload = $('#node-input-reload').prop('checked')
 
         $.ajax({
             type: 'POST',
@@ -1347,6 +1348,8 @@
                 'template': template,
                 'extTemplate': extTemplate,
                 'cmd': 'replaceTemplate',
+                'reload': reload,
+                'url': url,
             },
         })
             .done(function(data, textStatus, jqXHR) {
