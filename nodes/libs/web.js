@@ -718,6 +718,7 @@ class UibWeb {
 
             // TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             res
+                // Headers only accessible in the browser via web workers
                 .header({
                     // Help reduce risk of XSS and other attacks
                     'X-XSS-Protection': '1;mode=block',
@@ -937,7 +938,7 @@ class UibWeb {
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
                 <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
-                <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-styles.css" media="screen">
+                <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-brand.css" media="screen">
                 <style type="text/css" rel="stylesheet" media="all">
                     h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                     .col3i tbody>tr>:nth-child(3){ font-style:italic; }
