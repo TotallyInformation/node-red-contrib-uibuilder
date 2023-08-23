@@ -101,7 +101,6 @@ Why?
 * Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
 * [Issue #94](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/94) - Detect when Node-RED switches projects and see if the uibRoot folder can be dynamically changed.
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
-* ~~**NEW NODE** - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.~~ No longer needed, use `msg._uib` commands in std msg.
 
 * Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
 
@@ -112,12 +111,12 @@ Why?
   * probably chart
   * How to pass data through?
 
+* REJECTED
+  * ~~NEW NODE - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.~~ No longer needed, use `msg._uib` commands in std msg.
+
 
 ### Updates to `uibuilder` node
 
-* Auto-generate web manifest.
-* Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
-* Editor panel: Remove the "Allow passing to the front-end" from Advanced tab - no longer needed. Use `msg._ui` features with the updated client instead.
 * Allow file uploads
 * Add instance title and description fields. Extend record of instances to include these and update the `apps` page.
 
@@ -127,23 +126,20 @@ Why?
   * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
 
 * Gracefully handle when rename cannot (re)move original folder (e.g. held open by browser).
+  * Improve checks for rename failures. `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` - these should clear after restart but sometimes don't.
 * Files: Changing filetype in editor does not change the highlighting.
-* On template load, issue reload command to all connected clients.
 
 * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
 * Improve handling for when Node-RED changes projects.
-* Use new `uib-brand.css` style library on details pages.
-* Add api to query if a specific uib library is installed (and return version)
-* Add API test harness using VScode restbook.
-* Add 4th cookie to record the Node-RED web URL (e.g. `http://x.x.x.x:1800/`) since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.
 * Allow instance npm installs to be served (would allow both vue 2 and vue 3 for example). Instance serves to take preference. Would need extension to editor libraries tab to differentiate the locations.
 * Centralise the list of control messages in use.
 * Add occasional check for new version of uib being available and give single prompt in editor.
-* Improve checks for rename failures. `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` - these should clear after restart but sometimes don't.
 * Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'". "sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
 * Introduce standard events: url-change (so that all uib related nodes can be notified if a uib endpoint changes url).
 * uibindex change "User-Facing Routes" to "Client-Facing Routes".
 * Add index web page for the `common` folder.
+* Auto-generate web manifest.
+* Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
 
 * Editor:
   * Add Homepage link to each package in the Libraries tab.
@@ -219,13 +215,17 @@ Why?
   Currently available by adding the appropriate ExpressJS option in settings.js.
 
 * `package-mgt.js`
-  * Rationalise the various functions - several of them have similar tasks.
+  * Output npm log to NR log debug level (or maybe trace?)
+  * When checking for URL to use - scan for a `dist` folder.
 
 * `socket.js`
-* Add rooms: page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
-* When a new client connection is made, use `socket.emit('join', tabId)`
-* Output to a room using `io.to(tabId).emit(...)`
-* https://socket.io/docs/v4/rooms/
+  * Add rooms: page, User id, Tab id - will allow broadcasts to a specific page, user or individual tab and will not be purely reliant on the `_socketId` which can change.
+  * When a new client connection is made, use `socket.emit('join', tabId)`
+  * Output to a room using `io.to(tabId).emit(...)`
+  * https://socket.io/docs/v4/rooms/
+
+* Rejected
+  * ~~Add 4th cookie to record the Node-RED web URL since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.~~ Can't even give the port since the client access might be totally different to the server (e.g. behind a proxy).
 
 
 ### Extensions to `uib-cache` node
@@ -371,20 +371,20 @@ Why?
   * Allow for multi-select sending array of selected options.
   * Allow for multi-select pre-selecting array of options.
   * Allow for "selected" `true` on option entries.
+
 * Get _uib/_ui notify features to use Notification API if available
 * Compare ui.js with radar version - see if changes to watch fn need to be brought over. Also add observe options.
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
 * Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
+
 * *New Functions* (all to be callable from Node-RED):
-  * [ ] Show/hide page controls (light/dark, colours, etc. Easy Read option?)
-  * [ ] `uibuilder.navigate(locationUrl)` - change page. Ensure it works with SPA routers and with anchor links.
   * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
   * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
   * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
-  * [ ] **HARD - may be impossible?** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
-  * [ ] ~~`uiUpdate(cssSelector, data)` - mirroring the `uib-update` node's features & allowing easy DOM updates from front-end code as well.~~ Not really needed since if you are already writing front-end code, you can simply use the `uibuilder.ui` function directly.
   * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others) buttons. [ref](https://codereview.stackexchange.com/questions/192138/buttons-that-expand-or-collapse-all-the-details-within-the-document)
+  * [ ] `uibuilder.navigate(locationUrl)` - change page. Ensure it works with SPA routers and with anchor links. Probably won't work with router libraries as they have to intercept link calls.
+  * [ ] **HARD - may be impossible?** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
 
 * Control from Node-RED. Functions to implement:
   * [ ] watchDom(startStop), uiWatch(cssSelector)
@@ -397,8 +397,6 @@ Why?
   * [ ] `convertToUI(cssSelector)`
   * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others)
 
-* Add small button to showMsg output to allow user to turn off the display.
-* Add small button to showStatus output to allow user to turn off the display.
 * Use esbuild to create IIFE version of `ui.js`.
 * Allow file uploads
 * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
@@ -585,13 +583,13 @@ Why?
  
 * Add settings.js options to use different paths/names for middleware files.
 
-* Add socket.io instrumentation server. See https://socket.io/docs/v4/admin-ui/
-
 * Once Node-RED's baseline node.js version has moved passed v12.20, can update `execa` and use dynamic imports (and change README notes on scorecard). Once it has moved into v14, can simplify the socket.js class by reinstating the optional chaining.
 
+* Add socket.io instrumentation server. See https://socket.io/docs/v4/admin-ui/
+{}
 * Move socket.io client to dev deps and remove serve from web.js (new library builds it in) - can't do until uibuilderfe is deprecated? Or updated to include (breaking chg)
 
-* Consider the use of `RED.comms.publish('uibuilder:some-event-name', data, retainFlag)` to push data to the editor
+* Consider the use of `RED.comms.publish('uibuilder:some-event-name', data, retainFlag)` to push data to the editor (using RED.comms.subscribe in the Editor)
 
 * Consider allowing addition of HTTP request headers to control msgs
 
@@ -608,11 +606,6 @@ Why?
 * Method to show output from npm package handling.
 * Add optional plugin displaying drop-down in Editors header bar - listing links to all deployed uib URLs. See example: https://github.com/kazuhitoyokoi/node-red-contrib-plugin-header
 * If instance folder doesn't exist - need to mark node as changed to force deploy.
-
-### Package Manager Class
-
-* Output npm log to NR log debug level (or maybe trace?)
-* When checking for URL to use - scan for a `dist` folder.
 
 ### Templates
 
