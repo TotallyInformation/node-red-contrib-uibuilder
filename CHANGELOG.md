@@ -6,15 +6,57 @@ typora-root-url: docs/images
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version.
 
+## TO FIX
+
+* Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
+
 ## To do/In-progress
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
+
+### Client library
+
+* Add small button to showStatus output to allow user to turn off the display.
+
+### uibuilder node
+
+* Add api to query if a specific uib library is installed (and return version)
+* Add API test harness using VScode restbook.
+* Move all uibRoot package.json handling to `libs/package-mgt.js`
+* `package-mgt.js`
+  * Rationalise the various functions - several of them have similar tasks.
+
+### Docs
+* uib-tag
+
+### General
+
+* Add a "Quick Start" example.
 
 ----
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### Improvements to the client library
+
+* **NEW Function** `uibuilder.copyToClipboard(uibVarName)` - passed a uibuilder variable, will copy the contents to the clipboard (stringifying it first). Can't be used from the browser dev console due to restrictions in the browser. Use as `onclick` function on buttons.
+* Added close and copy (to clipboard) buttons on the Visible Messages box. They are only visible when hovering over the box.
+
+### Improvements to the uibuilder node
+
+* On loading a template, if the "Reload connected clients on save?" flag is set on the Files tab, a reload command is issued to all connected clients.
+* For the `uibindex` detailed information web page and the instance information page, replaced the old `uib-styles.css` with the newer `uib-brand.css`.
+
+### Improvements for uib-brand.css
+
+* New classes to support the enhanced showMsgs command buttons features.
+
+### General Improvements
+
+* Some pages of documentation reorganised. Note that this may have broken some links, if so, please do report them. The "Page Not Found" page has been updated with a reporting link.
+* **NEW TEMPLATE** `quick-start` - A simple, pre-configured flow with some standard uibuilder inputs and outputs.
 
 ## [v6.5.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.4.1)
 
