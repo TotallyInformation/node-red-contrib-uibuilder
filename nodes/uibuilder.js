@@ -565,6 +565,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     //#endregion -------- Constants -------- //
 
+    //! TODO: Move all file handling to separate lib
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable? */
@@ -589,11 +590,12 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     }
     // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
     if (uibRootFolderOK === true) {
+        //! TODO - No longer needed?
         // Check if uibRoot/package.json exists and if not, create it
-        const uibRootPkgJson = path.join(uib.rootFolder, 'package.json')
-        if ( !fs.existsSync( uibRootPkgJson ) ) {
-            fs.writeJsonSync( uibRootPkgJson, { name: 'uib-root' } )
-        }
+        // const uibRootPkgJson = path.join(uib.rootFolder, 'package.json')
+        // if ( !fs.existsSync( uibRootPkgJson ) ) {
+        //     fs.writeJsonSync( uibRootPkgJson, { name: 'uib-root' } )
+        // }
         // We want to always overwrite the .config template files
         const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
         try {
