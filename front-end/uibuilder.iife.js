@@ -4460,7 +4460,7 @@
     return json;
   }
   var _ui = new import_ui.default(log, syntaxHighlight);
-  var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _extCommands, _showStatus, _uiObservers, _a;
+  var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _extCommands, _showStatus, _uiObservers, _a;
   var Uib = (_a = class {
     // ---- End of ioSetup ---- //
     //#endregion -------- ------------ -------- //
@@ -4497,6 +4497,8 @@
       __privateAdd(this, _isShowMsg, false);
       // Has showStatus been turned on?
       __privateAdd(this, _isShowStatus, false);
+      // Has an IntersectionObserver been created? If so, this will hold the reference to it
+      __privateAdd(this, _intersectionObserver, void 0);
       // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
       __privateAdd(this, _extCommands, [
         "get",
@@ -4506,7 +4508,8 @@
         "showStatus",
         "uiGet",
         "uiWatch",
-        "include"
+        "include",
+        "elementExists"
       ]);
       // What status variables to show via showStatus()
       __privateAdd(this, _showStatus, {
@@ -4988,6 +4991,79 @@
       return syntaxHighlight(json);
     }
     // --- End of syntaxHighlight --- //
+    /** Copies a uibuilder variable to the browser clipboard
+     * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
+     */
+    copyToClipboard(varToCopy) {
+      let data = "";
+      try {
+        console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)));
+        data = JSON.stringify(this.get(varToCopy));
+      } catch (e) {
+        log("error", "copyToClipboard", `Could not copy "${varToCopy}" to clipboard.`, e.message)();
+      }
+      navigator.clipboard.writeText(data);
+    }
+    // --- End of copyToClipboard --- //
+    /** Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
+     * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
+     * Automatically sends a msg back to Node-RED.
+     * Requires the element to already exist.
+     * @param {string} cssSelector Required. CSS Selector to examine for visibility
+     * @param {boolean} stop Optional. Default=false. If TRUE, stop the observer for this cssSelector
+     * @param {number} threshold Optional. Default=0.1. Between 0 and 1, the % visibility before trigger
+     */
+    elementIsVisible(cssSelector, stop = false, threshold = 0.1) {
+      if (!IntersectionObserver)
+        return;
+      if (!__privateGet(this, _intersectionObserver)) {
+        __privateSet(this, _intersectionObserver, new IntersectionObserver((ioEntries) => {
+          const entries = [];
+          ioEntries.forEach((entry) => {
+            entry.target.dataset.isvisible = entry.isIntersecting;
+            entries.push({
+              isIntersecting: entry.isIntersecting
+            });
+          });
+          this.send({
+            payload: entries[0].isIntersecting,
+            isVisible: entries[0].isIntersecting,
+            cssSelector,
+            entries
+          });
+          log("info", "uib:elementIsVisible", `Element "${cssSelector}" is now ${entries[0].isIntersecting ? "more than 10%" : "NOT (<10%)"} visible`)();
+        }, { threshold }));
+      }
+      const el = document.querySelector(cssSelector);
+      if (el === null) {
+        log("error", "uib:elementIsVisible", `Element "${cssSelector}" not found`)();
+        return;
+      }
+      if (stop === true) {
+        __privateGet(this, _intersectionObserver).unobserve(el);
+        return;
+      }
+      __privateGet(this, _intersectionObserver).observe(el);
+    }
+    // --- End of elementIsVisible --- //
+    /** Does the chosen CSS Selector currently exist?
+     * Automatically sends a msg back to Node-RED unless turned off.
+     * @param {string} cssSelector Required. CSS Selector to examine for visibility
+     * @returns {boolean} True if the element exists
+     */
+    elementExists(cssSelector, msg = true) {
+      const el = document.querySelector(cssSelector);
+      let exists = false;
+      if (el !== null)
+        exists = true;
+      if (msg === true)
+        this.send({
+          payload: exists,
+          info: `Element "${cssSelector}" ${exists ? "exists" : "does not exist"}`
+        });
+      return exists;
+    }
+    // --- End of elementExists --- //
     //#endregion -------- -------- -------- //
     //#region ------- UI handlers --------- //
     //#region -- Direct to _ui --
@@ -5322,19 +5398,6 @@
       return startStop;
     }
     // ---- End of watchDom ---- //
-    /** Copies a uibuilder variable to the browser clipboard
-     * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
-     */
-    copyToClipboard(varToCopy) {
-      let data = "";
-      try {
-        console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)));
-        data = JSON.stringify(this.get(varToCopy));
-      } catch (e) {
-        log("error", "copyToClipboard", `Could not copy "${varToCopy}" to clipboard.`, e.message)();
-      }
-      navigator.clipboard.writeText(data);
-    }
     //#endregion -------- -------- -------- //
     //#region ------- HTML cache and DOM watch --------- //
     /** Clear the saved DOM from localStorage */
@@ -5635,7 +5698,7 @@ ${document.documentElement.outerHTML}`;
       }
       const prop = msg._uib.prop;
       const value2 = msg._uib.value;
-      let response;
+      let response, info;
       switch (cmd) {
         case "get": {
           response = this.get(prop);
@@ -5669,6 +5732,10 @@ ${document.documentElement.outerHTML}`;
           response = _ui.include(prop, value2);
           break;
         }
+        case "elementExists": {
+          response = this.elementExists(prop, false);
+          info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
+        }
         default: {
           log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();
           break;
@@ -5680,6 +5747,7 @@ ${document.documentElement.outerHTML}`;
       if (Object(response).constructor === Promise) {
         response.then((data) => {
           msg.payload = msg._uib.response = data;
+          msg.info = msg._uib.info = info;
           if (!msg.topic)
             msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
           this.send(msg);
@@ -5689,6 +5757,7 @@ ${document.documentElement.outerHTML}`;
         });
       } else {
         msg.payload = msg._uib.response = response;
+        msg.info = msg._uib.info = info;
         if (!msg.topic)
           msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
         this.send(msg);
@@ -6046,7 +6115,7 @@ ioPath: ${this.ioPath}`)();
       this._dispatchCustomEvent("uibuilder:startComplete");
     }
     //#endregion -------- ------------ -------- //
-  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#endregion -- not external --
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _intersectionObserver = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#endregion -- not external --
   //#region ------- Static metadata ------- //
   __publicField(_a, "_meta", {
     version,

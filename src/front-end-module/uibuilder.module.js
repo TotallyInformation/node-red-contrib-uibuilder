@@ -347,9 +347,11 @@ export const Uib = class Uib {
     #isShowMsg = false
     // Has showStatus been turned on?
     #isShowStatus = false
+    // Has an IntersectionObserver been created? If so, this will hold the reference to it
+    #intersectionObserver = undefined
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
-        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include'
+        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include', 'elementExists'
     ]
 
     // What status variables to show via showStatus()
@@ -843,6 +845,93 @@ export const Uib = class Uib {
         return syntaxHighlight(json)
     } // --- End of syntaxHighlight --- //
 
+    /** Copies a uibuilder variable to the browser clipboard
+     * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
+     */
+    copyToClipboard(varToCopy) {
+        let data = ''
+        try {
+            console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)))
+            data = JSON.stringify(this.get(varToCopy))
+        } catch(e) {
+            log('error', 'copyToClipboard', `Could not copy "${varToCopy}" to clipboard.`, e.message)()
+        }
+        navigator.clipboard.writeText(data)
+    } // --- End of copyToClipboard --- //
+
+    /** Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
+     * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
+     * Automatically sends a msg back to Node-RED.
+     * Requires the element to already exist.
+     * @param {string} cssSelector Required. CSS Selector to examine for visibility
+     * @param {boolean} stop Optional. Default=false. If TRUE, stop the observer for this cssSelector
+     * @param {number} threshold Optional. Default=0.1. Between 0 and 1, the % visibility before trigger
+     */
+    elementIsVisible(cssSelector, stop = false, threshold = 0.1) {
+        if (!IntersectionObserver) return
+
+        // TODO Return a promise? - make return message optional?
+        // https://blog.bitsrc.io/angular-maximizing-performance-with-the-intersection-observer-api-23d81312f178#:~:text=Let%E2%80%99s%20define%20a%20function%20named%20isVisible%20and%20returns,resolve%20%28entry.isIntersecting%29%3B%20observer.disconnect%20%28%29%3B%20%7D%29%3B%20observer.observe%20%28element%29%3B%20%7D%29%3B
+
+        if (!this.#intersectionObserver) {
+            this.#intersectionObserver = new IntersectionObserver( (ioEntries) => {
+                const entries = []
+                // Stupid DOM API's, we have to explicitly loop through the data to be able to use it
+                ioEntries.forEach((entry) => {
+                    // Markup the element (data-isvisible)
+                    entry.target.dataset.isvisible = entry.isIntersecting
+                    // Each entry describes an intersection change for one observed
+                    entries.push({
+                        isIntersecting: entry.isIntersecting,
+                    })
+                })
+
+                // console.log('IntersectionObserver: Entries ', ioEntries, entries)
+                this.send({
+                    payload: entries[0].isIntersecting,
+                    isVisible: entries[0].isIntersecting,
+                    cssSelector,
+                    entries: entries,
+                })
+
+                log('info', 'uib:elementIsVisible', `Element "${cssSelector}" is now ${entries[0].isIntersecting ? 'more than 10%' : 'NOT (<10%)'} visible`)()
+            }, {threshold: threshold})
+        }
+
+        const el = document.querySelector(cssSelector)
+
+        if (el === null) {
+            log('error', 'uib:elementIsVisible', `Element "${cssSelector}" not found`)()
+            return
+        }
+
+        if (stop === true) {
+            this.#intersectionObserver.unobserve(el)
+            return
+        }
+
+        this.#intersectionObserver.observe(el)
+    } // --- End of elementIsVisible --- //
+
+    /** Does the chosen CSS Selector currently exist?
+     * Automatically sends a msg back to Node-RED unless turned off.
+     * @param {string} cssSelector Required. CSS Selector to examine for visibility
+     * @returns {boolean} True if the element exists
+     */
+    elementExists(cssSelector, msg = true) {
+        const el = document.querySelector(cssSelector)
+
+        let exists = false
+        if (el !== null) exists = true
+
+        if (msg === true) this.send({
+            payload: exists,
+            info: `Element "${cssSelector}" ${exists ? 'exists' : 'does not exist'}`
+        })
+
+        return exists
+    } // --- End of elementExists --- //
+
     //#endregion -------- -------- -------- //
 
     //#region ------- UI handlers --------- //
@@ -1223,20 +1312,6 @@ export const Uib = class Uib {
         return startStop
     } // ---- End of watchDom ---- //
 
-    /** Copies a uibuilder variable to the browser clipboard
-     * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
-     */
-    copyToClipboard(varToCopy) {
-        let data = ''
-        try {
-            console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)))
-            data = JSON.stringify(this.get(varToCopy))
-        } catch(e) {
-            log('error', 'copyToClipboard', `Could not copy "${varToCopy}" to clipboard.`, e.message)()
-        }
-        navigator.clipboard.writeText(data)
-    }
-
     //#endregion -------- -------- -------- //
 
     //#region ------- HTML cache and DOM watch --------- //
@@ -1614,7 +1689,7 @@ export const Uib = class Uib {
         }
         const prop = msg._uib.prop
         const value = msg._uib.value
-        let response
+        let response, info
 
         switch (cmd) {
             case 'get': {
@@ -1658,6 +1733,11 @@ export const Uib = class Uib {
                 break
             }
 
+            case 'elementExists': {
+                response = this.elementExists(prop, false)
+                info = `Element "${prop}" ${response ? 'exists' : 'does not exist'}`
+            }
+
             default: {
                 log('warning', 'Uib:_uibCommand', `Command '${cmd}' not yet implemented`)()
                 break
@@ -1672,6 +1752,7 @@ export const Uib = class Uib {
             response
                 .then( (/** @type {any} */ data) => {
                     msg.payload = msg._uib.response = data
+                    msg.info = msg._uib.info = info
                     if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
                     this.send(msg)
                     return true
@@ -1681,6 +1762,7 @@ export const Uib = class Uib {
                 })
         } else {
             msg.payload = msg._uib.response = response
+            msg.info = msg._uib.info = info
             if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
             this.send(msg)
         }
