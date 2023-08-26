@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-07-02 14:23:47
+lastUpdated: 2023-08-23 17:56:05
 ---
 
 Functions accessible in client-side user code.
@@ -91,6 +91,16 @@ The `logLevel` matches both Node-RED and uibuilder defined log levels (e.g. erro
 
 ## Variable Handling
 
+### `copyToClipboard(varToCopy)` - Copy the specified uibuilder variable to the browser clipboard
+
+Can only be used as an event handler because browsers do not allow unrestricted JavaScript access to the browser clipboard.
+
+`varToCopy` has to be a variable specified in uibuilder. One that could be retrieved by `uibuilder.get('varToCopy')`.
+
+```html
+<button onclick="copyToClipboard('version')">Copy uibuilder client version string to clipboard</button>
+```
+
 ### `get(prop)` - Get a uibuilder property
 
 This is the preferred method to get an exposed uibuilder variable or property. Do not try to access variables and properties directly unless explicitly shared in this documentation. This function can also be called from Node-RED via `msg._uib.command` - `get` with `msg._uib.prop` set to the variable name to get.
@@ -100,6 +110,20 @@ This is the preferred method to get an exposed uibuilder variable or property. D
 ```javascript
 console.log( uibuilder.get('version') )
 ```
+
+### `getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage
+
+Note that browser localStorage is persisted even after a browser closes. It can be manually cleared from the browser's settings. You can also remove an item using the `removeStore` function.
+
+If the `id` is not found in the store, `null` is returned. If the store is not available or some other error occurs, `undefined` is returned.
+
+All `id`s have a pre-defined uibuilder prefix added to the key name to help ensure that the key being saved will be unique. This prefix is defined in the library and cannot be changed, it is set to `uib_`.
+
+Because the browser storage API only allows strings as values, the data has to be serialised. This function attempts to unserialise (re-hydrate). It should be noted that sometimes, this process results in values that may differ from the original. For example, `uibuilder.setStore('mydate',new Date()); console.log( uibuilder.getStore('mydate') )` will return the saved date as an ISO8602 date string, not a JavaScript Date object.
+
+### `removeStore(id)` - Attempt to remove a uibuilder key from browser localStorage
+
+Does not return anything. Does not generate an error if the key does not exist.
 
 ### `set(prop, val)` - Set a uibuilder property and dispatch a change event
 
@@ -117,15 +141,9 @@ This function can also be called from Node-RED via `msg._uib.command` - `set` wi
 uibuilder.set('logLevel', 3)
 ```
 
-### `getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage
+### `setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED
 
-Note that browser localStorage is persisted even after a browser closes. It can be manually cleared from the browser's settings. You can also remove an item using the `removeStore` function.
-
-If the `id` is not found in the store, `null` is returned. If the store is not available or some other error occurs, `undefined` is returned.
-
-All `id`s have a pre-defined uibuilder prefix added to the key name to help ensure that the key being saved will be unique. This prefix is defined in the library and cannot be changed, it is set to `uib_`.
-
-Because the browser storage API only allows strings as values, the data has to be serialised. This function attempts to unserialise (re-hydrate). It should be noted that sometimes, this process results in values that may differ from the original. For example, `uibuilder.setStore('mydate',new Date()); console.log( uibuilder.getStore('mydate') )` will return the saved date as an ISO8602 date string, not a JavaScript Date object.
+This uses an HTTP API call to a custom uibuilder API endpoint in Node-RED. So it works even if the Socket.IO connection is not working. It is used to check that the Node-RED server and the uibuilder instance are both still working.
 
 ### `setStore(id, val)` - Attempt to save to the browsers localStorage
 
@@ -139,13 +157,6 @@ Returns `true` if the save was successful, otherwise returns false.
 
 Errors are output to the browser console if saving fails but processing will continue.
 
-### `removeStore(id)` - Attempt to remove a uibuilder key from browser localStorage
-
-Does not return anything. Does not generate an error if the key does not exist.
-
-### `setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED
-
-This uses an HTTP API call to a custom uibuilder API endpoint in Node-RED. So it works even if the Socket.IO connection is not working. It is used to check that the Node-RED server and the uibuilder instance are both still working.
 
 ##### Example
 
@@ -166,27 +177,85 @@ In addition, internal message handling will recognise standard messages from nod
 
 For functions with no descriptions, please refer to the code. In general, these will not need to be used in your own code.
 
-### `ui(json)` - Directly manage UI via JSON
+### `elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Can an HTML element currently be seen by the user?
 
-Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
+When the selected element is showing at least 10% in the users browser view, sends a message to Node-RED with `msg.isVisible` set to `true`. Will send another message if the elements shows less than 10%. Will continue to send messages when the element moves in and out of visibility.
 
-Directly calls `_ui.ui` from the `ui.js` library.
+To turn it off, call it again with the same cssSelector but with the `stop` argument set to `true`.
+
+The `threshold` argument defaults to 0.1 (10%). It must be between 0 and 1 and represents, as a percentage, how much of the element must be in the browser viewport to trigger an output.
+
+Notes:
+
+* Unlike the visibility control message, this function sends a standard message AND is not effected by the browser tab visibility. So even if the tab containing the page is not visible but the element would be if the tab were showing, the result of this function is still TRUE.
+* Requires the browser to support the IntersectionObserver API (available to all mainstream browsers from early 2019).
+* The element has to exist on the page before it can be observed.
+* Turn on the optional `msg._uib` feature in the uibuilder node to see which client is sending the messages.
 
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
 
 See under [Message Handling](#message-handling) above for details.
 
-### `loadui(url)` - Load a dynamic UI from a JSON web reponse
+### `include(url, uiOptions)` - insert an external file into the web page
 
-Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
+Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch). This function is asynchronous, that should be allowed for when using in custom front-end code.
 
-Directly calls `_ui.loadui` from the `ui.js` library.
+> [!NOTE]
+> This function uses the standard [`replaceSlot`](#replaceslotel-component-replace-or-add-an-html-element39s-slot-from-text-or-an-html-string) internal function. As such, it will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if loaded. DOMPurify will block the loading of most file types.
+
+The `uiOptions` parameter is **required** and must contain at least an `id` property. Options are:
+
+```json
+{
+  // REQUIRED: Must be unique on the web page and is applied to the wrapping `div` tag.
+  "id": "unique99",
+  // A CSS Selector that identifies the parent element to which the included 
+  // file will be attached. If not provided, 'body' will be used
+  "parent": "#more",
+  // Optional. If the parent has multiple children, identifies where the new element
+  // will be inserted. Defaults to "last". May be "first", "last" or a number.
+  "position": "last",
+  // Optional. Attributes that will be applied to the wrapping DIV tag
+  "attributes": {
+    // NB: The "included" class is applied by default, if adding further 
+    //     classes it is generally best to include that.
+    "class": "myclass included"
+  }
+  // Other properties from the UI `replace` mode may also be included but 
+  // caution is required not to clash with properties from the included file.
+}
+```
+
+Each of the includes are wrapped in a `div` tag to which the supplied `id` attribute is applied along with a class of `included`. This makes styling of the included elements very easy. For example, to style an included image, add something like this to your `index.css` file: `.included img { width: 100%, border:5px solid silver;}`.
+
+The following file types are handled:
+
+* *HTML document/fragment* (*.html) - Will be wrapped in a div given the specified `id` attribute.
+  
+  If the `DOMPurify` library is loaded before the uibuilder client library, it will be used to sanitise the HTML.
+
+* *Image* - Any image file type recognised by the browser will be shown using an `img` tag (wrapped in the div as usual).
+* *Video* - Any video file type recognised by the browser will be shown using a `video` tag (wrapped in the div as usual). The video controls will be shown and it will auto-play if the browser allows it.
+* *JSON* - A `*.json` file will be syntax highlighted and shown in a panel. The syntax highlight CSS is contained in the `uib-brand.css` file and can be copied to your own CSS definitions if needed. The panel is defined as a `pre` tag with the `syntax-highlight` class added.
+* *PDF* - A `*.pdf` file will be shown in a resizable iFrame.
+* *Text* - The contents of the text file will be shown in a resizable iFrame.
+* *Other* - Any other file type will be shown in a resizable iFrame.
+
+Any file type that the browser cannot handle will trigger the browser to automatically download it. This is a browser limitation.
+
+Can be called from Node-RED with a message like: `{"command":"include","prop":"./test.html","value":{"id":"incHtm","parent":"#more","attributes":{"style":"width:50%;"}}}`.
 
 ### `loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously
 
 Either from a remote URL or from a text string.
 
 Directly call the functions of the same name from the `ui.js` library.
+
+### `loadui(url)` - Load a dynamic UI from a JSON web reponse
+
+Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
+
+Directly calls `_ui.loadui` from the `ui.js` library.
 
 ### `notify(config)` - Use the browser and OS notification API to show a message to the user
 
@@ -326,6 +395,12 @@ const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
 
+### `ui(json)` - Directly manage UI via JSON
+
+Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
+
+Directly calls `_ui.ui` from the `ui.js` library.
+
 ### `uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element
 
 Will return an array of found elements with properties.
@@ -354,54 +429,6 @@ If `startStop` is undefined, null or 'toggle', the watch will be toggled.
 
 Can be called from Node-RED with a message like: `{"_uib: {"command": "uiWatch", "prop": "#more"} }`.
 
-### `include(url, uiOptions)` - insert an external file into the web page
-
-Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch). This function is asynchronous, that should be allowed for when using in custom front-end code.
-
-> [!NOTE]
-> This function uses the standard [`replaceSlot`](#replaceslotel-component-replace-or-add-an-html-element39s-slot-from-text-or-an-html-string) internal function. As such, it will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if loaded. DOMPurify will block the loading of most file types.
-
-The `uiOptions` parameter is **required** and must contain at least an `id` property. Options are:
-
-```json
-{
-  // REQUIRED: Must be unique on the web page and is applied to the wrapping `div` tag.
-  "id": "unique99",
-  // A CSS Selector that identifies the parent element to which the included 
-  // file will be attached. If not provided, 'body' will be used
-  "parent": "#more",
-  // Optional. If the parent has multiple children, identifies where the new element
-  // will be inserted. Defaults to "last". May be "first", "last" or a number.
-  "position": "last",
-  // Optional. Attributes that will be applied to the wrapping DIV tag
-  "attributes": {
-    // NB: The "included" class is applied by default, if adding further 
-    //     classes it is generally best to include that.
-    "class": "myclass included"
-  }
-  // Other properties from the UI `replace` mode may also be included but 
-  // caution is required not to clash with properties from the included file.
-}
-```
-
-Each of the includes are wrapped in a `div` tag to which the supplied `id` attribute is applied along with a class of `included`. This makes styling of the included elements very easy. For example, to style an included image, add something like this to your `index.css` file: `.included img { width: 100%, border:5px solid silver;}`.
-
-The following file types are handled:
-
-* *HTML document/fragment* (*.html) - Will be wrapped in a div given the specified `id` attribute.
-  
-  If the `DOMPurify` library is loaded before the uibuilder client library, it will be used to sanitise the HTML.
-
-* *Image* - Any image file type recognised by the browser will be shown using an `img` tag (wrapped in the div as usual).
-* *Video* - Any video file type recognised by the browser will be shown using a `video` tag (wrapped in the div as usual). The video controls will be shown and it will auto-play if the browser allows it.
-* *JSON* - A `*.json` file will be syntax highlighted and shown in a panel. The syntax highlight CSS is contained in the `uib-brand.css` file and can be copied to your own CSS definitions if needed. The panel is defined as a `pre` tag with the `syntax-highlight` class added.
-* *PDF* - A `*.pdf` file will be shown in a resizable iFrame.
-* *Text* - The contents of the text file will be shown in a resizable iFrame.
-* *Other* - Any other file type will be shown in a resizable iFrame.
-
-Any file type that the browser cannot handle will trigger the browser to automatically download it. This is a browser limitation.
-
-Can be called from Node-RED with a message like: `{"command":"include","prop":"./test.html","value":{"id":"incHtm","parent":"#more","attributes":{"style":"width:50%;"}}}`.
 
 ## HTML/DOM Cacheing
 
