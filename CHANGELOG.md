@@ -16,6 +16,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Client library
 
+* Add `elementExists(selector)` - method for checking if an element exists on the page.
 * Add small button to showStatus output to allow user to turn off the display.
 
 ### uibuilder node
@@ -42,6 +43,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### Improvements to the client library
 
 * **NEW Function** `uibuilder.copyToClipboard(uibVarName)` - passed a uibuilder variable, will copy the contents to the clipboard (stringifying it first). Can't be used from the browser dev console due to restrictions in the browser. Use as `onclick` function on buttons.
+* **NEW Function** `elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Sends a msg back to Node-RED when the selected element goes in and out of visibility within the browser
 * Added close and copy (to clipboard) buttons on the Visible Messages box. They are only visible when hovering over the box.
 
 ### Improvements to the uibuilder node
@@ -57,6 +59,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Some pages of documentation reorganised. Note that this may have broken some links, if so, please do report them. The "Page Not Found" page has been updated with a reporting link.
 * **NEW TEMPLATE** `quick-start` - A simple, pre-configured flow with some standard uibuilder inputs and outputs.
+* Remove dependencies on fs-extra library - libs/web.js only right now - need to wait for node.js v16.7 to be baseline for the rest
 
 ## [v6.5.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.4.1)
 

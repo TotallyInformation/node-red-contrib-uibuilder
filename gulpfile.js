@@ -305,7 +305,7 @@ function packfeIIFE(cb) {
             cb(err)
         })
         .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-iife"'))
-        .pipe(debug({title: 'unicorn:'}))
+        .pipe(debug({title: '>>> '}))
         .pipe(dest('front-end/'))
         // .pipe(dest(`${feDest}/`))
         .on('end', function() {

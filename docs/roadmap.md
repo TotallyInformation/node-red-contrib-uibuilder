@@ -94,6 +94,8 @@ Why?
 
 ### General changes
 
+* Move the ui class to a separate repo so that it can be used independently.
+
 * Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
 * Restructure uibuilder node to remove fs-extra dependency to its own library module.
 * Restructure other nodes to move server file handling to a separate library module.
@@ -142,46 +144,53 @@ Why?
 * Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
 
 * Editor:
-  * Add Homepage link to each package in the Libraries tab.
-  * Improve help box for _uib switch 
-  * Add template description to display.
-  * Add dependency version handling to templates (e.g. vue 2/3)
-  * Switch tooltips to using aria-label with hover CSS as in the new node.
-  * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
-  * Change getFileList to only return files, use the separate folder list for folders. No need to run it multiple times then.
-  * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
-  * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
-  * Creating new folder - new folder should be selected after create.
-  * NEW TAB: `Build` - run npm scripts, install instance libraries (for dev or dependencies - just dev initially)
-  * Add visual error when changing advanced/Serve to a folder with no index.html.
-  * Option for project folder storage.
-  * Add (advanced) flag to make use of project folder optional.
-  * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
+  * Templates
+    * Add template description to display.
+    * Add dependency version handling to templates (e.g. vue 2/3)
+    * Allow templates to provide example flows via a uibuilder Node-RED library plugin - will library update though?
+      
+      Check for examples folder, if present load all *.json files to library.
+      [saveLibraryEntry](https://nodered.org/docs/api/storage/methods/#storagesavelibraryentrytypenamemetabody)
+      
+      ([ref1](https://discourse.nodered.org/t/red-library-without-red-editor/61247), [ref2](https://nodered.org/docs/api/library/), [ref3](https://github.com/node-red/node-red-library-file-store/blob/main/index.js))
+    
+  
   * Libraries tab
+    * Add Homepage link to each package in the Libraries tab.
     * Add update indicator to Libraries tab.
     * Trigger indicator to Libraries to show if new major version available when switching to the tab.
     * Add npm package delete confirmation - probably via std NR notifications.
     * When adding a package, make sure that the input field gets focus & add <keyb>Enter</keyb> & <keyb>Esc</keyb> key processing.
-  * Consider adding an action for when a uibuilder node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
-  * Add optional sidebar (or drop-down menu on NR header bar) displaying list of all uib URLs (and link to nodes).
-  * Move folder management to a popup dialog (to save vertical space)
-  * If `uibRoot` and the browser are on the same client, add an "Edit with VSCode" link to the Files tab
-  * Add all local package.json script entries as links/buttons so they can be run from the editor panel.
+  
+  * Files tab
+    * Change getFileList to only return files, use the separate folder list for folders. No need to run it multiple times then.
+    * Creating new folder - new folder should be selected after create.
+    * settings.js option to allow _ files to show in editor. https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/190.
+    * Move folder management to a popup dialog (to save vertical space)
+    * Extend folder/file management
+      * Allow renaming of files/folders.
+      * Add the `common` folder to the file editor.
+      * Allow editing in the `common` folder not just the instance folder.
+      * Add a file upload button.
+      * Method to import/export front-end files. Needs ZIP/Unzip functions at the back-end.
+      * Add a reminder to the Editor help about examples. Add an onclick to that <a> icon that calls RED.actions.invoke('core:show-import-dialog'); as a quick action to get the user to the import dialog. See [here](https://discourse.nodered.org/t/documentation-example-flows-for-contributed-nodes/44198/2?u=totallyinformation) for more info.
+      * Add option to keep backups for edited files + button to reset to backup + hide backup files
+  
+  * Advanced tab
+    * Update the `Advanced > Serve` dropdown list after creating a new top-level folder (to save having to exit and re-enter the panel).
+    * Add visual error when changing advanced/Serve to a folder with no index.html.
+    * Add (advanced) flag to make use of project folder optional.
+    * Improve help box for _uib switch 
+    * Option for project folder storage.
+    * Show Socket.io server & client versions
+
+  * Settings.js
+    * Add optional sidebar (or drop-down menu on NR header bar) displaying list of all uib URLs (and link to nodes).
+  
+  * NEW TAB: `Build` - run npm scripts, install instance libraries (for dev or dependencies - just dev initially)
+    * Add all local package.json script entries as links/buttons so they can be run from the editor panel.
     * If `dev` script discovered in local package.json scripts, enable a dev button so that a CI dev service can be spun up (e.g. Svelte). Will need debug output to be visible in Editor?
-  * Show Socket.io server & client versions
-  * Extend folder/file management
-    * Allow renaming of files/folders.
-    * Add the `common` folder to the file editor.
-    * Allow editing in the `common` folder not just the instance folder.
-    * Add a file upload button.
-    * Method to import/export front-end files. Needs ZIP/Unzip functions at the back-end.
-    * Add a reminder to the Editor help about examples. Add an onclick to that <a> icon that calls RED.actions.invoke('core:show-import-dialog'); as a quick action to get the user to the import dialog. See [here](https://discourse.nodered.org/t/documentation-example-flows-for-contributed-nodes/44198/2?u=totallyinformation) for more info.
-    * Add option to keep backups for edited files + button to reset to backup + hide backup files
-  * Add GIT processing? Or maybe just handle via npm scripts?
-     * Is git command available?
-     * is front-end src folder a git repository?
-     * git commit
-     * git push
+
   * Template handling:
     * Add ability to load an example flow from a template (add list to package.json and create a drop-down in the editor?) - using the pluggable libraries feature of Node-RED v2.1+?
     * Add option to auto-load npm dependencies on change of Template. [Issue #165](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/165)
@@ -190,11 +199,17 @@ Why?
       Couldn't use the dependencies prop because we dont want to install libraries in the instance root but rather the uibRoot. 
       Will need matching code in the Editor panel & a suitable API.
 
-* Details index page
-  * Make sure that the ExpressJS `views` folder is shown.
+  * Switch tooltips to using aria-label with hover CSS as in the new node.
+  * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
+  * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
+  * Consider adding an action for when a uibuilder node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
+  * Add GIT processing? Or maybe just handle via npm scripts?
+     * Is git command available?
+     * is front-end src folder a git repository?
+     * git commit
+     * git push
 
 * Templates
-  * Add `class="dark"` to all template html file `html` tags. Remove `class="uib"` from body tag.
   * Add group/category to `template_dependencies.js`. Add grouping to drop-down in editor. Allow for no group specified (for backwards compatibility).
   * Add option for external templates in `template_dependencies.js`.
   * Consider allowing a local version of `template_dependencies.js`.
@@ -205,7 +220,8 @@ Why?
     * REACT (no-build)
     * REACT (build)
     * jQuery + jQuery UI (maybe + some add-ons?)
-
+  * ~~Add `class="dark"` to all template html file `html` tags. Remove `class="uib"` from body tag.~~ Maybe not such a good idea
+  
 * Investigate use of WebWorkers to have a shared websocket that allows retained connection on page reload and between pages in the same uibuilder node.
   * https://crossbario.com/blog/Websocket-Persistent-Connections/
   * https://stackoverflow.com/questions/10886910/how-to-maintain-a-websockets-connection-between-pages
@@ -378,7 +394,6 @@ Why?
 * Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
 
 * *New Functions* (all to be callable from Node-RED):
-  * [ ] `elementExists(selector)`, `elementIsVisible(selector)` -  methods for checking if an element exists on the page and whether it is visible to the user.
   * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
   * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
   * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
@@ -430,7 +445,6 @@ Why?
 * Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
 * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow *sessionCache*.
 * Add a [resizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to report resize events back to Node-RED as a control msg.
-* Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change).
 * Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
 * Get better control over what control messages can be sent. Centralise the list of control messages in use.
 * Add functions for manipulating SVG's.
@@ -473,7 +487,6 @@ Why?
 * Reorg docs to make more sense to new starters & make more logical.
 
 * Search for `*(This document is a work-in-progress, it is not complete)*` and update documents.
-* Split the new client library, move _ui features to separate page.
 * Add message interaction diagram to "pre-defined-msgs.md"
 * Add note to documentation for the library manager that you can install LOCAL folders.
 * Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
@@ -555,6 +568,10 @@ Why?
 ### General
 
 * `uib-sender` node not really needed any more - consider putting a "deprecated" node.warn message prior to removing.
+* Remove dependencies on fs-extra library - need to wait for node.js v16.7 to be minimum so that fs.cp/fs.cpSync is available
+  * [x] libs/web.js
+  * [ ] libs/package-mgt.js
+  * [ ] uiblib.js
 * Optimise runtime code using esbuild (see node-build.mjs). Reduce runtime dependencies by bundling and move deps to dev deps.
 * Use uibuilder itself to manage docs webpage. Rather than docsify.
 * Allow client id to be set externally.
@@ -623,7 +640,7 @@ Why?
 * watcher
 * Add a new template and example to demonstrate the sender node.
 * Template - Docsify CMS
-* Allow templates to provide example flows via a uibuilder Node-RED library plugin ([ref1](https://discourse.nodered.org/t/red-library-without-red-editor/61247), [ref2](https://nodered.org/docs/api/library/), [ref3](https://github.com/node-red/node-red-library-file-store/blob/main/index.js))
+* Add examples folder
 * Add uibuilder property to package.json - define
   * uibuilder version checker - https://github.com/npm/node-semver
   * required fe packages
