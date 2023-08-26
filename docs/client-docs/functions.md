@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the uibuilder front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-08-23 17:56:05
+lastUpdated: 2023-08-26 01:18:41
 ---
 
 Functions accessible in client-side user code.
@@ -177,6 +177,12 @@ In addition, internal message handling will recognise standard messages from nod
 
 For functions with no descriptions, please refer to the code. In general, these will not need to be used in your own code.
 
+### `elementExists(cssSelector, msg = true)` - Does the element exist on the page?
+
+Returns a payload of true or false depending on whether the selected element exists on the page.
+
+Available as a command. Can be called from Node-RED with a message like: `{"command":"elementExists","prop":"#more"}`.
+
 ### `elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Can an HTML element currently be seen by the user?
 
 When the selected element is showing at least 10% in the users browser view, sends a message to Node-RED with `msg.isVisible` set to `true`. Will send another message if the elements shows less than 10%. Will continue to send messages when the element moves in and out of visibility.
@@ -191,6 +197,7 @@ Notes:
 * Requires the browser to support the IntersectionObserver API (available to all mainstream browsers from early 2019).
 * The element has to exist on the page before it can be observed.
 * Turn on the optional `msg._uib` feature in the uibuilder node to see which client is sending the messages.
+* Due to the nature of the IntersectionObserver API, this fn is not available as a command for now.
 
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
 
