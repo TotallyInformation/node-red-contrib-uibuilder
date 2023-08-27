@@ -77,21 +77,6 @@ Why?
 - Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
 - Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
 
-### **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations
-
-Uses the same code as the client library. Outputs HTML on `msg.payload`, removes the input `msg._ui`.
-Optionally, can add one of the uibuilder templates as a wrapper to the input payload HTML or wrap in a non-uibuilder template
-
-Why?
-
-- Learn how to write your own HTML
-- Output to a uibuilder node to save processing the _ui data in the front-end
-- Output to a uibuilder server folder for use in your app as a static load (or occasionally changing load)
-- Output to a file for use in an external (to Node-RED) static web server/service
-- Output to an `http-out` node as a response to a request
-- Output to a `ui_template` node for incorporation in Dashboard UI's
-
-
 ### General changes
 
 * Move the ui class to a separate repo so that it can be used independently.

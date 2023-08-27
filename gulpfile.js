@@ -490,7 +490,7 @@ function packUiNode(cb) {
             cb(err)
         })
         .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-node"'))
-        .pipe(dest('nodes/libs/'))
+        .pipe(dest('src/libs/'))
         .on('end', function() {
             // in case of success
             cb()
@@ -803,11 +803,57 @@ function buildPanelTag(cb) {
             // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
             .pipe(dest(`${nodeDest}/uib-tag/`))
     } catch (e) {
-        console.error('buildPanelUpdate failed', e)
+        console.error('buildPanelTag failed', e)
     }
 
     cb()
 }
+
+/** Combine the parts of uib-html.html */
+function buildPanelHTML(cb) {
+    try {
+        src(`${nodeSrcRoot}/uib-html/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-html/`))
+    } catch (e) {
+        console.error('buildPanelTag failed', e)
+    }
+
+    cb()
+}
+
+/** Combine the parts of uib-save.html */
+function buildPanelSave(cb) {
+    try {
+        src(`${nodeSrcRoot}/uib-save/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-save/`))
+    } catch (e) {
+        console.error('buildPanelSave failed', e)
+    }
+
+    cb()
+}
+
+
 
 //#endregion ---- ---- ----
 
@@ -870,6 +916,8 @@ function watchme(cb) {
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
     watch('src/editor/uib-tag/*', buildPanelTag)
+    watch('src/editor/uib-html/*', buildPanelHTML)
+    watch('src/editor/uib-save/*', buildPanelSave)
     watch('front-end/uib-brand.css', minifyBrandCSS)
     watch('src/libs/*', buildNodeLibs)
 
