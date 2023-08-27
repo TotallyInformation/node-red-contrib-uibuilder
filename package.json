@@ -67,7 +67,8 @@
       "uib-list": "nodes/uib-list/customNode.js"
     },
     "notyetnodes": {
-      "uib-receiver": "nodes/uib-receiver.js"
+      "uib-html": "nodes/uib-html/customNode.js",
+      "uib-save": "nodes/uib-save/customNode.js"
     }
   },
   "engines": {

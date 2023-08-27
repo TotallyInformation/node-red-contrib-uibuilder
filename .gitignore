@@ -133,3 +133,10 @@ docs/.obsidian/workspace.json
 docs/.obsidian/snippets/attention-callout.css
 docs/.obsidian/themes/Minimal/manifest.json
 docs/.obsidian/themes/Minimal/theme.css
+tests/execa/package-lock.json
+tests/execa/package.json
+tests/execa/test-execa-src.js
+tests/execa/test-execa-src.mjs
+tests/execa/test-execa.js
+tests/execa/test2.mjs
+tests/execa/test3.js

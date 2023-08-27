@@ -394,6 +394,7 @@ Why?
 * Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
 
 * *New Functions* (all to be callable from Node-RED):
+  * [ ] `uibuilder.watchLocation()` - sends control msgs back to node-red if location changes but page not loaded - e.g. from SPA routers.
   * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
   * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
   * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
@@ -402,17 +403,17 @@ Why?
   * [ ] **HARD - may be impossible?** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
 
 * Control from Node-RED. Functions to implement:
-  * [ ] watchDom(startStop), uiWatch(cssSelector)
+  * [ ] watchDom(startStop), uiWatch(cssSelector) [add custom event outputs]
   * [ ] setPing
   * [ ] `elementExists(selector)`, `elementIsVisible(selector)`
   * [ ] `navigate(url)`
   * [ ] `loadui()`
   * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
   * [ ] getStore, setStore, removeStore - control browser local storage
-  * [ ] `convertToUI(cssSelector)`
   * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others)
+  * Add `info` outputs to commands. Allow the fns that commands call to have auto-send & info.
 
-* Use esbuild to create IIFE version of `ui.js`.
+* Use esbuild to create stand-alone minimised IIFE/ESM versions of `ui.js`.
 * Allow file uploads
 * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
 
