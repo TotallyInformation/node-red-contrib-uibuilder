@@ -27,7 +27,7 @@
  */
 //#endregion --- Type Defs --- //
 
-//#region --- We need the Socket.IO client - check in decreasing order of likelihood --- //
+//#region --- We need the Socket.IO & ui libraries --- //
 import io from 'socket.io-client' // Note: Only works when using esbuild to bundle
 // @ts-ignore
 import Ui from './ui'
@@ -62,7 +62,7 @@ import Ui from './ui'
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.6.0-mod'
+const version = '6.6.0-src'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
