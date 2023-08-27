@@ -17,9 +17,11 @@
   limitations under the License.
  */
 /* globals module:true */
-// ts-nocheck
+// ts-nocheck 
 
 let log
+
+const version = '6.6.0-src'
 
 const Ui = class Ui {
     /** Called when `new Ui(...)` is called
