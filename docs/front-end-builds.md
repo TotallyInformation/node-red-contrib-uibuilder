@@ -3,7 +3,7 @@ title: Front-End Build Steps and Tools
 description: >
    Describes how to use a build step to transpile and optimise your front-end code.
 created: 2021-04-22 09:53:00
-lastUpdated: 2022-12-01 19:51:39
+lastUpdated: 2023-08-26 16:21:32
 ---
 
 A build step is simply a way to take things that your browser wont understand directly (like .vue, .jsx files)
@@ -15,12 +15,6 @@ Along the way, it will try to optimise everything to give the best possible perf
 - [Things to watch out for](#things-to-watch-out-for)
 - [Using a build development server](#using-a-build-development-server)
 - [Tools](#tools)
-  - [Snowpack](#snowpack)
-  - [ESbuild](#esbuild)
-  - [Webpack](#webpack)
-  - [Parcel](#parcel)
-  - [Rollup](#rollup)
-  - [Vite (by VueJS author Evan You)](#vite-by-vuejs-author-evan-you)
 
 ## Why have a build step (and why not)
 
@@ -45,7 +39,7 @@ front-end libraries for avoiding build steps. It even has a dynamic loader (3rd 
 Many build tools and some front-end frameworks have "live servers" to support development. These automatically reload the page being developed
 whenever something changes. 
 
-At present, only the Svelte development server will work correctly without you making some temporary changes to your front-end code.
+At present, only the Svelte development server will work correctly without you making some temporary changes to your front-end code. (However, see also [Live-reload dev servers](how-to/live-reload-dev-server)).
 
 For all other development servers, you will need to make the following changes:
 
