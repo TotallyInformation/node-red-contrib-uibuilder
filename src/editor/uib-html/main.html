@@ -1,0 +1,61 @@
+<!--
+    Copyright (c) 2023-2023 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<style>
+    #uib-upd *[aria-label] {
+        position:relative;
+    }
+    #uib-upd *[aria-label]:after {
+        content: attr(aria-label);
+        position:absolute;
+        top:100%;left:50px;
+        box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--red-ui-form-input-border-color);
+        padding: 10px;
+        z-index: 999;
+        background-color: var(--red-ui-popover-background);
+        color: var(--red-ui-popover-color);
+        max-width: 350px;
+        text-decoration: none;
+        text-align: center;
+        border-radius: 6px;
+        white-space: break-spaces;
+        
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.5s ease-out;
+    }
+    #uib-upd *[aria-label]:hover:after {
+        visibility: visible;
+        opacity: 1;
+        transition: all 0.5s ease-in 1s;
+    }
+    #uib-upd .red-ui-typedInput-container {
+        width:69% !important;
+    }
+</style>
+
+<script type="text/html" class="uib-tooltip" data-template-name="uib-html">
+<!--=include template.html -->
+</script>
+
+<script type="text/html" data-help-name="uib-html">
+<!--=include help.html -->
+</script>
+
+<script type="text/javascript">
+    /*=include editor.js */  // eslint-disable-line spaced-comment
+</script>

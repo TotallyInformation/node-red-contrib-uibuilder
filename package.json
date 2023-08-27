@@ -26,7 +26,8 @@
     "nanoid": "^3",
     "serve-index": "^1.9.1",
     "socket.io": "^4.3.2",
-    "socket.io-client": "^4.4.1"
+    "socket.io-client": "^4.4.1",
+    "jsdom": "^22.1.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
@@ -60,14 +61,14 @@
     "nodes": {
       "uibuilder": "nodes/uibuilder.js",
       "uib-cache": "nodes/uib-cache.js",
+      "uib-tag": "nodes/uib-tag/customNode.js",
       "uib-element": "nodes/uib-element/customNode.js",
       "uib-update": "nodes/uib-update/customNode.js",
-      "uib-tag": "nodes/uib-tag/customNode.js",
+      "uib-html": "nodes/uib-html/customNode.js",
       "uib-sender": "nodes/uib-sender.js",
       "uib-list": "nodes/uib-list/customNode.js"
     },
     "notyetnodes": {
-      "uib-html": "nodes/uib-html/customNode.js",
       "uib-save": "nodes/uib-save/customNode.js"
     }
   },
