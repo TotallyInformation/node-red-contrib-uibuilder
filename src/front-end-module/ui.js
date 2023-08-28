@@ -1,6 +1,9 @@
 /* Creates HTML UI's based on a standardised data input.
+  Works stand-alone, with uibuilder or with Node.js/jsdom.
   See: https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui
+
   Author: Julian Knight (Totally Information), March 2023
+  
   License: Apache 2.0
   Copyright (c) 2022-2023 Julian Knight (Totally Information)
 
@@ -19,22 +22,43 @@
 /* globals module:true */
 // ts-nocheck 
 
-let log
-
-const version = '6.6.0-src'
-
 const Ui = class Ui {
-    /** Called when `new Ui(...)` is called
-     * @param {*} extLog A fn that returns a fn for logging
-     * @param {*} jsonHighlight A function that returns a highlighted HTML of JSON input
+    version = '6.6.0-src'
+
+    // Reference to DOM window - must be passed in the constructor
+    // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
+    window
+
+    /** Log function - passed in constructor or will be a dummy function
+     * @type {function}
      */
-    constructor(extLog, jsonHighlight) {
-        if (!document) {
-            log(0, 'Ui:constructor', 'Current environment does not include `document`, UI functions cannot be used.')()
+    static log
+
+    /** Called when `new Ui(...)` is called
+     * @param {globalThis} win Either the browser global window or jsdom dom.window
+     * @param {function} [extLog] A function that returns a function for logging
+     * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
+     */
+    constructor(win, extLog, jsonHighlight) {
+        // window must be passed in as an arg to the constructor
+        // Should either be the global window for a browser or `dom.window` for jsdom in Node.js
+        if (win) this.window = win
+        else {
+            // Ui.log(0, 'Ui:constructor', 'Current environment does not include `window`, UI functions cannot be used.')()
+            // return
+            throw new Error('Ui:constructor. Current environment does not include `window`, UI functions cannot be used.')
         }
-        log = extLog
-        this.syntaxHighlight = jsonHighlight
-        // log(0, 'XXX', 'hello', window)()
+
+        // For convenience
+        this.document = this.window.document
+
+        // If a suitable function not passed in, create a dummy one
+        if (extLog) Ui.log = extLog
+        else Ui.log = function(){return function(){}}
+
+        // If a JSON HTML highlighting function passed then use it, else a dummy fn
+        if (jsonHighlight) this.syntaxHighlight = jsonHighlight
+        else this.syntaxHighlight = function(){}
     }
 
     /** Directly manage UI via JSON
@@ -61,7 +85,7 @@ const Ui = class Ui {
         if (!el) return
 
         // If DOMPurify is loaded, apply it now
-        if (window['DOMPurify']) component.slot = window['DOMPurify'].sanitize(component.slot)
+        if (this.window['DOMPurify']) component.slot = this.window['DOMPurify'].sanitize(component.slot)
         // Set the component content to the msg.payload or the slot property
         el.innerHTML = component.slot
     }
@@ -74,7 +98,7 @@ const Ui = class Ui {
      */
     replaceSlotMarkdown(el, component) {
         if (!el) return
-        if (!window['markdownit']) return
+        if (!this.window['markdownit']) return
         if (!component.slotMarkdown) return
 
         const opts = { // eslint-disable-line object-shorthand
@@ -83,20 +107,20 @@ const Ui = class Ui {
             _highlight: true,
             langPrefix: 'language-',
             highlight(str, lang) {
-                if (lang && window['hljs'] && window['hljs'].getLanguage(lang)) {
+                if (lang && this.window['hljs'] && this.window['hljs'].getLanguage(lang)) {
                     try {
                         return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${window['hljs'].highlightAuto(str).value}</code></pre>`
+                                <code class="language-${lang}">${this.window['hljs'].highlightAuto(str).value}</code></pre>`
                     } finally { } // eslint-disable-line no-empty
                 }
                 return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`
             },
         }
-        const md = window['markdownit'](opts)
+        const md = this.window['markdownit'](opts)
         // Convert from markdown to HTML
         component.slotMarkdown = md.render(component.slotMarkdown)
         // If DOMPurify is loaded, apply it now
-        if (window['DOMPurify']) component.slotMarkdown = window['DOMPurify'].sanitize(component.slotMarkdown)
+        if (this.window['DOMPurify']) component.slotMarkdown = this.window['DOMPurify'].sanitize(component.slotMarkdown)
         // Set the component content to the the converted slotMarkdown property
         el.innerHTML = component.slotMarkdown
     }
@@ -107,10 +131,10 @@ const Ui = class Ui {
      * @param {string} url The url to be used in the script src attribute
      */
     loadScriptSrc(url) {
-        const newScript = document.createElement('script')
+        const newScript = this.document.createElement('script')
         newScript.src = url
         newScript.async = false
-        document.head.appendChild(newScript)
+        this.document.head.appendChild(newScript)
     }
 
     /** Attach a new remote stylesheet link to the end of HEAD synchronously
@@ -119,12 +143,12 @@ const Ui = class Ui {
      * @param {string} url The url to be used in the style link href attribute
      */
     loadStyleSrc(url) {
-        const newStyle = document.createElement('link')
+        const newStyle = this.document.createElement('link')
         newStyle.href = url
         newStyle.rel = 'stylesheet'
         newStyle.type = 'text/css'
 
-        document.head.appendChild(newStyle)
+        this.document.head.appendChild(newStyle)
     }
 
     /** Attach a new text script to the end of HEAD synchronously
@@ -133,10 +157,10 @@ const Ui = class Ui {
      * @param {string} textFn The text to be loaded as a script
      */
     loadScriptTxt(textFn) {
-        const newScript = document.createElement('script')
+        const newScript = this.document.createElement('script')
         newScript.async = false
         newScript.textContent = textFn
-        document.head.appendChild(newScript)
+        this.document.head.appendChild(newScript)
     }
 
     /** Attach a new text stylesheet to the end of HEAD synchronously
@@ -145,13 +169,12 @@ const Ui = class Ui {
      * @param {string} textFn The text to be loaded as a stylesheet
      */
     loadStyleTxt(textFn) {
-        const newStyle = document.createElement('style')
+        const newStyle = this.document.createElement('style')
         newStyle.textContent = textFn
-        document.head.appendChild(newStyle)
+        this.document.head.appendChild(newStyle)
     }
 
-    // TODO - Allow notify to sit in corners rather than take over the screen
-    /** Show a pop-over "toast" dialog or a modal alert
+    /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
@@ -170,7 +193,7 @@ const Ui = class Ui {
         if (ui.content) content += ui.content
         // Toast wont show anyway if content is empty, may as well warn user
         if (content === '') {
-            log(1, 'Ui:showDialog', 'Toast content is blank. Not shown.')()
+            Ui.log(1, 'Ui:showDialog', 'Toast content is blank. Not shown.')()
             return
         }
 
@@ -200,9 +223,9 @@ const Ui = class Ui {
         //#endregion -- -- --
 
         // Create a toaster container element if not already created - or get a ref to it
-        let toaster = document.getElementById('toaster')
+        let toaster = this.document.getElementById('toaster')
         if (toaster === null) {
-            toaster = document.createElement('div')
+            toaster = this.document.createElement('div')
             toaster.id = 'toaster'
             toaster.title = 'Click to clear all notifcations'
             toaster.setAttribute('class', 'toaster')
@@ -212,11 +235,11 @@ const Ui = class Ui {
                 // @ts-ignore
                 toaster.remove()
             }
-            document.body.insertAdjacentElement('afterbegin', toaster)
+            this.document.body.insertAdjacentElement('afterbegin', toaster)
         }
 
         // Create a toast element. Would be nice to use <dialog> but that isn't well supported yet - come on Apple!
-        const toast = document.createElement('div')
+        const toast = this.document.createElement('div')
         toast.title = 'Click to clear this notifcation'
         toast.setAttribute('class', `toast ${ui.variant ? ui.variant : ''} ${type}`)
         toast.innerHTML = content
@@ -313,22 +336,22 @@ const Ui = class Ui {
      */
     loadui(url) {
         if (!fetch) {
-            log(0, 'Ui:loadui', 'Current environment does not include `fetch`, skipping.')()
+            Ui.log(0, 'Ui:loadui', 'Current environment does not include `fetch`, skipping.')()
             return
         }
         if (!url) {
-            log(0, 'Ui:loadui', 'url parameter must be provided, skipping.')()
+            Ui.log(0, 'Ui:loadui', 'url parameter must be provided, skipping.')()
             return
         }
 
         fetch(url)
             .then(response => {
                 if (response.ok === false) {
-                    // log('warn', 'Ui:loadui:then1', `Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`)()
+                    // Ui.log('warn', 'Ui:loadui:then1', `Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`)()
                     throw new Error(`Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`)
                 }
 
-                log('trace', 'Ui:loadui:then1', `Loaded '${url}'. Status ${response.status}, ${response.statusText}`)()
+                Ui.log('trace', 'Ui:loadui:then1', `Loaded '${url}'. Status ${response.status}, ${response.statusText}`)()
                 // Did we get json?
                 const contentType = response.headers.get('content-type')
                 if (!contentType || !contentType.includes('application/json')) {
@@ -339,7 +362,7 @@ const Ui = class Ui {
             })
             .then(data => {
                 if (data !== undefined) {
-                    log('trace', 'Ui:loadui:then2', 'Parsed JSON successfully obtained')()
+                    Ui.log('trace', 'Ui:loadui:then2', 'Parsed JSON successfully obtained')()
                     // Call the _uiManager
                     this._uiManager({ _ui: data })
                     return true
@@ -347,7 +370,7 @@ const Ui = class Ui {
                 return false
             })
             .catch(err => {
-                log('warn', 'Ui:loadui:catch', 'Error. ', err)()
+                Ui.log('warn', 'Ui:loadui:catch', 'Error. ', err)()
             })
     } // --- end of loadui
 
@@ -399,7 +422,7 @@ const Ui = class Ui {
                     })
                     // newEl.setAttribute( 'onClick', `${comp.events[type]}()` )
                 } catch (err) {
-                    log('error', 'Ui:_uiComposeComponent', `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)()
+                    Ui.log('error', 'Ui:_uiComposeComponent', `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)()
                 }
             })
         }
@@ -439,7 +462,7 @@ const Ui = class Ui {
      */
     _uiExtendEl(parentEl, components, ns = '') {
         components.forEach((compToAdd, i) => {
-            log('trace', `Ui:_uiExtendEl:components-forEach:${i}`, compToAdd)()
+            Ui.log('trace', `Ui:_uiExtendEl:components-forEach:${i}`, compToAdd)()
 
             /** @type {HTMLElement} Create the new component */
             let newEl
@@ -451,12 +474,12 @@ const Ui = class Ui {
                 // newEl.outerHTML = compToAdd.slot
                 parentEl.innerHTML = compToAdd.slot
             } else if (compToAdd.ns === 'svg') {
-                newEl = document.createElementNS('http://www.w3.org/2000/svg', compToAdd.type)
+                newEl = this.document.createElementNS('http://www.w3.org/2000/svg', compToAdd.type)
                 // Updates newEl
                 this._uiComposeComponent(newEl, compToAdd)
                 parentEl.appendChild(newEl)
             } else {
-                newEl = document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
+                newEl = this.document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
                 // Updates newEl
                 this._uiComposeComponent(newEl, compToAdd)
                 parentEl.appendChild(newEl)
@@ -475,7 +498,7 @@ const Ui = class Ui {
     //     // must be Vue
     //     // must have only 1 root element
     //     const compToAdd = ui.components[0]
-    //     const newEl = document.createElement(compToAdd.type)
+    //     const newEl = this.document.createElement(compToAdd.type)
 
     //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
     //     this._uiComposeComponent(newEl, compToAdd)
@@ -499,7 +522,7 @@ const Ui = class Ui {
      * @param {boolean} isRecurse Is this a recursive call?
      */
     _uiAdd(ui, isRecurse) {
-        log('trace', 'Ui:_uiManager:add', 'Starting _uiAdd')()
+        Ui.log('trace', 'Ui:_uiManager:add', 'Starting _uiAdd')()
 
         // Vue dynamic inserts Don't really work ...
         // if (this.#isVue && !isRecurse) {
@@ -508,7 +531,7 @@ const Ui = class Ui {
         // }
 
         ui.components.forEach((compToAdd, i) => {
-            log('trace', `Ui:_uiAdd:components-forEach:${i}`, 'Component to add: ', compToAdd)()
+            Ui.log('trace', `Ui:_uiAdd:components-forEach:${i}`, 'Component to add: ', compToAdd)()
 
             /** @type {*} Create the new component - some kind of HTML element */
             let newEl
@@ -516,20 +539,20 @@ const Ui = class Ui {
                 // If trying to insert raw html, wrap in a div
                 case 'html': {
                     compToAdd.ns = 'html'
-                    newEl = document.createElement('div')
+                    newEl = this.document.createElement('div')
                     break
                 }
 
                 // If trying to insert raw svg, need to create in namespace
                 case 'svg': {
                     compToAdd.ns = 'svg'
-                    newEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+                    newEl = this.document.createElementNS('http://www.w3.org/2000/svg', 'svg')
                     break
                 }
 
                 default: {
                     compToAdd.ns = 'dom'
-                    newEl = document.createElement(compToAdd.type)
+                    newEl = this.document.createElement(compToAdd.type)
                     break
                 }
             }
@@ -549,13 +572,13 @@ const Ui = class Ui {
             } else if (ui.parentEl) {
                 elParent = ui.parentEl
             } else if (compToAdd.parent) {
-                elParent = document.querySelector(compToAdd.parent)
+                elParent = this.document.querySelector(compToAdd.parent)
             } else if (ui.parent) {
-                elParent = document.querySelector(ui.parent)
+                elParent = this.document.querySelector(ui.parent)
             }
             if (!elParent) {
-                log('info', 'Ui:_uiAdd', 'No parent found, adding to body')()
-                elParent = document.querySelector('body')
+                Ui.log('info', 'Ui:_uiAdd', 'No parent found, adding to body')()
+                elParent = this.document.querySelector('body')
             }
 
             if (compToAdd.position && compToAdd.position === 'first') {
@@ -589,16 +612,16 @@ const Ui = class Ui {
     _uiRemove(ui, all = false) {
         ui.components.forEach((compToRemove) => {
             let els
-            if (all !== true) els = [document.querySelector(compToRemove)]
-            else els = document.querySelectorAll(compToRemove)
+            if (all !== true) els = [this.document.querySelector(compToRemove)]
+            else els = this.document.querySelectorAll(compToRemove)
 
             els.forEach(el => {
                 try {
                     el.remove()
                 } catch (err) {
                     // Could not remove. Cannot read properties of null <= no need to report this one
-                    // Could not remove. Failed to execute 'querySelector' on 'Document': '##testbutton1' is not a valid selector
-                    log('trace', 'Ui:_uiRemove', `Could not remove. ${err.message}`)()
+                    // Could not remove. Failed to execute 'querySelector' on 'this.document': '##testbutton1' is not a valid selector
+                    Ui.log('trace', 'Ui:_uiRemove', `Could not remove. ${err.message}`)()
                 }
             })
         })
@@ -608,30 +631,30 @@ const Ui = class Ui {
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiReplace(ui) {
-        log('trace', 'Ui:_uiReplace', 'Starting')()
+        Ui.log('trace', 'Ui:_uiReplace', 'Starting')()
 
         ui.components.forEach((compToReplace, /** @type {number} */ i) => {
-            log('trace', `Ui:_uiReplace:components-forEach:${i}`, 'Component to replace: ', compToReplace)()
+            Ui.log('trace', `Ui:_uiReplace:components-forEach:${i}`, 'Component to replace: ', compToReplace)()
 
             /** @type {HTMLElement} */
             let elToReplace
 
             // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. FIRST element matching is updated.
             if (compToReplace.id) {
-                elToReplace = document.getElementById(compToReplace.id) // .querySelector(`#${compToReplace.id}`)
+                elToReplace = this.document.getElementById(compToReplace.id) // .querySelector(`#${compToReplace.id}`)
             } else if (compToReplace.selector || compToReplace.select) {
-                elToReplace = document.querySelector(compToReplace.selector)
+                elToReplace = this.document.querySelector(compToReplace.selector)
             } else if (compToReplace.name) {
-                elToReplace = document.querySelector(`[name="${compToReplace.name}"]`)
+                elToReplace = this.document.querySelector(`[name="${compToReplace.name}"]`)
             } else if (compToReplace.type) {
-                elToReplace = document.querySelector(compToReplace.type)
+                elToReplace = this.document.querySelector(compToReplace.type)
             }
 
-            log('trace', `Ui:_uiReplace:components-forEach:${i}`, 'Element to replace: ', elToReplace)()
+            Ui.log('trace', `Ui:_uiReplace:components-forEach:${i}`, 'Element to replace: ', elToReplace)()
 
             // Nothing was found so ADD the element instead
             if (elToReplace === undefined || elToReplace === null) {
-                log('trace', `Ui:_uiReplace:components-forEach:${i}:noReplace`, 'Cannot find the DOM element. Adding instead.', compToReplace)()
+                Ui.log('trace', `Ui:_uiReplace:components-forEach:${i}:noReplace`, 'Cannot find the DOM element. Adding instead.', compToReplace)()
                 this._uiAdd({ components: [compToReplace] }, false)
                 return
             }
@@ -642,20 +665,20 @@ const Ui = class Ui {
                 // If trying to insert raw html, wrap in a div
                 case 'html': {
                     compToReplace.ns = 'html'
-                    newEl = document.createElement('div')
+                    newEl = this.document.createElement('div')
                     break
                 }
 
                 // If trying to insert raw svg, need to create in namespace
                 case 'svg': {
                     compToReplace.ns = 'svg'
-                    newEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+                    newEl = this.document.createElementNS('http://www.w3.org/2000/svg', 'svg')
                     break
                 }
 
                 default: {
                     compToReplace.ns = 'dom'
-                    newEl = document.createElement(compToReplace.type)
+                    newEl = this.document.createElement(compToReplace.type)
                     break
                 }
             }
@@ -681,13 +704,13 @@ const Ui = class Ui {
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiUpdate(ui) {
-        log('trace', 'Ui:_uiManager:update', 'Starting _uiUpdate')()
+        Ui.log('trace', 'Ui:_uiManager:update', 'Starting _uiUpdate')()
 
         // We allow an update not to actually need to spec a component
         if (!ui.components) ui.components = [Object.assign({}, ui)]
 
         ui.components.forEach((compToUpd, i) => {
-            log('trace', '_uiUpdate:components-forEach', `Component #${i}`, compToUpd)()
+            Ui.log('trace', '_uiUpdate:components-forEach', `Component #${i}`, compToUpd)()
 
             /** @type {NodeListOf<Element>} */
             let elToUpd
@@ -695,22 +718,22 @@ const Ui = class Ui {
             // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
             if (compToUpd.id) {
                 // NB We don't use get by id because this way the code is simpler later on
-                elToUpd = document.querySelectorAll(`#${compToUpd.id}`)
+                elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`)
             } else if (compToUpd.selector || compToUpd.select) {
-                elToUpd = document.querySelectorAll(compToUpd.selector)
+                elToUpd = this.document.querySelectorAll(compToUpd.selector)
             } else if (compToUpd.name) {
-                elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`)
+                elToUpd = this.document.querySelectorAll(`[name="${compToUpd.name}"]`)
             } else if (compToUpd.type) {
-                elToUpd = document.querySelectorAll(compToUpd.type)
+                elToUpd = this.document.querySelectorAll(compToUpd.type)
             }
 
             // @ts-ignore Nothing was found so give up
             if (elToUpd === undefined || elToUpd.length < 1) {
-                log('warn', 'Ui:_uiManager:update', 'Cannot find the DOM element. Ignoring.', compToUpd)()
+                Ui.log('warn', 'Ui:_uiManager:update', 'Cannot find the DOM element. Ignoring.', compToUpd)()
                 return
             }
 
-            log('trace', '_uiUpdate:components-forEach', `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)()
+            Ui.log('trace', '_uiUpdate:components-forEach', `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)()
 
             // If slot not specified but payload is, use the payload in the slot
             if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload
@@ -723,7 +746,7 @@ const Ui = class Ui {
             // If nested components, go again - but don't pass payload to sub-components
             if (compToUpd.components) {
                 elToUpd.forEach(el => {
-                    log('trace', '_uiUpdate:components', 'el', el)()
+                    Ui.log('trace', '_uiUpdate:components', 'el', el)()
                     this._uiUpdate({
                         method: ui.method,
                         parentEl: el,
@@ -784,7 +807,7 @@ const Ui = class Ui {
 
     /** Handle a reload request */
     _uiReload() {
-        log('trace', 'Ui:uiManager:reload', 'reloading')()
+        Ui.log('trace', 'Ui:uiManager:reload', 'reloading')()
         location.reload()
     }
 
@@ -800,7 +823,7 @@ const Ui = class Ui {
 
         msg._ui.forEach((ui, i) => {
             if (!ui.method) {
-                log('error', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring`)()
+                Ui.log('error', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring`)()
                 return
             }
 
@@ -853,7 +876,7 @@ const Ui = class Ui {
                 }
 
                 default: {
-                    log('error', 'Ui:_uiManager', `Invalid msg._ui[${i}].method (${ui.method}). Ignoring`)()
+                    Ui.log('error', 'Ui:_uiManager', `Invalid msg._ui[${i}].method (${ui.method}). Ignoring`)()
                     break
                 }
             }
@@ -886,7 +909,7 @@ const Ui = class Ui {
         }
 
         if (['UL', 'OL'].includes(node.nodeName)) {
-            const listEntries = document.querySelectorAll(`${cssSelector} li`)
+            const listEntries = this.document.querySelectorAll(`${cssSelector} li`)
             if (listEntries) {
                 thisOut.list = {
                     'entries': listEntries.length
@@ -894,7 +917,7 @@ const Ui = class Ui {
             }
         }
         if (node.nodeName === 'DL') {
-            const listEntries = document.querySelectorAll(`${cssSelector} dt`)
+            const listEntries = this.document.querySelectorAll(`${cssSelector} dt`)
             if (listEntries) {
                 thisOut.list = {
                     'entries': listEntries.length
@@ -902,9 +925,9 @@ const Ui = class Ui {
             }
         }
         if (node.nodeName === 'TABLE') {
-            const bodyEntries = document.querySelectorAll(`${cssSelector} > tbody > tr`)
-            const headEntries = document.querySelectorAll(`${cssSelector} > thead > tr`)
-            const cols = document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`)  // #eltest > table > tbody > tr:nth-child(3)
+            const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`)
+            const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`)
+            const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`)  // #eltest > table > tbody > tr:nth-child(3)
             if (bodyEntries || headEntries || cols) {
                 thisOut.table = {
                     'headRows': headEntries ? headEntries.length : 0,
@@ -940,7 +963,7 @@ const Ui = class Ui {
      */
     uiGet(cssSelector, propName = null) {
         // The type cast below not really correct but it gets rid of the other typescript errors
-        const selection = /** @type {NodeListOf<HTMLInputElement>} */ (document.querySelectorAll(cssSelector))
+        const selection = /** @type {NodeListOf<HTMLInputElement>} */ (this.document.querySelectorAll(cssSelector))
 
         const out = []
 
@@ -1003,15 +1026,15 @@ const Ui = class Ui {
     async include(url, uiOptions) { // eslint-disable-line sonarjs/cognitive-complexity
         // TODO: src, id, parent must all be a strings
         if (!fetch) {
-            log(0, 'Ui:include', 'Current environment does not include `fetch`, skipping.')()
+            Ui.log(0, 'Ui:include', 'Current environment does not include `fetch`, skipping.')()
             return 'Current environment does not include `fetch`, skipping.'
         }
         if (!url) {
-            log(0, 'Ui:include', 'url parameter must be provided, skipping.')()
+            Ui.log(0, 'Ui:include', 'url parameter must be provided, skipping.')()
             return 'url parameter must be provided, skipping.'
         }
         if (!uiOptions || !uiOptions.id) {
-            log(0, 'Ui:include', 'uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.')()
+            Ui.log(0, 'Ui:include', 'uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.')()
             return 'uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.'
         }
 
@@ -1020,11 +1043,11 @@ const Ui = class Ui {
         try {
             response = await fetch(url)
         } catch (error) {
-            log(0, 'Ui:include', `Fetch of file '${url}' failed. `, error.message)()
+            Ui.log(0, 'Ui:include', `Fetch of file '${url}' failed. `, error.message)()
             return error.message
         }
         if (!response.ok) {
-            log(0, 'Ui:include', `Fetch of file '${url}' failed. Status='${response.statusText}'`)()
+            Ui.log(0, 'Ui:include', `Fetch of file '${url}' failed. Status='${response.statusText}'`)()
             return response.statusText
         }
 
@@ -1079,9 +1102,9 @@ const Ui = class Ui {
             case 'image': {
                 data = await response.blob()
                 slot = `<img src="${URL.createObjectURL(data)}">`
-                if (window && window['DOMPurify']) {
+                if (this.window['DOMPurify']) {
                     txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
-                    log('warn', 'Ui:include:image', txtReturn)()
+                    Ui.log('warn', 'Ui:include:image', txtReturn)()
                 }
                 break
             }
@@ -1089,9 +1112,9 @@ const Ui = class Ui {
             case 'video': {
                 data = await response.blob()
                 slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`
-                if (window && window['DOMPurify']) {
+                if (this.window['DOMPurify']) {
                     txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
-                    log('warn', 'Ui:include:video', txtReturn)()
+                    Ui.log('warn', 'Ui:include:video', txtReturn)()
                 }
                 break
             }
@@ -1101,9 +1124,9 @@ const Ui = class Ui {
             default: {
                 data = await response.blob()
                 slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`
-                if (window && window['DOMPurify']) {
+                if (this.window['DOMPurify']) {
                     txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
-                    log('warn', `Ui:include:${type}`, txtReturn)()
+                    Ui.log('warn', `Ui:include:${type}`, txtReturn)()
                 }
                 break
             }
@@ -1122,11 +1145,10 @@ const Ui = class Ui {
             ]
         })
 
-        log('trace', `Ui:include:${type}`, txtReturn)()
+        Ui.log('trace', `Ui:include:${type}`, txtReturn)()
         return txtReturn
 
     } // ---- End of include() ---- //
-
 }
 
 module.exports = Ui
