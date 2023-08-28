@@ -68,13 +68,14 @@ const nodeSrcRoot = 'src/editor'
 // print output of commands into the terminal
 const stdio = 'inherit'
 
-// @ts-ignore
+// @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
-
-// npm version 4.2.1 --no-git-tag-version --allow-same-version
+// Desired release version
 const release = '6.6.0'
+// Wanted node.js version - used for ESBUILD
+const nodeVersion = 'node14.14'
 
-console.log(`Current Version: ${version}. Requested Version: ${release}`)
+console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
 
 // const readline = require('readline')
 /** Create a new node from the template */
@@ -475,14 +476,14 @@ function packUiNode(cb) {
     src(`${feModuleSrc}/ui.js`)
         .pipe(gulpEsbuild({
             outfile: 'ui.js',
-            bundle: true,
+            bundle: false,
             format: 'cjs', // CommonJS
             platform: 'node',
             minify: false,
             sourcemap: false,
             packages: 'external',
             target: [
-                'node14.14',
+                nodeVersion,
             ]
         }))
         .on('error', function(err) {
@@ -490,7 +491,7 @@ function packUiNode(cb) {
             cb(err)
         })
         .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-node"'))
-        .pipe(dest('src/libs/'))
+        .pipe(dest('nodes/libs/'))
         .on('end', function() {
             // in case of success
             cb()
@@ -872,6 +873,7 @@ const buildNewFe = parallel(
     packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE
 )
 
+/* Ignored for now
 function buildNodeLibs(cb) {
     src(`src/libs/*.js`)
         .pipe(gulpEsbuild({
@@ -884,7 +886,7 @@ function buildNodeLibs(cb) {
             sourcemap: true,
             packages: 'external',
             target: [
-                'node14.14',
+                nodeVersion,
             ]
         }))
         .on('error', function(err) {
@@ -898,6 +900,7 @@ function buildNodeLibs(cb) {
             cb()
         })
 }
+*/
 
 
 /** Watch for changes during development of uibuilderfe & editor */
@@ -919,7 +922,7 @@ function watchme(cb) {
     watch('src/editor/uib-html/*', buildPanelHTML)
     watch('src/editor/uib-save/*', buildPanelSave)
     watch('front-end/uib-brand.css', minifyBrandCSS)
-    watch('src/libs/*', buildNodeLibs)
+    // watch('src/libs/*', buildNodeLibs)
 
     cb()
 }
