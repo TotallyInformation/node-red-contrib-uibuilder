@@ -1,5 +1,939 @@
-var s,u=class{constructor(t,e){document||s(0,"Ui:constructor","Current environment does not include `document`, UI functions cannot be used.")(),s=t,this.syntaxHighlight=e}ui(t){let e={};t._ui?e=t:e._ui=t,this._uiManager(e)}replaceSlot(t,e){e.slot&&t&&(window.DOMPurify&&(e.slot=window.DOMPurify.sanitize(e.slot)),t.innerHTML=e.slot)}replaceSlotMarkdown(t,e){if(!t||!window.markdownit||!e.slotMarkdown)return;const r={html:!0,linkify:!0,_highlight:!0,langPrefix:"language-",highlight(n,a){if(a&&window.hljs&&window.hljs.getLanguage(a))try{return`<pre class="highlight" data-language="${a.toUpperCase()}">
-                                <code class="language-${a}">${window.hljs.highlightAuto(n).value}</code></pre>`}finally{}return`<pre class="highlight"><code>${i.utils.escapeHtml(n)}</code></pre>`}},i=window.markdownit(r);e.slotMarkdown=i.render(e.slotMarkdown),window.DOMPurify&&(e.slotMarkdown=window.DOMPurify.sanitize(e.slotMarkdown)),t.innerHTML=e.slotMarkdown}loadScriptSrc(t){const e=document.createElement("script");e.src=t,e.async=!1,document.head.appendChild(e)}loadStyleSrc(t){const e=document.createElement("link");e.href=t,e.rel="stylesheet",e.type="text/css",document.head.appendChild(e)}loadScriptTxt(t){const e=document.createElement("script");e.async=!1,e.textContent=t,document.head.appendChild(e)}loadStyleTxt(t){const e=document.createElement("style");e.textContent=t,document.head.appendChild(e)}showDialog(t,e,r){let i="";if(r.payload&&typeof r.payload=="string"&&(i+=r.payload),e.content&&(i+=e.content),i===""){s(1,"Ui:showDialog","Toast content is blank. Not shown.")();return}!e.title&&r.topic&&(e.title=r.topic),e.title&&(i=`<p class="toast-head">${e.title}</p><p>${i}</p>`),e.noAutohide&&(e.noAutoHide=e.noAutohide),e.noAutoHide&&(e.autohide=!e.noAutoHide),e.autoHideDelay?(e.autohide||(e.autohide=!0),e.delay=e.autoHideDelay):e.autoHideDelay=1e4,Object.prototype.hasOwnProperty.call(e,"autohide")||(e.autohide=!0),t==="alert"&&(e.modal=!0,e.autohide=!1,i=`<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${i}`);let n=document.getElementById("toaster");n===null&&(n=document.createElement("div"),n.id="toaster",n.title="Click to clear all notifcations",n.setAttribute("class","toaster"),n.setAttribute("role","dialog"),n.setAttribute("arial-label","Toast message"),n.onclick=function(){n.remove()},document.body.insertAdjacentElement("afterbegin",n));const a=document.createElement("div");a.title="Click to clear this notifcation",a.setAttribute("class",`toast ${e.variant?e.variant:""} ${t}`),a.innerHTML=i,a.setAttribute("role","alertdialog"),e.modal&&a.setAttribute("aria-modal",e.modal),a.onclick=function(o){o.stopPropagation(),a.remove(),n.childElementCount<1&&n.remove()},n.insertAdjacentElement(e.appendToast===!0?"beforeend":"afterbegin",a),e.autohide===!0&&setInterval(()=>{a.remove(),n.childElementCount<1&&n.remove()},e.autoHideDelay)}_showNotification(t){t.topic&&!t.title&&(t.title=t.topic),t.title||(t.title="uibuilder notification"),t.payload&&!t.body&&(t.body=t.payload),t.body||(t.body=" No message given.");try{const e=new Notification(t.title,t);return new Promise((r,i)=>{e.addEventListener("close",n=>{n.currentTarget.userAction="close",r(n)}),e.addEventListener("click",n=>{n.currentTarget.userAction="click",r(n)}),e.addEventListener("error",n=>{n.currentTarget.userAction="error",i(n)})})}catch{return Promise.reject(new Error("Browser refused to create a Notification"))}}async notification(t){if(typeof t=="string"&&(t={body:t}),typeof Notification>"u")return Promise.reject(new Error("Notifications not available in this browser"));let e=Notification.permission;return e==="denied"?Promise.reject(new Error("Notifications not permitted by user")):e==="granted"?this._showNotification(t):(e=await Notification.requestPermission(),e==="granted"?this._showNotification(t):Promise.reject(new Error("Notifications not permitted by user")))}loadui(t){if(!fetch){s(0,"Ui:loadui","Current environment does not include `fetch`, skipping.")();return}if(!t){s(0,"Ui:loadui","url parameter must be provided, skipping.")();return}fetch(t).then(e=>{if(e.ok===!1)throw new Error(`Could not load '${t}'. Status ${e.status}, Error: ${e.statusText}`);s("trace","Ui:loadui:then1",`Loaded '${t}'. Status ${e.status}, ${e.statusText}`)();const r=e.headers.get("content-type");if(!r||!r.includes("application/json"))throw new TypeError(`Fetch '${t}' did not return JSON, ignoring`);return e.json()}).then(e=>e!==void 0?(s("trace","Ui:loadui:then2","Parsed JSON successfully obtained")(),this._uiManager({_ui:e}),!0):!1).catch(e=>{s("warn","Ui:loadui:catch","Error. ",e)()})}_uiComposeComponent(t,e){e.attributes&&Object.keys(e.attributes).forEach(r=>{r==="value"&&(t.value=e.attributes[r]),r.startsWith("xlink:")?t.setAttributeNS("http://www.w3.org/1999/xlink",r,e.attributes[r]):t.setAttribute(r,e.attributes[r])}),e.id&&t.setAttribute("id",e.id),e.type==="svg"&&(t.setAttributeNS("http://www.w3.org/2000/xmlns/","xmlns","http://www.w3.org/2000/svg"),t.setAttributeNS("http://www.w3.org/2000/xmlns/","xmlns:xlink","http://www.w3.org/1999/xlink")),e.events&&Object.keys(e.events).forEach(r=>{r.toLowerCase==="onclick"&&(r="click");try{t.addEventListener(r,i=>{new Function("evt",`${e.events[r]}(evt)`)(i)})}catch(i){s("error","Ui:_uiComposeComponent",`Add event '${r}' for element '${e.type}': Cannot add event handler. ${i.message}`)()}}),e.properties&&Object.keys(e.properties).forEach(r=>{t[r]=e.properties[r]}),e.slot&&this.replaceSlot(t,e),e.slotMarkdown&&this.replaceSlotMarkdown(t,e)}uiEnhanceElement(t,e){this._uiComposeComponent(t,e)}_uiExtendEl(t,e,r=""){e.forEach((i,n)=>{s("trace",`Ui:_uiExtendEl:components-forEach:${n}`,i)();let a;i.ns=r,i.ns==="html"?(a=t,t.innerHTML=i.slot):i.ns==="svg"?(a=document.createElementNS("http://www.w3.org/2000/svg",i.type),this._uiComposeComponent(a,i),t.appendChild(a)):(a=document.createElement(i.type==="html"?"div":i.type),this._uiComposeComponent(a,i),t.appendChild(a)),i.components&&this._uiExtendEl(a,i.components,i.ns)})}_uiAdd(t,e){s("trace","Ui:_uiManager:add","Starting _uiAdd")(),t.components.forEach((r,i)=>{s("trace",`Ui:_uiAdd:components-forEach:${i}`,"Component to add: ",r)();let n;switch(r.type){case"html":{r.ns="html",n=document.createElement("div");break}case"svg":{r.ns="svg",n=document.createElementNS("http://www.w3.org/2000/svg","svg");break}default:{r.ns="dom",n=document.createElement(r.type);break}}!r.slot&&t.payload&&(r.slot=t.payload),this._uiComposeComponent(n,r);let a;r.parentEl?a=r.parentEl:t.parentEl?a=t.parentEl:r.parent?a=document.querySelector(r.parent):t.parent&&(a=document.querySelector(t.parent)),a||(s("info","Ui:_uiAdd","No parent found, adding to body")(),a=document.querySelector("body")),r.position&&r.position==="first"?a.insertBefore(n,a.firstChild):r.position&&Number.isInteger(Number(r.position))?a.insertBefore(n,a.children[r.position]):a.appendChild(n),r.components&&this._uiExtendEl(n,r.components,r.ns)})}_uiRemove(t,e=!1){t.components.forEach(r=>{let i;e!==!0?i=[document.querySelector(r)]:i=document.querySelectorAll(r),i.forEach(n=>{try{n.remove()}catch(a){s("trace","Ui:_uiRemove",`Could not remove. ${a.message}`)()}})})}_uiReplace(t){s("trace","Ui:_uiReplace","Starting")(),t.components.forEach((e,r)=>{s("trace",`Ui:_uiReplace:components-forEach:${r}`,"Component to replace: ",e)();let i;if(e.id?i=document.getElementById(e.id):e.selector||e.select?i=document.querySelector(e.selector):e.name?i=document.querySelector(`[name="${e.name}"]`):e.type&&(i=document.querySelector(e.type)),s("trace",`Ui:_uiReplace:components-forEach:${r}`,"Element to replace: ",i)(),i==null){s("trace",`Ui:_uiReplace:components-forEach:${r}:noReplace`,"Cannot find the DOM element. Adding instead.",e)(),this._uiAdd({components:[e]},!1);return}let n;switch(e.type){case"html":{e.ns="html",n=document.createElement("div");break}case"svg":{e.ns="svg",n=document.createElementNS("http://www.w3.org/2000/svg","svg");break}default:{e.ns="dom",n=document.createElement(e.type);break}}this._uiComposeComponent(n,e),i.replaceWith(n),e.components&&this._uiExtendEl(n,e.components,e.ns)})}_uiUpdate(t){s("trace","Ui:_uiManager:update","Starting _uiUpdate")(),t.components||(t.components=[Object.assign({},t)]),t.components.forEach((e,r)=>{s("trace","_uiUpdate:components-forEach",`Component #${r}`,e)();let i;if(e.id?i=document.querySelectorAll(`#${e.id}`):e.selector||e.select?i=document.querySelectorAll(e.selector):e.name?i=document.querySelectorAll(`[name="${e.name}"]`):e.type&&(i=document.querySelectorAll(e.type)),i===void 0||i.length<1){s("warn","Ui:_uiManager:update","Cannot find the DOM element. Ignoring.",e)();return}s("trace","_uiUpdate:components-forEach",`Element(s) to update. Count: ${i.length}`,i)(),!e.slot&&e.payload&&(e.slot=e.payload),i.forEach(n=>{this._uiComposeComponent(n,e)}),e.components&&i.forEach(n=>{s("trace","_uiUpdate:components","el",n)(),this._uiUpdate({method:t.method,parentEl:n,components:e.components})})})}_uiLoad(t){t.components&&(Array.isArray(t.components)||(t.components=[t.components]),t.components.forEach(async e=>{await import(e)})),t.srcScripts&&(Array.isArray(t.srcScripts)||(t.srcScripts=[t.srcScripts]),t.srcScripts.forEach(e=>{this.loadScriptSrc(e)})),t.txtScripts&&(Array.isArray(t.txtScripts)||(t.txtScripts=[t.txtScripts]),this.loadScriptTxt(t.txtScripts.join(`
-`))),t.srcStyles&&(Array.isArray(t.srcStyles)||(t.srcStyles=[t.srcStyles]),t.srcStyles.forEach(e=>{this.loadStyleSrc(e)})),t.txtStyles&&(Array.isArray(t.txtStyles)||(t.txtStyles=[t.txtStyles]),this.loadStyleTxt(t.txtStyles.join(`
-`)))}_uiReload(){s("trace","Ui:uiManager:reload","reloading")(),location.reload()}_uiManager(t){t._ui&&(Array.isArray(t._ui)||(t._ui=[t._ui]),t._ui.forEach((e,r)=>{if(!e.method){s("error","Ui:_uiManager",`No method defined for msg._ui[${r}]. Ignoring`)();return}switch(e.payload=t.payload,e.topic=t.topic,e.method){case"add":{this._uiAdd(e,!1);break}case"remove":{this._uiRemove(e,!1);break}case"removeAll":{this._uiRemove(e,!0);break}case"replace":{this._uiReplace(e);break}case"update":{this._uiUpdate(e);break}case"load":{this._uiLoad(e);break}case"reload":{this._uiReload();break}case"notify":{this.showDialog("notify",e,t);break}case"alert":{this.showDialog("alert",e,t);break}default:{s("error","Ui:_uiManager",`Invalid msg._ui[${r}].method (${e.method}). Ignoring`)();break}}}))}nodeGet(t,e){const r={id:t.id===""?void 0:t.id,name:t.name,children:t.childNodes.length,type:t.nodeName,attributes:void 0,isUserInput:!!t.validity,userInput:t.validity?{value:t.value,validity:void 0,willValidate:t.willValidate,valueAsDate:t.valueAsDate,valueAsNumber:t.valueAsNumber,type:t.type}:void 0};if(["UL","OL"].includes(t.nodeName)){const i=document.querySelectorAll(`${e} li`);i&&(r.list={entries:i.length})}if(t.nodeName==="DL"){const i=document.querySelectorAll(`${e} dt`);i&&(r.list={entries:i.length})}if(t.nodeName==="TABLE"){const i=document.querySelectorAll(`${e} > tbody > tr`),n=document.querySelectorAll(`${e} > thead > tr`),a=document.querySelectorAll(`${e} > tbody > tr:last-child > *`);(i||n||a)&&(r.table={headRows:n?n.length:0,bodyRows:i?i.length:0,columns:a?a.length:0})}if(t.nodeName!=="#text"&&t.attributes&&t.attributes.length>0){r.attributes={};for(const i of t.attributes)i.name!=="id"&&(r.attributes[i.name]=t.attributes[i.name].value)}t.nodeName==="#text"&&(r.text=t.textContent),t.validity&&(r.userInput.validity={});for(const i in t.validity)r.userInput.validity[i]=t.validity[i];return r}uiGet(t,e=null){const r=document.querySelectorAll(t),i=[];return r.forEach(n=>{if(e!==null&&e!==""){let a=n.getAttribute(e);if(a==null)try{a=n[e]}catch{}if(a==null)e.toLowerCase()==="value"?i.push(n.innerText):i.push(`Property '${e}' not found`);else if(a.constructor.name==="NamedNodeMap"){const o={};for(const l of a)o[l.name]=a[l.name].value;i.push(o)}else if(!a.constructor.name.toLowerCase().includes("map"))i.push({[e]:a});else{const o={};for(const l in a)o[l]=a[l];i.push(o)}}else i.push(this.nodeGet(n,t))}),i}async include(t,e){if(!fetch)return s(0,"Ui:include","Current environment does not include `fetch`, skipping.")(),"Current environment does not include `fetch`, skipping.";if(!t)return s(0,"Ui:include","url parameter must be provided, skipping.")(),"url parameter must be provided, skipping.";if(!e||!e.id)return s(0,"Ui:include","uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")(),"uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.";let r;try{r=await fetch(t)}catch(c){return s(0,"Ui:include",`Fetch of file '${t}' failed. `,c.message)(),c.message}if(!r.ok)return s(0,"Ui:include",`Fetch of file '${t}' failed. Status='${r.statusText}'`)(),r.statusText;const i=await r.headers.get("content-type");let n=null;i&&(i.includes("text/html")?n="html":i.includes("application/json")?n="json":i.includes("multipart/form-data")?n="form":i.includes("image/")?n="image":i.includes("video/")?n="video":i.includes("application/pdf")?n="pdf":i.includes("text/plain")&&(n="text"));let a="",o="Include successful",l;switch(n){case"html":{l=await r.text(),a=l;break}case"json":{l=await r.json(),a='<pre class="syntax-highlight">',a+=this.syntaxHighlight(l),a+="</pre>";break}case"form":{l=await r.formData(),a='<pre class="syntax-highlight">',a+=this.syntaxHighlight(l),a+="</pre>";break}case"image":{l=await r.blob(),a=`<img src="${URL.createObjectURL(l)}">`,window&&window.DOMPurify&&(o="Include successful. BUT DOMPurify loaded which may block its use.",s("warn","Ui:include:image",o)());break}case"video":{l=await r.blob(),a=`<video controls autoplay><source src="${URL.createObjectURL(l)}"></video>`,window&&window.DOMPurify&&(o="Include successful. BUT DOMPurify loaded which may block its use.",s("warn","Ui:include:video",o)());break}case"pdf":case"text":default:{l=await r.blob(),a=`<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(l)}">`,window&&window.DOMPurify&&(o="Include successful. BUT DOMPurify loaded which may block its use.",s("warn",`Ui:include:${n}`,o)());break}}return e.type="div",e.slot=a,e.parent||(e.parent="body"),e.attributes||(e.attributes={class:"included"}),this._uiReplace({components:[e]}),s("trace",`Ui:include:${n}`,o)(),o}};module.exports=u;
-//# sourceMappingURL=ui.js.map
+// src/front-end-module/ui.js
+var Ui = class Ui2 {
+  version = "6.6.0-node";
+  // Reference to DOM window - must be passed in the constructor
+  // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
+  window;
+  /** Log function - passed in constructor or will be a dummy function
+   * @type {function}
+   */
+  static log;
+  /** Called when `new Ui(...)` is called
+   * @param {globalThis} win Either the browser global window or jsdom dom.window
+   * @param {function} [extLog] A function that returns a function for logging
+   * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
+   */
+  constructor(win, extLog, jsonHighlight) {
+    if (win)
+      this.window = win;
+    else {
+      throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
+    }
+    this.document = this.window.document;
+    if (extLog)
+      Ui2.log = extLog;
+    else
+      Ui2.log = function() {
+        return function() {
+        };
+      };
+    if (jsonHighlight)
+      this.syntaxHighlight = jsonHighlight;
+    else
+      this.syntaxHighlight = function() {
+      };
+  }
+  /** Directly manage UI via JSON
+   * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
+   */
+  ui(json) {
+    let msg = {};
+    if (json._ui)
+      msg = json;
+    else
+      msg._ui = json;
+    this._uiManager(msg);
+  }
+  // TODO Add multi-slot
+  /** Replace or add an HTML element's slot from text or an HTML string
+   * Will use DOMPurify if that library has been loaded to window.
+   * param {*} ui Single entry from the msg._ui property
+   * @param {Element} el Reference to the element that we want to update
+   * @param {*} component The component we are trying to add/replace
+   */
+  replaceSlot(el, component) {
+    if (!component.slot)
+      return;
+    if (!el)
+      return;
+    if (this.window["DOMPurify"])
+      component.slot = this.window["DOMPurify"].sanitize(component.slot);
+    el.innerHTML = component.slot;
+  }
+  /** Replace or add an HTML element's slot from a Markdown string
+   * Only does something if the markdownit library has been loaded to window.
+   * Will use DOMPurify if that library has been loaded to window.
+   * @param {Element} el Reference to the element that we want to update
+   * @param {*} component The component we are trying to add/replace
+   */
+  replaceSlotMarkdown(el, component) {
+    if (!el)
+      return;
+    if (!this.window["markdownit"])
+      return;
+    if (!component.slotMarkdown)
+      return;
+    const opts = {
+      // eslint-disable-line object-shorthand
+      html: true,
+      linkify: true,
+      _highlight: true,
+      langPrefix: "language-",
+      highlight(str, lang) {
+        if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
+          try {
+            return `<pre class="highlight" data-language="${lang.toUpperCase()}">
+                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
+          } finally {
+          }
+        }
+        return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+      }
+    };
+    const md = this.window["markdownit"](opts);
+    component.slotMarkdown = md.render(component.slotMarkdown);
+    if (this.window["DOMPurify"])
+      component.slotMarkdown = this.window["DOMPurify"].sanitize(component.slotMarkdown);
+    el.innerHTML = component.slotMarkdown;
+  }
+  /** Attach a new remote script to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} url The url to be used in the script src attribute
+   */
+  loadScriptSrc(url) {
+    const newScript = this.document.createElement("script");
+    newScript.src = url;
+    newScript.async = false;
+    this.document.head.appendChild(newScript);
+  }
+  /** Attach a new remote stylesheet link to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} url The url to be used in the style link href attribute
+   */
+  loadStyleSrc(url) {
+    const newStyle = this.document.createElement("link");
+    newStyle.href = url;
+    newStyle.rel = "stylesheet";
+    newStyle.type = "text/css";
+    this.document.head.appendChild(newStyle);
+  }
+  /** Attach a new text script to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} textFn The text to be loaded as a script
+   */
+  loadScriptTxt(textFn) {
+    const newScript = this.document.createElement("script");
+    newScript.async = false;
+    newScript.textContent = textFn;
+    this.document.head.appendChild(newScript);
+  }
+  /** Attach a new text stylesheet to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} textFn The text to be loaded as a stylesheet
+   */
+  loadStyleTxt(textFn) {
+    const newStyle = this.document.createElement("style");
+    newStyle.textContent = textFn;
+    this.document.head.appendChild(newStyle);
+  }
+  /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
+   * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
+   *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
+   *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
+   * @param {"notify"|"alert"} type Dialog type
+   * @param {object} ui standardised ui data
+   * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+   * @returns {void}
+   */
+  showDialog(type, ui, msg) {
+    let content = "";
+    if (msg.payload && typeof msg.payload === "string")
+      content += msg.payload;
+    if (ui.content)
+      content += ui.content;
+    if (content === "") {
+      Ui2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
+      return;
+    }
+    if (!ui.title && msg.topic)
+      ui.title = msg.topic;
+    if (ui.title)
+      content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
+    if (ui.noAutohide)
+      ui.noAutoHide = ui.noAutohide;
+    if (ui.noAutoHide)
+      ui.autohide = !ui.noAutoHide;
+    if (ui.autoHideDelay) {
+      if (!ui.autohide)
+        ui.autohide = true;
+      ui.delay = ui.autoHideDelay;
+    } else
+      ui.autoHideDelay = 1e4;
+    if (!Object.prototype.hasOwnProperty.call(ui, "autohide"))
+      ui.autohide = true;
+    if (type === "alert") {
+      ui.modal = true;
+      ui.autohide = false;
+      content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
+    }
+    let toaster = this.document.getElementById("toaster");
+    if (toaster === null) {
+      toaster = this.document.createElement("div");
+      toaster.id = "toaster";
+      toaster.title = "Click to clear all notifcations";
+      toaster.setAttribute("class", "toaster");
+      toaster.setAttribute("role", "dialog");
+      toaster.setAttribute("arial-label", "Toast message");
+      toaster.onclick = function() {
+        toaster.remove();
+      };
+      this.document.body.insertAdjacentElement("afterbegin", toaster);
+    }
+    const toast = this.document.createElement("div");
+    toast.title = "Click to clear this notifcation";
+    toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
+    toast.innerHTML = content;
+    toast.setAttribute("role", "alertdialog");
+    if (ui.modal)
+      toast.setAttribute("aria-modal", ui.modal);
+    toast.onclick = function(evt) {
+      evt.stopPropagation();
+      toast.remove();
+      if (toaster.childElementCount < 1)
+        toaster.remove();
+    };
+    if (type === "alert") {
+    }
+    toaster.insertAdjacentElement(ui.appendToast === true ? "beforeend" : "afterbegin", toast);
+    if (ui.autohide === true) {
+      setInterval(() => {
+        toast.remove();
+        if (toaster.childElementCount < 1)
+          toaster.remove();
+      }, ui.autoHideDelay);
+    }
+  }
+  // --- End of showDialog ---
+  /** Show a browser notification if the browser and the user allows it
+   * @param {object} config Notification config data
+   * @returns {Promise} Resolves on close or click event, returns the event.
+   */
+  _showNotification(config) {
+    if (config.topic && !config.title)
+      config.title = config.topic;
+    if (!config.title)
+      config.title = "uibuilder notification";
+    if (config.payload && !config.body)
+      config.body = config.payload;
+    if (!config.body)
+      config.body = " No message given.";
+    try {
+      const notify = new Notification(config.title, config);
+      return new Promise((resolve, reject) => {
+        notify.addEventListener("close", (ev) => {
+          ev.currentTarget.userAction = "close";
+          resolve(ev);
+        });
+        notify.addEventListener("click", (ev) => {
+          ev.currentTarget.userAction = "click";
+          resolve(ev);
+        });
+        notify.addEventListener("error", (ev) => {
+          ev.currentTarget.userAction = "error";
+          reject(ev);
+        });
+      });
+    } catch (e) {
+      return Promise.reject(new Error("Browser refused to create a Notification"));
+    }
+  }
+  /** Show a browser notification if possible. Returns a promise
+   * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+   * or a Notifications API options object + config.title string.
+   * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+   * @param {object|string} config Notification config object or simple message string
+   * @returns {Promise} Resolves on close or click event, returns the event.
+   */
+  async notification(config) {
+    if (typeof config === "string") {
+      config = { body: config };
+    }
+    if (typeof Notification === "undefined")
+      return Promise.reject(new Error("Notifications not available in this browser"));
+    let permit = Notification.permission;
+    if (permit === "denied") {
+      return Promise.reject(new Error("Notifications not permitted by user"));
+    } else if (permit === "granted") {
+      return this._showNotification(config);
+    } else {
+      permit = await Notification.requestPermission();
+      if (permit === "granted") {
+        return this._showNotification(config);
+      }
+      return Promise.reject(new Error("Notifications not permitted by user"));
+    }
+  }
+  /** Load a dynamic UI from a JSON web reponse
+   * @param {string} url URL that will return the ui JSON
+   */
+  loadui(url) {
+    if (!fetch) {
+      Ui2.log(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
+      return;
+    }
+    if (!url) {
+      Ui2.log(0, "Ui:loadui", "url parameter must be provided, skipping.")();
+      return;
+    }
+    fetch(url).then((response) => {
+      if (response.ok === false) {
+        throw new Error(`Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`);
+      }
+      Ui2.log("trace", "Ui:loadui:then1", `Loaded '${url}'. Status ${response.status}, ${response.statusText}`)();
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new TypeError(`Fetch '${url}' did not return JSON, ignoring`);
+      }
+      return response.json();
+    }).then((data) => {
+      if (data !== void 0) {
+        Ui2.log("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
+        this._uiManager({ _ui: data });
+        return true;
+      }
+      return false;
+    }).catch((err) => {
+      Ui2.log("warn", "Ui:loadui:catch", "Error. ", err)();
+    });
+  }
+  // --- end of loadui
+  // Namespaces - See https://stackoverflow.com/a/52572048/1309986
+  // const NAMESPACES = {
+  //     svg: 'http://www.w3.org/2000/svg',
+  //     html: 'http://www.w3.org/1999/xhtml',
+  //     xml: 'http://www.w3.org/XML/1998/namespace',
+  //     xlink: 'http://www.w3.org/1999/xlink',
+  //     xmlns: 'http://www.w3.org/2000/xmlns/' // sic for the final slash...
+  // }
+  /** Enhance an HTML element that is being composed with ui data
+   *  such as ID, attribs, event handlers, custom props, etc.
+   * @param {*} el HTML Element to enhance
+   * @param {*} comp Individual uibuilder ui component spec
+   */
+  _uiComposeComponent(el, comp) {
+    if (comp.attributes) {
+      Object.keys(comp.attributes).forEach((attrib) => {
+        if (attrib === "value")
+          el.value = comp.attributes[attrib];
+        if (attrib.startsWith("xlink:"))
+          el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
+        else
+          el.setAttribute(attrib, comp.attributes[attrib]);
+      });
+    }
+    if (comp.id)
+      el.setAttribute("id", comp.id);
+    if (comp.type === "svg") {
+      el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
+      el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+    }
+    if (comp.events) {
+      Object.keys(comp.events).forEach((type) => {
+        if (type.toLowerCase === "onclick")
+          type = "click";
+        try {
+          el.addEventListener(type, (evt) => {
+            new Function("evt", `${comp.events[type]}(evt)`)(evt);
+          });
+        } catch (err) {
+          Ui2.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+        }
+      });
+    }
+    if (comp.properties) {
+      Object.keys(comp.properties).forEach((prop) => {
+        el[prop] = comp.properties[prop];
+      });
+    }
+    if (comp.slot) {
+      this.replaceSlot(el, comp);
+    }
+    if (comp.slotMarkdown) {
+      this.replaceSlotMarkdown(el, comp);
+    }
+  }
+  uiEnhanceElement(el, comp) {
+    this._uiComposeComponent(el, comp);
+  }
+  /** Extend an HTML Element with appended elements using ui components
+   * NOTE: This fn follows a strict hierarchy of added components.
+   * @param {HTMLElement} parentEl The parent HTML Element we want to append to
+   * @param {*} components The ui component(s) we want to add
+   * @param {string} [ns] Optional. The namespace to use.
+   */
+  _uiExtendEl(parentEl, components, ns = "") {
+    components.forEach((compToAdd, i) => {
+      Ui2.log("trace", `Ui:_uiExtendEl:components-forEach:${i}`, compToAdd)();
+      let newEl;
+      compToAdd.ns = ns;
+      if (compToAdd.ns === "html") {
+        newEl = parentEl;
+        parentEl.innerHTML = compToAdd.slot;
+      } else if (compToAdd.ns === "svg") {
+        newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
+        this._uiComposeComponent(newEl, compToAdd);
+        parentEl.appendChild(newEl);
+      } else {
+        newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+        this._uiComposeComponent(newEl, compToAdd);
+        parentEl.appendChild(newEl);
+      }
+      if (compToAdd.components) {
+        this._uiExtendEl(newEl, compToAdd.components, compToAdd.ns);
+      }
+    });
+  }
+  // Vue dynamic inserts Don't really work ...
+  // _uiAddVue(ui, isRecurse) {
+  //     // must be Vue
+  //     // must have only 1 root element
+  //     const compToAdd = ui.components[0]
+  //     const newEl = this.document.createElement(compToAdd.type)
+  //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
+  //     this._uiComposeComponent(newEl, compToAdd)
+  //     // If nested components, go again - but don't pass payload to sub-components
+  //     if (compToAdd.components) {
+  //         this._uiExtendEl(newEl, compToAdd.components)
+  //     }
+  //     console.log('MAGIC: ', this.magick, newEl, newEl.outerHTML)()
+  //     this.set('magick', newEl.outerHTML)
+  //     // if (compToAdd.id) newEl.setAttribute('ref', compToAdd.id)
+  //     // if (elParent.id) newEl.setAttribute('data-parent', elParent.id)
+  // }
+  // TODO Add check if ID already exists
+  // TODO Allow single add without using components array
+  /** Handle incoming msg._ui add requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   * @param {boolean} isRecurse Is this a recursive call?
+   */
+  _uiAdd(ui, isRecurse) {
+    Ui2.log("trace", "Ui:_uiManager:add", "Starting _uiAdd")();
+    ui.components.forEach((compToAdd, i) => {
+      Ui2.log("trace", `Ui:_uiAdd:components-forEach:${i}`, "Component to add: ", compToAdd)();
+      let newEl;
+      switch (compToAdd.type) {
+        case "html": {
+          compToAdd.ns = "html";
+          newEl = this.document.createElement("div");
+          break;
+        }
+        case "svg": {
+          compToAdd.ns = "svg";
+          newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          break;
+        }
+        default: {
+          compToAdd.ns = "dom";
+          newEl = this.document.createElement(compToAdd.type);
+          break;
+        }
+      }
+      if (!compToAdd.slot && ui.payload)
+        compToAdd.slot = ui.payload;
+      this._uiComposeComponent(newEl, compToAdd);
+      let elParent;
+      if (compToAdd.parentEl) {
+        elParent = compToAdd.parentEl;
+      } else if (ui.parentEl) {
+        elParent = ui.parentEl;
+      } else if (compToAdd.parent) {
+        elParent = this.document.querySelector(compToAdd.parent);
+      } else if (ui.parent) {
+        elParent = this.document.querySelector(ui.parent);
+      }
+      if (!elParent) {
+        Ui2.log("info", "Ui:_uiAdd", "No parent found, adding to body")();
+        elParent = this.document.querySelector("body");
+      }
+      if (compToAdd.position && compToAdd.position === "first") {
+        elParent.insertBefore(newEl, elParent.firstChild);
+      } else if (compToAdd.position && Number.isInteger(Number(compToAdd.position))) {
+        elParent.insertBefore(newEl, elParent.children[compToAdd.position]);
+      } else {
+        elParent.appendChild(newEl);
+      }
+      if (compToAdd.components) {
+        this._uiExtendEl(newEl, compToAdd.components, compToAdd.ns);
+      }
+    });
+  }
+  // --- end of _uiAdd ---
+  // TODO Add better tests for failures (see comments)
+  /** Handle incoming _ui remove requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   * @param {boolean} all Optional, default=false. If true, will remove ALL found elements, otherwise only the 1st is removed
+   */
+  _uiRemove(ui, all = false) {
+    ui.components.forEach((compToRemove) => {
+      let els;
+      if (all !== true)
+        els = [this.document.querySelector(compToRemove)];
+      else
+        els = this.document.querySelectorAll(compToRemove);
+      els.forEach((el) => {
+        try {
+          el.remove();
+        } catch (err) {
+          Ui2.log("trace", "Ui:_uiRemove", `Could not remove. ${err.message}`)();
+        }
+      });
+    });
+  }
+  // --- end of _uiRemove ---
+  /** Handle incoming _ui replace requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   */
+  _uiReplace(ui) {
+    Ui2.log("trace", "Ui:_uiReplace", "Starting")();
+    ui.components.forEach((compToReplace, i) => {
+      Ui2.log("trace", `Ui:_uiReplace:components-forEach:${i}`, "Component to replace: ", compToReplace)();
+      let elToReplace;
+      if (compToReplace.id) {
+        elToReplace = this.document.getElementById(compToReplace.id);
+      } else if (compToReplace.selector || compToReplace.select) {
+        elToReplace = this.document.querySelector(compToReplace.selector);
+      } else if (compToReplace.name) {
+        elToReplace = this.document.querySelector(`[name="${compToReplace.name}"]`);
+      } else if (compToReplace.type) {
+        elToReplace = this.document.querySelector(compToReplace.type);
+      }
+      Ui2.log("trace", `Ui:_uiReplace:components-forEach:${i}`, "Element to replace: ", elToReplace)();
+      if (elToReplace === void 0 || elToReplace === null) {
+        Ui2.log("trace", `Ui:_uiReplace:components-forEach:${i}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
+        this._uiAdd({ components: [compToReplace] }, false);
+        return;
+      }
+      let newEl;
+      switch (compToReplace.type) {
+        case "html": {
+          compToReplace.ns = "html";
+          newEl = this.document.createElement("div");
+          break;
+        }
+        case "svg": {
+          compToReplace.ns = "svg";
+          newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          break;
+        }
+        default: {
+          compToReplace.ns = "dom";
+          newEl = this.document.createElement(compToReplace.type);
+          break;
+        }
+      }
+      this._uiComposeComponent(newEl, compToReplace);
+      elToReplace.replaceWith(newEl);
+      if (compToReplace.components) {
+        this._uiExtendEl(newEl, compToReplace.components, compToReplace.ns);
+      }
+    });
+  }
+  // --- end of _uiReplace ---
+  // TODO Allow single add without using components array
+  // TODO Allow sub-components
+  // TODO Add multi-slot capability
+  /** Handle incoming _ui update requests
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   */
+  _uiUpdate(ui) {
+    Ui2.log("trace", "Ui:_uiManager:update", "Starting _uiUpdate")();
+    if (!ui.components)
+      ui.components = [Object.assign({}, ui)];
+    ui.components.forEach((compToUpd, i) => {
+      Ui2.log("trace", "_uiUpdate:components-forEach", `Component #${i}`, compToUpd)();
+      let elToUpd;
+      if (compToUpd.id) {
+        elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`);
+      } else if (compToUpd.selector || compToUpd.select) {
+        elToUpd = this.document.querySelectorAll(compToUpd.selector);
+      } else if (compToUpd.name) {
+        elToUpd = this.document.querySelectorAll(`[name="${compToUpd.name}"]`);
+      } else if (compToUpd.type) {
+        elToUpd = this.document.querySelectorAll(compToUpd.type);
+      }
+      if (elToUpd === void 0 || elToUpd.length < 1) {
+        Ui2.log("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
+        return;
+      }
+      Ui2.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
+      if (!compToUpd.slot && compToUpd.payload)
+        compToUpd.slot = compToUpd.payload;
+      elToUpd.forEach((el) => {
+        this._uiComposeComponent(el, compToUpd);
+      });
+      if (compToUpd.components) {
+        elToUpd.forEach((el) => {
+          Ui2.log("trace", "_uiUpdate:components", "el", el)();
+          this._uiUpdate({
+            method: ui.method,
+            parentEl: el,
+            components: compToUpd.components
+          });
+        });
+      }
+    });
+  }
+  // --- end of _uiUpdate ---
+  // TODO Add more error handling and parameter validation
+  /** Handle incoming _ui load requests
+   * Can load JavaScript modules, JavaScript scripts and CSS.
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   */
+  _uiLoad(ui) {
+    if (ui.components) {
+      if (!Array.isArray(ui.components))
+        ui.components = [ui.components];
+      ui.components.forEach(async (component) => {
+        await import(component);
+      });
+    }
+    if (ui.srcScripts) {
+      if (!Array.isArray(ui.srcScripts))
+        ui.srcScripts = [ui.srcScripts];
+      ui.srcScripts.forEach((script) => {
+        this.loadScriptSrc(script);
+      });
+    }
+    if (ui.txtScripts) {
+      if (!Array.isArray(ui.txtScripts))
+        ui.txtScripts = [ui.txtScripts];
+      this.loadScriptTxt(ui.txtScripts.join("\n"));
+    }
+    if (ui.srcStyles) {
+      if (!Array.isArray(ui.srcStyles))
+        ui.srcStyles = [ui.srcStyles];
+      ui.srcStyles.forEach((sheet) => {
+        this.loadStyleSrc(sheet);
+      });
+    }
+    if (ui.txtStyles) {
+      if (!Array.isArray(ui.txtStyles))
+        ui.txtStyles = [ui.txtStyles];
+      this.loadStyleTxt(ui.txtStyles.join("\n"));
+    }
+  }
+  // --- end of _uiLoad ---
+  /** Handle a reload request */
+  _uiReload() {
+    Ui2.log("trace", "Ui:uiManager:reload", "reloading")();
+    location.reload();
+  }
+  /** Handle incoming _ui messages and loaded UI JSON files
+   * Called from start()
+   * @param {*} msg Standardised msg object containing a _ui property object
+   */
+  _uiManager(msg) {
+    if (!msg._ui)
+      return;
+    if (!Array.isArray(msg._ui))
+      msg._ui = [msg._ui];
+    msg._ui.forEach((ui, i) => {
+      if (!ui.method) {
+        Ui2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring`)();
+        return;
+      }
+      ui.payload = msg.payload;
+      ui.topic = msg.topic;
+      switch (ui.method) {
+        case "add": {
+          this._uiAdd(ui, false);
+          break;
+        }
+        case "remove": {
+          this._uiRemove(ui, false);
+          break;
+        }
+        case "removeAll": {
+          this._uiRemove(ui, true);
+          break;
+        }
+        case "replace": {
+          this._uiReplace(ui);
+          break;
+        }
+        case "update": {
+          this._uiUpdate(ui);
+          break;
+        }
+        case "load": {
+          this._uiLoad(ui);
+          break;
+        }
+        case "reload": {
+          this._uiReload();
+          break;
+        }
+        case "notify": {
+          this.showDialog("notify", ui, msg);
+          break;
+        }
+        case "alert": {
+          this.showDialog("alert", ui, msg);
+          break;
+        }
+        default: {
+          Ui2.log("error", "Ui:_uiManager", `Invalid msg._ui[${i}].method (${ui.method}). Ignoring`)();
+          break;
+        }
+      }
+    });
+  }
+  // --- end of _uiManager ---
+  /** Get standard data from a DOM node.
+   * @param {*} node DOM node to examine
+   * @param {string} cssSelector Identify the DOM element to get data from
+   * @returns {object} Standardised data object
+   */
+  nodeGet(node, cssSelector) {
+    const thisOut = {
+      id: node.id === "" ? void 0 : node.id,
+      name: node.name,
+      children: node.childNodes.length,
+      type: node.nodeName,
+      attributes: void 0,
+      isUserInput: node.validity ? true : false,
+      // eslint-disable-line no-unneeded-ternary
+      userInput: !node.validity ? void 0 : {
+        // eslint-disable-line multiline-ternary
+        value: node.value,
+        validity: void 0,
+        willValidate: node.willValidate,
+        valueAsDate: node.valueAsDate,
+        valueAsNumber: node.valueAsNumber,
+        type: node.type
+      }
+    };
+    if (["UL", "OL"].includes(node.nodeName)) {
+      const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
+      if (listEntries) {
+        thisOut.list = {
+          "entries": listEntries.length
+        };
+      }
+    }
+    if (node.nodeName === "DL") {
+      const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
+      if (listEntries) {
+        thisOut.list = {
+          "entries": listEntries.length
+        };
+      }
+    }
+    if (node.nodeName === "TABLE") {
+      const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
+      const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
+      const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+      if (bodyEntries || headEntries || cols) {
+        thisOut.table = {
+          "headRows": headEntries ? headEntries.length : 0,
+          "bodyRows": bodyEntries ? bodyEntries.length : 0,
+          "columns": cols ? cols.length : 0
+        };
+      }
+    }
+    if (node.nodeName !== "#text" && node.attributes && node.attributes.length > 0) {
+      thisOut.attributes = {};
+      for (const attrib of node.attributes) {
+        if (attrib.name !== "id") {
+          thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
+        }
+      }
+    }
+    if (node.nodeName === "#text") {
+      thisOut.text = node.textContent;
+    }
+    if (node.validity)
+      thisOut.userInput.validity = {};
+    for (const v in node.validity) {
+      thisOut.userInput.validity[v] = node.validity[v];
+    }
+    return thisOut;
+  }
+  // --- end of nodeGet --- //
+  /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
+   * @param {string} cssSelector Identify the DOM element to get data from
+   * @param {string} [propName] Optional. Specific name of property to get from the element
+   * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+   */
+  uiGet(cssSelector, propName = null) {
+    const selection = (
+      /** @type {NodeListOf<HTMLInputElement>} */
+      this.document.querySelectorAll(cssSelector)
+    );
+    const out = [];
+    selection.forEach((node) => {
+      if (propName !== null && propName !== "") {
+        let prop = node.getAttribute(propName);
+        if (prop === void 0 || prop === null) {
+          try {
+            prop = node[propName];
+          } catch (error) {
+          }
+        }
+        if (prop === void 0 || prop === null) {
+          if (propName.toLowerCase() === "value")
+            out.push(node.innerText);
+          else
+            out.push(`Property '${propName}' not found`);
+        } else {
+          if (prop.constructor.name === "NamedNodeMap") {
+            const p = {};
+            for (const key of prop) {
+              p[key.name] = prop[key.name].value;
+            }
+            out.push(p);
+          } else if (!prop.constructor.name.toLowerCase().includes("map")) {
+            out.push({
+              [propName]: prop
+            });
+          } else {
+            const p = {};
+            for (const key in prop) {
+              p[key] = prop[key];
+            }
+            out.push(p);
+          }
+        }
+      } else {
+        out.push(this.nodeGet(node, cssSelector));
+      }
+    });
+    return out;
+  }
+  // --- end of uiGet --- //
+  /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
+   * Wraps the included object in a div tag.
+   * PDF's, text or unknown MIME types are also wrapped in an iFrame.
+   * @param {string} url The URL of the source file to include
+   * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
+   * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
+   * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
+   * @returns {Promise<any>} Status
+   */
+  async include(url, uiOptions) {
+    if (!fetch) {
+      Ui2.log(0, "Ui:include", "Current environment does not include `fetch`, skipping.")();
+      return "Current environment does not include `fetch`, skipping.";
+    }
+    if (!url) {
+      Ui2.log(0, "Ui:include", "url parameter must be provided, skipping.")();
+      return "url parameter must be provided, skipping.";
+    }
+    if (!uiOptions || !uiOptions.id) {
+      Ui2.log(0, "Ui:include", "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")();
+      return "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.";
+    }
+    let response;
+    try {
+      response = await fetch(url);
+    } catch (error) {
+      Ui2.log(0, "Ui:include", `Fetch of file '${url}' failed. `, error.message)();
+      return error.message;
+    }
+    if (!response.ok) {
+      Ui2.log(0, "Ui:include", `Fetch of file '${url}' failed. Status='${response.statusText}'`)();
+      return response.statusText;
+    }
+    const contentType = await response.headers.get("content-type");
+    let type = null;
+    if (contentType) {
+      if (contentType.includes("text/html")) {
+        type = "html";
+      } else if (contentType.includes("application/json")) {
+        type = "json";
+      } else if (contentType.includes("multipart/form-data")) {
+        type = "form";
+      } else if (contentType.includes("image/")) {
+        type = "image";
+      } else if (contentType.includes("video/")) {
+        type = "video";
+      } else if (contentType.includes("application/pdf")) {
+        type = "pdf";
+      } else if (contentType.includes("text/plain")) {
+        type = "text";
+      }
+    }
+    let slot = "";
+    let txtReturn = "Include successful";
+    let data;
+    switch (type) {
+      case "html": {
+        data = await response.text();
+        slot = data;
+        break;
+      }
+      case "json": {
+        data = await response.json();
+        slot = '<pre class="syntax-highlight">';
+        slot += this.syntaxHighlight(data);
+        slot += "</pre>";
+        break;
+      }
+      case "form": {
+        data = await response.formData();
+        slot = '<pre class="syntax-highlight">';
+        slot += this.syntaxHighlight(data);
+        slot += "</pre>";
+        break;
+      }
+      case "image": {
+        data = await response.blob();
+        slot = `<img src="${URL.createObjectURL(data)}">`;
+        if (this.window["DOMPurify"]) {
+          txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+          Ui2.log("warn", "Ui:include:image", txtReturn)();
+        }
+        break;
+      }
+      case "video": {
+        data = await response.blob();
+        slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
+        if (this.window["DOMPurify"]) {
+          txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+          Ui2.log("warn", "Ui:include:video", txtReturn)();
+        }
+        break;
+      }
+      case "pdf":
+      case "text":
+      default: {
+        data = await response.blob();
+        slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
+        if (this.window["DOMPurify"]) {
+          txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
+          Ui2.log("warn", `Ui:include:${type}`, txtReturn)();
+        }
+        break;
+      }
+    }
+    uiOptions.type = "div";
+    uiOptions.slot = slot;
+    if (!uiOptions.parent)
+      uiOptions.parent = "body";
+    if (!uiOptions.attributes)
+      uiOptions.attributes = { class: "included" };
+    this._uiReplace({
+      components: [
+        uiOptions
+      ]
+    });
+    Ui2.log("trace", `Ui:include:${type}`, txtReturn)();
+    return txtReturn;
+  }
+  // ---- End of include() ---- //
+};
+module.exports = Ui;
