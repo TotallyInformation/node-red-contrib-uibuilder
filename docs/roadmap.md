@@ -80,6 +80,7 @@ Why?
 ### General changes
 
 * Move the ui class to a separate repo so that it can be used independently.
+* Consider moving all libs to separate repo to reduce number of direct dependencies.
 
 * Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
 * Restructure uibuilder node to remove fs-extra dependency to its own library module.

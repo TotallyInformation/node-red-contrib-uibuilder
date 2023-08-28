@@ -450,12 +450,12 @@
 
 /** uibHtmlNode (HTML Node)
  * @typedef {{
-*   name: string;
-*   topic: string;
-*
-*   _ui: any;
-* }} uibHtmlNode
-*/
+ *   name: string;
+ *   topic: string;
+ *
+ *   _ui: any;
+ * }} uibHtmlNode
+ */
 
 /** uibUpdNode (Update Node)
  * @typedef {{
