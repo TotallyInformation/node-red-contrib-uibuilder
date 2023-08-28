@@ -269,7 +269,6 @@ function buildTitle(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildUlOlList(node, msg, parent) {
-    console.log(node.data)
     // Make sure node.data is an object or an array - if not, force to array
     if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
@@ -866,9 +865,6 @@ async function buildUi(msg, node) {
         getSource('data', node, msg), // contains core data
         getSource('position', node, msg),
     ])
-
-    // console.log('NODE DATA', node.data)
-    // console.log('NODE', node)
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) {

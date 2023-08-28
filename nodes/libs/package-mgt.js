@@ -80,7 +80,7 @@ class UibPackages {
             const all = execa.sync('npm', args, opts)
             res = all.stdout
         } catch (e) {
-            console.error('>>>>>', e.all)
+            // console.error('>>>>>', e.all)
             res = e.all  // Do we need to wrap this in a promise?
         }
         return res
@@ -409,7 +409,7 @@ class UibPackages {
 
         if (this.uibPackageJson.dependencies !== pj.dependencies ) {
             log.info(`[uibuilder:package-mgt:getUibRootPackageJson] package.json dependencies changed`)
-            console.info({'pkg-deps': this.uibPackageJson.dependencies, 'memory-deps': pj.dependencies})
+            // console.info({'pkg-deps': this.uibPackageJson.dependencies, 'memory-deps': pj.dependencies})
         }
 
         // Update the version string to match uibuilder version
@@ -600,37 +600,6 @@ class UibPackages {
 
         return pkgDetails
     } // ----  End of getPackageDetails2 ---- //
-
-    //#region --- DEPRECATED ---
-
-    /** Update all of the installed packages
-     */
-    updateInstalledPackages() {
-        this.log.error('[uibuilder:UibPackages:updateInstalledPackages] FUNCTION IS DEPRECATED.')
-        console.trace()
-
-        console.trace('package-mgt.js:updateInstalledPackages')
-    } // ---- End of updateInstalledPackages ---- //
-
-    /** !DEPRECATED!  Find install folder for a package
-     */
-    getPackagePath() {
-        this.log.error('[uibuilder:UibPackages:getPackagePath] FUNCTION IS DEPRECATED.')
-        console.trace()
-
-        console.trace('package-mgt.js:getPackagePath')
-    } // ----  End of getPackagePath ---- //
-
-    /** Update the master name list of possible packages that could be served to the front-end
-     */
-    updateMergedPackageList() {
-        this.log.error('[uibuilder:UibPackages:updateMergedPackageList] FUNCTION IS DEPRECATED.')
-        console.trace()
-
-        console.trace('package-mgt.js:updateMergedPackageList')
-    } // ---- End of updateMergedPackageList ---- //
-
-    //#endregion --- DEPRECATED ---
 
     /** Install an npm package
      * NOTE: This fn does not update the list of packages
