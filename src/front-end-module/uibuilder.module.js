@@ -28,9 +28,9 @@
 //#endregion --- Type Defs --- //
 
 //#region --- We need the Socket.IO & ui libraries --- //
-import io from 'socket.io-client' // Note: Only works when using esbuild to bundle
-// @ts-ignore
+// @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui'
+import io from 'socket.io-client' 
 
 // TODO - Maybe - check if already loaded as window['io']?
 // TODO - Maybe - Should this be moved to inside the class - would know the httpRoot then so less need to guess?
@@ -306,7 +306,7 @@ function syntaxHighlight(json) {
 }
 
 /** msg._ui handling functions */
-const _ui = new Ui(log, syntaxHighlight)
+const _ui = new Ui(window, log, syntaxHighlight)
 
 //#endregion --- Module-level utility functions --- //
 

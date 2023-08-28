@@ -55,18 +55,36 @@
   // src/front-end-module/ui.js
   var require_ui = __commonJS({
     "src/front-end-module/ui.js"(exports, module) {
-      var log2;
-      var Ui2 = class Ui {
+      var _a2;
+      var Ui2 = (_a2 = class {
         /** Called when `new Ui(...)` is called
-         * @param {*} extLog A fn that returns a fn for logging
-         * @param {*} jsonHighlight A function that returns a highlighted HTML of JSON input
+         * @param {globalThis} win Either the browser global window or jsdom dom.window
+         * @param {function} [extLog] A function that returns a function for logging
+         * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
          */
-        constructor(extLog, jsonHighlight) {
-          if (!document) {
-            log2(0, "Ui:constructor", "Current environment does not include `document`, UI functions cannot be used.")();
+        constructor(win, extLog, jsonHighlight) {
+          __publicField(this, "version", "6.6.0-src");
+          // Reference to DOM window - must be passed in the constructor
+          // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
+          __publicField(this, "window");
+          if (win)
+            this.window = win;
+          else {
+            throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
           }
-          log2 = extLog;
-          this.syntaxHighlight = jsonHighlight;
+          this.document = this.window.document;
+          if (extLog)
+            _a2.log = extLog;
+          else
+            _a2.log = function() {
+              return function() {
+              };
+            };
+          if (jsonHighlight)
+            this.syntaxHighlight = jsonHighlight;
+          else
+            this.syntaxHighlight = function() {
+            };
         }
         /** Directly manage UI via JSON
          * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
@@ -91,8 +109,8 @@
             return;
           if (!el)
             return;
-          if (window["DOMPurify"])
-            component.slot = window["DOMPurify"].sanitize(component.slot);
+          if (this.window["DOMPurify"])
+            component.slot = this.window["DOMPurify"].sanitize(component.slot);
           el.innerHTML = component.slot;
         }
         /** Replace or add an HTML element's slot from a Markdown string
@@ -104,7 +122,7 @@
         replaceSlotMarkdown(el, component) {
           if (!el)
             return;
-          if (!window["markdownit"])
+          if (!this.window["markdownit"])
             return;
           if (!component.slotMarkdown)
             return;
@@ -115,20 +133,20 @@
             _highlight: true,
             langPrefix: "language-",
             highlight(str, lang) {
-              if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
+              if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
                 try {
                   return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${window["hljs"].highlightAuto(str).value}</code></pre>`;
+                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
                 } finally {
                 }
               }
               return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
             }
           };
-          const md = window["markdownit"](opts);
+          const md = this.window["markdownit"](opts);
           component.slotMarkdown = md.render(component.slotMarkdown);
-          if (window["DOMPurify"])
-            component.slotMarkdown = window["DOMPurify"].sanitize(component.slotMarkdown);
+          if (this.window["DOMPurify"])
+            component.slotMarkdown = this.window["DOMPurify"].sanitize(component.slotMarkdown);
           el.innerHTML = component.slotMarkdown;
         }
         /** Attach a new remote script to the end of HEAD synchronously
@@ -137,10 +155,10 @@
          * @param {string} url The url to be used in the script src attribute
          */
         loadScriptSrc(url2) {
-          const newScript = document.createElement("script");
+          const newScript = this.document.createElement("script");
           newScript.src = url2;
           newScript.async = false;
-          document.head.appendChild(newScript);
+          this.document.head.appendChild(newScript);
         }
         /** Attach a new remote stylesheet link to the end of HEAD synchronously
          * NOTE: It takes too long for most scripts to finish loading
@@ -148,11 +166,11 @@
          * @param {string} url The url to be used in the style link href attribute
          */
         loadStyleSrc(url2) {
-          const newStyle = document.createElement("link");
+          const newStyle = this.document.createElement("link");
           newStyle.href = url2;
           newStyle.rel = "stylesheet";
           newStyle.type = "text/css";
-          document.head.appendChild(newStyle);
+          this.document.head.appendChild(newStyle);
         }
         /** Attach a new text script to the end of HEAD synchronously
          * NOTE: It takes too long for most scripts to finish loading
@@ -160,10 +178,10 @@
          * @param {string} textFn The text to be loaded as a script
          */
         loadScriptTxt(textFn) {
-          const newScript = document.createElement("script");
+          const newScript = this.document.createElement("script");
           newScript.async = false;
           newScript.textContent = textFn;
-          document.head.appendChild(newScript);
+          this.document.head.appendChild(newScript);
         }
         /** Attach a new text stylesheet to the end of HEAD synchronously
          * NOTE: It takes too long for most scripts to finish loading
@@ -171,12 +189,11 @@
          * @param {string} textFn The text to be loaded as a stylesheet
          */
         loadStyleTxt(textFn) {
-          const newStyle = document.createElement("style");
+          const newStyle = this.document.createElement("style");
           newStyle.textContent = textFn;
-          document.head.appendChild(newStyle);
+          this.document.head.appendChild(newStyle);
         }
-        // TODO - Allow notify to sit in corners rather than take over the screen
-        /** Show a pop-over "toast" dialog or a modal alert
+        /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
          * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
          *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
          *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
@@ -192,7 +209,7 @@
           if (ui.content)
             content += ui.content;
           if (content === "") {
-            log2(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
+            _a2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
             return;
           }
           if (!ui.title && msg.topic)
@@ -216,9 +233,9 @@
             ui.autohide = false;
             content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
           }
-          let toaster = document.getElementById("toaster");
+          let toaster = this.document.getElementById("toaster");
           if (toaster === null) {
-            toaster = document.createElement("div");
+            toaster = this.document.createElement("div");
             toaster.id = "toaster";
             toaster.title = "Click to clear all notifcations";
             toaster.setAttribute("class", "toaster");
@@ -227,9 +244,9 @@
             toaster.onclick = function() {
               toaster.remove();
             };
-            document.body.insertAdjacentElement("afterbegin", toaster);
+            this.document.body.insertAdjacentElement("afterbegin", toaster);
           }
-          const toast = document.createElement("div");
+          const toast = this.document.createElement("div");
           toast.title = "Click to clear this notifcation";
           toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
           toast.innerHTML = content;
@@ -318,18 +335,18 @@
          */
         loadui(url2) {
           if (!fetch) {
-            log2(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
+            _a2.log(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
             return;
           }
           if (!url2) {
-            log2(0, "Ui:loadui", "url parameter must be provided, skipping.")();
+            _a2.log(0, "Ui:loadui", "url parameter must be provided, skipping.")();
             return;
           }
           fetch(url2).then((response) => {
             if (response.ok === false) {
               throw new Error(`Could not load '${url2}'. Status ${response.status}, Error: ${response.statusText}`);
             }
-            log2("trace", "Ui:loadui:then1", `Loaded '${url2}'. Status ${response.status}, ${response.statusText}`)();
+            _a2.log("trace", "Ui:loadui:then1", `Loaded '${url2}'. Status ${response.status}, ${response.statusText}`)();
             const contentType = response.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
               throw new TypeError(`Fetch '${url2}' did not return JSON, ignoring`);
@@ -337,13 +354,13 @@
             return response.json();
           }).then((data) => {
             if (data !== void 0) {
-              log2("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
+              _a2.log("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
               this._uiManager({ _ui: data });
               return true;
             }
             return false;
           }).catch((err) => {
-            log2("warn", "Ui:loadui:catch", "Error. ", err)();
+            _a2.log("warn", "Ui:loadui:catch", "Error. ", err)();
           });
         }
         // --- end of loadui
@@ -386,7 +403,7 @@
                   new Function("evt", `${comp.events[type]}(evt)`)(evt);
                 });
               } catch (err) {
-                log2("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+                _a2.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
               }
             });
           }
@@ -413,18 +430,18 @@
          */
         _uiExtendEl(parentEl, components, ns = "") {
           components.forEach((compToAdd, i2) => {
-            log2("trace", `Ui:_uiExtendEl:components-forEach:${i2}`, compToAdd)();
+            _a2.log("trace", `Ui:_uiExtendEl:components-forEach:${i2}`, compToAdd)();
             let newEl;
             compToAdd.ns = ns;
             if (compToAdd.ns === "html") {
               newEl = parentEl;
               parentEl.innerHTML = compToAdd.slot;
             } else if (compToAdd.ns === "svg") {
-              newEl = document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
+              newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
               this._uiComposeComponent(newEl, compToAdd);
               parentEl.appendChild(newEl);
             } else {
-              newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+              newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
               this._uiComposeComponent(newEl, compToAdd);
               parentEl.appendChild(newEl);
             }
@@ -438,7 +455,7 @@
         //     // must be Vue
         //     // must have only 1 root element
         //     const compToAdd = ui.components[0]
-        //     const newEl = document.createElement(compToAdd.type)
+        //     const newEl = this.document.createElement(compToAdd.type)
         //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
         //     this._uiComposeComponent(newEl, compToAdd)
         //     // If nested components, go again - but don't pass payload to sub-components
@@ -457,24 +474,24 @@
          * @param {boolean} isRecurse Is this a recursive call?
          */
         _uiAdd(ui, isRecurse) {
-          log2("trace", "Ui:_uiManager:add", "Starting _uiAdd")();
+          _a2.log("trace", "Ui:_uiManager:add", "Starting _uiAdd")();
           ui.components.forEach((compToAdd, i2) => {
-            log2("trace", `Ui:_uiAdd:components-forEach:${i2}`, "Component to add: ", compToAdd)();
+            _a2.log("trace", `Ui:_uiAdd:components-forEach:${i2}`, "Component to add: ", compToAdd)();
             let newEl;
             switch (compToAdd.type) {
               case "html": {
                 compToAdd.ns = "html";
-                newEl = document.createElement("div");
+                newEl = this.document.createElement("div");
                 break;
               }
               case "svg": {
                 compToAdd.ns = "svg";
-                newEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 break;
               }
               default: {
                 compToAdd.ns = "dom";
-                newEl = document.createElement(compToAdd.type);
+                newEl = this.document.createElement(compToAdd.type);
                 break;
               }
             }
@@ -487,13 +504,13 @@
             } else if (ui.parentEl) {
               elParent = ui.parentEl;
             } else if (compToAdd.parent) {
-              elParent = document.querySelector(compToAdd.parent);
+              elParent = this.document.querySelector(compToAdd.parent);
             } else if (ui.parent) {
-              elParent = document.querySelector(ui.parent);
+              elParent = this.document.querySelector(ui.parent);
             }
             if (!elParent) {
-              log2("info", "Ui:_uiAdd", "No parent found, adding to body")();
-              elParent = document.querySelector("body");
+              _a2.log("info", "Ui:_uiAdd", "No parent found, adding to body")();
+              elParent = this.document.querySelector("body");
             }
             if (compToAdd.position && compToAdd.position === "first") {
               elParent.insertBefore(newEl, elParent.firstChild);
@@ -517,14 +534,14 @@
           ui.components.forEach((compToRemove) => {
             let els;
             if (all !== true)
-              els = [document.querySelector(compToRemove)];
+              els = [this.document.querySelector(compToRemove)];
             else
-              els = document.querySelectorAll(compToRemove);
+              els = this.document.querySelectorAll(compToRemove);
             els.forEach((el) => {
               try {
                 el.remove();
               } catch (err) {
-                log2("trace", "Ui:_uiRemove", `Could not remove. ${err.message}`)();
+                _a2.log("trace", "Ui:_uiRemove", `Could not remove. ${err.message}`)();
               }
             });
           });
@@ -534,22 +551,22 @@
          * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
          */
         _uiReplace(ui) {
-          log2("trace", "Ui:_uiReplace", "Starting")();
+          _a2.log("trace", "Ui:_uiReplace", "Starting")();
           ui.components.forEach((compToReplace, i2) => {
-            log2("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Component to replace: ", compToReplace)();
+            _a2.log("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Component to replace: ", compToReplace)();
             let elToReplace;
             if (compToReplace.id) {
-              elToReplace = document.getElementById(compToReplace.id);
+              elToReplace = this.document.getElementById(compToReplace.id);
             } else if (compToReplace.selector || compToReplace.select) {
-              elToReplace = document.querySelector(compToReplace.selector);
+              elToReplace = this.document.querySelector(compToReplace.selector);
             } else if (compToReplace.name) {
-              elToReplace = document.querySelector(`[name="${compToReplace.name}"]`);
+              elToReplace = this.document.querySelector(`[name="${compToReplace.name}"]`);
             } else if (compToReplace.type) {
-              elToReplace = document.querySelector(compToReplace.type);
+              elToReplace = this.document.querySelector(compToReplace.type);
             }
-            log2("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Element to replace: ", elToReplace)();
+            _a2.log("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Element to replace: ", elToReplace)();
             if (elToReplace === void 0 || elToReplace === null) {
-              log2("trace", `Ui:_uiReplace:components-forEach:${i2}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
+              _a2.log("trace", `Ui:_uiReplace:components-forEach:${i2}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
               this._uiAdd({ components: [compToReplace] }, false);
               return;
             }
@@ -557,17 +574,17 @@
             switch (compToReplace.type) {
               case "html": {
                 compToReplace.ns = "html";
-                newEl = document.createElement("div");
+                newEl = this.document.createElement("div");
                 break;
               }
               case "svg": {
                 compToReplace.ns = "svg";
-                newEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 break;
               }
               default: {
                 compToReplace.ns = "dom";
-                newEl = document.createElement(compToReplace.type);
+                newEl = this.document.createElement(compToReplace.type);
                 break;
               }
             }
@@ -586,26 +603,26 @@
          * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
          */
         _uiUpdate(ui) {
-          log2("trace", "Ui:_uiManager:update", "Starting _uiUpdate")();
+          _a2.log("trace", "Ui:_uiManager:update", "Starting _uiUpdate")();
           if (!ui.components)
             ui.components = [Object.assign({}, ui)];
           ui.components.forEach((compToUpd, i2) => {
-            log2("trace", "_uiUpdate:components-forEach", `Component #${i2}`, compToUpd)();
+            _a2.log("trace", "_uiUpdate:components-forEach", `Component #${i2}`, compToUpd)();
             let elToUpd;
             if (compToUpd.id) {
-              elToUpd = document.querySelectorAll(`#${compToUpd.id}`);
+              elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`);
             } else if (compToUpd.selector || compToUpd.select) {
-              elToUpd = document.querySelectorAll(compToUpd.selector);
+              elToUpd = this.document.querySelectorAll(compToUpd.selector);
             } else if (compToUpd.name) {
-              elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`);
+              elToUpd = this.document.querySelectorAll(`[name="${compToUpd.name}"]`);
             } else if (compToUpd.type) {
-              elToUpd = document.querySelectorAll(compToUpd.type);
+              elToUpd = this.document.querySelectorAll(compToUpd.type);
             }
             if (elToUpd === void 0 || elToUpd.length < 1) {
-              log2("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
+              _a2.log("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
               return;
             }
-            log2("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
+            _a2.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
             if (!compToUpd.slot && compToUpd.payload)
               compToUpd.slot = compToUpd.payload;
             elToUpd.forEach((el) => {
@@ -613,7 +630,7 @@
             });
             if (compToUpd.components) {
               elToUpd.forEach((el) => {
-                log2("trace", "_uiUpdate:components", "el", el)();
+                _a2.log("trace", "_uiUpdate:components", "el", el)();
                 this._uiUpdate({
                   method: ui.method,
                   parentEl: el,
@@ -665,7 +682,7 @@
         // --- end of _uiLoad ---
         /** Handle a reload request */
         _uiReload() {
-          log2("trace", "Ui:uiManager:reload", "reloading")();
+          _a2.log("trace", "Ui:uiManager:reload", "reloading")();
           location.reload();
         }
         /** Handle incoming _ui messages and loaded UI JSON files
@@ -679,7 +696,7 @@
             msg._ui = [msg._ui];
           msg._ui.forEach((ui, i2) => {
             if (!ui.method) {
-              log2("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
+              _a2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
               return;
             }
             ui.payload = msg.payload;
@@ -722,7 +739,7 @@
                 break;
               }
               default: {
-                log2("error", "Ui:_uiManager", `Invalid msg._ui[${i2}].method (${ui.method}). Ignoring`)();
+                _a2.log("error", "Ui:_uiManager", `Invalid msg._ui[${i2}].method (${ui.method}). Ignoring`)();
                 break;
               }
             }
@@ -754,7 +771,7 @@
             }
           };
           if (["UL", "OL"].includes(node.nodeName)) {
-            const listEntries = document.querySelectorAll(`${cssSelector} li`);
+            const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
             if (listEntries) {
               thisOut.list = {
                 "entries": listEntries.length
@@ -762,7 +779,7 @@
             }
           }
           if (node.nodeName === "DL") {
-            const listEntries = document.querySelectorAll(`${cssSelector} dt`);
+            const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
             if (listEntries) {
               thisOut.list = {
                 "entries": listEntries.length
@@ -770,9 +787,9 @@
             }
           }
           if (node.nodeName === "TABLE") {
-            const bodyEntries = document.querySelectorAll(`${cssSelector} > tbody > tr`);
-            const headEntries = document.querySelectorAll(`${cssSelector} > thead > tr`);
-            const cols = document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+            const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
+            const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
+            const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
             if (bodyEntries || headEntries || cols) {
               thisOut.table = {
                 "headRows": headEntries ? headEntries.length : 0,
@@ -808,7 +825,7 @@
         uiGet(cssSelector, propName = null) {
           const selection = (
             /** @type {NodeListOf<HTMLInputElement>} */
-            document.querySelectorAll(cssSelector)
+            this.document.querySelectorAll(cssSelector)
           );
           const out = [];
           selection.forEach((node) => {
@@ -862,26 +879,26 @@
          */
         async include(url2, uiOptions) {
           if (!fetch) {
-            log2(0, "Ui:include", "Current environment does not include `fetch`, skipping.")();
+            _a2.log(0, "Ui:include", "Current environment does not include `fetch`, skipping.")();
             return "Current environment does not include `fetch`, skipping.";
           }
           if (!url2) {
-            log2(0, "Ui:include", "url parameter must be provided, skipping.")();
+            _a2.log(0, "Ui:include", "url parameter must be provided, skipping.")();
             return "url parameter must be provided, skipping.";
           }
           if (!uiOptions || !uiOptions.id) {
-            log2(0, "Ui:include", "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")();
+            _a2.log(0, "Ui:include", "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")();
             return "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.";
           }
           let response;
           try {
             response = await fetch(url2);
           } catch (error) {
-            log2(0, "Ui:include", `Fetch of file '${url2}' failed. `, error.message)();
+            _a2.log(0, "Ui:include", `Fetch of file '${url2}' failed. `, error.message)();
             return error.message;
           }
           if (!response.ok) {
-            log2(0, "Ui:include", `Fetch of file '${url2}' failed. Status='${response.statusText}'`)();
+            _a2.log(0, "Ui:include", `Fetch of file '${url2}' failed. Status='${response.statusText}'`)();
             return response.statusText;
           }
           const contentType = await response.headers.get("content-type");
@@ -929,18 +946,18 @@
             case "image": {
               data = await response.blob();
               slot = `<img src="${URL.createObjectURL(data)}">`;
-              if (window && window["DOMPurify"]) {
+              if (this.window["DOMPurify"]) {
                 txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
-                log2("warn", "Ui:include:image", txtReturn)();
+                _a2.log("warn", "Ui:include:image", txtReturn)();
               }
               break;
             }
             case "video": {
               data = await response.blob();
               slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
-              if (window && window["DOMPurify"]) {
+              if (this.window["DOMPurify"]) {
                 txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
-                log2("warn", "Ui:include:video", txtReturn)();
+                _a2.log("warn", "Ui:include:video", txtReturn)();
               }
               break;
             }
@@ -949,9 +966,9 @@
             default: {
               data = await response.blob();
               slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
-              if (window && window["DOMPurify"]) {
+              if (this.window["DOMPurify"]) {
                 txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
-                log2("warn", `Ui:include:${type}`, txtReturn)();
+                _a2.log("warn", `Ui:include:${type}`, txtReturn)();
               }
               break;
             }
@@ -967,14 +984,20 @@
               uiOptions
             ]
           });
-          log2("trace", `Ui:include:${type}`, txtReturn)();
+          _a2.log("trace", `Ui:include:${type}`, txtReturn)();
           return txtReturn;
         }
         // ---- End of include() ---- //
-      };
+      }, /** Log function - passed in constructor or will be a dummy function
+       * @type {function}
+       */
+      __publicField(_a2, "log"), _a2);
       module.exports = Ui2;
     }
   });
+
+  // src/front-end-module/uibuilder.module.js
+  var import_ui = __toESM(require_ui());
 
   // node_modules/engine.io-parser/build/esm/commons.js
   var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -4288,7 +4311,6 @@
   });
 
   // src/front-end-module/uibuilder.module.js
-  var import_ui = __toESM(require_ui());
   var version = "6.6.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
@@ -4459,7 +4481,7 @@
     });
     return json;
   }
-  var _ui = new import_ui.default(log, syntaxHighlight);
+  var _ui = new import_ui.default(window, log, syntaxHighlight);
   var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _extCommands, _showStatus, _uiObservers, _a;
   var Uib = (_a = class {
     // ---- End of ioSetup ---- //
