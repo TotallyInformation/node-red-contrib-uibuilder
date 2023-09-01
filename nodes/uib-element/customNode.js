@@ -182,9 +182,10 @@ function buildArticle(node, msg, parent) {
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
  * @param {object} parent The parent JSON node that we will add components to
+ * @param {boolean} [md] If true, input is Markdown rather than HTML (MD requires the front-end to have loaded the Markdown-IT library)
  * @returns {string} Error description or empty error string
  */
-function buildHTML(node, msg, parent) {
+function buildHTML(node, msg, parent, md = false) {
     // Must be a string so convert arrays/objects
     let data = node.data
     if (!node.data) data = ''
@@ -205,7 +206,8 @@ function buildHTML(node, msg, parent) {
         'type': node.elementtype,
         'parent': node.parent,
         'position': node.position,
-        'slot': data,
+        'slot': md !== true ? data : undefined,
+        'slotMarkdown': md === true ? data : undefined,
     } )
 
     return err
@@ -954,7 +956,14 @@ async function buildUi(msg, node) {
         case 'html': {
             // parent = addDiv(parent, node)
             // parent = addHeading(parent, node)
-            err = buildHTML(node, msg, parent)
+            err = buildHTML(node, msg, parent, false)
+            break
+        }
+
+        case 'markdown': {
+            // parent = addDiv(parent, node)
+            // parent = addHeading(parent, node)
+            err = buildHTML(node, msg, parent, true)
             break
         }
 
