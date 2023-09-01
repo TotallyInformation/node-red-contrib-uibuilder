@@ -87,7 +87,30 @@ To check whether Markdown-IT is active, you can use this function in your front-
 
 Markdown-IT has a very extensive set of extensions for code highlighting, diagrams and much more. You can load extensions and styles as normal. Extensions should be loaded before the uibuilder client library. For example, to get highlighted code blocks inside the usual back-tick blocks, you can use [HighlightJS](https://highlightjs.org/). Add a reference to the library AND an appropriate CSS file in your index.js file.
 
-To send Markdown from Node-RED, you can use the uibuilder low-code methods. For example with this msg: `{"_ui": [{"method":"replace","components":[{"type":"div","id":"md","parent":"#more","attributes":{},"slotMarkdown":"## H2 - Markdown input\n\nSome text in a para\n\n* List #1\n* List #2\n"}]}]}`. You can use the `uibuilder.ui()` function if you wish to do the same from custom front-end code.
+To send Markdown from Node-RED, you can use the uibuilder low-code methods. For example with this msg: 
+
+```javascript
+msg._ui = {
+  "method":"replace",
+  "components":[{
+      "type":"div","id":"md","parent":"#more","attributes":{},
+      "slotMarkdown":"## H2 - Markdown input\n\nSome text in a para\n\n* List #1\n* List #2\n"
+  }]
+}
+``` 
+
+You can use the `uibuilder.ui()` function with the same data object if you wish to do the same from custom front-end code.
+
+You may also find Node-RED's core `template` node to be helpful for combining dynamic data from input messages with a Markdown template.
+
+>[!NOTE]
+> The Markdown-IT library can be loaded dynamically by sending uibuilder a message:
+> ```javascript
+{
+  "method": "load",
+  "srcScripts": ["https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"]
+}
+> ```
 
 ### 3. VueJS - Front-end framework
 

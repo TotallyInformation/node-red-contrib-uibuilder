@@ -31,6 +31,7 @@
   * [Forms](elements/forms.md)
   * [Lists](elements/lists.md)
   * [HTML](elements/html.md)
+  * [Markdown](elements/Markdown.md)
   * [Headings, text boxes, etc.](elements/other.md)
 * UI frameworks & builds
   * [VueJS complexities](vue-complexities.md)

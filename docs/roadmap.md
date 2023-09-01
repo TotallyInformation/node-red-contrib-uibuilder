@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-08-21 21:14:07
+lastUpdated: 2023-08-31 17:44:40
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -551,6 +551,20 @@ Why?
 
 
 ## Ideas for releases further out
+
+### Thoughts on JavaScript tabular data manipulation and visualisation
+
+* An editable table widget for the browser where data changes are sent back to Node-RED.
+
+* Some DataFrame style tools for manipulating 2d tabular JSON data.
+
+  * Using msg._ui low-code - facilitating quick table updates from Node-RED.
+  * In Node-RED functions - enabling simpler manipulation of 2d JSON data.
+  * In the browser - as above.
+
+* A live JavaScript interpreter in the browser that would let users do Jupyter notebook style interactions with browser data.
+
+[Ref](https://discourse.nodered.org/t/noisecraft-anyone-heard-of-it/79813/19)
 
 ### General
 
