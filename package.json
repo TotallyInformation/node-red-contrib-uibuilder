@@ -23,11 +23,11 @@
     "express": "^4.17.1",
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
+    "jsdom": "^22.1.0",
     "nanoid": "^3",
     "serve-index": "^1.9.1",
     "socket.io": "^4.3.2",
-    "socket.io-client": "^4.4.1",
-    "jsdom": "^22.1.0"
+    "socket.io-client": "^4.4.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
@@ -35,7 +35,7 @@
     "@types/node": "^14.18.29",
     "@types/node-red": "^1.1.1",
     "eslint": "^8.31.0",
-    "eslint-config-standard": "^17.0.0",
+    "eslint-config-standard": "^17.1.0",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^7.1.0",
     "eslint-plugin-import": "^2.26.0",
@@ -65,11 +65,11 @@
       "uib-element": "nodes/uib-element/customNode.js",
       "uib-update": "nodes/uib-update/customNode.js",
       "uib-html": "nodes/uib-html/customNode.js",
+      "uib-save": "nodes/uib-save/customNode.js",
       "uib-sender": "nodes/uib-sender.js",
       "uib-list": "nodes/uib-list/customNode.js"
     },
     "notyetnodes": {
-      "uib-save": "nodes/uib-save/customNode.js"
     }
   },
   "engines": {
@@ -107,7 +107,7 @@
   "homepage": "https://totallyinformation.github.io/node-red-contrib-uibuilder/#/",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
   "author": {
-    "name": "Julian Knight",
+    "name": "Julian Knight (TotallyInformation)",
     "url": "https://github.com/TotallyInformation"
   },
   "contributors": [
