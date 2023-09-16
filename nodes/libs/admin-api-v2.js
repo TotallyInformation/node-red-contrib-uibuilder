@@ -491,7 +491,7 @@ function adminRouterV2(uib, log) {
         // @ts-ignore
         const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
         // @ts-ignore
-        const filePath = path.join(filePathRoot, req.query.fname)
+        const filePath = path.join(filePathRoot, params.fname)
 
         // Does the file exist?
         if ( fs.existsSync(filePath) ) {

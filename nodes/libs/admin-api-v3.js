@@ -262,7 +262,7 @@ function adminRouterV3(uib, log) {
                     break
                 } // -- end of listall -- //
 
-                // List all folders and files for this uibuilder instance
+                // List all folders for this uibuilder instance
                 case 'listfolders': {
                     log.trace(`[uibuilder:adminRouterV3:GET] Admin API. List all folders. url=${params.url}, root fldr=${uib.rootFolder}`)
 
