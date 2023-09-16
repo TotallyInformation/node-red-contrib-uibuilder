@@ -27,7 +27,7 @@
 
 //#region ----- Module level variables ---- //
 
-const jsdom = require("jsdom");
+const jsdom = require('jsdom')
 const { JSDOM } = jsdom
 
 // Ui class copied from src/front-end-module/ui.js
