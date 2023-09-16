@@ -486,15 +486,20 @@ Why?
   * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
 * Videos
   * uibuilder reactive variables (set, get, onChange)
+  * Dynamically modify CSS class for HTML elements
+  
   * Low-code, do anything from Node-RED
+  * UI updates using low-code. [ref](https://discourse.nodered.org/t/uibuilder-documentation-suggestions-and-improvements/74812/33?u=totallyinformation)
   * Easy forms
-  * Switch light/dark
+  * Forms - zero-code
+  
+  * SHORT
+    * quick-start example
+    * Switch light/dark
+  
   * Mix of HTML and uibuilder uib-update for simple tasks.
   * Caching
-  * Dynamically modify CSS class for HTML elements
-  * Forms - zero-code
-  * UI updates using low-code. [ref](https://discourse.nodered.org/t/uibuilder-documentation-suggestions-and-improvements/74812/33?u=totallyinformation)
-
+  
 ### Examples
 
 * Zero-code example needs better wording for UL/OL example. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
@@ -568,6 +573,7 @@ Why?
 
 ### General
 
+* Consider creating a module that uses [gridstck.js](https://gridstackjs.com/#) where each grid entry gets a unique html ID. Needs a way to save the grid as HTML without the amend widgets but also as a gridstack object to allow re-editing.
 * `uib-sender` node not really needed any more - consider putting a "deprecated" node.warn message prior to removing.
 * Remove dependencies on fs-extra library - need to wait for node.js v16.7 to be minimum so that fs.cp/fs.cpSync is available
   * [x] libs/web.js

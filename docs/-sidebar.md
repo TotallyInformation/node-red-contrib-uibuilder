@@ -5,6 +5,7 @@
   * [Creating data-driven web apps](web-app-workflow.md "Different styles and workflows you can use")
   * [Configuring uibuilder](uib-configuration.md "Configure the uibuilder platform. Affects all uibuilder nodes")
   * [Standard messages](pre-defined-msgs.md "Catalogue of messages and properties")
+  * [REST API's](apis/)
   * [Creating Templates](creating-templates "Pre-defined and reusable front-end code, dependencies, and optional build steps")
   * [Browser auto-refresh](browser-refresh.md "Automatically reload your page after a change")
   * [Zero-code UI creation](using/zero-code-ui.md "Dynamically creating web UI's")
