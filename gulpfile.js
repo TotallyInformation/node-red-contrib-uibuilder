@@ -854,8 +854,6 @@ function buildPanelSave(cb) {
     cb()
 }
 
-
-
 //#endregion ---- ---- ----
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
@@ -867,6 +865,8 @@ const buildme = parallel(
     buildPanelUibElement,
     buildPanelUpdate,
     buildPanelTag,
+    buildPanelHTML,
+    buildPanelSave,
 )
 
 const buildNewFe = parallel(
@@ -901,7 +901,6 @@ function buildNodeLibs(cb) {
         })
 }
 */
-
 
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
