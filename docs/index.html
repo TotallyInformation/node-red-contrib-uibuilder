@@ -81,6 +81,26 @@
             margin-left: 1%;
         }
 
+        .cover-head {
+            display:flex;
+        }
+        .cover-head p {
+            flex: 1;
+            order: 2;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        .ch-title {
+            flex: 3;
+            order: 1;
+        }
+        .ch-title p {
+            margin-top: .1rem;
+        }
+        .cover blockquote p {
+            margin-top: 0.1rem;
+        }
+
         /* .callout {
             max-width: 100%; 
         } */
@@ -93,7 +113,9 @@
         window.$docsify = { //  eslint-disable-line no-undef
             name: 'uibuilder Documentation v6',
             repo: 'TotallyInformation/node-red-contrib-uibuilder',
-            homepage: 'README.md',
+            coverpage: true,
+            onlyCover: false,
+            // homepage: 'README.md',
 
             executeScript: true,
             // loadNavbar: true,
