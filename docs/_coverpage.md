@@ -1,10 +1,10 @@
 <div class="cover-head">
 
-![logo](/images/node-blue-125x125.png)
+![logo](/images/node-lblue-192x192.png)
 
 <div class="ch-title">
 
-# uibuilder <small>v6</small>
+# <span class="uib-red">ui</span>builder <small>v6</small>
 
 for Node-RED
 

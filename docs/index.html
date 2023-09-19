@@ -83,6 +83,7 @@
 
         .cover-head {
             display:flex;
+            font-size:xx-large;
         }
         .cover-head p {
             flex: 1;
@@ -100,13 +101,17 @@
         .cover blockquote p {
             margin-top: 0.1rem;
         }
+        .uib-red {
+            color: hsl(0 100% 45% / 70%); /*#8f0000;*/
+            font-weight: 600;
+        }
 
         /* .callout {
             max-width: 100%; 
         } */
     </style>
 </head><body>
-    <div id="app">Loading, please wait ...</div>
+    <div id="app">Loading ...</div>
     <script src="https://cdn.jsdelivr.net/npm/docsify-edit-on-github/index.min.js"></script>
     <script>
         'use strict'
@@ -121,7 +126,7 @@
             // loadNavbar: true,
             // mergeNavbar: true,
             autoHeader: false,
-            logo: '/images/node-blue-125x125.png',
+            logo: '/images/node-lblue-125x125.png',
             auto2top: true,
             loadSidebar: './-sidebar.md',
             alias: {
