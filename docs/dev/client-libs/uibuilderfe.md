@@ -1,21 +1,25 @@
 ---
-title: Developer documentation for the `uibuilderfe.js` library
+title: UIBUILDER's Deprecated Client Library
 description: >
-   This is the uibuilder front-end library. It provides socket.io connectivity, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions.
+  This describes the now deprecated old version of the client library. Provides the link from the front-end to Node-RED and many helper functions that make uibuilder a complete, lightweight framework.
 created: 2019-05-25 19:05:00
-lastUpdated: 2022-04-02 16:44:14
+lastUpdated: 2023-09-30 15:58:36
 ---
 
-For user documentation, please refer to the [Working with the uibuilderfe Library](front-end-library) page.
+> [!WARNING]
+> This library is no longer being developed.
+>
+> It is retained for backwards compatibility but is likely to be removed in a future major release.
 
-## ToC
-- [ToC](#toc)
+> [!NOTE]
+> This is just the developer documentation. See the [Client Docs](docs/client-docs) for how to actually use the library.
+
+For user documentation, please refer to the [Working with the `uibuilderfe` Library](front-end-library) page.
+
 - [Startup](#startup)
 - [Events](#events)
 - [Variable Handling](#variable-handling)
 - [Public Variables](#public-variables)
-  - [Externally Writable (via .set method, read via .get method)](#externally-writable-via-set-method-read-via-get-method)
-  - [Externally read-only (via .get method)](#externally-read-only-via-get-method)
 - [Private Variables](#private-variables)
 - [Public Methods](#public-methods)
 - [Private Methods](#private-methods)

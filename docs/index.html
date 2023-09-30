@@ -138,6 +138,14 @@
             auto2top: true,
             loadSidebar: './-sidebar.md',
             alias: {
+                // Moved pages
+                '/dev/socket-js.*': '/dev/server-libs/socket.md',
+                '/dev/tilib-js.*': '/dev/server-libs/tilib.md',
+                '/dev/uiblib-js.*': '/dev/server-libs/uiblib.md',
+                '/dev/web-js.*': '/dev/server-libs/web.md',
+                '/dev/uibuilderfe-js.*': '/dev/client-libs/uibuilderfe.md',
+                '/front-end-library.*': '/client-docs/uibuilderfe-library.md',
+
                 '/.*/_sidebar.md': '/-sidebar.md', // use the same sidebar everywhere. See #301
                 '/.*/-sidebar.md': '/-sidebar.md', // use the same sidebar everywhere. See #301
                 '.*?/changelog': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/CHANGELOG.md',

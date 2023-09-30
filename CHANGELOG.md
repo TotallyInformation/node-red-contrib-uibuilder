@@ -13,13 +13,12 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### TO FIX
 
 * Docs: 
-  * `client-docs/functions?id=htmlsend-sends-the-whole-domhtml-back-to-node-red-1`
-    * links to non-existing section.
-    * Need to say if if can be run as a cmd - which it can, see `client-docs/control-from-node-red?id=get-complete-copy-of-the-current-web-page`
   * Document the libs, see `/libs/` folder
-  * 
+
 * Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
+
 * Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
+
 * uib-tag
   * Attribs Source - should be "None" as default
   * 
@@ -47,6 +46,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ### Docs
 
+* Allow offline usage. [Ref](https://docsify.js.org/#/pwa). Need to work out how to cache the plugins. May need a manifest.json?
 
 ### General
 
@@ -158,8 +158,9 @@ It is another singleton class instance. It is initialised in the main uibuilder 
 
 * **NEW** The docs now have a fancy landing page! Let me know if you have ideas on how it can be improved. 😊
 * **NEW** `apis` folder - currently only contains the index readme which lists all of the REST API's provided by uibuilder.
-* **NEW** `libraries` folder - will eventually have a summary of all of the uibuilder library files/classes.
+* **NEW** `dev/client-libs` and `dev/server-libs` folders - providing a developer focused summary of all of the uibuilder library files/classes.
 * **NEW** A custom "Not Found" (404) page added. Much more friendly than the previous browser default.
+* **NEW** Added a `docksify-howto` page to the docs. This is not currently linked and so only available in source unless you know the name. Explains how to use Docksify with the UIBUILDER docs.
 * Changed the uibuilder logo to a lighter colour to fit in with the docs. Added red highlight to `ui`, thanks to Paul-Reed for the idea.
 
 ### General Improvements

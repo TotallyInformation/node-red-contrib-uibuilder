@@ -1,12 +1,13 @@
 ---
-title: Working with the UIBUILDERfe Front-End Library
+title: Working with the uibuilderfe Front-End Library
 description: >
    How to work with UIBUILDER's front-end library in your own UI code.
 created: 2021-02-17 14:28:00
-lastUpdated: 2023-09-30 13:05:17
+lastUpdated: 2023-09-30 17:16:17
 ---
 
-!> This page refers to the "old" original front-end library for UIBUILDER. There is now a new library that will eventually replace this one. Please see [the new front-end library pages](client-docs/readme.md). This older library has been functionally stabilised (there will not be any further enhancements after UIBUILDER v5). It still works as of UIBUILDER v6.0 but will eventually be deprecated.
+> [!WARNING]
+> This page refers to the "old" original front-end library for UIBUILDER. There is now a new library that will eventually replace this one. Please see [the new front-end library pages](client-docs/readme.md). This older library has been functionally stabilised (there will not be any further enhancements after UIBUILDER v5). It still works as of UIBUILDER v6.0 but will eventually be deprecated.
 
 `uibuildefe.js` is the library that lets you interact with your `uibuilder` nodes in Node-RED.
 

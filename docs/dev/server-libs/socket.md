@@ -1,17 +1,15 @@
 ---
-title: Developer documentation for `socket.js`
+title: Websocket Handling Library
 description: >
    A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
 created: 2021-06-27 21:35:00
-lastUpdated: 2022-04-02 17:14:51
+lastUpdated: 2023-09-30 16:44:10
 ---
 
+`nodes/libs/socket.js`
+
 - [Socket.IO Server Options](#socketio-server-options)
-  - [Example](#example)
 - [Socket.IO Middleware](#socketio-middleware)
-  - [Namespace (client connection) Middleware - `sioMiddleware.js`](#namespace-client-connection-middleware---siomiddlewarejs)
-  - [Client message Middleware - `sioUse.js`](#client-message-middleware---siousejs)
-  - [Server message Middleware - `sioMsgOut.js`](#server-message-middleware---siomsgoutjs)
 - [Socket.IO Options](#socketio-options)
 - [Default CORS Options](#default-cors-options)
 
