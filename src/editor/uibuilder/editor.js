@@ -1538,7 +1538,7 @@
         const vslink = vscodeLink(node)
 
         $('#info-webserver')
-            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank" title="Open in new window">${node.urlPrefix}</a><br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`)
+            .append(`<div class="form-tips node-help"><span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank" title="Open in new window">${node.urlPrefix}</a><br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`)
 
     } // ---- end of showServerInUse ---- //
 

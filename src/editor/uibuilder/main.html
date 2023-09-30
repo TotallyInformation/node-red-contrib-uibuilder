@@ -15,6 +15,20 @@
 -->
 
 <style>
+    :root {
+        --uib-blue: hsl(204 89% 55% / 70%);
+        --uib-red: hsl(0 100% 45% / 70%); /*#8f0000;*/
+    }
+    .uib-name {
+        display:inline !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--uib-blue) !important;
+    }
+    .uib-red {
+        color: var(--uib-red) !important;
+        font-weight: 800;
+    }
     .emoji {
         font-family: 
             "Twemoji Mozilla",
@@ -26,6 +40,7 @@
             "Android Emoji",
             sans-serif;
     }
+
 </style>
 
 <script type="text/html" data-template-name="uibuilder">
