@@ -58,11 +58,7 @@ class UibFs {
     /** @type {string} Get npm's global install location */
     globalPrefix // set in constructor
 
-    constructor() {
-
-        console.log('📘: UibFs - Load Count: ', ++UibFs.#loadCount)
-
-    } // ---- End of constructor ---- //
+    // constructor() {} // ---- End of constructor ---- //
 
     /** Configure this class with uibuilder module specifics
      * @param {uibConfig} uib uibuilder module-level configuration
