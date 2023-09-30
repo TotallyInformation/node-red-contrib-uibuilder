@@ -1,14 +1,15 @@
 * [Home](/)
-* Using uibuilder
+* Using <span class="uib-name"><span class="uib-red">ui</span>builder</span>
   * [A first-timers walkthough](walkthrough1.md "Let's get started!")
-  * [Did you know?](did-you-know.md "Things you might not know about uibuilder")
+  * [Did you know?](did-you-know.md "Things you might not know about UIBUILDER")
   * [Creating data-driven web apps](web-app-workflow.md "Different styles and workflows you can use")
-  * [Configuring uibuilder](uib-configuration.md "Configure the uibuilder platform. Affects all uibuilder nodes")
+  * [Configuring <span class="uib-name"><span class="uib-red">ui</span>builder</span>](uib-configuration.md "Configure the UIBUILDER platform. Affects all uibuilder nodes")
   * [Standard messages](pre-defined-msgs.md "Catalogue of messages and properties")
   * [REST API's](apis/)
   * [Creating Templates](creating-templates "Pre-defined and reusable front-end code, dependencies, and optional build steps")
   * [Browser auto-refresh](browser-refresh.md "Automatically reload your page after a change")
   * [Zero-code UI creation](using/zero-code-ui.md "Dynamically creating web UI's")
+  * [Why <span class="uib-name"><span class="uib-red">ui</span>builder</span>?](using/why-uibuilder.md "Why would I want to use UIBUILDER?")
 * [The nodes](nodes/README.md)
   * [`uibuilder`](nodes/uibuilder.md)
   * [`uib-cache`](nodes/uib-cache.md)
@@ -24,7 +25,7 @@
   * [Functions](client-docs/functions.md)
   * [Variables](client-docs/variables.md)
   * [Custom Events](client-docs/custom-events.md)
-  * [uib-brand Style Sheet](client-docs/uib-brand-css.md "How to use the uibuilder standard style sheet uib-brand.css")
+  * [uib-brand Style Sheet](client-docs/uib-brand-css.md "How to use the UIBUILDER standard style sheet uib-brand.css")
   * [Troubleshooting](client-docs/troubleshooting.md)
   * [Old uibuilderfe client library](front-end-library.md)
 * Zero-code element types
@@ -51,7 +52,7 @@
   * [How & why to use the sender node](how-to/sender-node.md)
   * [Other How-To's](how-to/README.md)
 * Security
-  * [Securing uib web apps](security/security.md "Overview of general web app security with some specifics for Node-RED and uibuilder")
+  * [Securing uib web apps](security/security.md "Overview of general web app security with some specifics for Node-RED and UIBUILDER")
   * [Securing Data](security/securing-data.md "How to use flows and uibiulder middleware to secure your data")
   * [Securing apps using NGINX](security/uib-security-nginx.md "How to use NGINX as a reverse proxy with TLS and identity authentication")
 * [Developer documentation](dev/README.md)
@@ -67,7 +68,7 @@
   * [v1 changelog](archived/CHANGELOG-v1)
 
 - **Links**
-- [uibuilder license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
-- [uibuilder WIKI <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
+- [<span class="uib-name"><span class="uib-red">ui</span>builder</span> license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
+- [<span class="uib-name"><span class="uib-red">ui</span>builder</span> WIKI <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
 - [Much Ado About IT (Blog) <sup>🔗</sup>](https://it.knightnet.org.uk)
 - [Node-RED <sup>🔗</sup>](https://nodered.org/)

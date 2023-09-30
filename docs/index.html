@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head>
     <meta charset="UTF-8">
-    <title>uibuilder Documentation v6</title>
+    <title>UIBUILDER Documentation v6</title>
 
-    <meta name="description" content="uibuilder Documentation v6">
+    <meta name="description" content="UIBUILDER Documentation v6">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="./images/favicon.ico">
 
@@ -16,6 +16,8 @@
             --sidebar-width: 22em;
             --heading-h3-border-color: var(--mono-tint2);
             --heading-h4-border-color: var(--mono-tint3);
+            --uib-blue: hsl(204 89% 55% / 70%);
+            --uib-red: hsl(0 100% 45% / 70%); /*#8f0000;*/
             /* --base-font-family: Arial, Sans-serif; */
             /*--sidebar-background: #005EB8;*/
         }
@@ -42,7 +44,7 @@
             font-size: 80%;
         }
         .app-name-link::after {
-            content: "uibuilder v6 docs";
+            content: "UIBUILDER v6 docs";
             float:right;
         }
         img[alt$=">"] {
@@ -101,9 +103,15 @@
         .cover blockquote p {
             margin-top: 0.1rem;
         }
-        .uib-red {
-            color: hsl(0 100% 45% / 70%); /*#8f0000;*/
+        .uib-name {
+            display:inline !important;
             font-weight: 600;
+            text-transform: uppercase;
+            color: var(--uib-blue) !important;
+        }
+        .uib-red {
+            color: var(--uib-red) !important;
+            font-weight: 800;
         }
 
         /* .callout {
@@ -116,7 +124,7 @@
     <script>
         'use strict'
         window.$docsify = { //  eslint-disable-line no-undef
-            name: 'uibuilder Documentation v6',
+            name: 'UIBUILDER Documentation v6',
             repo: 'TotallyInformation/node-red-contrib-uibuilder',
             coverpage: true,
             onlyCover: false,
@@ -149,7 +157,10 @@
             notFoundPage: true,
 
             mustache: {
-                noPackage : true
+                noPackage: true,
+                data: {
+                    uib: '<span class="uib-name"><span class="uib-red">ui</span>builder</span>',
+                },
             },
 
             plugins: [
@@ -176,6 +187,8 @@
 
                     // Runs against the raw markdown for each page
                     hook.beforeEach(function(content) {
+                        // content = content.replace(/=uib/ig, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
+                        content = content.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                         let strYr = (new Date()).getFullYear()
                         let mydate = false
                         let yearFrom = 2017
@@ -234,6 +247,7 @@
 
                     // Runs against the rendered HTML for each page
                     hook.afterEach(function (html, next) {
+                        html = html.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                         next( html + footer.join('') )
                     })
                 },
