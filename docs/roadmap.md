@@ -65,17 +65,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
 * How to provide a better log output? With a simple way to link to Node-RED log output (filtered) as well as a dedicated output node. That output's to a web page with highlighting and possibly page back/fwd through history.
 
+## Possible breaking changes for the next major release
+
+* Move minimum node.js version from v14 to v16 in alignment with Node-RED v4.
+* Switch to default of case sensitive URL's for ExpressJS. Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6)
+
 ## Next - these are things that need to be done
-
-### **NEW NODE** - `uib-save` - Easily save files to uibuilder-specific locations
-
-Select a deployed `uibuilder` node as the "parent" and the server folder location will be set for you so that you don't need to remember it.
-
-Why?
-
-- Save `msg._ui` configuration data to a static JSON which can then be used to load an entire UI on page load.
-- Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
-- Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
 
 ### General changes
 

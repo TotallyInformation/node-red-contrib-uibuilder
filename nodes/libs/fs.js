@@ -31,7 +31,6 @@ const fs = require('fs/promises')
 const sockets = require('./socket') // Socket.io handler library for uibuilder
 
 // ! TODO: Move other file-handling functions into this class
-// !       So that fs-extra is only ever needed here
 // !       In readiness for move to mono-repo (need node.js v16+ as a base)
 
 class UibFs {
@@ -39,8 +38,6 @@ class UibFs {
      * @type {boolean}
      */
     #isConfigured = false
-
-    static #loadCount = 0
 
     #logUndefinedError = new Error('pkgMgt: this.log is undefined')
     #uibUndefinedError = new Error('pkgMgt: this.uib is undefined')
