@@ -3,12 +3,12 @@ title: Auto-refresh the browser when developing
 description: >
    Describes how to make your page refresh automatically when developing front-end code.
 created: 2022-02-15 20:56:20
-lastUpdated: 2022-02-15 20:56:24
+lastUpdated: 2023-09-30 13:03:51
 ---
 
 ## Reload message
 
-The uibuilder front-end library has a a reload window tab command built in. This can be triggered by sending a standard message into a node-red node with the following data:
+The UIBUILDER front-end library has a a reload window tab command built in. This can be triggered by sending a standard message into a node-red node with the following data:
 
 ```json
 {
@@ -18,13 +18,13 @@ The uibuilder front-end library has a a reload window tab command built in. This
 }
 ```
 
-You can use a `watch` node to trigger a reload by watching the appropriate file or folder and connecting the watch node to a change node that sets the _uib.payload property and then sends it to the uibuilder node as in this example:
+You can use a `watch` node to trigger a reload by watching the appropriate file or folder and connecting the watch node to a change node that sets the _uib.payload property and then sends it to the `uibuilder` node as in this example:
 
 ![Watch autorefresh example](images/watch-example.png)
 
 ## Editing files in the Node-RED Editor
 
-uibuilder has a file editor feature built in. If you are using that (only recommended for fairly small edits), you can tell uibuilder to automatically reload the browser tab whenever you press the save button.
+UIBUILDER has a file editor feature built in. If you are using that (only recommended for fairly small edits), you can tell UIBUILDER to automatically reload the browser tab whenever you press the save button.
 
 ## Using Microsoft Edge developer tools with VScode
 
@@ -44,7 +44,7 @@ Use the watch approach above for HTML files.
 
 Most build tools contain their own development server that includes auto-update.
 
-To use these with uibuilder, you generally have to make some code changes in your index.html and index.js files to allow for the fact that a different, non-Node-RED web server is presenting the files.
+To use these with UIBUILDER, you generally have to make some code changes in your index.html and index.js files to allow for the fact that a different, non-Node-RED web server is presenting the files.
 
 You will need to pass some parameters to the `uibuilder.start` function in index.js and will need to make the `./` and `../uibuilder/vendor/` URL's in index.html absolute to include the Node-RED URL.
 

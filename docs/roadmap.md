@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-08-31 17:44:40
+lastUpdated: 2023-09-30 13:07:20
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -69,7 +69,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### **NEW NODE** - `uib-save` - Easily save files to uibuilder-specific locations
 
-Select a deployed uibuilder node as the "parent" and the server folder location will be set for you so that you don't need to remember it.
+Select a deployed `uibuilder` node as the "parent" and the server folder location will be set for you so that you don't need to remember it.
 
 Why?
 
@@ -83,9 +83,9 @@ Why?
 * Consider moving all libs to separate repo to reduce number of direct dependencies.
 
 * Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
-* Restructure uibuilder node to remove fs-extra dependency to its own library module.
+* Restructure `uibuilder` node to remove fs-extra dependency to its own library module.
 * Restructure other nodes to move server file handling to a separate library module.
-* Consider adding a default CSS override to the uibuilder node. To be used when no CSS specificed and also to be used in admin/generated uib pages. Defaulting to `../uibuilder/uib-brand.css`.
+* Consider adding a default CSS override to the `uibuilder` node. To be used when no CSS specificed and also to be used in admin/generated uib pages. Defaulting to `../uibuilder/uib-brand.css`.
 * Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
 * [Issue #94](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/94) - Detect when Node-RED switches projects and see if the uibRoot folder can be dynamically changed.
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
@@ -133,7 +133,7 @@ Why?
   * Templates
     * Add template description to display.
     * Add dependency version handling to templates (e.g. vue 2/3)
-    * Allow templates to provide example flows via a uibuilder Node-RED library plugin - will library update though?
+    * Allow templates to provide example flows via a `uibuilder` Node-RED library plugin - will library update though?
       
       Check for examples folder, if present load all *.json files to library.
       [saveLibraryEntry](https://nodered.org/docs/api/storage/methods/#storagesavelibraryentrytypenamemetabody)
@@ -188,7 +188,7 @@ Why?
   * Switch tooltips to using aria-label with hover CSS as in the new node.
   * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
   * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
-  * Consider adding an action for when a uibuilder node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
+  * Consider adding an action for when a `uibuilder` node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
   * Add GIT processing? Or maybe just handle via npm scripts?
      * Is git command available?
      * is front-end src folder a git repository?
@@ -208,7 +208,7 @@ Why?
     * jQuery + jQuery UI (maybe + some add-ons?)
   * ~~Add `class="dark"` to all template html file `html` tags. Remove `class="uib"` from body tag.~~ Maybe not such a good idea
   
-* Investigate use of WebWorkers to have a shared websocket that allows retained connection on page reload and between pages in the same uibuilder node.
+* Investigate use of WebWorkers to have a shared websocket that allows retained connection on page reload and between pages in the same `uibuilder` node.
   * https://crossbario.com/blog/Websocket-Persistent-Connections/
   * https://stackoverflow.com/questions/10886910/how-to-maintain-a-websockets-connection-between-pages
 
@@ -425,7 +425,7 @@ Why?
   * Report socket.io setup/config issues back to Node-RED using `beaconLog(txtToSend, logLevel)`.
   * _started_ Add showLog function similar to showMsg - showing log output to the UI instead of the console.
   * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
-      * uibuilder node will output control msg of type `Client Log` when client sends a beacon.
+      * `uibuilder` node will output control msg of type `Client Log` when client sends a beacon.
       * Make optional via flag in Editor with start msg enabling/disabling in client.
       * ? window and document events - make optional via uibuilder fe command.
     
@@ -476,7 +476,7 @@ Why?
 * Search for `*(This document is a work-in-progress, it is not complete)*` and update documents.
 * Add message interaction diagram to "pre-defined-msgs.md"
 * Add note to documentation for the library manager that you can install LOCAL folders.
-* Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring uibuilder nodes](uib-node-configuration.md) pages.
+* Finish [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) and [Configuring `uibuilder` nodes](uib-node-configuration.md) pages.
 * Add some notes about Node-RED's projects feature. It doesn't seem to add a correct .gitignore which should contain `**/node_modules`. Also add notes about the fact that projects creates a disconnect between the flows and the userDir folder.
 * Add new doc to explain the HTML document hierarchy.
 * Consider changing favicon slightly for the docs - to better differentiate from uibuilder apps.

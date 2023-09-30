@@ -4,25 +4,14 @@ description: >
    For a while, VueJS along with bootstrap-vue were the default frameworks supplied with uibuilder.
    As such, a few extra handlers were build into the uibuilderfe library. This page describes those features.
 created: 2020-12-11 16:38:00
-lastUpdated: 2022-01-30 21:40:57
+lastUpdated: 2023-09-30 13:10:18
 ---
 
 Note that these do not impact the use of uibuilder with other (or no) frameworks and in those cases, the extra features will do nothing and won't get in the way.
 
 - ["Toast" Notifications](#toast-notifications)
-  - [Message schema](#message-schema)
-  - [Example](#example)
 - [Discover a Vue components capabilities](#discover-a-vue-components-capabilities)
-  - [Message schema](#message-schema-1)
 - [Control Vue components direct from a Node-RED message](#control-vue-components-direct-from-a-node-red-message)
-  - [`v-bind="objAllProps"`](#v-bindobjallprops)
-    - [Example](#example-1)
-      - [HTML](#html)
-      - [JavaScript](#javascript)
-      - [Msg](#msg)
-  - [Dynamically change components](#dynamically-change-components)
-  - [Alternative no-code solution](#alternative-no-code-solution)
-  - [Message schema](#message-schema-2)
 
 ## "Toast" Notifications
 
@@ -42,7 +31,7 @@ Note that toasts will stack so that multiple can be visible.
 
 ### Message schema
 
-This is the structure of the `msg` to send through the uibuilder node in Node-RED.
+This is the structure of the `msg` to send through the `uibuilder` node in Node-RED.
 
 ```json
 {

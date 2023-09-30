@@ -4,9 +4,9 @@ Please ensure that as much of the following information is included as possible.
 
 ### Software and Package Versions
 
-> Node.JS, Node-RED and uibuilder back-end versions are listed in the Node-RED log on startup. 
+> Node.JS, Node-RED and UIBUILDER back-end versions are listed in the Node-RED log on startup. 
   `npm --version` shows the installed version of npm.
-  From your browser's developer console (F12), the uibuilder front-end
+  From your browser's developer console (F12), the UIBUILDER front-end
   version can be seen by issuing the command `uibuilder.get('version').
   Please include all 5. Node.JS needs to be at least 4 but realistically, anything less than 6 is unlikely to work.
 
@@ -25,11 +25,11 @@ OS             |
 Browser        | 
 
 
-### How is Node-RED installed? Where is uibuilder installed?
+### How is Node-RED installed? Where is UIBUILDER installed?
 
 > Often, issues with nodes occur because of non-standard installations.
   This may still indicate a bug so it is fine to report an issue. Just be sure you understand the consequences of how you have installed things.
   
 > A very common set of issues come from installing nodes as root instead of the user that runs Node-RED (e.g. using sudo on Mac/Linux). You will most likely be asked to undo that before we can analyse the issue.
 
-> Also quite common is to install the uibuilder node in the wrong folder. It is best to install using the Node-RED admin interface "Manage Palette". If installing manually, make sure you are in your `userDir` folder before installing (typically `~/.node-red`).
+> Also quite common is to install the `uibuilder` node in the wrong folder. It is best to install using the Node-RED admin interface "Manage Palette". If installing manually, make sure you are in your `userDir` folder before installing (typically `~/.node-red`).

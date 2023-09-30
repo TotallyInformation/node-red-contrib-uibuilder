@@ -1,18 +1,18 @@
 ---
 title: Future multi-node communications
 description: >
-   Initially, uibuilder was a single node. However, there was always the intent to offer wider communications from other packages and nodes
-   to uibuilder-based front-end's. This document lays out a proposal for how that may happen.
+   Initially, UIBUILDER was a single node. However, there was always the intent to offer wider communications from other packages and nodes
+   to UIBUILDER-based front-end's. This document lays out a proposal for how that may happen.
 created: 2021-09-29 20:04:36
-lastUpdated: 2021-09-29 21:17:01
+lastUpdated: 2023-09-30 13:09:32
 ---
 
 Status: **Draft**
 
-uibuilder v5 will use the Node.js package [ti-common-event-handler](https://github.com/TotallyInformation/ti-common-event-handler) to create a shareable event handler
-that facilitates communications between 3rd-party Node-RED nodes and uibuilder node instances (and back again).
+UIBUILDER v5 will use the Node.js package [ti-common-event-handler](https://github.com/TotallyInformation/ti-common-event-handler) to create a shareable event handler
+that facilitates communications between 3rd-party Node-RED nodes and `uibuilder` node instances (and back again).
 
-Each uibuilder instance will act as a hub for sending data to its connected web clients and receiving messages back and routing them back to the originating node.
+Each UIBUILDER instance will act as a hub for sending data to its connected web clients and receiving messages back and routing them back to the originating node.
 
 Two pieces of data will be required to enable this:
 
@@ -42,9 +42,9 @@ The important thing is that messages will be automatically routed both to and fr
 
 It is likely that there will be a mechanism in the `uibuilderfe.js` front-end library that will enable it to auto-load defined resources. Details to be defined later.
 
-## How it works - the uibuilder node
+## How it works - the `uibuilder` node
 
-When a uibuilder node receives the first event from a component node as defined below, it creates an entry in a mapping table.
+When a `uibuilder` node receives the first event from a component node as defined below, it creates an entry in a mapping table.
 
 The table maps the links between the component nodes (based on the node's Node-RED id) and the component-id. 
 This allows return messages from the front-end to be routed back to the correct originating node for any processing that node wishes to do. 
@@ -66,7 +66,7 @@ node-red-contrib-uibuilder/<node_instance_id>/return
 
 Where:
 
-* `<uib_url>` - is the uibuilder URL which is set in the uibuilder node and is the unique identifier for uibuilder instances.
+* `<uib_url>` - is the uibuilder URL which is set in the `uibuilder` node and is the unique identifier for uibuilder instances.
 * `<component_id>` - is a string identifier that is unique to your front-end code. It can be arbitrary. Component nodes can define defaults if preferred.
 * `<node_instance_id>` - is the Node-RED node id of the instance of the component node.
 

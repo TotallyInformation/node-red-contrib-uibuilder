@@ -1,14 +1,14 @@
 ---
-title: Pre-defined uibuilder messages
+title: Pre-defined UIBUILDER messages
 description: >
-   Documents the different types of uibuilder messages between a Node-RED uibuilder node and a uibuilder front-end.
+   Documents the different types of UIBUILDER messages between a Node-RED `uibuilder` node and a UIBUILDER front-end.
 created: 2020-09-24 18:14:00
-lastUpdated: 2022-06-18 17:17:42
+lastUpdated: 2023-09-30 13:06:44
 ---
 
 - [Message types](#message-types)
   - [Control message overview](#control-message-overview)
-- [Standard msg properties used by uibuilder](#standard-msg-properties-used-by-uibuilder)
+- [Standard msg properties used by UIBUILDER](#standard-msg-properties-used-by-uibuilder)
   - [msg.\_ui `{Object}` (uibuilder v5.1+)](#msg_ui-object-uibuilder-v51)
   - [msg.\_uib `{Object}` (uibuilder v3+)](#msg_uib-object-uibuilder-v3)
   - [msg.uibDomEvent `{Object}` (uibuilder v3.2+, PARTIALLY REPLACED WITH msg.\_ui in v5.1)](#msguibdomevent-object-uibuilder-v32-partially-replaced-with-msg_ui-in-v51)
@@ -18,7 +18,7 @@ lastUpdated: 2022-06-18 17:17:42
 - [Messages out of uibuilder's 2nd output port](#messages-out-of-uibuilders-2nd-output-port)
   - [On client (re)connection](#on-client-reconnection)
   - [On client disconnection](#on-client-disconnection)
-- [Messages from Node-RED uibuilder node to the front-end (browser)](#messages-from-node-red-uibuilder-node-to-the-front-end-browser)
+- [Messages from Node-RED `uibuilder` node to the front-end (browser)](#messages-from-node-red-uibuilder-node-to-the-front-end-browser)
   - [Client (re)Connection (Control Message)](#client-reconnection-control-message)
   - [Errors](#errors)
   - [UI Notification \[Toast\] (Control Message, PARTIALLY DEPRECATED in v5.1)](#ui-notification-toast-control-message-partially-deprecated-in-v51)
@@ -26,7 +26,7 @@ lastUpdated: 2022-06-18 17:17:42
     - [More complex example](#more-complex-example)
   - [Browser client reload page](#browser-client-reload-page)
     - [Msg Schema](#msg-schema)
-- [Messages From the front-end (browser) to the Node-RED uibuilder node](#messages-from-the-front-end-browser-to-the-node-red-uibuilder-node)
+- [Messages From the front-end (browser) to the Node-RED `uibuilder` node](#messages-from-the-front-end-browser-to-the-node-red-uibuilder-node)
   - [Client Ready for Content (Control Message)](#client-ready-for-content-control-message)
   - [DOM Event (standard message from eventSend function. PARTIALLY DEPRECATED IN v5.1)](#dom-event-standard-message-from-eventsend-function-partially-deprecated-in-v51)
 - [Messages From either Node-RED or the client](#messages-from-either-node-red-or-the-client)
@@ -50,7 +50,7 @@ uibuilder has three general types of pre-defined message.
   
 - Output control messages
 
-  A number of standard control messages may be output from the lower output port of the uibuilder node. These may be informational, control caching, notify of errors
+  A number of standard control messages may be output from the lower output port of the `uibuilder` node. These may be informational, control caching, notify of errors
 
 It also has some standard message property names that are used throughout. These are described in the [next section below](#standard-msg-properties-used-by-uibuilder).
 
@@ -58,14 +58,14 @@ It also has some standard message property names that are used throughout. These
 
 This is a list of the possible control messages. They are described in more detail in the following sections of this page.
 
-Created by the uibuilder node:
+Created by the `uibuilder` node:
 
 - "client connect" - When a new client connects or an existing client reloads the page or reconnects after a temporary disconnect. Contains a counter that allows discrimination between a new connection and a reconnection.
 - "client disconnect" - When an existing client disconnects or goes away.
 - "socket error" - when Socket.IO receives information that a client connection is in error.
 - "shutdown" - from server to client when Node-RED is shutting down. (Not well tested).
 
-Send by the uibuilder client library to the uibuilder node:
+Send by the uibuilder client library to the `uibuilder` node:
 
 - "cache control" - the client manually instructing a connected `uib-cache` node to either clear or replay its cache. Clear will impact all connected clients. Replay will only update the requestor.
 - "client log message" - a client can send a log message that is processed by the server. Initial implementation in v6.1, will be enhanced in future versions.
@@ -170,7 +170,7 @@ Note that the disconnction message may be output AFTER the reconnection message.
 }
 ```
 
-## Messages from Node-RED uibuilder node to the front-end (browser)
+## Messages from Node-RED `uibuilder` node to the front-end (browser)
 
 In addition to these messages, see also the [VueJS component handling page](./vue-component-handling).
 
@@ -231,7 +231,7 @@ From v5, this works without VueJS as well. Just make sure that you include the d
 
 #### Simple version
 
-This would send a notification to all connected clients. May be injected to a uibuilder node.
+This would send a notification to all connected clients. May be injected to a `uibuilder` node.
 
 ```json
 {
@@ -304,7 +304,7 @@ Sending this message (uibuilder v3.3+) to the client will cause the client to re
 
 Note that, as of v5.1 with the ESM client library, this can also be achieved using the standardised `msg._ui` features.
 
-## Messages From the front-end (browser) to the Node-RED uibuilder node
+## Messages From the front-end (browser) to the Node-RED `uibuilder` node
 
 Note that, if responding to a control msg (sending back to uibuilder's input), you **must** remove the `uibuilderCtrl` property otherwise, uibuilder will refuse to send the msg (to prevent msg loops).
 
@@ -313,7 +313,7 @@ Note that, if responding to a control msg (sending back to uibuilder's input), y
 Is send by the client library (uibuilderfe) to Node-RED whenever the client connects by loading or reloading the page.
 
 Any message that contains `"cacheControl": "REPLAY"` and is linked back to your cache node should trigger that node to replay all of the saved cache
-to the uibuilder node. Make sure you include the `_socketId` if you want that replay to only go to a specific connected client.
+to the `uibuilder` node. Make sure you include the `_socketId` if you want that replay to only go to a specific connected client.
 
 ```json
 {
@@ -357,7 +357,7 @@ Example output:
 
 This can be sent from anywhere. You will need to link the message to your caching node (e.g. a function node that handles caching).
 
-Note that sending this into a uibuilder node, the msg will be dropped by uibuilder (to prevent control loops). Send it to your cache node.
+Note that sending this into a `uibuilder` node, the msg will be dropped by uibuilder (to prevent control loops). Send it to your cache node.
 
 ```json
 {

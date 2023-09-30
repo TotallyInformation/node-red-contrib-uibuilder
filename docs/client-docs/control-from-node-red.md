@@ -1,13 +1,13 @@
 ---
-title: Controlling uibuilder's client from Node-RED
+title: Controlling UIBUILDER's client from Node-RED
 description: >
    How to send specially formatted messages from Node-RED to the uibuilder node that
    get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-lastUpdated: 2023-07-02 15:50:23
+lastUpdated: 2023-09-30 13:02:38
 ---
 
-The uibuilder client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
+The UIBUILDER client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
 
 These ways are all summarised here. They all use a pre-formatted message sent to the appropriate `uibuilder` node in Node-RED.
 
@@ -22,7 +22,7 @@ When a command is issued from Node-RED to the clients via a `msg._uib` command, 
 
 The `msg._uib` block of the response will contain `msg._uib.command` showing what command was issued and `msg._uib.response` showing the client library's (or browsers) response to the command. `msg.payload` also contains a copy of the response.
 
-If the uibuilder node has the "Include msg._uib in standard msg output" flag set, `msg._uib` will also contain all of the client details.
+If the `uibuilder` node has the "Include msg._uib in standard msg output" flag set, `msg._uib` will also contain all of the client details.
 
 ## UI control
 
@@ -77,7 +77,7 @@ Sending a message containing a `msg._uib` property set as follows will result in
 
 See [Client Variables](variables.md) for details of what information you can get. In addition, uibuilder allows the setting of custom variables via its `set` function (see next section). This uses the `uibuilder.get(varName)` client function.
 
-This command results in a standard message out of the top port of the uibuilder node that will contain `msg._uib.response`.
+This command results in a standard message out of the top port of the `uibuilder` node that will contain `msg._uib.response`.
 
 ## Changing settings
 
@@ -96,7 +96,7 @@ The following client settings can be changed from Node-RED by sending a message 
 
 Uses the `uibuilder.set(varName, value)` client function.
 
-This command results in a standard message out of the top port of the uibuilder node that will contain `msg._uib.response`.
+This command results in a standard message out of the top port of the `uibuilder` node that will contain `msg._uib.response`.
 
 ### Turn on/off visible last message from Node-RED
 
@@ -123,7 +123,7 @@ Where:
 
 ## Get complete copy of the current web page
 
-To get the current web page, complete with dynamic changes back to Node-RED as a string in `msg.payload`, send a message to the uibuilder node containing:
+To get the current web page, complete with dynamic changes back to Node-RED as a string in `msg.payload`, send a message to the `uibuilder` node containing:
 
 ```json
 { "_uib": { "command": "sendHtml" } }

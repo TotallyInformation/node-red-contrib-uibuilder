@@ -1,14 +1,14 @@
 ---
-title: Working with the uibuilderfe Front-End Library
+title: Working with the UIBUILDERfe Front-End Library
 description: >
-   How to work with uibuilder's front-end library in your own UI code.
+   How to work with UIBUILDER's front-end library in your own UI code.
 created: 2021-02-17 14:28:00
-lastUpdated: 2022-11-26 17:32:09
+lastUpdated: 2023-09-30 13:05:17
 ---
 
-!> This page refers to the "old" original front-end library for uibuilder. There is now a new library that will eventually replace this one. Please see [the new front-end library pages](client-docs/readme.md). This older library has been functionally stabilised (there will not be any further enhancements after uibuilder v5). It still works as of uibuilder v6.0 but will eventually be deprecated.
+!> This page refers to the "old" original front-end library for UIBUILDER. There is now a new library that will eventually replace this one. Please see [the new front-end library pages](client-docs/readme.md). This older library has been functionally stabilised (there will not be any further enhancements after UIBUILDER v5). It still works as of UIBUILDER v6.0 but will eventually be deprecated.
 
-`uibuildefe.js` is the library that lets you interact with your uibuilder nodes in Node-RED.
+`uibuildefe.js` is the library that lets you interact with your `uibuilder` nodes in Node-RED.
 
 It manages the communications and provides a number of helper functions to make life easy.
 
@@ -68,7 +68,7 @@ In addition, if you are using VueJS, you can pass the Vue app instance to the `s
   
   * IO Namespace override. Changes self.ioNamespace from the default.
     
-    If you are not sure about the correct namespace, use the "Instance Details" button in the uibuilder node configuration panel (in the Node-RED Editor) and search for "ioNamespace" in the resulting page.
+    If you are not sure about the correct namespace, use the "Instance Details" button in the `uibuilder` node configuration panel (in the Node-RED Editor) and search for "ioNamespace" in the resulting page.
 
     The namespace to use here is that result prefixed with a leading `/`. However if you are serving your code from a different server or a different port on the same
     server (e.g. when using a build tool dev server), you must include the full URL of Node-RED (or the uibuilder custom URL if using its custom ExpressJS server feature).
@@ -178,7 +178,7 @@ All public variables must be changed from your own code using the setter:
 uibuilder.set('varName',value)
 ```
 
-You can use the setter to add your own variables to the uibuilder object. These will then have an event handler attached so that you can monitor for changes with `uibuilder.onChange('varName', function(varName) { ... })`
+You can use the setter to add your own variables to the `uibuilder` object. These will then have an event handler attached so that you can monitor for changes with `uibuilder.onChange('varName', function(varName) { ... })`
 
 The list of accessible, pre-defined variables is provided on the [uibuildefe-js developer documentation page](uibuilderfe-js?id=public-variables).
 

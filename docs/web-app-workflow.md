@@ -3,7 +3,7 @@ title: Creating a web app using uibuilder and Node-RED
 description: >
    Some recommendations on how to use uibuilder to create data-driven web applications.
 created: 2022-01-05 14:36:24
-lastUpdated: 2023-01-04 16:50:42
+lastUpdated: 2023-09-30 13:10:57
 ---
 
 While it does a few other things to help as well, uibuilder primarily provides these services:
@@ -32,7 +32,7 @@ The code for your uibuilder web app lives in and under a specific folder on your
 
 Most things for uibuilder live under something we refer to as the `uibRoot` folder. This folder, by default, lives at `<userDir>/uibuilder`. Where `<userDir>` is normally `~/.node-red` for default installations of Node-RED. The uibRoot folder can, however, be moved by changing the `uibuilder.uibRoot` property in your Node-RED `settings.js` file.
 
-Each uibuilder node that you deploy, gets a sub-folder under uibRoot. That folder is named the same as the `URL` setting in the Editor panel. So a uibuilder node with a URL set to `mytest` will have its code folder at `~/.node-red/uibuilder/mytest` for a default installation.
+Each `uibuilder` node that you deploy, gets a sub-folder under uibRoot. That folder is named the same as the `URL` setting in the Editor panel. So a `uibuilder` node with a URL set to `mytest` will have its code folder at `~/.node-red/uibuilder/mytest` for a default installation.
 
 Within that instance root folder there will always be at least 3 things:
 
@@ -92,7 +92,7 @@ At present, only the Svelte development server will work correctly without you m
 For all other development servers, you will need to make the following changes:
 
 1. In `index.html` - replace the default `./xxxx` and `../uibuilder/xxxx` URL's with ones that start with the correct Node-RED/uibuilder server. e.g. `http://localhost:1880/xxxx`.
-2. In `indx.js` - replace the `uibuilder.start()` with `uibuilder.start({ioNamespace: 'http://localhost:1880/aa'})` (example) where the protocol, server name and port are your Node-RED/uibuilder server as above and `/aa` is the uibuilder node instances URL with a leading `/`. That is the Socket.io namespace.
+2. In `indx.js` - replace the `uibuilder.start()` with `uibuilder.start({ioNamespace: 'http://localhost:1880/aa'})` (example) where the protocol, server name and port are your Node-RED/uibuilder server as above and `/aa` is the `uibuilder` node instances URL with a leading `/`. That is the Socket.io namespace.
 
 Don't forget to change these back when you are putting your code live. Though your live code will still work, it would be more fragile and would break if you change the server details.
 

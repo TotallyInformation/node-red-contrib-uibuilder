@@ -1,9 +1,9 @@
 ---
 title: NGINX Example Config
 description: >
-   An example of a reasonably secure configuration for Node-RED and uibuilder.
+   An example of a reasonably secure configuration for Node-RED and UIBUILDER.
 created: 2022-02-21 13:05:38
-lastUpdated: 2022-02-21 13:05:42
+lastUpdated: 2023-09-30 13:06:35
 ---
 
 !> Status: Incomplete

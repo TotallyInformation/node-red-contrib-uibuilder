@@ -4,7 +4,7 @@
 
 <div class="ch-title">
 
-# <span class="uib-red">ui</span>builder <small>v6</small>
+# <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> <small>v6</small>
 
 for Node-RED
 
@@ -22,3 +22,4 @@ for Node-RED
 [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
 [Get Started](#uibuilder-documentation)
 [Quick Start](walkthrough1)
+

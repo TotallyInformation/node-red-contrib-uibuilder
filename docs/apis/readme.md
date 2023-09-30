@@ -1,14 +1,14 @@
 ---
-title: uibuilder REST API's
+title: UIBUILDER REST API's
 description: >
-  uibuilder exposes a number of REST API's. This is an index of them.
+  UIBUILDER exposes a number of REST API's. This is an index of them.
 created: 2023-09-14 19:39:52
 lastUpdated: 2023-09-16 12:36:36
 ---
 
-Most of uibuilder's standard REST API's are common across all instances of uibuilder nodes added to your Node-RED flows. However, see below for the instance API's features.
+Most of UIBUILDER's standard REST API's are common across all instances of `uibuilder` nodes added to your Node-RED flows. However, see below for the instance API's features.
 
-In this section, "Admin API" refers to a web endpoint that is only accessible from Node-RED's admin web server, this is generally restricted therefore to the Node-RED Editor. "User API" refers to a web endppoint accessible to users of your uibuilder web app and therefore can be called from your front-end code as needed.
+In this section, "Admin API" refers to a web endpoint that is only accessible from Node-RED's admin web server, this is generally restricted therefore to the Node-RED Editor. "User API" refers to a web endppoint accessible to users of your UIBUILDER web app and therefore can be called from your front-end code as needed.
 
 In all examples below, `<url>` refers to a uibuilder instance URL setting.
 
@@ -69,7 +69,7 @@ An example template file is provided but authors should expect to need to unders
 
 ## Instance Admin API's
 
-These are specific to each instance of a uibuilder node that you add to your flows.
+These are specific to each instance of a `uibuilder` node that you add to your flows.
 
 uibuilder has one other admin API (accessible only from the Node-RED Editor). This should be moved into the admin v3 API's in some future release but currently exists in the uibuilder runtime at the end of the `nodeInstance` function.
 
