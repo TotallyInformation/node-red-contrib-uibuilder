@@ -48,6 +48,10 @@
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
+        // initial checkbox states
+        $('#node-input-createFolder').prop('checked', node.createFolder)
+        $('#node-input-reload').prop('checked', node.reload)
+
         // Deal with the url
         getUrls()
 
@@ -92,6 +96,10 @@
             uibId: { value: '' }, // ID of selected uibuilder instance
             folder: { value: 'src', },
             fname: { value: '', },
+            createFolder: { value: false, },
+            reload: { value: false, },
+            encoding: { value: 'utf8' },
+            mode: { value: 0o666 },
             name: { value: '' },
             topic: { value: '' },
         },

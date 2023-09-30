@@ -44,6 +44,9 @@ const mod = {
 
 //#endregion ----- Module level variables ---- //
 
+// MAYBE?
+// - Add optional output msg?
+
 //#region ----- Module-level support functions ----- //
 
 /** 3) Run whenever a node instance receives a new input msg
@@ -58,19 +61,25 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // const RED = mod.RED
 
+    // TODO check if msg.payload exists
+    // TODO msg/config overrides
+    // TODO Check the _ui pagename property if fname not set - to allow auto-updates to pages
+
     // TODO Make the folder name in Editor default to `src`
+
     // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
 
     // Call uibuilder shared library to save file
-    // TODO change to await
-    const success = uibFs.writeFile(this.url, this.folder, this.fname, msg.payload)
-
-    // TODO Add success/fail counters
-    if (success !== false) {
-        this.statusDisplay = { fill: 'green', shape: 'dot', text: 'File Saved' }
-    } else {
-        this.statusDisplay = { fill: 'red', shape: 'dot', text: 'ERROR:File not saved' }
+    try {
+        await uibFs.writeInstanceFile(this.url, this.folder, this.fname, msg.payload)
+        this.counters.success++
+        this.statusDisplay = { fill: 'green', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
+    } catch (err) {
+        this.counters.fail++
+        this.statusDisplay = { fill: 'red', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
+        this.error(`🛑${err.message}`, err)
     }
+
     uiblib.setNodeStatus( this )
 
     // We are done
@@ -96,11 +105,15 @@ function nodeInstance(config) {
     this.url = config.url ?? ''
     this.folder = config.folder ?? ''
     this.fname = config.fname ?? ''
+    this.createFolder = config.createFolder ?? false
+    this.reload = config.reload ?? false
+    this.encoding = config.encoding ?? 'utf8'
+    this.mode = config.mode ?? 0o666
     this.uibId = config.uibId ?? ''
     this.name = config.name ?? ''
     this.topic = config.topic ?? ''
 
-    if (this.uibId === '') {
+    if (this.url === '' || this.uibId === '') {
         this.error(`No uibuilder instance provided, cannot continue. url = '${this.url}'`)
         return
     }
@@ -109,6 +122,13 @@ function nodeInstance(config) {
     const uibNode = RED.nodes.getNode(this.uibId)
     // Get reference to the instance root folder
     this.instanceRoot = uibNode.customFolder
+
+    this.counters = {
+        success: 0,
+        fail: 0,
+    }
+    this.statusDisplay = { fill: 'blue', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
+    uiblib.setNodeStatus( this )
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)

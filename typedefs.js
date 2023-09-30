@@ -467,10 +467,16 @@
  * url: string;
  * folder: string;
  * fname: string;
+ * createFolder: boolean;
+ * reload: boolean;
+ * encoding: string;
+ * mode: number;
  * uibId: string;
  * instanceRoot: string;
  * name: string;
  * topic: string;
+ * counters: object;
+ * statusDisplay: object;
  * }} uibSaveNode
  */
 
