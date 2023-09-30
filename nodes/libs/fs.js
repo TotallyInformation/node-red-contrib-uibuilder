@@ -26,9 +26,9 @@
  */
 
 const path = require('path')
-const fs = require('fs-extra')
+// const fs = require('fs-extra')
+const fs = require('fs/promises')
 const sockets = require('./socket') // Socket.io handler library for uibuilder
-const uiblib = require('./uiblib')  // Utility library for uibuilder
 
 // ! TODO: Move other file-handling functions into this class
 // !       So that fs-extra is only ever needed here
@@ -86,65 +86,74 @@ class UibFs {
         log.trace('[uibuilder:UibFs:setup] Package Management setup completed')
     } // ---- End of setup ---- //
 
-    // TODO Change to async
-    /** Output a file to an instance folder
+    /** Output a file to an instance folder (async/promise)
+     * NB: Errors have the fn indicator at the end because this is expected to be a utility fn called from elsewhere
+     *     This is also the reason we throw errors here rather than output error msgs
      * @param {string} url The uibuilder instance URL (name)
      * @param {string} folder The folder to save to (no '..' allowed)
      * @param {string} fname The file name to save (no path allowed)
      * @param {*} data The data to save, string or buffer
+     * @param {boolean} createFolder If true and folder does not exist, will be created. Else returns error
      * @param {boolean} reload If true, issue a reload command to all clients connected to the instance
-     * @returns {boolean} True if successful, false otherwise
+     * @returns {Promise} Success if write is successful
      */
-    writeFile(url, folder, fname, data, reload = false) {
-        if ( !this.uib ) throw new Error('[uibuilder:UibFs:writeFile] Called without required uib parameter or uib is undefined.')
-        if ( this.uib.RED === null ) throw new Error('[uibuilder:UibFs:writeFile] uib.RED is null')
+    async writeInstanceFile(url, folder, fname, data, createFolder = false, reload = false) {
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [uibuilder:UibFs:writeInstanceFile]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null [uibuilder:UibFs:writeInstanceFile] ')
 
         const log = this.uib.RED.log
 
-        // TODO Change from throw to log & return false
         if (folder.includes('..')) {
-            log.error(`🛑[uibuilder:UibFs:writeFile] Folder path includes '..', invalid. '${folder}'`)
-            return false
+            throw new Error(`Folder path includes '..', invalid. '${folder}' [uibuilder:UibFs:writeInstanceFile]`)
         }
         if ( fname.includes('/') || fname.includes('\\') ) {
-            log.error(`🛑[uibuilder:UibFs:writeFile] File name includes '/' or '\\', invalid. '${fname}'`)
-            return false
+            throw new Error(`File name includes '/' or '\\', invalid. '${fname}' [uibuilder:UibFs:writeInstanceFile]`)
         }
 
         const uib = this.uib
 
+        // TODO check parameters
         // TODO check if uib.rootFolder/url folder exists
-        // TODO Add reload flag to Editor settings
 
-        const fullname = path.join(uib.rootFolder, url, folder, fname)
+        const fullFolder = path.join(uib.rootFolder, url, folder)
 
-        console.log('📔: WRITE FILE: ', url, folder, fname, fullname)
-
-        // TODO Change to await
-        // TODO Move status msgs and uiblib ref to node, not here
-        fs.writeFile(fullname, data, (err) => {
-            if (err) {
-                // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-                log.error(`🛑[uibuilder:UibFs:writeFile] Admin API. File write FAIL. url=${url}, file=${folder}/${fname}`, err)
-                return false
-            } else {
-                // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-                log.trace(`📗[uibuilder:UibFs:writeFile] Admin API. File write SUCCESS. url=${url}, file=${folder}/${fname}`)
-
-                // Reload connected clients if required by sending them a reload msg
-                if ( reload === true ) {
-                    sockets.sendToFe2({
-                        '_uib': {
-                            'reload': true,
-                        }
-                    }, url)
+        // Test if folder exists and can be written to. If not, error unless createFolder flag is true
+        try {
+            await fs.access(fullFolder, fs.constants.W_OK)
+        } catch {
+            // If createFolder flag set, attempt to create the folder
+            if (createFolder === true) {
+                try {
+                    await fs.mkdir(fullFolder, { recursive: true }) // Add mode?
+                } catch (err) {
+                    throw new Error(`Cannot create folder. ${err.message} [uibuilder:UibFs:writeInstanceFile]`, err)
                 }
-                return true
+            } else {
+                throw new Error(`Folder does not exist. "${fullFolder}" [uibuilder:UibFs:writeInstanceFile]`)
             }
-        })
+        }
 
-        // TODO Add status display
-    }
+        const fullname = path.join(fullFolder, fname)
+
+        try {
+            // https://nodejs.org/docs/latest-v14.x/api/fs.html#fs_fspromises_writefile_file_data_options
+            await fs.writeFile(fullname, data)
+            // await fs.outputFile(fullname, data)
+        } catch (err) {
+            throw new Error(`File write FAIL. ${err.message} [uibuilder:UibFs:writeInstanceFile]`, err)
+        }
+
+        log.trace(`📗[uibuilder:UibFs:writeInstanceFile] File write SUCCESS. url=${url}, file=${folder}/${fname}`)
+
+        // Reload connected clients if required by sending them a reload msg
+        if ( reload === true ) {
+            sockets.sendToFe2({
+                '_uib': {
+                    'reload': true,
+                }
+            }, url)
+        }
+    } // -- End of writeFile -- //
 } // ----- End of UibPackages ----- //
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.
