@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: ❓ Ideas, questions & general help
+    url: https://discourse.nodered.org/tag/node-red-contrib-uibuilder
+    about: Ask your question on the Node-RED forum using the node-red-contrib-uibuilder tag
+  - name: 🗂 Documentation
+    url: https://totallyinformation.github.io/node-red-contrib-uibuilder
+    about: Go to the latest documentation
+  - name: 🧑‍💻 Flows
+    url: https://flows.nodered.org/search?term=uibuilder
+    about: Example flows, nodes and collections related to UIBUILDER

@@ -1,0 +1,65 @@
+name: 🪲 Report a bug or issue
+description: File an issue for UIBUILDER
+labels: [needs-triage]
+body:
+- type: markdown
+  attributes:
+    value: |
+      If your issue is a general 'how-to' type question, or something that needs discussion, please
+      firstly ask on [the Node-RED forum using the node-red-contrib-uibuilder tag](https://totallyinformation.github.io/node-red-contrib-uibuilder).
+
+      If you have a feature request or suggestion for a change, please use the Feature Request template.
+
+      Before logging an issue, please make sure that you are either on the latest npm version or the latest GitHub version of UIBUILDER.
+
+      Please ensure that as much of the following information is included as possible as it makes analysing and fixing it much easier.
+
+      Also, please try to include a simplified Node-RED flow that illustrates the issue.
+- type: textarea
+  attributes:
+    label: Current Behavior
+    description: A clear & concise description of what you're experiencing.
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Expected Behavior
+    description: A clear & concise description of what you expected to happen.
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Steps To Reproduce
+    description: Steps to reproduce the behavior.
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Example Node-RED flow
+    description: If you have a minimal example flow that demonstrates the issue, share it here.
+    value: |
+      ```
+      paste your flow here
+      ```
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Environment
+    description: Please tell us about your environment. Include any relevant information on how you are running Node-RED.
+    value: |
+        - UIBUILDER version: 
+        - Node-RED version: 
+        - Node.js version: 
+        - npm version: 
+        - Platform/OS: 
+        - Browser: 
+
+        How is Node-RED installed? (globally/locally? admin/user?):
+
+        How/where is UIBUILDER installed (palette-manager/globally/locally? Which folder?)
+
+        Have you changed any of the `uibuilder` settings in your `settings.js` file?
+
+  validations:
+    required: false

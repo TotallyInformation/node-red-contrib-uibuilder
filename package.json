@@ -98,11 +98,12 @@
     "ui",
     "gui",
     "dashboard",
-    "spa",
+    "SPA",
     "web",
     "website",
     "data-driven",
-    "webpage"
+    "webpage",
+    "web-app"
   ],
   "homepage": "https://totallyinformation.github.io/node-red-contrib-uibuilder/#/",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",

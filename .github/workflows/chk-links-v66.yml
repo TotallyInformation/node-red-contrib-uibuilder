@@ -1,0 +1,19 @@
+name: Check .md links on v6.6.0 branch
+
+on:
+  push: [v6.6.0]
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    # check out the the code
+    steps:
+    - uses: actions/checkout@master
+      with:
+        ref: v6.6.0
+
+    # Checks the status of hyperlinks in .md files in verbose mode
+    - name: Check links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-verbose-mode: 'yes'

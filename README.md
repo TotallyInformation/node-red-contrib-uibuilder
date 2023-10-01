@@ -206,8 +206,6 @@ You can also support the development of UIBUILDER by sponsoring the development.
 [GitHub Sponsorship](https://github.com/sponsors/TotallyInformation), 
 [PayPal Sponsorship](https://paypal.me/TotallyInformation)
 
-<iframe id='kofiframe' src='https://ko-fi.com/totallyinformation/?hidefeed=true&widget=true&embed=true&preview=true' style='border:none;width:100%;padding:4px;background:#f9f9f9;' height='712' title='totallyinformation'></iframe>
-
 ## Developers/Contributors
 
 - [Julian Knight](https://github.com/TotallyInformation) - the designer and main author.

@@ -1,0 +1,49 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: node-red-contrib-uibuilder
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Julian
+    family-names: Knight
+    affiliation: Totally Information
+  - name: Totally Information
+    city: Sheffield
+    country: GB
+    region: South Yorkshire
+    alias: TotallyInformation
+identifiers:
+  - type: url
+    value: >-
+      https://github.com/TotallyInformation/node-red-contrib-uibuilder/releases/latest
+    description: Latest release of UIBUILDER for Node-RED
+repository-code: >-
+  https://github.com/TotallyInformation/node-red-contrib-uibuilder/
+url: >-
+  https://totallyinformation.github.io/node-red-contrib-uibuilder
+abstract: >-
+  UIBUILDER for Node-RED allows the easy creation of
+  data-driven front-end web applications.
+
+
+  It includes many helper features that can reduce or
+  eliminate the need to write code for building data-driven
+  web applications and user interfaces integrated with
+  Node-RED.
+keywords:
+  - node-red
+  - ui
+  - gui
+  - dashboard
+  - SPA
+  - web
+  - website
+  - data-driven
+  - webpage
+  - web-app
+  - ui-builder
+license: Apache-2.0
