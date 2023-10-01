@@ -1,4 +1,5 @@
 [![Discussion](https://img.shields.io/static/v1.svg?label=Discussion&message=Node-RED%20Forum&color=green)](https://discourse.nodered.org/tag/node-red-contrib-uibuilder)
+[![Static Badge](https://img.shields.io/badge/UIBUILDER_Homepage-0d85d7)](https://totallyinformation.github.io/node-red-contrib-uibuilder)
 [![NPM Version](https://img.shields.io/npm/v/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![NPM Total Downloads](https://img.shields.io/npm/dt/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![NPM Downloads per month](https://img.shields.io/npm/dm/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
@@ -17,9 +18,9 @@
 
 # node-red-contrib-uibuilder
 
-UIBUILDER provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.
+UIBUILDER for Node-RED allows the easy creation of data-driven front-end web applications.
 
-It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces for Node-RED.
+It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces integrated with Node-RED.
 
 ## Installation
 
@@ -197,6 +198,15 @@ If you would like to contribute to this node, you can contact [Totally Informati
 Pull Requests both for code and documentation are welcomed and the WIKI is open to new entries and corrections (but please let me know if you make a change).
 
 Please refer to the [contributing guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/.github/CONTRIBUTING.md) for more information.
+
+You can also support the development of UIBUILDER by sponsoring the development.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/A0A3PPMRJ)
+
+[GitHub Sponsorship](https://github.com/sponsors/TotallyInformation), 
+[PayPal Sponsorship](https://paypal.me/TotallyInformation)
+
+<iframe id='kofiframe' src='https://ko-fi.com/totallyinformation/?hidefeed=true&widget=true&embed=true&preview=true' style='border:none;width:100%;padding:4px;background:#f9f9f9;' height='712' title='totallyinformation'></iframe>
 
 ## Developers/Contributors
 
