@@ -13,32 +13,42 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 ### TO FIX
 
 * Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
+* uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Decide when to check - on commit at least.
 
 * Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
 
-* uib-tag
-  * Attribs Source - should be "None" as default
-  * 
+* uib-tag - Attribs Source - should be "None" as default
+* Templates - add eslint dev dependencies to package.json
+  * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
 
 ### Client library
 
 * Add Node-RED command to find out if a front-end library is installed.
 * Add small button to showStatus output to allow user to turn off the display.
 * Make sure that all watch/monitor fns emit custom events
+* msgShow - add a message counter (optional?)
 
 ### uibuilder node
 
 * Handle case sensitivity flag
-* Add api to query if a specific uib library is installed and return version. Optionally return estimated base path. Allow calling from front-end.
+* _started_ Add api to query if a specific uib library is installed and return version. Optionally return estimated base path. Allow calling from front-end.
 * Add API test harness using VScode restbook.
 * Move all uibRoot package.json handling to `libs/package-mgt.js`
-* Move all file handling to `libs/file-mgt.js`
-* `package-mgt.js`
-  * Rationalise the various functions - several of them have similar tasks.
-  * Remove dependency on `execa`.
+* Move all file handling to `libs/fs.js`
 * Editor
   * Add case sensitivity flag
   * Rationalise the file editor. [Ref](https://discourse.nodered.org/t/code-editor-isnt-saving-text/80836)
+
+### Element node
+
+* Add width setting
+* Add new element: Layout
+  * Start with grid layout
+
+### package-mgt.js
+
+* Rationalise the various functions - several of them have similar tasks.
+* Remove dependency on `execa`.
 
 ### Examples
 
@@ -66,7 +76,7 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Front-end: 
   * Ability to visually show all uibuilder managed variables.
-  * Some way to visually expose a library of JavaScript functions with their args as inputs.
+  * Some way to visually expose a library of JavaScript functions with their args as inputs. Maybe make this a cmd that pulls a doc from Node-RED? (keeps client lib small)
   * Using the above to visually show available uibuilder fns with inputs and outputs.
   * A way to show and change uib-brand variables visually?
 

@@ -74,14 +74,19 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### General changes
 
-* Move the ui class to a separate repo so that it can be used independently.
-* Consider moving all libs to separate repo to reduce number of direct dependencies.
+* PAGE CREATOR: Something that creates a new page file from template. Could be an extension to uib-save?
+  * Maybe also a way to track pages? A catalogue? Maybe also an API to return all HTML file names as an array?
+  * Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
 
+* THEME CONFGURATOR: Something that allows manipulation of theme settings from within Node-RED
+
+* Move the ui class to a separate repo so that it can be used independently.
+* Consider moving all libs to separate repo to reduce number of direct dependencies. (probably requires node v16 for nested mono-repo modules)
 * Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
 * Restructure `uibuilder` node to remove fs-extra dependency to its own library module.
 * Restructure other nodes to move server file handling to a separate library module.
+
 * Consider adding a default CSS override to the `uibuilder` node. To be used when no CSS specificed and also to be used in admin/generated uib pages. Defaulting to `../uibuilder/uib-brand.css`.
-* Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
 * [Issue #94](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/94) - Detect when Node-RED switches projects and see if the uibRoot folder can be dynamically changed.
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
 
