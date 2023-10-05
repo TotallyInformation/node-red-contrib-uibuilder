@@ -78,11 +78,41 @@ The templates feature in UIBUILDER provides working front-end code of various co
 
 Other examples can be found on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder) and the [UIBUILDER WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). Also see the FAQ's and answered questions on the [Node-RED Forum](https://discourse.nodered.org/tag/node-red-contrib-uibuilder).
 
-## Documentation
+## Documentation and other links
 
 Please refer to the [Documentation web site](https://totallyinformation.github.io/node-red-contrib-uibuilder). This can also be accessed from within UIBUILDER nodes even without an Internet connection.
 
 There is a library of "official" [video tutorials on YouTube](https://www.youtube.com/playlist?list=PL9IEADRqAal3mG3RcF0cJaaxIgFh3GdRQ). Other folk have also produced [UIBUILDER-related content](https://www.youtube.com/results?search_query=UIBUILDER+node-red).
+
+### Questions, issues and suggestions
+
+The best place to ask questions or discuss possible enhancements is the [Node-RED Forum](https://discourse.nodered.org/).
+
+Alternatively, use the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements and the [GitHub Discussions page](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) for general questions, suggestions, etc.
+
+### Other links
+
+- ![uib](https://github.com/TotallyInformation/node-red-contrib-uibuilder/raw/main/front-end/images/node-blue.ico) [UIBUILDER for Node-RED](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
+  - ❓ [Ideas, questions & general help](https://discourse.nodered.org/tag/node-red-contrib-uibuilder) - Ask your question on the Node-RED forum using the node-red-contrib-uibuilder tag
+  - 📁 [Documentation](https://totallyinformation.github.io/node-red-contrib-uibuilder) - Go to the latest documentation
+  - 🧑‍💻 [Flows](https://flows.nodered.org/search?term=uibuilder) - Example flows, nodes and collections related to UIBUILDER
+  - ℹ️ [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki) - More documentation and examples
+  - 📂 [Example Svelte External Template](https://github.com/TotallyInformation/uib-template-svelte-simple) - In case you want to build your own svelte app
+  - 📂 [Example Simple External Template](https://github.com/TotallyInformation/uib-template-test) - In case you want to build your own external template
+  - 📊 [uPlot UIBUILDER extension](https://github.com/TotallyInformation/nr-uibuilder-uplot) - Useful charts but also demonstrates how to build your own extension
+  - 🔨 [Event Handler module used by UIBUILDER](https://github.com/TotallyInformation/ti-common-event-handler) - So you can see some of the inner workings
+
+- 🔨 [ui library module used by UIBUILDER](https://github.com/TotallyInformation/ui.js) - Can be used stand-alone for turning UI standard config JSON into HTML
+
+- 🕜 [node-red-contrib-moment](https://github.com/TotallyInformation/node-red-contrib-moment) - Nodes to make use of the MomentJS date/time handling library in Node-RED
+
+- 🧪 [Test Nodes for Node-RED](https://github.com/TotallyInformation/uib-template-test) - Some test nodes for Node-RED that help you understand how everything works
+
+- 🚤 [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) - A really nice looking gauge component. Works with Node-RED, UIBUILDER, or stand-alone
+
+- 🧪 [Experimental Web Components](https://github.com/TotallyInformation/web-components) - Have some Node-RED & UIBUILDER specific enhancements but also work well stand-alone
+
+- 🧪 [Array Grouper](https://github.com/TotallyInformation/groupit) - Stand-alone function to reshape an array of objects
 
 ## Purpose
 
@@ -184,12 +214,6 @@ The general direction of UIBUILDER (or associated modules) is likely to include:
 
   This will use a local package.json file that contains a "build" script. If it exists, UIBUILDER will expose a build button that will run the script.
 </details>
-
-## Questions, issues and suggestions
-
-The best place to ask questions or discuss possible enhancements is the [Node-RED Forum](https://discourse.nodered.org/).
-
-Alternatively, use the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements and the [GitHub Discussions page](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) for general questions, suggestions, etc.
 
 ## Contributing
 
