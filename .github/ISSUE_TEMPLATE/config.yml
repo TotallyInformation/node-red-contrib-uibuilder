@@ -3,9 +3,42 @@ contact_links:
   - name: ❓ Ideas, questions & general help
     url: https://discourse.nodered.org/tag/node-red-contrib-uibuilder
     about: Ask your question on the Node-RED forum using the node-red-contrib-uibuilder tag
-  - name: 🗂 Documentation
+  - name: 📁 Documentation
     url: https://totallyinformation.github.io/node-red-contrib-uibuilder
     about: Go to the latest documentation
   - name: 🧑‍💻 Flows
     url: https://flows.nodered.org/search?term=uibuilder
     about: Example flows, nodes and collections related to UIBUILDER
+  - name: ℹ️ WIKI
+    url: https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki
+    about: More documentation and examples
+  - name: 📂 Example Svelte Template
+    url: https://github.com/TotallyInformation/uib-template-svelte-simple
+    about: In case you want to build your own svelte app
+  - name: 📂 Example Simple Template
+    url: https://github.com/TotallyInformation/uib-template-test
+    about: In case you want to build your own external template
+
+
+  - name: 📊 uPlot UIBUILDER extension
+    url: https://github.com/TotallyInformation/nr-uibuilder-uplot
+    about: Useful charts but also demonstrates how to build your own extension
+  - name: 🔨 ui library module used by UIBUILDER
+    url: https://github.com/TotallyInformation/ui.js
+    about: Can be used stand-alone for turning UI standard config JSON into HTML
+  - name: 🔨 Event Handler module used by UIBUILDER
+    url: https://github.com/TotallyInformation/ti-common-event-handler
+    about: So you can see some of the inner workings
+  - name: 🧪 Test Nodes for Node-RED
+    url: https://github.com/TotallyInformation/uib-template-test
+    about: Some test nodes for Node-RED that help you understand how everything works
+  - name: 🚤 HotNipi Gauge Web Component
+    url: https://github.com/TotallyInformation/gauge-hotnipi
+    about: A really nice looking gauge component. Works with UIBUILDER or stand-alone
+  - name: 🧪 Experimental Web Components
+    url: https://github.com/TotallyInformation/web-components
+    about: Have some Node-RED & UIBUILDER specific enhancements but also work well stand-alone
+
+  - name: 🧪 Array Grouper
+    url: https://github.com/TotallyInformation/groupit
+    about: Stand-alone function to reshape an array of objects
