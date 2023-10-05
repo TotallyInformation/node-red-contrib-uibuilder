@@ -50,6 +50,7 @@ Each of the v3 API's accepts a `cmd` parameter (either via URL query parameters 
   * `listinstances` - List all of the deployed instance urls
   * `listurls` - Return a list of all user urls in use by ExpressJS
   * `checkfolder` - See if a node's custom folder exists. Return true if it does, else false
+  * `checkpackage` - Check whether a specific package name has been installed using the library manager
 * PUT
   * `deleteondelete` - tells uibuilder to delete the instance folder
   * `updatepackage` - *(Not currently in use)*

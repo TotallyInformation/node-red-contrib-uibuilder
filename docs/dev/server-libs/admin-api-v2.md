@@ -7,3 +7,7 @@ lastUpdated: 2023-09-30 15:58:36
 ---
 
 TBC
+
+## API's
+
+See the separate [API's](apis/readme?id=v3-admin-api39s) document for API details.
