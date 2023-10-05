@@ -142,3 +142,17 @@ You can, of course still use `msg._socketId`. If present, the msg being sent is 
 The client ID should remain constant while the browser stays open. The tab ID should remain until the tab or the browser is closed.
 
 For the page name, note that the default name (e.g. when the browser address bar is only showing the folder and not a specific `xxxx.html`) is `index.html`. uibuilder allows you to have any number of pages defined under a single node however.
+
+## Reference summary
+
+### A summary of the `msg._uib.command` values
+
+* `elementExists` - does an element exist in the HTML DOM?
+* `get` - gets a uibuilder client managed variable
+* `htmlSend` - gets the current full HTML as text
+* `include` - Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
+* `set` - set a uibuilder client managed variable
+* `showMsg` - Turn on/off the display of the latest msg from Node-RED
+* `showStatus` - Turn on/off the display of the uibuilder client library settings
+* `uiGet` - get detailed information about an HTML DOM element
+* `uiWatch` - watch for changes to the HTML DOM, return messages about changes
