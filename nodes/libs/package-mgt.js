@@ -601,6 +601,24 @@ class UibPackages {
         return pkgDetails
     } // ----  End of getPackageDetails2 ---- //
 
+    /** Is the specified package installed into uibRoot (e.g. via the library manager)
+     * @param {string} packageName The package name to check
+     * @returns {boolean} True if it is installed, false otherwise
+     */
+    isPackageInstalled(packageName) {
+        if ( this.#isConfigured !== true ) {
+            this.log.warn('[uibuilder:UibPackages:isPackageInstalled] Cannot run. Setup has not been called.')
+            return false
+        }
+        if (!this.uibPackageJson) return false
+
+        if (!this.packageJson[packageName]) return false // eslint-disable-line sonarjs/prefer-single-boolean-return
+
+        return true
+    } // ----  End of isPackageInstalled ---- //
+
+    //#region -- Manage Packages via npm --
+
     /** Install an npm package
      * NOTE: This fn does not update the list of packages
      *       because that is built from the package.json file
@@ -808,6 +826,8 @@ class UibPackages {
         return /** @type {string} */ (all)
 
     }
+
+    //#endregion -- ---- --
 
 } // ----- End of UibPackages ----- //
 

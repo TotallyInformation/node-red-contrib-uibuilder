@@ -30,6 +30,7 @@ const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
 const uiblib = require('./uiblib')  // Utility library for uibuilder
 const web = require('./web')
 const sockets = require('./socket')
+const packageMgt = require('./package-mgt')
 const templateConf  = require('../../templates/template_dependencies') // Template configuration metadata
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap
@@ -384,6 +385,27 @@ function adminRouterV3(uib, log) {
 
                     break
                 } // -- end of checkfolder -- //
+
+                // See if a specific package has been installed into uibRoot (e.g. via library manager)
+                case 'checkpackage': {
+                    // We must have a packageName
+                    if (!params.packageName) {
+                        log.error(`[uibuilder:adminRouterV3:GET] Admin API. cmd=${checkpackage}. 'packageName' parameter not provided. url=${params.url}`)
+                        res.statusMessage = 'packageName parameter not provided'
+                        res.status(500).end()
+                        return
+                    }
+                    const ans = packageMgt.isPackageInstalled(params.packageName)
+                    if (ans === false) {
+                        res.statusMessage = 'Package checked - not installed'
+                        res.status(200).json( false )
+                    }
+
+                    res.statusMessage = 'Package checked - is installed'
+                    res.status(200).json( true )
+
+                    break
+                } // -- end of checkpackage -- //
 
                 default: {
                     break
