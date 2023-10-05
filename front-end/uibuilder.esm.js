@@ -4461,23 +4461,30 @@ function urlJoin() {
   return url2.replace("//", "/");
 }
 function syntaxHighlight(json) {
-  json = JSON.stringify(json, void 0, 4);
-  json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
-    let cls = "number";
-    if (/^"/.test(match)) {
-      if (/:$/.test(match)) {
-        cls = "key";
-      } else {
-        cls = "string";
-      }
-    } else if (/true|false/.test(match)) {
-      cls = "boolean";
-    } else if (/null/.test(match)) {
-      cls = "null";
+  if (json === void 0) {
+    json = '<span class="undefined">undefined</span>';
+  } else {
+    try {
+      json = JSON.stringify(json, void 0, 4);
+      json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
+        let cls = "number";
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = "key";
+          } else {
+            cls = "string";
+          }
+        } else if (/true|false/.test(match)) {
+          cls = "boolean";
+        } else if (/null/.test(match)) {
+          cls = "null";
+        }
+        return `<span class="${cls}">${match}</span>`;
+      });
+    } catch (e) {
+      json = `Syntax Highlight ERROR: ${e.message}`;
     }
-    return '<span class="' + cls + '">' + match + "</span>";
-  });
+  }
   return json;
 }
 var _ui = new import_ui.default(window, log, syntaxHighlight);
@@ -5756,6 +5763,7 @@ ${document.documentElement.outerHTML}`;
       case "elementExists": {
         response = this.elementExists(prop, false);
         info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
+        break;
       }
       default: {
         log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();

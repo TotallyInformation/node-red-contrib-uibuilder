@@ -285,23 +285,31 @@ function urlJoin() {
  * @returns {html} Object reformatted as highlighted HTML
  */
 function syntaxHighlight(json) {
-    json = JSON.stringify(json, undefined, 4)
-    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
-    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) { // eslint-disable-line prefer-named-capture-group
-        let cls = 'number'
-        if ((/^"/).test(match)) {
-            if ((/:$/).test(match)) {
-                cls = 'key'
-            } else {
-                cls = 'string'
-            }
-        } else if ((/true|false/).test(match)) {
-            cls = 'boolean'
-        } else if ((/null/).test(match)) {
-            cls = 'null'
+    if (json === undefined) {
+        json = '<span class="undefined">undefined</span>'
+    } else {
+        try {
+            json = JSON.stringify(json, undefined, 4)
+            // json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
+            json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) { // eslint-disable-line prefer-named-capture-group
+                let cls = 'number'
+                if ((/^"/).test(match)) {
+                    if ((/:$/).test(match)) {
+                        cls = 'key'
+                    } else {
+                        cls = 'string'
+                    }
+                } else if ((/true|false/).test(match)) {
+                    cls = 'boolean'
+                } else if ((/null/).test(match)) {
+                    cls = 'null'
+                }
+                return `<span class="${cls}">${match}</span>`
+            })
+        } catch (e) {
+            json = `Syntax Highlight ERROR: ${e.message}`
         }
-        return '<span class="' + cls + '">' + match + '</span>'
-    })
+    }
     return json
 }
 
@@ -1691,6 +1699,7 @@ export const Uib = class Uib {
         const value = msg._uib.value
         let response, info
 
+        // Don't forget to update `docs/client-docs/control-from-node-red.md`
         switch (cmd) {
             case 'get': {
                 response = this.get(prop)
@@ -1736,6 +1745,7 @@ export const Uib = class Uib {
             case 'elementExists': {
                 response = this.elementExists(prop, false)
                 info = `Element "${prop}" ${response ? 'exists' : 'does not exist'}`
+                break
             }
 
             default: {
