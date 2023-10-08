@@ -27,10 +27,11 @@
  */
 //#endregion --- Type Defs --- //
 
-//#region --- We need the Socket.IO & ui libraries --- //
+//#region --- We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui'
-import io from 'socket.io-client' 
+import UibVar from '../components/uib-var/uib-var'
+import io from 'socket.io-client'
 
 // TODO - Maybe - check if already loaded as window['io']?
 // TODO - Maybe - Should this be moved to inside the class - would know the httpRoot then so less need to guess?
@@ -924,6 +925,7 @@ export const Uib = class Uib {
     /** Does the chosen CSS Selector currently exist?
      * Automatically sends a msg back to Node-RED unless turned off.
      * @param {string} cssSelector Required. CSS Selector to examine for visibility
+     * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
      * @returns {boolean} True if the element exists
      */
     elementExists(cssSelector, msg = true) {
@@ -932,10 +934,12 @@ export const Uib = class Uib {
         let exists = false
         if (el !== null) exists = true
 
-        if (msg === true) this.send({
-            payload: exists,
-            info: `Element "${cssSelector}" ${exists ? 'exists' : 'does not exist'}`
-        })
+        if (msg === true) {
+            this.send({
+                payload: exists,
+                info: `Element "${cssSelector}" ${exists ? 'exists' : 'does not exist'}`
+            })
+        }
 
         return exists
     } // --- End of elementExists --- //
@@ -971,6 +975,24 @@ export const Uib = class Uib {
      */
     replaceSlotMarkdown(el, component) {
         _ui.replaceSlotMarkdown(el, component)
+    }
+
+    /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+     * Otherwise simply returns the text
+     * @param {string} mdText The input markdown string
+     * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+     */
+    convertMarkdown(mdText) {
+        return _ui.convertMarkdown(mdText)
+    }
+
+    /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+     * Otherwise just returns that HTML as-is.
+     * @param {string} html The input HTML string
+     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+     */
+    sanitiseHTML(html) {
+        return _ui.sanitiseHTML(html)
     }
 
     /** Attach a new remote script to the end of HEAD synchronously
@@ -2018,6 +2040,7 @@ export const Uib = class Uib {
             log('trace', 'uibuilder.module.js:getIOnamespace', `Socket.IO namespace found via cookie: ${ioNamespace}`)()
         }
 
+        this.url = ioNamespace
         // Namespace HAS to start with a /
         ioNamespace = '/' + ioNamespace
 
@@ -2475,6 +2498,9 @@ export default uibuilder
 
 // Attempt to run start fn
 uibuilder.start()
+
+// Add the class as a new Custom Element to the window object
+customElements.define('uib-var', UibVar)
 
 //#endregion --- Wrap up ---
 

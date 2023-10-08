@@ -63,6 +63,9 @@ var require_ui = __commonJS({
        */
       constructor(win, extLog, jsonHighlight) {
         __publicField(this, "version", "6.6.0-src");
+        // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
+        __publicField(this, "sanitiseExtraTags", ["uib-var"]);
+        __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
         // Reference to DOM window - must be passed in the constructor
         // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
         __publicField(this, "window");
@@ -112,19 +115,16 @@ var require_ui = __commonJS({
           component.slot = this.window["DOMPurify"].sanitize(component.slot);
         el.innerHTML = component.slot;
       }
-      /** Replace or add an HTML element's slot from a Markdown string
-       * Only does something if the markdownit library has been loaded to window.
-       * Will use DOMPurify if that library has been loaded to window.
-       * @param {Element} el Reference to the element that we want to update
-       * @param {*} component The component we are trying to add/replace
+      /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+       * Otherwise simply returns the text
+       * @param {string} mdText The input markdown string
+       * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
        */
-      replaceSlotMarkdown(el, component) {
-        if (!el)
-          return;
+      convertMarkdown(mdText) {
+        if (!mdText)
+          return "";
         if (!this.window["markdownit"])
-          return;
-        if (!component.slotMarkdown)
-          return;
+          return mdText;
         const opts = {
           // eslint-disable-line object-shorthand
           html: true,
@@ -143,9 +143,31 @@ var require_ui = __commonJS({
           }
         };
         const md = this.window["markdownit"](opts);
-        component.slotMarkdown = md.render(component.slotMarkdown);
-        if (this.window["DOMPurify"])
-          component.slotMarkdown = this.window["DOMPurify"].sanitize(component.slotMarkdown);
+        return md.render(mdText);
+      }
+      /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+       * Otherwise just returns that HTML as-is.
+       * @param {string} html The input HTML string
+       * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+       */
+      sanitiseHTML(html) {
+        if (!this.window["DOMPurify"])
+          return html;
+        return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
+      }
+      /** Replace or add an HTML element's slot from a Markdown string
+       * Only does something if the markdownit library has been loaded to window.
+       * Will use DOMPurify if that library has been loaded to window.
+       * @param {Element} el Reference to the element that we want to update
+       * @param {*} component The component we are trying to add/replace
+       */
+      replaceSlotMarkdown(el, component) {
+        if (!el)
+          return;
+        if (!component.slotMarkdown)
+          return;
+        component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
+        component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
         el.innerHTML = component.slotMarkdown;
       }
       /** Attach a new remote script to the end of HEAD synchronously
@@ -997,6 +1019,145 @@ var require_ui = __commonJS({
 
 // src/front-end-module/uibuilder.module.js
 var import_ui = __toESM(require_ui());
+
+// src/components/uib-var/uib-var.js
+var template = document.createElement("template");
+template.innerHTML = /** @type {HTMLTemplateElement} */
+/*html*/
+`<div></div>`;
+var _UibVar = class _UibVar extends HTMLElement {
+  //#endregion --- Class Properties ---
+  constructor() {
+    super();
+    //#region --- Class Properties ---
+    /** @type {string} Name of the uibuilder mangaged variable to use */
+    __publicField(this, "variable");
+    /** Current value of the watched variable */
+    __publicField(this, "value");
+    /** Whether to output if the variable is undefined */
+    __publicField(this, "undefined", false);
+    /** Whether to send update value to Node-RED on change */
+    __publicField(this, "report", false);
+    /** What is the value type */
+    __publicField(this, "type", "plain");
+    /** what are the available types? */
+    __publicField(this, "types", ["plain", "html", "markdown", "object"]);
+    /** Mini jQuery-like shadow dom selector (see constructor) */
+    __publicField(this, "$");
+    this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
+    this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
+    this.dispatchEvent(new Event(`uib-var:construction`, { bubbles: true, composed: true }));
+  }
+  // Makes HTML attribute change watched
+  static get observedAttributes() {
+    return _UibVar.props;
+  }
+  /** NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called  */
+  attributeChangedCallback(attrib, oldVal, newVal) {
+    if (oldVal === newVal)
+      return;
+    switch (attrib) {
+      case "variable": {
+        if (newVal === "")
+          throw new Error('[uib-var] Attribute "variable" MUST be set to a UIBUILDER managed variable name');
+        this.variable = newVal;
+        this.doWatch();
+        break;
+      }
+      case "undefined": {
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
+          this.undefined = true;
+        else
+          this.undefined = false;
+        break;
+      }
+      case "report": {
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
+          this.report = true;
+        else
+          this.report = false;
+        break;
+      }
+      case "type": {
+        if (newVal === "" || !this.types.includes(newVal.toLowerCase()))
+          this.type = "plain";
+        else
+          this.type = newVal;
+        break;
+      }
+      default: {
+        this[attrib] = newVal;
+        break;
+      }
+    }
+  }
+  // --- end of attributeChangedCallback --- //
+  // Runs when an instance is added to the DOM
+  connectedCallback() {
+    if (!this.id) {
+      if (!this.name)
+        this.name = this.getAttribute("name");
+      if (this.name)
+        this.id = this.name.toLowerCase().replace(/\s/g, "_");
+      else
+        this.id = `uib-var-${++_UibVar._iCount}`;
+    }
+  }
+  // ---- end of connectedCallback ---- //
+  // Runs when an instance is removed from the DOM
+  // disconnectedCallback() {} // ---- end of disconnectedCallback ---- //
+  /** Process changes to the required uibuilder variable */
+  doWatch() {
+    if (!this.variable)
+      throw new Error("No variable name provided");
+    this.value = window["uibuilder"].get(this.variable);
+    this.varDom();
+    window["uibuilder"].onChange(this.variable, (val) => {
+      this.value = val;
+      this.varDom();
+      if (this.report === true)
+        window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+    });
+  }
+  /** Convert this.value to DOM output */
+  varDom() {
+    if (this.value === void 0 && this.undefined !== true) {
+      this.shadow.innerHTML = "";
+      return;
+    }
+    let val = this.value;
+    switch (this.type) {
+      case "markdown": {
+        this.shadow.innerHTML = window["uibuilder"].sanitiseHTML(window["uibuilder"].convertMarkdown(val));
+        break;
+      }
+      case "object": {
+        this.shadow.innerHTML = `<pre class="syntax-highlight">${window["uibuilder"].syntaxHighlight(val)}</pre>`;
+        break;
+      }
+      case "plain":
+      case "html":
+      default: {
+        const t = typeof val;
+        if (Array.isArray(val) || t === "[object Object]" || t === "object") {
+          try {
+            this.shadow.innerHTML = JSON.stringify(val);
+          } catch (e) {
+            this.shadow.innerHTML = val;
+          }
+        } else {
+          this.shadow.innerHTML = val;
+        }
+        break;
+      }
+    }
+  }
+};
+/** Holds a count of how many instances of this component are on the page */
+__publicField(_UibVar, "_iCount", 0);
+/** @type {Array<string>} List of all of the html attribs (props) listened to */
+__publicField(_UibVar, "props", ["name", "id", "variable", "undefined", "report", "type"]);
+var UibVar = _UibVar;
 
 // node_modules/engine.io-parser/build/esm/commons.js
 var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -5077,6 +5238,7 @@ var Uib = (_a = class {
   /** Does the chosen CSS Selector currently exist?
    * Automatically sends a msg back to Node-RED unless turned off.
    * @param {string} cssSelector Required. CSS Selector to examine for visibility
+   * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
    * @returns {boolean} True if the element exists
    */
   elementExists(cssSelector, msg = true) {
@@ -5084,11 +5246,12 @@ var Uib = (_a = class {
     let exists = false;
     if (el !== null)
       exists = true;
-    if (msg === true)
+    if (msg === true) {
       this.send({
         payload: exists,
         info: `Element "${cssSelector}" ${exists ? "exists" : "does not exist"}`
       });
+    }
     return exists;
   }
   // --- End of elementExists --- //
@@ -5118,6 +5281,22 @@ var Uib = (_a = class {
    */
   replaceSlotMarkdown(el, component) {
     _ui.replaceSlotMarkdown(el, component);
+  }
+  /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+   * Otherwise simply returns the text
+   * @param {string} mdText The input markdown string
+   * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+   */
+  convertMarkdown(mdText) {
+    return _ui.convertMarkdown(mdText);
+  }
+  /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+   * Otherwise just returns that HTML as-is.
+   * @param {string} html The input HTML string
+   * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+   */
+  sanitiseHTML(html) {
+    return _ui.sanitiseHTML(html);
   }
   /** Attach a new remote script to the end of HEAD synchronously
    * NOTE: It takes too long for most scripts to finish loading
@@ -5958,6 +6137,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     } else {
       log("trace", "uibuilder.module.js:getIOnamespace", `Socket.IO namespace found via cookie: ${ioNamespace}`)();
     }
+    this.url = ioNamespace;
     ioNamespace = "/" + ioNamespace;
     log("trace", "uibuilder.module.js:getIOnamespace", `Final Socket.IO namespace: ${ioNamespace}`)();
     return ioNamespace;
@@ -6174,6 +6354,7 @@ if (!window["$$"]) {
 }
 var uibuilder_module_default = uibuilder;
 uibuilder.start();
+customElements.define("uib-var", UibVar);
 export {
   Uib,
   uibuilder_module_default as default,
