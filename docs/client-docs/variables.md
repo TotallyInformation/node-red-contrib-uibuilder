@@ -46,6 +46,7 @@ Always use `uibuilder.get('varname', value)` to obtain the value of these. You c
 * `serverTimeOffset` - Time offset between browser clock and server clock
 * `socketError` - Holds the details of the last socket error
 * `tabId` - Identifier for the current browser tab
+* `url` - The instance URL fragment (name) for this instance of uibuilder
 * `version` - accessible via `uibuilder.get('version')` or `uibuilder.get('meta')` only - the uibuilder client version in use
 * `vueVersion` - if the VueJS front-end library is loaded, this _may_ tell you the version (does not work for all versions of VueJS)
 

@@ -77,6 +77,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * PAGE CREATOR: Something that creates a new page file from template. Could be an extension to uib-save?
   * Maybe also a way to track pages? A catalogue? Maybe also an API to return all HTML file names as an array?
   * Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
+  * Add functions to not only reference page-names/urls but also to automatically create menus.
 
 * THEME CONFGURATOR: Something that allows manipulation of theme settings from within Node-RED
 
@@ -256,8 +257,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 * New Types for CSS and JS files?
 * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
-* Add more elements:
-
 * "Text Box" type - allow msg.payload to be an array with each entry being a new para.
 * Disable or hide inputs when unused for a specific type.
 * As more element types are added, group into types: main, add, form, etc
@@ -279,7 +278,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Future improvements:
       * Better validation of input data
       * list-style-type (add to outer) - several options plus text (incl emoji's)
+      * Collapsable list style. [ref](https://github.com/mdn/web-components-examples/blob/main/expanding-list-web-component)
       * ? Optional list leading/trailing text ?
+  * [ ] Editable List - [ref](https://github.com/mdn/web-components-examples/blob/main/editable-list)
   * [x] Table
     * Future improvements:
       * Additional field definitions in input data
@@ -300,7 +301,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * [x] Card/Article
     * Future improvements:
       * Better layout, more optional internal structure (footer, etc)
-  * [x] Simple Form - Input types: button, checkbox, color, date, detetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week
+  * [x] Simple Form - Input types: button, checkbox, color, date, datetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week
     * Future Improvements:
       * **Improve range slider** - with min/max and current value indicator (possibly as a separate, linked number input box) - may need an `oninput` handler
       * Better validation of input data
@@ -408,7 +409,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Option for a pop-over notification to manually reconnect the websocket.
 * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
 
-* Add ability to save the current DOM.
+* _started_ Add ability to save the current DOM.
   * _started_ To local storage - with option to reload on reload
   * _started_ (manual request is done) Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
 
