@@ -25,6 +25,10 @@
 const Ui = class Ui {
     version = '6.6.0-src'
 
+    // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
+    sanitiseExtraTags = ['uib-var']
+    sanitiseExtraAttribs = ['variable', 'report', 'undefined']
+
     // Reference to DOM window - must be passed in the constructor
     // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
     window
@@ -90,16 +94,14 @@ const Ui = class Ui {
         el.innerHTML = component.slot
     }
 
-    /** Replace or add an HTML element's slot from a Markdown string
-     * Only does something if the markdownit library has been loaded to window.
-     * Will use DOMPurify if that library has been loaded to window.
-     * @param {Element} el Reference to the element that we want to update
-     * @param {*} component The component we are trying to add/replace
+    /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+     * Otherwise simply returns the text
+     * @param {string} mdText The input markdown string
+     * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
      */
-    replaceSlotMarkdown(el, component) {
-        if (!el) return
-        if (!this.window['markdownit']) return
-        if (!component.slotMarkdown) return
+    convertMarkdown(mdText) {
+        if (!mdText) return ''
+        if (!this.window['markdownit']) return mdText
 
         const opts = { // eslint-disable-line object-shorthand
             html: true,
@@ -118,9 +120,33 @@ const Ui = class Ui {
         }
         const md = this.window['markdownit'](opts)
         // Convert from markdown to HTML
-        component.slotMarkdown = md.render(component.slotMarkdown)
+        return md.render(mdText)
+    }
+
+    /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+     * Otherwise just returns that HTML as-is.
+     * @param {string} html The input HTML string
+     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+     */
+    sanitiseHTML(html) {
+        if (!this.window['DOMPurify']) return html
+        return this.window['DOMPurify'].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs })
+    }
+
+    /** Replace or add an HTML element's slot from a Markdown string
+     * Only does something if the markdownit library has been loaded to window.
+     * Will use DOMPurify if that library has been loaded to window.
+     * @param {Element} el Reference to the element that we want to update
+     * @param {*} component The component we are trying to add/replace
+     */
+    replaceSlotMarkdown(el, component) {
+        if (!el) return
+        if (!component.slotMarkdown) return
+
+        // Convert from markdown to HTML
+        component.slotMarkdown = this.convertMarkdown(component.slotMarkdown)
         // If DOMPurify is loaded, apply it now
-        if (this.window['DOMPurify']) component.slotMarkdown = this.window['DOMPurify'].sanitize(component.slotMarkdown)
+        component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown)
         // Set the component content to the the converted slotMarkdown property
         el.innerHTML = component.slotMarkdown
     }
