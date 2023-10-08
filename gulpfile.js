@@ -499,6 +499,85 @@ function packUiNode(cb) {
 }
 //#endregion -- ESbuild UI client library ---
 
+//#region -- ESbuild components --
+/** ESBuild front-end as IIFE minified
+ * @param {Function} cb Callback
+ */
+function buildUibVarIIFEmin(cb) {
+    src('src/components/uib-var/uib-var.js')
+        .pipe(gulpEsbuild({
+            outfile: 'uib-var.iife.min.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            target: [
+                // 'es2019',
+                // Start of 2019
+                'chrome72',
+                'safari12.1',
+                'firefox65',
+                'opera58',
+
+                // For private class fields:
+                // 'chrome74',   // Apr 23, 2019
+                // 'opera62',    // Jun 27, 2019
+                // 'edge79',     // Jan 15, 2020
+                // 'safari14.1', // Apr 26, 2021
+                // 'firefox90',  // Jul 13, 2021
+
+                // If we need top-level await
+                // 'chrome89',  // March 1, 2021
+                // 'edge89',
+                // 'opera75',   // Mar 24, 2021
+                // 'firefox89', // Jun 1, 2021
+                // 'safari15',  // Sep 20, 2021
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibVarIIFEmin] ERROR ', err)
+            cb(err)
+        })
+        // .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
+        .pipe(dest(feDest))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+/** ESBuild front-end as IIFE (not minified)
+ * @param {Function} cb Callback
+ */
+function buildUibVarIIFE(cb) {
+    src('src/components/uib-var/uib-var.js')
+        .pipe(gulpEsbuild({
+            outfile: 'uib-var.iife.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibVarIIFE] ERROR ', err)
+            cb(err)
+        })
+        // .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
+        // .pipe(debug({title: '>>> '}))
+        .pipe(dest('front-end/'))
+        // .pipe(dest(`${feDest}/`))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+
+//#endregion -- ---- --
+
 //#region -- tests --
 /** Pack (Uglify) front-end IIFE ES6 task
  * @param {Function} cb Callback
@@ -907,6 +986,7 @@ function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('src/front-end/uibuilderfe.dev.js', packfe)
     watch(['src/front-end-module/uibuilder.module.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    watch('src/components/uib-var/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
@@ -921,6 +1001,7 @@ function watchme(cb) {
     watch('src/editor/uib-html/*', buildPanelHTML)
     watch('src/editor/uib-save/*', buildPanelSave)
     watch('front-end/uib-brand.css', minifyBrandCSS)
+    // watch('src/components/uib-var/uib-var.js', parallel(buildUibVarIIFE, buildUibVarIIFEmin))
     // watch('src/libs/*', buildNodeLibs)
 
     cb()
