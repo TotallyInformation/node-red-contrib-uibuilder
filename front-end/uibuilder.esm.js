@@ -1021,10 +1021,6 @@ var require_ui = __commonJS({
 var import_ui = __toESM(require_ui());
 
 // src/components/uib-var/uib-var.js
-var template = document.createElement("template");
-template.innerHTML = /** @type {HTMLTemplateElement} */
-/*html*/
-`<div></div>`;
 var _UibVar = class _UibVar extends HTMLElement {
   //#endregion --- Class Properties ---
   constructor() {
@@ -1046,6 +1042,10 @@ var _UibVar = class _UibVar extends HTMLElement {
     __publicField(this, "$");
     this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
     this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
+    this.css = document.createElement("link");
+    this.css.setAttribute("type", "text/css");
+    this.css.setAttribute("rel", "stylesheet");
+    this.css.setAttribute("href", "../uibuilder/uib-brand.min.css");
     this.dispatchEvent(new Event(`uib-var:construction`, { bubbles: true, composed: true }));
   }
   // Makes HTML attribute change watched
@@ -1151,6 +1151,7 @@ var _UibVar = class _UibVar extends HTMLElement {
         break;
       }
     }
+    this.shadow.appendChild(this.css);
   }
 };
 /** Holds a count of how many instances of this component are on the page */

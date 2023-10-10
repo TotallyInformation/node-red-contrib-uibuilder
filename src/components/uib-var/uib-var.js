@@ -21,9 +21,12 @@
   limitations under the License.
 */
 
-const template = document.createElement('template')
+// const template = document.createElement('template')
 // template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<span></span>`
-template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<div></div>`
+// template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<link type="text/css" rel="stylesheet" href=""../uibuilder/uib-brand.min.css"" media="all"><span></span>`
+// template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`
+// {/* <style>@import url("../uibuilder/uib-brand.min.css");</style><span></span> */}
+// `
 
 export default class UibVar extends HTMLElement {
     //#region --- Class Properties ---
@@ -55,6 +58,12 @@ export default class UibVar extends HTMLElement {
             // .append(template.content.cloneNode(true))
 
         this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot)
+
+        // Apply external styles to the shadow dom
+        this.css = document.createElement("link")
+        this.css.setAttribute("type", "text/css")
+        this.css.setAttribute("rel", "stylesheet")
+        this.css.setAttribute("href", "../uibuilder/uib-brand.min.css")
 
         this.dispatchEvent(new Event(`uib-var:construction`, { bubbles: true, composed: true }))
     }
@@ -165,6 +174,7 @@ export default class UibVar extends HTMLElement {
             }
         }
 
+        this.shadow.appendChild(this.css)
         // this.$('span').innerHTML = window['uibuilder'].sanitiseHTML(val)
         // this.shadow.innerHTML = window['uibuilder'].sanitiseHTML(val)
     }
