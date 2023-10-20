@@ -34,6 +34,7 @@ const sockets = require('./socket') // Socket.io handler library for uibuilder
 // !       In readiness for move to mono-repo (need node.js v16+ as a base)
 
 class UibFs {
+    //#region --- Class vars ---
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
      * @type {boolean}
      */
@@ -54,6 +55,7 @@ class UibFs {
 
     /** @type {string} Get npm's global install location */
     globalPrefix // set in constructor
+    //#endregion --- ----- ---
 
     // constructor() {} // ---- End of constructor ---- //
 
@@ -72,12 +74,74 @@ class UibFs {
 
         this.RED = uib.RED
         this.uib = uib
-        const log = this.log = uib.RED.log
-
-        log.trace('[uibuilder:UibFs:setup] Package Management setup started')
-
-        log.trace('[uibuilder:UibFs:setup] Package Management setup completed')
+        this.log = uib.RED.log
     } // ---- End of setup ---- //
+
+    // async getAllInstanceUrls
+
+    /** Walks through a folder and sub-folders returning list of files
+     * @param {string} dir Folder name to start the walk
+     * @param {string} ftype File extension to filter on, e.g. '.html'
+     * @returns {Promise<string[]>} On each call, returns the next found file name
+     */
+    async walk(dir, ftype) {
+        let files = await fs.readdir(dir)
+        // @ts-ignore
+        files = await Promise.all(files.map(async file => {
+            const filePath = path.join(dir, file)
+            const stats = await fs.stat(filePath)
+            if (stats.isDirectory()) {
+                return this.walk(filePath, ftype)
+            } else if (stats.isFile() && file.endsWith(ftype)) {
+                return filePath
+            }
+        }))
+
+        // Filter out undefined entries before concatenating
+        return files.filter(Boolean).reduce((all, folderContents) => all.concat(folderContents), [])
+    } // -- End of walk -- //
+
+    /** Return all of the *.html files from the served folder for a specific instance
+     * NOTE: Only call this after all nodes are loaded into the Node-RED runtime
+     * @param {string} url uibuilder instance url (name)
+     * @returns {Promise<string[]>} List of discovered html files with their folder if needed
+     */
+    async getInstanceLiveHtmlFiles(url) {
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [uibuilder:UibFs:writeInstanceFile]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null [uibuilder:UibFs:writeInstanceFile] ')
+
+        const RED = this.uib.RED
+
+        // Get the node id of the instance
+        let node
+        for (const [key, value] of Object.entries(this.uib.instances)) {
+            if (value === url) node = RED.nodes.getNode(key)
+        }
+
+        // Make sure we got a node
+        if (!node) {
+            RED.log.error(`No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+            return []
+        }
+
+        // Get the served folder from the instance node
+        let folder = ''
+        const allFiles = []
+
+        folder = path.join(node.customFolder, node.sourceFolder)
+
+        // Get all *.html files recursively
+        for await (const p of await this.walk(folder, '.html')) {
+            allFiles.push(p.replace(folder, ''))
+        }
+
+        return allFiles
+    } // -- End of getInstanceLiveHtmlFiles -- //
+
+    async getUibInstanceRootFolders() {
+        // const chkInstances = Object.values(uib.instances).includes(params.url)
+        // const chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+    }
 
     /** Output a file to an instance folder (async/promise)
      * NB: Errors have the fn indicator at the end because this is expected to be a utility fn called from elsewhere
