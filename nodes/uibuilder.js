@@ -30,8 +30,9 @@
 // uibuilder custom
 const uiblib = require('./libs/uiblib')  // Utility library for uibuilder
 const tilib = require('./libs/tilib')   // General purpose library (by Totally Information)
-const packageMgt  = require('./libs/package-mgt')
-const tiEvents  = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
+const packageMgt = require('./libs/package-mgt')
+const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
+const uibFs  = require('./libs/fs')   // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {
     // Template configuration metadata
@@ -58,11 +59,10 @@ try {
 // }
 
 // Core node.js
-const path          = require('path')
+const path = require('path')
 
-// 3rd-party
-const fs            = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
-const uibFs  = require('./libs/fs')   // File/folder handling library (by Totally Information)
+// TODO - ELIMINATE - move fs processing to uibFs
+const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 
 //#endregion ----- Require packages ----- //
 
@@ -444,7 +444,6 @@ function nodeInstance(config) {
     //     tiEvents.emit(`node-red-contrib-uibuilder/components-html/BOO`, 1, 2)
     //     tiEvents.emit(`node-red-contrib-uibuilder/components-html`, 3, 4)
     // }, 8000)
-
 } // ----- end of nodeInstance ----- //
 
 /** 1a) All of the initialisation of the Node
@@ -567,7 +566,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     //#endregion -------- Constants -------- //
 
-    // ! TODO: Move all file handling to separate uibFs lib
+    // TODO: Move all file handling to separate uibFs lib
     // Configure the UibFs handler class
     uibFs.setup(uib)
 
