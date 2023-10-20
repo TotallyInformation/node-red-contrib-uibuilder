@@ -105,7 +105,6 @@ export default class UibVar extends HTMLElement {
                 break
             }
         }
-
     } // --- end of attributeChangedCallback --- //
 
     // Runs when an instance is added to the DOM
@@ -139,7 +138,11 @@ export default class UibVar extends HTMLElement {
 
     /** Convert this.value to DOM output */
     varDom() {
-        if (this.value === undefined && this.undefined !== true) { this.shadow.innerHTML = ''; return }
+        // If user doesn't want to show undefined vars, allow the component slot to show instead
+        if (this.value === undefined && this.undefined !== true) { 
+            this.shadow.innerHTML = '<slot></slot>'
+            return
+        }
         
         let val = this.value
 
