@@ -1122,7 +1122,7 @@ var _UibVar = class _UibVar extends HTMLElement {
   /** Convert this.value to DOM output */
   varDom() {
     if (this.value === void 0 && this.undefined !== true) {
-      this.shadow.innerHTML = "";
+      this.shadow.innerHTML = "<slot></slot>";
       return;
     }
     let val = this.value;
@@ -4650,12 +4650,13 @@ function syntaxHighlight(json) {
   return json;
 }
 var _ui = new import_ui.default(window, log, syntaxHighlight);
-var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _extCommands, _showStatus, _uiObservers, _a;
+var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _extCommands, _managedVars, _showStatus, _uiObservers;
 var Uib = (_a = class {
   // ---- End of ioSetup ---- //
   //#endregion -------- ------------ -------- //
   //#region ------- Class construction & startup method -------- //
   constructor() {
+    //#endregion ---- ---- ---- ----
     //#region private class vars
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
     __publicField(this, "connectedNum", 0);
@@ -4699,8 +4700,12 @@ var Uib = (_a = class {
       "uiGet",
       "uiWatch",
       "include",
-      "elementExists"
+      "elementExists",
+      "getManagedVarList",
+      "getWatchedVars"
     ]);
+    /** @type {{[key: string]: string}} Managed uibuilder variables */
+    __privateAdd(this, _managedVars, {});
     // What status variables to show via showStatus()
     __privateAdd(this, _showStatus, {
       online: { "var": "online", "label": "Online?", "description": "Is the browser online?" },
@@ -4874,13 +4879,19 @@ var Uib = (_a = class {
       this.set("pageName", `${this.pageName}index.html`);
     if (this.pageName === "")
       this.set("pageName", "index.html");
+    try {
+      const autoloadVars = this.getStore("_uibAutoloadVars");
+      if (Object.keys(autoloadVars).length > 0) {
+        Object.keys(autoloadVars).forEach((id) => {
+          this.set(id, this.getStore(id));
+        });
+      }
+    } catch (e) {
+    }
     this._dispatchCustomEvent("uibuilder:constructorComplete");
     log("trace", "Uib:constructor", "Ending")();
   }
-  get meta() {
-    return _a._meta;
-  }
-  //#endregion ---- ---- ---- ---- //
+  //#endregion -- not external --
   //#endregion --- End of variables ---
   //#region ------- Getters and Setters ------- //
   // Change logging level dynamically (affects both console. and print.)
@@ -4891,22 +4902,29 @@ var Uib = (_a = class {
   get logLevel() {
     return logLevel;
   }
-  // TODO Block setting of read-only vars
+  get meta() {
+    return _a._meta;
+  }
   /** Function to set uibuilder properties to a new value - works on any property except _* or #*
    * Also triggers any event listeners.
    * Example: this.set('msg', {topic:'uibuilder', payload:42});
    * @param {string} prop Any uibuilder property who's name does not start with a _ or #
    * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
+   * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
+   * @param {boolean} [autoload] If true & store is true, on load, uib will try to restore the value from the store automatically
    * @returns {*} Input value
    */
-  set(prop, val) {
+  set(prop, val, store = false, autoload = false) {
     if (prop.startsWith("_") || prop.startsWith("#")) {
       log("warn", "Uib:set", `Cannot use set() on protected property "${prop}"`)();
       return `Cannot use set() on protected property "${prop}"`;
     }
     this[prop] = val;
-    log("trace", "Uib:set", `prop set - prop: ${prop}, val: `, val)();
-    this._dispatchCustomEvent("uibuilder:propertyChanged", { "prop": prop, "value": val });
+    __privateGet(this, _managedVars)[prop] = prop;
+    if (store === true)
+      this.setStore(prop, val, autoload);
+    log("trace", "Uib:set", `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)();
+    this._dispatchCustomEvent("uibuilder:propertyChanged", { "prop": prop, "value": val, "store": store, "autoload": autoload });
     return val;
   }
   /** Function to get the value of a uibuilder property
@@ -4937,9 +4955,17 @@ var Uib = (_a = class {
    *   console.log(uibuilder.getStore('fred'))
    * @param {string} id localStorage var name to be used (prefixed with 'uib_')
    * @param {*} value value to write to localstore
+   * @param {boolean} [autoload] If true, on load, uib will try to restore the value from the store
    * @returns {boolean} True if succeeded else false
    */
-  setStore(id, value2) {
+  setStore(id, value2, autoload = false) {
+    let autoVars = {};
+    if (autoload === true) {
+      try {
+        autoVars = this.getStore("_uibAutoloadVars") || {};
+      } catch (e) {
+      }
+    }
     if (typeof value2 === "object") {
       try {
         value2 = JSON.stringify(value2);
@@ -4950,6 +4976,15 @@ var Uib = (_a = class {
     }
     try {
       localStorage.setItem(this.storePrefix + id, value2);
+      if (autoload) {
+        autoVars[id] = id;
+        try {
+          localStorage.setItem(this.storePrefix + "_uibAutoloadVars", JSON.stringify(autoVars));
+        } catch (e) {
+          log("error", "Uib:setStore", "Cannot save autoload list. ", e)();
+        }
+      }
+      this._dispatchCustomEvent("uibuilder:propertyStored", { "prop": id, "value": value2, "autoload": autoload });
       return true;
     } catch (e) {
       log("error", "Uib:setStore", "Cannot write to localStorage. ", e)();
@@ -4981,6 +5016,15 @@ var Uib = (_a = class {
       localStorage.removeItem(this.storePrefix + id);
     } catch (e) {
     }
+  }
+  /** Returns a list of uibuilder properties (variables) that can be watched with onChange
+   * @returns {{[key: string]: string}} List of uibuilder managed variables
+   */
+  getManagedVarList() {
+    return __privateGet(this, _managedVars);
+  }
+  getWatchedVars() {
+    return Object.keys(__privateGet(this, _propChangeCallbacks));
   }
   //#endregion ------- -------- ------- //
   //#region ------- Our own event handling system ---------- //
@@ -5068,7 +5112,7 @@ var Uib = (_a = class {
   //     }
   //     log('trace', 'Uib:emit', `${evt.length} listeners run for prop ${prop} `)()
   // }
-  /** Forcably removes all event listeners from the events array
+  /** Forcibly removes all event listeners from the events array
    * Use if you need to re-initialise the environment
    */
   // clearEventListeners() {
@@ -5908,16 +5952,47 @@ ${document.documentElement.outerHTML}`;
     const value2 = msg._uib.value;
     let response, info;
     switch (cmd) {
+      case "elementExists": {
+        response = this.elementExists(prop, false);
+        info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
+        break;
+      }
       case "get": {
         response = this.get(prop);
+        break;
+      }
+      case "getManagedVarList": {
+        if (prop === "full")
+          response = this.getManagedVarList();
+        else
+          response = Object.values(this.getManagedVarList());
+        break;
+      }
+      case "getWatchedVars": {
+        if (prop === "full")
+          response = this.getWatchedVars();
+        else
+          response = Object.values(this.getWatchedVars());
         break;
       }
       case "htmlSend": {
         response = this.htmlSend();
         break;
       }
+      case "include": {
+        response = _ui.include(prop, value2);
+        break;
+      }
       case "set": {
-        response = this.set(prop, value2);
+        let store = false;
+        let autoload = false;
+        if (msg._uib.options && msg._uib.options.store) {
+          if (msg._uib.options.store === true)
+            store = true;
+          if (msg._uib.options.autoload === true)
+            autoload = true;
+        }
+        response = this.set(prop, value2, store, autoload);
         break;
       }
       case "showMsg": {
@@ -5934,15 +6009,6 @@ ${document.documentElement.outerHTML}`;
       }
       case "uiWatch": {
         response = this.uiWatch(prop);
-        break;
-      }
-      case "include": {
-        response = _ui.include(prop, value2);
-        break;
-      }
-      case "elementExists": {
-        response = this.elementExists(prop, false);
-        info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
         break;
       }
       default: {
@@ -6325,8 +6391,7 @@ ioPath: ${this.ioPath}`)();
     this._dispatchCustomEvent("uibuilder:startComplete");
   }
   //#endregion -------- ------------ -------- //
-}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _intersectionObserver = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#endregion -- not external --
-//#region ------- Static metadata ------- //
+}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _intersectionObserver = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
 __publicField(_a, "_meta", {
   version,
   type: "module",

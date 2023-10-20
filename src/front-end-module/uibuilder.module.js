@@ -324,6 +324,14 @@ const _ui = new Ui(window, log, syntaxHighlight)
  */
 export const Uib = class Uib {
 
+    //#region --- Static variables ---
+    static _meta = {
+        version: version,
+        type: 'module',
+        displayName: 'uibuilder',
+    }
+    //#endregion ---- ---- ---- ----
+
     //#region private class vars
 
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
@@ -360,8 +368,12 @@ export const Uib = class Uib {
     #intersectionObserver = undefined
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
-        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include', 'elementExists'
+        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include', 'elementExists',
+        'getManagedVarList', 'getWatchedVars',
     ]
+
+    /** @type {{[key: string]: string}} Managed uibuilder variables */
+    #managedVars = {}
 
     // What status variables to show via showStatus()
     #showStatus = {
@@ -487,16 +499,6 @@ export const Uib = class Uib {
     }
     //#endregion -- not external --
 
-    //#region ------- Static metadata ------- //
-    static _meta = {
-        version: version,
-        type: 'module',
-        displayName: 'uibuilder',
-    }
-
-    get meta() { return Uib._meta }
-    //#endregion ---- ---- ---- ---- //
-
     //#endregion --- End of variables ---
 
     //#region ------- Getters and Setters ------- //
@@ -505,15 +507,18 @@ export const Uib = class Uib {
     set logLevel(level) { logLevel = level; console.log('%c❗ info%c [logLevel]', `${LOG_STYLES.level} ${LOG_STYLES.info.css}`, `${LOG_STYLES.head} ${LOG_STYLES.info.txtCss}`, `Set to ${level} (${LOG_STYLES.names[level]})`) /* changeLogLevel(level)*/ }
     get logLevel() { return logLevel }
 
-    // TODO Block setting of read-only vars
+    get meta() { return Uib._meta }
+
     /** Function to set uibuilder properties to a new value - works on any property except _* or #*
      * Also triggers any event listeners.
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
      * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
+     * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
+     * @param {boolean} [autoload] If true & store is true, on load, uib will try to restore the value from the store automatically
      * @returns {*} Input value
      */
-    set(prop, val) {
+    set(prop, val, store = false, autoload = false) {
         // Check for excluded properties - we don't want people to set these
         // if (this.#excludedSet.indexOf(prop) !== -1) {
         if (prop.startsWith('_') || prop.startsWith('#')) {
@@ -521,15 +526,22 @@ export const Uib = class Uib {
             return `Cannot use set() on protected property "${prop}"`
         }
 
+        // We must add the var to the uibuilder object
         this[prop] = val
 
-        log('trace', 'Uib:set', `prop set - prop: ${prop}, val: `, val)()
+        // Keep track of all managed variables
+        this.#managedVars[prop] = prop
+
+        // If requested, save to store
+        if (store === true) this.setStore(prop, val, autoload)
+
+        log('trace', 'Uib:set', `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)()
 
         // Trigger this prop's event callbacks (listeners which are set by this.onChange)
         // this.emit(prop, val)
 
         // trigger an event on the prop name, pass both the name and value to the event details
-        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val })
+        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'store': store, 'autoload': autoload })
 
         return val
     }
@@ -560,9 +572,16 @@ export const Uib = class Uib {
      *   console.log(uibuilder.getStore('fred'))
      * @param {string} id localStorage var name to be used (prefixed with 'uib_')
      * @param {*} value value to write to localstore
+     * @param {boolean} [autoload] If true, on load, uib will try to restore the value from the store
      * @returns {boolean} True if succeeded else false
      */
-    setStore(id, value) {
+    setStore(id, value, autoload = false) {
+        let autoVars = {}
+        if (autoload === true) {
+            try {
+                autoVars = this.getStore('_uibAutoloadVars') || {}
+            } catch (e) {}
+        }
         if (typeof value === 'object') {
             try {
                 value = JSON.stringify(value)
@@ -573,6 +592,15 @@ export const Uib = class Uib {
         }
         try {
             localStorage.setItem(this.storePrefix + id, value)
+            if (autoload) {
+                autoVars[id] = id
+                try {
+                    localStorage.setItem(this.storePrefix + '_uibAutoloadVars', JSON.stringify(autoVars))
+                } catch (e) {
+                    log('error', 'Uib:setStore', 'Cannot save autoload list. ', e)()
+                }
+            }
+            this._dispatchCustomEvent('uibuilder:propertyStored', { 'prop': id, 'value': value, 'autoload': autoload })
             return true
         } catch (e) {
             log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
@@ -604,6 +632,17 @@ export const Uib = class Uib {
         try {
             localStorage.removeItem(this.storePrefix + id)
         } catch (e) { }
+    }
+
+    /** Returns a list of uibuilder properties (variables) that can be watched with onChange
+     * @returns {{[key: string]: string}} List of uibuilder managed variables
+     */
+    getManagedVarList() {
+        return this.#managedVars
+    }
+
+    getWatchedVars() {
+        return Object.keys(this.#propChangeCallbacks)
     }
 
     //#endregion ------- -------- ------- //
@@ -726,7 +765,7 @@ export const Uib = class Uib {
     //     log('trace', 'Uib:emit', `${evt.length} listeners run for prop ${prop} `)()
     // }
 
-    /** Forcably removes all event listeners from the events array
+    /** Forcibly removes all event listeners from the events array
      * Use if you need to re-initialise the environment
      */
     // clearEventListeners() {
@@ -862,7 +901,7 @@ export const Uib = class Uib {
         try {
             console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)))
             data = JSON.stringify(this.get(varToCopy))
-        } catch(e) {
+        } catch (e) {
             log('error', 'copyToClipboard', `Could not copy "${varToCopy}" to clipboard.`, e.message)()
         }
         navigator.clipboard.writeText(data)
@@ -904,7 +943,7 @@ export const Uib = class Uib {
                 })
 
                 log('info', 'uib:elementIsVisible', `Element "${cssSelector}" is now ${entries[0].isIntersecting ? 'more than 10%' : 'NOT (<10%)'} visible`)()
-            }, {threshold: threshold})
+            }, { threshold: threshold })
         }
 
         const el = document.querySelector(cssSelector)
@@ -1436,7 +1475,7 @@ export const Uib = class Uib {
 
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
         msgToSend._socketId = this._socket.id
-        
+
         //#region ---- Update socket.io metadata ---- //
         // Session tab id
         this.socketOptions.auth.tabId = this.tabId
@@ -1462,9 +1501,9 @@ export const Uib = class Uib {
             }
         }
 
-        // If a standard send & _ui property exists, make sure to add _ui.from = 'client'        
+        // If a standard send & _ui property exists, make sure to add _ui.from = 'client'
         if (msgToSend._ui) msgToSend._ui.from = 'client'
-        
+
         // Track how many messages have been sent & last msg sent
         let numMsgs
         if (channel === this._ioChannels.client) {
@@ -1723,8 +1762,26 @@ export const Uib = class Uib {
 
         // Don't forget to update `docs/client-docs/control-from-node-red.md`
         switch (cmd) {
+            case 'elementExists': {
+                response = this.elementExists(prop, false)
+                info = `Element "${prop}" ${response ? 'exists' : 'does not exist'}`
+                break
+            }
+
             case 'get': {
                 response = this.get(prop)
+                break
+            }
+
+            case 'getManagedVarList': {
+                if (prop === 'full') response = this.getManagedVarList()
+                else response = Object.values(this.getManagedVarList())
+                break
+            }
+
+            case 'getWatchedVars': {
+                if (prop === 'full') response = this.getWatchedVars()
+                else response = Object.values(this.getWatchedVars())
                 break
             }
 
@@ -1733,8 +1790,20 @@ export const Uib = class Uib {
                 break
             }
 
+            case 'include': {
+                // include is async
+                response = _ui.include(prop, value)
+                break
+            }
+
             case 'set': {
-                response = this.set(prop, value)
+                let store = false
+                let autoload = false
+                if (msg._uib.options && msg._uib.options.store) {
+                    if (msg._uib.options.store === true) store = true
+                    if (msg._uib.options.autoload === true) autoload = true
+                }
+                response = this.set(prop, value, store, autoload)
                 break
             }
 
@@ -1755,18 +1824,6 @@ export const Uib = class Uib {
 
             case 'uiWatch': {
                 response = this.uiWatch(prop)
-                break
-            }
-
-            case 'include': {
-                // include is async
-                response = _ui.include(prop, value)
-                break
-            }
-
-            case 'elementExists': {
-                response = this.elementExists(prop, false)
-                info = `Element "${prop}" ${response ? 'exists' : 'does not exist'}`
                 break
             }
 
@@ -2351,6 +2408,16 @@ export const Uib = class Uib {
         if ( this.pageName.endsWith('/') ) this.set('pageName', `${this.pageName}index.html`)
         if ( this.pageName === '' ) this.set('pageName', 'index.html')
 
+        // Attempt to restore autoload variables
+        try {
+            const autoloadVars = this.getStore('_uibAutoloadVars')
+            if (Object.keys(autoloadVars).length > 0) {
+                Object.keys(autoloadVars).forEach( (id) => {
+                    this.set(id, this.getStore(id))
+                })
+            }
+        } catch (e) {}
+
         this._dispatchCustomEvent('uibuilder:constructorComplete')
 
         log('trace', 'Uib:constructor', 'Ending')()
@@ -2455,7 +2522,7 @@ export const Uib = class Uib {
     }
 
     //#endregion -------- ------------ -------- //
-} // ==== End of Class Uib
+} // ==== End of Class Uib ====
 
 //#region --- Wrap up - get things started ---
 
