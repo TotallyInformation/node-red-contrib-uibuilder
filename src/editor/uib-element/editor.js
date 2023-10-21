@@ -1,7 +1,7 @@
 /* eslint-disable strict, sonarjs/no-duplicate-string, sonarjs/no-duplicated-branches */
 
 // Isolate this code
-(function () {
+;(function () {
     'use strict'
 
     /** Module name must match this nodes html file @constant {string} moduleName */
@@ -254,6 +254,25 @@
     // Standard width for typed input fields
     const tiWidth = '68.5%'
 
+    /** Add jQuery UI formatted tooltips */
+    function doTooltips() {
+        // Select our page elements
+        $('#uib-el').tooltip({
+            items: 'img[alt], [aria-label], [title]',
+            track: true,
+            content: function() {
+                const element = $( this )
+                if ( element.is( '[title]' ) ) {
+                    return element.attr( 'title' )
+                } else if ( element.is( '[aria-label]' ) ) {
+                    return element.attr( 'aria-label' )
+                } else if ( element.is( 'img[alt]' ) ) {
+                    return element.attr( 'alt' )
+                } else return ''
+            },
+        })
+    }
+
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
@@ -427,6 +446,8 @@
             id: 'el-tab-conf',
             label: 'Element Config'
         })
+
+        doTooltips()
 
     } // ----- end of onEditPrepare() ----- //
 
