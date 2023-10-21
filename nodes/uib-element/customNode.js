@@ -191,7 +191,7 @@ function buildHTML(node, msg, parent, md = false) {
     let data = node.data
     if (!node.data) data = ''
     else if (Array.isArray(node.data)) data = node.data.join('/n')
-    else if ( node.data !== null && node.data.constructor.name === 'Object' ) {
+    else if ( node.data.constructor.name === 'Object' ) {
         try {
             data = JSON.stringify(node.data)
         } catch (e) {

@@ -40,9 +40,9 @@ class UibFs {
      */
     #isConfigured = false
 
-    #logUndefinedError = new Error('pkgMgt: this.log is undefined')
-    #uibUndefinedError = new Error('pkgMgt: this.uib is undefined')
-    #rootFldrNullError = new Error('pkgMgt: this.uib.rootFolder is null')
+    // #logUndefinedError = new Error('fs: this.log is undefined')
+    // #uibUndefinedError = new Error('fs: this.uib is undefined')
+    // #rootFldrNullError = new Error('fs: this.uib.rootFolder is null')
 
     /** @type {Array<string>} Updated by updateMergedPackageList which is called first in setup and then in various updates */
     mergedPkgMasterList = []

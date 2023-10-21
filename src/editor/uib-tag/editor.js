@@ -31,8 +31,8 @@
     function onEditPrepare(node) {
         $('#node-input-slotPropMarkdown').prop('checked', node.slotPropMarkdown)
 
-        if (!node.parent || node.parent === '') $('#node-input-parent').val('body')
-        if (!node.position || node.position === '') {
+        if (!node.parent) $('#node-input-parent').val('body')
+        if (!node.position) {
             $('#node-input-position').val('last')
             node.position = 'last'
         }

@@ -1690,7 +1690,7 @@ export const Uib = class Uib {
                 type: 'eventSend',
                 id: target.id !== '' ? target.id : undefined,
                 name: target.name !== '' ? target.name : undefined,
-                slotText: target.textContent && target.textContent !== '' ? target.textContent.substring(0, 255) : undefined,
+                slotText: target.textContent ? target.textContent.substring(0, 255) : undefined,
 
                 form: form,
                 props: props,

@@ -5896,7 +5896,7 @@
           type: "eventSend",
           id: target.id !== "" ? target.id : void 0,
           name: target.name !== "" ? target.name : void 0,
-          slotText: target.textContent && target.textContent !== "" ? target.textContent.substring(0, 255) : void 0,
+          slotText: target.textContent ? target.textContent.substring(0, 255) : void 0,
           form,
           props,
           attribs,
