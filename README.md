@@ -14,7 +14,7 @@
 [![Open Issues](https://img.shields.io/github/issues-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues)
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
 
-<img class="dhide" align="right" src="docs/images/node-blue-125x125.png" title="uibuilder icon" />
+<img class="dhide" align="right" src="front-end/images/node-blue.svg" title="uibuilder icon" />
 
 # node-red-contrib-uibuilder
 
@@ -249,6 +249,7 @@ You can also support the development of UIBUILDER by sponsoring the development.
 - [Harold Peters Inskipp](https://github.com/HaroldPetersInskipp) - Thanks for the logging examples.
 - [dczysz](https://github.com/dczysz) - Thanks for reporting [Issue #186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186) and helping work through the complex async bug.
 - [Colin J (mudwalkercj)](https://github.com/mudwalkercj) - Thanks for helping with the documentation.
+- [Marcus Davies](https://discourse.nodered.org/u/marcus-j-davies) - Many thanks for the encouragement and for the 3d logo.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 

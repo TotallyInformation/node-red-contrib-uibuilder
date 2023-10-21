@@ -36,7 +36,14 @@ Nothing currently.
 
 ### Highlights
 
-
+* A new "Quick Start" example in the node-red import library. Simple flow to get going quickly.
+* New node `uib-html` - hydrates low-code JSON (e.g. `msg._ui`) to full HTML in Node-RED just like the client library does in the browser. Lets you use UIBUILDER's low-code config style for things other than just UIBUILDER, for example http-in/-out and Dashboard. Note that the `ui.js` library is also available stand alone, you can use it in your own projects in and out of Node-RED.
+* New node `uib-save` - saves a file to a uibuilder instance folder. For example, grab the latest HTML using the `htmlSend` command and replace the existing `src/index.html` file after dynamic updates. Or use the `uib-html` node to hydrate low-code JSON config into HTML and save to the index.html or a new file. Or perhaps use to save an image or data obtained from MQTT or a REST API.
+* New custom HTML tag `<uib-var variable="myvar"></uib-var>` shows and dynamically updates a uibuilder managed variable. Use the uibuilder set command to create or update the variable. You can use the new `getManagedVarList` command to see all managed variables.
+* New `uib-element` element type `markdown`. This is similar to the `html` type but takes markdown (CommonMark) as input. Requires loading the Markdown-IT library.
+* A bunch of new client library functions (see details below) making hard things easy.
+* Some simple branding changes. "uibuilder" is now "UIBUILDER" with colouring where feasible. The UIBUILDER icon is now a much lighter blue. There is also a new 3d logo kindly produced by forum member Marcus Davies.
+* Lots of documentation updates and improvements.
 
 ### **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations into HTML
 
