@@ -10,87 +10,29 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-* Runtime API's
-  * List all URL's
-  * List all *.html files for instance serve folder
-  * List all *.html for all URL's
+* Outdated examples - some of the included example flows such as the "remote-commands" example are now out of date. What is there will still work but they are no longer comprehensive. Will try to catch them up as soon as I can.
+* Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
+
+  Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
 
 ### TO FIX
 
 * Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
-* uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Decide when to check - on commit at least.
-
-* Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
-
+* uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
 * uib-tag - Attribs Source - should be "None" as default
+* Editor (all nodes) - Use jQueryUI tooltips instead of uib custom (see `uib-element`)
 * Templates - add eslint dev dependencies to package.json
   * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
 
-### Client library
-
-* Add Node-RED command to find out if a front-end library is installed.
-* Add small button to showStatus output to allow user to turn off the display.
-* Make sure that all watch/monitor fns emit custom events
-* msgShow - add a message counter (optional?)
-
-### uibuilder node
-
-* Handle case sensitivity flag
-* _started_ Add api to query if a specific uib library is installed and return version. Optionally return estimated base path. Allow calling from front-end.
-* Add API test harness using VScode restbook.
-* Move all uibRoot package.json handling to `libs/package-mgt.js`
-* Move all file handling to `libs/fs.js`
-* Editor
-  * Add case sensitivity flag
-  * Rationalise the file editor. [Ref](https://discourse.nodered.org/t/code-editor-isnt-saving-text/80836)
-
-### Element node
-
-* Add width setting
-* Add new element: Layout
-  * Start with grid layout
-
-### package-mgt.js
-
-* Rationalise the various functions - several of them have similar tasks.
-* Remove dependency on `execa`.
-
-### Examples
-
-* Update the uib-element example.
-
-### Docs
-
-* Allow offline usage. [Ref](https://docsify.js.org/#/pwa). Need to work out how to cache the plugins. May need a manifest.json?
-
-### General
-
-* Add a "Quick Start" example.
-
-### HTML node
-
-* Use `gulp watch` to dynamically update the Ui class from the `src/front-end-module/ui.js` source code.
-* Allow an input HTML template to be used.
-* Add Option to include uibuilder uib-brand.css
-* Add option to remove the page tags, leaving just the document body fragment.
-* Add options for DOMpurify and Markdown-IT
-* Consider allowing HTML from the uibuilder templates?
-* Consider adding an HTML editor for the template?
-
-### Wild thoughts
-
-* Front-end: 
-  * Ability to visually show all uibuilder managed variables.
-  * Some way to visually expose a library of JavaScript functions with their args as inputs. Maybe make this a cmd that pulls a doc from Node-RED? (keeps client lib small)
-  * Using the above to visually show available uibuilder fns with inputs and outputs.
-  * A way to show and change uib-brand variables visually?
 
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...main)
 
-<!-- Nothing currently. -->
+Nothing currently.
+
+## [v6.6.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.6.0)
 
 ### Highlights
 
@@ -153,14 +95,36 @@ Why might you use this node?
 
   Examples: `<p>UIBUILDER client library version "<uib-var variable="version"></uib-var>"</p>` or `<p>Last msg received: "<uib-var variable="msg"></uib-var>"</p>`
 
-* **NEW Function** `uibuilder.copyToClipboard(uibVarName)` - passed a UIBUILDER variable, will copy the contents to the clipboard (stringifying it first). Can't be used from the browser dev console due to restrictions in the browser. Use as `onclick` function on buttons.
-* **NEW Function** `uibuilder.elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Sends a msg back to Node-RED when the selected element goes in and out of visibility within the browser
+* **NEW Function** `uibuilder.copyToClipboard(uibVarName)` - passed a UIBUILDER variable, will copy the contents to the clipboard (stringifying it first). Can't be used from the browser dev console due to restrictions in the browser. Use as `onclick` function on buttons. Similarly, cannot be called as a remote command.
+* **NEW Function** `uibuilder.elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Sends a msg back to Node-RED when the selected element goes in and out of visibility within the browser. Sadly, browser restrictions prevent this from being called as a remote command.
 * **NEW Function** `uibuilder.elementExists(cssSelector, msg = true)` - Returns `true` if the selected element exists on the page, false otherwise. Sends a msg back to Node-RED unless suppressed. Also available as a remote command.
 * **NEW Function** `uibuilder.convertMarkdown(mdText)` - Returns an HTML string converted from the Markdown input text. Only if the Markdown-IT library is loaded, otherwise returns the input.
 * **NEW Function** `uibuilder.sanitiseHTML(htmlText)` - Returns a safe, sanitised HTML string IF the DOMPurify library is loaded. Otherwise returns the input.
+* **NEW Function** `uibuilder.getManagedVarList()` - Returns an object listing all managed variables.
+  
+  These are variables that have been set using `uibuilder.set()` or the equivalent command from Node-RED (or internally by the client library) and that can therefore be watched for changes using `uibuilder.onChange()`.
+
+  Can be called from Node-RED as a command as well.
+
+* **NEW Function** `uibuilder.getWatchedVars()` - Returns an array of watched client variables.
+
+  These are variables that have been set using `uibuilder.set()` or the equivalent command from Node-RED (or internally by the client library) and that have an active `uibuilder.onChange()`.
+
+  Can be called from Node-RED as a command as well.
+
 * **NEW** "Maskable" icons added and available in the front end at the URL `./images/maskable_icon_x512.png` where `xNNN` is one of `x48`, `x72`, `x96`, `x128`, `x192`, `x384`, `x512`. (`front-end/images` folder). These are useful for PWA apps.
 * **NEW** Template manifest file available at URL `./utils/manifest-template.json` (`front-end/utils` folder). Copy, amend and load this if you wish to make a PWA from your UIBUILDER instance.
 * **NEW Variable** `uibuilder.get('url')` - The instance url fragment (name) for the uibuilder instance.
+
+* **UPDATED** `uibuilder.set('varname', value)` - Now has 2 additional optional arguments
+  
+  `store` (boolean): Tells uibuilder to attempt to save the variable/value in the browser `localStorage`.
+  `autoload` (boolean): Tells uibuilder to attempt to restore the last stored value from browser `localStorage` when loading the page.
+
+* **UPDATED** `uibuilder.setStore('varname', value)` - Now has an extra optional argument 
+
+  `autoload` (boolean): Tells uibuilder to attempt to restore the last stored value from browser `localStorage` when loading the page.
+
 * All UIBUILDER icons and images changed to the new, lighter blue background.
 * Added close and copy (to clipboard) buttons on the Visible Messages box. They are only visible when hovering over the box.
 * Stand-alone versions of the low-code ui features - the code that turns the low-code config JSON into HTML and manages DOM interactions - are now available. This code is already built in to the UIBUILDER client library but now may be used independently in your own projects. Auto-generated by `gulp watch` when the source is changed. Source is in `src/front-end-module/ui.js`, dist versions are in the `front-end/` folder.
@@ -174,6 +138,7 @@ Why might you use this node?
 
 NB: This is the library that reconstitutes uibuilder's zero- and low-code configuration JSON data into a full HTML UI. It is built into uibuilder's front-end client library but is now also available stand-alone for your own projects and is also available as a node.js class module that works with `jsdom` on the server. Eventually, it will be in a stand-alone npm package for use in other projects.
 
+* ESM and IIFE minimised versions of the stand-alone client are now available in the `front-end` folder. These can be used in other projects. Map files for easier debugging also available.
 * Now fully self-contained, no longer has external vars. This allows it to be made available as a node.js library as well.
 * `window` is now an argument you must pass in when constructing an instance of the class. This allows it to be used in node.js (in conjunction with the `jsdom` library) as well as the browser. References to `window`, `document`, `log` and `syntaxHighlight` are now fully self-contained. See `nodes/uib-html.js` for an example of using with `jsdom`.
 

@@ -4,7 +4,7 @@ description: >
    Details about the variables used in the uibuilder modern front-end client library.
    Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-01-28 15:57:02
+lastUpdated: 2023-10-14 17:01:12
 ---
 
 ## Read/write
@@ -55,3 +55,7 @@ In addition, `uibuilder.logLevel` will automatically be retrieved via its own ge
 ## Read only - unlikely to be required
 
 * `httpNodeRoot` - The setting from Node-RED. May be useful if you need to manually create a Node-RED URL and have set this variable in Node-RED.
+
+## Functions that deal with client variables
+
+See [client functions](client-docs/functions#variable-handling) for details.

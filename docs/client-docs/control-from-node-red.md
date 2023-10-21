@@ -4,7 +4,7 @@ description: >
    How to send specially formatted messages from Node-RED to the uibuilder node that
    get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-lastUpdated: 2023-09-30 13:02:38
+lastUpdated: 2023-10-14 17:00:54
 ---
 
 The UIBUILDER client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
@@ -15,6 +15,27 @@ These ways are all summarised here. They all use a pre-formatted message sent to
 > This feature was introduced in uibuilder v6.1 with only the get/set commands. Other commands are introduced in later versions.
 
 Please load the "remote-commands" example from the library to test all of these out.
+
+### A summary of the commands available
+
+Possible `msg._uib.command` values.
+
+* `elementExists` - does an element exist in the HTML DOM?
+* `get` - gets a uibuilder client managed variable.
+* `getManagedVarList` - gets the list of uibuilder client managed variables.
+* `getWatchedVars` - gets the list of uibuilder client managed variables that are currently being watched for changes.
+* `htmlSend` - gets the current full HTML as text.
+* `include` - Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API.
+* `set` - set a uibuilder client managed variable.
+* `showMsg` - Turn on/off the display of the latest msg from Node-RED.
+* `showStatus` - Turn on/off the display of the uibuilder client library settings.
+* `uiGet` - get detailed information about an HTML DOM element.
+* `uiWatch` - watch for changes to the HTML DOM, return messages about changes.
+
+
+> [!NOTE]
+> The _case_ of the command string matters. It must match exactly. In general, the commands match function names in the uibuilder client library.
+
 
 ## Responses
 
@@ -83,11 +104,6 @@ This command results in a standard message out of the top port of the `uibuilder
 
 The following client settings can be changed from Node-RED by sending a message containing a `msg._uib` property configured as shown.
 
-> [!NOTE]
-> The _case_ of the command string matters. It must match exactly the function name. The following command functions are currently allowed:
-> 
-> 'get', 'set', 'showMsg'
-
 ### Set variable
 
 ```json
@@ -96,7 +112,24 @@ The following client settings can be changed from Node-RED by sending a message 
 
 Uses the `uibuilder.set(varName, value)` client function.
 
-This command results in a standard message out of the top port of the `uibuilder` node that will contain `msg._uib.response`.
+The command results in a standard message out of the top port of the `uibuilder` node that will contain `msg._uib.response`.
+
+Optionally can set some additional options:
+
+```json
+{
+   "command": "set", "prop": "myvar", 
+   "value": {"a": 42, "b": "hello", "c": true}, 
+   "options": {"store": true, "autoload": true}
+}
+```
+
+The `store` option tells the client to attempt to save the value in the browser's `localStorage`. This means that it will be saved until the page tab has been closed in the browser.
+
+The `autoload` option tells the client to attempt to automatically reload the variable from `localStorage` if the page is re-loaded. It is only used if `store` is also set.
+
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
 
 ### Turn on/off visible last message from Node-RED
 
@@ -129,6 +162,30 @@ To get the current web page, complete with dynamic changes back to Node-RED as a
 { "_uib": { "command": "sendHtml" } }
 ```
 
+## Getting other information from the client
+
+### Get a list of managed variables 
+
+Send the following msg object to get a list of all variables actively managed by the client. Those which can be watched for changes using `uibuilder.onChange()`.
+
+```json
+{ "_uib": { "command": "getManagedVarList" } }
+```
+
+Optionally, also send the "full" prop to get an object instead of an array:
+
+```json
+{ "_uib": { "command": "getManagedVarList", "prop": "full" } }
+```
+
+### Get a list of watched variables
+
+Send the following msg object to get a list of all variables currently being watched by the client using `uibuilder.onChange()`.
+
+```json
+{ "_uib": { "command": "getWatchedVars" } }
+```
+
 ## Restricting to specific pages, users, tabs
 
 Any of the `_ui` and `_uib` messages can be limited to operate only against specific page names, client ID's and browser tab ID's.
@@ -143,16 +200,3 @@ The client ID should remain constant while the browser stays open. The tab ID sh
 
 For the page name, note that the default name (e.g. when the browser address bar is only showing the folder and not a specific `xxxx.html`) is `index.html`. uibuilder allows you to have any number of pages defined under a single node however.
 
-## Reference summary
-
-### A summary of the `msg._uib.command` values
-
-* `elementExists` - does an element exist in the HTML DOM?
-* `get` - gets a uibuilder client managed variable
-* `htmlSend` - gets the current full HTML as text
-* `include` - Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
-* `set` - set a uibuilder client managed variable
-* `showMsg` - Turn on/off the display of the latest msg from Node-RED
-* `showStatus` - Turn on/off the display of the uibuilder client library settings
-* `uiGet` - get detailed information about an HTML DOM element
-* `uiWatch` - watch for changes to the HTML DOM, return messages about changes

@@ -29,7 +29,10 @@ Displays the *value* of the given variable name in your web page and *dynamicall
 
 Other attributes are available on the component tag:
 
-- `undefined`: If present or set to `on`, or `true`, the component will show even if the variable is undefined. If not present or set to anything else, an undefined variable will be blank.
+- `undefined`: If present or set to `on`, or `true`, the component will show even if the variable is undefined. 
+  
+  If not present or set to anything else, an undefined variable will show the _slot content_ (anything put between the open and close tag). This lets you have an initial value showing that is replaced as soon as the variable is actually set.
+
 - `report`: If present or set to `on`, or `true`, the component will return a standard message back to Node-RED when the variable changes value.
 - `type`: Must be one of 'plain', 'html', 'markdown', or 'object'. `plain` and `html` simply insert the variable as-is. `markdown` allows the insertion of Markdown as long as the Markdown-IT library is loaded (it will also sanitise the resulting HTML if the DOMPurify library is loaded). `object` does some basic formatting to allow object or array variables to be more easily read.
 

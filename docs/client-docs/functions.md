@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the UIBUILDER front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-09-30 15:53:13
+lastUpdated: 2023-10-14 17:23:41
 ---
 
 Functions accessible in client-side user code.
@@ -17,6 +17,9 @@ Functions accessible in client-side user code.
 - [Event Handling](#event-handling)
 - [Utility](#utility)
 - [Startup](#startup)
+
+> [!NOTE]
+> Where functions are marked as being accessible as Node-RED command messages, details can be found in [Controling From Node-RED](client-docs/control-from-node-red).
 
 
 ## Receiving Messages from Node-RED
@@ -32,22 +35,6 @@ You can use one or more of the `msg._uib.pageName`, `msg._uib.clientId`, or `msg
 UIBUILDER also allows you to issue control commands from Node-RED to your front-end app by sending messages to the `uibuilder` node containing `msg._uib.command` which must be set to [one of the recognised commands](/client-docs/control-from-node-red).
 
 ## Sending Messages to Node-RED
-
-### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
-
-Results in a standard message sent to Node-RED where the `msg.payload` contains the whole current HTML page as a string.
-
-Use with the `uib-save` node to fix the latest page complete with any dynamic updates as the html page to load for new client connections for example.
-
-The returned message includes `msg.length` to allow checking that the returned html payload wasn't truncated by a Socket.IO message length restriction.
-
-This can also be triggered from Node-RED. Send a message to the `uibuilder` node containing `msg._uib.command` set to "htmlSend". [Reference](client-docs/control-from-node-red?id=get-complete-copy-of-the-current-web-page)
-
-### `send(msg, originator = '')` - Send a custom message back to Node-RED
-
-The `msg` format is the same as used in Node-RED. 
-
-The `originator` is optional and if used, should match the id from a `uib-sender` node. That allows you to specifically return a message into a flow that uses one of those nodes. However, ensure that the `uib-sender` node has turned on the flag to allow returned messages.
 
 ### `eventSend(domevent, originator = '')` - Send a standard message back to Node-RED in response to a DOM event
 
@@ -71,18 +58,6 @@ If the source event type is `change` (e.g. a user changed an input field and the
 > The input element validity property can contain any of the following: badInput, customError, patternMismatch, rangeOverflow, rangeUnderflow, stepMismatch, tooLong, tooShort, typeMismatch, valueMissing. See [ValidityState](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) for details of the meanings.
 
 
-### `setOriginator(originator = '')` - Set/clear the default originator
-
-Will automatically be used by `send` and `eventSend`.
-
-Set to an empty string to remove.
-
-### `sendCtrl(msg)` - Send a custom control message back to Node-RED
-
-The message will be assessed by UIBUILDER and passed to its #2 (bottom) output port if considered acceptible.
-
-This lets you create your own control custom messages should you wish to. Use with caution.
-
 ### `beaconLog(txtToSend, logLevel)` - Send a short log message to Node-RED
 
 This has the advantage of working even if Socket.IO is not connected. It uses a logging API provided by UIBUILDER.
@@ -91,9 +66,55 @@ However, only text strings can be sent and messages need to be kept short. It on
 
 The `logLevel` matches both Node-RED and UIBUILDER defined log levels (e.g. error, warn, info, debug, trace ).
 
+### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
+
+Results in a standard message sent to Node-RED where the `msg.payload` contains the whole current HTML page as a string.
+
+Use with the `uib-save` node to fix the latest page complete with any dynamic updates as the html page to load for new client connections for example.
+
+The returned message includes `msg.length` to allow checking that the returned html payload wasn't truncated by a Socket.IO message length restriction.
+
+This can also be triggered from Node-RED. Send a message to the `uibuilder` node containing `msg._uib.command` set to "htmlSend". [Reference](client-docs/control-from-node-red?id=get-complete-copy-of-the-current-web-page)
+
 ### ~~logToServer()~~ - Not yet reliable. Will cause the input to appear in Node-RED logs
 
+### `send(msg, originator = '')` - Send a custom message back to Node-RED
+
+The `msg` format is the same as used in Node-RED. 
+
+The `originator` is optional and if used, should match the id from a `uib-sender` node. That allows you to specifically return a message into a flow that uses one of those nodes. However, ensure that the `uib-sender` node has turned on the flag to allow returned messages.
+
+### `sendCtrl(msg)` - Send a custom control message back to Node-RED
+
+The message will be assessed by UIBUILDER and passed to its #2 (bottom) output port if considered acceptible.
+
+This lets you create your own control custom messages should you wish to. Use with caution.
+
+### `setOriginator(originator = '')` - Set/clear the default originator
+
+Will automatically be used by `send` and `eventSend`.
+
+Set to an empty string to remove.
+
+### `setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED
+
+This uses an HTTP API call to a custom UIBUILDER API endpoint in Node-RED. So it works even if the Socket.IO connection is not working. It is used to check that the Node-RED server and the UIBUILDER instance are both still working.
+
+##### Example
+
+```javascript
+uibuilder.setPing(2000) // repeat every 2 sec. Re-issue with ping(0) to turn off repeat.
+
+// Optionally monitor responses
+uibuilder.onChange('ping', function(data) {
+   console.log('pinger', data)
+})
+```
+
 ## Variable Handling
+
+> [!NOTE]
+> See [client variables](client-docs/variables) for details of what uibuilder variables are available.
 
 ### `copyToClipboard(varToCopy)` - Copy the specified UIBUILDER variable to the browser clipboard
 
@@ -115,6 +136,21 @@ This is the preferred method to get an exposed UIBUILDER variable or property. D
 console.log( uibuilder.get('version') )
 ```
 
+### `getManagedVarList()` - Get a list of all UIBUILDER managed variables
+
+A UIBUILDER managed variable is one that has been created with `uibuilder.set()` (or changed from Node-RED with the equivalent command msg). As such, it can be watched for changes with `uibuilder.onChange()`.
+
+This function can also be called from Node-RED via `msg._uib.command` - `getManagedVarList`. The returned `msg.payload` contains the list. Optionally, you can also add `msg._uib.prop` set to `full` which will return an object where each key/value is the variable name. This can be usefull for some types of processing.
+
+### `getWatchedVars()` - Get a list of all UIBUILDER watched variables
+
+Shows all variables that are being watched using `uibuilder.onChange()`.
+
+This function can also be called from Node-RED via `msg._uib.command` - `getWatchedVars`. The returned `msg.payload` contains the list.
+
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables.
+
 ### `getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage
 
 Note that browser localStorage is persisted even after a browser closes. It can be manually cleared from the browser's settings. You can also remove an item using the `removeStore` function.
@@ -129,7 +165,10 @@ Because the browser storage API only allows strings as values, the data has to b
 
 Does not return anything. Does not generate an error if the key does not exist.
 
-### `set(prop, val)` - Set a UIBUILDER property and dispatch a change event
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
+
+### `set(prop, val, store, autoload)` - Set a UIBUILDER property and dispatch a change event
 
 This is the preferred method to set an exposed UIBUILDER variable or property. Do not try to set variables and properties directly.
 
@@ -137,7 +176,10 @@ When using set, the variable that is set becomes responsive. That is to say, tha
 
 Note that you can add additional custom data to the UIBUILDER object but care must be taken not to overwrite existing internal variables. This is useful if you want to be able to automatically process changes to your own variables using the `onChange` handler.
 
-This function can also be called from Node-RED via `msg._uib.command` - `set` with `msg._uib.prop` set to the variable name to set. and `msg._uib.value` set to the new value.
+This function can also be called from Node-RED via `msg._uib.command` - `set` with `msg._uib.prop` set to the variable name to set. and `msg._uib.value` set to the new value. `msg._uib.options` is used as `{store: true, autoload: true}` to optionally pass the additional arguments.
+
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
 
 ##### Example
 
@@ -145,11 +187,7 @@ This function can also be called from Node-RED via `msg._uib.command` - `set` wi
 uibuilder.set('logLevel', 3)
 ```
 
-### `setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED
-
-This uses an HTTP API call to a custom UIBUILDER API endpoint in Node-RED. So it works even if the Socket.IO connection is not working. It is used to check that the Node-RED server and the UIBUILDER instance are both still working.
-
-### `setStore(id, val)` - Attempt to save to the browsers localStorage
+### `setStore(id, val, autoload)` - Attempt to save to the browsers localStorage
 
 Write a value to the given id to localStorage. Will fail if localStorage has been turned off or is full.
 
@@ -161,17 +199,8 @@ Returns `true` if the save was successful, otherwise returns false.
 
 Errors are output to the browser console if saving fails but processing will continue.
 
-
-##### Example
-
-```javascript
-uibuilder.setPing(2000) // repeat every 2 sec. Re-issue with ping(0) to turn off repeat.
-
-// Optionally monitor responses
-uibuilder.onChange('ping', function(data) {
-   console.log('pinger', data)
-})
-```
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
 
 ## UI Handling
 
@@ -180,6 +209,10 @@ These are the new dynamic, configuration-driven UI features. They let you create
 In addition, internal message handling will recognise standard messages from node-red and process them. So these functions won't always be needed. You can also do `uibuilder.set('msg', {/*your object details*/})` which instructs the client to treat the object as though it had come from Node-RED.
 
 For functions with no descriptions, please refer to the code. In general, these will not need to be used in your own code.
+
+### `convertMarkdown(mdText)` - Convert's Markdown text input to HTML
+
+Returns an HTML string converted from the Markdown input text. Only if the Markdown-IT library is loaded, otherwise just returns the input text.
 
 ### `elementExists(cssSelector, msg = true)` - Does the element exist on the page?
 
@@ -262,7 +295,7 @@ Either from a remote URL or from a text string.
 
 Directly call the functions of the same name from the `ui.js` library.
 
-### `loadui(url)` - Load a dynamic UI from a JSON web reponse
+### `loadui(url)` - Load a dynamic UI from a JSON web response
 
 Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
 
@@ -338,6 +371,10 @@ The [Markdown-IT](client-docs/readme#_2-markdown-it-converts-markdown-markup-int
 Will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if that library has been loaded.
 
 Directly calls `_ui.replaceSlotMarkdown` from the `ui.js` library.
+
+### `sanitiseHTML(htmlText)` - Ensures that input HTML text is safe
+
+Returns a safe, sanitised HTML string IF the DOMPurify library is loaded. Otherwise returns the input.
 
 ### `showDialog(type, ui, msg)` - Show a toast or alert style message on the UI
 
@@ -443,6 +480,15 @@ Can be called from Node-RED with a message like: `{"_uib: {"command": "uiWatch",
 
 ## HTML/DOM Cacheing
 
+### `clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage
+### `restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage
+
+### `saveHtmlCache()` - Manually saves the currently displayed HTML to the browser localStorage
+
+> [!NOTE]
+> Browser local cache is generally limited to 10MB for the whole source domain.
+> Therefore, it is quite easy to exceed this - use with caution.
+
 ### `watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage
 
 `uibuilder.watchDom(true)` will start the browser watching for any changes to the displayed HTML. When it detects a change, it automatically saves the new HTML (the whole page) to the browser's `localStorage`. This persists across browser and device restarts.
@@ -454,14 +500,6 @@ You can ensure that the page display looks exactly like the last update upon pag
 >
 > You should be able to change the capacity in the browser settings but of course, this would have to be done on every client device.
 
-### `clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage
-### `restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage
-
-### `saveHtmlCache()` - Manually saves the currently displayed HTML to the browser localStorage
-
-> [!NOTE]
-> Browser local cache is generally limited to 10MB for the whole source domain.
-> Therefore, it is quite easy to exceed this - use with caution.
 
 ## Event Handling
 
