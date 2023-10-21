@@ -1,7 +1,7 @@
 /* eslint-disable strict, sonarjs/no-duplicate-string, sonarjs/no-duplicated-branches */
 
 // Isolate this code
-(function () {
+;(function () {
     'use strict'
 
     /** Module name must match this nodes html file @constant {string} moduleName */
@@ -141,15 +141,44 @@
         html: {
             value: 'html',
             label: 'HTML',
-            description: `
+            description: /*html*/`
                 <p>
-                    Pass-through HTML from the input data. When sent to the uibuilder node, will be reproduced in your page(s). <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
+                    Pass-through HTML from the input data. When sent to the uibuilder node, will be reproduced in your page(s).
+                    Output is wrapped in a <code>div</code> but the optional heading is ignored. 
+                    <b><a href="./uibuilder/docs/#/elements/html" target="_blank">Docs</a></b>.
                 </p>
                 <p>
                     May be used with the Node-RED core <code>template</code> node.
                 </p>
                 <p>
-                    <b>NOTE</b>: Use with caution, no validity checking is currently done.
+                    <b>NOTE</b>: Use with caution, no validity checking is currently done unless the optional
+                    <a href="./uibuilder/docs/#/client-docs/readme?id=_1-dompurify-sanitises-html-to-ensure-safety-and-security" target="_blank">DOMPurify library</a>
+                    is loaded.
+                </p>
+            `,
+            allowsParent: true,
+            allowsHead: false,
+            allowsPos: true,
+        },
+        markdown: {
+            value: 'markdown',
+            label: 'Markdown',
+            description: /*html*/`
+                <p>
+                    Pass-through Markdown from the input data. When sent to the uibuilder node, will be reproduced as HTML in your page(s).
+                    Output is wrapped in a <code>div</code> but the optional heading is ignored.
+                    <b><a href="./uibuilder/docs/#/elements/markdown" target="_blank">Docs</a></b>.
+                </p>
+                <p>
+                    Markdown will not be rendered as HTML unless the optional
+                    <a href="./uibuilder/docs/#/client-docs/readme?id=_2-markdown-it-converts-markdown-markup-into-html" target="_blank">Markdown-IT library</a>
+                    is loaded.
+                </p>
+                <p>
+                    May be used with the Node-RED core <code>template</code> node.
+                </p>
+                <p>
+                    <b>NOTE</b>: Use with caution, no validity checking is currently done unless the optional <a href="./uibuilder/docs/#/client-docs/readme?id=_1-dompurify-sanitises-html-to-ensure-safety-and-security" target="_blank">DOMPurify library</a> is loaded.
                 </p>
             `,
             allowsParent: true,
@@ -224,6 +253,25 @@
     ]
     // Standard width for typed input fields
     const tiWidth = '68.5%'
+
+    /** Add jQuery UI formatted tooltips */
+    function doTooltips() {
+        // Select our page elements
+        $('#uib-el').tooltip({
+            items: 'img[alt], [aria-label], [title]',
+            track: true,
+            content: function() {
+                const element = $( this )
+                if ( element.is( '[title]' ) ) {
+                    return element.attr( 'title' )
+                } else if ( element.is( '[aria-label]' ) ) {
+                    return element.attr( 'aria-label' )
+                } else if ( element.is( 'img[alt]' ) ) {
+                    return element.attr( 'alt' )
+                } else return ''
+            },
+        })
+    }
 
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
@@ -398,6 +446,8 @@
             id: 'el-tab-conf',
             label: 'Element Config'
         })
+
+        doTooltips()
 
     } // ----- end of onEditPrepare() ----- //
 

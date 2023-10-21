@@ -10,11 +10,191 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
-----
+* Outdated examples - some of the included example flows such as the "remote-commands" example are now out of date. What is there will still work but they are no longer comprehensive. Will try to catch them up as soon as I can.
+* Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.4.1...main)
+  Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
+
+### TO FIX
+
+* Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
+* uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
+* uib-tag - Attribs Source - should be "None" as default
+* Editor (all nodes) - Use jQueryUI tooltips instead of uib custom (see `uib-element`)
+* Templates - add eslint dev dependencies to package.json
+  * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
+
+
+
+------------
+
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...main)
 
 Nothing currently.
+
+## [v6.6.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.6.0)
+
+### Highlights
+
+
+
+### **NEW NODE** - `uib-html` - Hydrates `msg._ui` configurations into HTML
+
+Takes a `msg._ui` input such as those produced by the uibuilder zero-code nodes (`uib-element`, `uib-tag`, `uib-update`) and "hydrates" that config UI description into HTML.
+
+Uses the same code as the client library. Outputs HTML on `msg.payload`, removes the input `msg._ui`.
+<!-- Optionally, can add one of the uibuilder templates as a wrapper to the input payload HTML or wrap in a non-uibuilder template -->
+
+#### Current Limitations
+
+* Uses the widely used [`jsdom` library](https://www.npmjs.com/package/jsdom) to do all the heavy lifting. This library is used by many existing tools and implements virtually all of the DOM v4 spec. However, there will always be a few things that can't be done in a virtual DOM outside the browser. Check the JSDOM library documentation and WIKI for any current limitations.
+* Some things such as the dynamic client commands (reload, toggle visible msgs, ... ) don't make sense in this context. They will either produce an error or will be ignored. Occasionally, they might produce some unexpected output.
+* Testing is currently very limited. Please report any errors.
+
+#### Why?
+
+- Learn how to write your own HTML
+- Output to a uibuilder node to save processing the _ui data in the front-end
+- Output to a uibuilder server folder for use in your app as a static load (or occasionally changing load)
+- Output to a file for use in an external (to Node-RED) static web server/service
+- Output to an `http-out` node as a response to a request
+- Output to a `ui_template` node for incorporation in Dashboard UI's
+
+### **NEW NODE** `uib-save` - Save a file to a UIBUILDER instance folder
+
+Makes it easy to output files to the folder structure of a uibuilder node.
+
+This can be used for all manner of things.
+
+* Use with the `uib-html` node to make a permanent copy of some zero-/low-code output.
+* Use with the `htmlSend()` front-end function (`htmlSend` `_uib` cmd from Node-RED) to get a copy of the current state of the UI and save it back to the page file for future use.
+* Use with HTML like `<input type="file" onchange="upload(this.files)" multiple />` to get one or more files from the user (e.g. images or anything else to save) and save the file.
+
+Obviously, this means that all input must be carefully checked for safety.
+
+Why might you use this node?
+
+- Save `msg._ui` configuration data to a static JSON which can then be used to load an entire UI on page load.
+- Save/update files that are automatically available via the uibuilder web. For example a static web page that is perhaps updated periodically. This could also work with data, JavaScript, CSS, etc. In fact anything that can be serialised or that is already a string.
+- Use with the `uib-html` node to save static HTML files built via `uib-element` or some other flow that outputs `msg._ui` configurations.
+
+### Improvements to the client library
+
+- **NEW Feature** A new built-in web component `uib-var`, used as `<uib-var variable="uibVarName"></uib-var>`.
+  
+  Displays the value of the given variable name in your web page and dynamically updates as long as it is changed using `uibuilder.set()`. (or from Node-RED using the appropriate uib set command). The tag inserts the variable value as inline text. Class and Style attributes can be added as for any other HTML.
+
+  Two other attributes are available on the component tag:
+  
+  - `undefined`: If present or set to `on`, or `true`, the component will show even if the variable is undefined. If not present or set to anything else, an undefined variable will be blank.
+  - `report` If present or set to `on`, or `true`, the component will return a standard message back to Node-RED when the variable changes value.
+
+  This works with Markdown as well and even works if DOMPurify is loaded as overrides to its filters are provided.
+
+  There is no need to load the component, that is done automatically in the uibuilder client library.
+
+  Examples: `<p>UIBUILDER client library version "<uib-var variable="version"></uib-var>"</p>` or `<p>Last msg received: "<uib-var variable="msg"></uib-var>"</p>`
+
+* **NEW Function** `uibuilder.copyToClipboard(uibVarName)` - passed a UIBUILDER variable, will copy the contents to the clipboard (stringifying it first). Can't be used from the browser dev console due to restrictions in the browser. Use as `onclick` function on buttons. Similarly, cannot be called as a remote command.
+* **NEW Function** `uibuilder.elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Sends a msg back to Node-RED when the selected element goes in and out of visibility within the browser. Sadly, browser restrictions prevent this from being called as a remote command.
+* **NEW Function** `uibuilder.elementExists(cssSelector, msg = true)` - Returns `true` if the selected element exists on the page, false otherwise. Sends a msg back to Node-RED unless suppressed. Also available as a remote command.
+* **NEW Function** `uibuilder.convertMarkdown(mdText)` - Returns an HTML string converted from the Markdown input text. Only if the Markdown-IT library is loaded, otherwise returns the input.
+* **NEW Function** `uibuilder.sanitiseHTML(htmlText)` - Returns a safe, sanitised HTML string IF the DOMPurify library is loaded. Otherwise returns the input.
+* **NEW Function** `uibuilder.getManagedVarList()` - Returns an object listing all managed variables.
+  
+  These are variables that have been set using `uibuilder.set()` or the equivalent command from Node-RED (or internally by the client library) and that can therefore be watched for changes using `uibuilder.onChange()`.
+
+  Can be called from Node-RED as a command as well.
+
+* **NEW Function** `uibuilder.getWatchedVars()` - Returns an array of watched client variables.
+
+  These are variables that have been set using `uibuilder.set()` or the equivalent command from Node-RED (or internally by the client library) and that have an active `uibuilder.onChange()`.
+
+  Can be called from Node-RED as a command as well.
+
+* **NEW** "Maskable" icons added and available in the front end at the URL `./images/maskable_icon_x512.png` where `xNNN` is one of `x48`, `x72`, `x96`, `x128`, `x192`, `x384`, `x512`. (`front-end/images` folder). These are useful for PWA apps.
+* **NEW** Template manifest file available at URL `./utils/manifest-template.json` (`front-end/utils` folder). Copy, amend and load this if you wish to make a PWA from your UIBUILDER instance.
+* **NEW Variable** `uibuilder.get('url')` - The instance url fragment (name) for the uibuilder instance.
+
+* **UPDATED** `uibuilder.set('varname', value)` - Now has 2 additional optional arguments
+  
+  `store` (boolean): Tells uibuilder to attempt to save the variable/value in the browser `localStorage`.
+  `autoload` (boolean): Tells uibuilder to attempt to restore the last stored value from browser `localStorage` when loading the page.
+
+* **UPDATED** `uibuilder.setStore('varname', value)` - Now has an extra optional argument 
+
+  `autoload` (boolean): Tells uibuilder to attempt to restore the last stored value from browser `localStorage` when loading the page.
+
+* All UIBUILDER icons and images changed to the new, lighter blue background.
+* Added close and copy (to clipboard) buttons on the Visible Messages box. They are only visible when hovering over the box.
+* Stand-alone versions of the low-code ui features - the code that turns the low-code config JSON into HTML and manages DOM interactions - are now available. This code is already built in to the UIBUILDER client library but now may be used independently in your own projects. Auto-generated by `gulp watch` when the source is changed. Source is in `src/front-end-module/ui.js`, dist versions are in the `front-end/` folder.
+* Added extra error handling to the syntaxHighlight function to prevent rare error.
+
+### Improvements to the `uib-element` node
+
+* **NEW Element Type** **Markdown** - Much the same as the HTML element but uses Markdown as input instead of raw HTML. Requires the Markdown-IT library to be loaded in the client.
+
+### Improvements to `ui.js` library
+
+NB: This is the library that reconstitutes uibuilder's zero- and low-code configuration JSON data into a full HTML UI. It is built into uibuilder's front-end client library but is now also available stand-alone for your own projects and is also available as a node.js class module that works with `jsdom` on the server. Eventually, it will be in a stand-alone npm package for use in other projects.
+
+* ESM and IIFE minimised versions of the stand-alone client are now available in the `front-end` folder. These can be used in other projects. Map files for easier debugging also available.
+* Now fully self-contained, no longer has external vars. This allows it to be made available as a node.js library as well.
+* `window` is now an argument you must pass in when constructing an instance of the class. This allows it to be used in node.js (in conjunction with the `jsdom` library) as well as the browser. References to `window`, `document`, `log` and `syntaxHighlight` are now fully self-contained. See `nodes/uib-html.js` for an example of using with `jsdom`.
+
+* **NEW Function** `convertMarkdown(mdText)` - Returns an HTML string converted from the Markdown input text. Only if the Markdown-IT library is loaded, otherwise returns the input. Allows the use of Markdown-IT independently from the `_ui` low-code processing.
+* **NEW Function** `sanitiseHTML(htmlText)` - Returns a safe, sanitised HTML string IF the DOMPurify library is loaded. Otherwise returns the input. Allows the use of DOMPurify to sanitise HTML independently from the `_ui` low-code processing.
+
+### Improvements to the UIBUILDER node
+
+* On loading a template, if the "Reload connected clients on save?" flag is set on the Files tab, a reload command is issued to all connected clients.
+* For the `uibindex` detailed information web page and the instance information page, replaced the old `uib-styles.css` with the newer `uib-brand.css`.
+* Emoji's added to error (🛑) and warn (⚠️) log outputs. 📘 emoji added to the uibuilder initialised message to make it easier to spot in a busy Node-RED log.
+* Updated branding.
+
+### Improvements to the server libraries
+
+#### New `nodes/libs/fs.js` library added
+
+This will eventually hold ALL file system processing so that it is all together. That will allow it to be improved in a single place. Eventually will allow the deprecation of the fs-extra package.
+
+It is another singleton class instance. It is initialised in the main uibuilder runtime and initially just accessed in the new `uib-save` node where it does the file saving.
+
+#### admin-api-v3
+
+* Initial code for isPackageInstalled API for the Editor
+
+#### package-mgt
+
+* isPackageInstalled function - returns true or false
+
+### Improvements for uib-brand.css
+
+* New classes to support the enhanced showMsgs command buttons features.
+
+### Documentation improvements
+
+* **NEW** The docs now have a fancy landing page! Let me know if you have ideas on how it can be improved. 😊
+* **NEW** `apis` folder - currently only contains the index readme which lists all of the REST API's provided by uibuilder.
+* **NEW** `dev/client-libs` and `dev/server-libs` folders - providing a developer focused summary of all of the uibuilder library files/classes.
+* **NEW** A custom "Not Found" (404) page added. Much more friendly than the previous browser default.
+* **NEW** Added a `docksify-howto` page to the docs. This is not currently linked and so only available in source unless you know the name. Explains how to use Docksify with the UIBUILDER docs.
+* Changed the uibuilder logo to a lighter colour to fit in with the docs. Added red highlight to `ui`, thanks to Paul-Reed for the idea.
+* Added extended information links to main readme and the docs home page.
+* Added available command summary to the "Control from Node-RED" client docs.
+
+### General Improvements
+
+* New branding. 'uibuilder' is now 'UIBUILDER' except when referring to code. Where feasible, UIBUILDER has the new light blue as the text colour except for the initial UI which is a slight variation of the Node-RED base colour.
+* A CITATION.cff file has been added - this provides official meta-data to the repo for use in research and standardised citation references.
+* Some pages of documentation reorganised. Note that this may have broken some links, if so, please do report them. The "Page Not Found" page has been updated with a reporting link.
+* **NEW EXAMPLE** `quick-start` - A simple, pre-configured flow with some standard uibuilder inputs and outputs.
+* Remove dependencies on `fs-extra` library - `nodes/libs/web.js` only right now - need to wait for node.js v16.7 to be baseline for the rest (allowing uibuilder to move to be a monorepo and use dependant packages).
+* **NEW LIBRARY** `nodes/libs/fs.js` - Server file handling library. Using the node.js core `fs/promises` library dependency only, not `fs-extra`. Initial release only contains `writeInstanceFile`, an async function to save a file to a uibuilder node instance's folder structure (used by the new `uib-save` node). Aim is to use for all server file/folder handling eventually, helping facilitate the previous improvement.
+* The `ui.js` library now added as a node.js library to `libs/ui.js` so that it can be used with the `uib-html` node. Auto-generated by `gulp watch` when the source is changed.
+* Improved GitHub issue templates, workflows & funding. Added CITATION.cff.
+
+
 
 ## [v6.5.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.4.1)
 

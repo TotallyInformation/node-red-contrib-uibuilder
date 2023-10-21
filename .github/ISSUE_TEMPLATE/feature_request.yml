@@ -1,0 +1,19 @@
+name: 🆕 Request a feature
+description: File a bug/issue on the core of Node-RED
+labels: [needs-triage]
+body:
+- type: markdown
+  attributes:
+    value: |
+      Before requesting a new feature or improvement, please check the docs/roadmap.md file in the latest branch to see
+      whether it is already on the roadmap.
+
+      New features can be discussed in the Node-RED forum under the `node-red-contrib-uibuilder` tag and you may wish
+      to discuss there before raising a request.
+- type: textarea
+  attributes:
+    label: Request
+    description: A clear & concise description of what you would like.
+  validations:
+    required: true
+

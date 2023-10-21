@@ -28,6 +28,7 @@
 //#region ----- Module level variables ---- //
 
 const { promisify } = require('util')
+// const uibFs  = require('../libs/fs')   // File/folder handling library (by Totally Information)
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -182,9 +183,10 @@ function buildArticle(node, msg, parent) {
  * @param {runtimeNode & uibElNode} node reference to node instance
  * @param {*} msg The msg data in the custom event
  * @param {object} parent The parent JSON node that we will add components to
+ * @param {boolean} [md] If true, input is Markdown rather than HTML (MD requires the front-end to have loaded the Markdown-IT library)
  * @returns {string} Error description or empty error string
  */
-function buildHTML(node, msg, parent) {
+function buildHTML(node, msg, parent, md = false) {
     // Must be a string so convert arrays/objects
     let data = node.data
     if (!node.data) data = ''
@@ -205,7 +207,8 @@ function buildHTML(node, msg, parent) {
         'type': node.elementtype,
         'parent': node.parent,
         'position': node.position,
-        'slot': data,
+        'slot': md !== true ? data : undefined,
+        'slotMarkdown': md === true ? data : undefined,
     } )
 
     return err
@@ -269,7 +272,6 @@ function buildTitle(node, msg, parent) {
  * @returns {string} Error description or empty error string
  */
 function buildUlOlList(node, msg, parent) {
-    console.log(node.data)
     // Make sure node.data is an object or an array - if not, force to array
     if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
@@ -867,9 +869,6 @@ async function buildUi(msg, node) {
         getSource('position', node, msg),
     ])
 
-    // console.log('NODE DATA', node.data)
-    // console.log('NODE', node)
-
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) {
         if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
@@ -958,7 +957,14 @@ async function buildUi(msg, node) {
         case 'html': {
             // parent = addDiv(parent, node)
             // parent = addHeading(parent, node)
-            err = buildHTML(node, msg, parent)
+            err = buildHTML(node, msg, parent, false)
+            break
+        }
+
+        case 'markdown': {
+            // parent = addDiv(parent, node)
+            // parent = addHeading(parent, node)
+            err = buildHTML(node, msg, parent, true)
             break
         }
 

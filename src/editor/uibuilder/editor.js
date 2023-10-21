@@ -1338,6 +1338,7 @@
         const template = $('#node-input-templateFolder').val()
         const extTemplate = $('#node-input-extTemplate').val()
         const url = $('#node-input-url').val()
+        const reload = $('#node-input-reload').prop('checked')
 
         $.ajax({
             type: 'POST',
@@ -1347,6 +1348,8 @@
                 'template': template,
                 'extTemplate': extTemplate,
                 'cmd': 'replaceTemplate',
+                'reload': reload,
+                'url': url,
             },
         })
             .done(function(data, textStatus, jqXHR) {
@@ -1535,7 +1538,7 @@
         const vslink = vscodeLink(node)
 
         $('#info-webserver')
-            .append(`<div class="form-tips node-help">uibuilder is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank" title="Open in new window">${node.urlPrefix}</a><br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`)
+            .append(`<div class="form-tips node-help"><span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank" title="Open in new window">${node.urlPrefix}</a><br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`)
 
     } // ---- end of showServerInUse ---- //
 

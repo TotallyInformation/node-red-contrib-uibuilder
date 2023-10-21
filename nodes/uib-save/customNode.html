@@ -1,0 +1,339 @@
+<!--
+    Copyright (c) 2023-2023 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<style>
+    #uib-upd *[aria-label] {
+        position:relative;
+    }
+    #uib-upd *[aria-label]:after {
+        content: attr(aria-label);
+        position:absolute;
+        top:100%;left:50px;
+        box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--red-ui-form-input-border-color);
+        padding: 10px;
+        z-index: 999;
+        background-color: var(--red-ui-popover-background);
+        color: var(--red-ui-popover-color);
+        max-width: 350px;
+        text-decoration: none;
+        text-align: center;
+        border-radius: 6px;
+        white-space: break-spaces;
+        
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.5s ease-out;
+    }
+    #uib-upd *[aria-label]:hover:after {
+        visibility: visible;
+        opacity: 1;
+        transition: all 0.5s ease-in 1s;
+    }
+    #uib-upd .red-ui-typedInput-container {
+        width:69% !important;
+    }
+</style>
+
+<script type="text/html" class="uib-tooltip" data-template-name="uib-save">
+<div id="uib-upd">
+    <div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
+        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+        <select id="node-input-url" style="width:70%">
+            <option value="" name="">--choose a uibuilder instance--</option>
+        </select>
+    </div>
+    <hr>
+          
+    <div aria-label="Folder to save to" class="form-row">
+        <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Folder</label>
+        <input type="text" id="node-input-folder">
+    </div>
+    <div aria-label="File name" class="form-row">
+        <label for="node-input-fname"><i class="fa fa-file-code-o"></i> File</label>
+        <input type="text" id="node-input-fname">
+    </div>
+
+    <div aria-label="If set and folder name does not exist, it will be created." class="form-row">
+        <input type="checkbox" id="node-input-createFolder" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-createFolder" style="width: 90%;">
+            Create Folder?
+        </label>
+    </div>
+    <div aria-label="If set connected client browser tabs will be automatically reloaded." class="form-row">
+        <input type="checkbox" id="node-input-reload" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-reload" style="width: 90%;">
+            Reload Clients?
+        </label>
+    </div>
+    <div aria-label="Character coding for text inputs" class="form-row">
+        <label for="node-input-encoding"><i class="fa fa-file-text-o"></i> Encoding</label>
+        <input type="text" id="node-input-encoding" value="utf8" disabled>
+    </div>
+    <div aria-label="New file access mode" class="form-row">
+        <label for="node-input-mode"><i class="fa fa-share-square-o"></i> File Mode</label>
+        <input type="text" id="node-input-mode" value="0o666" disabled>
+    </div>
+
+    <hr>
+    <div aria-label="Default msg topic. Make unique if using uib-cache." class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-topic">
+    </div>
+    <div aria-label="Node name (descriptive only)" class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+    
+</div>
+
+</script>
+
+<script type="text/html" data-help-name="uib-save">
+
+<p>
+    Save a file into a uibuilder instance folder.
+</p>
+
+<h3>Inputs</h3>
+<dl class="message-properties">
+    <dt>payload <span class="property-type">string|buffer</span></dt>
+    <dd>
+        REQUIRED. The data to output to the file.
+        Use a buffer for binary file types (video, audio, image, etc).
+    </dd>
+
+    <dt>folder <span class="property-type">string</span></dt>
+    <dd>
+        If supplied and the folder setting is blank, will be used as the output folder.
+    </dd>
+
+    <dt>fname <span class="property-type">string</span></dt>
+    <dd>
+        If supplied and the file name setting is blank, will be used as the output file name.
+    </dd>
+</dl>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt>URL <span class="property-type">selection</span></dt>
+    <dd>
+        Select the existing uibuilder Node instance via its URL setting.
+        This cannot be overridden by a msg property at this time.
+    </dd>
+    <dd>
+        Sets the top-most (root) folder that can be written to.
+    </dd>
+
+    <dt>Folder <span class="property-type">string</span></dt>
+    <dd>
+        The name of an existing or new folder inside the chosen uibuilder instance root.
+    </dd>
+    <dd>
+        "<code>..</code>" cannot be included in the path to prevent escaping from the instance root.
+    </dd>
+    <dd>
+        If the folder does not exist, an error is generated unless the "Create Folder" flag is ticked.
+    </dd>
+    <dd>
+        <code>msg.folder</code> overrides this as long as this is left blank.
+    </dd>
+
+    <dt>File <span class="property-type">string</span></dt>
+    <dd>
+        The name of an existing or new file inside the chosen uibuilder instance root and folder.
+    </dd>
+    <dd>
+        If the file does not exist, it will be created. Otherwise it is silently overwritten.
+    </dd>
+    <dd>
+        Neither "<code>/</code>" or "<code>\</code>" can be included in the file name. The name must be valid for the OS you are using.
+    </dd>
+    <dd>
+        <code>msg.fname</code> overrides this as long as this is left blank.
+    </dd>
+
+    <dt>Create Folder? <span class="property-type">boolean</span></dt>
+    <dd>
+        If set and the given folder name does not exist inside the instance root folder,
+        the new folder will be automatically created.
+    </dd>
+    
+    <dt>Reload? <span class="property-type">boolean</span></dt>
+    <dd>
+        If ticked, any client browser tabs connected to the selected uibuilder node will be reloaded.
+        This may be useful when auto-changing static resource files (e.g. <code>index.html</code>).
+        It is mostly useful when testing. Use with caution on a live system.
+    </dd>
+    
+    <dt>Encoding <span class="property-type">string</span></dt>
+    <dd>
+        The optional string encoding to be used when the input data is a string.
+        It defaults to Node.js's <code>utf8</code>.
+        See Node.js documentation for what can be provided here.
+    </dd>
+
+    <dt>Mode <span class="property-type">integer</span></dt>
+    <dd>
+        The optional file output mode. Defaults to <code>0o666</code>
+        See Node.js documentation for what can be provided here.
+    </dd>
+    <dd>
+        This only impacts newly created files. It is ignored when overwriting existing files.
+    </dd>
+    <dd>
+        On Windows, only the write permission can be set.
+    </dd>
+
+    
+    <dt>Topic <span class="property-type">string</span></dt>
+    <dd>
+        Standard optional topic name.
+    </dd>
+
+    <dt>Name <span class="property-type">string</span></dt>
+    <dd>
+        Standard optional name. Has no impact other than on the Editor display.
+    </dd>
+</dl>
+
+</script>
+
+<script type="text/javascript">
+    /* eslint-disable strict, sonarjs/no-duplicate-string */
+    
+    // Isolate this code
+    (function () {
+        'use strict'
+    
+        /** Module name must match this nodes html file @constant {string} moduleName */
+        const moduleName = 'uib-save'
+        /** Node's label @constant {string} paletteCategory */
+        const nodeLabel = moduleName
+        /** Node's palette category @constant {string} paletteCategory */
+        const paletteCategory = 'uibuilder'
+        /** Node's background color @constant {string} paletteColor */
+        const paletteColor = '#E6E0F8'
+    
+        /** Copy of all deployed uibuilder node instances */
+        let uibInstances = null
+    
+        /** Get all of the current uibuilder URL's */
+        function getUrls() {
+            $.ajax({
+                type: 'GET',
+                async: false,
+                dataType: 'json',
+                url: './uibuilder/admin/dummy',
+                data: {
+                    'cmd': 'listinstances',
+                },
+                success: function(instances) {
+                    console.log('>> Instances >>', instances, Object.entries(instances) )
+    
+                    uibInstances = instances
+    
+                    Object.keys(instances).forEach( (key, i, arr) => {
+                        $('#node-input-url').append($('<option>', {
+                            value: instances[key],
+                            text: instances[key],
+                            'data-id': key,
+                        }))
+                    })
+    
+                }
+            })
+    
+        } // ---- end of getUrls ---- //
+    
+        /** Prep for edit
+         * @param {*} node A node instance as seen from the Node-RED Editor
+         */
+        function onEditPrepare(node) {
+            // initial checkbox states
+            $('#node-input-createFolder').prop('checked', node.createFolder)
+            $('#node-input-reload').prop('checked', node.reload)
+    
+            // Deal with the url
+            getUrls()
+    
+            if ( node.uibId in uibInstances ) {
+                // console.log( 'uibuilder node ID is known', node.url, node.uibId)
+                // We know the ID, always look up the latest name
+                const chkUrl = uibInstances[node.uibId]
+                if (chkUrl !== node.url) { // The url for this node changed so force a re-deploy
+                    RED.nodes.dirty(true)
+                    node.changed = true
+                }
+                node.url = uibInstances[node.uibId]
+            } else if ( Object.values(uibInstances).includes(node.url) ) {
+                // console.log( 'We didnt know the id but we found the url', node.url, node.uibId, Object.keys(uibInstances)[Object.values(uibInstances).indexOf(node.url)])
+                // We didn't know the ID but we know the last url so set the ID - always force a redeploy in this case
+                node.uibId = uibInstances[Object.keys(uibInstances)[Object.values(uibInstances).indexOf(node.url)]]
+                RED.nodes.dirty(true)
+                node.changed = true
+            } else {
+                // console.log( 'Neither id nor url found', node.url, node.uibId)
+                node.valid = false
+            }
+    
+            $('#node-input-url')
+                .on('change', function() {
+                    node.uibId = Object.keys(uibInstances)[Object.values(uibInstances).indexOf(this.value)]
+                    // console.log('>> URL Change >>', this.value, node.uibId, Object.keys(uibInstances)[Object.values(uibInstances).indexOf(this.value)])
+                })
+    
+            if ( node.url && node.url.length > 0 ) {
+                $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
+                $('#node-input-url').val(node.url)
+            }
+        } // ----- end of onEditPrepare() ----- //
+    
+        // @ts-ignore
+        RED.nodes.registerType(moduleName, {
+            category: paletteCategory,
+            color: paletteColor,
+            defaults: {
+                url: { value: '', required: true },
+                uibId: { value: '' }, // ID of selected uibuilder instance
+                folder: { value: 'src', },
+                fname: { value: '', },
+                createFolder: { value: false, },
+                reload: { value: false, },
+                encoding: { value: 'utf8' },
+                mode: { value: 0o666 },
+                name: { value: '' },
+                topic: { value: '' },
+            },
+            align: 'left',
+            inputs: 1,
+            inputLabels: 'File content to save',
+            // outputs: 1,
+            // outputLabels: ['HTML payload'],
+            icon: 'font-awesome/fa-floppy-o',
+            paletteLabel: nodeLabel,
+            label: function () {
+                return this.name || this.url || moduleName
+            },
+    
+            /** Prepares the Editor panel */
+            oneditprepare: function () { onEditPrepare(this) },
+    
+        }) // ---- End of registerType() ---- //
+    
+    }())
+    
+</script>

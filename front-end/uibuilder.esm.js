@@ -54,18 +54,39 @@ var __privateSet = (obj, member, value2, setter) => {
 // src/front-end-module/ui.js
 var require_ui = __commonJS({
   "src/front-end-module/ui.js"(exports, module) {
-    var log2;
-    var Ui2 = class Ui {
+    var _a2;
+    var Ui2 = (_a2 = class {
       /** Called when `new Ui(...)` is called
-       * @param {*} extLog A fn that returns a fn for logging
-       * @param {*} jsonHighlight A function that returns a highlighted HTML of JSON input
+       * @param {globalThis} win Either the browser global window or jsdom dom.window
+       * @param {function} [extLog] A function that returns a function for logging
+       * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
        */
-      constructor(extLog, jsonHighlight) {
-        if (!document) {
-          log2(0, "Ui:constructor", "Current environment does not include `document`, UI functions cannot be used.")();
+      constructor(win, extLog, jsonHighlight) {
+        __publicField(this, "version", "6.6.0-src");
+        // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
+        __publicField(this, "sanitiseExtraTags", ["uib-var"]);
+        __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
+        // Reference to DOM window - must be passed in the constructor
+        // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
+        __publicField(this, "window");
+        if (win)
+          this.window = win;
+        else {
+          throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
         }
-        log2 = extLog;
-        this.syntaxHighlight = jsonHighlight;
+        this.document = this.window.document;
+        if (extLog)
+          _a2.log = extLog;
+        else
+          _a2.log = function() {
+            return function() {
+            };
+          };
+        if (jsonHighlight)
+          this.syntaxHighlight = jsonHighlight;
+        else
+          this.syntaxHighlight = function() {
+          };
       }
       /** Directly manage UI via JSON
        * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
@@ -90,9 +111,49 @@ var require_ui = __commonJS({
           return;
         if (!el)
           return;
-        if (window["DOMPurify"])
-          component.slot = window["DOMPurify"].sanitize(component.slot);
+        if (this.window["DOMPurify"])
+          component.slot = this.window["DOMPurify"].sanitize(component.slot);
         el.innerHTML = component.slot;
+      }
+      /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+       * Otherwise simply returns the text
+       * @param {string} mdText The input markdown string
+       * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+       */
+      convertMarkdown(mdText) {
+        if (!mdText)
+          return "";
+        if (!this.window["markdownit"])
+          return mdText;
+        const opts = {
+          // eslint-disable-line object-shorthand
+          html: true,
+          linkify: true,
+          _highlight: true,
+          langPrefix: "language-",
+          highlight(str, lang) {
+            if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
+              try {
+                return `<pre class="highlight" data-language="${lang.toUpperCase()}">
+                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
+              } finally {
+              }
+            }
+            return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+          }
+        };
+        const md = this.window["markdownit"](opts);
+        return md.render(mdText);
+      }
+      /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+       * Otherwise just returns that HTML as-is.
+       * @param {string} html The input HTML string
+       * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+       */
+      sanitiseHTML(html) {
+        if (!this.window["DOMPurify"])
+          return html;
+        return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
       }
       /** Replace or add an HTML element's slot from a Markdown string
        * Only does something if the markdownit library has been loaded to window.
@@ -103,31 +164,10 @@ var require_ui = __commonJS({
       replaceSlotMarkdown(el, component) {
         if (!el)
           return;
-        if (!window["markdownit"])
-          return;
         if (!component.slotMarkdown)
           return;
-        const opts = {
-          // eslint-disable-line object-shorthand
-          html: true,
-          linkify: true,
-          _highlight: true,
-          langPrefix: "language-",
-          highlight(str, lang) {
-            if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
-              try {
-                return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${window["hljs"].highlightAuto(str).value}</code></pre>`;
-              } finally {
-              }
-            }
-            return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-          }
-        };
-        const md = window["markdownit"](opts);
-        component.slotMarkdown = md.render(component.slotMarkdown);
-        if (window["DOMPurify"])
-          component.slotMarkdown = window["DOMPurify"].sanitize(component.slotMarkdown);
+        component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
+        component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
         el.innerHTML = component.slotMarkdown;
       }
       /** Attach a new remote script to the end of HEAD synchronously
@@ -136,10 +176,10 @@ var require_ui = __commonJS({
        * @param {string} url The url to be used in the script src attribute
        */
       loadScriptSrc(url2) {
-        const newScript = document.createElement("script");
+        const newScript = this.document.createElement("script");
         newScript.src = url2;
         newScript.async = false;
-        document.head.appendChild(newScript);
+        this.document.head.appendChild(newScript);
       }
       /** Attach a new remote stylesheet link to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -147,11 +187,11 @@ var require_ui = __commonJS({
        * @param {string} url The url to be used in the style link href attribute
        */
       loadStyleSrc(url2) {
-        const newStyle = document.createElement("link");
+        const newStyle = this.document.createElement("link");
         newStyle.href = url2;
         newStyle.rel = "stylesheet";
         newStyle.type = "text/css";
-        document.head.appendChild(newStyle);
+        this.document.head.appendChild(newStyle);
       }
       /** Attach a new text script to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -159,10 +199,10 @@ var require_ui = __commonJS({
        * @param {string} textFn The text to be loaded as a script
        */
       loadScriptTxt(textFn) {
-        const newScript = document.createElement("script");
+        const newScript = this.document.createElement("script");
         newScript.async = false;
         newScript.textContent = textFn;
-        document.head.appendChild(newScript);
+        this.document.head.appendChild(newScript);
       }
       /** Attach a new text stylesheet to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -170,12 +210,11 @@ var require_ui = __commonJS({
        * @param {string} textFn The text to be loaded as a stylesheet
        */
       loadStyleTxt(textFn) {
-        const newStyle = document.createElement("style");
+        const newStyle = this.document.createElement("style");
         newStyle.textContent = textFn;
-        document.head.appendChild(newStyle);
+        this.document.head.appendChild(newStyle);
       }
-      // TODO - Allow notify to sit in corners rather than take over the screen
-      /** Show a pop-over "toast" dialog or a modal alert
+      /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
        * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
        *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
        *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
@@ -191,7 +230,7 @@ var require_ui = __commonJS({
         if (ui.content)
           content += ui.content;
         if (content === "") {
-          log2(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
+          _a2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
           return;
         }
         if (!ui.title && msg.topic)
@@ -215,9 +254,9 @@ var require_ui = __commonJS({
           ui.autohide = false;
           content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
         }
-        let toaster = document.getElementById("toaster");
+        let toaster = this.document.getElementById("toaster");
         if (toaster === null) {
-          toaster = document.createElement("div");
+          toaster = this.document.createElement("div");
           toaster.id = "toaster";
           toaster.title = "Click to clear all notifcations";
           toaster.setAttribute("class", "toaster");
@@ -226,9 +265,9 @@ var require_ui = __commonJS({
           toaster.onclick = function() {
             toaster.remove();
           };
-          document.body.insertAdjacentElement("afterbegin", toaster);
+          this.document.body.insertAdjacentElement("afterbegin", toaster);
         }
-        const toast = document.createElement("div");
+        const toast = this.document.createElement("div");
         toast.title = "Click to clear this notifcation";
         toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
         toast.innerHTML = content;
@@ -317,18 +356,18 @@ var require_ui = __commonJS({
        */
       loadui(url2) {
         if (!fetch) {
-          log2(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
+          _a2.log(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
           return;
         }
         if (!url2) {
-          log2(0, "Ui:loadui", "url parameter must be provided, skipping.")();
+          _a2.log(0, "Ui:loadui", "url parameter must be provided, skipping.")();
           return;
         }
         fetch(url2).then((response) => {
           if (response.ok === false) {
             throw new Error(`Could not load '${url2}'. Status ${response.status}, Error: ${response.statusText}`);
           }
-          log2("trace", "Ui:loadui:then1", `Loaded '${url2}'. Status ${response.status}, ${response.statusText}`)();
+          _a2.log("trace", "Ui:loadui:then1", `Loaded '${url2}'. Status ${response.status}, ${response.statusText}`)();
           const contentType = response.headers.get("content-type");
           if (!contentType || !contentType.includes("application/json")) {
             throw new TypeError(`Fetch '${url2}' did not return JSON, ignoring`);
@@ -336,13 +375,13 @@ var require_ui = __commonJS({
           return response.json();
         }).then((data) => {
           if (data !== void 0) {
-            log2("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
+            _a2.log("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
             this._uiManager({ _ui: data });
             return true;
           }
           return false;
         }).catch((err) => {
-          log2("warn", "Ui:loadui:catch", "Error. ", err)();
+          _a2.log("warn", "Ui:loadui:catch", "Error. ", err)();
         });
       }
       // --- end of loadui
@@ -385,7 +424,7 @@ var require_ui = __commonJS({
                 new Function("evt", `${comp.events[type]}(evt)`)(evt);
               });
             } catch (err) {
-              log2("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+              _a2.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
             }
           });
         }
@@ -412,18 +451,18 @@ var require_ui = __commonJS({
        */
       _uiExtendEl(parentEl, components, ns = "") {
         components.forEach((compToAdd, i2) => {
-          log2("trace", `Ui:_uiExtendEl:components-forEach:${i2}`, compToAdd)();
+          _a2.log("trace", `Ui:_uiExtendEl:components-forEach:${i2}`, compToAdd)();
           let newEl;
           compToAdd.ns = ns;
           if (compToAdd.ns === "html") {
             newEl = parentEl;
             parentEl.innerHTML = compToAdd.slot;
           } else if (compToAdd.ns === "svg") {
-            newEl = document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
+            newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
             this._uiComposeComponent(newEl, compToAdd);
             parentEl.appendChild(newEl);
           } else {
-            newEl = document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+            newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
             this._uiComposeComponent(newEl, compToAdd);
             parentEl.appendChild(newEl);
           }
@@ -437,7 +476,7 @@ var require_ui = __commonJS({
       //     // must be Vue
       //     // must have only 1 root element
       //     const compToAdd = ui.components[0]
-      //     const newEl = document.createElement(compToAdd.type)
+      //     const newEl = this.document.createElement(compToAdd.type)
       //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
       //     this._uiComposeComponent(newEl, compToAdd)
       //     // If nested components, go again - but don't pass payload to sub-components
@@ -456,24 +495,24 @@ var require_ui = __commonJS({
        * @param {boolean} isRecurse Is this a recursive call?
        */
       _uiAdd(ui, isRecurse) {
-        log2("trace", "Ui:_uiManager:add", "Starting _uiAdd")();
+        _a2.log("trace", "Ui:_uiManager:add", "Starting _uiAdd")();
         ui.components.forEach((compToAdd, i2) => {
-          log2("trace", `Ui:_uiAdd:components-forEach:${i2}`, "Component to add: ", compToAdd)();
+          _a2.log("trace", `Ui:_uiAdd:components-forEach:${i2}`, "Component to add: ", compToAdd)();
           let newEl;
           switch (compToAdd.type) {
             case "html": {
               compToAdd.ns = "html";
-              newEl = document.createElement("div");
+              newEl = this.document.createElement("div");
               break;
             }
             case "svg": {
               compToAdd.ns = "svg";
-              newEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+              newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
               break;
             }
             default: {
               compToAdd.ns = "dom";
-              newEl = document.createElement(compToAdd.type);
+              newEl = this.document.createElement(compToAdd.type);
               break;
             }
           }
@@ -486,13 +525,13 @@ var require_ui = __commonJS({
           } else if (ui.parentEl) {
             elParent = ui.parentEl;
           } else if (compToAdd.parent) {
-            elParent = document.querySelector(compToAdd.parent);
+            elParent = this.document.querySelector(compToAdd.parent);
           } else if (ui.parent) {
-            elParent = document.querySelector(ui.parent);
+            elParent = this.document.querySelector(ui.parent);
           }
           if (!elParent) {
-            log2("info", "Ui:_uiAdd", "No parent found, adding to body")();
-            elParent = document.querySelector("body");
+            _a2.log("info", "Ui:_uiAdd", "No parent found, adding to body")();
+            elParent = this.document.querySelector("body");
           }
           if (compToAdd.position && compToAdd.position === "first") {
             elParent.insertBefore(newEl, elParent.firstChild);
@@ -516,14 +555,14 @@ var require_ui = __commonJS({
         ui.components.forEach((compToRemove) => {
           let els;
           if (all !== true)
-            els = [document.querySelector(compToRemove)];
+            els = [this.document.querySelector(compToRemove)];
           else
-            els = document.querySelectorAll(compToRemove);
+            els = this.document.querySelectorAll(compToRemove);
           els.forEach((el) => {
             try {
               el.remove();
             } catch (err) {
-              log2("trace", "Ui:_uiRemove", `Could not remove. ${err.message}`)();
+              _a2.log("trace", "Ui:_uiRemove", `Could not remove. ${err.message}`)();
             }
           });
         });
@@ -533,22 +572,22 @@ var require_ui = __commonJS({
        * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
        */
       _uiReplace(ui) {
-        log2("trace", "Ui:_uiReplace", "Starting")();
+        _a2.log("trace", "Ui:_uiReplace", "Starting")();
         ui.components.forEach((compToReplace, i2) => {
-          log2("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Component to replace: ", compToReplace)();
+          _a2.log("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Component to replace: ", compToReplace)();
           let elToReplace;
           if (compToReplace.id) {
-            elToReplace = document.getElementById(compToReplace.id);
+            elToReplace = this.document.getElementById(compToReplace.id);
           } else if (compToReplace.selector || compToReplace.select) {
-            elToReplace = document.querySelector(compToReplace.selector);
+            elToReplace = this.document.querySelector(compToReplace.selector);
           } else if (compToReplace.name) {
-            elToReplace = document.querySelector(`[name="${compToReplace.name}"]`);
+            elToReplace = this.document.querySelector(`[name="${compToReplace.name}"]`);
           } else if (compToReplace.type) {
-            elToReplace = document.querySelector(compToReplace.type);
+            elToReplace = this.document.querySelector(compToReplace.type);
           }
-          log2("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Element to replace: ", elToReplace)();
+          _a2.log("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Element to replace: ", elToReplace)();
           if (elToReplace === void 0 || elToReplace === null) {
-            log2("trace", `Ui:_uiReplace:components-forEach:${i2}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
+            _a2.log("trace", `Ui:_uiReplace:components-forEach:${i2}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
             this._uiAdd({ components: [compToReplace] }, false);
             return;
           }
@@ -556,17 +595,17 @@ var require_ui = __commonJS({
           switch (compToReplace.type) {
             case "html": {
               compToReplace.ns = "html";
-              newEl = document.createElement("div");
+              newEl = this.document.createElement("div");
               break;
             }
             case "svg": {
               compToReplace.ns = "svg";
-              newEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+              newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
               break;
             }
             default: {
               compToReplace.ns = "dom";
-              newEl = document.createElement(compToReplace.type);
+              newEl = this.document.createElement(compToReplace.type);
               break;
             }
           }
@@ -585,26 +624,26 @@ var require_ui = __commonJS({
        * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
        */
       _uiUpdate(ui) {
-        log2("trace", "Ui:_uiManager:update", "Starting _uiUpdate")();
+        _a2.log("trace", "Ui:_uiManager:update", "Starting _uiUpdate")();
         if (!ui.components)
           ui.components = [Object.assign({}, ui)];
         ui.components.forEach((compToUpd, i2) => {
-          log2("trace", "_uiUpdate:components-forEach", `Component #${i2}`, compToUpd)();
+          _a2.log("trace", "_uiUpdate:components-forEach", `Component #${i2}`, compToUpd)();
           let elToUpd;
           if (compToUpd.id) {
-            elToUpd = document.querySelectorAll(`#${compToUpd.id}`);
+            elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`);
           } else if (compToUpd.selector || compToUpd.select) {
-            elToUpd = document.querySelectorAll(compToUpd.selector);
+            elToUpd = this.document.querySelectorAll(compToUpd.selector);
           } else if (compToUpd.name) {
-            elToUpd = document.querySelectorAll(`[name="${compToUpd.name}"]`);
+            elToUpd = this.document.querySelectorAll(`[name="${compToUpd.name}"]`);
           } else if (compToUpd.type) {
-            elToUpd = document.querySelectorAll(compToUpd.type);
+            elToUpd = this.document.querySelectorAll(compToUpd.type);
           }
           if (elToUpd === void 0 || elToUpd.length < 1) {
-            log2("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
+            _a2.log("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
             return;
           }
-          log2("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
+          _a2.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
           if (!compToUpd.slot && compToUpd.payload)
             compToUpd.slot = compToUpd.payload;
           elToUpd.forEach((el) => {
@@ -612,7 +651,7 @@ var require_ui = __commonJS({
           });
           if (compToUpd.components) {
             elToUpd.forEach((el) => {
-              log2("trace", "_uiUpdate:components", "el", el)();
+              _a2.log("trace", "_uiUpdate:components", "el", el)();
               this._uiUpdate({
                 method: ui.method,
                 parentEl: el,
@@ -664,7 +703,7 @@ var require_ui = __commonJS({
       // --- end of _uiLoad ---
       /** Handle a reload request */
       _uiReload() {
-        log2("trace", "Ui:uiManager:reload", "reloading")();
+        _a2.log("trace", "Ui:uiManager:reload", "reloading")();
         location.reload();
       }
       /** Handle incoming _ui messages and loaded UI JSON files
@@ -678,7 +717,7 @@ var require_ui = __commonJS({
           msg._ui = [msg._ui];
         msg._ui.forEach((ui, i2) => {
           if (!ui.method) {
-            log2("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
+            _a2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
             return;
           }
           ui.payload = msg.payload;
@@ -721,7 +760,7 @@ var require_ui = __commonJS({
               break;
             }
             default: {
-              log2("error", "Ui:_uiManager", `Invalid msg._ui[${i2}].method (${ui.method}). Ignoring`)();
+              _a2.log("error", "Ui:_uiManager", `Invalid msg._ui[${i2}].method (${ui.method}). Ignoring`)();
               break;
             }
           }
@@ -753,7 +792,7 @@ var require_ui = __commonJS({
           }
         };
         if (["UL", "OL"].includes(node.nodeName)) {
-          const listEntries = document.querySelectorAll(`${cssSelector} li`);
+          const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
           if (listEntries) {
             thisOut.list = {
               "entries": listEntries.length
@@ -761,7 +800,7 @@ var require_ui = __commonJS({
           }
         }
         if (node.nodeName === "DL") {
-          const listEntries = document.querySelectorAll(`${cssSelector} dt`);
+          const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
           if (listEntries) {
             thisOut.list = {
               "entries": listEntries.length
@@ -769,9 +808,9 @@ var require_ui = __commonJS({
           }
         }
         if (node.nodeName === "TABLE") {
-          const bodyEntries = document.querySelectorAll(`${cssSelector} > tbody > tr`);
-          const headEntries = document.querySelectorAll(`${cssSelector} > thead > tr`);
-          const cols = document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+          const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
+          const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
+          const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
           if (bodyEntries || headEntries || cols) {
             thisOut.table = {
               "headRows": headEntries ? headEntries.length : 0,
@@ -807,7 +846,7 @@ var require_ui = __commonJS({
       uiGet(cssSelector, propName = null) {
         const selection = (
           /** @type {NodeListOf<HTMLInputElement>} */
-          document.querySelectorAll(cssSelector)
+          this.document.querySelectorAll(cssSelector)
         );
         const out = [];
         selection.forEach((node) => {
@@ -861,26 +900,26 @@ var require_ui = __commonJS({
        */
       async include(url2, uiOptions) {
         if (!fetch) {
-          log2(0, "Ui:include", "Current environment does not include `fetch`, skipping.")();
+          _a2.log(0, "Ui:include", "Current environment does not include `fetch`, skipping.")();
           return "Current environment does not include `fetch`, skipping.";
         }
         if (!url2) {
-          log2(0, "Ui:include", "url parameter must be provided, skipping.")();
+          _a2.log(0, "Ui:include", "url parameter must be provided, skipping.")();
           return "url parameter must be provided, skipping.";
         }
         if (!uiOptions || !uiOptions.id) {
-          log2(0, "Ui:include", "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")();
+          _a2.log(0, "Ui:include", "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.")();
           return "uiOptions parameter MUST be provided and must contain at least an `id` property, skipping.";
         }
         let response;
         try {
           response = await fetch(url2);
         } catch (error) {
-          log2(0, "Ui:include", `Fetch of file '${url2}' failed. `, error.message)();
+          _a2.log(0, "Ui:include", `Fetch of file '${url2}' failed. `, error.message)();
           return error.message;
         }
         if (!response.ok) {
-          log2(0, "Ui:include", `Fetch of file '${url2}' failed. Status='${response.statusText}'`)();
+          _a2.log(0, "Ui:include", `Fetch of file '${url2}' failed. Status='${response.statusText}'`)();
           return response.statusText;
         }
         const contentType = await response.headers.get("content-type");
@@ -928,18 +967,18 @@ var require_ui = __commonJS({
           case "image": {
             data = await response.blob();
             slot = `<img src="${URL.createObjectURL(data)}">`;
-            if (window && window["DOMPurify"]) {
+            if (this.window["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
-              log2("warn", "Ui:include:image", txtReturn)();
+              _a2.log("warn", "Ui:include:image", txtReturn)();
             }
             break;
           }
           case "video": {
             data = await response.blob();
             slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
-            if (window && window["DOMPurify"]) {
+            if (this.window["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
-              log2("warn", "Ui:include:video", txtReturn)();
+              _a2.log("warn", "Ui:include:video", txtReturn)();
             }
             break;
           }
@@ -948,9 +987,9 @@ var require_ui = __commonJS({
           default: {
             data = await response.blob();
             slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
-            if (window && window["DOMPurify"]) {
+            if (this.window["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
-              log2("warn", `Ui:include:${type}`, txtReturn)();
+              _a2.log("warn", `Ui:include:${type}`, txtReturn)();
             }
             break;
           }
@@ -966,14 +1005,160 @@ var require_ui = __commonJS({
             uiOptions
           ]
         });
-        log2("trace", `Ui:include:${type}`, txtReturn)();
+        _a2.log("trace", `Ui:include:${type}`, txtReturn)();
         return txtReturn;
       }
       // ---- End of include() ---- //
-    };
+    }, /** Log function - passed in constructor or will be a dummy function
+     * @type {function}
+     */
+    __publicField(_a2, "log"), _a2);
     module.exports = Ui2;
   }
 });
+
+// src/front-end-module/uibuilder.module.js
+var import_ui = __toESM(require_ui());
+
+// src/components/uib-var/uib-var.js
+var _UibVar = class _UibVar extends HTMLElement {
+  //#endregion --- Class Properties ---
+  constructor() {
+    super();
+    //#region --- Class Properties ---
+    /** @type {string} Name of the uibuilder mangaged variable to use */
+    __publicField(this, "variable");
+    /** Current value of the watched variable */
+    __publicField(this, "value");
+    /** Whether to output if the variable is undefined */
+    __publicField(this, "undefined", false);
+    /** Whether to send update value to Node-RED on change */
+    __publicField(this, "report", false);
+    /** What is the value type */
+    __publicField(this, "type", "plain");
+    /** what are the available types? */
+    __publicField(this, "types", ["plain", "html", "markdown", "object"]);
+    /** Mini jQuery-like shadow dom selector (see constructor) */
+    __publicField(this, "$");
+    this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
+    this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
+    this.css = document.createElement("link");
+    this.css.setAttribute("type", "text/css");
+    this.css.setAttribute("rel", "stylesheet");
+    this.css.setAttribute("href", "../uibuilder/uib-brand.min.css");
+    this.dispatchEvent(new Event(`uib-var:construction`, { bubbles: true, composed: true }));
+  }
+  // Makes HTML attribute change watched
+  static get observedAttributes() {
+    return _UibVar.props;
+  }
+  /** NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called  */
+  attributeChangedCallback(attrib, oldVal, newVal) {
+    if (oldVal === newVal)
+      return;
+    switch (attrib) {
+      case "variable": {
+        if (newVal === "")
+          throw new Error('[uib-var] Attribute "variable" MUST be set to a UIBUILDER managed variable name');
+        this.variable = newVal;
+        this.doWatch();
+        break;
+      }
+      case "undefined": {
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
+          this.undefined = true;
+        else
+          this.undefined = false;
+        break;
+      }
+      case "report": {
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
+          this.report = true;
+        else
+          this.report = false;
+        break;
+      }
+      case "type": {
+        if (newVal === "" || !this.types.includes(newVal.toLowerCase()))
+          this.type = "plain";
+        else
+          this.type = newVal;
+        break;
+      }
+      default: {
+        this[attrib] = newVal;
+        break;
+      }
+    }
+  }
+  // --- end of attributeChangedCallback --- //
+  // Runs when an instance is added to the DOM
+  connectedCallback() {
+    if (!this.id) {
+      if (!this.name)
+        this.name = this.getAttribute("name");
+      if (this.name)
+        this.id = this.name.toLowerCase().replace(/\s/g, "_");
+      else
+        this.id = `uib-var-${++_UibVar._iCount}`;
+    }
+  }
+  // ---- end of connectedCallback ---- //
+  // Runs when an instance is removed from the DOM
+  // disconnectedCallback() {} // ---- end of disconnectedCallback ---- //
+  /** Process changes to the required uibuilder variable */
+  doWatch() {
+    if (!this.variable)
+      throw new Error("No variable name provided");
+    this.value = window["uibuilder"].get(this.variable);
+    this.varDom();
+    window["uibuilder"].onChange(this.variable, (val) => {
+      this.value = val;
+      this.varDom();
+      if (this.report === true)
+        window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+    });
+  }
+  /** Convert this.value to DOM output */
+  varDom() {
+    if (this.value === void 0 && this.undefined !== true) {
+      this.shadow.innerHTML = "<slot></slot>";
+      return;
+    }
+    let val = this.value;
+    switch (this.type) {
+      case "markdown": {
+        this.shadow.innerHTML = window["uibuilder"].sanitiseHTML(window["uibuilder"].convertMarkdown(val));
+        break;
+      }
+      case "object": {
+        this.shadow.innerHTML = `<pre class="syntax-highlight">${window["uibuilder"].syntaxHighlight(val)}</pre>`;
+        break;
+      }
+      case "plain":
+      case "html":
+      default: {
+        const t = typeof val;
+        if (Array.isArray(val) || t === "[object Object]" || t === "object") {
+          try {
+            this.shadow.innerHTML = JSON.stringify(val);
+          } catch (e) {
+            this.shadow.innerHTML = val;
+          }
+        } else {
+          this.shadow.innerHTML = val;
+        }
+        break;
+      }
+    }
+    this.shadow.appendChild(this.css);
+  }
+};
+/** Holds a count of how many instances of this component are on the page */
+__publicField(_UibVar, "_iCount", 0);
+/** @type {Array<string>} List of all of the html attribs (props) listened to */
+__publicField(_UibVar, "props", ["name", "id", "variable", "undefined", "report", "type"]);
+var UibVar = _UibVar;
 
 // node_modules/engine.io-parser/build/esm/commons.js
 var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -4287,8 +4472,7 @@ Object.assign(lookup2, {
 });
 
 // src/front-end-module/uibuilder.module.js
-var import_ui = __toESM(require_ui());
-var version = "6.5.0-esm";
+var version = "6.6.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
@@ -4439,32 +4623,40 @@ function urlJoin() {
   return url2.replace("//", "/");
 }
 function syntaxHighlight(json) {
-  json = JSON.stringify(json, void 0, 4);
-  json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
-    let cls = "number";
-    if (/^"/.test(match)) {
-      if (/:$/.test(match)) {
-        cls = "key";
-      } else {
-        cls = "string";
-      }
-    } else if (/true|false/.test(match)) {
-      cls = "boolean";
-    } else if (/null/.test(match)) {
-      cls = "null";
+  if (json === void 0) {
+    json = '<span class="undefined">undefined</span>';
+  } else {
+    try {
+      json = JSON.stringify(json, void 0, 4);
+      json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
+        let cls = "number";
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = "key";
+          } else {
+            cls = "string";
+          }
+        } else if (/true|false/.test(match)) {
+          cls = "boolean";
+        } else if (/null/.test(match)) {
+          cls = "null";
+        }
+        return `<span class="${cls}">${match}</span>`;
+      });
+    } catch (e) {
+      json = `Syntax Highlight ERROR: ${e.message}`;
     }
-    return '<span class="' + cls + '">' + match + "</span>";
-  });
+  }
   return json;
 }
-var _ui = new import_ui.default(log, syntaxHighlight);
-var _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _extCommands, _showStatus, _uiObservers, _a;
+var _ui = new import_ui.default(window, log, syntaxHighlight);
+var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _extCommands, _managedVars, _showStatus, _uiObservers;
 var Uib = (_a = class {
   // ---- End of ioSetup ---- //
   //#endregion -------- ------------ -------- //
   //#region ------- Class construction & startup method -------- //
   constructor() {
+    //#endregion ---- ---- ---- ----
     //#region private class vars
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
     __publicField(this, "connectedNum", 0);
@@ -4496,6 +4688,8 @@ var Uib = (_a = class {
     __privateAdd(this, _isShowMsg, false);
     // Has showStatus been turned on?
     __privateAdd(this, _isShowStatus, false);
+    // Has an IntersectionObserver been created? If so, this will hold the reference to it
+    __privateAdd(this, _intersectionObserver, void 0);
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     __privateAdd(this, _extCommands, [
       "get",
@@ -4505,8 +4699,13 @@ var Uib = (_a = class {
       "showStatus",
       "uiGet",
       "uiWatch",
-      "include"
+      "include",
+      "elementExists",
+      "getManagedVarList",
+      "getWatchedVars"
     ]);
+    /** @type {{[key: string]: string}} Managed uibuilder variables */
+    __privateAdd(this, _managedVars, {});
     // What status variables to show via showStatus()
     __privateAdd(this, _showStatus, {
       online: { "var": "online", "label": "Online?", "description": "Is the browser online?" },
@@ -4680,13 +4879,19 @@ var Uib = (_a = class {
       this.set("pageName", `${this.pageName}index.html`);
     if (this.pageName === "")
       this.set("pageName", "index.html");
+    try {
+      const autoloadVars = this.getStore("_uibAutoloadVars");
+      if (Object.keys(autoloadVars).length > 0) {
+        Object.keys(autoloadVars).forEach((id) => {
+          this.set(id, this.getStore(id));
+        });
+      }
+    } catch (e) {
+    }
     this._dispatchCustomEvent("uibuilder:constructorComplete");
     log("trace", "Uib:constructor", "Ending")();
   }
-  get meta() {
-    return _a._meta;
-  }
-  //#endregion ---- ---- ---- ---- //
+  //#endregion -- not external --
   //#endregion --- End of variables ---
   //#region ------- Getters and Setters ------- //
   // Change logging level dynamically (affects both console. and print.)
@@ -4697,22 +4902,29 @@ var Uib = (_a = class {
   get logLevel() {
     return logLevel;
   }
-  // TODO Block setting of read-only vars
+  get meta() {
+    return _a._meta;
+  }
   /** Function to set uibuilder properties to a new value - works on any property except _* or #*
    * Also triggers any event listeners.
    * Example: this.set('msg', {topic:'uibuilder', payload:42});
    * @param {string} prop Any uibuilder property who's name does not start with a _ or #
    * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
+   * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
+   * @param {boolean} [autoload] If true & store is true, on load, uib will try to restore the value from the store automatically
    * @returns {*} Input value
    */
-  set(prop, val) {
+  set(prop, val, store = false, autoload = false) {
     if (prop.startsWith("_") || prop.startsWith("#")) {
       log("warn", "Uib:set", `Cannot use set() on protected property "${prop}"`)();
       return `Cannot use set() on protected property "${prop}"`;
     }
     this[prop] = val;
-    log("trace", "Uib:set", `prop set - prop: ${prop}, val: `, val)();
-    this._dispatchCustomEvent("uibuilder:propertyChanged", { "prop": prop, "value": val });
+    __privateGet(this, _managedVars)[prop] = prop;
+    if (store === true)
+      this.setStore(prop, val, autoload);
+    log("trace", "Uib:set", `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)();
+    this._dispatchCustomEvent("uibuilder:propertyChanged", { "prop": prop, "value": val, "store": store, "autoload": autoload });
     return val;
   }
   /** Function to get the value of a uibuilder property
@@ -4743,9 +4955,17 @@ var Uib = (_a = class {
    *   console.log(uibuilder.getStore('fred'))
    * @param {string} id localStorage var name to be used (prefixed with 'uib_')
    * @param {*} value value to write to localstore
+   * @param {boolean} [autoload] If true, on load, uib will try to restore the value from the store
    * @returns {boolean} True if succeeded else false
    */
-  setStore(id, value2) {
+  setStore(id, value2, autoload = false) {
+    let autoVars = {};
+    if (autoload === true) {
+      try {
+        autoVars = this.getStore("_uibAutoloadVars") || {};
+      } catch (e) {
+      }
+    }
     if (typeof value2 === "object") {
       try {
         value2 = JSON.stringify(value2);
@@ -4756,6 +4976,15 @@ var Uib = (_a = class {
     }
     try {
       localStorage.setItem(this.storePrefix + id, value2);
+      if (autoload) {
+        autoVars[id] = id;
+        try {
+          localStorage.setItem(this.storePrefix + "_uibAutoloadVars", JSON.stringify(autoVars));
+        } catch (e) {
+          log("error", "Uib:setStore", "Cannot save autoload list. ", e)();
+        }
+      }
+      this._dispatchCustomEvent("uibuilder:propertyStored", { "prop": id, "value": value2, "autoload": autoload });
       return true;
     } catch (e) {
       log("error", "Uib:setStore", "Cannot write to localStorage. ", e)();
@@ -4787,6 +5016,15 @@ var Uib = (_a = class {
       localStorage.removeItem(this.storePrefix + id);
     } catch (e) {
     }
+  }
+  /** Returns a list of uibuilder properties (variables) that can be watched with onChange
+   * @returns {{[key: string]: string}} List of uibuilder managed variables
+   */
+  getManagedVarList() {
+    return __privateGet(this, _managedVars);
+  }
+  getWatchedVars() {
+    return Object.keys(__privateGet(this, _propChangeCallbacks));
   }
   //#endregion ------- -------- ------- //
   //#region ------- Our own event handling system ---------- //
@@ -4874,7 +5112,7 @@ var Uib = (_a = class {
   //     }
   //     log('trace', 'Uib:emit', `${evt.length} listeners run for prop ${prop} `)()
   // }
-  /** Forcably removes all event listeners from the events array
+  /** Forcibly removes all event listeners from the events array
    * Use if you need to re-initialise the environment
    */
   // clearEventListeners() {
@@ -4987,6 +5225,81 @@ var Uib = (_a = class {
     return syntaxHighlight(json);
   }
   // --- End of syntaxHighlight --- //
+  /** Copies a uibuilder variable to the browser clipboard
+   * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
+   */
+  copyToClipboard(varToCopy) {
+    let data = "";
+    try {
+      console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)));
+      data = JSON.stringify(this.get(varToCopy));
+    } catch (e) {
+      log("error", "copyToClipboard", `Could not copy "${varToCopy}" to clipboard.`, e.message)();
+    }
+    navigator.clipboard.writeText(data);
+  }
+  // --- End of copyToClipboard --- //
+  /** Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
+   * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
+   * Automatically sends a msg back to Node-RED.
+   * Requires the element to already exist.
+   * @param {string} cssSelector Required. CSS Selector to examine for visibility
+   * @param {boolean} stop Optional. Default=false. If TRUE, stop the observer for this cssSelector
+   * @param {number} threshold Optional. Default=0.1. Between 0 and 1, the % visibility before trigger
+   */
+  elementIsVisible(cssSelector, stop = false, threshold = 0.1) {
+    if (!IntersectionObserver)
+      return;
+    if (!__privateGet(this, _intersectionObserver)) {
+      __privateSet(this, _intersectionObserver, new IntersectionObserver((ioEntries) => {
+        const entries = [];
+        ioEntries.forEach((entry) => {
+          entry.target.dataset.isvisible = entry.isIntersecting;
+          entries.push({
+            isIntersecting: entry.isIntersecting
+          });
+        });
+        this.send({
+          payload: entries[0].isIntersecting,
+          isVisible: entries[0].isIntersecting,
+          cssSelector,
+          entries
+        });
+        log("info", "uib:elementIsVisible", `Element "${cssSelector}" is now ${entries[0].isIntersecting ? "more than 10%" : "NOT (<10%)"} visible`)();
+      }, { threshold }));
+    }
+    const el = document.querySelector(cssSelector);
+    if (el === null) {
+      log("error", "uib:elementIsVisible", `Element "${cssSelector}" not found`)();
+      return;
+    }
+    if (stop === true) {
+      __privateGet(this, _intersectionObserver).unobserve(el);
+      return;
+    }
+    __privateGet(this, _intersectionObserver).observe(el);
+  }
+  // --- End of elementIsVisible --- //
+  /** Does the chosen CSS Selector currently exist?
+   * Automatically sends a msg back to Node-RED unless turned off.
+   * @param {string} cssSelector Required. CSS Selector to examine for visibility
+   * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
+   * @returns {boolean} True if the element exists
+   */
+  elementExists(cssSelector, msg = true) {
+    const el = document.querySelector(cssSelector);
+    let exists = false;
+    if (el !== null)
+      exists = true;
+    if (msg === true) {
+      this.send({
+        payload: exists,
+        info: `Element "${cssSelector}" ${exists ? "exists" : "does not exist"}`
+      });
+    }
+    return exists;
+  }
+  // --- End of elementExists --- //
   //#endregion -------- -------- -------- //
   //#region ------- UI handlers --------- //
   //#region -- Direct to _ui --
@@ -5013,6 +5326,22 @@ var Uib = (_a = class {
    */
   replaceSlotMarkdown(el, component) {
     _ui.replaceSlotMarkdown(el, component);
+  }
+  /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+   * Otherwise simply returns the text
+   * @param {string} mdText The input markdown string
+   * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+   */
+  convertMarkdown(mdText) {
+    return _ui.convertMarkdown(mdText);
+  }
+  /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+   * Otherwise just returns that HTML as-is.
+   * @param {string} html The input HTML string
+   * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+   */
+  sanitiseHTML(html) {
+    return _ui.sanitiseHTML(html);
   }
   /** Attach a new remote script to the end of HEAD synchronously
    * NOTE: It takes too long for most scripts to finish loading
@@ -5109,21 +5438,48 @@ var Uib = (_a = class {
     if (showHide === false) {
       _ui._uiRemove({
         components: [
-          "#uib_last_msg"
+          "#uib_last_msg_wrap"
         ]
       });
     } else {
       _ui._uiReplace({
         components: [
           {
-            type: "pre",
-            id: "uib_last_msg",
+            type: "div",
+            id: "uib_last_msg_wrap",
             parent,
             attributes: {
-              title: "Last message from Node-RED",
-              class: "syntax-highlight"
+              title: "Last message from Node-RED"
             },
-            slot
+            components: [
+              {
+                type: "button",
+                attributes: {
+                  onclick: 'uibuilder.copyToClipboard("msg")',
+                  class: "compact",
+                  style: "right:3em;"
+                },
+                slot: "\u{1F4CB}"
+              },
+              {
+                type: "button",
+                attributes: {
+                  onclick: "uibuilder.showMsg()",
+                  class: "compact",
+                  style: "right:.5em;"
+                },
+                slot: "\u26D4"
+              },
+              {
+                type: "pre",
+                id: "uib_last_msg",
+                // parent: 'uib_last_msg_wrap',
+                attributes: {
+                  class: "syntax-highlight"
+                },
+                slot
+              }
+            ]
           }
         ]
       });
@@ -5594,18 +5950,49 @@ ${document.documentElement.outerHTML}`;
     }
     const prop = msg._uib.prop;
     const value2 = msg._uib.value;
-    let response;
+    let response, info;
     switch (cmd) {
+      case "elementExists": {
+        response = this.elementExists(prop, false);
+        info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
+        break;
+      }
       case "get": {
         response = this.get(prop);
+        break;
+      }
+      case "getManagedVarList": {
+        if (prop === "full")
+          response = this.getManagedVarList();
+        else
+          response = Object.values(this.getManagedVarList());
+        break;
+      }
+      case "getWatchedVars": {
+        if (prop === "full")
+          response = this.getWatchedVars();
+        else
+          response = Object.values(this.getWatchedVars());
         break;
       }
       case "htmlSend": {
         response = this.htmlSend();
         break;
       }
+      case "include": {
+        response = _ui.include(prop, value2);
+        break;
+      }
       case "set": {
-        response = this.set(prop, value2);
+        let store = false;
+        let autoload = false;
+        if (msg._uib.options && msg._uib.options.store) {
+          if (msg._uib.options.store === true)
+            store = true;
+          if (msg._uib.options.autoload === true)
+            autoload = true;
+        }
+        response = this.set(prop, value2, store, autoload);
         break;
       }
       case "showMsg": {
@@ -5624,10 +6011,6 @@ ${document.documentElement.outerHTML}`;
         response = this.uiWatch(prop);
         break;
       }
-      case "include": {
-        response = _ui.include(prop, value2);
-        break;
-      }
       default: {
         log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();
         break;
@@ -5639,6 +6022,7 @@ ${document.documentElement.outerHTML}`;
     if (Object(response).constructor === Promise) {
       response.then((data) => {
         msg.payload = msg._uib.response = data;
+        msg.info = msg._uib.info = info;
         if (!msg.topic)
           msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
         this.send(msg);
@@ -5648,6 +6032,7 @@ ${document.documentElement.outerHTML}`;
       });
     } else {
       msg.payload = msg._uib.response = response;
+      msg.info = msg._uib.info = info;
       if (!msg.topic)
         msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
       this.send(msg);
@@ -5819,6 +6204,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     } else {
       log("trace", "uibuilder.module.js:getIOnamespace", `Socket.IO namespace found via cookie: ${ioNamespace}`)();
     }
+    this.url = ioNamespace;
     ioNamespace = "/" + ioNamespace;
     log("trace", "uibuilder.module.js:getIOnamespace", `Final Socket.IO namespace: ${ioNamespace}`)();
     return ioNamespace;
@@ -6005,8 +6391,7 @@ ioPath: ${this.ioPath}`)();
     this._dispatchCustomEvent("uibuilder:startComplete");
   }
   //#endregion -------- ------------ -------- //
-}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _extCommands = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#endregion -- not external --
-//#region ------- Static metadata ------- //
+}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _intersectionObserver = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
 __publicField(_a, "_meta", {
   version,
   type: "module",
@@ -6035,6 +6420,7 @@ if (!window["$$"]) {
 }
 var uibuilder_module_default = uibuilder;
 uibuilder.start();
+customElements.define("uib-var", UibVar);
 export {
   Uib,
   uibuilder_module_default as default,

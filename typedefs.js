@@ -103,12 +103,14 @@
  * @property {Function} removeHandler Removes a log handler
  */
 
-/** Node-RED runtimeNodes
+/** Node-RED runtimeNodes: RED.nodes
+ * obsidian://open?vault=Obsidian%20Vault&file=Programming%2FNode-RED%2FRuntime%20API's%2FRED.nodes
  * @typedef {object} runtimeNodes Gives access to other active nodes in the flows.
  * @property {Function} registerType Register a new type of node to Node-RED.
+ * @property {Function} registerSubflow .
  * @property {Function} createNode Create a node instance (called from within registerType Function).
  * @property {Function} getNode Get a reference to another node instance in the current flows. Can then access its properties.
- * @property {Function} eachNode .
+ * @property {Function} eachNode Walk through each node
  * @property {Function} addCredentials .
  * @property {Function} getCredentials .
  * @property {Function} deleteCredentials .
@@ -158,6 +160,10 @@
  * @property {Function} util.prepareJSONataExpression : [Function: prepareJSONataExpression],
  * @property {Function} util.evaluateJSONataExpression : [Function: evaluateJSONataExpression],
  * @property {Function} util.parseContextStore : [Function: parseContextStore]
+ * 
+ * @property {object} util.uib : Added by uibuilder.js - utility functions made available to function nodes
+ * @property {Function} util.uib.deepObjFind : Recursive object deep find
+ * @property {Function} util.uib.listAllApps : Return a list of all uibuilder instances
  */
 
 /** runtimeNode
@@ -434,7 +440,7 @@
  *   position: string|number;
  *   positionSource: string|number;
  *   positionSourceType: string;
- * 
+ *
  *   slotContent: string;
  *   slotSourceProp: string;
  *   slotContentSource: string;
@@ -446,6 +452,32 @@
  *   slotPropMarkdown: boolean;
  *   _ui: any;
  * }} uibTagNode
+ */
+
+/** uibHtmlNode (HTML Node)
+ * @typedef {{
+ *   name: string;
+ *   topic: string;
+ *   _ui: any;
+ * }} uibHtmlNode
+ */
+
+/** uibSaveNode (Save Node)
+ * @typedef {{
+ * url: string;
+ * folder: string;
+ * fname: string;
+ * createFolder: boolean;
+ * reload: boolean;
+ * encoding: string;
+ * mode: number;
+ * uibId: string;
+ * instanceRoot: string;
+ * name: string;
+ * topic: string;
+ * counters: object;
+ * statusDisplay: object;
+ * }} uibSaveNode
  */
 
 /** uibUpdNode (Update Node)

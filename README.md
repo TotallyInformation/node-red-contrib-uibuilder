@@ -1,4 +1,5 @@
 [![Discussion](https://img.shields.io/static/v1.svg?label=Discussion&message=Node-RED%20Forum&color=green)](https://discourse.nodered.org/tag/node-red-contrib-uibuilder)
+[![Static Badge](https://img.shields.io/badge/UIBUILDER_Homepage-0d85d7)](https://totallyinformation.github.io/node-red-contrib-uibuilder)
 [![NPM Version](https://img.shields.io/npm/v/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![NPM Total Downloads](https://img.shields.io/npm/dt/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![NPM Downloads per month](https://img.shields.io/npm/dm/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
@@ -17,13 +18,13 @@
 
 # node-red-contrib-uibuilder
 
-uibuilder provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.
+UIBUILDER for Node-RED allows the easy creation of data-driven front-end web applications.
 
-It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces for Node-RED.
+It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces integrated with Node-RED.
 
 ## Installation
 
-uibuilder is best installed using Node-RED's Palette Manager.
+UIBUILDER is best installed using Node-RED's Palette Manager.
 
 <details><summary>Manual installs and other versions</summary>
 
@@ -61,9 +62,9 @@ Older changes can be found in the previous change documents: [CHANGELOG-V5](http
 
 Once installed, The following is a typical simple flow to get going.
 
-1. Add a uibuilder node. Open its settings and give it a "URL" which is used as the identifying name. Close the settings and click on the Deploy button.
+1. Add a `uibuilder` node. Open its settings and give it a "URL" which is used as the identifying name. Close the settings and click on the Deploy button.
 2. Add an inject node for some simple input data and two debug nodes on the two output ports so that you can see everything that is going on. Deploy the flow.
-3. Re-open the uibuilder node's settings and click the "Open" button to see the resulting web page.
+3. Re-open the `uibuilder` node's settings and click the "Open" button to see the resulting web page.
 
 You are now ready to edit the front-end html/javascript/css if you wish and to add logic in Node-RED to provide inputs and handle outputs.
 
@@ -73,23 +74,53 @@ Please see the [First-timers walkthrough](https://totallyinformation.github.io/n
 
 Within Node-RED, use the hamburger menu. Click Import. Click Examples. Select the node-red-contrib-uibuilder folder and choose an example.
 
-The templates feature in uibuilder provides working front-end code of various configurations.
+The templates feature in UIBUILDER provides working front-end code of various configurations.
 
-Other examples can be found on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder) and the [uibuilder WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). Also see the FAQ's and answered questions on the [Node-RED Forum](https://discourse.nodered.org/tag/node-red-contrib-uibuilder).
+Other examples can be found on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder) and the [UIBUILDER WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). Also see the FAQ's and answered questions on the [Node-RED Forum](https://discourse.nodered.org/tag/node-red-contrib-uibuilder).
 
-## Documentation
+## Documentation and other links
 
-Please refer to the [Documentation web site](https://totallyinformation.github.io/node-red-contrib-uibuilder). This can also be accessed from within uibuilder nodes even without an Internet connection.
+Please refer to the [Documentation web site](https://totallyinformation.github.io/node-red-contrib-uibuilder). This can also be accessed from within UIBUILDER nodes even without an Internet connection.
 
-There is a library of "official" [video tutorials on YouTube](https://www.youtube.com/playlist?list=PL9IEADRqAal3mG3RcF0cJaaxIgFh3GdRQ). Other folk have also produced [uibuilder-related content](https://www.youtube.com/results?search_query=uibuilder+node-red).
+There is a library of "official" [video tutorials on YouTube](https://www.youtube.com/playlist?list=PL9IEADRqAal3mG3RcF0cJaaxIgFh3GdRQ). Other folk have also produced [UIBUILDER-related content](https://www.youtube.com/results?search_query=UIBUILDER+node-red).
+
+### Questions, issues and suggestions
+
+The best place to ask questions or discuss possible enhancements is the [Node-RED Forum](https://discourse.nodered.org/).
+
+Alternatively, use the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements and the [GitHub Discussions page](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) for general questions, suggestions, etc.
+
+### Other links
+
+- ![uib](https://github.com/TotallyInformation/node-red-contrib-uibuilder/raw/main/front-end/images/node-blue.ico) [UIBUILDER for Node-RED](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
+  - ❓ [Ideas, questions & general help](https://discourse.nodered.org/tag/node-red-contrib-uibuilder) - Ask your question on the Node-RED forum using the node-red-contrib-uibuilder tag
+  - 📁 [Documentation](https://totallyinformation.github.io/node-red-contrib-uibuilder) - Go to the latest documentation
+  - 🧑‍💻 [Flows](https://flows.nodered.org/search?term=uibuilder) - Example flows, nodes and collections related to UIBUILDER
+  - ℹ️ [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki) - More documentation and examples
+  - 📂 [Example Svelte External Template](https://github.com/TotallyInformation/uib-template-svelte-simple) - In case you want to build your own svelte app
+  - 📂 [Example Simple External Template](https://github.com/TotallyInformation/uib-template-test) - In case you want to build your own external template
+  - 📊 [uPlot UIBUILDER extension](https://github.com/TotallyInformation/nr-uibuilder-uplot) - Useful charts but also demonstrates how to build your own extension
+  - 🔨 [Event Handler module used by UIBUILDER](https://github.com/TotallyInformation/ti-common-event-handler) - So you can see some of the inner workings
+
+- 🔨 [ui library module used by UIBUILDER](https://github.com/TotallyInformation/ui.js) - Can be used stand-alone for turning UI standard config JSON into HTML
+
+- 🕜 [node-red-contrib-moment](https://github.com/TotallyInformation/node-red-contrib-moment) - Nodes to make use of the MomentJS date/time handling library in Node-RED
+
+- 🧪 [Test Nodes for Node-RED](https://github.com/TotallyInformation/uib-template-test) - Some test nodes for Node-RED that help you understand how everything works
+
+- 🚤 [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) - A really nice looking gauge component. Works with Node-RED, UIBUILDER, or stand-alone
+
+- 🧪 [Experimental Web Components](https://github.com/TotallyInformation/web-components) - Have some Node-RED & UIBUILDER specific enhancements but also work well stand-alone
+
+- 🧪 [Array Grouper](https://github.com/TotallyInformation/groupit) - Stand-alone function to reshape an array of objects
 
 ## Purpose
 
-The purpose of uibuilder is to:
+The purpose of UIBUILDER is to:
 
 * Support easy methods for creating and delivering data-driven web apps and web pages (also known as web User-Interfaces).
 * Be a conduit between Node-RED and front-end (browser) UI web apps.
-* Be UI framework agnostic. No framework is needed to use uibuilder but it will work with them where desired. uibuilder aims to reduce the requirement for a framework by making it easier to work with vanilla HTML/CSS.
+* Be UI framework agnostic. No framework is needed to use UIBUILDER but it will work with them where desired. UIBUILDER aims to reduce the requirement for a framework by making it easier to work with vanilla HTML/CSS.
 * Provide interface/data standards for exchanging data and controls between Node-RED and the web pages.
 * Enable the creation and management of multiple web apps from a single Node-RED instance.
 * Reduce the amount of front-end code (HTML/JavaScript) needed to create and manage a web app.
@@ -98,7 +129,7 @@ The purpose of uibuilder is to:
 
 ## Features
 
-The core features of uibuilder:
+The core features of UIBUILDER:
 
 * Provides nodes to enable zero-code translation of input data to usable and accessible web elements.
 * Provides capability for low-code, configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code without having to write code.
@@ -110,8 +141,8 @@ The core features of uibuilder:
 * Allows editing of front-end code from the Node-RED Editor (designed for small changes, use web development tools generally).
 * Enables the use of external authentication and authorisation methods and services to control multi-user access to web apps.
 * Provides various server middleware and API options for additional custom capabilities.
-* Allows as many uibuilder node instances as you like. Each instance allows the creation of many web pages and sub-folders for easy management.
-* Each uibuilder node instance provides a private 2-way communications channel between the Node-RED server (back-end) and browser (front-end) UI code.
+* Allows as many `uibuilder` node instances as you like. Each instance allows the creation of many web pages and sub-folders for easy management.
+* Each `uibuilder` node instance provides a private 2-way communications channel between the Node-RED server (back-end) and browser (front-end) UI code.
 * Supports the use of standard web development workflows.
 * Allows the creation of a dedicated web service to facilitate independent security.
 * Provides a caching capability allowing newly joining clients to receive the latest data and configurations. Joining/leaving clients create notifications in Node-RED.
@@ -119,9 +150,9 @@ The core features of uibuilder:
 
 <details><summary>No-code UI's</summary>
 
-uibuilder is still growing towards offering more no-code capabilities like Node-RED's Dashboard extension does. However, it is starting to offer these features via the "new" client available since v5. V6.1 introduced the new `uib-element` and `uib-update` nodes that offer the first usable no-code features.
+UIBUILDER is still growing towards offering more no-code capabilities like Node-RED's Dashboard extension does. However, it is starting to offer these features via the "new" client available since v5. V6.1 introduced the new `uib-element` and `uib-update` nodes that offer the first usable no-code features.
 
-`uib-element` takes in simple data and outputs configuration data. This can then be sent to the front-end via the uibuilder node. Alternatively, it can be saved and the result used in an initial load. Several simple options such as tables and lists are available in uibuilder v6.1, additional elements and structures will be made available in future versions. The uibuilder front-end client takes the configuration information and dynamically builds HTML elements and inserts them to the web page (or removes/updates as needed).
+`uib-element` takes in simple data and outputs configuration data. This can then be sent to the front-end via the `uibuilder` node. Alternatively, it can be saved and the result used in an initial load. Several simple options such as tables and lists are available in UIBUILDER v6.1, additional elements and structures will be made available in future versions. The UIBUILDER front-end client takes the configuration information and dynamically builds HTML elements and inserts them to the web page (or removes/updates as needed).
 
 While this is not the most efficient processing approach (since updates are mostly replacing the whole element which could be quite large for things like big tables), it is very efficient from an authoring perspective. So the `uib-update` node provides a more targetted approach to updating and changing specific attributes and "slot" content for elements.
 
@@ -138,13 +169,13 @@ The schema and the UI creator functions built into the front-end client are spec
 
 <details><summary>Future direction</summary>
 
-The general direction of uibuilder (or associated modules) is likely to include:
+The general direction of UIBUILDER (or associated modules) is likely to include:
 
 * Provide more no-code and low-code UI creation and update capabilities. As of v6.1, these are now starting to be delivered, v6.2 will extend these.
 * The ability to save updated HTML from the front-end via Node-RED so that UI building can be done once and loaded as efficient, static HTML.
 * The ability to use the zero-code features to produce HTML for other tools to use.
-* The ability within Node-RED to, for each uibuilder node, run npm scripts such as build processes and to manage instance-level npm packages.
-* Be able to install/update/remove instance-level npm packages as can already be done for uibuilder-level packages.
+* The ability within Node-RED to, for each `uibuilder` node, run npm scripts such as build processes and to manage instance-level npm packages.
+* Be able to install/update/remove instance-level npm packages as can already be done for UIBUILDER-level packages.
 * Provide a "development server" capability that auto-reloads connected clients when code changes are made.
 * A UI designer allowing users without HTML/CSS/JS skills to create reasonable web apps without code.
 </details>
@@ -169,26 +200,20 @@ The general direction of uibuilder (or associated modules) is likely to include:
 * Two detailed admin info web pages are included to help authors understand where everything is and what is available.
 * Uses Node-RED's own ExpressJS webservers by default. Switch to a custom ExpressJS server if desired. When using a custom server, pages can also include EJB server-side templating.
 * Has middleware for ExpressJS (for web services) and Socket.IO (for communications, both at initial connection and per-message) so that you can add your own custom features including security.
-* Can create custom API's for each uibuilder instance.
+* Can create custom API's for each UIBUILDER instance.
 </details>
 
 <details><summary>Current limitations</summary>
 
 * You may need to write some of your own HTML.
-* You have to know the front-end library locations for installed 3rd-party packages and edit your HTML accordingly. The `uibindex` admin API (accessible from any node's admin ui) shows you all of the root folders and what the package authors report as the main entry point for all active packages. There is now also a simplified information page for the currently viewed uibuilder node instance, this is access from a button in the configuration panel.
+* You have to know the front-end library locations for installed 3rd-party packages and edit your HTML accordingly. The `uibindex` admin API (accessible from any node's admin ui) shows you all of the root folders and what the package authors report as the main entry point for all active packages. There is now also a simplified information page for the currently viewed `uibuilder` node instance, this is access from a button in the configuration panel.
 
-  Note that this is a limitation of `npm` and module authors, not of uibuilder. Unless module authors correctly identify the browser entrypoint for their libraries, uibuilder can only guess.
+  Note that this is a limitation of `npm` and module authors, not of UIBUILDER. Unless module authors correctly identify the browser entrypoint for their libraries, UIBUILDER can only guess.
   
 * You cannot yet compile/compress your custom front-end code (HMTL, JS, SCSS, etc.) for efficiency. *This will be added soon.*
 
-  This will use a local package.json file that contains a "build" script. If it exists, uibuilder will expose a build button that will run the script.
+  This will use a local package.json file that contains a "build" script. If it exists, UIBUILDER will expose a build button that will run the script.
 </details>
-
-## Questions, issues and suggestions
-
-The best place to ask questions or discuss possible enhancements is the [Node-RED Forum](https://discourse.nodered.org/).
-
-Alternatively, use the [GitHub issues log](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues) for raising issues or contributing suggestions and enhancements and the [GitHub Discussions page](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) for general questions, suggestions, etc.
 
 ## Contributing
 
@@ -197,6 +222,13 @@ If you would like to contribute to this node, you can contact [Totally Informati
 Pull Requests both for code and documentation are welcomed and the WIKI is open to new entries and corrections (but please let me know if you make a change).
 
 Please refer to the [contributing guidelines](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/master/.github/CONTRIBUTING.md) for more information.
+
+You can also support the development of UIBUILDER by sponsoring the development.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/A0A3PPMRJ)
+
+[GitHub Sponsorship](https://github.com/sponsors/TotallyInformation), 
+[PayPal Sponsorship](https://paypal.me/TotallyInformation)
 
 ## Developers/Contributors
 

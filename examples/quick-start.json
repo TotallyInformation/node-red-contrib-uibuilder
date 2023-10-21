@@ -1,0 +1,205 @@
+[
+    {
+        "id": "60a8489436d0ee43",
+        "type": "debug",
+        "z": "30fdd9a9702231b0",
+        "name": "uib Std Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 715,
+        "y": 1020,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "03d761104c3ee12f",
+        "type": "inject",
+        "z": "30fdd9a9702231b0",
+        "name": "uib-quick-start",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uib-quick-start",
+        "payload": "",
+        "payloadType": "date",
+        "x": 330,
+        "y": 1060,
+        "wires": [
+            [
+                "ff050c4347776e67"
+            ]
+        ]
+    },
+    {
+        "id": "ff050c4347776e67",
+        "type": "uibuilder",
+        "z": "30fdd9a9702231b0",
+        "name": "",
+        "topic": "",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "showMsgUib": true,
+        "title": "",
+        "descr": "",
+        "x": 580,
+        "y": 1060,
+        "wires": [
+            [
+                "60a8489436d0ee43"
+            ],
+            [
+                "86ffc76eb5838f6c"
+            ]
+        ]
+    },
+    {
+        "id": "86ffc76eb5838f6c",
+        "type": "debug",
+        "z": "30fdd9a9702231b0",
+        "name": "uib Control Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 715,
+        "y": 1080,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "e044ccbbc70ecc60",
+        "type": "inject",
+        "z": "30fdd9a9702231b0",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 310,
+        "y": 1120,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ]
+    },
+    {
+        "id": "ad3e6bf13e2c7f15",
+        "type": "inject",
+        "z": "30fdd9a9702231b0",
+        "name": "Log Lvl 5",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":5}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 340,
+        "y": 1160,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ]
+    },
+    {
+        "id": "86f9153ff0dc2d04",
+        "type": "inject",
+        "z": "30fdd9a9702231b0",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 350,
+        "y": 1200,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "b9605e7d0a662387",
+        "type": "link in",
+        "z": "30fdd9a9702231b0",
+        "name": "uib in",
+        "links": [
+            "6a4c985e0fc73c31"
+        ],
+        "x": 385,
+        "y": 1020,
+        "wires": [
+            [
+                "ff050c4347776e67"
+            ]
+        ]
+    },
+    {
+        "id": "6a4c985e0fc73c31",
+        "type": "link out",
+        "z": "30fdd9a9702231b0",
+        "name": "uib ctrls out",
+        "mode": "link",
+        "links": [
+            "b9605e7d0a662387"
+        ],
+        "x": 475,
+        "y": 1160,
+        "wires": []
+    }
+]

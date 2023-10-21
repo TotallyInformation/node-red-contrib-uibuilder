@@ -4,7 +4,7 @@ description: >
    Details about the variables used in the uibuilder modern front-end client library.
    Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-01-28 15:57:02
+lastUpdated: 2023-10-14 17:01:12
 ---
 
 ## Read/write
@@ -46,6 +46,7 @@ Always use `uibuilder.get('varname', value)` to obtain the value of these. You c
 * `serverTimeOffset` - Time offset between browser clock and server clock
 * `socketError` - Holds the details of the last socket error
 * `tabId` - Identifier for the current browser tab
+* `url` - The instance URL fragment (name) for this instance of uibuilder
 * `version` - accessible via `uibuilder.get('version')` or `uibuilder.get('meta')` only - the uibuilder client version in use
 * `vueVersion` - if the VueJS front-end library is loaded, this _may_ tell you the version (does not work for all versions of VueJS)
 
@@ -54,3 +55,7 @@ In addition, `uibuilder.logLevel` will automatically be retrieved via its own ge
 ## Read only - unlikely to be required
 
 * `httpNodeRoot` - The setting from Node-RED. May be useful if you need to manually create a Node-RED URL and have set this variable in Node-RED.
+
+## Functions that deal with client variables
+
+See [client functions](client-docs/functions#variable-handling) for details.

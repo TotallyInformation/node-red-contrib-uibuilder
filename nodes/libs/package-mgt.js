@@ -80,7 +80,7 @@ class UibPackages {
             const all = execa.sync('npm', args, opts)
             res = all.stdout
         } catch (e) {
-            console.error('>>>>>', e.all)
+            // console.error('>>>>>', e.all)
             res = e.all  // Do we need to wrap this in a promise?
         }
         return res
@@ -172,6 +172,9 @@ class UibPackages {
 
         let file = null
         try {
+            //! TODO: Replace fs-extra
+            // const data = fs.readFileSync('./example.json')
+            // const obj = JSON.parse(data)
             file = fs.readJsonSync( path.join(folder, this.packageJson), 'utf8' )
             this.log.trace(`[uibuilder:package-mgt:readPackageJson] package.json file read successfully from ${folder}`)
         } catch (err) {
@@ -362,7 +365,8 @@ class UibPackages {
         this.writePackageJson(rootFolder, pj)
     }
 
-    /** Create/Update, record & return <uibRoot>/package.json (create it if it doesn't exist)
+    /** Get <uibRoot>/package.json (create it if it doesn't exist), enhance with package details
+     * Also make version string same as uibuilder version
      * @returns {object|null} Parsed version of <uibRoot>/package.json with uibuilder specific updates
      */
     getUibRootPackageJson() {
@@ -370,33 +374,20 @@ class UibPackages {
         if ( this.uib === undefined ) throw this.#uibUndefinedError
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
 
+        const log = this.log
+
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:getUibRootPackageJson] Cannot run. Setup has not been called.')
+            log.warn('[uibuilder:UibPackages:getUibRootPackageJson] Cannot run. Setup has not been called.')
             return null
         }
 
         const uibRoot = this.uib.rootFolder
         const fileName = path.join( uibRoot, this.packageJson )
 
-        // Make sure it exists & contains valid JSON
+        // Make sure it exists & contains valid JSON - 
         if ( !fs.existsSync(fileName) ) {
-            this.log.warn('[uibuilder:package-mgt:getUibRootPackageJson] No uibRoot/package.json file, creating minimal file.')
-            // Create a minimal one
-            fs.writeJsonSync(fileName, {
-                'name': 'uib_root',
-                'version': this.uib.version,
-                'description': 'Root configuration and data folder for uibuilder',
-                'scripts': {},
-                'dependencies': {},
-                'homepage': '',
-                'bugs': '',
-                'author': '',
-                'license': 'Apache-2.0',
-                'repository': '',
-                'uibuilder': {
-                    'packages': {},
-                },
-            })
+            log.warn('[uibuilder:package-mgt:getUibRootPackageJson] No uibRoot/package.json file, creating minimal file.')
+            this.setUibRootPackageJson()
         }
 
         // Get it
@@ -404,7 +395,7 @@ class UibPackages {
         try {
             pj = this.readPackageJson(uibRoot)
         } catch (e) {
-            this.log.error(`[uibuilder:package-mgt:getUibRootPackageJson] Error reading ${fileName}. ${e.message}`)
+            log.error(`[uibuilder:package-mgt:getUibRootPackageJson] Error reading ${fileName}. ${e.message}`)
             this.uibPackageJson = null
             return null
         }
@@ -415,6 +406,11 @@ class UibPackages {
         if ( !pj.uibuilder ) pj.uibuilder = {}
         // Reset the packages list, we rebuild it below
         pj.uibuilder.packages = {}
+
+        if (this.uibPackageJson.dependencies !== pj.dependencies ) {
+            log.info(`[uibuilder:package-mgt:getUibRootPackageJson] package.json dependencies changed`)
+            // console.info({'pkg-deps': this.uibPackageJson.dependencies, 'memory-deps': pj.dependencies})
+        }
 
         // Update the version string to match uibuilder version
         pj.version = this.uib.version
@@ -434,18 +430,16 @@ class UibPackages {
             }
         })
 
-        // Save it for use elsewhere
-        this.uibPackageJson = pj
-
-        // Update the <uibRoot>/package.json file with updated details
-        this.setUibRootPackageJson(pj)
-
-        // Return it
-        return pj
+        // Update the <uibRoot>/package.json file with updated details & Return it
+        if (this.setUibRootPackageJson(pj) === true) return pj
+        
+        // Failed
+        return null
     } // ----- End of getUibRootPackageJson() ----- //
 
     /** Write updated <uibRoot>/package.json
      * @param {object} json The Object data to write to the file
+     * @returns {boolean} True if write was successful
      */
     setUibRootPackageJson(json) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -460,11 +454,35 @@ class UibPackages {
         const uibRoot = this.uib.rootFolder
         const fileName = path.join( uibRoot, this.packageJson )
 
-        // Save it for use elsewhere
-        this.uibPackageJson = json
+        if (!json) {
+            log.warn('[uibuilder:package-mgt:setUibRootPackageJson] Using dummy json')
+            json = {
+                'name': 'uib_root',
+                'version': this.uib.version,
+                'description': 'Root configuration and data folder for uibuilder',
+                'scripts': {},
+                'dependencies': {},
+                'homepage': '',
+                'bugs': '',
+                'author': '',
+                'license': 'Apache-2.0',
+                'repository': '',
+                'uibuilder': {
+                    'packages': {},
+                }
+            }
+        }
 
-        // TODO Add try & error message
-        fs.writeJsonSync(fileName, json, { spaces: 2 })
+        try {
+            fs.writeJsonSync(fileName, json, { spaces: 2 })
+            // Save it for use elsewhere
+            this.uibPackageJson = json
+            return true
+        } catch (e) {
+            log.error(`[uibuilder:package-mgt:setUibRootPackageJson] Error writing ${fileName}. ${e.message}`)
+            this.uibPackageJson = null
+            return false
+        }
     }
 
     /** Find install folder for a package - allows an array of locations to be given
@@ -583,36 +601,23 @@ class UibPackages {
         return pkgDetails
     } // ----  End of getPackageDetails2 ---- //
 
-    //#region --- DEPRECATED ---
-
-    /** Update all of the installed packages
+    /** Is the specified package installed into uibRoot (e.g. via the library manager)
+     * @param {string} packageName The package name to check
+     * @returns {boolean} True if it is installed, false otherwise
      */
-    updateInstalledPackages() {
-        this.log.error('[uibuilder:UibPackages:updateInstalledPackages] FUNCTION IS DEPRECATED.')
-        console.trace()
+    isPackageInstalled(packageName) {
+        if ( this.#isConfigured !== true ) {
+            this.log.warn('[uibuilder:UibPackages:isPackageInstalled] Cannot run. Setup has not been called.')
+            return false
+        }
+        if (!this.uibPackageJson) return false
 
-        console.trace('package-mgt.js:updateInstalledPackages')
-    } // ---- End of updateInstalledPackages ---- //
+        if (!this.packageJson[packageName]) return false // eslint-disable-line sonarjs/prefer-single-boolean-return
 
-    /** !DEPRECATED!  Find install folder for a package
-     */
-    getPackagePath() {
-        this.log.error('[uibuilder:UibPackages:getPackagePath] FUNCTION IS DEPRECATED.')
-        console.trace()
+        return true
+    } // ----  End of isPackageInstalled ---- //
 
-        console.trace('package-mgt.js:getPackagePath')
-    } // ----  End of getPackagePath ---- //
-
-    /** Update the master name list of possible packages that could be served to the front-end
-     */
-    updateMergedPackageList() {
-        this.log.error('[uibuilder:UibPackages:updateMergedPackageList] FUNCTION IS DEPRECATED.')
-        console.trace()
-
-        console.trace('package-mgt.js:updateMergedPackageList')
-    } // ---- End of updateMergedPackageList ---- //
-
-    //#endregion --- DEPRECATED ---
+    //#region -- Manage Packages via npm --
 
     /** Install an npm package
      * NOTE: This fn does not update the list of packages
@@ -821,6 +826,8 @@ class UibPackages {
         return /** @type {string} */ (all)
 
     }
+
+    //#endregion -- ---- --
 
 } // ----- End of UibPackages ----- //
 

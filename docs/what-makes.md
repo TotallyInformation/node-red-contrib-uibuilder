@@ -3,7 +3,7 @@ title: What makes a good Node-RED Dashboard framework?
 description: >
    Lays out what I think a good framework for building Node-RED dashboards would look like and what features it would have.
 created: 2021-09-17 09:28:09
-lastUpdated: 2021-09-17 09:28:15
+lastUpdated: 2023-09-30 15:01:50
 ---
 
 Status: **Incomplete**
@@ -32,7 +32,7 @@ Status: **Incomplete**
   * Basic output (text, numbers, dates, times, ...)
   * Basic inputs (text, numbers, dates, times, passwords, extended text)
 
-## uibuilder Thoughts
+## UIBUILDER Thoughts
 
 ### Extension node
 

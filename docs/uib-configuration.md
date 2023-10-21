@@ -1,14 +1,14 @@
 ---
-title: Configuring uibuilder
+title: Configuring UIBUILDER
 description: >
-   Describes how to change uibuilder's configuration, options and settings.
+   Describes how to change UIBUILDER's configuration, options and settings.
 created: 2021-12-30 17:38:33
-lastUpdated: 2022-04-09 18:14:18
+lastUpdated: 2023-09-30 13:08:51
 ---
 
-?> This page is about the global configuration of uibuilder. If you are looking for information on how to configure an individual uibuilder node instance, please refer to the [Configuring uibuilder nodes](uib-node-configuration.md) page. 
+?> This page is about the global configuration of UIBUILDER. If you are looking for information on how to configure an individual `uibuilder` node instance, please refer to the [Configuring `uibuilder` nodes](uib-node-configuration.md) page. 
 
-uibuilder is configured in a number of places.
+UIBUILDER is configured in a number of places.
 
 Obviously, each node instance you add to your flows has its own configuration which is set in the Node-RED Editor by double-
 clicking on the node.
@@ -17,19 +17,15 @@ However, there are some additional places you may need to make changes to.
 
 - [`settings.js`](#settingsjs)
 - [`<uibRoot>/.config/`](#uibrootconfig)
-  - [`<uibRoot>/.config/uibMiddleware.js`](#uibrootconfiguibmiddlewarejs)
-  - [`<uibRoot>/.config/sioMiddleware.js`](#uibrootconfigsiomiddlewarejs)
-  - [`<uibRoot>/.config/sioUse.js`](#uibrootconfigsiousejs)
-  - [`<uibRoot>/.config/sioMsgOut.js`](#uibrootconfigsiomsgoutjs)
 - [`<uibRoot>/<instance-url>/`](#uibrootinstance-url)
 
 * **`settings.js`** - may optionally have a property called `uibuilder` with a number of settings that are global to
-  all uibuilder nodes.
+  all `uibuilder` nodes.
 
-* **`<uibRoot>/.config/`** - contains a number of files that are global to all instances of uibuilder nodes.
+* **`<uibRoot>/.config/`** - contains a number of files that are global to all instances of `uibuilder` nodes.
 
 * **`uibRoot>/<instance-url>/`** - contains the settings, build modules and front-end code for the specific instance
-  of uibuilder nodes.
+  of `uibuilder` nodes.
 
 ## `settings.js`
 
@@ -111,7 +107,7 @@ Note that the example templates end with `.js-template` and that the template fi
 
 ### `<uibRoot>/.config/uibMiddleware.js`
 
-ExpressJS middleware, called for all uibuilder node instances whenever a client connection is made (for user-facing API calls as well as UI's).
+ExpressJS middleware, called for all `uibuilder` node instances whenever a client connection is made (for user-facing API calls as well as UI's).
 
 This should be kept as short and efficient as possible since it will be called many times for all client connections.
 
@@ -121,7 +117,7 @@ It may be used to provide custom authentication and authorisation processing if 
 
 Per-client-connection server Socket.IO middleware. 
 
-Contains an exported function that is run every time a client (e.g. a uibuilder powered browser tab) connects to the Socket.IO server embedded in a uibuilder node. It can be used as part of security processes.
+Contains an exported function that is run every time a client (e.g. a uibuilder powered browser tab) connects to the Socket.IO server embedded in a `uibuilder` node. It can be used as part of security processes.
 
 See [Developer documentation for `socket.js`](socket-js.md) for more details.
 
@@ -129,7 +125,7 @@ See [Developer documentation for `socket.js`](socket-js.md) for more details.
 
 Per-inbound-message Socket.IO middleware. 
 
-Contains an exported function that is run every time a message is received to any uibuilder node from any client browser. The function may make changes to the message and/or block receipt of the message. It can be used as part of security processes.
+Contains an exported function that is run every time a message is received to any `uibuilder` node from any client browser. The function may make changes to the message and/or block receipt of the message. It can be used as part of security processes.
 
 See [Developer documentation for `socket.js`](socket-js.md) for more details.
 
@@ -137,7 +133,7 @@ See [Developer documentation for `socket.js`](socket-js.md) for more details.
 
 Per-outbound-message Socket.IO middleware. 
 
-Contains an exported function that is run every time a message is sent from any uibuilder node to any client browser. The function may make changes to the message. It can be used as part of security processes.
+Contains an exported function that is run every time a message is sent from any `uibuilder` node to any client browser. The function may make changes to the message. It can be used as part of security processes.
 
 See [Developer documentation for `socket.js`](socket-js.md) for more details.
 

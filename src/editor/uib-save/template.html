@@ -1,0 +1,50 @@
+<div id="uib-upd">
+    <div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
+        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+        <select id="node-input-url" style="width:70%">
+            <option value="" name="">--choose a uibuilder instance--</option>
+        </select>
+    </div>
+    <hr>
+          
+    <div aria-label="Folder to save to" class="form-row">
+        <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Folder</label>
+        <input type="text" id="node-input-folder">
+    </div>
+    <div aria-label="File name" class="form-row">
+        <label for="node-input-fname"><i class="fa fa-file-code-o"></i> File</label>
+        <input type="text" id="node-input-fname">
+    </div>
+
+    <div aria-label="If set and folder name does not exist, it will be created." class="form-row">
+        <input type="checkbox" id="node-input-createFolder" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-createFolder" style="width: 90%;">
+            Create Folder?
+        </label>
+    </div>
+    <div aria-label="If set connected client browser tabs will be automatically reloaded." class="form-row">
+        <input type="checkbox" id="node-input-reload" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-reload" style="width: 90%;">
+            Reload Clients?
+        </label>
+    </div>
+    <div aria-label="Character coding for text inputs" class="form-row">
+        <label for="node-input-encoding"><i class="fa fa-file-text-o"></i> Encoding</label>
+        <input type="text" id="node-input-encoding" value="utf8" disabled>
+    </div>
+    <div aria-label="New file access mode" class="form-row">
+        <label for="node-input-mode"><i class="fa fa-share-square-o"></i> File Mode</label>
+        <input type="text" id="node-input-mode" value="0o666" disabled>
+    </div>
+
+    <hr>
+    <div aria-label="Default msg topic. Make unique if using uib-cache." class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-topic">
+    </div>
+    <div aria-label="Node name (descriptive only)" class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+    
+</div>

@@ -1,14 +1,14 @@
     <p>
         Provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.<br><br>
 
-        You need at least one of these in order to make full use of all of uibuilder's features.
+        You need at least one of these in order to make full use of all of <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>'s features.
     </p><p>
         It is this node that creates a custom web server. You can have many nodes if that best meets your needs. But each node can serve many pages.
     </p><p>
         It also creates a set of filing system folders and files on the Node-RED server. 
         These define the front-end UI you see in the browser as well as providing some important configuration.
     </p><p>
-        This node is also where you configure much of uibuilder's web server such as installing helper libraries that 
+        This node is also where you configure much of UIBUILDER's web server such as installing helper libraries that 
         you may wish to use to support your interfaces (e.g. VueJS, jQuery, etc). You can also use it to edit your custom UI code.
     </p>
 
@@ -17,7 +17,7 @@
     </p>
 
     <p>
-        More information on how to configure this node: <a href="./uibuilder/docs/#/nodes/uibuilder" target="_blank">uibuilder node configuration</a>.
+        More information on how to configure this node: <a href="./uibuilder/docs/#/nodes/uibuilder" target="_blank">UIBUILDER node configuration</a>.
     </p>
 
     <p>
@@ -26,7 +26,7 @@
 
     <h3>Status display</h3>
     <p>
-        Each instance (node) of uibuilder has a status display. Normally, the icon is blue.
+        Each instance (node) of UIBUILDER has a status display. Normally, the icon is blue.
         When 1 or more clients are connected, the text will show how many clients are connected.
     </p>
 
@@ -150,7 +150,7 @@
                 There is no default and this entry is required.<br>
                 The URL path that the resulting page and other resources will be served from.
                 Must be unique across Node-RED. Will also use the Node-RED scheme (http/https)
-                and port or the custom uibuilder scheme and port if specified in settings.js. 
+                and port or the custom UIBUILDER scheme and port if specified in settings.js. 
                 Will also be prefixed by the Node-RED setting <i>httpNodeRoot</i>.<br>
                 The url is also used to define the server filing system path for front-end code files.<br>
                 The url must be valid as a filename as well as a url path. It may not exceed 20 characters.
@@ -196,7 +196,7 @@
             front-end library packages. This interface allows you to add, remove and update any library
             that can be installed via <a href="https://www.npmjs.com/" target="_blank">npm</a>.<br>
             Libraries will be loaded into your <code>&lt;userDir>/</code> folder in the same place as custom nodes.
-            uibuilder retains an internal list of front-end libraries loaded this way.
+            UIBUILDER retains an internal list of front-end libraries loaded this way.
             Each library will be served so that you can use it in your front-end html.
         </p>
 
@@ -224,14 +224,14 @@
             <dd>
                 If on, any string(s) in <code>msg.script</code> will be dynamically added to the scripts of the web page.
                 Turn off to prevent scripts from being dynamically added and executed.<br>
-                <b>NOTE</b>: It is better to use uibuilder's <code>msg._ui</code> low-code features for passing scripts.
+                <b>NOTE</b>: It is better to use UIBUILDER's <code>msg._ui</code> low-code features for passing scripts.
             </dd>
 
             <dt>Allow styles to be passed to front-end? <span class="property-type">check box</span></dt>
             <dd>
                 If on, any string(s) in <code>msg.style</code> will be dynamically added to the styles of the web page.
                 Turn off to prevent styles from being dynamically added.<br>
-                <b>NOTE</b>: It is better to use uibuilder's <code>msg._ui</code> low-code features for passing styles.
+                <b>NOTE</b>: It is better to use UIBUILDER's <code>msg._ui</code> low-code features for passing styles.
             </dd>
 
             <dt>Forward input to output? <span class="property-type">check box</span></dt>
@@ -255,21 +255,21 @@
 
             <dt><i class="fa fa-info-circle" aria-hidden="true"></i> Full details <span class="property-type">link</span></dt>
             <dd>
-                Shows a web page with detailed information about the overall uibuilder
+                Shows a web page with detailed information about the overall UIBUILDER
                 configuration. Including details of all of the vendor modules that are
-                available and all of the uibuilder endpoints along with both server
+                available and all of the UIBUILDER endpoints along with both server
                 and URL paths.
             </dd>
 
             <dt><i class="fa fa-info" aria-hidden="true"></i> Node Details <span class="property-type">link</span></dt>
             <dd>
                 Shows a web page with detailed information relavent just for this
-                instance (node) of uibuilder. May be easier to read than the full details.
+                instance (node) of UIBUILDER. May be easier to read than the full details.
             </dd>
 
             <dt><i class="fa fa-book" aria-hidden="true"></i> Docs <span class="property-type">link</span></dt>
             <dd>
-                Opens the documentation for uibuilder in a separate tab.
+                Opens the documentation for UIBUILDER in a separate tab.
                 This does not require an Internet connection, the local docs are used.
                 Also available as a button at the top of the panel on all tabs.
             </dd>
@@ -278,24 +278,24 @@
 
     <h3>File/Folder Structure</h3>
     <p>
-        For more information, see the <a href="./uibuilder/docs" target="_blank">uibuilder documentation</a>.
+        For more information, see the <a href="./uibuilder/docs" target="_blank">UIBUILDER documentation</a>.
     </p>
 
 
     <h3>Details</h3>
     <p>
-        For more information, see the <a href="./uibuilder/docs" target="_blank">uibuilder documentation</a>.
+        For more information, see the <a href="./uibuilder/docs" target="_blank">UIBUILDER documentation</a>.
     </p>
     <p>
-        There are also examples of how to use uibuilder in the Node-RED import library, on the <a href="https://flows.nodered.org/search?term=uibuilder" target="_blank"></a>, and in the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki" target="_blank">GitHub WIKI</a>.
+        There are also examples of how to use UIBUILDER in the Node-RED import library, on the <a href="https://flows.nodered.org/search?term=uibuilder" target="_blank"></a>, and in the <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki" target="_blank">GitHub WIKI</a>.
     </p>
     <p>
-        uibuilder can be discussed in the <a href="https://discourse.nodered.org/tag/node-red-contrib-uibuilder" target="_blank">Node-RED Forum</a>. Issues/bugs can be raised on <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues" target="_blank">GitHub</a>.
+        UIBUILDER can be discussed in the <a href="https://discourse.nodered.org/tag/node-red-contrib-uibuilder" target="_blank">Node-RED Forum</a>. Issues/bugs can be raised on <a href="https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues" target="_blank">GitHub</a>.
     </p>
 
     <h3>Admin Index (Details) page</h3>
     <p>
-        The <a href="uibindex" target="_blank">&lt;admin url&gt;/uibindex</a> page lists all of the uibuilder endpoints and other details. You can use the following parameters:
+        The <a href="uibindex" target="_blank">&lt;admin url&gt;/uibindex</a> page lists all of the UIBUILDER endpoints and other details. You can use the following parameters:
     </p>
     <dl class="message-properties">
         <dt>type <span class="property-type">(string)</span></dt>
@@ -305,7 +305,7 @@
                 <dt>html <span class="property-type">(default)</span></dt>
                 <dd>
                     Also used if no type parameter is given. 
-                    Returns an HTML page showing the details for all deployed uibuilder nodes.
+                    Returns an HTML page showing the details for all deployed UIBUILDER nodes.
                     Shows the server file locations of the instance and for vendor libraries.
                 </dd>
                 <dt>json</dt>
@@ -314,7 +314,7 @@
                 </dd>
                 <dt>urls</dt>
                 <dd>
-                    Returns a JSON array of just the URL's in use from deployed uibuilder nodes.
+                    Returns a JSON array of just the URL's in use from deployed UIBUILDER nodes.
                     Used internally to ensure that new nodes use unique url's.
                 </dd>
             </dl>
@@ -322,8 +322,8 @@
 
         <dt>check <span class="property-type">(string)</span></dt>
         <dd>
-            Passing a uibuilder instance name to the check parameter will result in a boolean (true/false)
-            return. True if it is being delivered by a uibuilder instance,
+            Passing a UIBUILDER instance name to the check parameter will result in a boolean (true/false)
+            return. True if it is being delivered by a UIBUILDER instance,
             false otherwise. e.g. <code>?check=uibuilder</code>
         </dd>
     </dl>

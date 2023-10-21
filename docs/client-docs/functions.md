@@ -1,10 +1,10 @@
 ---
 title: Functions available in the modern client
 description: >
-   Details about the functions/methods used in the uibuilder front-end client library.
+   Details about the functions/methods used in the UIBUILDER front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-07-02 14:23:47
+lastUpdated: 2023-10-14 17:23:41
 ---
 
 Functions accessible in client-side user code.
@@ -18,32 +18,23 @@ Functions accessible in client-side user code.
 - [Utility](#utility)
 - [Startup](#startup)
 
+> [!NOTE]
+> Where functions are marked as being accessible as Node-RED command messages, details can be found in [Controling From Node-RED](client-docs/control-from-node-red).
+
 
 ## Receiving Messages from Node-RED
 
-uibuilder automatically creates a live websocket channel from the Node-RED server to your browser when you open a uibuilder page. By sending a msg to a uibuilder node, it will be transferred to ALL connected clients unless you specify otherwise.
+UIBUILDER automatically creates a live websocket channel from the Node-RED server to your browser when you open a UIBUILDER page. By sending a msg to a UIBUILDER node, it will be transferred to ALL connected clients unless you specify otherwise.
 
-To process a message in your browser, you can use one of the event handling uibuilder library functions such as [`onChange`](#event-handling) or [`onTopic`](#event-handling). Alternatively, you can use the standard `document.addEventListener` function to listen for one of the uibuilder library's custom events.
+To process a message in your browser, you can use one of the event handling UIBUILDER library functions such as [`onChange`](#event-handling) or [`onTopic`](#event-handling). Alternatively, you can use the standard `document.addEventListener` function to listen for one of the UIBUILDER library's custom events.
 
 You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-end code which instructs the client to treat the object as though it had come from Node-RED.
 
 You can use one or more of the `msg._uib.pageName`, `msg._uib.clientId`, or `msg._uib.tabId` properties to control whether a specific page, client or browser tab will process an inbound message. Use this where you have multiple pages or clients and need to target a message to a specific one.
 
+UIBUILDER also allows you to issue control commands from Node-RED to your front-end app by sending messages to the `uibuilder` node containing `msg._uib.command` which must be set to [one of the recognised commands](/client-docs/control-from-node-red).
+
 ## Sending Messages to Node-RED
-
-### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
-
-Results in a standard message sent to Node-RED where the `msg.payload` contains the whole current HTML page as a string.
-
-Use with the `uib-save` node to fix the latest page complete with any dynamic updates as the html page to load for new client connections for example.
-
-The returned message inludes `msg.length` to allow checking that the returned html payload wasn't truncated by a Socket.IO message length restriction.
-
-### `send(msg, originator = '')` - Send a custom message back to Node-RED
-
-The `msg` format is the same as used in Node-RED. 
-
-The `originator` is optional and if used, should match the id from a `uib-sender` node. That allows you to specifically return a message into a flow that uses one of those nodes. However, ensure that the `uib-sender` node has turned on the flag to allow returned messages.
 
 ### `eventSend(domevent, originator = '')` - Send a standard message back to Node-RED in response to a DOM event
 
@@ -67,85 +58,47 @@ If the source event type is `change` (e.g. a user changed an input field and the
 > The input element validity property can contain any of the following: badInput, customError, patternMismatch, rangeOverflow, rangeUnderflow, stepMismatch, tooLong, tooShort, typeMismatch, valueMissing. See [ValidityState](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) for details of the meanings.
 
 
+### `beaconLog(txtToSend, logLevel)` - Send a short log message to Node-RED
+
+This has the advantage of working even if Socket.IO is not connected. It uses a logging API provided by UIBUILDER.
+
+However, only text strings can be sent and messages need to be kept short. It only works with modern browsers that support the web beacon API.
+
+The `logLevel` matches both Node-RED and UIBUILDER defined log levels (e.g. error, warn, info, debug, trace ).
+
+### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
+
+Results in a standard message sent to Node-RED where the `msg.payload` contains the whole current HTML page as a string.
+
+Use with the `uib-save` node to fix the latest page complete with any dynamic updates as the html page to load for new client connections for example.
+
+The returned message includes `msg.length` to allow checking that the returned html payload wasn't truncated by a Socket.IO message length restriction.
+
+This can also be triggered from Node-RED. Send a message to the `uibuilder` node containing `msg._uib.command` set to "htmlSend". [Reference](client-docs/control-from-node-red?id=get-complete-copy-of-the-current-web-page)
+
+### ~~logToServer()~~ - Not yet reliable. Will cause the input to appear in Node-RED logs
+
+### `send(msg, originator = '')` - Send a custom message back to Node-RED
+
+The `msg` format is the same as used in Node-RED. 
+
+The `originator` is optional and if used, should match the id from a `uib-sender` node. That allows you to specifically return a message into a flow that uses one of those nodes. However, ensure that the `uib-sender` node has turned on the flag to allow returned messages.
+
+### `sendCtrl(msg)` - Send a custom control message back to Node-RED
+
+The message will be assessed by UIBUILDER and passed to its #2 (bottom) output port if considered acceptible.
+
+This lets you create your own control custom messages should you wish to. Use with caution.
+
 ### `setOriginator(originator = '')` - Set/clear the default originator
 
 Will automatically be used by `send` and `eventSend`.
 
 Set to an empty string to remove.
 
-### `sendCtrl(msg)` - Send a custom control message back to Node-RED
-
-The message will be assessed by uibuilder and passed to its #2 (bottom) output port if considered acceptible.
-
-This lets you create your own control custom messages should you wish to. Use with caution.
-
-### `beaconLog(txtToSend, logLevel)` - Send a short log message to Node-RED
-
-This has the advantage of working even if Socket.IO is not connected. It uses a logging API provided by uibuilder.
-
-However, only text strings can be sent and messages need to be kept short. It only works with modern browsers that support the web beacon API.
-
-The `logLevel` matches both Node-RED and uibuilder defined log levels (e.g. error, warn, info, debug, trace ).
-
-### ~~logToServer()~~ - Not yet reliable. Will cause the input to appear in Node-RED logs
-
-## Variable Handling
-
-### `get(prop)` - Get a uibuilder property
-
-This is the preferred method to get an exposed uibuilder variable or property. Do not try to access variables and properties directly unless explicitly shared in this documentation. This function can also be called from Node-RED via `msg._uib.command` - `get` with `msg._uib.prop` set to the variable name to get.
-
-##### Example
-
-```javascript
-console.log( uibuilder.get('version') )
-```
-
-### `set(prop, val)` - Set a uibuilder property and dispatch a change event
-
-This is the preferred method to set an exposed uibuilder variable or property. Do not try to set variables and properties directly.
-
-When using set, the variable that is set becomes responsive. That is to say, that issuing a set triggers both the internal event handler (as used in `uibuilder.onChange('prop', ...)`) but also the DOM custom event `uibuilder:propertyChanged`. Normally, you will want to use the `onChange` handler.
-
-Note that you can add additional custom data to the uibuilder object but care must be taken not to overwrite existing internal variables. This is useful if you want to be able to automatically process changes to your own variables using the `onChange` handler.
-
-This function can also be called from Node-RED via `msg._uib.command` - `set` with `msg._uib.prop` set to the variable name to set. and `msg._uib.value` set to the new value.
-
-##### Example
-
-```javascript
-uibuilder.set('logLevel', 3)
-```
-
-### `getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage
-
-Note that browser localStorage is persisted even after a browser closes. It can be manually cleared from the browser's settings. You can also remove an item using the `removeStore` function.
-
-If the `id` is not found in the store, `null` is returned. If the store is not available or some other error occurs, `undefined` is returned.
-
-All `id`s have a pre-defined uibuilder prefix added to the key name to help ensure that the key being saved will be unique. This prefix is defined in the library and cannot be changed, it is set to `uib_`.
-
-Because the browser storage API only allows strings as values, the data has to be serialised. This function attempts to unserialise (re-hydrate). It should be noted that sometimes, this process results in values that may differ from the original. For example, `uibuilder.setStore('mydate',new Date()); console.log( uibuilder.getStore('mydate') )` will return the saved date as an ISO8602 date string, not a JavaScript Date object.
-
-### `setStore(id, val)` - Attempt to save to the browsers localStorage
-
-Write a value to the given id to localStorage. Will fail if localStorage has been turned off or is full.
-
-The value to save has to be serialisable. Some JavaScript objects cannot be serialised (using `JSON.stringify`). If this happens `false` is returned and an error output to the browser console. However, you can store any basic value (number, string, boolean) as well as array's and objects.
-
-Browsers set a limit on the size of the store for a particular source. Typically this is 10MB but may be altered by the user. The user can turn off localStorage as well.
-
-Returns `true` if the save was successful, otherwise returns false.
-
-Errors are output to the browser console if saving fails but processing will continue.
-
-### `removeStore(id)` - Attempt to remove a uibuilder key from browser localStorage
-
-Does not return anything. Does not generate an error if the key does not exist.
-
 ### `setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED
 
-This uses an HTTP API call to a custom uibuilder API endpoint in Node-RED. So it works even if the Socket.IO connection is not working. It is used to check that the Node-RED server and the uibuilder instance are both still working.
+This uses an HTTP API call to a custom UIBUILDER API endpoint in Node-RED. So it works even if the Socket.IO connection is not working. It is used to check that the Node-RED server and the UIBUILDER instance are both still working.
 
 ##### Example
 
@@ -158,6 +111,97 @@ uibuilder.onChange('ping', function(data) {
 })
 ```
 
+## Variable Handling
+
+> [!NOTE]
+> See [client variables](client-docs/variables) for details of what uibuilder variables are available.
+
+### `copyToClipboard(varToCopy)` - Copy the specified UIBUILDER variable to the browser clipboard
+
+Can only be used as an event handler because browsers do not allow unrestricted JavaScript access to the browser clipboard.
+
+`varToCopy` has to be a variable specified in UIBUILDER. One that could be retrieved by `uibuilder.get('varToCopy')`.
+
+```html
+<button onclick="copyToClipboard('version')">Copy UIBUILDER client version string to clipboard</button>
+```
+
+### `get(prop)` - Get a UIBUILDER property
+
+This is the preferred method to get an exposed UIBUILDER variable or property. Do not try to access variables and properties directly unless explicitly shared in this documentation. This function can also be called from Node-RED via `msg._uib.command` - `get` with `msg._uib.prop` set to the variable name to get.
+
+##### Example
+
+```javascript
+console.log( uibuilder.get('version') )
+```
+
+### `getManagedVarList()` - Get a list of all UIBUILDER managed variables
+
+A UIBUILDER managed variable is one that has been created with `uibuilder.set()` (or changed from Node-RED with the equivalent command msg). As such, it can be watched for changes with `uibuilder.onChange()`.
+
+This function can also be called from Node-RED via `msg._uib.command` - `getManagedVarList`. The returned `msg.payload` contains the list. Optionally, you can also add `msg._uib.prop` set to `full` which will return an object where each key/value is the variable name. This can be usefull for some types of processing.
+
+### `getWatchedVars()` - Get a list of all UIBUILDER watched variables
+
+Shows all variables that are being watched using `uibuilder.onChange()`.
+
+This function can also be called from Node-RED via `msg._uib.command` - `getWatchedVars`. The returned `msg.payload` contains the list.
+
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables.
+
+### `getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage
+
+Note that browser localStorage is persisted even after a browser closes. It can be manually cleared from the browser's settings. You can also remove an item using the `removeStore` function.
+
+If the `id` is not found in the store, `null` is returned. If the store is not available or some other error occurs, `undefined` is returned.
+
+All `id`s have a pre-defined UIBUILDER prefix added to the key name to help ensure that the key being saved will be unique. This prefix is defined in the library and cannot be changed, it is set to `uib_`.
+
+Because the browser storage API only allows strings as values, the data has to be serialised. This function attempts to unserialise (re-hydrate). It should be noted that sometimes, this process results in values that may differ from the original. For example, `uibuilder.setStore('mydate',new Date()); console.log( uibuilder.getStore('mydate') )` will return the saved date as an ISO8602 date string, not a JavaScript Date object.
+
+### `removeStore(id)` - Attempt to remove a UIBUILDER key from browser localStorage
+
+Does not return anything. Does not generate an error if the key does not exist.
+
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
+
+### `set(prop, val, store, autoload)` - Set a UIBUILDER property and dispatch a change event
+
+This is the preferred method to set an exposed UIBUILDER variable or property. Do not try to set variables and properties directly.
+
+When using set, the variable that is set becomes responsive. That is to say, that issuing a set triggers both the internal event handler (as used in `uibuilder.onChange('prop', ...)`) but also the DOM custom event `uibuilder:propertyChanged`. Normally, you will want to use the `onChange` handler.
+
+Note that you can add additional custom data to the UIBUILDER object but care must be taken not to overwrite existing internal variables. This is useful if you want to be able to automatically process changes to your own variables using the `onChange` handler.
+
+This function can also be called from Node-RED via `msg._uib.command` - `set` with `msg._uib.prop` set to the variable name to set. and `msg._uib.value` set to the new value. `msg._uib.options` is used as `{store: true, autoload: true}` to optionally pass the additional arguments.
+
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
+
+##### Example
+
+```javascript
+uibuilder.set('logLevel', 3)
+```
+
+### `setStore(id, val, autoload)` - Attempt to save to the browsers localStorage
+
+Write a value to the given id to localStorage. Will fail if localStorage has been turned off or is full.
+
+The value to save has to be serialisable. Some JavaScript objects cannot be serialised (using `JSON.stringify`). If this happens `false` is returned and an error output to the browser console. However, you can store any basic value (number, string, boolean) as well as array's and objects.
+
+Browsers set a limit on the size of the store for a particular source. Typically this is 10MB but may be altered by the user. The user can turn off localStorage as well.
+
+Returns `true` if the save was successful, otherwise returns false.
+
+Errors are output to the browser console if saving fails but processing will continue.
+
+> [!WARNING]
+> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
+
 ## UI Handling
 
 These are the new dynamic, configuration-driven UI features. They let you create your UI dynamically from simple data sent to the client.
@@ -166,27 +210,96 @@ In addition, internal message handling will recognise standard messages from nod
 
 For functions with no descriptions, please refer to the code. In general, these will not need to be used in your own code.
 
-### `ui(json)` - Directly manage UI via JSON
+### `convertMarkdown(mdText)` - Convert's Markdown text input to HTML
 
-Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
+Returns an HTML string converted from the Markdown input text. Only if the Markdown-IT library is loaded, otherwise just returns the input text.
 
-Directly calls `_ui.ui` from the `ui.js` library.
+### `elementExists(cssSelector, msg = true)` - Does the element exist on the page?
+
+Returns a payload of true or false depending on whether the selected element exists on the page.
+
+Available as a command. Can be called from Node-RED with a message like: `{"command":"elementExists","prop":"#more"}`.
+
+### `elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Can an HTML element currently be seen by the user?
+
+When the selected element is showing at least 10% in the users browser view, sends a message to Node-RED with `msg.isVisible` set to `true`. Will send another message if the elements shows less than 10%. Will continue to send messages when the element moves in and out of visibility.
+
+To turn it off, call it again with the same cssSelector but with the `stop` argument set to `true`.
+
+The `threshold` argument defaults to 0.1 (10%). It must be between 0 and 1 and represents, as a percentage, how much of the element must be in the browser viewport to trigger an output.
+
+Notes:
+
+* Unlike the visibility control message, this function sends a standard message AND is not effected by the browser tab visibility. So even if the tab containing the page is not visible but the element would be if the tab were showing, the result of this function is still TRUE.
+* Requires the browser to support the IntersectionObserver API (available to all mainstream browsers from early 2019).
+* The element has to exist on the page before it can be observed.
+* Turn on the optional `msg._uib` feature in the UIBUILDER node to see which client is sending the messages.
+* Due to the nature of the IntersectionObserver API, this fn is not available as a command for now.
 
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
 
 See under [Message Handling](#message-handling) above for details.
 
-### `loadui(url)` - Load a dynamic UI from a JSON web reponse
+### `include(url, uiOptions)` - insert an external file into the web page
 
-Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
+Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch). This function is asynchronous, that should be allowed for when using in custom front-end code.
 
-Directly calls `_ui.loadui` from the `ui.js` library.
+> [!NOTE]
+> This function uses the standard [`replaceSlot`](#replaceslotel-component-replace-or-add-an-html-element39s-slot-from-text-or-an-html-string) internal function. As such, it will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if loaded. DOMPurify will block the loading of most file types.
+
+The `uiOptions` parameter is **required** and must contain at least an `id` property. Options are:
+
+```json
+{
+  // REQUIRED: Must be unique on the web page and is applied to the wrapping `div` tag.
+  "id": "unique99",
+  // A CSS Selector that identifies the parent element to which the included 
+  // file will be attached. If not provided, 'body' will be used
+  "parent": "#more",
+  // Optional. If the parent has multiple children, identifies where the new element
+  // will be inserted. Defaults to "last". May be "first", "last" or a number.
+  "position": "last",
+  // Optional. Attributes that will be applied to the wrapping DIV tag
+  "attributes": {
+    // NB: The "included" class is applied by default, if adding further 
+    //     classes it is generally best to include that.
+    "class": "myclass included"
+  }
+  // Other properties from the UI `replace` mode may also be included but 
+  // caution is required not to clash with properties from the included file.
+}
+```
+
+Each of the includes are wrapped in a `div` tag to which the supplied `id` attribute is applied along with a class of `included`. This makes styling of the included elements very easy. For example, to style an included image, add something like this to your `index.css` file: `.included img { width: 100%, border:5px solid silver;}`.
+
+The following file types are handled:
+
+* *HTML document/fragment* (*.html) - Will be wrapped in a div given the specified `id` attribute.
+  
+  If the `DOMPurify` library is loaded before the UIBUILDER client library, it will be used to sanitise the HTML.
+
+* *Image* - Any image file type recognised by the browser will be shown using an `img` tag (wrapped in the div as usual).
+* *Video* - Any video file type recognised by the browser will be shown using a `video` tag (wrapped in the div as usual). The video controls will be shown and it will auto-play if the browser allows it.
+* *JSON* - A `*.json` file will be syntax highlighted and shown in a panel. The syntax highlight CSS is contained in the `uib-brand.css` file and can be copied to your own CSS definitions if needed. The panel is defined as a `pre` tag with the `syntax-highlight` class added.
+* *PDF* - A `*.pdf` file will be shown in a resizable iFrame.
+* *Text* - The contents of the text file will be shown in a resizable iFrame.
+* *Other* - Any other file type will be shown in a resizable iFrame.
+
+Any file type that the browser cannot handle will trigger the browser to automatically download it. This is a browser limitation.
+
+Can be called from Node-RED with a message like: `{"command":"include","prop":"./test.html","value":{"id":"incHtm","parent":"#more","attributes":{"style":"width:50%;"}}}`.
 
 ### `loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously
 
 Either from a remote URL or from a text string.
 
 Directly call the functions of the same name from the `ui.js` library.
+
+### `loadui(url)` - Load a dynamic UI from a JSON web response
+
+Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
+
+Directly calls `_ui.loadui` from the `ui.js` library.
 
 ### `notify(config)` - Use the browser and OS notification API to show a message to the user
 
@@ -259,6 +372,10 @@ Will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-sa
 
 Directly calls `_ui.replaceSlotMarkdown` from the `ui.js` library.
 
+### `sanitiseHTML(htmlText)` - Ensures that input HTML text is safe
+
+Returns a safe, sanitised HTML string IF the DOMPurify library is loaded. Otherwise returns the input.
+
 ### `showDialog(type, ui, msg)` - Show a toast or alert style message on the UI
 
 Directly calls `_ui.showDialog` from the `ui.js` library.
@@ -295,19 +412,19 @@ Simply add `uibuilder.showMsg(true)` early in your index.js custom code and a bo
 
 `uibuilder.showMsg(false)` or `uibuilder.showMsg()` will remove the box and stop the updates.
 
-You can also position the box in a different location by specifying a "parent". This is a CSS selector that, if found on the page, uibuilder will add the box to the end of. For example, `uibuilder.showMsg(true, 'h1')` would attach the box to the end of a heading level 1 element on the page. Don't forget that the box will inherit at least some of the CSS style from the parent, so attaching to an H1 element will make the text much bigger.
+You can also position the box in a different location by specifying a "parent". This is a CSS selector that, if found on the page, UIBUILDER will add the box to the end of. For example, `uibuilder.showMsg(true, 'h1')` would attach the box to the end of a heading level 1 element on the page. Don't forget that the box will inherit at least some of the CSS style from the parent, so attaching to an H1 element will make the text much bigger.
 
 This function can also be called from Node-RED via `msg._uib.command` - `showMsg` with `msg._uib.value` set to `true`. Leave the value property off to toggle the display.
 
 Adds/removes `<div id="uib_last_msg">` to/from the page.
 
-### `showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the uibuilder client library
+### `showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the UIBUILDER client library
 
-Simply add `uibuilder.showStatus(true)` early in your index.js custom code and a box will be added to the end of your page that will show all of the important settings in the uibuilder client. Use `uibuilder.showStatus()` to toggle the display.
+Simply add `uibuilder.showStatus(true)` early in your index.js custom code and a box will be added to the end of your page that will show all of the important settings in the UIBUILDER client. Use `uibuilder.showStatus()` to toggle the display.
 
 `uibuilder.showStatus(false)` or `uibuilder.showStatus()` will remove the box and stop the updates.
 
-You can also position the box in a different location by specifying a "parent". This is a CSS selector that, if found on the page, uibuilder will add the box to the end of. For example, `uibuilder.showStatus(true, 'h1')` would attach the box to the end of a heading level 1 element on the page. Don't forget that the box will inherit at least some of the CSS style from the parent, so attaching to an H1 element will make the text much bigger.
+You can also position the box in a different location by specifying a "parent". This is a CSS selector that, if found on the page, UIBUILDER will add the box to the end of. For example, `uibuilder.showStatus(true, 'h1')` would attach the box to the end of a heading level 1 element on the page. Don't forget that the box will inherit at least some of the CSS style from the parent, so attaching to an H1 element will make the text much bigger.
 
 This function can also be called from Node-RED via `msg._uib.command` - `showStatus` optionally with `msg._uib.value` set to `true`. Leave the value property off to toggle the display.
 
@@ -325,6 +442,12 @@ Use as:
 const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
+
+### `ui(json)` - Directly manage UI via JSON
+
+Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
+
+Directly calls `_ui.ui` from the `ui.js` library.
 
 ### `uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element
 
@@ -354,67 +477,8 @@ If `startStop` is undefined, null or 'toggle', the watch will be toggled.
 
 Can be called from Node-RED with a message like: `{"_uib: {"command": "uiWatch", "prop": "#more"} }`.
 
-### `include(url, uiOptions)` - insert an external file into the web page
-
-Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch). This function is asynchronous, that should be allowed for when using in custom front-end code.
-
-> [!NOTE]
-> This function uses the standard [`replaceSlot`](#replaceslotel-component-replace-or-add-an-html-element39s-slot-from-text-or-an-html-string) internal function. As such, it will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if loaded. DOMPurify will block the loading of most file types.
-
-The `uiOptions` parameter is **required** and must contain at least an `id` property. Options are:
-
-```json
-{
-  // REQUIRED: Must be unique on the web page and is applied to the wrapping `div` tag.
-  "id": "unique99",
-  // A CSS Selector that identifies the parent element to which the included 
-  // file will be attached. If not provided, 'body' will be used
-  "parent": "#more",
-  // Optional. If the parent has multiple children, identifies where the new element
-  // will be inserted. Defaults to "last". May be "first", "last" or a number.
-  "position": "last",
-  // Optional. Attributes that will be applied to the wrapping DIV tag
-  "attributes": {
-    // NB: The "included" class is applied by default, if adding further 
-    //     classes it is generally best to include that.
-    "class": "myclass included"
-  }
-  // Other properties from the UI `replace` mode may also be included but 
-  // caution is required not to clash with properties from the included file.
-}
-```
-
-Each of the includes are wrapped in a `div` tag to which the supplied `id` attribute is applied along with a class of `included`. This makes styling of the included elements very easy. For example, to style an included image, add something like this to your `index.css` file: `.included img { width: 100%, border:5px solid silver;}`.
-
-The following file types are handled:
-
-* *HTML document/fragment* (*.html) - Will be wrapped in a div given the specified `id` attribute.
-  
-  If the `DOMPurify` library is loaded before the uibuilder client library, it will be used to sanitise the HTML.
-
-* *Image* - Any image file type recognised by the browser will be shown using an `img` tag (wrapped in the div as usual).
-* *Video* - Any video file type recognised by the browser will be shown using a `video` tag (wrapped in the div as usual). The video controls will be shown and it will auto-play if the browser allows it.
-* *JSON* - A `*.json` file will be syntax highlighted and shown in a panel. The syntax highlight CSS is contained in the `uib-brand.css` file and can be copied to your own CSS definitions if needed. The panel is defined as a `pre` tag with the `syntax-highlight` class added.
-* *PDF* - A `*.pdf` file will be shown in a resizable iFrame.
-* *Text* - The contents of the text file will be shown in a resizable iFrame.
-* *Other* - Any other file type will be shown in a resizable iFrame.
-
-Any file type that the browser cannot handle will trigger the browser to automatically download it. This is a browser limitation.
-
-Can be called from Node-RED with a message like: `{"command":"include","prop":"./test.html","value":{"id":"incHtm","parent":"#more","attributes":{"style":"width:50%;"}}}`.
 
 ## HTML/DOM Cacheing
-
-### `watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage
-
-`uibuilder.watchDom(true)` will start the browser watching for any changes to the displayed HTML. When it detects a change, it automatically saves the new HTML (the whole page) to the browser's `localStorage`. This persists across browser and device restarts.
-
-You can ensure that the page display looks exactly like the last update upon page load simply by adding `uibuilder.restoreHtmlFromCache()` at the start of your index.js custom code.
-
-> [!note]
-> Browser `localStorage` capacity is set by the browser, not uibuilder. Very large pages might concevably fill the storage as might other things saved to it.
->
-> You should be able to change the capacity in the browser settings but of course, this would have to be done on every client device.
 
 ### `clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage
 ### `restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage
@@ -425,6 +489,18 @@ You can ensure that the page display looks exactly like the last update upon pag
 > Browser local cache is generally limited to 10MB for the whole source domain.
 > Therefore, it is quite easy to exceed this - use with caution.
 
+### `watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage
+
+`uibuilder.watchDom(true)` will start the browser watching for any changes to the displayed HTML. When it detects a change, it automatically saves the new HTML (the whole page) to the browser's `localStorage`. This persists across browser and device restarts.
+
+You can ensure that the page display looks exactly like the last update upon page load simply by adding `uibuilder.restoreHtmlFromCache()` at the start of your index.js custom code.
+
+> [!note]
+> Browser `localStorage` capacity is set by the browser, not UIBUILDER. Very large pages might concevably fill the storage as might other things saved to it.
+>
+> You should be able to change the capacity in the browser settings but of course, this would have to be done on every client device.
+
+
 ## Event Handling
 
 > [!NOTE]
@@ -432,7 +508,7 @@ You can ensure that the page display looks exactly like the last update upon pag
 > to control whether a specific page, client or browser tab will process an inbound message.
 > Use this where you have multiple pages or clients and need to target a message to a specific one.
 
-### `onChange(prop, callbackFn)` - Register on-change event listeners for uibuilder tracked properties
+### `onChange(prop, callbackFn)` - Register on-change event listeners for UIBUILDER tracked properties
 
 Returns a reference to the callback so that it can be cancelled if needed.
 
@@ -475,7 +551,7 @@ uibuilder.cancelTopic('my topic', topicChgEvt)
 
 ### Custom Events
 
-The uibuilder library also issues a number of custom events. These can be handled using the standard `document.addEventListener` JavaScript function.
+The UIBUILDER library also issues a number of custom events. These can be handled using the standard `document.addEventListener` JavaScript function.
 
 * `uibuilder:stdMsgReceived` - triggered whenever a normal msg is received from Node-RED. Passes the msg in the data parameter. Happens before any processing of `msg._uib`, `msg._ui` or page/client/tab filtering.
 * `uibuilder:msg:topic:${msg.topic}` - triggered immediately after the above event if the `msg.topic` property is set. Passes the msg in the data parameter.
@@ -501,14 +577,14 @@ This is a convenience method to help you select HTML DOM elements in your own cu
 
 As per the native function, it returns a single [HTML element](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement). If the CSS Selector provided is not unique (e.g. >1 element would be returned), only the first element found in the DOM is returned. Use `document.querySelectorAll(cssSelector)` if you want to get back an array of selected elements.
 
-If the uibuilder client finds an existing definition of `$` on startup, it will not make this global. However, it would still be usable as `uibuilder.$(...)`. This avoids clashes with libraries such as jQuery.
+If the UIBUILDER client finds an existing definition of `$` on startup, it will not make this global. However, it would still be usable as `uibuilder.$(...)`. This avoids clashes with libraries such as jQuery.
 
 If the selector finds a `<template>` tag, it returns its _first child_ instead of the tag. This is to ensure that if you clone it, it will be valid for applying event handlers. A template element is not visible on-page but is used for cloning multiple times or for swapping between different displays (removing the old element and replacing with a new one - not hide/show).
 
 > [!NOTE]
-> Worth noting that the Chromium DevTools console also uses the same definition of `$()` that uibuilder does. [Reference](https://developer.chrome.com/docs/devtools/console/utilities/#querySelector-function). uibuilder's definition supercedes that of the DevTools console however. The devtools version allows a 2nd parameter which uibuilder does not.
+> Worth noting that the Chromium DevTools console also uses the same definition of `$()` that UIBUILDER does. [Reference](https://developer.chrome.com/docs/devtools/console/utilities/#querySelector-function). UIBUILDER's definition supercedes that of the DevTools console however. The devtools version allows a 2nd parameter which UIBUILDER does not.
 >
-> In addition, uibuilder's version gracefully handles the selection of a `<template>` tag where it returns the template's first child rather than the template itself.
+> In addition, UIBUILDER's version gracefully handles the selection of a `<template>` tag where it returns the template's first child rather than the template itself.
 
 #### Example
 
@@ -523,14 +599,14 @@ This function is a convenience wrapper around `Array.from(document.querySelector
 
 This means that it returns different data to the `$()` function.
 
-This is very similar to the function of the same name in the Chromium DevTools. The only difference being that uibuilder's function does not accept a 2nd parameter. uibuilder's function supercedes that of the DevTools.
+This is very similar to the function of the same name in the Chromium DevTools. The only difference being that UIBUILDER's function does not accept a 2nd parameter. UIBUILDER's function supercedes that of the DevTools.
 
 ### `log` - output log messages like the library does
 
 Use as `uibuilder.log(1, 'my:prefix', 'Some text', {some:'optional data'})` which produces:
 ![Example log output](../images/example-log-output.png)
 
-First argument is the log level (0=Error, 1=Warn, 2=Info, 3=log, 4=debug, 5=trace). If the uibuilder logLevel variable is set to less than the requested level, the output will not be shown. The names can be used instead of the numbers.
+First argument is the log level (0=Error, 1=Warn, 2=Info, 3=log, 4=debug, 5=trace). If the UIBUILDER logLevel variable is set to less than the requested level, the output will not be shown. The names can be used instead of the numbers.
 
 The first 2 arguments are required. All remaining arguments are included in the output and may include array, objects, etc.
 
@@ -547,7 +623,7 @@ Future versions of this function after v6.1 will extend it to output to an on-pa
 >
 > Use the `uibuilder.showStatus()` function to display the status of the client library on-page. This can show when the start function has failed and show what you need to change.
 
-Unlike the original uibuilder client, this version:
+Unlike the original UIBUILDER client, this version:
 
 * Rarely needs to be manually called. It should work for all page locations including in sub-folders as long as the client allows cookies.
 * Only allows passing of a single options object.
@@ -555,7 +631,7 @@ Unlike the original uibuilder client, this version:
 
 While multiple properties can be given in the options object, only the following are currently used:
 
-* `ioNamespace` - This is normally calculated for you. However, if using an external server to serve the page, you may need to manually set this. Check the uibuilder node details page in the Node-RED Editor for what this should be set to.
+* `ioNamespace` - This is normally calculated for you. However, if using an external server to serve the page, you may need to manually set this. Check the UIBUILDER node details page in the Node-RED Editor for what this should be set to.
 * `ioPath` - As above.
-* `loadStylesheet` - (default=true). Set to false if you don't want the uibuilder default stylesheet (`uib-brand.css`) to be loaded if you haven't loaded your own. Checks to see if any stylesheet has already been loaded and if it has, does not load.
+* `loadStylesheet` - (default=true). Set to false if you don't want the UIBUILDER default stylesheet (`uib-brand.css`) to be loaded if you haven't loaded your own. Checks to see if any stylesheet has already been loaded and if it has, does not load.
 

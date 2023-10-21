@@ -192,7 +192,7 @@ function detailsPage(uib, urlPrefix) {
         <!doctype html><html lang="en"><head>
             <title>Uibuilder Index</title>
             <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
-            <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-styles.css" media="screen">
+            <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-brand.min.css" media="screen">
             <style type="text/css" rel="stylesheet" media="all">
                 h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                 .col3i tbody>tr>:nth-child(3){ font-style:italic; }
@@ -491,7 +491,7 @@ function adminRouterV2(uib, log) {
         // @ts-ignore
         const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
         // @ts-ignore
-        const filePath = path.join(filePathRoot, req.query.fname)
+        const filePath = path.join(filePathRoot, params.fname)
 
         // Does the file exist?
         if ( fs.existsSync(filePath) ) {

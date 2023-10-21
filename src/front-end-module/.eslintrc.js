@@ -40,7 +40,7 @@ module.exports = {
         'plugin:sonarjs/recommended',
     ],
     rules: {
-        'sonarjs/no-duplicate-string': ['error', 6], // Default is 3
+        'sonarjs/no-duplicate-string': ['warn', { 'threshold': 6 }],  // default is 3
         // 'sonarjs/cognitive-complexity': ['error', 15], // Default is 15
         'sonarjs/no-nested-template-literals': 0,
 

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head>
     <meta charset="UTF-8">
-    <title>uibuilder Documentation v6</title>
+    <title>UIBUILDER Documentation v6</title>
 
-    <meta name="description" content="uibuilder Documentation v6">
+    <meta name="description" content="UIBUILDER Documentation v6">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="./images/favicon.ico">
 
@@ -16,6 +16,8 @@
             --sidebar-width: 22em;
             --heading-h3-border-color: var(--mono-tint2);
             --heading-h4-border-color: var(--mono-tint3);
+            --uib-blue: hsl(204 89% 55% / 70%);
+            --uib-red: hsl(0 100% 45% / 70%); /*#8f0000;*/
             /* --base-font-family: Arial, Sans-serif; */
             /*--sidebar-background: #005EB8;*/
         }
@@ -42,7 +44,7 @@
             font-size: 80%;
         }
         .app-name-link::after {
-            content: "uibuilder v6 docs";
+            content: "UIBUILDER v6 docs";
             float:right;
         }
         img[alt$=">"] {
@@ -81,28 +83,69 @@
             margin-left: 1%;
         }
 
+        .cover-head {
+            display:flex;
+            font-size:xx-large;
+        }
+        .cover-head p {
+            flex: 1;
+            order: 2;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        .ch-title {
+            flex: 3;
+            order: 1;
+        }
+        .ch-title p {
+            margin-top: .1rem;
+        }
+        .cover blockquote p {
+            margin-top: 0.1rem;
+        }
+        .uib-name {
+            display:inline !important;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--uib-blue) !important;
+        }
+        .uib-red {
+            color: var(--uib-red) !important;
+            font-weight: 800;
+        }
+
         /* .callout {
             max-width: 100%; 
         } */
     </style>
 </head><body>
-    <div id="app">Loading, please wait ...</div>
+    <div id="app">Loading ...</div>
     <script src="https://cdn.jsdelivr.net/npm/docsify-edit-on-github/index.min.js"></script>
     <script>
         'use strict'
         window.$docsify = { //  eslint-disable-line no-undef
-            name: 'uibuilder Documentation v6',
+            name: 'UIBUILDER Documentation v6',
             repo: 'TotallyInformation/node-red-contrib-uibuilder',
-            homepage: 'README.md',
+            coverpage: true,
+            onlyCover: false,
+            // homepage: 'README.md',
 
             executeScript: true,
             // loadNavbar: true,
             // mergeNavbar: true,
             autoHeader: false,
-            logo: '/images/node-blue-125x125.png',
+            logo: '/images/node-lblue-125x125.png',
             auto2top: true,
             loadSidebar: './-sidebar.md',
             alias: {
+                // Moved pages
+                '/dev/socket-js.*': '/dev/server-libs/socket.md',
+                '/dev/tilib-js.*': '/dev/server-libs/tilib.md',
+                '/dev/uiblib-js.*': '/dev/server-libs/uiblib.md',
+                '/dev/web-js.*': '/dev/server-libs/web.md',
+                '/dev/uibuilderfe-js.*': '/dev/client-libs/uibuilderfe.md',
+                '/front-end-library.*': '/client-docs/uibuilderfe-library.md',
+
                 '/.*/_sidebar.md': '/-sidebar.md', // use the same sidebar everywhere. See #301
                 '/.*/-sidebar.md': '/-sidebar.md', // use the same sidebar everywhere. See #301
                 '.*?/changelog': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/CHANGELOG.md',
@@ -119,9 +162,13 @@
                 crossChapter: true,
                 crossChapterText: true,
             },
+            notFoundPage: true,
 
             mustache: {
-                noPackage : true
+                noPackage: true,
+                data: {
+                    uib: '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>',
+                },
             },
 
             plugins: [
@@ -148,6 +195,8 @@
 
                     // Runs against the raw markdown for each page
                     hook.beforeEach(function(content) {
+                        // content = content.replace(/=uib/ig, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
+                        content = content.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                         let strYr = (new Date()).getFullYear()
                         let mydate = false
                         let yearFrom = 2017
@@ -206,6 +255,7 @@
 
                     // Runs against the rendered HTML for each page
                     hook.afterEach(function (html, next) {
+                        html = html.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                         next( html + footer.join('') )
                     })
                 },

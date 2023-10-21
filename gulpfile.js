@@ -39,7 +39,11 @@ const greplace = require('gulp-replace')
 const debug = require('gulp-debug')
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
-const gulpEsbuild = require('gulp-esbuild')
+// const gulpEsbuild = require('gulp-esbuild')
+const {createGulpEsbuild} = require('gulp-esbuild')
+const gulpEsbuild = createGulpEsbuild({
+	pipe: true,
+})
 const cleanCSS = require('gulp-clean-css')
 
 const execa = require('execa')
@@ -64,13 +68,14 @@ const nodeSrcRoot = 'src/editor'
 // print output of commands into the terminal
 const stdio = 'inherit'
 
-// @ts-ignore
+// @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
+// Desired release version
+const release = '6.6.0'
+// Wanted node.js version - used for ESBUILD
+const nodeVersion = 'node14.14'
 
-// npm version 4.2.1 --no-git-tag-version --allow-same-version
-const release = '6.5.0'
-
-console.log(`Current Version: ${version}. Requested Version: ${release}`)
+console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
 
 // const readline = require('readline')
 /** Create a new node from the template */
@@ -111,7 +116,7 @@ console.log(`Current Version: ${version}. Requested Version: ${release}`)
 
 //#region ---- packing FE ----
 
-/** Pack (Uglify) front-end task
+/** Pack (Uglify) OLD front-end
  * @param {Function} cb Callback
  */
 function packfe(cb) {
@@ -156,7 +161,8 @@ function packfe(cb) {
     cb()
 }
 
-/** Pack (Uglify) front-end Module task
+//#region -- ESbuild NEW client library ---
+/** ESBuild front-end as ES Module minified
  * @param {Function} cb Callback
  */
 function packfeModuleMin(cb) {
@@ -195,7 +201,7 @@ function packfeModuleMin(cb) {
             console.error('[packfeModuleMin] ERROR ', err)
             cb(err)
         })
-        .pipe(greplace(/="(.*)-mod"/, '="$1-esm.min"'))
+        .pipe(greplace(/="(.*)-src"/, '="$1-esm.min"'))
         .pipe(dest(feDest))
         .on('end', function() {
             // in case of success
@@ -205,8 +211,8 @@ function packfeModuleMin(cb) {
     // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
     // cb()
 }
-/**
- *
+/** ESBuild front-end as ES Module (not minified)
+ * @param {Function} cb Callback
  */
 function packfeModule(cb) {
     src(`${feModuleSrc}/uibuilder.module.js`)
@@ -225,7 +231,7 @@ function packfeModule(cb) {
             console.error('[packfeModule] ERROR ', err)
             cb(err)
         })
-        .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-esm"'))
+        .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-esm"'))
         .pipe(dest(feDest))
         .on('end', function() {
             // in case of success
@@ -234,8 +240,7 @@ function packfeModule(cb) {
     // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.js`, `${feDest}/uibuilder.esm.js`)
     // cb()
 }
-
-/** Pack (Uglify) front-end IIFE task
+/** ESBuild front-end as IIFE minified
  * @param {Function} cb Callback
  */
 function packfeIIFEmin(cb) {
@@ -274,7 +279,7 @@ function packfeIIFEmin(cb) {
             console.error('[packfeIIFEmin] ERROR ', err)
             cb(err)
         })
-        .pipe(greplace(/="(.*)-mod"/, '="$1-iife.min"'))
+        .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
         .pipe(dest(feDest))
         .on('end', function() {
             // in case of success
@@ -282,12 +287,10 @@ function packfeIIFEmin(cb) {
         })
     // cb()
 }
-
-/**
- *
+/** ESBuild front-end as IIFE (not minified)
+ * @param {Function} cb Callback
  */
 function packfeIIFE(cb) {
-    console.log(feDest)
     src(`${feModuleSrc}/uibuilder.module.js`)
         .pipe(gulpEsbuild({
             outfile: 'uibuilder.iife.js',
@@ -304,8 +307,8 @@ function packfeIIFE(cb) {
             console.error('[packfeIIFE] ERROR ', err)
             cb(err)
         })
-        .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-iife"'))
-        .pipe(debug({title: 'unicorn:'}))
+        .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
+        // .pipe(debug({title: '>>> '}))
         .pipe(dest('front-end/'))
         // .pipe(dest(`${feDest}/`))
         .on('end', function() {
@@ -317,7 +320,265 @@ function packfeIIFE(cb) {
 
     // cb()
 }
+//#endregion -- ESbuild NEW client library ---
 
+//#region -- ESbuild UI client library ---
+/** ESBuild ui.js as ES Module minified
+ * @param {Function} cb Callback
+ */
+function packUiEsmMin(cb) {
+    src(`${feModuleSrc}/ui.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'ui.esm.min.js',
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            target: [
+                // 'es2019',
+                // Start of 2019
+                'chrome72',
+                'safari12.1',
+                'firefox65',
+                'opera58',
+
+                // For private class fields:
+                // 'chrome74',   // Apr 23, 2019
+                // 'opera62',    // Jun 27, 2019
+                // 'edge79',     // Jan 15, 2020
+                // 'safari14.1', // Apr 26, 2021
+                // 'firefox90',  // Jul 13, 2021
+
+                // If we need top-level await
+                // 'chrome89',  // March 1, 2021
+                // 'edge89',
+                // 'opera75',   // Mar 24, 2021
+                // 'firefox89', // Jun 1, 2021
+                // 'safari15',  // Sep 20, 2021
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[packUiEsmMin] ERROR ', err)
+            cb(err)
+        })
+        .pipe(greplace(/="(.*)-src"/, '="$1-esm.min"'))
+        .pipe(dest(feDest))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+/** ESBuild ui.js as ES Module (not minified)
+ * @param {Function} cb Callback
+ */
+function packUiEsm(cb) {
+    src(`${feModuleSrc}/ui.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'ui.esm.js',
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[packUiEsm] ERROR ', err)
+            cb(err)
+        })
+        .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-esm"'))
+        .pipe(dest(feDest))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+/** ESBuild ui.js as IIFE minified
+ * @param {Function} cb Callback
+ */
+function packUiIIFEmin(cb) {
+    src(`${feModuleSrc}/ui.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'ui.iife.min.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            target: [
+                // 'es2019',
+                // Start of 2019
+                'chrome72',
+                'safari12.1',
+                'firefox65',
+                'opera58',
+
+                // For private class fields:
+                // 'chrome74',   // Apr 23, 2019
+                // 'opera62',    // Jun 27, 2019
+                // 'edge79',     // Jan 15, 2020
+                // 'safari14.1', // Apr 26, 2021
+                // 'firefox90',  // Jul 13, 2021
+
+                // If we need top-level await
+                // 'chrome89',  // March 1, 2021
+                // 'edge89',
+                // 'opera75',   // Mar 24, 2021
+                // 'firefox89', // Jun 1, 2021
+                // 'safari15',  // Sep 20, 2021
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[packUiIIFEmin] ERROR ', err)
+            cb(err)
+        })
+        .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
+        .pipe(dest(feDest))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+/** ESBuild ui.js as IIFE (not minified)
+ * @param {Function} cb Callback
+ */
+function packUiIIFE(cb) {
+    src(`${feModuleSrc}/ui.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'ui.iife.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[packUiIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
+        .pipe(dest('front-end/'))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+/** ESBuild ui.js as a Node.js library
+ * @param {Function} cb Callback
+ */
+function packUiNode(cb) {
+    src(`${feModuleSrc}/ui.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'ui.js',
+            bundle: false,
+            format: 'cjs', // CommonJS
+            platform: 'node',
+            minify: false,
+            sourcemap: false,
+            packages: 'external',
+            target: [
+                nodeVersion,
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[packUiNode] ERROR ', err)
+            cb(err)
+        })
+        .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-node"'))
+        .pipe(dest('nodes/libs/'))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+//#endregion -- ESbuild UI client library ---
+
+//#region -- ESbuild components --
+/** ESBuild front-end as IIFE minified
+ * @param {Function} cb Callback
+ */
+function buildUibVarIIFEmin(cb) {
+    src('src/components/uib-var/uib-var.js')
+        .pipe(gulpEsbuild({
+            outfile: 'uib-var.iife.min.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            target: [
+                // 'es2019',
+                // Start of 2019
+                'chrome72',
+                'safari12.1',
+                'firefox65',
+                'opera58',
+
+                // For private class fields:
+                // 'chrome74',   // Apr 23, 2019
+                // 'opera62',    // Jun 27, 2019
+                // 'edge79',     // Jan 15, 2020
+                // 'safari14.1', // Apr 26, 2021
+                // 'firefox90',  // Jul 13, 2021
+
+                // If we need top-level await
+                // 'chrome89',  // March 1, 2021
+                // 'edge89',
+                // 'opera75',   // Mar 24, 2021
+                // 'firefox89', // Jun 1, 2021
+                // 'safari15',  // Sep 20, 2021
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibVarIIFEmin] ERROR ', err)
+            cb(err)
+        })
+        // .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
+        .pipe(dest(feDest))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+/** ESBuild front-end as IIFE (not minified)
+ * @param {Function} cb Callback
+ */
+function buildUibVarIIFE(cb) {
+    src('src/components/uib-var/uib-var.js')
+        .pipe(gulpEsbuild({
+            outfile: 'uib-var.iife.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibVarIIFE] ERROR ', err)
+            cb(err)
+        })
+        // .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
+        // .pipe(debug({title: '>>> '}))
+        .pipe(dest('front-end/'))
+        // .pipe(dest(`${feDest}/`))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+
+//#endregion -- ---- --
+
+//#region -- tests --
 /** Pack (Uglify) front-end IIFE ES6 task
  * @param {Function} cb Callback
  */
@@ -440,6 +701,7 @@ function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
     }
     cb()
 }
+//#endregion
 
 //#endregion ---- ---- ----
 
@@ -621,7 +883,51 @@ function buildPanelTag(cb) {
             // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
             .pipe(dest(`${nodeDest}/uib-tag/`))
     } catch (e) {
-        console.error('buildPanelUpdate failed', e)
+        console.error('buildPanelTag failed', e)
+    }
+
+    cb()
+}
+
+/** Combine the parts of uib-html.html */
+function buildPanelHTML(cb) {
+    try {
+        src(`${nodeSrcRoot}/uib-html/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-html/`))
+    } catch (e) {
+        console.error('buildPanelTag failed', e)
+    }
+
+    cb()
+}
+
+/** Combine the parts of uib-save.html */
+function buildPanelSave(cb) {
+    try {
+        src(`${nodeSrcRoot}/uib-save/main.html`, ) // { since: lastRun(buildMe) } )
+            // .pipe(debug({title:'debug1',minimal:false}))
+            .pipe( include() )
+            // Rename output to $dirname/editor.html
+            .pipe(rename(function(thispath) {
+                // thispath.dirname = `${thispath.dirname}`
+                thispath.basename = 'customNode'
+                // thispath.extname = 'html'
+            }))
+            // Minimise HTML output
+            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+            .pipe(dest(`${nodeDest}/uib-save/`))
+    } catch (e) {
+        console.error('buildPanelSave failed', e)
     }
 
     cb()
@@ -638,17 +944,50 @@ const buildme = parallel(
     buildPanelUibElement,
     buildPanelUpdate,
     buildPanelTag,
+    buildPanelHTML,
+    buildPanelSave,
 )
 
 const buildNewFe = parallel(
     packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE
 )
 
+/* Ignored for now
+function buildNodeLibs(cb) {
+    src(`src/libs/*.js`)
+        .pipe(gulpEsbuild({
+            // outfile: 'test-execa.js',
+            // outdir: 'libs',
+            bundle: false,
+            format: 'cjs', // CommonJS
+            platform: 'node',
+            minify: true,
+            sourcemap: true,
+            packages: 'external',
+            target: [
+                nodeVersion,
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildNodeLibs] ERROR ', err)
+            cb(err)
+        })
+        .pipe(debug({title: '>>> '}))
+        .pipe(dest('nodes/libs/'))
+        .on('end', function() {
+            // in case of success
+            cb()
+        })
+}
+*/
+
 /** Watch for changes during development of uibuilderfe & editor */
 function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('src/front-end/uibuilderfe.dev.js', packfe)
-    watch(['src/front-end-module/uibuilder.module.js', 'src/front-end-module/ui.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    watch(['src/front-end-module/uibuilder.module.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    watch('src/components/uib-var/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
     watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
@@ -659,7 +998,11 @@ function watchme(cb) {
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
     watch('src/editor/uib-tag/*', buildPanelTag)
+    watch('src/editor/uib-html/*', buildPanelHTML)
+    watch('src/editor/uib-save/*', buildPanelSave)
     watch('front-end/uib-brand.css', minifyBrandCSS)
+    // watch('src/components/uib-var/uib-var.js', parallel(buildUibVarIIFE, buildUibVarIIFEmin))
+    // watch('src/libs/*', buildNodeLibs)
 
     cb()
 }
@@ -787,6 +1130,7 @@ exports.watch       = watchme
 exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
 exports.build       = buildme
 exports.buildFe     = buildNewFe
+// exports.buildNodeLibs = buildNodeLibs
 exports.packfe      = packfe
 exports.packfeModule = packfeModule
 exports.packfeIIFE  = packfeIIFE

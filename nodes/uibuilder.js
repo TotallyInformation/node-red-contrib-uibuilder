@@ -30,8 +30,9 @@
 // uibuilder custom
 const uiblib = require('./libs/uiblib')  // Utility library for uibuilder
 const tilib = require('./libs/tilib')   // General purpose library (by Totally Information)
-const packageMgt  = require('./libs/package-mgt')
-const tiEvents  = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
+const packageMgt = require('./libs/package-mgt')
+const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
+const uibFs  = require('./libs/fs')   // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {
     // Template configuration metadata
@@ -58,10 +59,10 @@ try {
 // }
 
 // Core node.js
-const path          = require('path')
+const path = require('path')
 
-// 3rd-party
-const fs            = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
+// TODO - ELIMINATE - move fs processing to uibFs
+const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 
 //#endregion ----- Require packages ----- //
 
@@ -252,7 +253,7 @@ function nodeInstance(config) {
     log.trace(`[uibuilder:nodeInstance:${this.url}] Deployed Version: ${this.deployedVersion}`)
 
     if ( !this.url || typeof this.url !== 'string' || this.url.length < 1 ) {
-        log.error('[uibuilder:nodeInstance] No valid URL provided. Cannot set up this uibuilder instance')
+        log.error('🛑[uibuilder:nodeInstance] No valid URL provided. Cannot set up this uibuilder instance')
         this.statusDisplay = { fill: 'red', shape: 'dot', text: 'ERROR:NOT CONFIGURED - No URL' }
         uiblib.setNodeStatus( this )
         return
@@ -295,6 +296,7 @@ function nodeInstance(config) {
      *   over those in the nodes folders (which act as defaults) @type {string}
      */
     this.customFolder = path.join(/** @type {string} */ (uib.rootFolder), this.url)
+    // console.log('uibuilder custom folder', this.customFolder)
 
     // TODO Need to find a way to make this more robust for when folder rename fails
     // Check whether the url has been changed. If so, rename the folder
@@ -309,7 +311,7 @@ function nodeInstance(config) {
             log.trace(`[uibuilder:nodeInstance:${this.url}] Could not rename folder. ${e.message}`)
             // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
             if ( e.code !== 'ENOENT' ) {
-                log.error(`[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. Manually change the URL back to the original. newUrl=${this.url}, oldUrl=${this.oldUrl}, Fldr=${this.customFolder}. Error=${e.message}`, e)
+                log.error(`🛑[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal. Manually change the URL back to the original. newUrl=${this.url}, oldUrl=${this.oldUrl}, Fldr=${this.customFolder}. Error=${e.message}`, e)
             }
         }
         // TODO Move this to a function in web.js
@@ -333,7 +335,7 @@ function nodeInstance(config) {
                 fs.copySync( copyFrom, this.customFolder, cpyOpts)
                 log.info(`[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
             } catch (e) {
-                log.error(`[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
+                log.error(`🛑[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
                 customFoldersOK = false
             }
 
@@ -355,7 +357,7 @@ function nodeInstance(config) {
                         if ( this.templateFolder === 'external' ) mystr = `, ${this.extTemplate}`
                         statusMsg = `Replace template error. ${err.message}. url=${this.url}. ${this.templateFolder}${mystr}`
                     }
-                    log.error(`[uibuilder:nodeInstance:replaceTemplate] ${statusMsg}`, err)
+                    log.error(`🛑[uibuilder:nodeInstance:replaceTemplate] ${statusMsg}`, err)
                 } )
 
         }
@@ -365,7 +367,7 @@ function nodeInstance(config) {
         try {
             fs.accessSync(this.customFolder, fs.constants.W_OK)
         } catch (e) {
-            log.error(`[uibuilder:nodeInstance:${this.url}] Local custom folder ERROR`, e.message)
+            log.error(`🛑[uibuilder:nodeInstance:${this.url}] Local custom folder ERROR`, e.message)
             customFoldersOK = false
         }
 
@@ -378,7 +380,7 @@ function nodeInstance(config) {
         log.trace(`[uibuilder:nodeInstance:${this.url}] Using local front-end folders in: ${this.customFolder}` )
     } else {
         // Local custom folders are not right!
-        log.error(`[uibuilder:nodeInstance:${this.url}] Wanted to use local front-end folders in ${this.customFolder} but could not`)
+        log.error(`🛑[uibuilder:nodeInstance:${this.url}] Wanted to use local front-end folders in ${this.customFolder} but could not`)
     }
 
     //#endregion ====== End of Local folder structure ====== //
@@ -442,7 +444,6 @@ function nodeInstance(config) {
     //     tiEvents.emit(`node-red-contrib-uibuilder/components-html/BOO`, 1, 2)
     //     tiEvents.emit(`node-red-contrib-uibuilder/components-html`, 3, 4)
     // }, 8000)
-
 } // ----- end of nodeInstance ----- //
 
 /** 1a) All of the initialisation of the Node
@@ -489,7 +490,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
             initialised = true
             const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
             RED.log.info('+-----------------------------------------------------')
-            RED.log.info(`| ${uib.moduleName} v${uib.version} initialised`)
+            RED.log.info(`| ${uib.moduleName} v${uib.version} initialised 📗`)
             RED.log.info(`| root folder: ${uib.rootFolder}`)
             if ( uib.customServer.isCustom === true ) {
                 RED.log.info('| Using custom ExpressJS webserver at:')
@@ -565,6 +566,10 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     //#endregion -------- Constants -------- //
 
+    // TODO: Move all file handling to separate uibFs lib
+    // Configure the UibFs handler class
+    uibFs.setup(uib)
+
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable? */
@@ -575,7 +580,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
         log.trace(`[uibuilder:runtimeSetup] uibRoot folder exists. ${uib.rootFolder}` )
     } catch (e) {
         if ( e.code !== 'EEXIST' ) { // ignore folder exists error
-            RED.log.error(`[uibuilder:runtimeSetup] Custom folder ERROR, path: ${uib.rootFolder}. ${e.message}`)
+            RED.log.error(`🛑[uibuilder:runtimeSetup] Custom folder ERROR, path: ${uib.rootFolder}. ${e.message}`)
             uibRootFolderOK = false
         }
     }
@@ -584,23 +589,24 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
         fs.accessSync( uib.rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
         log.trace(`[uibuilder:runtimeSetup] uibRoot folder is read/write accessible. ${uib.rootFolder}` )
     } catch (e) {
-        RED.log.error(`[uibuilder:runtimeSetup] Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
+        RED.log.error(`🛑[uibuilder:runtimeSetup] Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
         uibRootFolderOK = false
     }
     // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
     if (uibRootFolderOK === true) {
+        // ! TODO - No longer needed?
         // Check if uibRoot/package.json exists and if not, create it
-        const uibRootPkgJson = path.join(uib.rootFolder, 'package.json')
-        if ( !fs.existsSync( uibRootPkgJson ) ) {
-            fs.writeJsonSync( uibRootPkgJson, { name: 'uib-root' } )
-        }
+        // const uibRootPkgJson = path.join(uib.rootFolder, 'package.json')
+        // if ( !fs.existsSync( uibRootPkgJson ) ) {
+        //     fs.writeJsonSync( uibRootPkgJson, { name: 'uib-root' } )
+        // }
         // We want to always overwrite the .config template files
         const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
         try {
             fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
             log.trace(`[uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
         } catch (e) {
-            RED.log.error(`[uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
+            RED.log.error(`🛑[uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
             uibRootFolderOK = false
         }
 
@@ -609,14 +615,14 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
         try {
             fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err) {
                 if (err) {
-                    log.error(`[uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
+                    log.error(`🛑[uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
                 } else {
                     log.trace(`[uibuilder:runtimeSetup] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
                 }
             })
         } catch (e) {
             // should never happen
-            log.error('[uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED')
+            log.error('🛑[uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED')
         }
         // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeInstance() so available for each instance as `./common/`)
     }

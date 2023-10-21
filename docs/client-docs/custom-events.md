@@ -3,7 +3,7 @@ title: Custom document events used in the modern client
 description: >
    Details about the custom `document` events used in the uibuilder modern front-end client library.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-04-02 18:45:49
+lastUpdated: 2023-09-30 13:02:53
 ---
 
 
@@ -37,14 +37,14 @@ No data included.
 
 ## `uibuilder:socket:connected`
 
-When Socket.IO successfully connects to the matching uibuilder node in Node-RED
+When Socket.IO successfully connects to the matching `uibuilder` node in Node-RED
 
 The connection count is provided on the events `detail` object.
 This is likely to be the first event that is usable in your own front-end code, you can use it as an indicator that the uibuilder library is started and running correctly with a link back to Node-RED active. However, if using in your own code, note that it will fire again if the socket gets disconnected and then reconnects. So put in a flag if you only want to do something on initial startup.
 
 ## `uibuilder:socket:disconnected`
 
-When Socket.IO disconnects from the matching uibuilder node in Node-RED
+When Socket.IO disconnects from the matching `uibuilder` node in Node-RED
 
 The disconnect reason is provided on the events `detail` object if available. May be a string or an error object.
 

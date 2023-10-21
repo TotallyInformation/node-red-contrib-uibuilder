@@ -1,0 +1,39 @@
+{
+    "instructions": [
+        "Make sure to change the names, id, start_url, etc.",
+        "Check Google dev docs for details.",
+        "https://web.dev/add-manifest/",
+        "Add to pages, eg: <link rel='manifest' href='/manifest.json' crossorigin='use-credentials'>"
+    ],
+    "short_name": "UIBUILDER",
+    "name": "UIBUILDER for Node-RED - Template Manifest",
+    "description": "Weather forecast information",
+    "id": "/?source=pwa",
+    "scope": "/",
+    "start_url": "/?source=pwa",
+
+    "icons": [
+      {
+        "src": "/images/node-blue.svg",
+        "type": "image/svg+xml",
+        "sizes": "512x512"
+      },
+      {
+        "src": "/images/maskable_icon_x192.png",
+        "type": "image/png",
+        "sizes": "192x192",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/images/maskable_icon_x512.png",
+        "type": "image/png",
+        "sizes": "512x512",
+        "purpose": "any maskable"
+      }
+    ],
+    "background_color": "#22282a",
+    "display": "minimal-ui",
+    "theme_color": "#38393c",
+    "shortcuts": [],
+    "screenshots": []
+  }

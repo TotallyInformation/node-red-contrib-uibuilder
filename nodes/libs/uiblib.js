@@ -65,6 +65,8 @@ module.exports = {
                 // Remove the flag in case someone recreates the same url!
                 delete uib.deleteOnDelete[node.url]
 
+                //! TODO: Replace fs-extra
+                // fsPromises.rm(path, {force:true,recursive:true}), fs.rm(path, {force:true,recursive:true}), callback(err))
                 fs.remove(path.join(uib.rootFolder, node.url))
                     .catch(err => {
                         log.error(`[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
@@ -211,6 +213,8 @@ module.exports = {
             const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
             const srcTemplate = path.join( uib.masterTemplateFolder, template )
             try {
+                //! TODO: Replace fs-extra - https://github.com/jprichardson/node-fs-extra/blob/HEAD/docs/copy-sync.md
+                //! Must copy full folder - need to wait till node v16.7 - fs.cp/fs.cpSync
                 fs.copySync( srcTemplate, fullname, fsOpts )
                 const statusMsg = `Successfully copied template ${template} to ${url}.`
                 log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)

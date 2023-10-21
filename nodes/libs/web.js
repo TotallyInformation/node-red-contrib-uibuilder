@@ -30,7 +30,8 @@
  */
 
 const path = require('path')
-const fs = require('fs-extra')
+const fs = require('fs')
+// const fs = require('fs-extra') // only used for ensureDirSync
 const fg = require('fast-glob')
 const serveIndex = require('serve-index')
 const express = require('express')
@@ -454,7 +455,6 @@ class UibWeb {
 
         // Update the <uibRoot>/package.json file & packageMgt.uibPackageJson in case a package was manually installed then node-red restarted
         // Get the installed packages from the `<uibRoot>/package.json` file. If it doesn't exist, this will create it.
-        // const pj = packageMgt.getUibRootPackageJson()
         const pj = packageMgt.uibPackageJson
         if (pj === null) throw new Error('web.js:serveVendorPackages: pj is null')
         if ( pj.dependencies === undefined ) throw new Error('web.js:serveVendorPackages: pj.dependencies is undefined')
@@ -718,6 +718,7 @@ class UibWeb {
 
             // TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             res
+                // Headers only accessible in the browser via web workers
                 .header({
                     // Help reduce risk of XSS and other attacks
                     'X-XSS-Protection': '1;mode=block',
@@ -804,7 +805,9 @@ class UibWeb {
 
         // Does the customStatic folder exist? If not, then create it
         try {
-            fs.ensureDirSync( customFull )
+            // With recursive, will create missing parents and does not error if parents already exist
+            fs.mkdirSync( customFull, {recursive:true} )
+            // fs.ensureDirSync( customFull ) // requires fs-extra
             log.trace(`[uibuilder:web:setupInstanceStatic:${node.url}] Using local ${customStatic} folder`)
         } catch (e) {
             node.warn(`[uibuilder:web:setupInstanceStatic:${node.url}] Cannot create or access ${customFull} folder, no pages can be shown. Error: ${e.message}`)
@@ -937,7 +940,7 @@ class UibWeb {
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
                 <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
-                <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-styles.css" media="screen">
+                <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-brand.min.css" media="screen">
                 <style type="text/css" rel="stylesheet" media="all">
                     h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                     .col3i tbody>tr>:nth-child(3){ font-style:italic; }

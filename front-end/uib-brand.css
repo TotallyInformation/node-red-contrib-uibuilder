@@ -854,7 +854,22 @@ button.compact {
 
 /*#endregion ---- ---- ---- */
 
-/*#region  Colours for Syntax Highlighted pre's */
+/*#region for Syntax Highlighted pre's */
+#uib_last_msg_wrap {
+    position:relative;
+}
+#uib_last_msg_wrap > button {
+    display:none;
+    position:absolute;
+    color:hsl(0,0%,50%,.5);
+}
+#uib_last_msg_wrap:hover > button {
+    display:initial;
+}
+#uib_last_msg_wrap > button:hover {
+    color:hsl(0,0%,50%,1);
+}
+
 .syntax-highlight {
     color:white;
     display:block;

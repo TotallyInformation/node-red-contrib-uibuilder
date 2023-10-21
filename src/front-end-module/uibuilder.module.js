@@ -27,10 +27,11 @@
  */
 //#endregion --- Type Defs --- //
 
-//#region --- We need the Socket.IO client - check in decreasing order of likelihood --- //
-import io from 'socket.io-client' // Note: Only works when using esbuild to bundle
-// @ts-ignore
+//#region --- We need the Socket.IO & ui libraries & the uib-var component  --- //
+// @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui'
+import UibVar from '../components/uib-var/uib-var'
+import io from 'socket.io-client'
 
 // TODO - Maybe - check if already loaded as window['io']?
 // TODO - Maybe - Should this be moved to inside the class - would know the httpRoot then so less need to guess?
@@ -62,7 +63,7 @@ import Ui from './ui'
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.5.0-mod'
+const version = '6.6.0-src'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -285,28 +286,36 @@ function urlJoin() {
  * @returns {html} Object reformatted as highlighted HTML
  */
 function syntaxHighlight(json) {
-    json = JSON.stringify(json, undefined, 4)
-    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
-    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) { // eslint-disable-line prefer-named-capture-group
-        let cls = 'number'
-        if ((/^"/).test(match)) {
-            if ((/:$/).test(match)) {
-                cls = 'key'
-            } else {
-                cls = 'string'
-            }
-        } else if ((/true|false/).test(match)) {
-            cls = 'boolean'
-        } else if ((/null/).test(match)) {
-            cls = 'null'
+    if (json === undefined) {
+        json = '<span class="undefined">undefined</span>'
+    } else {
+        try {
+            json = JSON.stringify(json, undefined, 4)
+            // json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
+            json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) { // eslint-disable-line prefer-named-capture-group
+                let cls = 'number'
+                if ((/^"/).test(match)) {
+                    if ((/:$/).test(match)) {
+                        cls = 'key'
+                    } else {
+                        cls = 'string'
+                    }
+                } else if ((/true|false/).test(match)) {
+                    cls = 'boolean'
+                } else if ((/null/).test(match)) {
+                    cls = 'null'
+                }
+                return `<span class="${cls}">${match}</span>`
+            })
+        } catch (e) {
+            json = `Syntax Highlight ERROR: ${e.message}`
         }
-        return '<span class="' + cls + '">' + match + '</span>'
-    })
+    }
     return json
 }
 
 /** msg._ui handling functions */
-const _ui = new Ui(log, syntaxHighlight)
+const _ui = new Ui(window, log, syntaxHighlight)
 
 //#endregion --- Module-level utility functions --- //
 
@@ -314,6 +323,14 @@ const _ui = new Ui(log, syntaxHighlight)
  * @typicalname uibuilder
  */
 export const Uib = class Uib {
+
+    //#region --- Static variables ---
+    static _meta = {
+        version: version,
+        type: 'module',
+        displayName: 'uibuilder',
+    }
+    //#endregion ---- ---- ---- ----
 
     //#region private class vars
 
@@ -347,10 +364,16 @@ export const Uib = class Uib {
     #isShowMsg = false
     // Has showStatus been turned on?
     #isShowStatus = false
+    // Has an IntersectionObserver been created? If so, this will hold the reference to it
+    #intersectionObserver = undefined
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
-        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include'
+        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include', 'elementExists',
+        'getManagedVarList', 'getWatchedVars',
     ]
+
+    /** @type {{[key: string]: string}} Managed uibuilder variables */
+    #managedVars = {}
 
     // What status variables to show via showStatus()
     #showStatus = {
@@ -476,16 +499,6 @@ export const Uib = class Uib {
     }
     //#endregion -- not external --
 
-    //#region ------- Static metadata ------- //
-    static _meta = {
-        version: version,
-        type: 'module',
-        displayName: 'uibuilder',
-    }
-
-    get meta() { return Uib._meta }
-    //#endregion ---- ---- ---- ---- //
-
     //#endregion --- End of variables ---
 
     //#region ------- Getters and Setters ------- //
@@ -494,15 +507,18 @@ export const Uib = class Uib {
     set logLevel(level) { logLevel = level; console.log('%c❗ info%c [logLevel]', `${LOG_STYLES.level} ${LOG_STYLES.info.css}`, `${LOG_STYLES.head} ${LOG_STYLES.info.txtCss}`, `Set to ${level} (${LOG_STYLES.names[level]})`) /* changeLogLevel(level)*/ }
     get logLevel() { return logLevel }
 
-    // TODO Block setting of read-only vars
+    get meta() { return Uib._meta }
+
     /** Function to set uibuilder properties to a new value - works on any property except _* or #*
      * Also triggers any event listeners.
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
      * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
+     * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
+     * @param {boolean} [autoload] If true & store is true, on load, uib will try to restore the value from the store automatically
      * @returns {*} Input value
      */
-    set(prop, val) {
+    set(prop, val, store = false, autoload = false) {
         // Check for excluded properties - we don't want people to set these
         // if (this.#excludedSet.indexOf(prop) !== -1) {
         if (prop.startsWith('_') || prop.startsWith('#')) {
@@ -510,15 +526,22 @@ export const Uib = class Uib {
             return `Cannot use set() on protected property "${prop}"`
         }
 
+        // We must add the var to the uibuilder object
         this[prop] = val
 
-        log('trace', 'Uib:set', `prop set - prop: ${prop}, val: `, val)()
+        // Keep track of all managed variables
+        this.#managedVars[prop] = prop
+
+        // If requested, save to store
+        if (store === true) this.setStore(prop, val, autoload)
+
+        log('trace', 'Uib:set', `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)()
 
         // Trigger this prop's event callbacks (listeners which are set by this.onChange)
         // this.emit(prop, val)
 
         // trigger an event on the prop name, pass both the name and value to the event details
-        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val })
+        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'store': store, 'autoload': autoload })
 
         return val
     }
@@ -549,9 +572,16 @@ export const Uib = class Uib {
      *   console.log(uibuilder.getStore('fred'))
      * @param {string} id localStorage var name to be used (prefixed with 'uib_')
      * @param {*} value value to write to localstore
+     * @param {boolean} [autoload] If true, on load, uib will try to restore the value from the store
      * @returns {boolean} True if succeeded else false
      */
-    setStore(id, value) {
+    setStore(id, value, autoload = false) {
+        let autoVars = {}
+        if (autoload === true) {
+            try {
+                autoVars = this.getStore('_uibAutoloadVars') || {}
+            } catch (e) {}
+        }
         if (typeof value === 'object') {
             try {
                 value = JSON.stringify(value)
@@ -562,6 +592,15 @@ export const Uib = class Uib {
         }
         try {
             localStorage.setItem(this.storePrefix + id, value)
+            if (autoload) {
+                autoVars[id] = id
+                try {
+                    localStorage.setItem(this.storePrefix + '_uibAutoloadVars', JSON.stringify(autoVars))
+                } catch (e) {
+                    log('error', 'Uib:setStore', 'Cannot save autoload list. ', e)()
+                }
+            }
+            this._dispatchCustomEvent('uibuilder:propertyStored', { 'prop': id, 'value': value, 'autoload': autoload })
             return true
         } catch (e) {
             log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
@@ -593,6 +632,17 @@ export const Uib = class Uib {
         try {
             localStorage.removeItem(this.storePrefix + id)
         } catch (e) { }
+    }
+
+    /** Returns a list of uibuilder properties (variables) that can be watched with onChange
+     * @returns {{[key: string]: string}} List of uibuilder managed variables
+     */
+    getManagedVarList() {
+        return this.#managedVars
+    }
+
+    getWatchedVars() {
+        return Object.keys(this.#propChangeCallbacks)
     }
 
     //#endregion ------- -------- ------- //
@@ -715,7 +765,7 @@ export const Uib = class Uib {
     //     log('trace', 'Uib:emit', `${evt.length} listeners run for prop ${prop} `)()
     // }
 
-    /** Forcably removes all event listeners from the events array
+    /** Forcibly removes all event listeners from the events array
      * Use if you need to re-initialise the environment
      */
     // clearEventListeners() {
@@ -843,6 +893,96 @@ export const Uib = class Uib {
         return syntaxHighlight(json)
     } // --- End of syntaxHighlight --- //
 
+    /** Copies a uibuilder variable to the browser clipboard
+     * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
+     */
+    copyToClipboard(varToCopy) {
+        let data = ''
+        try {
+            console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)))
+            data = JSON.stringify(this.get(varToCopy))
+        } catch (e) {
+            log('error', 'copyToClipboard', `Could not copy "${varToCopy}" to clipboard.`, e.message)()
+        }
+        navigator.clipboard.writeText(data)
+    } // --- End of copyToClipboard --- //
+
+    /** Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
+     * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
+     * Automatically sends a msg back to Node-RED.
+     * Requires the element to already exist.
+     * @param {string} cssSelector Required. CSS Selector to examine for visibility
+     * @param {boolean} stop Optional. Default=false. If TRUE, stop the observer for this cssSelector
+     * @param {number} threshold Optional. Default=0.1. Between 0 and 1, the % visibility before trigger
+     */
+    elementIsVisible(cssSelector, stop = false, threshold = 0.1) {
+        if (!IntersectionObserver) return
+
+        // TODO Return a promise? - make return message optional?
+        // https://blog.bitsrc.io/angular-maximizing-performance-with-the-intersection-observer-api-23d81312f178#:~:text=Let%E2%80%99s%20define%20a%20function%20named%20isVisible%20and%20returns,resolve%20%28entry.isIntersecting%29%3B%20observer.disconnect%20%28%29%3B%20%7D%29%3B%20observer.observe%20%28element%29%3B%20%7D%29%3B
+
+        if (!this.#intersectionObserver) {
+            this.#intersectionObserver = new IntersectionObserver( (ioEntries) => {
+                const entries = []
+                // Stupid DOM API's, we have to explicitly loop through the data to be able to use it
+                ioEntries.forEach((entry) => {
+                    // Markup the element (data-isvisible)
+                    entry.target.dataset.isvisible = entry.isIntersecting
+                    // Each entry describes an intersection change for one observed
+                    entries.push({
+                        isIntersecting: entry.isIntersecting,
+                    })
+                })
+
+                // console.log('IntersectionObserver: Entries ', ioEntries, entries)
+                this.send({
+                    payload: entries[0].isIntersecting,
+                    isVisible: entries[0].isIntersecting,
+                    cssSelector,
+                    entries: entries,
+                })
+
+                log('info', 'uib:elementIsVisible', `Element "${cssSelector}" is now ${entries[0].isIntersecting ? 'more than 10%' : 'NOT (<10%)'} visible`)()
+            }, { threshold: threshold })
+        }
+
+        const el = document.querySelector(cssSelector)
+
+        if (el === null) {
+            log('error', 'uib:elementIsVisible', `Element "${cssSelector}" not found`)()
+            return
+        }
+
+        if (stop === true) {
+            this.#intersectionObserver.unobserve(el)
+            return
+        }
+
+        this.#intersectionObserver.observe(el)
+    } // --- End of elementIsVisible --- //
+
+    /** Does the chosen CSS Selector currently exist?
+     * Automatically sends a msg back to Node-RED unless turned off.
+     * @param {string} cssSelector Required. CSS Selector to examine for visibility
+     * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
+     * @returns {boolean} True if the element exists
+     */
+    elementExists(cssSelector, msg = true) {
+        const el = document.querySelector(cssSelector)
+
+        let exists = false
+        if (el !== null) exists = true
+
+        if (msg === true) {
+            this.send({
+                payload: exists,
+                info: `Element "${cssSelector}" ${exists ? 'exists' : 'does not exist'}`
+            })
+        }
+
+        return exists
+    } // --- End of elementExists --- //
+
     //#endregion -------- -------- -------- //
 
     //#region ------- UI handlers --------- //
@@ -874,6 +1014,24 @@ export const Uib = class Uib {
      */
     replaceSlotMarkdown(el, component) {
         _ui.replaceSlotMarkdown(el, component)
+    }
+
+    /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+     * Otherwise simply returns the text
+     * @param {string} mdText The input markdown string
+     * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+     */
+    convertMarkdown(mdText) {
+        return _ui.convertMarkdown(mdText)
+    }
+
+    /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+     * Otherwise just returns that HTML as-is.
+     * @param {string} html The input HTML string
+     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+     */
+    sanitiseHTML(html) {
+        return _ui.sanitiseHTML(html)
     }
 
     /** Attach a new remote script to the end of HEAD synchronously
@@ -982,23 +1140,50 @@ export const Uib = class Uib {
         if ( showHide === false ) {
             _ui._uiRemove( {
                 components: [
-                    '#uib_last_msg',
+                    '#uib_last_msg_wrap',
                 ],
             })
         } else {
             _ui._uiReplace({
                 components: [
                     {
-                        type: 'pre',
-                        id: 'uib_last_msg',
+                        type: 'div',
+                        id: 'uib_last_msg_wrap',
                         parent: parent,
                         attributes: {
                             title: 'Last message from Node-RED',
-                            class: 'syntax-highlight',
                         },
-                        slot: slot,
-                    }
-                ]
+                        components: [
+                            {
+                                type: 'button',
+                                attributes: {
+                                    onclick: 'uibuilder.copyToClipboard("msg")',
+                                    class: 'compact',
+                                    style: 'right:3em;',
+                                },
+                                slot: '📋',
+                            },
+                            {
+                                type: 'button',
+                                attributes: {
+                                    onclick: 'uibuilder.showMsg()',
+                                    class: 'compact',
+                                    style: 'right:.5em;',
+                                },
+                                slot: '⛔',
+                            },
+                            {
+                                type: 'pre',
+                                id: 'uib_last_msg',
+                                // parent: 'uib_last_msg_wrap',
+                                attributes: {
+                                    class: 'syntax-highlight',
+                                },
+                                slot: slot,
+                            },
+                        ],
+                    },
+                ],
             })
         }
 
@@ -1290,7 +1475,7 @@ export const Uib = class Uib {
 
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
         msgToSend._socketId = this._socket.id
-        
+
         //#region ---- Update socket.io metadata ---- //
         // Session tab id
         this.socketOptions.auth.tabId = this.tabId
@@ -1316,9 +1501,9 @@ export const Uib = class Uib {
             }
         }
 
-        // If a standard send & _ui property exists, make sure to add _ui.from = 'client'        
+        // If a standard send & _ui property exists, make sure to add _ui.from = 'client'
         if (msgToSend._ui) msgToSend._ui.from = 'client'
-        
+
         // Track how many messages have been sent & last msg sent
         let numMsgs
         if (channel === this._ioChannels.client) {
@@ -1573,11 +1758,30 @@ export const Uib = class Uib {
         }
         const prop = msg._uib.prop
         const value = msg._uib.value
-        let response
+        let response, info
 
+        // Don't forget to update `docs/client-docs/control-from-node-red.md`
         switch (cmd) {
+            case 'elementExists': {
+                response = this.elementExists(prop, false)
+                info = `Element "${prop}" ${response ? 'exists' : 'does not exist'}`
+                break
+            }
+
             case 'get': {
                 response = this.get(prop)
+                break
+            }
+
+            case 'getManagedVarList': {
+                if (prop === 'full') response = this.getManagedVarList()
+                else response = Object.values(this.getManagedVarList())
+                break
+            }
+
+            case 'getWatchedVars': {
+                if (prop === 'full') response = this.getWatchedVars()
+                else response = Object.values(this.getWatchedVars())
                 break
             }
 
@@ -1586,8 +1790,20 @@ export const Uib = class Uib {
                 break
             }
 
+            case 'include': {
+                // include is async
+                response = _ui.include(prop, value)
+                break
+            }
+
             case 'set': {
-                response = this.set(prop, value)
+                let store = false
+                let autoload = false
+                if (msg._uib.options && msg._uib.options.store) {
+                    if (msg._uib.options.store === true) store = true
+                    if (msg._uib.options.autoload === true) autoload = true
+                }
+                response = this.set(prop, value, store, autoload)
                 break
             }
 
@@ -1611,12 +1827,6 @@ export const Uib = class Uib {
                 break
             }
 
-            case 'include': {
-                // include is async
-                response = _ui.include(prop, value)
-                break
-            }
-
             default: {
                 log('warning', 'Uib:_uibCommand', `Command '${cmd}' not yet implemented`)()
                 break
@@ -1631,6 +1841,7 @@ export const Uib = class Uib {
             response
                 .then( (/** @type {any} */ data) => {
                     msg.payload = msg._uib.response = data
+                    msg.info = msg._uib.info = info
                     if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
                     this.send(msg)
                     return true
@@ -1640,6 +1851,7 @@ export const Uib = class Uib {
                 })
         } else {
             msg.payload = msg._uib.response = response
+            msg.info = msg._uib.info = info
             if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
             this.send(msg)
         }
@@ -1885,6 +2097,7 @@ export const Uib = class Uib {
             log('trace', 'uibuilder.module.js:getIOnamespace', `Socket.IO namespace found via cookie: ${ioNamespace}`)()
         }
 
+        this.url = ioNamespace
         // Namespace HAS to start with a /
         ioNamespace = '/' + ioNamespace
 
@@ -2195,6 +2408,16 @@ export const Uib = class Uib {
         if ( this.pageName.endsWith('/') ) this.set('pageName', `${this.pageName}index.html`)
         if ( this.pageName === '' ) this.set('pageName', 'index.html')
 
+        // Attempt to restore autoload variables
+        try {
+            const autoloadVars = this.getStore('_uibAutoloadVars')
+            if (Object.keys(autoloadVars).length > 0) {
+                Object.keys(autoloadVars).forEach( (id) => {
+                    this.set(id, this.getStore(id))
+                })
+            }
+        } catch (e) {}
+
         this._dispatchCustomEvent('uibuilder:constructorComplete')
 
         log('trace', 'Uib:constructor', 'Ending')()
@@ -2299,8 +2522,7 @@ export const Uib = class Uib {
     }
 
     //#endregion -------- ------------ -------- //
-
-} // ==== End of Class Uib
+} // ==== End of Class Uib ====
 
 //#region --- Wrap up - get things started ---
 
@@ -2343,6 +2565,9 @@ export default uibuilder
 
 // Attempt to run start fn
 uibuilder.start()
+
+// Add the class as a new Custom Element to the window object
+customElements.define('uib-var', UibVar)
 
 //#endregion --- Wrap up ---
 

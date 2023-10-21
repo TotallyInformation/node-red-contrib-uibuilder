@@ -55,7 +55,7 @@ module.exports = { // eslint-disable-line no-undef
         // 'es/no-promise-any': 'error',
         // 'es/no-numeric-separators': 'error',
 
-        'sonarjs/no-duplicate-string': ['error', 6], // Default is 3
+        'sonarjs/no-duplicate-string': ['warn', { 'threshold': 5 }], // Default is 3
         // 'sonarjs/cognitive-complexity': ['error', 15], // Default is 15
         'sonarjs/no-nested-template-literals': 0,
 

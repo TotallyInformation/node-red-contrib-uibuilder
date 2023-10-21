@@ -3,7 +3,7 @@ title: Using the Svelte framework with uibuilder
 description: >
   How to make good use of the Svelte front-end framework with uibuilder and Node-RED.
 created: 2022-02-26 19:40:00
-lastUpdated: 2022-04-01 21:54:35
+lastUpdated: 2023-09-30 13:08:35
 ---
 
 The Svelte framework turns out to be one of the easiest frameworks to use in conjunction with uibuilder of those that requires a build step.
@@ -25,7 +25,7 @@ These instructions assume that you have installed Node-RED using the "standard" 
 
    The Svelte Basic template includes all of the configuration required to get up and running and even includes the built version of the code in the `dist` folder so that you don't need to do any build at all until you want to change something. See the README.md file that the template includes for further information.
 
-   Please remember to remove the following files from the `src` folder: `index.html`, `index.css`, `index.js`. These will be left behind if you deployed your uibuilder node with the basic template before switching to the Svelte Basic template.
+   Please remember to remove the following files from the `src` folder: `index.html`, `index.css`, `index.js`. These will be left behind if you deployed your `uibuilder` node with the basic template before switching to the Svelte Basic template.
 
 3) Change the "Serve" setting from `src` to `dist` in the settings panel and re-deploy.
 
@@ -49,19 +49,19 @@ OK, so not the most amazing thing. But lets note a couple of important points. (
 
    Yup, it changed without you having to reload it! Just like Svelte's own dev server :grin: 
 
-* Attach a debug node to the output of your uibuilder node. Make sure it is set to show the whole msg object. Now click on the button on your page. Notice that you get a message just by clicking the button, no code required (other than the HTML for the button itself).
+* Attach a debug node to the output of your `uibuilder` node. Make sure it is set to show the whole msg object. Now click on the button on your page. Notice that you get a message just by clicking the button, no code required (other than the HTML for the button itself).
 
    That uses the new eventSend function in uibuilder v3.2
 
    Note how the `data-xxxx` attributes are sent back to node-red in the payload, one of which is dynamic thanks to Svelte. Also note that the `msg.uibDomEvent.sourceId` in node-red contains the text of the button. Try adding an id attribute to the button to see what difference it makes.
 
-* Send a msg to the uibuilder node and note how the payload appears on the page
+* Send a msg to the `uibuilder` node and note how the payload appears on the page
 
    5 lines of code in total to do that :grin: 
 
 Just a few lines of actual code for a simple, data-driven web page. Not too bad I think.
 
-?> Some features will be added to uibuilder in a future release that will make this even easier. <br><br>There will be buttons in the Editor panel for uibuilder nodes the will let you run any npm scripts defined in your `package.json` file. For Svelte, that will include `install`, `build` and `dev` buttons. So that most of the above steps will be reduced to a couple of clicks. <br><br>These changes will help anyone who needs a build step for their web app, not just be for Svelte users.
+?> Some features will be added to uibuilder in a future release that will make this even easier. <br><br>There will be buttons in the Editor panel for `uibuilder` nodes the will let you run any npm scripts defined in your `package.json` file. For Svelte, that will include `install`, `build` and `dev` buttons. So that most of the above steps will be reduced to a couple of clicks. <br><br>These changes will help anyone who needs a build step for their web app, not just be for Svelte users.
 
 ## References
 
