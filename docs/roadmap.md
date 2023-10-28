@@ -293,6 +293,13 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add option for blank line.
   * Add option for an info line (supporting HTML? Markdown?)
   * Add a "Simple Form Immediate" version where every element sends its own changes back to Node-RED and where send/reset buttons are not added.
+  * **Improve range slider** - with min/max and current value indicator (possibly as a separate, linked number input box) - may need an `oninput` handler
+  * Better validation of input data
+  * Additional input types: file (need to process uploads to NR), combo, image.
+  * Eventually add extended inputs such as HTML WYSIWYG/Markdown
+  * Add Auto-complete for text inputs
+  * If no button added, make each input send changes direct - or possibly add that as an optional setting.
+  * Rich text edit (Markdown? HTML?)
 * Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 * New Types for CSS and JS files?
@@ -305,8 +312,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Think about having a `linkInputs([idList])` fn that allows easy linking of different inputs?
 * Consider adding the ability to have some tag other than `div` as the wrapper. [ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/210)
 * Add more elements:
-  * [ ] Markdown
-    Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
+  * Buttons
+    * All buttons should allow image (icon), main text and sub-text ([ref](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras))
+    * [ ] Toggle/3-way
+    * [ ] 
   * Individual Form Elements
     This is to enable additional form elements to be added to an existing form.
     * [ ] Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
@@ -319,13 +328,17 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * Parts: Icon, title (next to icon), (sub)text (below icon/title) - any of which can be optional.
     * [ ] iFrame
       As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
+  * [ ] Charts
+  * [ ] Gauges
   * [x] List (ul, ol, dl)
     * Future improvements:
       * Better validation of input data
       * list-style-type (add to outer) - several options plus text (incl emoji's)
       * Collapsable list style. [ref](https://github.com/mdn/web-components-examples/blob/main/expanding-list-web-component)
       * ? Optional list leading/trailing text ?
-  * [ ] Editable List - [ref](https://github.com/mdn/web-components-examples/blob/main/editable-list)
+  * [x] Card/Article
+    * Future improvements:
+      * Better layout, more optional internal structure (footer, etc)
   * [x] Table
     * Future improvements:
       * Additional field definitions in input data
@@ -335,26 +348,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * Add data-row-name to td's as well
       * See also: https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/data-grids/
       * Consider: https://github.com/tofsjonas/sortable - perhaps adopt data-sort attribs?
+  * [ ] Editable List - [ref](https://github.com/mdn/web-components-examples/blob/main/editable-list)
   * [ ] TTS text-to-speach output
-  * [x] HTML - allow raw html to be sent - e.g. from template node
-  * [x] Page Title
-  * [x] tr - Add a row to an existing table
-  * [x] li - Add a row to an existing ul/ol list
-  * Future improvements:
-      * Better validation of input data
-      * list-style-type (add to outer) - several options plus text (incl emoji's)
-  * [x] Card/Article
-    * Future improvements:
-      * Better layout, more optional internal structure (footer, etc)
-  * [x] Simple Form - Input types: button, checkbox, color, date, datetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week
-    * Future Improvements:
-      * **Improve range slider** - with min/max and current value indicator (possibly as a separate, linked number input box) - may need an `oninput` handler
-      * Better validation of input data
-      * Additional input types: file (need to process uploads to NR), combo, image.
-      * Eventually add extended inputs such as HTML WYSIWYG/Markdown
-      * Add Auto-complete for text inputs
-      * If no button added, make each input send changes direct - or possibly add that as an optional setting.
-  
   * [ ] Status Box, Status Panel - [ref](https://discourse.nodered.org/t/web-endpoint-status-dashboard-uibuilder-zero-code-example/75740)
     A segmented vertical/horizontal status/progress panel. For things like battery displays, etc.
     Each status box has a coloured sidepanel to show the status.
@@ -396,6 +391,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     [ref](https://css-tricks.com/quick-reminder-that-details-summary-is-the-easiest-way-ever-to-make-an-accordion/)
 
   * [ ] Map - Leaflet
+  
+  * Completed 
+    * [x] Markdown
+      Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
+    * [x] Simple Form - Input types: button, checkbox, color, date, datetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week
+    * [x] HTML - allow raw html to be sent - e.g. from template node
+    * [x] Page Title
+    * [x] tr - Add a row to an existing table
+    * [x] li - Add a row to an existing ul/ol list
 
 * Other thoughts:
   * Pill list, scrollable search - https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/layout-grids/
@@ -599,6 +603,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Consider adding a virtual file system to enable uibuilder to work with FlowForge. [ref](https://discourse.nodered.org/t/ui-builder-and-flowforge-device-agent/79373/7)
 
+### Potential Web Components
+
+* lamp - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras)
+* gauge - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras).
+
 ### Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features
     * Replace `||` default value tests with `??` .
@@ -619,22 +628,60 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
 
   * Changes due once Node.js v16 live:
+    * Change style of requiring core node modules: `require('node:os')` instead of `require('os')`
     * JSON Modules (experimental in v14, full in 16.15.0)
     * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
     * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
-    * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0)
+    * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0) - allows use of negative indexes.
     * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
 
+    Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What's New In Node.js 16?](https://www.howtogeek.com/devops/whats-new-in-node-js-16/)
+
   * Changes due once Node.js v18 live
-    * Test Runner module (experimental 18.0.0)
     * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
     * Top-level await (experimental in v14 - behind flag, full in v18)
+    * V8 updates
+      * The `findLast()` and `findLastIndex()` array methods.
+      * Improvements to the `Intl.Locale` API.
+      * The `Intl.supportedValuesOf` function.
+      * Improved performance of class fields and private class methods (the initialization of them is now as fast as ordinary property stores).
+    * APIs now exposed on the global scope:
+      * Blob - https://nodejs.org/api/buffer.html#class-blob
+      * BroadcastChannel - https://nodejs.org/api/worker_threads.html#class-broadcastchannel-extends-eventtarget
+    * Experimental
+      * Fetch
+      * Web Streams API
+      * Test Runner
+      * Experimental watch run mode (restarts the process)
 
-  * Changes due once Node.js post v18
+  * Changes due once Node.js v19 live
+    * Web crypto: `globalThis.crypto` or `require('node:crypto').webcrypto` 
+    * `Intl.NumberFormat` v3 API is a new TC39 ECMA402 stage 3 proposal extending the pre-existing `Intl.NumberFormat`.
+    * npm@8.19.2
+  
+  * Changes due once Node.js v20 live
+    * Consider the experimental permission model
+    * Test Runner module
+    * `String.prototype.isWellFormed` and `toWellFormed`
+    * Methods that change Array and TypedArray by copy
+    * Resizable ArrayBuffer and growable SharedArrayBuffer
+    * RegExp v flag
+    * Synchronous import.meta.resolve()
+
+  * Changes due once Node.js v21 live
+    * Stable Fetch
+    * Stable Webstreams
+    * [Array grouping](https://github.com/tc39/proposal-array-grouping)
+    * `ArrayBuffer.prototype.transfer`
+    * Global `navigator` object.
+    * Experimental
+      * experimental browser-compatible WebSocket implementation
+  
+  * Changes due once Node.js post v20
     * Diagnostic channels (experimental in v14)
     * AbortController and AbortSignal (experimental in v14)
     * Fetch (Experimental 16.15.0, 18.0.0)
-
+    * Permission model (experimental in v20)
 
 
 ## Ideas for releases further out
@@ -642,6 +689,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Some way to visually expose a library of JavaScript functions with their args as inputs. Maybe make this a cmd that pulls a doc from Node-RED? (keeps client lib small)
 * Using the above to visually show available uibuilder fns with inputs and outputs.
 * Add optional TELEMETRY output (maybe linked to the log functions) - add mqtt endpoint to uibuilder settings.js (or maybe websocket?)
+* Use `degit` to move default templates and maybe examples to their own repos - allowing more dynamic updates without needing a new version of uibuilder.
 
 ### Thoughts on JavaScript tabular data manipulation and visualisation
 

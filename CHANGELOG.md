@@ -11,11 +11,23 @@ Please see the documentation for archived changelogs - a new archive is produced
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Outdated examples - some of the included example flows such as the "remote-commands" example are now out of date. What is there will still work but they are no longer comprehensive. Will try to catch them up as soon as I can.
-* Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
+* Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. 
+  
+  In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
 
   Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
 
+* Change ui.js to create global $ui object, change lib to match. Make sure it works in node.js as well as browser.
+  
+  In preparation for the ui library to be used stand-alone and have its own branding. Also allowing option for it to be managed as an independent library.
+
+  Add a version and a version fn.
+
+  Consider making available to Node-RED functions?
+
 ### TO FIX
+
+* uib-html - allow a template - msg.template as text, use instead of the default text.
 
 * Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
 * uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
@@ -24,13 +36,48 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 * Templates - add eslint dev dependencies to package.json
   * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
 
-
+* uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
+* uib-save - client reload not working? check if create folder is working?
+* uib-html - add default blank template based on uibuilder blank template, add template inclusion flag to make it optional.
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.7.0...main)
 
 Nothing currently.
+
+## [v6.7.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...v6.7.0)
+
+### Highlights
+
+* The `uib-html` node now allows an HTML string wrapper. This defaults to uibuilder's default "Blank" template HTML or can be overridden using `msg.template`. This lets you create a fully working page from no-code and low-code configurations that can be fed direct to `uib-save` or used in Dashboard or with http-in/-out nodes. Or indeed with external web server tools.
+
+### Fixes
+
+* Client htmlSend, when called as a Node-RED command, was returning 2 messages. Now returns the HTML string and sends it to Node-RED directly only if the new 2nd argument is TRUE (the default so that direct calls will still work without changes).
+
+### `uib-html` improvements
+
+* The `uib-html` node now accepts a `msg.template` property which, if provided, MUST contain a valid HTML page template.
+
+  This allows you to grab an existing page using the `htmlSend` command, add new elements/updates and save it back to a uibuilder instance either as the default page or another page, for example, using the `uib-save` node. Overwriting a page is a way of ensuring that new accesses get a known page with structure and potentially data.
+
+  You can, of course, use this node to produce HTML for use outside of UIBUILDER. For example, use uib-element/uib-update, add a template and use this node to create a complete web page for use with http-in/-out, a static website or some other web service.
+
+  You probably don't need/want the template if outputting for the Node-RED Dashboard `ui_template` node.
+
+### `uib-save` improvements
+
+* The reload client flag now actually works.
+* The filename can include folders (use `/` as separator) and missing folders will be created automatically. Note that you cannot have any `..` in the filename, this is to prevent escaping from the instance root folder and causing mayhem elsewhere.
+
+### Other improvements
+
+* `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
+* `uibuilder` - Reduce code complexity by moving more fs actions out.
+
+
+
 
 ## [v6.6.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.6.0)
 
