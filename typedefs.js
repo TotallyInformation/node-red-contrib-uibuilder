@@ -458,6 +458,7 @@
  * @typedef {{
  *   name: string;
  *   topic: string;
+ *   useTemplate: boolean;
  *   _ui: any;
  * }} uibHtmlNode
  */
