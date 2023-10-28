@@ -3,7 +3,7 @@ title: uib-cache - Cache and replay data
 description: >
    Usage and configuration.
 created: 2023-02-05 16:31:39
-lastUpdated: 2023-10-27 17:42:19
+lastUpdated: 2023-10-28 15:57:45
 ---
 
 The cache node was added in uibuilder v5. It provides an easy method of saving messages in a cache and replaying them
@@ -89,3 +89,12 @@ The html node has an flag to "Merge HTML Template?" which should be checked. If 
 
 ### Using a context variable
 
+By connecting the output from uibuilder's port #2 to a switch node to filter on `msg.uibuilderCtrl` being equal to "client connect" (and optionally filtering for specific pages/clients) and then using that to trigger a change node that outputs back into the uibuilder node with settings like this:
+
+![Cache change node](image-3.png)
+
+You can set up a manual cache using a context variable.
+
+Obviously, this does have some dangers that need to be managed. Namely that some other flow process could change the cache context variable. But this could also be an advantage since many things could now update the cache if needed.
+
+Of course, since the cache would only be delivered on a page load, you would also need to deal with dynamic updates if needed.
