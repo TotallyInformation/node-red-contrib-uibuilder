@@ -146,6 +146,7 @@ module.exports = {
         node.status(node.statusDisplay)
     }, // ---- End of setNodeStatus ---- //
 
+    // TODO Move to fs 
     /** Replace template in front-end instance folder
      * @param {string} url The uib instance URL
      * @param {string} template Name of one of the built-in templates including 'blank' and 'external'
@@ -177,6 +178,7 @@ module.exports = {
         if ( extTemplate ) extTemplate = extTemplate.trim()
         if ( extTemplate === undefined ) throw new Error('extTemplate is undefined')
 
+        // TODO Move degit processing to its own function. Don't need the emitter on uib
         // If template="external" & extTemplate not blank - use degit to load
         if ( template === 'external' ) {
             const degit = require('degit')
