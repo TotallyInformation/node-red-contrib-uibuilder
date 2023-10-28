@@ -28,7 +28,8 @@
 //#region ----- Module level variables ---- //
 
 const uibFs  = require('../libs/fs')   // File/folder handling library (by Totally Information)
-const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
+// const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
+const { setNodeStatus } = require('../libs/uiblib')  // Utility library for uibuilder
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -69,9 +70,9 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
 
-    // Call uibuilder shared library to save file
+    // Call uibuilder shared library to save file (optional sub-folder creation and client reload)
     try {
-        await uibFs.writeInstanceFile(this.url, this.folder, this.fname, msg.payload)
+        await uibFs.writeInstanceFile(this.url, this.folder, this.fname, msg.payload, this.createFolder, this.reload)
         this.counters.success++
         this.statusDisplay = { fill: 'green', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
     } catch (err) {
@@ -80,7 +81,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         this.error(`🛑${err.message}`, err)
     }
 
-    uiblib.setNodeStatus( this )
+    setNodeStatus( this )
 
     // We are done
     done()
@@ -118,17 +119,12 @@ function nodeInstance(config) {
         return
     }
 
-    // Get reference to the uibuilder node instance
-    const uibNode = RED.nodes.getNode(this.uibId)
-    // Get reference to the instance root folder
-    this.instanceRoot = uibNode.customFolder
-
     this.counters = {
         success: 0,
         fail: 0,
     }
     this.statusDisplay = { fill: 'blue', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
-    uiblib.setNodeStatus( this )
+    setNodeStatus( this )
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
