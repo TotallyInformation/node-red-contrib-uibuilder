@@ -71,6 +71,10 @@ Nothing currently.
 * The reload client flag now actually works.
 * The filename can include folders (use `/` as separator) and missing folders will be created automatically. Note that you cannot have any `..` in the filename, this is to prevent escaping from the instance root folder and causing mayhem elsewhere.
 
+### Examples
+
+* `uib-save` and `uib-html` example flows added.
+
 ### Other improvements
 
 * `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
