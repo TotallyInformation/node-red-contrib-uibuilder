@@ -18,6 +18,12 @@
  */
 'use strict'
 
+// REFERENCES
+//  https://nodejs.org/docs/latest-v14.x/api/fs.html
+//  https://github.com/jprichardson/node-fs-extra
+//  https://github.com/jprichardson/node-jsonfile
+//  https://github.com/isaacs/node-graceful-fs
+
 /** --- Type Defs ---
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs.js').uibNode} uibNode
@@ -28,6 +34,7 @@
 const path = require('path')
 // const fs = require('fs-extra')
 const fs = require('fs/promises')
+const { readFileSync } = require('fs')
 const sockets = require('./socket') // Socket.io handler library for uibuilder
 
 // ! TODO: Move other file-handling functions into this class
@@ -59,6 +66,8 @@ class UibFs {
 
     // constructor() {} // ---- End of constructor ---- //
 
+    //#region ---- Utility methods ----
+
     /** Configure this class with uibuilder module specifics
      * @param {uibConfig} uib uibuilder module-level configuration
      */
@@ -76,8 +85,6 @@ class UibFs {
         this.uib = uib
         this.log = uib.RED.log
     } // ---- End of setup ---- //
-
-    // async getAllInstanceUrls
 
     /** Walks through a folder and sub-folders returning list of files
      * @param {string} dir Folder name to start the walk
@@ -100,6 +107,12 @@ class UibFs {
         // Filter out undefined entries before concatenating
         return files.filter(Boolean).reduce((all, folderContents) => all.concat(folderContents), [])
     } // -- End of walk -- //
+
+    //#endregion ---- ---- ----
+
+    //#region ---- Async Methods ----
+
+    // async getAllInstanceUrls
 
     /** Return all of the *.html files from the served folder for a specific instance
      * NOTE: Only call this after all nodes are loaded into the Node-RED runtime
@@ -143,6 +156,7 @@ class UibFs {
         // const chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
     }
 
+    // TODO create folders, chk params
     /** Output a file to an instance folder (async/promise)
      * NB: Errors have the fn indicator at the end because this is expected to be a utility fn called from elsewhere
      *     This is also the reason we throw errors here rather than output error msgs
@@ -163,9 +177,9 @@ class UibFs {
         if (folder.includes('..')) {
             throw new Error(`Folder path includes '..', invalid. '${folder}' [uibuilder:UibFs:writeInstanceFile]`)
         }
-        if ( fname.includes('/') || fname.includes('\\') ) {
-            throw new Error(`File name includes '/' or '\\', invalid. '${fname}' [uibuilder:UibFs:writeInstanceFile]`)
-        }
+        // if ( fname.includes('/') || fname.includes('\\') ) {
+        //     throw new Error(`File name includes '/' or '\\', invalid. '${fname}' [uibuilder:UibFs:writeInstanceFile]`)
+        // }
 
         const uib = this.uib
 
@@ -204,13 +218,68 @@ class UibFs {
 
         // Reload connected clients if required by sending them a reload msg
         if ( reload === true ) {
-            sockets.sendToFe2({
-                '_uib': {
-                    'reload': true,
-                }
-            }, url)
+            sockets.sendToFe(
+                {
+                    _ui: { 'method': 'reload' },
+                    topic: 'uib-save reload'
+                },
+                url,
+                'uiBuilder'
+            )
         }
     } // -- End of writeFile -- //
+
+    /** Get a text file from uibuilder's master template folders
+     * @param {*} template The name of the master template, e.g. "blank" or "esm-blank-client"
+     * @param {*} fName The name of the file to get (optionally with leading folder using forward-slash separators)
+     * @returns {Promise<string>} The text contents of the file.
+     */
+    async getTemplateFile(template, fName) {
+        return await fs.readFile( path.join(__dirname, '..', '..', 'templates', template, fName), 'utf8')
+    }
+
+    //#endregion ---- ---- ----
+
+    //#region ---- Synchronous methods ----
+
+    ensureFolder({ folder, copyFrom,  }) {
+        // const cpyOpts = { 'preserveTimestamps': true }
+        // Make sure folder exists, create if not
+        // Make sure that the folder can be read/write
+        // If copyFrom not undefined/null/'', copy to folder
+    }
+
+    //#endregion ---- ---- ----
+
+    /* TODO
+        moveSync
+        existsSync
+        copySync
+        copy
+        accessSync (constants.W_OK, constants.R_OK)
+        ensureDirSync
+    */
+
+    //#region ---- async fs-extra replacement methods ----
+    //#endregion ---- ---- ----
+
+    //#region ---- synchronous fs-extra replacement methods ----
+
+    /** Read a JSON file and return as a JavaScript object - can use instead of fs-extra
+     * @throws If reading or parsing fails
+     * @param {string} file JSON file path/name to read
+     * @returns {Object} The parsed JSON file as an object
+     */
+    readJSONSync(file) {
+        try {
+            return JSON.parse(readFileSync(file, 'utf8'))
+        } catch (e) {
+            e.message = `${file}: ${e.message}`
+            throw e
+        }
+    }
+
+    //#endregion ---- ---- ----
 } // ----- End of UibPackages ----- //
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.
