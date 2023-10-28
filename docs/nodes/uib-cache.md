@@ -3,7 +3,7 @@ title: uib-cache - Cache and replay data
 description: >
    Usage and configuration.
 created: 2023-02-05 16:31:39
-lastUpdated: 2023-03-04 15:32:55
+lastUpdated: 2023-10-27 17:42:19
 ---
 
 The cache node was added in uibuilder v5. It provides an easy method of saving messages in a cache and replaying them
@@ -70,4 +70,22 @@ The "Cache by" (group-by) `msg` property must contain string values, other data 
 Using `flow` or `global` cache types exposes the data to other nodes which could change the entries. This might be useful in some cases since it provides alternatives to simply sending the data into the cache node. These could be used for much more complex processing if needed. However, obviously this must be treated with caution. 
 
 Also, when using `flow` or `global` types, you are able to change the name of the variable. Make sure that the name does not clash with other use.
+
+## Alternatives
+
+There are a couple of important alternatives to using the cache node that may, in some circumstances, be better.
+
+### Using the uib-save node with the current UI
+
+In some cases, you may want to persist the whole UI back to a static file. This may give you a significant performance boost for complex pages and large numbers of connected users.
+
+To do this, you can send an `sendHtml` command to one of the connected clients. Feed the resulting `msg` directly into the `uib-save` node remembering to set the output file to `index.html` if you want to replace the default page.
+
+### Using the uib-save node with UI generated in Node-RED
+
+Another alternative is to create a UI completely in Node-RED. You can use the `uib-html` node to do this with both no-code and low-code configurations.
+
+The html node has an flag to "Merge HTML Template?" which should be checked. If no `msg.template` is supplied and this flag is set, the node will wrap the resulting HTML in uibuilder's current "Blank" template. Alternatively, you can provide your own template string.
+
+### Using a context variable
 
