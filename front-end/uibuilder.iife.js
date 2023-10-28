@@ -5928,8 +5928,10 @@
     }
     /** Easily send the entire DOM/HTML msg back to Node-RED
      * @param {string} [originator] A Node-RED node ID to return the message to
+     * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
+     * @returns {string} The HTML as a string
      */
-    htmlSend(originator = "") {
+    htmlSend(originator = "", send = true) {
       const out = `<!doctype html>
 ${document.documentElement.outerHTML}`;
       const msg = {
@@ -5938,7 +5940,9 @@ ${document.documentElement.outerHTML}`;
         topic: this.topic
       };
       log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg)();
-      this._send(msg, this._ioChannels.client, originator);
+      if (send === true)
+        this._send(msg, this._ioChannels.client, originator);
+      return out;
     }
     /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
      * @param {object} msg Msg from Node-RED containing a msg._uib object
@@ -5977,7 +5981,7 @@ ${document.documentElement.outerHTML}`;
           break;
         }
         case "htmlSend": {
-          response = this.htmlSend();
+          response = this.htmlSend("", false);
           break;
         }
         case "include": {

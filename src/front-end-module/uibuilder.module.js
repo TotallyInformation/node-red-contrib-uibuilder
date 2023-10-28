@@ -1730,8 +1730,10 @@ export const Uib = class Uib {
 
     /** Easily send the entire DOM/HTML msg back to Node-RED
      * @param {string} [originator] A Node-RED node ID to return the message to
+     * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
+     * @returns {string} The HTML as a string
      */
-    htmlSend(originator = '') {
+    htmlSend(originator = '', send = true) {
         const out = `<!doctype html>\n${document.documentElement.outerHTML}`
 
         // Set up the msg to send - NB: Topic may be added by this._send
@@ -1743,7 +1745,8 @@ export const Uib = class Uib {
 
         log('trace', 'Uib:htmlSend', 'Sending full HTML to Node-RED', msg)()
 
-        this._send(msg, this._ioChannels.client, originator)
+        if (send === true) this._send(msg, this._ioChannels.client, originator)
+        return out
     }
 
     /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
@@ -1786,7 +1789,7 @@ export const Uib = class Uib {
             }
 
             case 'htmlSend': {
-                response = this.htmlSend()
+                response = this.htmlSend('', false)
                 break
             }
 
@@ -1888,7 +1891,6 @@ export const Uib = class Uib {
 
     // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
     _msgRcvdEvents(msg) {
-
         // Message received
         this._dispatchCustomEvent('uibuilder:stdMsgReceived', msg)
 
@@ -1932,7 +1934,6 @@ export const Uib = class Uib {
             this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
             _ui._uiManager(msg)
         }
-
     } // --- end of _msgRcvdEvents ---
 
     /** Callback handler for messages from Node-RED
