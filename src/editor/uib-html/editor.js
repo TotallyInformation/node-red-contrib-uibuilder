@@ -27,6 +27,7 @@
         defaults: {
             name: { value: '' },
             topic: { value: '' },
+            useTemplate: { value: false },
         },
         align: 'left',
         inputs: 1,

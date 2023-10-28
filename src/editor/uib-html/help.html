@@ -1,4 +1,62 @@
 
 <p>
-    Converts uibuilder low-code UI description data into HTML. Send a <code>msg._ui</code> object to the node, the output will be HTML in <code>msg.payload</code>.
+    Converts uibuilder low-code UI description data into HTML. Send a <code>msg._ui</code> object to the node, 
+    the output will be HTML in <code>msg.payload</code>. 
+    <a href="../docs/nodes/uib-html" target="_blank">Details</a>.
 </p>
+
+<h3>Inputs</h3>
+<dl class="message-properties">
+    <dt>_ui <span class="property-type">object</span></dt>
+    <dd>
+        uibuilder low-code UI definition that will be "hydrated" to full HTML
+        by this node.
+    </dd>
+
+    <dt class="optional">template <span class="property-type">string</span></dt>
+    <dd>
+        HTML string that will be wrapped around the <code>msg._ui</code> generated
+        HTML output if the template option is ticked in the settings.
+    </dd>
+
+    <dt class="optional">topic <span class="property-type">string</span></dt>
+    <dd>
+        Passed through if provided.
+    </dd>
+</dl>
+
+<h3>Outputs</h3>
+<dl class="message-properties">
+    <dt>payload <span class="property-type">string</span></dt>
+    <dd>
+        Display name (only used in the Editor for display).
+    </dd>
+
+    <dt>topic <span class="property-type">string</span></dt>
+    <dd>
+        The input topic.
+    </dd>
+</dl>
+
+<h3>Node Settings</h3>
+<dl class="message-properties">
+    <dt class="optional">Name <span class="property-type">string</span></dt>
+    <dd>
+        Optional short description shown in the admin interface
+    </dd>
+
+    <dt>Topic <span class="property-type">string</span></dt>
+    <dd>
+        Fixed topic string. Only used if the input <code>msg</code> does not
+        contain a <code>topic</code> property.
+    </dd>
+
+    <dt class="optional">Merge HTML Template? <span class="property-type">boolean</span></dt>
+    <dd>
+        If selected, the input will be wrapped in an HTML template.
+    </dd>
+    <dd>
+        The template can be provided in msg.template as a string.
+        Or, if not provided, the node will add uibuilder's default "blank" template.
+    </dd>
+</dl>
