@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the UIBUILDER front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-10-14 17:23:41
+lastUpdated: 2023-10-30 17:58:51
 ---
 
 Functions accessible in client-side user code.
@@ -549,6 +549,16 @@ Both arguments must be provided. With `cbRef` having been saved when the listene
 uibuilder.cancelTopic('my topic', topicChgEvt)
 ```
 
+### `watchUrlHash` - Toggle (or manually set on/off) sending URL Hash changes back to Node-RED in a standard msg.
+
+Manually set on/off using the parameter, e.g. `watchUrlHash(true)`. Or toggle by not sending the parameter.
+
+URL Hashes are used by front-end routers for single-page apps (SPAs). Turning on this feature lets you track user "page" changes in SPA's. Don't forget to turn on the optional "Include msg._uib in standard msg output." flag (uibuilder advanced settings) if you need to track changes in multiple browser tabs or users. Which most likely you will want to.
+
+Can also be called as a command from Node-RED via `msg._uib.command` = `watchUrlHash`. The optional `msg._uib.prop` set to true/false will manually turn on/off.
+
+This function uses the `truthy` utility function for the optional parameter and so will accept truthy/falsy entries not just true/false.
+
 ### Custom Events
 
 The UIBUILDER library also issues a number of custom events. These can be handled using the standard `document.addEventListener` JavaScript function.
@@ -613,6 +623,14 @@ The first 2 arguments are required. All remaining arguments are included in the 
 To set the log level to display in your code, use `uibuilder.logLevel = 5` or `uibuilder.logLevel = 'trace'`. Set to your desired level.
 
 Future versions of this function after v6.1 will extend it to output to an on-page visible log and/or log back to Node-RED.
+
+
+### `truthy(val, [default])` - Returns true or false or the optional default value depending on the value
+
+True accepts 'on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1
+False accepts 'off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0
+
+If neither truthy or falsy, the optional default value is returned or `undefined` if that parameter is not supplied.
 
 ## Startup
 
