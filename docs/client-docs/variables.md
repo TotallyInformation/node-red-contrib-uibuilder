@@ -4,15 +4,14 @@ description: >
    Details about the variables used in the uibuilder modern front-end client library.
    Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-10-14 17:01:12
+lastUpdated: 2023-10-30 17:18:40
 ---
 
 ## Read/write
 
 Always use `uibuilder.set('varname', value)` to change these.
 
-* `topic` - Sets a default `msg.topic` that will be added to all outbound messages if nothing takes preference. Set to an empty string to turn it off.
-
+* 
 * `logLevel` - Sets the current logging level. The default is `2` ('error' and 'warn'). Increase to see more detailed logging.
   
   NOTE: This is one of the few properties it is safe to change directly `uibuilder.logLevel = 5`. That is because it has a dedicated getter and setter in the Class.
@@ -20,6 +19,8 @@ Always use `uibuilder.set('varname', value)` to change these.
 * `originator` - Set to the node ID of a `uib-sender` node if you want any sent messages (back to Node-RED) to only go to that node. Normally, you would not set this manually but rather rely on the library to set it for you when it recieves a msg from a sender node. However, you might want to save and reconstitue it if you need to send general messages before returning a message to the sender node.
   
   NOTE: It is preferable to set this via the specific function `uibuilder.setOriginator(...)`.
+
+* `topic` - Sets a default `msg.topic` that will be added to all outbound messages if nothing takes preference. Set to an empty string to turn it off.
 
 ## Read only
 
@@ -47,6 +48,7 @@ Always use `uibuilder.get('varname', value)` to obtain the value of these. You c
 * `socketError` - Holds the details of the last socket error
 * `tabId` - Identifier for the current browser tab
 * `url` - The instance URL fragment (name) for this instance of uibuilder
+* `urlHash` Set on load and updated as it changes. URL Hashes are used by front-end routing for Single-Page-Apps (SPA's). They do not reload the page.
 * `version` - accessible via `uibuilder.get('version')` or `uibuilder.get('meta')` only - the uibuilder client version in use
 * `vueVersion` - if the VueJS front-end library is loaded, this _may_ tell you the version (does not work for all versions of VueJS)
 
