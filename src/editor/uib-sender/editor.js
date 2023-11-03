@@ -5,15 +5,18 @@
 (function () {
     'use strict'
 
+    const mylog = window['uibuilder'].log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uib-sender'
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel  = 'uib-sender'
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = 'uibuilder'
+    const paletteCategory  = window['uibuilder'].paletteCategory
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = '#E6E0F8'
+    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
+    // TODO Change to use window.uibuilder
     /** Copy of all deployed uibuilder node instances */
     let uibInstances = null
 
@@ -49,7 +52,7 @@
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
-        console.log('uib-sender onEditPrepare ', node)
+        mylog('uib-sender onEditPrepare ', node)
 
         // initial checkbox states
         if (!node.passthrough) node.passthrough = false
@@ -113,6 +116,7 @@
             $('#node-input-url').val(node.url)
         }
 
+        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     /** When node type is added to the palette

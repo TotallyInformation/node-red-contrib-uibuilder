@@ -9,10 +9,11 @@
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel = moduleName
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory = 'uibuilder'
+    const paletteCategory  = window['uibuilder'].paletteCategory
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor = '#E6E0F8'
+    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
+    // TODO Change to use window.uibuilder
     /** Copy of all deployed uibuilder node instances */
     let uibInstances = null
 
@@ -85,6 +86,8 @@
             $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
             $('#node-input-url').val(node.url)
         }
+
+        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     // @ts-ignore

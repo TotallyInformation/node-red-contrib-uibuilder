@@ -2,13 +2,8 @@
 /* eslint-disable sonarjs/no-duplicate-string, es/no-object-values, strict */
 
 // Isolate this code
-(function () { // eslint-disable-line sonarjs/cognitive-complexity
+;(function () { // eslint-disable-line sonarjs/cognitive-complexity
     'use strict'
-
-    const localHost = ['localhost', '127.0.0.1', '::1', ''].includes(window.location.hostname) || window.location.hostname.endsWith('.localhost')
-    const uibDebug = localHost
-    const mylog = uibDebug ? console.log : function() {}
-    mylog('[uibuilder] DEBUG ON (because running on localhost)')
 
     //#region ------------------- Pollyfills --------------------- //
 
@@ -37,28 +32,31 @@
 
     //#region --------- "global" variables for the panel --------- //
 
+    // NOTE: window.uibuilder is added - see `resources` folder
+
+    const localHost = window['uibuilder'].localHost
+    const uibDebug = window['uibuilder'].debug
+    const mylog = window['uibuilder'].log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uibuilder'
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel  = 'uibuilder'
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = 'uibuilder'
+    const paletteCategory  = window['uibuilder'].paletteCategory
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = '#E6E0F8'
-    /** Default session length (in seconds) if security is active @type {Number} */
-    // const defaultSessionLength = 432000
-    /** Default JWT secret if security is active - to ensure it isn't blank @type {String} */
-    // const defaultJwtSecret = 'Replace This With A Real Secret'
-    /** Default template name */
-    const defaultTemplate = 'blank'
+    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
+
     /** Track which urls have been used - required to handle copy/paste and import
      *  as these can contain duplicate urls before deployment.
      */
-    const editorInstances = {}
+    const editorInstances = window['uibuilder'].urlsByNodeId
+    /** Default template name */
+    const defaultTemplate = 'blank'
 
     /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
-    let packages = []
-    /** List of the instances in use by id [{node_id: url}], updated in validateUrl() */
+    let packages = window['uibuilder'].packages
+    /** List of the deployed instances in use by id [{node_id: url}], updated in validateUrl() */
     let uibuilderInstances = RED.settings.uibuilderInstances
 
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
@@ -80,41 +78,41 @@
 
     //#endregion ------------------------------------------------- //
 
-    //#region --------- Node-RED Event Handlers  --------- //
+    //#region --------- /Node-RED Event Handlers/  --------- //
     // These are registered once for the node type
 
-    /** Track which urls have been used - required to handle copy/paste and import
-     *  as these can contain duplicate urls before deployment.
-     */
-    RED.events.on('nodes:add', function(node) {
-        if ( node.type === 'uibuilder') {
-            // Keep a list of uib nodes in the editor
-            // may be different to the deployed list
-            editorInstances[node.id] = node.url
-            // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. --
-        }
-    })
-    RED.events.on('nodes:change', function(node) {
-        if ( node.type === 'uibuilder') {
-            mylog('nodes:change:', node)
-            editorInstances[node.id] = node.url
-        }
-    })
-    RED.events.on('nodes:remove', function(node) {
-        if ( node.type === 'uibuilder') {
-            mylog('>> nodes:remove >>', node)
-            delete editorInstances[node.id]
-        }
-    })
-    // RED.events.on('deploy', function() {
-    //     console.log('Deployed')
+    // /** Track which urls have been used - required to handle copy/paste and import
+    //  *  as these can contain duplicate urls before deployment.
+    //  */
+    // RED.events.on('nodes:add', function(node) {
+    //     if ( node.type === 'uibuilder') {
+    //         // Keep a list of uib nodes in the editor
+    //         // may be different to the deployed list
+    //         editorInstances[node.id] = node.url
+    //         // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. --
+    //     }
     // })
-    // RED.events.on('workspace:dirty', function(data) {
-    //     console.log('Workspace dirty:', data)
+    // RED.events.on('nodes:change', function(node) {
+    //     if ( node.type === 'uibuilder') {
+    //         mylog('nodes:change:', node)
+    //         editorInstances[node.id] = node.url
+    //     }
     // })
-    // RED.events.on('runtime-state', function(event) {
-    //     console.log('>> Runtime State >>', event)
+    // RED.events.on('nodes:remove', function(node) {
+    //     if ( node.type === 'uibuilder') {
+    //         mylog('>> nodes:remove >>', node)
+    //         delete editorInstances[node.id]
+    //     }
     // })
+    // // RED.events.on('deploy', function() {
+    // //     console.log('Deployed')
+    // // })
+    // // RED.events.on('workspace:dirty', function(data) {
+    // //     console.log('Workspace dirty:', data)
+    // // })
+    // // RED.events.on('runtime-state', function(event) {
+    // //     console.log('>> Runtime State >>', event)
+    // // })
 
     //#endregion --------- Node-RED Event Handlers  --------- //
 
@@ -140,9 +138,9 @@
             const npmOutput = data.result[0]
 
             if ( data.success === true) {
-                packages = data.result[1]
+                packages = window['uibuilder'].packages = data.result[1]
 
-                console.log('[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ')
+                console.log('[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
                 RED.notify(`Successful update of npm package ${packageName}`, 'success')
 
                 // reset and populate the list
@@ -291,16 +289,15 @@
                     const npmOutput = data.result[0]
 
                     if ( data.success === true) {
-                        packages = data.result[1]
+                        packages = window['uibuilder'].packages = data.result[1]
 
-                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ')
+                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
                         RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
 
                         // reset and populate the list
                         $('#node-input-packageList').editableList('empty')
                         // @ts-ignore
                         $('#node-input-packageList').editableList('addItems', Object.keys(packages))
-
                     } else {
                         console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
                         RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
@@ -371,29 +368,6 @@
 
         return null
     } // ---- End of removePackageRow ---- //
-
-    /** Get list of installed packages via v2 API - save to master list */
-    function packageList() {
-
-        $.ajax({
-
-            dataType: 'json',
-            method: 'get',
-            url: 'uibuilder/uibvendorpackages',
-            async: false,
-            // data: { url: node.url},
-
-            success: function(vendorPaths) {
-                packages = vendorPaths
-            },
-
-            error: function(err) {
-                console.log('ERROR', err)
-            },
-
-        })
-
-    } // --- End of packageList --- //
 
     //#endregion ==== Package Management Functions ==== //
 
@@ -1441,34 +1415,6 @@
 
     //#endregion ==== Template Management Functions ==== //
 
-    /** If debug, dump out key information to console */
-    function dumpUibSettings() {
-        if (!uibDebug) return
-
-        mylog('[uibuilder] Settings:\n',
-            // The server's NODE_ENV environment var (e.g. PRODUCTION or DEVELOPMENT)
-            '\nNodeEnv: ', RED.settings.uibuilderNodeEnv,
-            // Current version of uibuilder
-            '\nCurrentVersion: ', RED.settings.uibuilderCurrentVersion,
-            // Should the editor tell the user that a redeploy is needed (based on uib versions)
-            '\nRedeployNeeded: ', RED.settings.uibuilderRedeployNeeded,
-            // uibRoot folder
-            '\nRootFolder: ', RED.settings.uibuilderRootFolder,
-
-            // Available templates and details
-            '\n\nTemplates: ', RED.settings.uibuilderTemplates,
-            // Custom server details
-            '\n\nCustomServer: ', RED.settings.uibuilderCustomServer,
-
-            // List of the deployed uib instances [{node_id: url}]
-            `\n\nInstances (${Object.keys(RED.settings.uibuilderInstances).length}): `, RED.settings.uibuilderInstances,
-
-            `\n\neditorInstances (${Object.keys(editorInstances).length}): `, editorInstances,
-
-            `\n\npackages (${Object.keys(packages).length}): `, packages
-        )
-    }
-
     /** Set initial hidden & checkbox states (called from onEditPrepare)
      * @param {object} node A reference to the panel's `this` object
      */
@@ -2005,8 +1951,6 @@
 
         getFolders()
 
-        packageList()
-
         // console.log('>> ONEDITPREPARE: NODE >>', node)
 
         // Show uibuilder version
@@ -2049,8 +1993,7 @@
 
         fileEditor()
 
-        dumpUibSettings()
-
+        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
     } // ---- End of oneditprepare ---- //
 
     //#endregion ------------------------------------------------- //

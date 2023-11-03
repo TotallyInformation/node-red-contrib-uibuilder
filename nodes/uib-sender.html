@@ -1,19 +1,22 @@
-<script type="text/javascript">/* eslint-disable sonarjs/no-duplicate-string */
+<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/ti-common.css" media="all"><script src="./resources/node-red-contrib-uibuilder/ti-common.js"></script><script type="text/javascript">/* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable strict */
 
 // Isolate this code
 (function () {
     'use strict'
 
+    const mylog = window['uibuilder'].log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uib-sender'
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel  = 'uib-sender'
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = 'uibuilder'
+    const paletteCategory  = window['uibuilder'].paletteCategory
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = '#E6E0F8'
+    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
+    // TODO Change to use window.uibuilder
     /** Copy of all deployed uibuilder node instances */
     let uibInstances = null
 
@@ -49,7 +52,7 @@
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
-        console.log('uib-sender onEditPrepare ', node)
+        mylog('uib-sender onEditPrepare ', node)
 
         // initial checkbox states
         if (!node.passthrough) node.passthrough = false
@@ -113,6 +116,7 @@
             $('#node-input-url').val(node.url)
         }
 
+        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     /** When node type is added to the palette
@@ -152,30 +156,34 @@
 
     }) // ---- End of registerType() ---- //
 
-}())</script><script type="text/html" data-template-name="uib-sender"><div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
-    <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-    <select id="node-input-url">
-        <option value="" name="">--choose a uibuilder instance--</option>
-    </select>
-</div>
+}())</script><script type="text/html" data-template-name="uib-sender"><div id="ti-edit-panel">
 
-<div class="form-row">
-    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-    <input type="text" id="node-input-name">
-</div>
-<div class="form-row">
-    <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
-    <input type="text" id="node-input-topic">
-</div>
+    <div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
+        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+        <select id="node-input-url">
+            <option value="" name="">--choose a uibuilder instance--</option>
+        </select>
+    </div>
 
-<div class="form-row">
-    <input type="checkbox" id="node-input-passthrough" style="display:inline-block; width:15px; vertical-align:baseline;">
-    <label for="node-input-passthrough" style="width: 90%;">Pass input msg to output?</label>
-</div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-topic">
+    </div>
 
-<div class="form-row">
-    <input type="checkbox" id="node-input-return" style="display:inline-block; width:15px; vertical-align:baseline;">
-    <label for="node-input-return" style="width: 90%;">Allow return messages?</label>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-passthrough" style="display:inline-block; width:15px; vertical-align:baseline;">
+        <label for="node-input-passthrough" style="width: 90%;">Pass input msg to output?</label>
+    </div>
+
+    <div class="form-row">
+        <input type="checkbox" id="node-input-return" style="display:inline-block; width:15px; vertical-align:baseline;">
+        <label for="node-input-return" style="width: 90%;">Allow return messages?</label>
+    </div>
+
 </div></script><script type="text/html" data-help-name="uib-sender"><p>
     An easy method of sending messages to your uibuilder front-end from anywhere in your flows 
     and a method of easily getting a response back again.

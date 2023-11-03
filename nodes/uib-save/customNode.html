@@ -14,42 +14,12 @@
     limitations under the License.
 -->
 
-<style>
-    #uib-upd *[aria-label] {
-        position:relative;
-    }
-    #uib-upd *[aria-label]:after {
-        content: attr(aria-label);
-        position:absolute;
-        top:100%;left:50px;
-        box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--red-ui-form-input-border-color);
-        padding: 10px;
-        z-index: 999;
-        background-color: var(--red-ui-popover-background);
-        color: var(--red-ui-popover-color);
-        max-width: 350px;
-        text-decoration: none;
-        text-align: center;
-        border-radius: 6px;
-        white-space: break-spaces;
-        
-        visibility: hidden;
-        opacity: 0;
-        transition: all 0.5s ease-out;
-    }
-    #uib-upd *[aria-label]:hover:after {
-        visibility: visible;
-        opacity: 1;
-        transition: all 0.5s ease-in 1s;
-    }
-    #uib-upd .red-ui-typedInput-container {
-        width:69% !important;
-    }
-</style>
+<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/ti-common.css" media="all">
+<script src="./resources/node-red-contrib-uibuilder/ti-common.js"></script>
 
-<script type="text/html" class="uib-tooltip" data-template-name="uib-save">
-<div id="uib-upd">
+<script type="text/html" data-template-name="uib-save">
+<div id="ti-edit-panel">
+    
     <div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
         <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
         <select id="node-input-url" style="width:70%">
@@ -106,6 +76,9 @@
 
 <p>
     Save a file into a uibuilder instance folder.
+</p>
+<p>
+    <a href="./uibuilder/docs/#/nodes/uib-save" target="_blank">Documentation</a>.
 </p>
 
 <h3>Inputs</h3>
@@ -224,10 +197,11 @@
         /** Node's label @constant {string} paletteCategory */
         const nodeLabel = moduleName
         /** Node's palette category @constant {string} paletteCategory */
-        const paletteCategory = 'uibuilder'
+        const paletteCategory  = window['uibuilder'].paletteCategory
         /** Node's background color @constant {string} paletteColor */
-        const paletteColor = '#E6E0F8'
+        const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
     
+        // TODO Change to use window.uibuilder
         /** Copy of all deployed uibuilder node instances */
         let uibInstances = null
     
@@ -300,6 +274,8 @@
                 $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
                 $('#node-input-url').val(node.url)
             }
+    
+            window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
         } // ----- end of onEditPrepare() ----- //
     
         // @ts-ignore
