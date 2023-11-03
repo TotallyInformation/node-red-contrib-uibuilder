@@ -366,6 +366,8 @@ export const Uib = class Uib {
     #isShowStatus = false
     // Has an IntersectionObserver been created? If so, this will hold the reference to it
     #intersectionObserver = undefined
+    // If true, URL hash changes send msg back to node-red. Controlled by watchUrlHash()
+    #sendUrlHash = false
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
         'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include', 'elementExists',
@@ -453,6 +455,8 @@ export const Uib = class Uib {
     purify = false
     // Is the Markdown-IT library loaded? Updated in start()
     markdown = false
+    // Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched
+    urlHash = location.hash
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -982,6 +986,41 @@ export const Uib = class Uib {
 
         return exists
     } // --- End of elementExists --- //
+
+    /** Set up an event listener to watch for hash changes
+     * and set the watchable urlHash variable
+     */
+    _watchHashChanges() {
+        this.set('urlHash', location.hash)
+        window.addEventListener('hashchange', (event) => {
+            this.set('urlHash', location.hash)
+            if (this.#sendUrlHash === true) {
+                this.send({ topic: 'hashChange', payload: location.hash, newHash: location.hash })
+            }
+        })
+    }
+
+    /** Returns true/false or a default value for truthy/falsy and other values
+     * @param {string|number|boolean|*} val The value to test
+     * @param {any} deflt Default value to use if the value is not truthy/falsy
+     * @returns {boolean|any} The truth! Or the default
+     */
+    truthy(val, deflt) {
+        let ret
+        if (['on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1].includes(val)) ret = true
+        else if (['off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0].includes(val)) ret = false
+        else ret = deflt
+        return ret
+    }
+
+    /** Turn on/off/toggle sending URL hash changes back to Node-RED
+     * @param {string|number|boolean|undefined} [toggle] Optional on/off/etc
+     * @returns {boolean} True if we will send a msg to Node-RED on a hash change
+     */
+    watchUrlHash(toggle) {
+        this.#sendUrlHash = this.truthy(toggle, this.#sendUrlHash !== true)
+        return this.#sendUrlHash
+    }
 
     //#endregion -------- -------- -------- //
 
@@ -1830,6 +1869,11 @@ export const Uib = class Uib {
                 break
             }
 
+            case 'watchUrlHash': {
+                response = this.watchUrlHash(prop)
+                break
+            }
+
             default: {
                 log('warning', 'Uib:_uibCommand', `Command '${cmd}' not yet implemented`)()
                 break
@@ -2477,6 +2521,9 @@ export const Uib = class Uib {
         } else {
             log('error', 'Uib:start', 'Start completed. ERROR: Socket.IO client library NOT LOADED.')()
         }
+
+        // Watch for URL hash changes in case using a front-end router. Updates watched var `urlHash` and socket.io `auth.urlHash`
+        this._watchHashChanges()
 
         // Check if Vue is present (used for dynamic UI processing)
         if (window['Vue']) {

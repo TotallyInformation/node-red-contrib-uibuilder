@@ -4651,7 +4651,7 @@
     return json;
   }
   var _ui = new import_ui.default(window, log, syntaxHighlight);
-  var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _extCommands, _managedVars, _showStatus, _uiObservers;
+  var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers;
   var Uib = (_a = class {
     // ---- End of ioSetup ---- //
     //#endregion -------- ------------ -------- //
@@ -4691,6 +4691,8 @@
       __privateAdd(this, _isShowStatus, false);
       // Has an IntersectionObserver been created? If so, this will hold the reference to it
       __privateAdd(this, _intersectionObserver, void 0);
+      // If true, URL hash changes send msg back to node-red. Controlled by watchUrlHash()
+      __privateAdd(this, _sendUrlHash, false);
       // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
       __privateAdd(this, _extCommands, [
         "get",
@@ -4777,6 +4779,8 @@
       __publicField(this, "purify", false);
       // Is the Markdown-IT library loaded? Updated in start()
       __publicField(this, "markdown", false);
+      // Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched
+      __publicField(this, "urlHash", location.hash);
       //#endregion ---- ---- ---- ---- //
       // TODO Move to proper getters/setters
       //#region ---- Externally Writable (via .set method, read via .get method) ---- //
@@ -5301,6 +5305,41 @@
       return exists;
     }
     // --- End of elementExists --- //
+    /** Set up an event listener to watch for hash changes
+     * and set the watchable urlHash variable
+     */
+    _watchHashChanges() {
+      this.set("urlHash", location.hash);
+      window.addEventListener("hashchange", (event2) => {
+        this.set("urlHash", location.hash);
+        if (__privateGet(this, _sendUrlHash) === true) {
+          this.send({ topic: "hashChange", payload: location.hash, newHash: location.hash });
+        }
+      });
+    }
+    /** Returns true/false or a default value for truthy/falsy and other values
+     * @param {string|number|boolean|*} val The value to test
+     * @param {any} deflt Default value to use if the value is not truthy/falsy
+     * @returns {boolean|any} The truth! Or the default
+     */
+    truthy(val, deflt) {
+      let ret;
+      if (["on", "On", "ON", "true", "True", "TRUE", "1", true, 1].includes(val))
+        ret = true;
+      else if (["off", "Off", "OFF", "false", "False", "FALSE", "0", false, 0].includes(val))
+        ret = false;
+      else
+        ret = deflt;
+      return ret;
+    }
+    /** Turn on/off/toggle sending URL hash changes back to Node-RED
+     * @param {string|number|boolean|undefined} [toggle] Optional on/off/etc
+     * @returns {boolean} True if we will send a msg to Node-RED on a hash change
+     */
+    watchUrlHash(toggle) {
+      __privateSet(this, _sendUrlHash, this.truthy(toggle, __privateGet(this, _sendUrlHash) !== true));
+      return __privateGet(this, _sendUrlHash);
+    }
     //#endregion -------- -------- -------- //
     //#region ------- UI handlers --------- //
     //#region -- Direct to _ui --
@@ -6016,6 +6055,10 @@ ${document.documentElement.outerHTML}`;
           response = this.uiWatch(prop);
           break;
         }
+        case "watchUrlHash": {
+          response = this.watchUrlHash(prop);
+          break;
+        }
         default: {
           log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();
           break;
@@ -6364,6 +6407,7 @@ ioPath: ${this.ioPath}`)();
       } else {
         log("error", "Uib:start", "Start completed. ERROR: Socket.IO client library NOT LOADED.")();
       }
+      this._watchHashChanges();
       if (window["Vue"]) {
         this.set("isVue", true);
         try {
@@ -6396,7 +6440,7 @@ ioPath: ${this.ioPath}`)();
       this._dispatchCustomEvent("uibuilder:startComplete");
     }
     //#endregion -------- ------------ -------- //
-  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _intersectionObserver = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _intersectionObserver = new WeakMap(), _sendUrlHash = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
   __publicField(_a, "_meta", {
     version,
     type: "module",
