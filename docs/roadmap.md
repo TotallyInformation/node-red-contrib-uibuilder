@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-10-14 18:08:06
+lastUpdated: 2023-10-28 16:59:26
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -422,14 +422,16 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Extensions to the `uib-html` node
 
-* Allow an input HTML template to be used.
-* Add Option to include uibuilder uib-brand.css
 * Add option to remove the page tags, leaving just the document body fragment.
 * Add options for DOMpurify and Markdown-IT
-* Consider allowing HTML from the uibuilder templates?
 * Consider adding an HTML editor for the template?
 
+### Extensions to the `uib-save` node
+
+* Allow msg overrides of input fields
+
 ### Extensions to client Library
+* Add client time offset from server to standard client metadata. [ref](https://discourse.nodered.org/t/time-zone-in-a-z-in-node-red/82537/7?u=totallyinformation)
 * Restrict `onChange` to only watch watched variables? Optionally make the watched var managed automatically (checking to make sure it doesn't start with `_` or `#`)
 * [**STARTED**] Ability to visually show all uibuilder managed variables.
 * A way to show and change uib-brand variables visually?
@@ -683,6 +685,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Fetch (Experimental 16.15.0, 18.0.0)
     * Permission model (experimental in v20)
 
+## UIBUILDER v7 planned breaking changes
+
+* Minimum node.js v18
+* Minimum node-red v4
+* Removal of uib-list node
+* Remove Pollyfills from uibuilder editor code
 
 ## Ideas for releases further out
 
@@ -690,6 +698,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Using the above to visually show available uibuilder fns with inputs and outputs.
 * Add optional TELEMETRY output (maybe linked to the log functions) - add mqtt endpoint to uibuilder settings.js (or maybe websocket?)
 * Use `degit` to move default templates and maybe examples to their own repos - allowing more dynamic updates without needing a new version of uibuilder.
+
+* Change ui.js to create global $ui object, change lib to match. Make sure it works in node.js as well as browser.
+  
+  In preparation for the ui library to be used stand-alone and have its own branding. Also allowing option for it to be managed as an independent library.
+
+  Add a version and a version fn.
+
+  Consider making available to Node-RED functions?
+
 
 ### Thoughts on JavaScript tabular data manipulation and visualisation
 

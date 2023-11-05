@@ -11,23 +11,14 @@ Please see the documentation for archived changelogs - a new archive is produced
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
 * Outdated examples - some of the included example flows such as the "remote-commands" example are now out of date. What is there will still work but they are no longer comprehensive. Will try to catch them up as soon as I can.
+* Editor: Add panel of links to all instances of uibuilder.
 * Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. 
   
   In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
 
   Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
 
-* Change ui.js to create global $ui object, change lib to match. Make sure it works in node.js as well as browser.
-  
-  In preparation for the ui library to be used stand-alone and have its own branding. Also allowing option for it to be managed as an independent library.
-
-  Add a version and a version fn.
-
-  Consider making available to Node-RED functions?
-
 ### TO FIX
-
-* uib-html - allow a template - msg.template as text, use instead of the default text.
 
 * Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
 * uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
@@ -37,8 +28,21 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
 
 * uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
-* uib-save - client reload not working? check if create folder is working?
-* uib-html - add default blank template based on uibuilder blank template, add template inclusion flag to make it optional.
+* uib-save - check if create folder is working?
+* List of editor instances of uibuilder nodes needs to differentiate between enabled and disabled.
+* http://127.0.0.1:1880/red/uibuilder/admin/_?cmd=listinstances - is called for each loaded node instance on load of editor.
+  
+  
+  Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId]
+
+* Anywhere calling getUrls() or `listinstances` API - replace with uibuilder.getDeployedUrls (see uib-save html)
+
+* validateUrl() - core processing moved to ti-common, search and fix
+  * Remove url prop blanking (now done in ti-common)
+
+### Document
+
+* http://127.0.0.1:1880/red/uibuilder/admin/api-test?cmd=checkfolder - is called each loaded instance on load of editor
 
 ------------
 
@@ -69,7 +73,24 @@ Nothing currently.
 ### `uib-save` improvements
 
 * The reload client flag now actually works.
-* The filename can include folders (use `/` as separator) and missing folders will be created automatically. Note that you cannot have any `..` in the filename, this is to prevent escaping from the instance root folder and causing mayhem elsewhere.
+* The filename can include folders (use `/` as separator) and missing folders will be created automatically. Note that you cannot have any `..` in the filename, this is to prevent escaping from the instance root folder and causing mayhem elsewhere. By default, new folders cannot be created (this is a safety feature), select the "Create Folder?" flag to allow creation.
+* The Editor js has been moved out of the html file and put into `resources/uib-save.js`. It is loaded by the html file in a link. This makes development a lot easier. The code also references `resources/ti-common.js` to ensure consistency.
+
+### Client library improvements
+
+* **NEW function and command** `watchUrlHash` - Toggle (or manually set on/off) sending URL Hash changes back to Node-RED in a standard msg.
+* **NEW watched variable** `urlHash` Set on load and updated as it changes. URL Hashes are used by front-end routing for Single-Page-Apps (SPA's). They do not reload the page.
+* **New utility function** `truthy` Takes a truthy/falsy input (e.g. text, number, boolean) and returns true or false (boolean). If input is neither truthy or falsy, can take a 2nd parameter which is the default return.
+* Function added to watch for url hash changes.
+
+### `uibuilder` node improvements
+
+* Major rework of tracking node instances. Custom events are now fired: 'uibuilder:node-added', 'uibuilder:node-changed', 'uibuilder:node-deleted'. With the node in question passed as data in the event. For added nodes, an extra property `addType` is added to the node object and set to either "load" (fired when the Editor is loaded which adds all nodes), "new" (when a brand new instance is added, eg from the palette), or "paste/import". The tracking code is also now only ever instanciated once when the Editor is loaded.
+* Better and more consistent removal of URL setting when pasting or importing existing uibuilder nodes.
+* `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
+* `uibuilder` - Reduce code complexity by moving more fs actions out into `fs.js`.
+* Some common Node-RED Editor code and styles moved to common libraries (`resources/ti-common.js` & `resources/ti-common.css`) loaded as resources. Making the editor code smaller and more consistent.
+* The Editor js has been moved out of the html file and put into `resources/uibuilder.js`. It is loaded by the html file in a link. This makes development a lot easier. The code also references `resources/ti-common.js` to ensure consistency.
 
 ### Examples
 
@@ -77,8 +98,6 @@ Nothing currently.
 
 ### Other improvements
 
-* `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
-* `uibuilder` - Reduce code complexity by moving more fs actions out.
 
 
 
