@@ -4,45 +4,31 @@
 (function () {
     'use strict'
 
+    // NOTE: window.uibuilder is added - see `resources` folder
+
+    // RED._debug({topic: 'RED.settings', payload:RED.settings})
+
+    const uibuilder = window['uibuilder']
+    const log = uibuilder.log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-save'
-    /** Node's label @constant {string} paletteCategory */
-    const nodeLabel = moduleName
-    /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = window['uibuilder'].paletteCategory
-    /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
-    // TODO Change to use window.uibuilder
-    /** Copy of all deployed uibuilder node instances */
-    let uibInstances = null
+    /** Copy of deployed uibuilder node instances populated by getUrls() */
+    let uibInstances
 
-    /** Get all of the current uibuilder URL's */
+    /** Get all of the currently deployed uibuilder URL's
+     * NOTE that the uibuilder.urlsByNodeId cannot be used as that includes disabled nodes/flows
+     */
     function getUrls() {
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: './uibuilder/admin/dummy',
-            data: {
-                'cmd': 'listinstances',
-            },
-            success: function(instances) {
-                console.log('>> Instances >>', instances, Object.entries(instances) )
-
-                uibInstances = instances
-
-                Object.keys(instances).forEach( (key, i, arr) => {
-                    $('#node-input-url').append($('<option>', {
-                        value: instances[key],
-                        text: instances[key],
-                        'data-id': key,
-                    }))
-                })
-
-            }
+        uibInstances = uibuilder.getDeployedUrls()
+        Object.keys(uibInstances).forEach( (key, i, arr) => {
+            $('#node-input-url').append($('<option>', {
+                value: uibInstances[key],
+                text: uibInstances[key],
+                'data-id': key,
+            }))
         })
-
     } // ---- end of getUrls ---- //
 
     /** Prep for edit
@@ -87,13 +73,11 @@
             $('#node-input-url').val(node.url)
         }
 
-        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
+        uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     // @ts-ignore
     RED.nodes.registerType(moduleName, {
-        category: paletteCategory,
-        color: paletteColor,
         defaults: {
             url: { value: '', required: true },
             uibId: { value: '' }, // ID of selected uibuilder instance
@@ -112,14 +96,15 @@
         // outputs: 1,
         // outputLabels: ['HTML payload'],
         icon: 'font-awesome/fa-floppy-o',
-        paletteLabel: nodeLabel,
         label: function () {
             return this.name || this.url || moduleName
         },
+        paletteLabel: moduleName,
+        category: uibuilder.paletteCategory,
+        color: 'var(--uib-node-colour)', // '#E6E0F8'
 
         /** Prepares the Editor panel */
         oneditprepare: function () { onEditPrepare(this) },
-
     }) // ---- End of registerType() ---- //
 
 }())
