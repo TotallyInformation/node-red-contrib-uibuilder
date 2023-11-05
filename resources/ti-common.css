@@ -1,13 +1,13 @@
 /**
  * CSS Resource file for UIBUILDER
  *
- * Load as: ./resources/@totallyinformation/node-red-contrib-uibuilder/ti-common.css
+ * Load as: ./resources/node-red-contrib-uibuilder/ti-common.css
  */
 
 :root {
     --uib-node-colour: hsl(248 100% 91%);
     --uib-blue: hsl(204 89% 55% / 70%); 
-    --uib-red: hsl(0 100% 45% / 70%); /* #8f0000; */)
+    --uib-red: hsl(0 100% 45% / 70%); /* #8f0000; */
 }
 
 .uib-name {
