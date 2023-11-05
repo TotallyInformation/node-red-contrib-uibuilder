@@ -728,7 +728,7 @@ function minifyBrandCSS(cb) {
 
 //#region ---- Build node panels ----
 
-/** Combine the parts of uibuilder.html */
+/** NO LONGER USED - Combine the parts of uibuilder.html */
 function buildPanelUib1(cb) {
     try {
         src('src/editor/uibuilder/editor.js')
@@ -937,7 +937,8 @@ function buildPanelSave(cb) {
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
 const buildme = parallel(
-    series(buildPanelUib1, buildPanelUib2),
+    // series(buildPanelUib1, buildPanelUib2),
+    buildPanelUib2,
     buildPanelSender,
     buildPanelCache,
     buildPanelUibList,
@@ -988,9 +989,10 @@ function watchme(cb) {
     watch(['src/front-end-module/uibuilder.module.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch('src/components/uib-var/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
-    watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
+    // watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
-    watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
+    // watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
+    watch(['src/editor/uibuilder/*'], buildPanelUib2)
     watch('src/editor/uib-sender/*', buildPanelSender)
     // watch('src/editor/uib-receiver/*', buildPanelReceiver)
     watch('src/editor/uib-cache/*', buildPanelCache)
