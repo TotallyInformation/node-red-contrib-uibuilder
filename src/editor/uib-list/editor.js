@@ -1,5 +1,7 @@
 /* eslint-disable strict */
 
+// ! DEPRECATING - REMOVE IN NEXT MAJOR RELEASE
+
 // Isolate this code
 (function () {
     'use strict'
