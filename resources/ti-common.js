@@ -23,11 +23,14 @@
             urlPrefix: undefined,
             // uib server type
             serverType: undefined,
-            /** Tracks ALL uibuilder URL's by node id by tracking changes to the Node-RED Editor - ONLY USE FOR URL TRACKING
+            /** Tracks ALL uibuilder editor instance URL's by node id by tracking changes to the Node-RED Editor - ONLY USE FOR URL TRACKING
              * These URL's may not actually be deployed. They also include disabled nodes (node.d=true) AND disabled flows.
              * NOTE: Nodes on disabled flows are not directly detectable and node.d will not be set.
+             * @type {{string,string}|{}}
              */
-            urlsByNodeId: {},
+            editorUibInstances: {},
+            /** Tracks all DEPLOYED uibuilder instances url's by node id @type {{string,string}|{}} */
+            deployedUibInstances: {},
             /** Tracks uibuilder's installed front-end packages - changes as packages added/removed (in uibuilder node) */
             packages: [],
 
@@ -61,7 +64,7 @@
                 })
             },
             /** Get all of the currently deployed uibuilder URL's
-             * NOTE that the uibuilder.urlsByNodeId cannot be used as that includes disabled nodes/flows
+             * NOTE that the uibuilder.editorUibInstances cannot be used as that includes disabled nodes/flows
              * @returns {{string,string}} URLs by node id of deployed uibuilder nodes
              */
             getDeployedUrls: function getDeployedUrls() {
@@ -100,8 +103,8 @@
         uibuilder.urlPrefix = `${eUrlSplit.join(':')}/${uibuilder.nodeRoot}`
         //#endregion ---- ---- ----
 
-        uibuilder.debug = uibuilder.localHost
-        uibuilder.log('[uibuilder] DEBUG ON (because running on localhost)')
+        uibuilder.debug = RED.settings.uibuilderNodeEnv.toLowerCase() === 'development' || RED.settings.uibuilderNodeEnv.toLowerCase() === 'dev' // uibuilder.localHost
+        uibuilder.log(`[uibuilder] DEBUG ON (because env NODE_ENV is '${RED.settings.uibuilderNodeEnv}')`)
 
         /** Get initial list of installed FE packages via v2 API - save to master list */
         $.ajax({
@@ -121,6 +124,9 @@
             },
         })
 
+        /** Get initial list of deployed uibuilder instances */
+        uibuilder.deployedUibInstances =  uibuilder.getDeployedUrls()
+
         /** Track which urls have been used - required to handle copy/paste and import
          *  as these can contain duplicate urls before deployment.
          */
@@ -133,11 +139,12 @@
                 // Remove the URL on paste or import
                 if (node.addType === 'paste/import') {
                     delete node.url
+                    delete node.oldUrl
                     // We have to change this if we want the display version to change (if the prop is part of the label)
                     delete node._config.url
                 }
                 // Keep a list of ALL uib nodes in the editor incl disabled, undeployed, etc. Different to the deployed list
-                if (node.url) uibuilder.urlsByNodeId[node.id] = node.url
+                if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 // Inform interested functions that something was added (and why)
                 RED.events.emit('uibuilder:node-added', node)
                 // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. OR Disabled nodes/flows --
@@ -148,8 +155,8 @@
         RED.events.on('nodes:change', function(node) {
             if ( node.type === 'uibuilder') {
                 // Update list
-                if (node.url) uibuilder.urlsByNodeId[node.id] = node.url
-                else delete uibuilder.urlsByNodeId[node.id]
+                if (node.url) uibuilder.editorUibInstances[node.id] = node.url
+                else delete uibuilder.editorUibInstances[node.id]
                 // Inform interested functions that something was changed
                 RED.events.emit('uibuilder:node-changed', node)
 
@@ -159,7 +166,7 @@
         RED.events.on('nodes:remove', function(node) {
             if ( node.type === 'uibuilder') {
                 // update list
-                delete uibuilder.urlsByNodeId[node.id]
+                delete uibuilder.editorUibInstances[node.id]
                 // Inform interested functions that something was deleted
                 RED.events.emit('uibuilder:node-deleted', node)
 
@@ -198,7 +205,7 @@
                     // List of the deployed uib instances at Editor load time [{node_id: url}]
                     `\n\nDeployed Instances (${Object.keys(RED.settings.uibuilderInstances).length}): `, RED.settings.uibuilderInstances,
                     // ALL possible nodes in the editor
-                    `\n\nEditor Instances (${Object.keys(uibuilder.urlsByNodeId).length}, incl undeployed & disabled): `, uibuilder.urlsByNodeId,
+                    `\n\nEditor Instances (${Object.keys(uibuilder.editorUibInstances).length}, incl undeployed & disabled): `, uibuilder.editorUibInstances,
                     // Currently installed FE packages
                     `\n\nFE installed packages - (${Object.keys(uibuilder.packages).length}): `, uibuilder.packages
                 )
