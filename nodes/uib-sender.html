@@ -5,47 +5,54 @@
 (function () {
     'use strict'
 
-    const mylog = window['uibuilder'].log
+    const uibuilder = window['uibuilder']
+    const mylog = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uib-sender'
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel  = 'uib-sender'
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = window['uibuilder'].paletteCategory
+    const paletteCategory  = uibuilder.paletteCategory
     /** Node's background color @constant {string} paletteColor */
     const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
-    // TODO Change to use window.uibuilder
     /** Copy of all deployed uibuilder node instances */
-    let uibInstances = null
+    let uibInstances
 
     /** Get all of the current uibuilder URL's */
     function getUrls() {
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: './uibuilder/admin/dummy',
-            data: {
-                'cmd': 'listinstances',
-            },
-            success: function(instances) {
-                console.log('>> Instances >>', instances, Object.entries(instances) )
-
-                uibInstances = instances
-
-                Object.keys(instances).forEach( (key, i, arr) => {
-                    $('#node-input-url').append($('<option>', {
-                        value: instances[key],
-                        text: instances[key],
-                        'data-id': key,
-                    }))
-                })
-
-            }
+        uibInstances = uibuilder.getDeployedUrls()
+        Object.keys(uibInstances).forEach( (key, i, arr) => {
+            $('#node-input-url').append($('<option>', {
+                value: uibInstances[key],
+                text: uibInstances[key],
+                'data-id': key,
+            }))
         })
+        // $.ajax({
+        //     type: 'GET',
+        //     async: false,
+        //     dataType: 'json',
+        //     url: './uibuilder/admin/dummy',
+        //     data: {
+        //         'cmd': 'listinstances',
+        //     },
+        //     success: function(instances) {
+        //         console.log('>> Instances >>', instances, Object.entries(instances) )
 
+        //         uibInstances = instances
+
+        //         Object.keys(instances).forEach( (key, i, arr) => {
+        //             $('#node-input-url').append($('<option>', {
+        //                 value: instances[key],
+        //                 text: instances[key],
+        //                 'data-id': key,
+        //             }))
+        //         })
+
+        //     }
+        // })
     } // ---- end of getUrls ---- //
 
     /** Prep for edit
