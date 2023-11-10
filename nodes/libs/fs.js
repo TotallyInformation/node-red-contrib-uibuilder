@@ -86,6 +86,24 @@ class UibFs {
         this.log = uib.RED.log
     } // ---- End of setup ---- //
 
+    /** returns true if the filename contains / or \ else false
+     * @param {string} fname filename to test
+     * @returns {boolean}
+     */
+    hasFolder(fname) {
+        return /[/|\\]/.test(fname)
+    }
+
+    /** Throw an error if a path string contains folder traversal `..`
+     * @param {string} fname Path to test
+     * @param {string} note Optional text to add to error to indicate source
+     */
+    throwOnFolderEscape(fname, note) {
+        if (fname.includes('..')) {
+            throw new Error(`Path includes '..'. Folder traversal not permitted. '${folder}' [uibuilder:UibFs:throwOnFolderEscape] ${note}`)
+        }
+    }
+
     /** Walks through a folder and sub-folders returning list of files
      * @param {string} dir Folder name to start the walk
      * @param {string} ftype File extension to filter on, e.g. '.html'
@@ -156,7 +174,7 @@ class UibFs {
         // const chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
     }
 
-    // TODO create folders, chk params
+    // TODO chk params
     /** Output a file to an instance folder (async/promise)
      * NB: Errors have the fn indicator at the end because this is expected to be a utility fn called from elsewhere
      *     This is also the reason we throw errors here rather than output error msgs
@@ -174,12 +192,16 @@ class UibFs {
 
         const log = this.uib.RED.log
 
-        if (folder.includes('..')) {
-            throw new Error(`Folder path includes '..', invalid. '${folder}' [uibuilder:UibFs:writeInstanceFile]`)
+        // Make sure that the inputs don't include folder traversal
+        this.throwOnFolderEscape(folder, 'writeInstanceFile, folder')
+        this.throwOnFolderEscape(folder, 'writeInstanceFile, file')
+
+        // Check to see if any folder's on the filename - if so, move to the fullFolder
+        if (this.hasFolder(fname)) {
+            const splitFname = fname.split(/[/|\\]/)
+            fname = splitFname.pop()
+            folder = path.join(folder, ...splitFname)
         }
-        // if ( fname.includes('/') || fname.includes('\\') ) {
-        //     throw new Error(`File name includes '/' or '\\', invalid. '${fname}' [uibuilder:UibFs:writeInstanceFile]`)
-        // }
 
         const uib = this.uib
 
