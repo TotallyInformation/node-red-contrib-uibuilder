@@ -63,10 +63,6 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
     const RED = mod.RED
     let statusColor = 'blue'
 
-    // TODO Update node doc
-    // TODO msg/config overrides
-    // TODO Check the _uib/_ui pageName property if fname not set - to allow auto-updates to pages
-
     if (!msg.payload) {
         this.counters.fail++
         statusColor = 'red'

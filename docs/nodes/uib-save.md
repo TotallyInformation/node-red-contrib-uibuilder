@@ -3,7 +3,7 @@ title: uib-save - Save files to a uibuilder instance folder
 description: >
    Usage and configuration.
 created: 2023-02-05 16:31:39
-lastUpdated: 2023-10-30 18:03:00
+lastUpdated: 2023-11-10 13:48:13
 ---
 
 Available since uibuilder v6.6.
@@ -20,4 +20,4 @@ Obviously, this means that all input must be carefully checked for safety.
 
 An instance of a UIBUILDER node must be selected before the node can be used. This lets the node know where to save the files. It will save to the sub-folder currently being served. Change the advanced "Serve" setting in the uibuilder node
 
-**TODO - Add flag to allow saving anywhere - default it to off to match the initial release settings**
+This node has a flow tab of examples. See Node-RED's import library.

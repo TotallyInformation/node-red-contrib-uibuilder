@@ -10,6 +10,19 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Check the [roadmap](./docs/roadmap.md) for future developments.
 
+* Move all src editor js files to resources. 
+  * [x] uib-save
+  * [ ] uib-html
+  * [ ] uib-element
+  * [ ] uib-update
+  * [ ] uib-sender
+  * [ ] ~~uib-list~~ - deprecated, don't bother
+  * [ ] uibuilder - harder
+
+* uib-element: Move element constructors into their own library and build versions that can be loaded into the browser. 
+  
+  Consider putting each element in its own source js file and using a build process. This will allow their use when converting to web components. Add a master js with all components but allow each to be individually loaded.
+
 * Outdated examples - some of the included example flows such as the "remote-commands" example are now out of date. What is there will still work but they are no longer comprehensive. Will try to catch them up as soon as I can.
 * Editor: Add panel of links to all instances of uibuilder.
 * Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. 
@@ -28,17 +41,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
 
 * uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
-* uib-save - check if create folder is working?
-* List of editor instances of uibuilder nodes needs to differentiate between enabled and disabled.
-* http://127.0.0.1:1880/red/uibuilder/admin/_?cmd=listinstances - is called for each loaded node instance on load of editor.
-  
-  
-  Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId]
+* Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId]
 
-* Anywhere calling getUrls() or `listinstances` API - replace with uibuilder.getDeployedUrls (see uib-save html)
-
-* validateUrl() - core processing moved to ti-common, search and fix
-  * Remove url prop blanking (now done in ti-common)
 
 ### Document
 
@@ -73,7 +77,8 @@ Nothing currently.
 ### `uib-save` improvements
 
 * The reload client flag now actually works.
-* The filename can include folders (use `/` as separator) and missing folders will be created automatically. Note that you cannot have any `..` in the filename, this is to prevent escaping from the instance root folder and causing mayhem elsewhere. By default, new folders cannot be created (this is a safety feature), select the "Create Folder?" flag to allow creation.
+* The new "Use pageName" flag allows you to save to the uibuilder node's live folder using the page name returned from the front-end or manually set in `msg._ui.pageName` or `msg.uib.pageName`. This makes it easier to save an updated page via the `htmlSend` command (either from Node-RED or from front-end code). See the example flow to see how this works. It means that you don't need to know the folder or the pageName at all.
+* The filename can include folders (use `/` as separator) and missing folders will be created automatically if the "Create Folder" flag is set. Note that you cannot have any `..` in the filename, this is to prevent escaping from the instance root folder and causing mayhem elsewhere. By default, new folders cannot be created (this is a safety feature), select the "Create Folder?" flag to allow creation.
 * The Editor js has been moved out of the html file and put into `resources/uib-save.js`. It is loaded by the html file in a link. This makes development a lot easier. The code also references `resources/ti-common.js` to ensure consistency.
 
 ### Client library improvements
@@ -85,12 +90,16 @@ Nothing currently.
 
 ### `uibuilder` node improvements
 
-* Major rework of tracking node instances. Custom events are now fired: 'uibuilder:node-added', 'uibuilder:node-changed', 'uibuilder:node-deleted'. With the node in question passed as data in the event. For added nodes, an extra property `addType` is added to the node object and set to either "load" (fired when the Editor is loaded which adds all nodes), "new" (when a brand new instance is added, eg from the palette), or "paste/import". The tracking code is also now only ever instanciated once when the Editor is loaded.
-* Better and more consistent removal of URL setting when pasting or importing existing uibuilder nodes.
 * `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
 * `uibuilder` - Reduce code complexity by moving more fs actions out into `fs.js`.
 * Some common Node-RED Editor code and styles moved to common libraries (`resources/ti-common.js` & `resources/ti-common.css`) loaded as resources. Making the editor code smaller and more consistent.
+
+#### Editor panel improvements
+
+* Major rework of tracking node instances. Custom events are now fired: 'uibuilder:node-added', 'uibuilder:node-changed', 'uibuilder:node-deleted'. With the node in question passed as data in the event. For added nodes, an extra property `addType` is added to the node object and set to either "load" (fired when the Editor is loaded which adds all nodes), "new" (when a brand new instance is added, eg from the palette), or "paste/import". The tracking code is also now only ever instanciated once when the Editor is loaded.
+* Better and more consistent removal of URL setting when pasting or importing existing uibuilder nodes.
 * The Editor js has been moved out of the html file and put into `resources/uibuilder.js`. It is loaded by the html file in a link. This makes development a lot easier. The code also references `resources/ti-common.js` to ensure consistency.
+* Improved debug information. Debug output to Editor page console is automatic if environment variable NODE_ENV is set to 'dev' or 'development' (it used to be if running on localhost). Otherwise can be turned on by manually issueing `uibuilder.debug = true` on the browser console on the Editor page.
 
 ### Examples
 
