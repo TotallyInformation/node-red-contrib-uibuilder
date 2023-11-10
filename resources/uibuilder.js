@@ -40,16 +40,12 @@
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uibuilder'
 
-    /** Track which urls have been used - required to handle copy/paste and import
-     *  as these can contain duplicate urls before deployment.
-     */
-    const editorInstances = uibuilder.urlsByNodeId
+    /** Track which urls have been used - required for error handling in url validation. Only use for URL tracking */
+    const editorInstances = uibuilder.editorUibInstances
     /** Default template name */
     const defaultTemplate = 'blank'
     /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
     let packages = uibuilder.packages
-    /** List of the deployed instances in use by id [{node_id: url}], updated in validateUrl() */
-    let uibuilderInstances = RED.settings.uibuilderInstances
 
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
      * @typedef {object} uiace Options for the ACE/Monaco code editor
@@ -818,22 +814,8 @@
      * @param {object} node Pass in this
      */
     function updateDeployedInstances(node) {
-        // Update the deployed instances list
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: './uibuilder/admin/_', // pass dummy url _ as not needed for this query
-            data: {
-                'cmd': 'listinstances', // 'checkurls',
-            },
-            success: function(data) {
-                // console.log('>> update instances >>', value, data)
-                uibuilderInstances = data
-            }
-        })
-
-        if ( node ) node.isDeployed = uibuilderInstances[node.id] !== undefined
+        uibuilder.deployedUibInstances =  uibuilder.getDeployedUrls()
+        if ( node ) node.isDeployed = uibuilder.deployedUibInstances[node.id] !== undefined
     }
 
     /** Find out if a server folder exists for this url
@@ -962,7 +944,7 @@
         log('-- value --', value)
         log('-- Editor URL Changed? --', node.urlChanged, '-- Valid? --', node.urlValid )
         log('-- Deployed URL Changed? --', node.urlDeployedChanged )
-        log('-- uibuilderInstances[node.id] --', uibuilderInstances[node.id])
+        log('-- deployedUibInstances[node.id] --', uibuilder.deployedUibInstances[node.id])
         log('-- editorInstances[node.id] --', editorInstances[node.id])
         log('-- is Dup? -- Deployed:', node.urlDeployedDup, ', Editor:', node.urlEditorDup)
         log('-- URL Errors --', node.urlErrors )
@@ -978,61 +960,21 @@
      **/
     function validateUrl(value) {
         if ($('#node-input-url').is(':visible')) {
-            // console.log('#node-input-url IS VISIBLE')
-        } else {
-            if (this.isDeployed) console.log('validateUrl - is deployed')
-            // console.log('#node-input-url IS NOT VISIBLE')
-            // return true
+            // Update the DEPLOYED instances list (also updates this.isDeployed) - not needed on Editor load
+            updateDeployedInstances(this)
+            // console.log(this.url, '#node-input-url IS VISIBLE. ', 'Changed? ', this.changed)
         }
-        // log('validateUrl', value, this)
-        /** Notes:
-         *  1) `this` is the node instance configuration as at last press of Done.
-         *  2) Validation fns are run on every node instance when the Editor is loaded (e.g. panel not open) -
-         *     value is populated but jQ val is undefined.
-         *  3) Validation for an instance is run when a new node instance added - value & jq value both `undefined`.
-         *  4) Validation for an instance is run when a field value has changed (on blur) - value & jq value are the same.
-         *  4) jq values are undefined when this is called on load (e.g. panel not open).
-         *  5) value and jq value both undefined when a new instance added to flow. Validation is fired at that point.
-         */
-        /**
-         * Saved/this (me)
-         *  url
-         *  oldUrl
-         * this (me)
-         *  urlValid
-         *  urlErrors
-         *  urlDeployedDup
-         *  urlEditorDup
-         * this (node-red)
-         *  isDeployed
-         *  validationErrors
-         *  valid
-         *  changed
-         */
-
-        // Update the deployed instances list (also updates this.isDeployed)
-        updateDeployedInstances(this)
 
         // this.urlValid = false
         this.urlErrors = {}
 
-        this.urlDeployedChanged = uibuilderInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
+        this.urlDeployedChanged = uibuilder.deployedUibInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
         this.urlChanged = (this.url !== value)
 
-        let f = Object.values(uibuilderInstances).indexOf(value)
-        this.urlDeployedDup = ( f > -1 && Object.keys(uibuilderInstances)[f] !== this.id )
+        let f = Object.values(uibuilder.deployedUibInstances).indexOf(value)
+        this.urlDeployedDup = ( f > -1 && Object.keys(uibuilder.deployedUibInstances)[f] !== this.id )
         f = Object.values(editorInstances).indexOf(value)
         this.urlEditorDup = ( f > -1 && Object.keys(editorInstances)[f] !== this.id )
-
-        // Node is an editor dup but not deployed therefore must be a copy/paste or maybe an import
-        if ( this.isDeployed === false && this.urlEditorDup === true ) {
-            this.urlErrors.config = 'Pasted or imported, URL must be changed'
-            // Reset the url's because we need a new one (but don't trigger url change as this will be new)
-            value = ''
-            this.url = this.oldUrl = undefined
-            $('#node-input-url').val('')
-            log('[uib] >> Copy/Paste >>', this.id, 'this.url:', this.url, ', value:', value, ', this.oldUrl:', this.oldUrl )
-        }
 
         // If value is undefined, node hasn't been configured yet - we assume empty url which is invalid
         if ( value === undefined ) {
@@ -2037,7 +1979,7 @@
 
             // Remove the recorded instance
             // delete editorInstances[this.id]
-            log('[uib] >> deleting >> isDeployed? ', this.isDeployed, uibuilderInstances[this.id] !== undefined)
+            log('[uib] >> deleting >> isDeployed? ', this.isDeployed, uibuilder.deployedUibInstances[this.id] !== undefined)
 
             // Only warn if the node has been deployed
             if ( this.isDeployed ) {
