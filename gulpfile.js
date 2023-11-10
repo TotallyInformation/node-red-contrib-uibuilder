@@ -504,7 +504,7 @@ function packUiNode(cb) {
  * @param {Function} cb Callback
  */
 function buildUibVarIIFEmin(cb) {
-    src('src/components/uib-var/uib-var.js')
+    src('src/components/uib-var.js')
         .pipe(gulpEsbuild({
             outfile: 'uib-var.iife.min.js',
             bundle: true,
@@ -550,7 +550,7 @@ function buildUibVarIIFEmin(cb) {
  * @param {Function} cb Callback
  */
 function buildUibVarIIFE(cb) {
-    src('src/components/uib-var/uib-var.js')
+    src('src/components/uib-var.js')
         .pipe(gulpEsbuild({
             outfile: 'uib-var.iife.js',
             bundle: true,
@@ -987,7 +987,7 @@ function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('src/front-end/uibuilderfe.dev.js', packfe)
     watch(['src/front-end-module/uibuilder.module.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
-    watch('src/components/uib-var/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    watch('src/components/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     // watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
@@ -1003,7 +1003,7 @@ function watchme(cb) {
     watch('src/editor/uib-html/*', buildPanelHTML)
     watch('src/editor/uib-save/*', buildPanelSave)
     watch('front-end/uib-brand.css', minifyBrandCSS)
-    // watch('src/components/uib-var/uib-var.js', parallel(buildUibVarIIFE, buildUibVarIIFEmin))
+    // watch('src/components/uib-var.js', parallel(buildUibVarIIFE, buildUibVarIIFEmin))
     // watch('src/libs/*', buildNodeLibs)
 
     cb()

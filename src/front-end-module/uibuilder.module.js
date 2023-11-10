@@ -30,7 +30,7 @@
 //#region --- We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui'
-import UibVar from '../components/uib-var/uib-var'
+import UibVar from '../components/uib-var'
 import io from 'socket.io-client'
 
 // TODO - Maybe - check if already loaded as window['io']?
