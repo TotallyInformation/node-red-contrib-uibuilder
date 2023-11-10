@@ -669,7 +669,7 @@ function Uib(RED) {
             uibuilderCurrentVersion: { value: (uib.version), exportable: true },
             // Should the editor tell the user that a redeploy is needed (based on uib versions)
             uibuilderRedeployNeeded: { value: uib.reDeployNeeded, exportable: true },
-            // List of the deployed uib instances [{node_id: url}]
+            // TODO REMOVE? since only correct at first load and an API is needed anyway. List of the deployed uib instances [{node_id: url}]
             uibuilderInstances: { value: uib.instances, exportable: true },
             // uibRoot
             uibuilderRootFolder: { value: uib.rootFolder, exportable: true },
