@@ -470,6 +470,7 @@
  * fname: string;
  * createFolder: boolean;
  * reload: boolean;
+ * usePageName: boolean;
  * encoding: string;
  * mode: number;
  * uibId: string;

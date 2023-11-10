@@ -60,27 +60,47 @@ const mod = {
  */
 async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
 
-    // const RED = mod.RED
+    const RED = mod.RED
+    let statusColor = 'blue'
 
-    // TODO check if msg.payload exists
+    // TODO Update node doc
     // TODO msg/config overrides
-    // TODO Check the _ui pagename property if fname not set - to allow auto-updates to pages
+    // TODO Check the _uib/_ui pageName property if fname not set - to allow auto-updates to pages
 
-    // TODO Make the folder name in Editor default to `src`
-
-    // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
-
-    // Call uibuilder shared library to save file (optional sub-folder creation and client reload)
-    try {
-        await uibFs.writeInstanceFile(this.url, this.folder, this.fname, msg.payload, this.createFolder, this.reload)
-        this.counters.success++
-        this.statusDisplay = { fill: 'green', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
-    } catch (err) {
+    if (!msg.payload) {
         this.counters.fail++
-        this.statusDisplay = { fill: 'red', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
-        this.error(`🛑${err.message}`, err)
+        statusColor = 'red'
+        this.error('🛑 msg.payload not present or empty. File not saved.')
+    } else {
+        let folder = this.folder
+        let fname = this.fname
+
+        // If "Use pageName"
+        if (this.usePageName === true && ( (msg._uib && msg._uib.pageName) || (msg._ui && msg._ui.pageName) )) {
+            fname = msg._uib ? msg._uib.pageName : msg._ui.pageName
+            const srcNode = RED.nodes.getNode(this.uibId)
+            folder = srcNode.sourceFolder
+        } else {
+            this.warn('Use pageName requested but neither msg._uib nor msg._ui exists')
+        }
+
+        // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
+        if (!folder && msg.folder) folder = msg.folder
+        if (!fname && msg.fname) fname = msg.fname
+
+        // Call uibuilder shared library to save file (optional sub-folder creation and client reload)
+        try {
+            await uibFs.writeInstanceFile(this.url, folder, fname, msg.payload, this.createFolder, this.reload)
+            this.counters.success++
+            statusColor = 'green'
+        } catch (err) {
+            this.counters.fail++
+            statusColor = 'red'
+            this.error(`🛑 ${err.message}`, err)
+        }
     }
 
+    this.statusDisplay = { fill: statusColor, shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
     setNodeStatus( this )
 
     // We are done
@@ -108,6 +128,7 @@ function nodeInstance(config) {
     this.fname = config.fname ?? ''
     this.createFolder = config.createFolder ?? false
     this.reload = config.reload ?? false
+    this.usePageName = config.usePageName ?? false
     this.encoding = config.encoding ?? 'utf8'
     this.mode = config.mode ?? 0o666
     this.uibId = config.uibId ?? ''

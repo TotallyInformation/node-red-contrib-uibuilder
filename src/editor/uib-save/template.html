@@ -8,26 +8,32 @@
     </div>
     <hr>
           
-    <div aria-label="Folder to save to" class="form-row">
+    <div aria-label="If set, `msg._uib.pageName` or `msg._ui.pageName` will be used instead of the file name. Folder will be set to the current served folder for the node." class="form-row">
+        <label for="node-input-usePageName">
+            Use pageName
+        </label>
+        <input type="checkbox" id="node-input-usePageName" style="display: inline-block; width: auto; vertical-align: top;">
+    </div>
+    <div aria-label="Folder to save to (relative to node instance root folder). Leave blank to use `msg.folder`. `..` not allowed." class="form-row" id="folder">
         <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Folder</label>
         <input type="text" id="node-input-folder">
     </div>
-    <div aria-label="File name" class="form-row">
+    <div aria-label="File name. Leave blank to use `msg.fname`. May have prefixed sub-folders. `..` not allowed." class="form-row" id="fname">
         <label for="node-input-fname"><i class="fa fa-file-code-o"></i> File</label>
         <input type="text" id="node-input-fname">
     </div>
 
-    <div aria-label="If set and folder name does not exist, it will be created." class="form-row">
-        <input type="checkbox" id="node-input-createFolder" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-createFolder" style="width: 90%;">
+    <div aria-label="If set and sub-folder name(s) do not not exist, they will be created." class="form-row">
+        <label for="node-input-createFolder">
             Create Folder?
         </label>
+        <input type="checkbox" id="node-input-createFolder" style="display: inline-block; width: auto; vertical-align: top;">
     </div>
-    <div aria-label="If set connected client browser tabs will be automatically reloaded." class="form-row">
-        <input type="checkbox" id="node-input-reload" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-reload" style="width: 90%;">
+    <div aria-label="If set, connected client browser tabs will be automatically reloaded." class="form-row">
+        <label for="node-input-reload">
             Reload Clients?
         </label>
+        <input type="checkbox" id="node-input-reload" style="display: inline-block; width: auto; vertical-align: top;">
     </div>
     <div aria-label="Character coding for text inputs" class="form-row">
         <label for="node-input-encoding"><i class="fa fa-file-text-o"></i> Encoding</label>

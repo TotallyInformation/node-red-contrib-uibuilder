@@ -36,6 +36,7 @@
      */
     function onEditPrepare(node) {
         // initial checkbox states
+        $('#node-input-usePageName').prop('checked', node.usePageName)
         $('#node-input-createFolder').prop('checked', node.createFolder)
         $('#node-input-reload').prop('checked', node.reload)
 
@@ -73,6 +74,27 @@
             $('#node-input-url').val(node.url)
         }
 
+        // If "Use pageName" is set, disable the folder and file fields.
+        $('#node-input-usePageName').on('change', function() {
+            if ($(this).prop('checked') === true) {
+                $('#node-input-folder').attr('disabled', true)
+                $('#folder').css('color', 'var(--red-ui-tab-text-color-disabled-active)')
+                $('#node-input-folder').css('background-color', 'var(--red-ui-form-text-color-disabled)')
+
+                $('#node-input-fname').attr('disabled', true)
+                $('#fname').css('color', 'var(--red-ui-tab-text-color-disabled-active)')
+                $('#node-input-fname').css('background-color', 'var(--red-ui-form-text-color-disabled)')
+            } else {
+                $('#node-input-folder').attr('disabled', false)
+                $('#folder').removeAttr('style')
+                $('#node-input-folder').removeAttr('style')
+
+                $('#node-input-fname').attr('disabled', false)
+                $('#fname').removeAttr('style')
+                $('#node-input-fname').removeAttr('style')
+            }
+        })
+
         uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
@@ -85,6 +107,7 @@
             fname: { value: '', },
             createFolder: { value: false, },
             reload: { value: false, },
+            usePageName: { value: false, },
             encoding: { value: 'utf8' },
             mode: { value: 0o666 },
             name: { value: '' },

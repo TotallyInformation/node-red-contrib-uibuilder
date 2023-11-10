@@ -24,7 +24,7 @@
             "37aa33db5588a33b"
         ],
         "x": 54,
-        "y": 587,
+        "y": 627,
         "w": 532,
         "h": 114
     },
@@ -32,7 +32,7 @@
         "id": "ebeecf45c78a4219",
         "type": "group",
         "z": "8d5d4002ce6fd551",
-        "name": "Trigger htmlSend cmd, send to uibuilder. Returned HTML is used as template, no-code additions made in Node-RED and saved back to default index.html \\n ",
+        "name": "Trigger htmlSend cmd, send to uibuilder. Returned HTML is used as template, no-code additions made in Node-RED and saved back to default index.html \\n Shows how to use uib-save when making no-code changes from Node-RED. \\n ",
         "style": {
             "fill": "#ffffbf",
             "fill-opacity": "0.28",
@@ -50,15 +50,15 @@
             "9b79f2f5522fc258"
         ],
         "x": 54,
-        "y": 323,
+        "y": 347,
         "w": 1092,
-        "h": 98
+        "h": 114
     },
     {
         "id": "aad125b663744f23",
         "type": "group",
         "z": "8d5d4002ce6fd551",
-        "name": "Trigger htmlSend cmd, send to uibuilder. Returned HTML is saved directly back to default index.html \\n ",
+        "name": "Trigger htmlSend cmd, send to uibuilder. Returned HTML is saved directly back to default index.html \\n Use this if making changes to the UI in front-end Code. Could also trigger htmlSend in front-end if preferred. \\n ",
         "style": {
             "fill": "#ffefbf",
             "fill-opacity": "0.26",
@@ -71,9 +71,9 @@
             "ec15535f1c34f422"
         ],
         "x": 54,
-        "y": 203,
-        "w": 628,
-        "h": 98
+        "y": 207,
+        "w": 675,
+        "h": 114
     },
     {
         "id": "f74ce23ede1c232e",
@@ -94,7 +94,7 @@
             "365c01dfb58b06fb"
         ],
         "x": 54,
-        "y": 447,
+        "y": 487,
         "w": 812,
         "h": 114
     },
@@ -115,7 +115,7 @@
         "reload": false,
         "sourceFolder": "src",
         "deployedVersion": "6.6.0",
-        "showMsgUib": false,
+        "showMsgUib": true,
         "title": "",
         "descr": "",
         "x": 300,
@@ -134,7 +134,7 @@
         "type": "debug",
         "z": "8d5d4002ce6fd551",
         "name": "uib Std Output",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": true,
@@ -152,7 +152,7 @@
         "type": "inject",
         "z": "8d5d4002ce6fd551",
         "g": "645daef38984ece2",
-        "name": "video",
+        "name": "parameters",
         "props": [
             {
                 "p": "filename",
@@ -165,12 +165,12 @@
             },
             {
                 "p": "fname",
-                "v": "flower.mp4",
+                "v": "fred/jim/flower1.mp4",
                 "vt": "str"
             },
             {
                 "p": "folder",
-                "v": "src",
+                "v": "src/videos",
                 "vt": "str"
             }
         ],
@@ -179,8 +179,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "video-file",
-        "x": 150,
-        "y": 660,
+        "x": 170,
+        "y": 700,
         "wires": [
             [
                 "e030779b263e0dc5"
@@ -216,8 +216,8 @@
         "sendError": false,
         "encoding": "none",
         "allProps": false,
-        "x": 300,
-        "y": 660,
+        "x": 320,
+        "y": 700,
         "wires": [
             [
                 "37aa33db5588a33b"
@@ -231,16 +231,17 @@
         "g": "645daef38984ece2",
         "url": "test-uib-save",
         "uibId": "abbfeec826d76d49",
-        "folder": "src",
-        "fname": "fred/jim/flower.mp4",
+        "folder": "",
+        "fname": "",
         "createFolder": false,
-        "reload": true,
+        "reload": false,
+        "usePageName": false,
         "encoding": "",
         "mode": "",
         "name": "",
         "topic": "",
         "x": 490,
-        "y": 660,
+        "y": 700,
         "wires": []
     },
     {
@@ -252,7 +253,7 @@
         "topic": "",
         "useTemplate": true,
         "x": 900,
-        "y": 380,
+        "y": 420,
         "wires": [
             [
                 "a643b60b93475b0e"
@@ -280,7 +281,7 @@
         "to": "",
         "reg": false,
         "x": 630,
-        "y": 380,
+        "y": 420,
         "wires": [
             [
                 "b32463ac6e1792ea"
@@ -310,7 +311,7 @@
         "passthrough": false,
         "confData": {},
         "x": 770,
-        "y": 380,
+        "y": 420,
         "wires": [
             [
                 "ec39ca6384333473"
@@ -340,7 +341,7 @@
         "onceDelay": 0.1,
         "topic": "sendHtml",
         "x": 180,
-        "y": 260,
+        "y": 280,
         "wires": [
             [
                 "ec15535f1c34f422"
@@ -357,7 +358,9 @@
         "propertyType": "msg",
         "rules": [
             {
-                "t": "null"
+                "t": "eq",
+                "v": "sendHtml",
+                "vt": "str"
             },
             {
                 "t": "else"
@@ -367,7 +370,7 @@
         "repair": false,
         "outputs": 2,
         "x": 345,
-        "y": 380,
+        "y": 420,
         "wires": [
             [
                 "63fb9f1ff9a81a32"
@@ -387,12 +390,13 @@
         "fname": "index.html",
         "createFolder": false,
         "reload": true,
+        "usePageName": true,
         "encoding": "",
         "mode": "",
         "name": "",
         "topic": "",
         "x": 1050,
-        "y": 380,
+        "y": 420,
         "wires": []
     },
     {
@@ -416,7 +420,7 @@
         "to": "",
         "reg": false,
         "x": 460,
-        "y": 380,
+        "y": 420,
         "wires": [
             [
                 "0268e4370f37cffc"
@@ -444,7 +448,7 @@
         "to": "",
         "reg": false,
         "x": 240,
-        "y": 520,
+        "y": 560,
         "wires": [
             [
                 "b944af2232a0376b"
@@ -474,7 +478,7 @@
         "passthrough": false,
         "confData": {},
         "x": 440,
-        "y": 520,
+        "y": 560,
         "wires": [
             [
                 "a39f35ec8b4e3537"
@@ -489,7 +493,7 @@
         "name": "",
         "topic": "",
         "x": 620,
-        "y": 520,
+        "y": 560,
         "wires": [
             [
                 "2c96aa60808d84db"
@@ -512,7 +516,7 @@
         "name": "",
         "topic": "",
         "x": 770,
-        "y": 520,
+        "y": 560,
         "wires": []
     },
     {
@@ -528,7 +532,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 115,
-        "y": 520,
+        "y": 560,
         "wires": [
             [
                 "ff798359e2bbc2bd"
@@ -571,7 +575,7 @@
         "type": "debug",
         "z": "8d5d4002ce6fd551",
         "name": "uib Std Output",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": true,
@@ -595,12 +599,13 @@
         "fname": "index.html",
         "createFolder": false,
         "reload": true,
+        "usePageName": true,
         "encoding": "",
         "mode": "",
         "name": "",
         "topic": "",
         "x": 530,
-        "y": 260,
+        "y": 280,
         "wires": []
     },
     {
@@ -647,7 +652,7 @@
         "linkType": "static",
         "timeout": "30",
         "x": 325,
-        "y": 260,
+        "y": 280,
         "wires": [
             [
                 "7c3acf059c70b284"
@@ -689,7 +694,7 @@
         "onceDelay": 0.1,
         "topic": "sendHtml",
         "x": 180,
-        "y": 380,
+        "y": 420,
         "wires": [
             [
                 "9b79f2f5522fc258"
@@ -708,7 +713,7 @@
         "linkType": "static",
         "timeout": "30",
         "x": 295,
-        "y": 380,
+        "y": 420,
         "wires": [
             [
                 "972d802e014f60d6"
