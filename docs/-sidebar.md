@@ -26,6 +26,7 @@
   * [Functions](client-docs/functions.md)
   * [Variables](client-docs/variables.md)
   * [Custom Components](client-docs/custom-components.md "The built-in uib-var component, using external components")
+  * [Routing Library](client-docs/fe-router.md "A full-featured front-end router for Single Page Apps and other use")
   * [Custom Events](client-docs/custom-events.md)
   * [uib-brand Style Sheet](client-docs/uib-brand-css.md "How to use the UIBUILDER standard style sheet uib-brand.css")
   * [Troubleshooting](client-docs/troubleshooting.md)
@@ -52,6 +53,7 @@
   * [Change the root folder (uibRoot)](how-to/changing-uibroot.md)
   * [Create instance-specific API's](how-to/instance-apis.md)
   * [How & why to use the sender node](how-to/sender-node.md)
+  * [How to use low-code in the browser](how-to/use-low-code-in-fe.md "Define and update elements in the browser using low-code")
   * [Other How-To's](how-to/README.md)
 * Security
   * [Securing uib web apps](security/security.md "Overview of general web app security with some specifics for Node-RED and UIBUILDER")
