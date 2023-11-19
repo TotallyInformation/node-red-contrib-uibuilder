@@ -3,7 +3,7 @@ title: UIBUILDER Front-End Router Library
 description: >
   Details on the configuration and use of UIBUILDER's front-end router.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-11-19 15:48:57
+lastUpdated: 2023-11-19 17:21:15
 ---
 
 The `uibrouter` front-end library defines a `UibRouter` class. This allows both internal and external content to be dynamically shown, allowing the creation of "Single-Page Apps" (SPA's) or simply keeping parts of the UI hidden from the users until they need them.
@@ -75,6 +75,12 @@ Which mode you use will be dependent on what you want to achieve.
 
 TBC - See the example below for configuration settings.
 
+## Defining route templates
+
+Internal route templates are simply valid HTML wrapped in a `<template>` tag. They may contain `<style>` and `<script>` tags if needed though note the potential issues listed below. Internal templates can go into the `<head>` section of your HTML if you want to keep the `<body>` clear. Template tags are standard HTML and are not loaded into the DOM.
+
+External route templates are simply HTML files with the same format as the internal route templates shown (without the `<template>` tags). They should be HTML document fragments and so should not have `<!doctype html>`, `<html>`, `<head>`, or `<body>` tags. The router will automatically load the templates on startup. The external templates are loaded to the end of the `<head>` section of the page HTML.
+
 ## Events
 
 These are the custom `document` events used by the router class. Listen for them using `document.addEventListener('eventname', callbackFn)`. The callback function may receive additional data as an argument where shown below.
@@ -121,14 +127,38 @@ TBC
 
 TBC
 
+## Using with UIBUILDER
+
+While not dependent on UIBUILDER, the router class does work nicely with it.
+
+The simplest way to report route changes back to Node-RED is to use uibuilder's `watchUrlHash()` function or monitor changes on the managed variable `urlHash`.
+
+The `watchUrlHash()` function will send a message back to Node-RED with the following format:
+
+```json
+{
+    "topic": "hashChange",
+    "payload": "#route02",
+    "newHash": "#route02",
+    "oldHash": "#route01",
+    "_socketId": "sXQLk3yJw-8AkMg6AAH6",
+    // "_uib": { ... }, // Shown if `Include msg._uib in standard msg output.` turned on in uibuilder node
+    "_msgid": "7304ef8d00bee8b4"
+}
+```
+
+You will probably want the "Include msg._uib in standard msg output" flag turned on in the uibuilder node so that you can know which client id and page the notification came from.
+
+This feature can be turned on in your front-end code with `uibuilder.watchUrlHash()` or from Node-RED by sending a uibuilder command message with `msg._ui` set to `{"command": "watchUrlHash"}` (which toggles the watch on/off). See [Control from Node-RED](client-docs/control-from-node-red#watchurlhash-watch-for-url-hash-changes) in the docs for more details.
+
 ## Notes
 
 * You can reference elements added in the template from the script in the template (the addEventListener for example).
-* Your routes can be a mix of external files and <template> tags.
+* Your routes can be a mix of external files and `<template>` tags.
 * An incorrect URL for an external template will give a console error but everything else will still work.
 * You can define a container that the output route goes into but if you don't give your own, one is added. 
 * If you give a route container id that doesn't actually exist, a div will be created for you at the end of the body.
-* Manually added templates can go anywhere in the HTML but I put them in the <head> out of the way. External templates are added to the end of the head.
+* Manually added templates can go anywhere in the HTML but I put them in the `<head>` out of the way. External templates are added to the end of the head.
 * The exact order of the templates in the HTML is not guaranteed because they are all loaded in parallel. This should not matter.
 * The external templates are ALL loaded into the page when the router is set up. This wouldn't normally cause any issues but if you had many dozens of really big templates, you might get some memory issues.
 * Remember that styles in external templates only exist while that route is loaded. While you can reference that style anywhere on page, it will only apply when the route is loaded. This could be used to get some interesting effects.
@@ -182,4 +212,66 @@ With a simple HTML Menu:
     <li><a href="#route03?doh=rei">#3 (External template)</a></li>
     <li><a href="#route04">#4 (fails as the external route template doesn't exist)</a></li>
 </ul>
+```
+
+To load the library when using with UIBUILDER (based on the "Blank" uibuilder template):
+
+```html
+<!doctype html>
+<html lang="en"><head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+
+    <title>Blank template - Node-RED uibuilder</title>
+    <meta name="description" content="Node-RED uibuilder - Blank template">
+
+    <!-- Your own CSS (defaults to loading uibuilders css)-->
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+
+    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
+    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+    <script defer src="../uibuilder/utils/uibrouter.iife.min.js"></script>
+    <script defer src="./index.js"></script>
+    <!-- #endregion -->
+
+    <template id="route01">
+        <h2>This comes from an internal <code class="r01style">&lt;template></code> tag</h2>
+        <div>
+            Route 1
+        </div>
+        <script>
+            console.log('I was produced by a script in Route 1')
+        </script>
+        <style>
+            .r01style {
+                background-color: yellow;
+                color: blue;
+                font-weight: 900;
+            }
+        </style>
+    </template>
+    <template id="route02">
+        <h2>This also comes from an internal <code>&lt;template></code> tag</h2>
+        <div class="extraclass">
+            Route 2
+        </div>
+    </template>
+
+</head><body class="uib">
+
+    <h1 class="with-subtitle">A simple front-end router example</h1>
+    <div role="doc-subtitle">Using the uibuilder and uibrouter IIFE libraries.</div>
+
+    <div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>
+
+    <ul id="routemenu">Route Menu
+        <li><a href="#route01">#1 (Internal template)</a></li>
+        <li><a href="#route02">#2 (Internal template)</a></li>
+        <li><a href="#route03?doh=rei">#3 (External template)</a></li>
+        <li><a href="#route04">#4 (fails as the external route template doesn't exist)</a></li>
+    </ul>
+
+</body></html>
 ```
