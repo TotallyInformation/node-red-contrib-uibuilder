@@ -1,0 +1,529 @@
+[
+    {
+        "id": "edd8d2f3f3b4cbd4",
+        "type": "tab",
+        "label": "uib-tag Tests",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "fda6af47f8efd93c",
+        "type": "group",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "Add a <div> tag contining some dynamic text, an <hr>, and an <a> tag using uib-tag nodes \\n <hr> has no ID so cannot be removed on its own, only via its parent. <a> tag's slot text is defined in the node so no extra change node needed. \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "2e1608671f832f89",
+            "bd00d8ddcfb2f246",
+            "d1a6b45a924ac77d",
+            "bd4f0bd4e10cb11f",
+            "faa3acf6d4d7ac93",
+            "8dfa3dc8a661ae03",
+            "a5758452c7eee3c7"
+        ],
+        "x": 84,
+        "y": 287,
+        "w": 992,
+        "h": 154
+    },
+    {
+        "id": "7d8c6d1c54f88ff0",
+        "type": "group",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "Dynamically add a button that sends a msg back here using eventSend. \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "5903b4f7cd6b15de",
+            "a32b53f1fd7fed98",
+            "a08c1ef3d9db753c",
+            "9c292d244aaa59bc"
+        ],
+        "x": 84,
+        "y": 463,
+        "w": 992,
+        "h": 138
+    },
+    {
+        "id": "c1d95d94bbaf210d",
+        "type": "junction",
+        "z": "edd8d2f3f3b4cbd4",
+        "x": 520,
+        "y": 200,
+        "wires": [
+            [
+                "ea2a845fc20e1963"
+            ]
+        ]
+    },
+    {
+        "id": "93aecd2b7edf0f21",
+        "type": "comment",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "uib-tag example - similar to uib-element but adds/replaces a single HTML or web component element (tag)",
+        "info": "",
+        "x": 440,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "2e1608671f832f89",
+        "type": "link out",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "fda6af47f8efd93c",
+        "name": "link out 61",
+        "mode": "link",
+        "links": [
+            "6745857ca796a9a3"
+        ],
+        "x": 1035,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "bd00d8ddcfb2f246",
+        "type": "inject",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "fda6af47f8efd93c",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uib-tag",
+        "payload": "\"[\" & $formatInteger($random() * 100, \"#00\") & \"] Dynamic title\"",
+        "payloadType": "jsonata",
+        "x": 200,
+        "y": 360,
+        "wires": [
+            [
+                "d1a6b45a924ac77d"
+            ]
+        ]
+    },
+    {
+        "id": "d1a6b45a924ac77d",
+        "type": "uib-tag",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "fda6af47f8efd93c",
+        "name": "",
+        "topic": "",
+        "tag": "div",
+        "parent": "body",
+        "parentSourceType": "str",
+        "elementId": "tag-div1",
+        "elementIdSourceType": "str",
+        "position": "3",
+        "positionSourceType": "str",
+        "slotSourceProp": "payload",
+        "slotSourcePropType": "msg",
+        "attribsSource": "{\"style\":\"border:1px solid red;padding:1em;background-color:var(--surface3);\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 380,
+        "y": 360,
+        "wires": [
+            [
+                "8dfa3dc8a661ae03"
+            ]
+        ]
+    },
+    {
+        "id": "bd4f0bd4e10cb11f",
+        "type": "uib-tag",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "fda6af47f8efd93c",
+        "name": "",
+        "topic": "",
+        "tag": "a",
+        "parent": "#tag-div1",
+        "parentSourceType": "str",
+        "elementId": "tag-a1",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "A Link",
+        "slotSourcePropType": "str",
+        "attribsSource": "{\"href\":\"http://example.com\",\"title\":\"A link\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 850,
+        "y": 360,
+        "wires": [
+            [
+                "2e1608671f832f89"
+            ]
+        ]
+    },
+    {
+        "id": "faa3acf6d4d7ac93",
+        "type": "inject",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "fda6af47f8efd93c",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 190,
+        "y": 400,
+        "wires": [
+            [
+                "d1a6b45a924ac77d"
+            ]
+        ]
+    },
+    {
+        "id": "8dfa3dc8a661ae03",
+        "type": "uib-tag",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "fda6af47f8efd93c",
+        "name": "",
+        "topic": "",
+        "tag": "hr",
+        "parent": "#tag-div1",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "",
+        "attribsSourceType": "msg",
+        "slotPropMarkdown": false,
+        "x": 600,
+        "y": 360,
+        "wires": [
+            [
+                "bd4f0bd4e10cb11f"
+            ]
+        ]
+    },
+    {
+        "id": "a5758452c7eee3c7",
+        "type": "inject",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "fda6af47f8efd93c",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 640,
+        "y": 400,
+        "wires": [
+            [
+                "bd4f0bd4e10cb11f"
+            ]
+        ]
+    },
+    {
+        "id": "5903b4f7cd6b15de",
+        "type": "inject",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "7d8c6d1c54f88ff0",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uib-tag",
+        "payload": "\"[\" & $formatInteger($random() * 100, \"#00\") & \"] Dynamic title\"",
+        "payloadType": "jsonata",
+        "x": 200,
+        "y": 520,
+        "wires": [
+            [
+                "a08c1ef3d9db753c"
+            ]
+        ]
+    },
+    {
+        "id": "a32b53f1fd7fed98",
+        "type": "inject",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "7d8c6d1c54f88ff0",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 190,
+        "y": 560,
+        "wires": [
+            [
+                "a08c1ef3d9db753c"
+            ]
+        ]
+    },
+    {
+        "id": "a08c1ef3d9db753c",
+        "type": "uib-tag",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "7d8c6d1c54f88ff0",
+        "name": "",
+        "topic": "",
+        "tag": "button",
+        "parent": "body",
+        "parentSourceType": "str",
+        "elementId": "tag-btn1",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "A Button",
+        "slotSourcePropType": "str",
+        "attribsSource": "{\"onclick\":\"uibuilder.eventSend(event)\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 610,
+        "y": 520,
+        "wires": [
+            [
+                "9c292d244aaa59bc"
+            ]
+        ]
+    },
+    {
+        "id": "9c292d244aaa59bc",
+        "type": "link out",
+        "z": "edd8d2f3f3b4cbd4",
+        "g": "7d8c6d1c54f88ff0",
+        "name": "link out 62",
+        "mode": "link",
+        "links": [
+            "6745857ca796a9a3"
+        ],
+        "x": 1035,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "ea2a845fc20e1963",
+        "type": "uibuilder",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "",
+        "topic": "",
+        "url": "uib-tag-tests",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.6.0",
+        "showMsgUib": true,
+        "title": "Zero-code examples",
+        "descr": "A collection of flows that demonstrate and test all of the uib-element node's output types.",
+        "x": 700,
+        "y": 140,
+        "wires": [
+            [
+                "dc571a1bb3a94cd1"
+            ],
+            [
+                "e5f3f5e262f4a538"
+            ]
+        ],
+        "info": "This example uses the default blank template.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript."
+    },
+    {
+        "id": "6745857ca796a9a3",
+        "type": "link in",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "uib-tag-tests - no cache",
+        "links": [
+            "2e1608671f832f89",
+            "9c292d244aaa59bc"
+        ],
+        "x": 375,
+        "y": 200,
+        "wires": [
+            [
+                "c1d95d94bbaf210d"
+            ]
+        ]
+    },
+    {
+        "id": "e5f3f5e262f4a538",
+        "type": "debug",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "uibuilder control output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 835,
+        "y": 160,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "dc571a1bb3a94cd1",
+        "type": "debug",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 885,
+        "y": 120,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "138223dfc1a8d9f1",
+        "type": "link in",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "uib-tag-tests - cached",
+        "links": [],
+        "x": 305,
+        "y": 140,
+        "wires": [
+            [
+                "cd7feb25748c70ea"
+            ]
+        ]
+    },
+    {
+        "id": "cd7feb25748c70ea",
+        "type": "uib-cache",
+        "z": "edd8d2f3f3b4cbd4",
+        "cacheall": false,
+        "cacheKey": "topic",
+        "newcache": true,
+        "num": 1,
+        "storeName": "default",
+        "name": "Cache (by topic)",
+        "storeContext": "context",
+        "varName": "uib_cache",
+        "x": 440,
+        "y": 140,
+        "wires": [
+            [
+                "ea2a845fc20e1963"
+            ]
+        ]
+    },
+    {
+        "id": "bbf48c026e7aeb1a",
+        "type": "inject",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "Setup",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "setup",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "8e8695231f17cac5"
+            ]
+        ]
+    },
+    {
+        "id": "8e8695231f17cac5",
+        "type": "uib-element",
+        "z": "edd8d2f3f3b4cbd4",
+        "name": "Head",
+        "topic": "",
+        "elementtype": "title",
+        "parent": "body",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "uib-tag Test Page",
+        "dataSourceType": "str",
+        "position": "first",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 270,
+        "y": 100,
+        "wires": [
+            [
+                "cd7feb25748c70ea"
+            ]
+        ]
+    }
+]
