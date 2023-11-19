@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-10-28 16:59:26
+lastUpdated: 2023-11-10 15:05:28
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -78,10 +78,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Maybe also a way to track pages? A catalogue? Maybe also an API to return all HTML file names as an array?
   * Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
   * Add functions to not only reference page-names/urls but also to automatically create menus.
+  * [Ref](https://discourse.nodered.org/t/why-would-i-want-to-use-uibuilder/81683/7?u=totallyinformation)
 
 * THEME CONFGURATOR: Something that allows manipulation of theme settings from within Node-RED
 
 * Move the ui class to a separate repo so that it can be used independently.
+* Consider using element setHTML() method if DOMsanitise is not available. [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/setHTML)
 * Consider moving all libs to separate repo to reduce number of direct dependencies. (probably requires node v16 for nested mono-repo modules)
 * Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
 * Restructure `uibuilder` node to remove fs-extra dependency to its own library module.
@@ -319,6 +321,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Individual Form Elements
     This is to enable additional form elements to be added to an existing form.
     * [ ] Select - https://www.w3.org/WAI/ARIA/apg/example-index/combobox/combobox-autocomplete-both.html
+    * [ ] Combo
     * [ ] Input
     * [ ] button (NB: add type="button" to avoid form submit issues, click=uibuilder.eventSend by default)
       * Types:
@@ -435,6 +438,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Restrict `onChange` to only watch watched variables? Optionally make the watched var managed automatically (checking to make sure it doesn't start with `_` or `#`)
 * [**STARTED**] Ability to visually show all uibuilder managed variables.
 * A way to show and change uib-brand variables visually?
+* Add extra optional flag to set() to allow saving to localStorage - where set, auto-load on (re)load
 
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
 * Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
