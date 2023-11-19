@@ -31,6 +31,7 @@ Possible `msg._uib.command` values.
 * `showStatus` - Turn on/off the display of the uibuilder client library settings.
 * `uiGet` - get detailed information about an HTML DOM element.
 * `uiWatch` - watch for changes to the HTML DOM, return messages about changes.
+* `watchUrlHash` - watch for URL Hash changes. Used for front-end routing.
 
 
 > [!NOTE]
@@ -51,7 +52,26 @@ A message containing a `msg._ui` property will be processed internally by the li
 
 Please see the [Dynamic, data-driven HTML content](config-driven-ui.md) content for details.
 
-## Navigation control
+## Navigation & routing
+
+### `watchUrlHash` Watch for URL Hash changes
+
+Typically from front-end routers and Single-Page App (SPA) style pages. URL Hash changes do not cause the browser to reload the page.
+
+Set `msg._ui` to:
+
+```jsonc
+// Toggle watcher on/off
+{"command": "watchUrlHash"}
+```
+
+```jsonc
+// Force watch ON
+{"command": "watchUrlHash", "prop": "true"}
+```
+
+
+### Navigation control
 
 Currently, only a page reload control is available. Set `msg._ui` to `{"method": "reload"}`.
 
