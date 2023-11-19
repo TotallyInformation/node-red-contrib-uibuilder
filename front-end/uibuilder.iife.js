@@ -1021,7 +1021,7 @@
   // src/front-end-module/uibuilder.module.js
   var import_ui = __toESM(require_ui());
 
-  // src/components/uib-var/uib-var.js
+  // src/components/uib-var.js
   var _UibVar = class _UibVar extends HTMLElement {
     //#endregion --- Class Properties ---
     constructor() {
@@ -5305,6 +5305,15 @@
       return exists;
     }
     // --- End of elementExists --- //
+    /** Only keep the URL Hash & ignoring query params
+     * @param {string} url URL to extract the hash from
+     * @returns {string} Just the route id
+     */
+    keepHashFromUrl(url2) {
+      if (!url2)
+        return "";
+      return "#" + url2.replace(/^.*#(.*)/, "$1").replace(/\?.*$/, "");
+    }
     /** Set up an event listener to watch for hash changes
      * and set the watchable urlHash variable
      */
@@ -5313,7 +5322,7 @@
       window.addEventListener("hashchange", (event2) => {
         this.set("urlHash", location.hash);
         if (__privateGet(this, _sendUrlHash) === true) {
-          this.send({ topic: "hashChange", payload: location.hash, newHash: location.hash });
+          this.send({ topic: "hashChange", payload: location.hash, newHash: this.keepHashFromUrl(event2.newURL), oldHash: this.keepHashFromUrl(event2.oldURL) });
         }
       });
     }

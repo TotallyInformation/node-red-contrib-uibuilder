@@ -987,6 +987,15 @@ export const Uib = class Uib {
         return exists
     } // --- End of elementExists --- //
 
+    /** Only keep the URL Hash & ignoring query params
+     * @param {string} url URL to extract the hash from
+     * @returns {string} Just the route id
+     */
+    keepHashFromUrl(url) {
+        if (!url) return ''
+        return '#' + url.replace(/^.*#(.*)/, '$1').replace(/\?.*$/, '')
+    }
+
     /** Set up an event listener to watch for hash changes
      * and set the watchable urlHash variable
      */
@@ -995,7 +1004,7 @@ export const Uib = class Uib {
         window.addEventListener('hashchange', (event) => {
             this.set('urlHash', location.hash)
             if (this.#sendUrlHash === true) {
-                this.send({ topic: 'hashChange', payload: location.hash, newHash: location.hash })
+                this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL) })
             }
         })
     }
