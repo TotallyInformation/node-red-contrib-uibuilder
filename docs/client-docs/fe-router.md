@@ -27,9 +27,34 @@ The easiest way to include the router is to use the `../uibuilder/utils/uibroute
 
 ## Triggering a route change
 
-3 ways - manually changing the URL; `<a>` tag with a hash url only; Javascript using `router.doRoute('routeid')`
+There are three ways to trigger a route change:
 
-TBC
+* Manually changing the URL, adding `#routeid`
+* Link tags with a hash url only, `<a href="#routeid">`
+* Javascript using `router.doRoute('routeid')`
+
+Here is an example of a very simplistic menu that uses URL links:
+
+```html
+<ul id="routemenu">Route Menu
+    <li><a href="#route01">#1 (Internal template)</a></li>
+    <li><a href="#route02">#2 (Internal template)</a></li>
+    <li><a href="#route03?doh=rei">#3 (External template)</a></li>
+    <li><a href="#route04">#4 (fails as the external route template doesn't exist)</a></li>
+</ul>
+```
+
+And an example of triggering a route change in code:
+
+```javascript
+router.doRoute('route02')
+```
+
+Or even from a click event on a random HTML element:
+
+```html
+<div href="#route01" onclick="router.doRoute(event)">Go to route #1 via click event handler.</div>
+```
 
 ## Operational modes
 
@@ -39,16 +64,16 @@ The default mode deletes a route's HTML when a route change occurs and duplicate
 
 The hide/show alternate mode, only duplicates the route template once, on first access. Subsequent route changes just set the route container to CSS `display: none` before either duplicating a new template into place or removing (unhiding) the `display: none` if that route had previously been selected.
 
-| Mode      | Advantages | Disadvantages                                                |
-| --------- | ---------- | ------------------------------------------------------------ |
-| Clone     |            | Any `script` tags are re-executed. So requires code that should not be re-executed (such as code that creates global variables or functions) to be wrapped with a flag che |
-| Hide/Show |            |                                                              |
+| Mode      | Advantages                                                   | Disadvantages                                                |
+| --------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Clone     | Keeps `<body>` code as simple as possible.<br /><br />The visible clone is reset back to the template on every access. | Any `script` tags are re-executed. So requires code that should not be re-executed (such as code that creates global variables or functions) to be wrapped with a flag che |
+| Hide/Show | `script` tags in routes are only executed once.<br /><br />Templates can be unloaded after use. | `script`s cannot be run multiple times, define a function can call that instead.<br /><br />The visible clone cannot be reset back to the default. Once accessed, the template is never used again.<br /><br />Clutters up `body` code, potentially keeps duplicate code in memory (the template and the visible clone) unless you forcibly unload the template after access. |
 
-TBC
+Which mode you use will be dependent on what you want to achieve.
 
 ## Configuration
 
-TBC
+TBC - See the example below for configuration settings.
 
 ## Events
 
@@ -146,4 +171,15 @@ const routerConfig = {
     ],
 }
 const router = new UibRouter(routerConfig)
+```
+
+With a simple HTML Menu:
+
+```html
+<ul id="routemenu">Route Menu
+    <li><a href="#route01">#1 (Internal template)</a></li>
+    <li><a href="#route02">#2 (Internal template)</a></li>
+    <li><a href="#route03?doh=rei">#3 (External template)</a></li>
+    <li><a href="#route04">#4 (fails as the external route template doesn't exist)</a></li>
+</ul>
 ```
