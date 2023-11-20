@@ -5967,8 +5967,9 @@
           msg.payload[entry.key] = entry.val;
         });
       }
-      if (domevent.type === "change")
-        msg._ui.newValue = msg.payload.value = domevent.target.value;
+      if (domevent.type === "change") {
+        msg._ui.newValue = msg.payload.value = "checked" in target ? target.checked : domevent.target.value;
+      }
       log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
       if (target.dataset && target.dataset.length === 0)
         log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();

@@ -19,7 +19,8 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
   * [ ] ~~uib-list~~ - deprecated, don't bother
   * [ ] uibuilder - harder
 
-* uib-element: Move element constructors into their own library and build versions that can be loaded into the browser. 
+* Move runtime `buildUi` to common library
+* uib-element/uib-tag: Move element constructors into their own library and build versions that can be loaded into the browser. 
   
   Consider putting each element in its own source js file and using a build process. This will allow their use when converting to web components. Add a master js with all components but allow each to be individually loaded.
 
@@ -31,8 +32,13 @@ Check the [roadmap](./docs/roadmap.md) for future developments.
 
   Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
 
+* Add uib.var function as a test of using a proxy to manage vars and work with the uib-var component.
+
 ### TO FIX
 
+* uib-tag-tests example - update with ctrl output link.
+* Remove tooltip from ace/monaco wrapper.
+* uib-update - content source should default to msg.payload.
 * Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
 * uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
 * uib-tag - Attribs Source - should be "None" as default
@@ -58,11 +64,16 @@ Nothing currently.
 
 ### Highlights
 
+* The new front-end routing library is available. Easy to use, robust and reasonably comprehensive. It is not dependent on uibuilder but offered with it to enable Single-Page Apps (SPA's) to be easily created with uibuilder.
 * The `uib-html` node now allows an HTML string wrapper. This defaults to uibuilder's default "Blank" template HTML or can be overridden using `msg.template`. This lets you create a fully working page from no-code and low-code configurations that can be fed direct to `uib-save` or used in Dashboard or with http-in/-out nodes. Or indeed with external web server tools.
 
 ### Fixes
 
 * Client htmlSend, when called as a Node-RED command, was returning 2 messages. Now returns the HTML string and sends it to Node-RED directly only if the new 2nd argument is TRUE (the default so that direct calls will still work without changes).
+
+### New client library - uibrouter - front-end routing library
+
+A complete, standalone library for doing front-end routing with both internal and external templates. Lightweight and simple to use. See the [documentation](docs/client-docs/fe-router.md) for details.
 
 ### `uib-html` improvements
 
@@ -81,8 +92,13 @@ Nothing currently.
 * The filename can include folders (use `/` as separator) and missing folders will be created automatically if the "Create Folder" flag is set. Note that you cannot have any `..` in the filename, this is to prevent escaping from the instance root folder and causing mayhem elsewhere. By default, new folders cannot be created (this is a safety feature), select the "Create Folder?" flag to allow creation.
 * The Editor js has been moved out of the html file and put into `resources/uib-save.js`. It is loaded by the html file in a link. This makes development a lot easier. The code also references `resources/ti-common.js` to ensure consistency.
 
+### `uib-tag` improvements
+
+* **FIXED** - Tag name input would only accept string. Now correctly processes other types.
+
 ### Client library improvements
 
+* **FIXED** `eventSend` when attached to a change event returns the `value` property that all `input` tags have - except when they don't! When input is used as a checkbox, it has a `checked` property instead. Function changed to return the checked value if it exists (`true` or `false`), the value property otherwise.
 * **NEW function and command** `watchUrlHash` - Toggle (or manually set on/off) sending URL Hash changes back to Node-RED in a standard msg.
 * **NEW watched variable** `urlHash` Set on load and updated as it changes. URL Hashes are used by front-end routing for Single-Page-Apps (SPA's). They do not reload the page.
 * **New utility function** `truthy` Takes a truthy/falsy input (e.g. text, number, boolean) and returns true or false (boolean). If input is neither truthy or falsy, can take a 2nd parameter which is the default return.
@@ -104,6 +120,8 @@ Nothing currently.
 ### Examples
 
 * `uib-save` and `uib-html` example flows added.
+* `uib-var-web-component` example flow added. Contains several examples of showing uibuilder managed variables dynamically in your HTML code. Including several no-code examples.
+* `uib-tag` example flow added.
 
 ### Other improvements
 
