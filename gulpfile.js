@@ -578,6 +578,97 @@ function buildUibVarIIFE(cb) {
 
 //#endregion -- ---- --
 
+//#region -- ESbuild uibrouter --
+function buildUibRouterIIFE(cb) {
+    src(`${feModuleSrc}/uibrouter.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'uibrouter.iife.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibRouterIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(dest('front-end/utils/'))
+        .on('end', function() {
+            cb()
+        })
+}
+function buildUibRouterIIFEmin(cb) {
+    src(`${feModuleSrc}/uibrouter.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'uibrouter.iife.min.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibRouterIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(dest('front-end/utils/'))
+        .on('end', function() {
+            cb()
+        })
+}
+function buildUibRouterESM(cb) {
+    src(`${feModuleSrc}/uibrouter.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'uibrouter.esm.js',
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibRouterIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(dest('front-end/utils/'))
+        .on('end', function() {
+            cb()
+        })
+}
+function buildUibRouterESMmin(cb) {
+    src(`${feModuleSrc}/uibrouter.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'uibrouter.esm.min.js',
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibRouterIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(dest('front-end/utils/'))
+        .on('end', function() {
+            cb()
+        })
+}
+//#endregion -- ---- --
+
 //#region -- tests --
 /** Pack (Uglify) front-end IIFE ES6 task
  * @param {Function} cb Callback
@@ -987,6 +1078,7 @@ function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('src/front-end/uibuilderfe.dev.js', packfe)
     watch(['src/front-end-module/uibuilder.module.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    watch('src/front-end-module/uibrouter.js', parallel(buildUibRouterIIFE, buildUibRouterIIFEmin, buildUibRouterESM, buildUibRouterESMmin))
     watch('src/components/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     // watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
