@@ -3,54 +3,28 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-11-10 15:05:28
+lastUpdated: 2023-11-21 18:12:36
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
 
 Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
 
-## Aims and the future
+## UIBUILDER future aims and overall direction
 
-### uibuilder aims and overall direction
+UIBUILDER will continue to be independent of front-end frameworks though it will also continue to be as compatible as possible so that any desired framework can be used with it.
 
-_THIS NEEDS AN UPDATE_
-
-The general direction of uibuilder (or associated modules) that I would like to see includes:
-
-* _STARTED_, see [node-red-experimental-nodes](https://github.com/TotallyInformation/node-red-experimental-nodes). A set of extension front-end components with well defined (reusable) data schemas for doing common UI tasks. The defined data schema's would cover both the component content and configuration data so that both could be sent from Node-RED via uibuilder and any return data structures would similarly be well defined.
-* _STARTED_, see the new front-end library in the above module. A capability to have configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code.
-* A UI designer allowing users without HTML/CSS/JS skills to create reasonable web apps without code.
-
-Information also needs to be provided to enable people to build security, identity, authentication and authorisation. As at v5, the experimental security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication.
-
-### Focus for the near future
-
-_THIS NEEDS AN UPDATE_
-
-The following is the immediate direction. These are not likely to be incuded in v5.0.0 but are likely to be added to v5.1 or maybe a little later.
-
-Current focus (beyond what has already been developed) is on:
-
-* Continuing to improve  the zero-code features.
-* Ensuring that control is easy from both front-end code and Node-RED flows. Creating visible elements and updating them should be easy and consistent.
-* Ensuring the information from the UI and the uibuilder client is easy to recover and use either in front-end code or in Node-RED.
-* Add further options for efficiency - such as easy ways to save updated HTML such that it will be used on new connections and reloads.
-* Continuing to improve the documentation. Updating details and changes, adding how-to's, moving some things from the WIKI. Improving language consistency.
-* Creating more YouTube videos.
-
-Next immediate focus will be on:
-
-* Enabling instance npm scripts to be run from the Editor.
+* It will continue to gain more zero-code pre-built elements.
+* It will gain improved control over the instance root folder structure and the ability to execute `npm run` scripts defined in the `package.json`.
+* More videos!
 
 ### Longer term focus
 
-_THIS NEEDS AN UPDATE_
+There remains a desire to build a page-builder feature so that people with no coding skills can build great data-driven web apps.
 
-* Creating usable components that have standardised data interfaces. So that other developers can produce similar outputs with different frameworks but the data that is exchanged with Node-RED remains the same. These components should make things easy that flow designers might typically want to do (notifications, forms, charts, tables, drag-and-drop, etc.)
-* Creating a visual layout generator to bridge the gap between uibuilder and Dashboard. Ideally this would be non-framework specific but this seems a very unlikely goal to hit. Would be happy for this to either use web components, Svelte or VueJS.
-* Add *option* to auto-install npm dependencies on change of Template (and possibly run an install script).
-* Possibly the addition of a `uib-dashboard` node that uses data-driven composition. As a half-way house between code-driven and visual-layout approaches.
+* The documentation quality will continue to improve.
+* The number of 3rd-party module dependencies will be reduced. Starting with the eventual removal of `fs-extra` in favour of the native promisified fs library. Followed most likely by `arun`.
+* Once Node.js v18 or 20 is the base, the code is likely to be refactored into multiple sub-packages in a mono-repo.
 
 ---
 
@@ -60,50 +34,47 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ----
 
-## Questions that need answers
-
-* How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
-* How to provide a better log output? With a simple way to link to Node-RED log output (filtered) as well as a dedicated output node. That output's to a web page with highlighting and possibly page back/fwd through history.
-
-## Possible breaking changes for the next major release
-
-* Move minimum node.js version from v14 to v16 in alignment with Node-RED v4.
-* Switch to default of case sensitive URL's for ExpressJS. Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6)
-
 ## Next - these are things that need to be done
 
 ### General changes
 
-* PAGE CREATOR: Something that creates a new page file from template. Could be an extension to uib-save?
-  * Maybe also a way to track pages? A catalogue? Maybe also an API to return all HTML file names as an array?
-  * Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
-  * Add functions to not only reference page-names/urls but also to automatically create menus.
-  * [Ref](https://discourse.nodered.org/t/why-would-i-want-to-use-uibuilder/81683/7?u=totallyinformation)
+* Complete the move of the zero- to low-code translations into the `libs/lowcode.js` library. Move runtime `buildUi` to common library.
 
-* THEME CONFGURATOR: Something that allows manipulation of theme settings from within Node-RED
+  Consider putting each element in its own source js file and using a build process. This will allow their use when converting to web components. Add a master js with all components but allow each to be individually loaded.
 
-* Move the ui class to a separate repo so that it can be used independently.
-* Consider using element setHTML() method if DOMsanitise is not available. [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/setHTML)
-* Consider moving all libs to separate repo to reduce number of direct dependencies. (probably requires node v16 for nested mono-repo modules)
-* Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
-* Restructure `uibuilder` node to remove fs-extra dependency to its own library module.
-* Restructure other nodes to move server file handling to a separate library module.
+* Complete the move of all server filing system handling into the `libs/fs.js` library. And remove dependency on `fs-extra`.
 
-* Consider adding a default CSS override to the `uibuilder` node. To be used when no CSS specificed and also to be used in admin/generated uib pages. Defaulting to `../uibuilder/uib-brand.css`.
+* Node Refactoring:
+
+  | Node        | Mv src editor.js<br>to resources   | jQ Tooltips | getSource | Notes                               |
+  | ----------- | :--------------------------------: | :---------: | :-------: | ----------------------------------- |
+  | uibuilder   |                                    |      ✔️     |           |                                     |
+  | uib-cache   |                                    |             |           |                                     |
+  | uib-element |                                    |             |     ✔️    |                                     |
+  | uib-html    |                                    |             |           |                                     |
+  | uib-save    |                 ✔️                 |      ✔️    |           |                                     |
+  | uib-sender  |                                    |             |           |                                     |
+  | uib-tag     |                                    |      ✔️    |     ✔️    |                                     |
+  | uib-update  |                                    |             |           |                                     |
+  | uib-uplot   |                                    |             |           | check this for other needed updates |
+
+  Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId]
+
+
 * [Issue #94](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/94) - Detect when Node-RED switches projects and see if the uibRoot folder can be dynamically changed.
-* Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
 
 * Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
 
 * Use alt logging for websocket disconnects, sleep, error, etc
+
+* Editor: Add panel of links to all instances of uibuilder.
+
 
 * **Example stand-alone node package as exemplar**
   * https://github.com/TotallyInformation/nr-uibuilder-uplot
   * probably chart
   * How to pass data through?
 
-* REJECTED
-  * ~~NEW NODE - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function.~~ No longer needed, use `msg._uib` commands in std msg.
 
 
 ### Updates to `uibuilder` node
@@ -248,10 +219,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Add all local package.json script entries as links/buttons so they can be run from the editor panel.
 * If `dev` script discovered in local package.json scripts, enable a dev button so that a CI dev service can be spun up (e.g. Svelte). Will need debug output to be visible in Editor?
-
-
-
-
 
 * `package-mgt.js`
   * Rationalise the various functions - several of them have similar tasks.
@@ -504,7 +471,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
       * `uibuilder` node will output control msg of type `Client Log` when client sends a beacon.
       * Make optional via flag in Editor with start msg enabling/disabling in client.
       * ? window and document events - make optional via uibuilder fe command.
-    
+  
 * Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
 * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow *sessionCache*.
 * Add a [resizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to report resize events back to Node-RED as a control msg.
@@ -525,7 +492,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add count of current errors to title
 
 ### Improvements to `uib-brand.css`
-  
+
 * Forms:
   * Allow for blank line spanning the form width.
   * Allow for information line spanning the form width.
@@ -614,6 +581,46 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * lamp - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras)
 * gauge - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras).
 
+### Ideas
+
+* PAGE CREATOR: Something that creates a new page file from template. Could be an extension to uib-save?
+  * Maybe also a way to track pages? A catalogue? Maybe also an API to return all HTML file names as an array?
+  * Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
+  * Add functions to not only reference page-names/urls but also to automatically create menus.
+  * [Ref](https://discourse.nodered.org/t/why-would-i-want-to-use-uibuilder/81683/7?u=totallyinformation)
+
+* THEME CONFGURATOR: Something that allows manipulation of theme settings from within Node-RED
+
+* Consider using element setHTML() method if DOMsanitise is not available. [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/setHTML)
+
+* Consider adding a default CSS override to the `uibuilder` node. To be used when no CSS specificed and also to be used in admin/generated uib pages. Defaulting to `../uibuilder/uib-brand.css`.
+
+* Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
+
+
+#### Questions that need answers
+
+* How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
+* How to provide a better log output? With a simple way to link to Node-RED log output (filtered) as well as a dedicated output node. That output's to a web page with highlighting and possibly page back/fwd through history.
+
+
+## UIBUILDER v7 planned breaking changes
+
+* Minimum node.js v18
+* Minimum node-red v4
+* Removal of uib-list node
+* Remove Pollyfills from uibuilder editor code
+* Switch to default of case sensitive URL's for ExpressJS. Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6)
+* Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. 
+
+  In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
+
+  Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
+
+
+
+## Ideas for releases further out
+
 ### Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
   * Node.js v14 features - code updates to leverage the latest features
     * Replace `||` default value tests with `??` .
@@ -689,14 +696,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * Fetch (Experimental 16.15.0, 18.0.0)
     * Permission model (experimental in v20)
 
-## UIBUILDER v7 planned breaking changes
 
-* Minimum node.js v18
-* Minimum node-red v4
-* Removal of uib-list node
-* Remove Pollyfills from uibuilder editor code
-
-## Ideas for releases further out
+* Move the ui class to a separate *repo* so that it can be used independently.
+* Consider moving all libs to separate repo to reduce number of direct dependencies. (probably requires node v16 for nested mono-repo modules)
+* Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
 
 * Some way to visually expose a library of JavaScript functions with their args as inputs. Maybe make this a cmd that pulls a doc from Node-RED? (keeps client lib small)
 * Using the above to visually show available uibuilder fns with inputs and outputs.
@@ -759,7 +762,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
 
- 
+
 * Add settings.js options to use different paths/names for middleware files.
 
 * Once Node-RED's baseline node.js version has moved passed v12.20, can update `execa` and use dynamic imports (and change README notes on scorecard). Once it has moved into v14, can simplify the socket.js class by reinstating the optional chaining.
@@ -868,12 +871,16 @@ These are some thoughts about possible future direction. They need further thoug
 
 ----
 
-# OLD
+## Rejected
+
+* NEW NODE - `uib-get` - Gets data from a page's DOM. Will use the `uiGet` function. **No longer needed, use `msg._uib` commands in std msg.**
+
+## OLD
 
 **Update 2022-01-19**: These are the old entries from the WIKI To Do page. They need tidying up and consolidating into the newer structure.
 **Update 2022-06-18**: Now mostly tidied and consolidated. Just a few left that I want to keep for reference.
 
-## Ideas
+### Ideas
 
 * Node(s) for specific web components. Possibly allowing the component to be pushed over ws. [Ref.1](https://markus.oberlehner.net/blog/distributed-vue-applications-pushing-content-and-component-updates-to-the-client/) - _[Keep for reference]_
 

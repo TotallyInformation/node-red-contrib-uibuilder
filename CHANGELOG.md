@@ -4,55 +4,27 @@ typora-root-url: docs/images
 
 # Changelog
 
-Please see the documentation for archived changelogs - a new archive is produced for each major version.
+Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ## To do/In-progress
 
-Check the [roadmap](./docs/roadmap.md) for future developments.
-
-* Move all src editor js files to resources. 
-  * [x] uib-save
-  * [ ] uib-html
-  * [ ] uib-element
-  * [ ] uib-update
-  * [ ] uib-sender
-  * [ ] ~~uib-list~~ - deprecated, don't bother
-  * [ ] uibuilder - harder
-
-* Move runtime `buildUi` to common library
-* uib-element/uib-tag: Move element constructors into their own library and build versions that can be loaded into the browser. 
-  
-  Consider putting each element in its own source js file and using a build process. This will allow their use when converting to web components. Add a master js with all components but allow each to be individually loaded.
-
 * Outdated examples - some of the included example flows such as the "remote-commands" example are now out of date. What is there will still work but they are no longer comprehensive. Will try to catch them up as soon as I can.
-* Editor: Add panel of links to all instances of uibuilder.
-* Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. 
-  
-  In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
-
-  Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
-
 * Add uib.var function as a test of using a proxy to manage vars and work with the uib-var component.
 
 ### TO FIX
 
-* uib-tag-tests example - update with ctrl output link.
 * Remove tooltip from ace/monaco wrapper.
-* uib-update - content source should default to msg.payload.
 * Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
 * uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
-* uib-tag - Attribs Source - should be "None" as default
-* Editor (all nodes) - Use jQueryUI tooltips instead of uib custom (see `uib-element`)
+
 * Templates - add eslint dev dependencies to package.json
   * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
 
 * uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
-* Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId]
 
+* Dev Docs
+  * http://127.0.0.1:1880/red/uibuilder/admin/api-test?cmd=checkfolder - is called each loaded instance on load of editor
 
-### Document
-
-* http://127.0.0.1:1880/red/uibuilder/admin/api-test?cmd=checkfolder - is called each loaded instance on load of editor
 
 ------------
 
@@ -66,10 +38,6 @@ Nothing currently.
 
 * The new front-end routing library is available. Easy to use, robust and reasonably comprehensive. It is not dependent on uibuilder but offered with it to enable Single-Page Apps (SPA's) to be easily created with uibuilder.
 * The `uib-html` node now allows an HTML string wrapper. This defaults to uibuilder's default "Blank" template HTML or can be overridden using `msg.template`. This lets you create a fully working page from no-code and low-code configurations that can be fed direct to `uib-save` or used in Dashboard or with http-in/-out nodes. Or indeed with external web server tools.
-
-### Fixes
-
-* Client htmlSend, when called as a Node-RED command, was returning 2 messages. Now returns the HTML string and sends it to Node-RED directly only if the new 2nd argument is TRUE (the default so that direct calls will still work without changes).
 
 ### New client library - uibrouter - front-end routing library
 
@@ -98,6 +66,7 @@ A complete, standalone library for doing front-end routing with both internal an
 
 ### Client library improvements
 
+* **FIXED** Client `htmlSend`, when called as a Node-RED command, was returning 2 messages. Now returns the HTML string and sends it to Node-RED directly only if the new 2nd argument is TRUE (the default so that direct calls will still work without changes).
 * **FIXED** `eventSend` when attached to a change event returns the `value` property that all `input` tags have - except when they don't! When input is used as a checkbox, it has a `checked` property instead. Function changed to return the checked value if it exists (`true` or `false`), the value property otherwise.
 * **NEW function and command** `watchUrlHash` - Toggle (or manually set on/off) sending URL Hash changes back to Node-RED in a standard msg.
 * **NEW watched variable** `urlHash` Set on load and updated as it changes. URL Hashes are used by front-end routing for Single-Page-Apps (SPA's). They do not reload the page.
@@ -106,8 +75,7 @@ A complete, standalone library for doing front-end routing with both internal an
 
 ### `uibuilder` node improvements
 
-* `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
-* `uibuilder` - Reduce code complexity by moving more fs actions out into `fs.js`.
+* `uibuilder` - Reduce code complexity by moving more fs actions out into `libs/fs.js`.
 * Some common Node-RED Editor code and styles moved to common libraries (`resources/ti-common.js` & `resources/ti-common.css`) loaded as resources. Making the editor code smaller and more consistent.
 
 #### Editor panel improvements
@@ -125,6 +93,9 @@ A complete, standalone library for doing front-end routing with both internal an
 
 ### Other improvements
 
+* **NEW node Library** `libs/lowcode.js` - The beginnings of moving the zero- to low-code element translations (e.g. uib-element, uib-update and uib-tag) to their own library. With the possibility of eventually making that library available as a stand-alone front-end library as well. Not yet in use.
+* `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
+* **NEW utility function** `getSource(propName, node, msg, RED, src, srcType)` in `libs/uiblib.js` - this is an ASYNC function that returns a promise. It is a standardised way of getting the current value from a Node-RED Typed Input field.
 
 
 
