@@ -269,6 +269,7 @@ module.exports = {
     },
 
     /** Get an individual value for a typed input field and save to supplied node object - REQUIRES standardised node property names
+     * Use propnameSource and propnameSourceType as standard input field names
      * @param {string} propName Name of the node property to check
      * @param {runtimeNode} node reference to node instance
      * @param {*} msg incoming msg
