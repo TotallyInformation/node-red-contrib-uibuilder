@@ -30,7 +30,7 @@
  */
 
 // const { getSource } = require('../libs/uiblib')
-const { promisify } = require('util')
+// const { promisify } = require('util')
 
 class UibLowCode {
     //#region --- Class vars ---
@@ -62,87 +62,8 @@ class UibLowCode {
         this.RED = RED
         this.log = RED.log
 
-        // this.evaluateNodeProperty = promisify(RED.util.evaluateNodeProperty)
-        this.evaluateNodeProperty = RED.util.evaluateNodeProperty
-
         this.#isConfigured = true
     } // ---- End of setup ---- //
-
-    /** Get an individual value for a typed input field and save to supplied node object - REQUIRES standardised node property names
-     * @param {string} propName Name of the node property to check
-     * @param {runtimeNode} node reference to node instance
-     * @param {*} msg incoming msg
-     * @param {string} [src] Name of the typed input field (defaults to `${propName}Source`)
-     * @param {string} [srcType] Name of the field holding the typed input field type (defaults to `${propName}SourceType`)
-     */
-    async _getSource(propName, node, msg, src, srcType, callType) {
-        // if (!this.#isConfigured) throw new Error('[uib:lowCode:getSource] Class instance node not configured, cannot continue.')
-        // if (!propName) throw new Error('[uib:lowCode:getSource] No propName provided, cannot continue')
-        // if (!node) throw new Error('[uib:lowCode:getSource] No node object provided, cannot continue')
-
-        // if (!src) src = `${propName}Source`
-        // if (!srcType) srcType = `${propName}SourceType`
-
-        // if (!msg && srcType === 'msg') return // throw new Error('[uib:lowCode:getSource] Type is msg but no msg object provided, cannot continue')
-
-        if (!(src in node)) throw Error(`[uib:lowCode:getSource] Property ${src} does not exist in supplied node object`)
-        if (!(srcType in node)) throw Error(`[uib:lowCode:getSource] Property ${srcType} does not exist in supplied node object`)
-
-        if (node[src] !== '') {
-            console.log(`✔️ DOING 2 '${propName}', '${node[src]}'`)
-            try {
-                console.log(`✔️✔️ DOING 2a '${propName}', '${node[src]}'`)
-                if (msg) {
-                    console.log(`✔️✔️✔️ DOING 2b '${propName}', '${node[src]}'`)
-                    node[propName] = await this.evaluateNodeProperty(node[src], node[srcType], node, msg)
-                    console.log(`✔️👁️✔️ OK 2b '${propName}', '${node[src]}'`)
-                } else {
-                    console.log(`✔️✔️✔️✔️ DOING 2c '${propName}', '${node[src]}'`)
-                    node[propName] = await this.evaluateNodeProperty(node[src], node[srcType], node)
-                    console.log(`✔️👁️✔️✔️ OK 2c '${propName}', '${node[src]}'`)
-                }
-            } catch (e) {
-                console.log(`❌ DOING 3 '${propName}', '${node[src]}'`)
-                node.warn(`[uib:lowCode:getSource] Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
-            }
-        } else {
-            console.log(`🧪🧪❌ node[src] === ''. '${propName}', ${node[src]}`)
-        }
-        console.log(`🧪🧪 '${node[propName]}'. '${propName}', '${src}', '${srcType}', '${node[src]}', '${node[srcType]}', '${callType}'`)
-    }
-
-    async getSourceNoMsg(propName, node, src, srcType) {
-        if (!this.#isConfigured) throw new Error('[uib:lowCode:getSource] Class instance node not configured, cannot continue.')
-        if (!propName) throw new Error('[uib:lowCode:getSource] No propName provided, cannot continue')
-        if (!node) throw new Error('[uib:lowCode:getSource] No node object provided, cannot continue')
-
-        if (!src) src = `${propName}Source`
-        if (!srcType) srcType = `${propName}SourceType`
-
-        console.log(`👁️👁️ '${propName}', '${src}', '${srcType}', '${node[src]}', '${node[srcType]}', 'NOMSG SRC'`)
-
-        if (node[srcType] === 'msg') return
-        try {
-            await this._getSource(propName, node, undefined, src, srcType, 'NOMSG')
-        } catch (e) {
-            console.error(`🤯 ERROR. ${e.message}`)
-        }
-    }
-
-    async getSourceMsg(propName, node, msg, src, srcType) {
-        if (!this.#isConfigured) throw new Error('[uib:lowCode:getSource] Class instance node not configured, cannot continue.')
-        if (!propName) throw new Error('[uib:lowCode:getSource] No propName provided, cannot continue')
-        if (!node) throw new Error('[uib:lowCode:getSource] No node object provided, cannot continue')
-
-        if (!src) src = `${propName}Source`
-        if (!srcType) srcType = `${propName}SourceType`
-
-        console.log(`👁️👁️ '${propName}', '${src}', '${srcType}', '${node[src]}', '${node[srcType]}', 'msg SRC'`)
-
-        if (node[srcType] !== 'msg') return
-        if (!msg) throw new Error('[uib:lowCode:getSource] Type is "msg" but no msg object supplied, cannot continue.')
-        await this._getSource(propName, node, msg, src, srcType, 'msg')
-    }
 
     /** Create/update the _ui object and retain for replay
      * @param {*} msg incoming msg
