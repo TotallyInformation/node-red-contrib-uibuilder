@@ -5,14 +5,16 @@
 (function () {
     'use strict'
 
+    const mylog = window['uibuilder'].log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uib-cache'
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel  = moduleName
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = 'uibuilder'
+    const paletteCategory  = window['uibuilder'].paletteCategory
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = '#E6E0F8'
+    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
     /** Populate the store dropdown */
     function populateUseStoreDropdown() {
@@ -110,6 +112,7 @@
             }
         })
 
+        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     RED.nodes.registerType(moduleName, {
@@ -141,7 +144,5 @@
         },
 
         oneditprepare: function() { onEditPrepare(this) },
-
     }) // ---- End of registerType() ---- //
-
 }())

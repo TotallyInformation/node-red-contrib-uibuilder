@@ -2,13 +2,8 @@
 /* eslint-disable sonarjs/no-duplicate-string, es/no-object-values, strict */
 
 // Isolate this code
-(function () { // eslint-disable-line sonarjs/cognitive-complexity
+;(function () { // eslint-disable-line sonarjs/cognitive-complexity
     'use strict'
-
-    const localHost = ['localhost', '127.0.0.1', '::1', ''].includes(window.location.hostname) || window.location.hostname.endsWith('.localhost')
-    const uibDebug = localHost
-    const mylog = uibDebug ? console.log : function() {}
-    mylog('[uibuilder] DEBUG ON (because running on localhost)')
 
     //#region ------------------- Pollyfills --------------------- //
 
@@ -37,29 +32,20 @@
 
     //#region --------- "global" variables for the panel --------- //
 
+    // RED._debug({topic: 'RED.settings', payload:RED.settings})
+
+    // NOTE: window.uibuilder is added by ti-common.js - see `resources` folder
+    const uibuilder = window['uibuilder']
+    const log = uibuilder.log
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uibuilder'
-    /** Node's label @constant {string} paletteCategory */
-    const nodeLabel  = 'uibuilder'
-    /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = 'uibuilder'
-    /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = '#E6E0F8'
-    /** Default session length (in seconds) if security is active @type {Number} */
-    // const defaultSessionLength = 432000
-    /** Default JWT secret if security is active - to ensure it isn't blank @type {String} */
-    // const defaultJwtSecret = 'Replace This With A Real Secret'
+
+    /** Track which urls have been used - required for error handling in url validation. Only use for URL tracking */
+    const editorInstances = uibuilder.editorUibInstances
     /** Default template name */
     const defaultTemplate = 'blank'
-    /** Track which urls have been used - required to handle copy/paste and import
-     *  as these can contain duplicate urls before deployment.
-     */
-    const editorInstances = {}
-
     /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
-    let packages = []
-    /** List of the instances in use by id [{node_id: url}], updated in validateUrl() */
-    let uibuilderInstances = RED.settings.uibuilderInstances
+    let packages = uibuilder.packages
 
     /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
      * @typedef {object} uiace Options for the ACE/Monaco code editor
@@ -80,44 +66,6 @@
 
     //#endregion ------------------------------------------------- //
 
-    //#region --------- Node-RED Event Handlers  --------- //
-    // These are registered once for the node type
-
-    /** Track which urls have been used - required to handle copy/paste and import
-     *  as these can contain duplicate urls before deployment.
-     */
-    RED.events.on('nodes:add', function(node) {
-        if ( node.type === 'uibuilder') {
-            // Keep a list of uib nodes in the editor
-            // may be different to the deployed list
-            editorInstances[node.id] = node.url
-            // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. --
-        }
-    })
-    RED.events.on('nodes:change', function(node) {
-        if ( node.type === 'uibuilder') {
-            mylog('nodes:change:', node)
-            editorInstances[node.id] = node.url
-        }
-    })
-    RED.events.on('nodes:remove', function(node) {
-        if ( node.type === 'uibuilder') {
-            mylog('>> nodes:remove >>', node)
-            delete editorInstances[node.id]
-        }
-    })
-    // RED.events.on('deploy', function() {
-    //     console.log('Deployed')
-    // })
-    // RED.events.on('workspace:dirty', function(data) {
-    //     console.log('Workspace dirty:', data)
-    // })
-    // RED.events.on('runtime-state', function(event) {
-    //     console.log('>> Runtime State >>', event)
-    // })
-
-    //#endregion --------- Node-RED Event Handlers  --------- //
-
     //#region --------- "global" functions for the panel --------- //
 
     //#region ==== Package Management Functions ==== //
@@ -127,7 +75,7 @@
      */
     function doPkgUpd(evt) {
         // ! TODO
-        console.log('>>>> do update', evt.data.pkgName)
+        log('>>>> do update', evt.data.pkgName)
 
         const packageName = evt.data.pkgName
         const node = evt.data.node
@@ -140,9 +88,9 @@
             const npmOutput = data.result[0]
 
             if ( data.success === true) {
-                packages = data.result[1]
+                packages = uibuilder.packages = data.result[1]
 
-                console.log('[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ')
+                console.log('[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
                 RED.notify(`Successful update of npm package ${packageName}`, 'success')
 
                 // reset and populate the list
@@ -252,7 +200,7 @@
                     </div>
                     <div title="NB: This link is an estimate, check the package docs for the actual entry point" style="display:flex;justify-content:space-between;">
                         <div>Est.&nbsp;link:</div>
-                        <div style="margin-left:auto;text-align:right;"><code style="white-space:inherit;text-decoration: underline;"><a href="${node.urlPrefix}${pkgSpec.url}" target="_blank">
+                        <div style="margin-left:auto;text-align:right;"><code style="white-space:inherit;text-decoration: underline;"><a href="${uibuilder.urlPrefix}${pkgSpec.url}" target="_blank">
                             ${pkgSpec.url}
                         </code></div>
                     </div>
@@ -291,16 +239,15 @@
                     const npmOutput = data.result[0]
 
                     if ( data.success === true) {
-                        packages = data.result[1]
+                        packages = uibuilder.packages = data.result[1]
 
-                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ')
+                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
                         RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
 
                         // reset and populate the list
                         $('#node-input-packageList').editableList('empty')
                         // @ts-ignore
                         $('#node-input-packageList').editableList('addItems', Object.keys(packages))
-
                     } else {
                         console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
                         RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
@@ -371,29 +318,6 @@
 
         return null
     } // ---- End of removePackageRow ---- //
-
-    /** Get list of installed packages via v2 API - save to master list */
-    function packageList() {
-
-        $.ajax({
-
-            dataType: 'json',
-            method: 'get',
-            url: 'uibuilder/uibvendorpackages',
-            async: false,
-            // data: { url: node.url},
-
-            success: function(vendorPaths) {
-                packages = vendorPaths
-            },
-
-            error: function(err) {
-                console.log('ERROR', err)
-            },
-
-        })
-
-    } // --- End of packageList --- //
 
     //#endregion ==== Package Management Functions ==== //
 
@@ -890,22 +814,8 @@
      * @param {object} node Pass in this
      */
     function updateDeployedInstances(node) {
-        // Update the deployed instances list
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: './uibuilder/admin/_', // pass dummy url _ as not needed for this query
-            data: {
-                'cmd': 'listinstances', // 'checkurls',
-            },
-            success: function(data) {
-                // console.log('>> update instances >>', value, data)
-                uibuilderInstances = data
-            }
-        })
-
-        if ( node ) node.isDeployed = uibuilderInstances[node.id] !== undefined
+        uibuilder.deployedUibInstances =  uibuilder.getDeployedUrls()
+        if ( node ) node.isDeployed = uibuilder.deployedUibInstances[node.id] !== undefined
     }
 
     /** Find out if a server folder exists for this url
@@ -1026,20 +936,20 @@
      * @param {*} value Value
      */
     function debugUrl(node, value) { // eslint-disable-line no-unused-vars
-        if (!uibDebug) return
+        if (!uibuilder.debug) return
 
-        console.group(`>> validateUrl >> ${node.id}`)
-        mylog('-- isDeployed --', node.isDeployed )
-        mylog('-- node.url --', node.url, '-- node.oldUrl --', node.oldUrl)
-        mylog('-- value --', value)
-        mylog('-- Editor URL Changed? --', node.urlChanged, '-- Valid? --', node.urlValid )
-        mylog('-- Deployed URL Changed? --', node.urlDeployedChanged )
-        mylog('-- uibuilderInstances[node.id] --', uibuilderInstances[node.id])
-        mylog('-- editorInstances[node.id] --', editorInstances[node.id])
-        mylog('-- is Dup? -- Deployed:', node.urlDeployedDup, ', Editor:', node.urlEditorDup)
-        mylog('-- URL Errors --', node.urlErrors )
-        mylog('-- Node Changed? --', node.changed, '-- Valid? --', node.valid )
-        mylog('-- this --', node)
+        console.groupCollapsed(`>> validateUrl >> ${node.id}`)
+        log('-- isDeployed --', node.isDeployed )
+        log('-- node.url --', node.url, '-- node.oldUrl --', node.oldUrl)
+        log('-- value --', value)
+        log('-- Editor URL Changed? --', node.urlChanged, '-- Valid? --', node.urlValid )
+        log('-- Deployed URL Changed? --', node.urlDeployedChanged )
+        log('-- deployedUibInstances[node.id] --', uibuilder.deployedUibInstances[node.id])
+        log('-- editorInstances[node.id] --', editorInstances[node.id])
+        log('-- is Dup? -- Deployed:', node.urlDeployedDup, ', Editor:', node.urlEditorDup)
+        log('-- URL Errors --', node.urlErrors )
+        log('-- Node Changed? --', node.changed, '-- Valid? --', node.valid )
+        log('-- this --', node)
         console.groupEnd()
     }
     /** Validation Function: Validate the url property
@@ -1049,54 +959,22 @@
      * @this {*}
      **/
     function validateUrl(value) {
-        /** Notes:
-         *  1) `this` is the node instance configuration as at last press of Done.
-         *  2) Validation fns are run on every node instance when the Editor is loaded (e.g. panel not open) -
-         *     value is populated but jQ val is undefined.
-         *  3) Validation for an instance is run when a new node instance added - value & jq value both `undefined`.
-         *  4) Validation for an instance is run when a field value has changed (on blur) - value & jq value are the same.
-         *  4) jq values are undefined when this is called on load (e.g. panel not open).
-         *  5) value and jq value both undefined when a new instance added to flow. Validation is fired at that point.
-         */
-        /**
-         * Saved/this (me)
-         *  url
-         *  oldUrl
-         * this (me)
-         *  urlValid
-         *  urlErrors
-         *  urlDeployedDup
-         *  urlEditorDup
-         * this (node-red)
-         *  isDeployed
-         *  validationErrors
-         *  valid
-         *  changed
-         */
-
-        // Update the deployed instances list (also updates this.isDeployed)
-        updateDeployedInstances(this)
+        if ($('#node-input-url').is(':visible')) {
+            // Update the DEPLOYED instances list (also updates this.isDeployed) - not needed on Editor load
+            updateDeployedInstances(this)
+            // console.log(this.url, '#node-input-url IS VISIBLE. ', 'Changed? ', this.changed)
+        }
 
         // this.urlValid = false
         this.urlErrors = {}
 
-        this.urlDeployedChanged = uibuilderInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
+        this.urlDeployedChanged = uibuilder.deployedUibInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
         this.urlChanged = (this.url !== value)
 
-        let f = Object.values(uibuilderInstances).indexOf(value)
-        this.urlDeployedDup = ( f > -1 && Object.keys(uibuilderInstances)[f] !== this.id )
+        let f = Object.values(uibuilder.deployedUibInstances).indexOf(value)
+        this.urlDeployedDup = ( f > -1 && Object.keys(uibuilder.deployedUibInstances)[f] !== this.id )
         f = Object.values(editorInstances).indexOf(value)
         this.urlEditorDup = ( f > -1 && Object.keys(editorInstances)[f] !== this.id )
-
-        // Node is an editor dup but not deployed therefore must be a copy/paste or maybe an import
-        if ( this.isDeployed === false && this.urlEditorDup === true ) {
-            this.urlErrors.config = 'Pasted or imported, URL must be changed'
-            // Reset the url's because we need a new one (but don't trigger url change as this will be new)
-            value = ''
-            this.url = this.oldUrl = undefined
-            $('#node-input-url').val('')
-            mylog('[uib] >> Copy/Paste >>', this.id, 'this.url:', this.url, ', value:', value, ', this.oldUrl:', this.oldUrl )
-        }
 
         // If value is undefined, node hasn't been configured yet - we assume empty url which is invalid
         if ( value === undefined ) {
@@ -1158,7 +1036,7 @@
 
             /** If the folder already exists - lock out the editor panel. */
             if ( this.folderExists === true && this.urlChanged === true ) {
-                mylog('>> folder already exists >>', this.url, this.id)
+                log('>> folder already exists >>', this.url, this.id)
                 RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, { type: 'warning' })
             }
 
@@ -1169,7 +1047,7 @@
 
         // Warn user when changing URL. NOTE: Set/reset old url in the onsave function not here
         if ( this.isDeployed && this.deployedUrlChanged === true ) {
-            mylog('[uib] >> deployed url changed >> this.url:', this.url, ', this.oldUrl:', this.oldUrl, this.id)
+            log('[uib] >> deployed url changed >> this.url:', this.url, ', this.oldUrl:', this.oldUrl, this.id)
             this.urlErrors.warnChange = `Renaming from ${this.url} to ${value}. <b>MUST</b> redeploy now`
             RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, { type: 'warning' })
         }
@@ -1193,7 +1071,6 @@
         }
 
         return this.urlValid
-
     } // --- End of validateUrl --- //
 
     /** Validation Function: Validate the session length property
@@ -1441,34 +1318,6 @@
 
     //#endregion ==== Template Management Functions ==== //
 
-    /** If debug, dump out key information to console */
-    function dumpUibSettings() {
-        if (!uibDebug) return
-
-        mylog('[uibuilder] Settings:\n',
-            // The server's NODE_ENV environment var (e.g. PRODUCTION or DEVELOPMENT)
-            '\nNodeEnv: ', RED.settings.uibuilderNodeEnv,
-            // Current version of uibuilder
-            '\nCurrentVersion: ', RED.settings.uibuilderCurrentVersion,
-            // Should the editor tell the user that a redeploy is needed (based on uib versions)
-            '\nRedeployNeeded: ', RED.settings.uibuilderRedeployNeeded,
-            // uibRoot folder
-            '\nRootFolder: ', RED.settings.uibuilderRootFolder,
-
-            // Available templates and details
-            '\n\nTemplates: ', RED.settings.uibuilderTemplates,
-            // Custom server details
-            '\n\nCustomServer: ', RED.settings.uibuilderCustomServer,
-
-            // List of the deployed uib instances [{node_id: url}]
-            `\n\nInstances (${Object.keys(RED.settings.uibuilderInstances).length}): `, RED.settings.uibuilderInstances,
-
-            `\n\neditorInstances (${Object.keys(editorInstances).length}): `, editorInstances,
-
-            `\n\npackages (${Object.keys(packages).length}): `, packages
-        )
-    }
-
     /** Set initial hidden & checkbox states (called from onEditPrepare)
      * @param {object} node A reference to the panel's `this` object
      */
@@ -1492,7 +1341,7 @@
      */
     function vscodeLink(node) {
         let pre, post
-        if (localHost) {
+        if (uibuilder.localHost) {
             pre = `<a href="vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank" title="Open in VScode">`
             post = '</a>'
         } else {
@@ -1511,35 +1360,13 @@
      * @param {object} node A reference to the panel's `this` object
      */
     function showServerInUse(node) {
-        let svrType
-
-        const eUrlSplit = window.origin.split(':')
-        // var nrPort = Number(eUrlSplit[2])
-
-        node.nodeRoot = RED.settings.httpNodeRoot.replace(/^\//, '')
-
         $('#info-webserver').empty()
-
-        // Is uibuilder using a custom server?
-        if (RED.settings.uibuilderCustomServer.isCustom === true) {
-            // Use the correct protocol (http or https)
-            eUrlSplit[0] = RED.settings.uibuilderCustomServer.type.replace('http2', 'https')
-            // Use the correct port
-            eUrlSplit[2] = RED.settings.uibuilderCustomServer.port
-            // When using custom server, no base path is used
-            node.nodeRoot = ''
-            svrType = 'a custom'
-        } else {
-            svrType = 'Node-RED\'s'
-        }
-
-        node.urlPrefix = `${eUrlSplit.join(':')}/${node.nodeRoot}`
 
         const vslink = vscodeLink(node)
 
-        $('#info-webserver')
-            .append(`<div class="form-tips node-help"><span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using ${svrType} webserver at <a href="${node.urlPrefix}${node.url}" target="_blank" title="Open in new window">${node.urlPrefix}</a><br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`)
-
+        $('#info-webserver').append(
+            `<div class="form-tips node-help"><span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using ${uibuilder.serverType} webserver at <a href="${uibuilder.urlPrefix}${node.url}" target="_blank" title="Open in new window">${uibuilder.urlPrefix}</a><br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`
+        )
     } // ---- end of showServerInUse ---- //
 
     /** Handle URL changes - update web links (called from onEditPrepare)
@@ -1550,20 +1377,19 @@
         const thisurl = /** @type {string} */ ($(this).val())
 
         // Show the root URL
-        $('#uibuilderurl').prop('href', `${node.urlPrefix}${thisurl}`)
+        $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${thisurl}`)
         // .html(`<i class="fa fa-globe" aria-hidden="true"></i> Open ${node.nodeRoot}${thisurl}`)
         $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
         // NB: The index url link is only shown if the option is turned on
         $('#show-src-folder-idx-url').empty()
             .append(
                 `<div>at 
-                    <a href="${node.urlPrefix}${thisurl}/idx" target="_blank" 
+                    <a href="${uibuilder.urlPrefix}${thisurl}/idx" target="_blank" 
                             style="color:var(--red-ui-text-color-link);text-decoration:underline;">
                         ${node.nodeRoot}${thisurl}/idx
                     </a>
                 </div>`
             )
-
     } // ---- end of urlChange ---- //
 
     /** Run when switching to the Files tab
@@ -1630,7 +1456,6 @@
      * @param {object} node A reference to the panel's `this` object
      */
     function tabLibraries(node) {
-
         // ! TODO Improve feedback
 
         // Setup the package list https://nodered.org/docs/api/ui/editableList/
@@ -1655,7 +1480,6 @@
         // spinner
         $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
         $('i.spinner').hide()
-
     } // ---- End of tabLibraries() ---- //
 
     /** Prep tabs
@@ -1982,7 +1806,7 @@
         $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-globe" aria-hidden="true"></i> Open</button>')
             .on('click', (evt) => {
                 evt.preventDefault()
-                window.open(`${node.urlPrefix}${$('#node-input-url').val()}`, '_blank')
+                window.open(`${uibuilder.urlPrefix}${$('#node-input-url').val()}`, '_blank')
             })
             .appendTo($('div.red-ui-tray-toolbar'))
         $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book" aria-hidden="true"></i> Docs</button>')
@@ -1993,7 +1817,7 @@
             })
             .appendTo($('div.red-ui-tray-toolbar'))
         // If on localhost, add clickable label that opens in vscode
-        if (localHost) {
+        if (uibuilder.localHost) {
             const vsc = vscodeLink(node)
             $(`<button type="button" title="Open instance code folder in VSCode" aria-label="Link that opens the instance code folder in VSCode." class="ui-button ui-corner-all ui-widget leftButton">${vsc.icon}</button>`)
                 .on('click', (evt) => {
@@ -2004,8 +1828,6 @@
         }
 
         getFolders()
-
-        packageList()
 
         // console.log('>> ONEDITPREPARE: NODE >>', node)
 
@@ -2049,8 +1871,7 @@
 
         fileEditor()
 
-        dumpUibSettings()
-
+        uibuilder.doTooltips('.ti-edit-panel') // Do this at the end
     } // ---- End of oneditprepare ---- //
 
     //#endregion ------------------------------------------------- //
@@ -2058,8 +1879,6 @@
     // Register the node type, defaults and set up the edit fns
     RED.nodes.registerType(moduleName, {
         //#region --- options --- //
-        category: paletteCategory,
-        color: paletteColor,
         defaults: {
             name: { value: '' },
             topic: { value: '' },
@@ -2071,11 +1890,6 @@
             templateFolder: { value: defaultTemplate },  // Folder for selected template
             extTemplate: { value: '' }, // Only if templateFolder=external, degit name
             showfolder: { value: false },      // Should a web index view of all source files be made available?
-            // useSecurity: { value: false },
-            // allowUnauth: { value: false },
-            // allowAuthAnon: { value: false },
-            // sessionLength: { value: defaultSessionLength, validate: validateSessLen },   // 5d - Must have content if useSecurity=true
-            // tokenAutoExtend: { value: false }, // TODO add validation if useSecurity=true
             oldUrl: { value: undefined },      // If the url has been changed, this is the previous url
             reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
             sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)
@@ -2084,9 +1898,6 @@
             title: { value: '' },    // Optional short description for this instance
             descr: { value: '' },    // Optional long description for this instance
         },
-        credentials: {
-            jwtSecret: { type: 'password' },  // text or password
-        },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
         outputs: 2,
@@ -2094,23 +1905,18 @@
         // icon: 'node-white.svg',
         icon: 'node-blue-inverted.svg',
         // icon: 'semanticWebWhite.svg',
-        paletteLabel: nodeLabel,
         label: function () {
             const url = this.url ? `<${this.url}>` : '<no url>'
             const name = this.name ? `${this.name} ` : ''
             return `${name}${url}`
         },
+        paletteLabel: moduleName,
+        category: uibuilder.paletteCategory,
+        color: 'var(--uib-node-colour)', // '#E6E0F8'
+        // credentials: {
+        //     jwtSecret: { type: 'password' },  // text or password
+        // },
         //#endregion --- options --- //
-
-        /** Available methods:
-         * oneditprepare: (function) called when the edit dialog is being built.
-         * oneditsave:   (function) called when the edit dialog is okayed.
-         * oneditcancel: (function) called when the edit dialog is canceled.
-         * oneditdelete: (function) called when the delete button in a configuration node’s edit dialog is pressed.
-         * oneditresize: (function) called when the edit dialog is resized.
-         * onpaletteadd: (function) called when the node type is added to the palette.
-         * onpaletteremove: (function) called when the node type is removed from the palette.
-         */
 
         /** Prepares the Editor panel */
         oneditprepare: function() { onEditPrepare(this) },
@@ -2119,7 +1925,7 @@
          * @this {RED}
          */
         oneditsave: function() {
-            mylog('[uib] >> this >>', this)
+            log('[uib] >> this >>', this)
 
             // Get rid of the editor
             if ( uiace.editorLoaded === true ) {
@@ -2133,7 +1939,7 @@
             if ( $('#node-input-url').val() !== '' ) url = $('#node-input-url').val()
             if ( url !== this.url ) {
                 this.oldUrl = this.url
-                mylog(`>> oneditsave URL CHANGED >> New=${$('#node-input-url').val()}, Old=${this.url}` )
+                log(`>> oneditsave URL CHANGED >> New=${$('#node-input-url').val()}, Old=${this.url}` )
             } else if ( this.oldUrl !== undefined ) {
                 this.oldUrl = undefined
             }
@@ -2173,7 +1979,7 @@
 
             // Remove the recorded instance
             // delete editorInstances[this.id]
-            mylog('[uib] >> deleting >> isDeployed? ', this.isDeployed, uibuilderInstances[this.id] !== undefined)
+            log('[uib] >> deleting >> isDeployed? ', this.isDeployed, uibuilder.deployedUibInstances[this.id] !== undefined)
 
             // Only warn if the node has been deployed
             if ( this.isDeployed ) {

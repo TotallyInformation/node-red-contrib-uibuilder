@@ -27,8 +27,8 @@
 
 //#region ----- Module level variables ---- //
 
-const { promisify } = require('util')
 // const uibFs  = require('../libs/fs')   // File/folder handling library (by Totally Information)
+const { getSource } = require('../libs/uiblib')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -80,6 +80,8 @@ function emitMsg(msg, node) {
  * @this {runtimeNode & uibElNode}
  */
 async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+    const RED = mod.RED
+
     // TODO: Accept cache-replay and cache-clear
     // Is this a uib control msg? If so, ignore it since this is connected to uib via event handler
     if ( msg.uibuilderCtrl ) {
@@ -90,6 +92,15 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // If msg has _ui property - is it from the client? If so, remove it.
     if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
+
+    // Get all of the typed input values (in parallel)
+    await Promise.all([
+        getSource('parent', this, msg, RED),
+        getSource('elementId', this, msg, RED),
+        getSource('heading', this, msg, RED),
+        getSource('data', this, msg, RED), // contains core data
+        getSource('position', this, msg, RED),
+    ])
 
     // Save the last input msg for replay to new client connections, creates/update this._ui
     await buildUi(msg, this)
@@ -837,37 +848,11 @@ function addHeading(parent, node) {
     return parent
 }
 
-/** Get an individual value for a typed input field
- * @param {string} propName Name of the node property to check
- * @param {runtimeNode & uibElNode} node reference to node instance
- * @param {*} msg incoming msg
- */
-async function getSource(propName, node, msg) {
-    const src = `${propName}Source`
-    const srcType = `${propName}SourceType`
-    if (node[src] !== '') {
-        try {
-            node[propName] = await mod.evaluateNodeProperty(node[src], node[srcType], node, msg)
-        } catch (e) {
-            node.warn(`Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
-        }
-    }
-}
-
 /** Create/update the _ui object and retain for replay
  * @param {*} msg incoming msg
  * @param {runtimeNode & uibElNode} node reference to node instance
  */
 async function buildUi(msg, node) {
-
-    // Get all of the typed input values (in parallel)
-    await Promise.all([
-        getSource('parent', node, msg),
-        getSource('elementId', node, msg),
-        getSource('heading', node, msg),
-        getSource('data', node, msg), // contains core data
-        getSource('position', node, msg),
-    ])
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) {
@@ -1013,9 +998,6 @@ function ModuleDefinition(RED) {
 
     // Save a reference to the RED runtime for convenience
     mod.RED = RED
-
-    // Save a ref to a promisified version to simplify async callback handling
-    mod.evaluateNodeProperty = promisify(mod.RED.util.evaluateNodeProperty)
 
     /** Register a new instance of the specified node type (2) */
     RED.nodes.registerType(mod.nodeName, nodeInstance)

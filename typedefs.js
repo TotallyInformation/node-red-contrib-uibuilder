@@ -458,6 +458,7 @@
  * @typedef {{
  *   name: string;
  *   topic: string;
+ *   useTemplate: boolean;
  *   _ui: any;
  * }} uibHtmlNode
  */
@@ -469,6 +470,7 @@
  * fname: string;
  * createFolder: boolean;
  * reload: boolean;
+ * usePageName: boolean;
  * encoding: string;
  * mode: number;
  * uibId: string;

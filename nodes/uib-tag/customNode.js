@@ -27,7 +27,8 @@
 
 //#region ----- Module level variables ---- //
 
-const { promisify } = require('util')
+const { getSource } = require('../libs/uiblib')
+// const lowCode = require('../libs/low-code')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -45,39 +46,11 @@ const mod = {
 
 //#region ----- Module-level support functions ----- //
 
-/** Get an individual value for a typed input field
- * @param {string} propName Name of the node property to check
- * @param {runtimeNode & uibTagNode} node reference to node instance
- * @param {*} msg incoming msg
- */
-async function getSource(propName, node, msg) {
-    const src = `${propName}Source`
-    const srcType = `${propName}SourceType`
-    if (node[src] !== '') {
-        try {
-            node[propName] = await mod.evaluateNodeProperty(node[src], node[srcType], node, msg)
-        } catch (e) {
-            node.warn(`Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
-        }
-    }
-}
-
 /** Create/update the _ui object and retain for replay
  * @param {*} msg incoming msg
  * @param {runtimeNode & uibTagNode} node reference to node instance
  */
 async function buildUi(msg, node) {
-
-    // Get all of the typed input values (in parallel)
-    await Promise.all([
-        getSource('tag', node, msg),
-        getSource('elementId', node, msg),
-        getSource('parent', node, msg),
-        getSource('position', node, msg),
-        getSource('cssSelector', node, msg),
-        getSource('slotContent', node, msg),
-        getSource('attribs', node, msg),
-    ])
 
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) {
@@ -124,7 +97,6 @@ async function buildUi(msg, node) {
             },
         ]
     })
-    
 } // -- end of buildUI -- //
 
 /** Build the output and send the msg (clone input msg and add _ui prop)
@@ -160,7 +132,7 @@ function emitMsg(msg, node) {
  */
 async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
 
-    // const RED = mod.RED
+    const RED = mod.RED
 
     // TODO: Accept cache-replay and cache-clear
     // Is this a uib control msg? If so, ignore it since this is connected to uib via event handler
@@ -172,6 +144,16 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // If msg has _ui property - is it from the client? If so, remove it.
     if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
+
+    // Get all of the typed input values (in parallel)
+    await Promise.all([
+        getSource('tag', this, msg, RED),
+        getSource('elementId', this, msg, RED),
+        getSource('parent', this, msg, RED),
+        getSource('position', this, msg, RED),
+        getSource('slotContent', this, msg, RED),
+        getSource('attribs', this, msg, RED),
+    ])
 
     // Save the last input msg for replay to new client connections, creates/update this._ui
     await buildUi(msg, this)
@@ -244,8 +226,7 @@ function ModuleDefinition(RED) {
     // Save a reference to the RED runtime for convenience
     mod.RED = RED
 
-    // Save a ref to a promisified version to simplify async callback handling
-    mod.evaluateNodeProperty = promisify(mod.RED.util.evaluateNodeProperty)
+    // lowCode.setup(RED)
 
     /** Register a new instance of the specified node type (2) */
     RED.nodes.registerType(mod.nodeName, nodeInstance)

@@ -3,7 +3,7 @@ title: uib-tag - Zero-code web UI creation of a single HTML tag
 description: >
    Create `msg._ui` configuration data that adds a single HTML or web component element (tag) to the browser UI.
 created: 2023-08-23 09:30:13
-lastUpdated: 2023-09-01 17:02:35
+lastUpdated: 2023-11-10 15:05:05
 ---
 
 *(This document is a work-in-progress, it is not complete)*
@@ -19,6 +19,8 @@ With this node configuration: ![uib-tag eg config](image-2.png)
 You get a simple button that, when clicked, will send a standard message back to Node-RED immediately.
 
 The node's configuration fields are the same as the other zero-code nodes.
+
+This node has an example flow. See Node-RED's import flow library.
 
 >[!NOTE]
 > - The output does not get wrapped in a `div` unlike most of the `uib-element` outputs.

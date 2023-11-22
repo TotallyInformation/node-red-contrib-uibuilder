@@ -24,6 +24,8 @@
  * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
+ * @typedef {import('../../typedefs').runtimeNode} runtimeNode
  * typedef {import('../typedefs.js')}
  * @typedef {import('node-red')} Red
  * @typedef {import('Express')} Express
@@ -35,6 +37,7 @@ const path = require('path')
 const fs = require('fs-extra')
 // const tilib = require('./tilib')
 const { nanoid } = require('nanoid')
+const { promisify } = require('util')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 module.exports = {
@@ -146,6 +149,7 @@ module.exports = {
         node.status(node.statusDisplay)
     }, // ---- End of setNodeStatus ---- //
 
+    // TODO Move to fs
     /** Replace template in front-end instance folder
      * @param {string} url The uib instance URL
      * @param {string} template Name of one of the built-in templates including 'blank' and 'external'
@@ -177,6 +181,7 @@ module.exports = {
         if ( extTemplate ) extTemplate = extTemplate.trim()
         if ( extTemplate === undefined ) throw new Error('extTemplate is undefined')
 
+        // TODO Move degit processing to its own function. Don't need the emitter on uib
         // If template="external" & extTemplate not blank - use degit to load
         if ( template === 'external' ) {
             const degit = require('degit')
@@ -261,7 +266,41 @@ module.exports = {
             clientId = nanoid()
         }
         return clientId
-    }
+    },
+
+    /** Get an individual value for a typed input field and save to supplied node object - REQUIRES standardised node property names
+     * Use propnameSource and propnameSourceType as standard input field names
+     * @param {string} propName Name of the node property to check
+     * @param {runtimeNode} node reference to node instance
+     * @param {*} msg incoming msg
+     * @param {runtimeRED} RED Reference to runtime RED library
+     * @param {string} [src] Name of the typed input field (defaults to `${propName}Source`)
+     * @param {string} [srcType] Name of the field holding the typed input field type (defaults to `${propName}SourceType`)
+     */
+    getSource: async function getSource(propName, node, msg, RED, src, srcType) {
+        if (!propName) throw new Error('[uiblib:getSource] No propName provided, cannot continue')
+        if (!node) throw new Error('[uiblib:getSource] No node object provided, cannot continue')
+        if (!RED) throw new Error('[uiblib:getSource] No RED reference provided, cannot continue')
+
+        if (!src) src = `${propName}Source`
+        if (!srcType) srcType = `${propName}SourceType`
+
+        if (!msg && srcType === 'msg') throw new Error('[uiblib:getSource] Type is msg but no msg object provided, cannot continue')
+
+        if (!(src in node)) throw Error(`[uiblib:getSource] Property ${src} does not exist in supplied node object`)
+        if (!(srcType in node)) throw Error(`[uiblib:getSource] Property ${srcType} does not exist in supplied node object`)
+
+        const evaluateNodeProperty = promisify(RED.util.evaluateNodeProperty)
+
+        if (node[src] !== '') {
+            try {
+                if (msg) node[propName] = await evaluateNodeProperty(node[src], node[srcType], node, msg)
+                else node[propName] = await evaluateNodeProperty(node[src], node[srcType], node)
+            } catch (e) {
+                node.warn(`Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
+            }
+        }
+    },
 
 } // ---- End of module.exports ---- //
 

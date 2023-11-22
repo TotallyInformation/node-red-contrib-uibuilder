@@ -5,51 +5,61 @@
 (function () {
     'use strict'
 
+    const uibuilder = window['uibuilder']
+    const mylog = uibuilder.log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uib-sender'
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel  = 'uib-sender'
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = 'uibuilder'
+    const paletteCategory  = uibuilder.paletteCategory
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = '#E6E0F8'
+    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
     /** Copy of all deployed uibuilder node instances */
-    let uibInstances = null
+    let uibInstances
 
     /** Get all of the current uibuilder URL's */
     function getUrls() {
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: './uibuilder/admin/dummy',
-            data: {
-                'cmd': 'listinstances',
-            },
-            success: function(instances) {
-                console.log('>> Instances >>', instances, Object.entries(instances) )
-
-                uibInstances = instances
-
-                Object.keys(instances).forEach( (key, i, arr) => {
-                    $('#node-input-url').append($('<option>', {
-                        value: instances[key],
-                        text: instances[key],
-                        'data-id': key,
-                    }))
-                })
-
-            }
+        uibInstances = uibuilder.getDeployedUrls()
+        Object.keys(uibInstances).forEach( (key, i, arr) => {
+            $('#node-input-url').append($('<option>', {
+                value: uibInstances[key],
+                text: uibInstances[key],
+                'data-id': key,
+            }))
         })
+        // $.ajax({
+        //     type: 'GET',
+        //     async: false,
+        //     dataType: 'json',
+        //     url: './uibuilder/admin/dummy',
+        //     data: {
+        //         'cmd': 'listinstances',
+        //     },
+        //     success: function(instances) {
+        //         console.log('>> Instances >>', instances, Object.entries(instances) )
 
+        //         uibInstances = instances
+
+        //         Object.keys(instances).forEach( (key, i, arr) => {
+        //             $('#node-input-url').append($('<option>', {
+        //                 value: instances[key],
+        //                 text: instances[key],
+        //                 'data-id': key,
+        //             }))
+        //         })
+
+        //     }
+        // })
     } // ---- end of getUrls ---- //
 
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
-        console.log('uib-sender onEditPrepare ', node)
+        mylog('uib-sender onEditPrepare ', node)
 
         // initial checkbox states
         if (!node.passthrough) node.passthrough = false
@@ -113,6 +123,7 @@
             $('#node-input-url').val(node.url)
         }
 
+        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     /** When node type is added to the palette

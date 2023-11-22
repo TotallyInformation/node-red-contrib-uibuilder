@@ -1,0 +1,409 @@
+[
+    {
+        "id": "e281d742284760a4",
+        "type": "group",
+        "z": "ff1a7711.244f48",
+        "name": "Tests for the uib-var custom web component baked into uibuilder \\n ",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.18",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "60a8489436d0ee43",
+            "ff050c4347776e67",
+            "86ffc76eb5838f6c",
+            "b9605e7d0a662387",
+            "6a4c985e0fc73c31",
+            "ab72b1d0039a5cb3",
+            "e33a29855f036e79",
+            "7c499ac47dc01640",
+            "2d07723a33514785",
+            "5c5965ac4682fc53",
+            "29f2d5712c08232b",
+            "130704c99e375d77",
+            "0e7d0e2fdb0cc462",
+            "eeb24d2935b76147",
+            "a29c18dfe4a6926b",
+            "bebda3baf75a1209",
+            "f2591948e1dea11e",
+            "22c52f9ce8e9ea37",
+            "5f237a9ee055b71d"
+        ],
+        "x": 324,
+        "y": 2923,
+        "w": 922,
+        "h": 458
+    },
+    {
+        "id": "60a8489436d0ee43",
+        "type": "debug",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "uib Std Output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 865,
+        "y": 2980,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "ff050c4347776e67",
+        "type": "uibuilder",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "",
+        "topic": "",
+        "url": "uib-var-test",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.6.0",
+        "showMsgUib": true,
+        "title": "",
+        "descr": "",
+        "x": 700,
+        "y": 3020,
+        "wires": [
+            [
+                "60a8489436d0ee43"
+            ],
+            [
+                "86ffc76eb5838f6c"
+            ]
+        ]
+    },
+    {
+        "id": "86ffc76eb5838f6c",
+        "type": "debug",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "uib Control Output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 865,
+        "y": 3040,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "b9605e7d0a662387",
+        "type": "link in",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "uib in",
+        "links": [
+            "6a4c985e0fc73c31",
+            "5c5965ac4682fc53"
+        ],
+        "x": 565,
+        "y": 3020,
+        "wires": [
+            [
+                "ff050c4347776e67"
+            ]
+        ]
+    },
+    {
+        "id": "6a4c985e0fc73c31",
+        "type": "link out",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "uib ctrls out",
+        "mode": "link",
+        "links": [
+            "b9605e7d0a662387"
+        ],
+        "x": 865,
+        "y": 3260,
+        "wires": []
+    },
+    {
+        "id": "ab72b1d0039a5cb3",
+        "type": "inject",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 385,
+        "y": 3120,
+        "wires": [
+            [
+                "7c499ac47dc01640"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "e33a29855f036e79",
+        "type": "uib-element",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "",
+        "topic": "",
+        "elementtype": "html",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "md001",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 680,
+        "y": 3120,
+        "wires": [
+            [
+                "5c5965ac4682fc53"
+            ]
+        ]
+    },
+    {
+        "id": "7c499ac47dc01640",
+        "type": "template",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "<p>\n    UIBUILDER Version: <uib-var variable=\"version\"></uib-var>\n<p></p>\n    Random # from Node-RED: <uib-var variable=\"myrandom\">(No Value)</uib-var>\n</p>",
+        "output": "str",
+        "x": 480,
+        "y": 3120,
+        "wires": [
+            [
+                "e33a29855f036e79"
+            ]
+        ]
+    },
+    {
+        "id": "2d07723a33514785",
+        "type": "inject",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "SET myrandom var",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\t   \"command\":\"set\",\t   \"prop\":\"myrandom\",\t   \"value\":$formatInteger($random() * 100, \"0\")\t}",
+                "vt": "jsonata"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 690,
+        "y": 3340,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ]
+    },
+    {
+        "id": "5c5965ac4682fc53",
+        "type": "link out",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "uib ctrls out",
+        "mode": "link",
+        "links": [
+            "b9605e7d0a662387"
+        ],
+        "x": 865,
+        "y": 3120,
+        "wires": []
+    },
+    {
+        "id": "29f2d5712c08232b",
+        "type": "uib-tag",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "",
+        "topic": "",
+        "tag": "uib-var",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementId": "uibvar03",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "Default value",
+        "slotSourcePropType": "str",
+        "attribsSource": "{\"variable\":\"myvar3\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 670,
+        "y": 3180,
+        "wires": [
+            [
+                "5c5965ac4682fc53"
+            ]
+        ]
+    },
+    {
+        "id": "130704c99e375d77",
+        "type": "inject",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "Blank myvar3",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"myvar3\",\"value\":\"\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 710,
+        "y": 3260,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ]
+    },
+    {
+        "id": "0e7d0e2fdb0cc462",
+        "type": "inject",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "Random myvar3",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\t   \"command\":\"set\",\t   \"prop\":\"myvar3\",\t   \"value\":$formatInteger($random() * 100, \"0\")\t}",
+                "vt": "jsonata"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 700,
+        "y": 3300,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ]
+    },
+    {
+        "id": "eeb24d2935b76147",
+        "type": "inject",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 515,
+        "y": 3180,
+        "wires": [
+            [
+                "29f2d5712c08232b"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "a29c18dfe4a6926b",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "Dynamic add HTML with 2 shown vars",
+        "info": "",
+        "x": 1070,
+        "y": 3120,
+        "wires": []
+    },
+    {
+        "id": "bebda3baf75a1209",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "Add single shown vars dynamically",
+        "info": "",
+        "x": 1060,
+        "y": 3180,
+        "wires": []
+    },
+    {
+        "id": "f2591948e1dea11e",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "Blank 3rd var",
+        "info": "",
+        "x": 990,
+        "y": 3260,
+        "wires": []
+    },
+    {
+        "id": "22c52f9ce8e9ea37",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "Set 3rd var to random number",
+        "info": "",
+        "x": 1040,
+        "y": 3300,
+        "wires": []
+    },
+    {
+        "id": "5f237a9ee055b71d",
+        "type": "comment",
+        "z": "ff1a7711.244f48",
+        "g": "e281d742284760a4",
+        "name": "Set 2nd var to random number",
+        "info": "",
+        "x": 1040,
+        "y": 3340,
+        "wires": []
+    }
+]

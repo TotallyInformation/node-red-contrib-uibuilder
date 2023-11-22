@@ -30,7 +30,7 @@
 //#region --- We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui'
-import UibVar from '../components/uib-var/uib-var'
+import UibVar from '../components/uib-var'
 import io from 'socket.io-client'
 
 // TODO - Maybe - check if already loaded as window['io']?
@@ -366,6 +366,8 @@ export const Uib = class Uib {
     #isShowStatus = false
     // Has an IntersectionObserver been created? If so, this will hold the reference to it
     #intersectionObserver = undefined
+    // If true, URL hash changes send msg back to node-red. Controlled by watchUrlHash()
+    #sendUrlHash = false
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
         'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include', 'elementExists',
@@ -453,6 +455,8 @@ export const Uib = class Uib {
     purify = false
     // Is the Markdown-IT library loaded? Updated in start()
     markdown = false
+    // Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched
+    urlHash = location.hash
     //#endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -982,6 +986,50 @@ export const Uib = class Uib {
 
         return exists
     } // --- End of elementExists --- //
+
+    /** Only keep the URL Hash & ignoring query params
+     * @param {string} url URL to extract the hash from
+     * @returns {string} Just the route id
+     */
+    keepHashFromUrl(url) {
+        if (!url) return ''
+        return '#' + url.replace(/^.*#(.*)/, '$1').replace(/\?.*$/, '')
+    }
+
+    /** Set up an event listener to watch for hash changes
+     * and set the watchable urlHash variable
+     */
+    _watchHashChanges() {
+        this.set('urlHash', location.hash)
+        window.addEventListener('hashchange', (event) => {
+            this.set('urlHash', location.hash)
+            if (this.#sendUrlHash === true) {
+                this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL) })
+            }
+        })
+    }
+
+    /** Returns true/false or a default value for truthy/falsy and other values
+     * @param {string|number|boolean|*} val The value to test
+     * @param {any} deflt Default value to use if the value is not truthy/falsy
+     * @returns {boolean|any} The truth! Or the default
+     */
+    truthy(val, deflt) {
+        let ret
+        if (['on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1].includes(val)) ret = true
+        else if (['off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0].includes(val)) ret = false
+        else ret = deflt
+        return ret
+    }
+
+    /** Turn on/off/toggle sending URL hash changes back to Node-RED
+     * @param {string|number|boolean|undefined} [toggle] Optional on/off/etc
+     * @returns {boolean} True if we will send a msg to Node-RED on a hash change
+     */
+    watchUrlHash(toggle) {
+        this.#sendUrlHash = this.truthy(toggle, this.#sendUrlHash !== true)
+        return this.#sendUrlHash
+    }
 
     //#endregion -------- -------- -------- //
 
@@ -1720,7 +1768,10 @@ export const Uib = class Uib {
             })
         }
 
-        if (domevent.type === 'change') msg._ui.newValue = msg.payload.value = domevent.target.value
+        if (domevent.type === 'change') {
+            // Checkboxes don't have a value!!
+            msg._ui.newValue = msg.payload.value = 'checked' in target ? target.checked : domevent.target.value
+        }
 
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
         if (target.dataset && target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
@@ -1730,8 +1781,10 @@ export const Uib = class Uib {
 
     /** Easily send the entire DOM/HTML msg back to Node-RED
      * @param {string} [originator] A Node-RED node ID to return the message to
+     * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
+     * @returns {string} The HTML as a string
      */
-    htmlSend(originator = '') {
+    htmlSend(originator = '', send = true) {
         const out = `<!doctype html>\n${document.documentElement.outerHTML}`
 
         // Set up the msg to send - NB: Topic may be added by this._send
@@ -1743,7 +1796,8 @@ export const Uib = class Uib {
 
         log('trace', 'Uib:htmlSend', 'Sending full HTML to Node-RED', msg)()
 
-        this._send(msg, this._ioChannels.client, originator)
+        if (send === true) this._send(msg, this._ioChannels.client, originator)
+        return out
     }
 
     /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
@@ -1786,7 +1840,7 @@ export const Uib = class Uib {
             }
 
             case 'htmlSend': {
-                response = this.htmlSend()
+                response = this.htmlSend('', false)
                 break
             }
 
@@ -1824,6 +1878,11 @@ export const Uib = class Uib {
 
             case 'uiWatch': {
                 response = this.uiWatch(prop)
+                break
+            }
+
+            case 'watchUrlHash': {
+                response = this.watchUrlHash(prop)
                 break
             }
 
@@ -1888,7 +1947,6 @@ export const Uib = class Uib {
 
     // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
     _msgRcvdEvents(msg) {
-
         // Message received
         this._dispatchCustomEvent('uibuilder:stdMsgReceived', msg)
 
@@ -1932,7 +1990,6 @@ export const Uib = class Uib {
             this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
             _ui._uiManager(msg)
         }
-
     } // --- end of _msgRcvdEvents ---
 
     /** Callback handler for messages from Node-RED
@@ -2476,6 +2533,9 @@ export const Uib = class Uib {
         } else {
             log('error', 'Uib:start', 'Start completed. ERROR: Socket.IO client library NOT LOADED.')()
         }
+
+        // Watch for URL hash changes in case using a front-end router. Updates watched var `urlHash` and socket.io `auth.urlHash`
+        this._watchHashChanges()
 
         // Check if Vue is present (used for dynamic UI processing)
         if (window['Vue']) {

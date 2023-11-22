@@ -1,0 +1,734 @@
+[
+    {
+        "id": "8d5d4002ce6fd551",
+        "type": "tab",
+        "label": "uib-save tests",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "645daef38984ece2",
+        "type": "group",
+        "z": "8d5d4002ce6fd551",
+        "name": "Read a file from the filing system, output to a uibuilder node's served folder. \\n Adjust the filename to suit \\n ",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.26",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "3f02e06255766cb3",
+            "e030779b263e0dc5",
+            "37aa33db5588a33b"
+        ],
+        "x": 54,
+        "y": 627,
+        "w": 532,
+        "h": 114
+    },
+    {
+        "id": "ebeecf45c78a4219",
+        "type": "group",
+        "z": "8d5d4002ce6fd551",
+        "name": "Trigger htmlSend cmd, send to uibuilder. Returned HTML is used as template, no-code additions made in Node-RED and saved back to default index.html \\n Shows how to use uib-save when making no-code changes from Node-RED. \\n ",
+        "style": {
+            "fill": "#ffffbf",
+            "fill-opacity": "0.28",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "ec39ca6384333473",
+            "0268e4370f37cffc",
+            "b32463ac6e1792ea",
+            "972d802e014f60d6",
+            "a643b60b93475b0e",
+            "63fb9f1ff9a81a32",
+            "641005c1571172f2",
+            "9b79f2f5522fc258"
+        ],
+        "x": 54,
+        "y": 347,
+        "w": 1092,
+        "h": 114
+    },
+    {
+        "id": "aad125b663744f23",
+        "type": "group",
+        "z": "8d5d4002ce6fd551",
+        "name": "Trigger htmlSend cmd, send to uibuilder. Returned HTML is saved directly back to default index.html \\n Use this if making changes to the UI in front-end Code. Could also trigger htmlSend in front-end if preferred. \\n ",
+        "style": {
+            "fill": "#ffefbf",
+            "fill-opacity": "0.26",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "1f5c4ab8049e62df",
+            "7c3acf059c70b284",
+            "ec15535f1c34f422"
+        ],
+        "x": 54,
+        "y": 207,
+        "w": 675,
+        "h": 114
+    },
+    {
+        "id": "f74ce23ede1c232e",
+        "type": "group",
+        "z": "8d5d4002ce6fd551",
+        "name": "Directly create a list using no-code, convert to HTML with the default \"Blank\" uibuilder template wrapped around it, \\n save back to the default index.html page. \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.32",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "ff798359e2bbc2bd",
+            "b944af2232a0376b",
+            "a39f35ec8b4e3537",
+            "2c96aa60808d84db",
+            "365c01dfb58b06fb"
+        ],
+        "x": 54,
+        "y": 487,
+        "w": 812,
+        "h": 114
+    },
+    {
+        "id": "abbfeec826d76d49",
+        "type": "uibuilder",
+        "z": "8d5d4002ce6fd551",
+        "name": "",
+        "topic": "",
+        "url": "test-uib-save",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "6.6.0",
+        "showMsgUib": true,
+        "title": "",
+        "descr": "",
+        "x": 300,
+        "y": 140,
+        "wires": [
+            [
+                "85ab80f8e040fc8e"
+            ],
+            [
+                "67fdfb6a9f62c2cd"
+            ]
+        ]
+    },
+    {
+        "id": "67fdfb6a9f62c2cd",
+        "type": "debug",
+        "z": "8d5d4002ce6fd551",
+        "name": "uib Std Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 425,
+        "y": 160,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "3f02e06255766cb3",
+        "type": "inject",
+        "z": "8d5d4002ce6fd551",
+        "g": "645daef38984ece2",
+        "name": "parameters",
+        "props": [
+            {
+                "p": "filename",
+                "v": "./test-files/flower.mp4",
+                "vt": "str"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "fname",
+                "v": "fred/jim/flower1.mp4",
+                "vt": "str"
+            },
+            {
+                "p": "folder",
+                "v": "src/videos",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "video-file",
+        "x": 170,
+        "y": 700,
+        "wires": [
+            [
+                "e030779b263e0dc5"
+            ]
+        ]
+    },
+    {
+        "id": "7839e3c4a36af6c4",
+        "type": "link in",
+        "z": "8d5d4002ce6fd551",
+        "name": "link in 14",
+        "links": [
+            "2cc9fb790c15d0e3"
+        ],
+        "x": 165,
+        "y": 120,
+        "wires": [
+            [
+                "abbfeec826d76d49"
+            ]
+        ]
+    },
+    {
+        "id": "e030779b263e0dc5",
+        "type": "file in",
+        "z": "8d5d4002ce6fd551",
+        "g": "645daef38984ece2",
+        "name": "",
+        "filename": "filename",
+        "filenameType": "msg",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 320,
+        "y": 700,
+        "wires": [
+            [
+                "37aa33db5588a33b"
+            ]
+        ]
+    },
+    {
+        "id": "37aa33db5588a33b",
+        "type": "uib-save",
+        "z": "8d5d4002ce6fd551",
+        "g": "645daef38984ece2",
+        "url": "test-uib-save",
+        "uibId": "abbfeec826d76d49",
+        "folder": "",
+        "fname": "",
+        "createFolder": false,
+        "reload": false,
+        "usePageName": false,
+        "encoding": "",
+        "mode": "",
+        "name": "",
+        "topic": "",
+        "x": 490,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "ec39ca6384333473",
+        "type": "uib-html",
+        "z": "8d5d4002ce6fd551",
+        "g": "ebeecf45c78a4219",
+        "name": "",
+        "topic": "",
+        "useTemplate": true,
+        "x": 900,
+        "y": 420,
+        "wires": [
+            [
+                "a643b60b93475b0e"
+            ]
+        ]
+    },
+    {
+        "id": "0268e4370f37cffc",
+        "type": "change",
+        "z": "8d5d4002ce6fd551",
+        "g": "ebeecf45c78a4219",
+        "name": "Set payload",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[\t   \"LI One\",\t   \"LI Two\",\t   [\"LI Three a\",\"LI Three b\"],\t   \"LI Four\",\t   \"Random: \" & $formatInteger($random() * 100, \"0\")\t]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 630,
+        "y": 420,
+        "wires": [
+            [
+                "b32463ac6e1792ea"
+            ]
+        ]
+    },
+    {
+        "id": "b32463ac6e1792ea",
+        "type": "uib-element",
+        "z": "8d5d4002ce6fd551",
+        "g": "ebeecf45c78a4219",
+        "name": "A list",
+        "topic": "",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-ul-ol",
+        "elementIdSourceType": "str",
+        "heading": "My Heading",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 770,
+        "y": 420,
+        "wires": [
+            [
+                "ec39ca6384333473"
+            ]
+        ]
+    },
+    {
+        "id": "1f5c4ab8049e62df",
+        "type": "inject",
+        "z": "8d5d4002ce6fd551",
+        "g": "aad125b663744f23",
+        "name": "htmlSend Direct",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"htmlSend\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "sendHtml",
+        "x": 180,
+        "y": 280,
+        "wires": [
+            [
+                "ec15535f1c34f422"
+            ]
+        ]
+    },
+    {
+        "id": "972d802e014f60d6",
+        "type": "switch",
+        "z": "8d5d4002ce6fd551",
+        "g": "ebeecf45c78a4219",
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "sendHtml",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 345,
+        "y": 420,
+        "wires": [
+            [
+                "63fb9f1ff9a81a32"
+            ],
+            []
+        ],
+        "l": false
+    },
+    {
+        "id": "a643b60b93475b0e",
+        "type": "uib-save",
+        "z": "8d5d4002ce6fd551",
+        "g": "ebeecf45c78a4219",
+        "url": "test-uib-save",
+        "uibId": "abbfeec826d76d49",
+        "folder": "src",
+        "fname": "index.html",
+        "createFolder": false,
+        "reload": true,
+        "usePageName": true,
+        "encoding": "",
+        "mode": "",
+        "name": "",
+        "topic": "",
+        "x": 1050,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "63fb9f1ff9a81a32",
+        "type": "change",
+        "z": "8d5d4002ce6fd551",
+        "g": "ebeecf45c78a4219",
+        "name": "Move payload",
+        "rules": [
+            {
+                "t": "move",
+                "p": "payload",
+                "pt": "msg",
+                "to": "template",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 460,
+        "y": 420,
+        "wires": [
+            [
+                "0268e4370f37cffc"
+            ]
+        ]
+    },
+    {
+        "id": "ff798359e2bbc2bd",
+        "type": "change",
+        "z": "8d5d4002ce6fd551",
+        "g": "f74ce23ede1c232e",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[\t   \"LI One\",\t   \"LI Two\",\t   [\"LI Three a\",\"LI Three b\"],\t   \"LI Four\",\t   \"Random: \" & $formatInteger($random() * 100, \"0\")\t]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 240,
+        "y": 560,
+        "wires": [
+            [
+                "b944af2232a0376b"
+            ]
+        ]
+    },
+    {
+        "id": "b944af2232a0376b",
+        "type": "uib-element",
+        "z": "8d5d4002ce6fd551",
+        "g": "f74ce23ede1c232e",
+        "name": "",
+        "topic": "",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-ul-ol",
+        "elementIdSourceType": "str",
+        "heading": "My Heading",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 440,
+        "y": 560,
+        "wires": [
+            [
+                "a39f35ec8b4e3537"
+            ]
+        ]
+    },
+    {
+        "id": "a39f35ec8b4e3537",
+        "type": "uib-html",
+        "z": "8d5d4002ce6fd551",
+        "g": "f74ce23ede1c232e",
+        "name": "",
+        "topic": "",
+        "x": 620,
+        "y": 560,
+        "wires": [
+            [
+                "2c96aa60808d84db"
+            ]
+        ]
+    },
+    {
+        "id": "2c96aa60808d84db",
+        "type": "uib-save",
+        "z": "8d5d4002ce6fd551",
+        "g": "f74ce23ede1c232e",
+        "url": "test-uib-save",
+        "uibId": "abbfeec826d76d49",
+        "folder": "src",
+        "fname": "index.html",
+        "createFolder": false,
+        "reload": true,
+        "encoding": "",
+        "mode": "",
+        "name": "",
+        "topic": "",
+        "x": 770,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "365c01dfb58b06fb",
+        "type": "inject",
+        "z": "8d5d4002ce6fd551",
+        "g": "f74ce23ede1c232e",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 115,
+        "y": 560,
+        "wires": [
+            [
+                "ff798359e2bbc2bd"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "49cbb5964db6f4ca",
+        "type": "inject",
+        "z": "8d5d4002ce6fd551",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 130,
+        "y": 160,
+        "wires": [
+            [
+                "abbfeec826d76d49"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "cd3f861511b4e9e3",
+        "type": "debug",
+        "z": "8d5d4002ce6fd551",
+        "name": "uib Std Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 505,
+        "y": 140,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "7c3acf059c70b284",
+        "type": "uib-save",
+        "z": "8d5d4002ce6fd551",
+        "g": "aad125b663744f23",
+        "url": "test-uib-save",
+        "uibId": "abbfeec826d76d49",
+        "folder": "src",
+        "fname": "index.html",
+        "createFolder": false,
+        "reload": true,
+        "usePageName": true,
+        "encoding": "",
+        "mode": "",
+        "name": "",
+        "topic": "",
+        "x": 530,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "85ab80f8e040fc8e",
+        "type": "switch",
+        "z": "8d5d4002ce6fd551",
+        "name": "Filter sendHtml command response",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "sendHtml",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 425,
+        "y": 120,
+        "wires": [
+            [
+                "1e962eb78bd2f03e"
+            ],
+            [
+                "cd3f861511b4e9e3"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "ec15535f1c34f422",
+        "type": "link call",
+        "z": "8d5d4002ce6fd551",
+        "g": "aad125b663744f23",
+        "name": "",
+        "links": [
+            "7839e3c4a36af6c4"
+        ],
+        "linkType": "static",
+        "timeout": "30",
+        "x": 325,
+        "y": 280,
+        "wires": [
+            [
+                "7c3acf059c70b284"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "1e962eb78bd2f03e",
+        "type": "link out",
+        "z": "8d5d4002ce6fd551",
+        "name": "Link Return",
+        "mode": "return",
+        "links": [],
+        "x": 505,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "641005c1571172f2",
+        "type": "inject",
+        "z": "8d5d4002ce6fd551",
+        "g": "ebeecf45c78a4219",
+        "name": "htmlSend Indirect",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"htmlSend\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "sendHtml",
+        "x": 180,
+        "y": 420,
+        "wires": [
+            [
+                "9b79f2f5522fc258"
+            ]
+        ]
+    },
+    {
+        "id": "9b79f2f5522fc258",
+        "type": "link call",
+        "z": "8d5d4002ce6fd551",
+        "g": "ebeecf45c78a4219",
+        "name": "Link Call/Return",
+        "links": [
+            "7839e3c4a36af6c4"
+        ],
+        "linkType": "static",
+        "timeout": "30",
+        "x": 295,
+        "y": 420,
+        "wires": [
+            [
+                "972d802e014f60d6"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "1a505520ff80c52d",
+        "type": "comment",
+        "z": "8d5d4002ce6fd551",
+        "name": "Test out various ways of using the uib-save node. With or without the uib-html node.",
+        "info": "",
+        "x": 350,
+        "y": 40,
+        "wires": []
+    }
+]

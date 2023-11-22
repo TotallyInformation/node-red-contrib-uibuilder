@@ -71,7 +71,7 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '6.6.0'
+const release = '6.7.0'
 // Wanted node.js version - used for ESBUILD
 const nodeVersion = 'node14.14'
 
@@ -504,7 +504,7 @@ function packUiNode(cb) {
  * @param {Function} cb Callback
  */
 function buildUibVarIIFEmin(cb) {
-    src('src/components/uib-var/uib-var.js')
+    src('src/components/uib-var.js')
         .pipe(gulpEsbuild({
             outfile: 'uib-var.iife.min.js',
             bundle: true,
@@ -550,7 +550,7 @@ function buildUibVarIIFEmin(cb) {
  * @param {Function} cb Callback
  */
 function buildUibVarIIFE(cb) {
-    src('src/components/uib-var/uib-var.js')
+    src('src/components/uib-var.js')
         .pipe(gulpEsbuild({
             outfile: 'uib-var.iife.js',
             bundle: true,
@@ -576,6 +576,97 @@ function buildUibVarIIFE(cb) {
         })
 }
 
+//#endregion -- ---- --
+
+//#region -- ESbuild uibrouter --
+function buildUibRouterIIFE(cb) {
+    src(`${feModuleSrc}/uibrouter.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'uibrouter.iife.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibRouterIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(dest('front-end/utils/'))
+        .on('end', function() {
+            cb()
+        })
+}
+function buildUibRouterIIFEmin(cb) {
+    src(`${feModuleSrc}/uibrouter.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'uibrouter.iife.min.js',
+            bundle: true,
+            format: 'iife',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibRouterIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(dest('front-end/utils/'))
+        .on('end', function() {
+            cb()
+        })
+}
+function buildUibRouterESM(cb) {
+    src(`${feModuleSrc}/uibrouter.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'uibrouter.esm.js',
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibRouterIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(dest('front-end/utils/'))
+        .on('end', function() {
+            cb()
+        })
+}
+function buildUibRouterESMmin(cb) {
+    src(`${feModuleSrc}/uibrouter.js`)
+        .pipe(gulpEsbuild({
+            outfile: 'uibrouter.esm.min.js',
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            target: [
+                'es2020',
+            ]
+        }))
+        .on('error', function(err) {
+            console.error('[buildUibRouterIIFE] ERROR ', err)
+            cb(err)
+        })
+        .pipe(dest('front-end/utils/'))
+        .on('end', function() {
+            cb()
+        })
+}
 //#endregion -- ---- --
 
 //#region -- tests --
@@ -728,7 +819,7 @@ function minifyBrandCSS(cb) {
 
 //#region ---- Build node panels ----
 
-/** Combine the parts of uibuilder.html */
+/** NO LONGER USED - Combine the parts of uibuilder.html */
 function buildPanelUib1(cb) {
     try {
         src('src/editor/uibuilder/editor.js')
@@ -937,7 +1028,8 @@ function buildPanelSave(cb) {
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
 const buildme = parallel(
-    series(buildPanelUib1, buildPanelUib2),
+    // series(buildPanelUib1, buildPanelUib2),
+    buildPanelUib2,
     buildPanelSender,
     buildPanelCache,
     buildPanelUibList,
@@ -986,11 +1078,13 @@ function watchme(cb) {
     // Re-pack uibuilderfe if it changes
     watch('src/front-end/uibuilderfe.dev.js', packfe)
     watch(['src/front-end-module/uibuilder.module.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
-    watch('src/components/uib-var/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    watch('src/front-end-module/uibrouter.js', parallel(buildUibRouterIIFE, buildUibRouterIIFEmin, buildUibRouterESM, buildUibRouterESMmin))
+    watch('src/components/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
-    watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
+    // watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
-    watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
+    // watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
+    watch(['src/editor/uibuilder/*'], buildPanelUib2)
     watch('src/editor/uib-sender/*', buildPanelSender)
     // watch('src/editor/uib-receiver/*', buildPanelReceiver)
     watch('src/editor/uib-cache/*', buildPanelCache)
@@ -1001,7 +1095,7 @@ function watchme(cb) {
     watch('src/editor/uib-html/*', buildPanelHTML)
     watch('src/editor/uib-save/*', buildPanelSave)
     watch('front-end/uib-brand.css', minifyBrandCSS)
-    // watch('src/components/uib-var/uib-var.js', parallel(buildUibVarIIFE, buildUibVarIIFEmin))
+    // watch('src/components/uib-var.js', parallel(buildUibVarIIFE, buildUibVarIIFEmin))
     // watch('src/libs/*', buildNodeLibs)
 
     cb()

@@ -4,44 +4,31 @@
 (function () {
     'use strict'
 
+    // NOTE: window.uibuilder is added - see `resources` folder
+
+    // RED._debug({topic: 'RED.settings', payload:RED.settings})
+
+    const uibuilder = window['uibuilder']
+    const log = uibuilder.log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-save'
-    /** Node's label @constant {string} paletteCategory */
-    const nodeLabel = moduleName
-    /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory = 'uibuilder'
-    /** Node's background color @constant {string} paletteColor */
-    const paletteColor = '#E6E0F8'
 
-    /** Copy of all deployed uibuilder node instances */
-    let uibInstances = null
+    /** Copy of deployed uibuilder node instances populated by getUrls() */
+    let uibInstances
 
-    /** Get all of the current uibuilder URL's */
+    /** Get all of the currently deployed uibuilder URL's
+     * NOTE that the uibuilder.urlsByNodeId cannot be used as that includes disabled nodes/flows
+     */
     function getUrls() {
-        $.ajax({
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            url: './uibuilder/admin/dummy',
-            data: {
-                'cmd': 'listinstances',
-            },
-            success: function(instances) {
-                console.log('>> Instances >>', instances, Object.entries(instances) )
-
-                uibInstances = instances
-
-                Object.keys(instances).forEach( (key, i, arr) => {
-                    $('#node-input-url').append($('<option>', {
-                        value: instances[key],
-                        text: instances[key],
-                        'data-id': key,
-                    }))
-                })
-
-            }
+        uibInstances = uibuilder.getDeployedUrls()
+        Object.keys(uibInstances).forEach( (key, i, arr) => {
+            $('#node-input-url').append($('<option>', {
+                value: uibInstances[key],
+                text: uibInstances[key],
+                'data-id': key,
+            }))
         })
-
     } // ---- end of getUrls ---- //
 
     /** Prep for edit
@@ -49,6 +36,7 @@
      */
     function onEditPrepare(node) {
         // initial checkbox states
+        $('#node-input-usePageName').prop('checked', node.usePageName)
         $('#node-input-createFolder').prop('checked', node.createFolder)
         $('#node-input-reload').prop('checked', node.reload)
 
@@ -85,12 +73,33 @@
             $(`#node-input-url option[value="${node.url}"]`).prop('selected', true)
             $('#node-input-url').val(node.url)
         }
+
+        // If "Use pageName" is set, disable the folder and file fields.
+        $('#node-input-usePageName').on('change', function() {
+            if ($(this).prop('checked') === true) {
+                $('#node-input-folder').attr('disabled', true)
+                $('#folder').css('color', 'var(--red-ui-tab-text-color-disabled-active)')
+                $('#node-input-folder').css('background-color', 'var(--red-ui-form-text-color-disabled)')
+
+                $('#node-input-fname').attr('disabled', true)
+                $('#fname').css('color', 'var(--red-ui-tab-text-color-disabled-active)')
+                $('#node-input-fname').css('background-color', 'var(--red-ui-form-text-color-disabled)')
+            } else {
+                $('#node-input-folder').attr('disabled', false)
+                $('#folder').removeAttr('style')
+                $('#node-input-folder').removeAttr('style')
+
+                $('#node-input-fname').attr('disabled', false)
+                $('#fname').removeAttr('style')
+                $('#node-input-fname').removeAttr('style')
+            }
+        })
+
+        uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     // @ts-ignore
     RED.nodes.registerType(moduleName, {
-        category: paletteCategory,
-        color: paletteColor,
         defaults: {
             url: { value: '', required: true },
             uibId: { value: '' }, // ID of selected uibuilder instance
@@ -98,6 +107,7 @@
             fname: { value: '', },
             createFolder: { value: false, },
             reload: { value: false, },
+            usePageName: { value: false, },
             encoding: { value: 'utf8' },
             mode: { value: 0o666 },
             name: { value: '' },
@@ -109,14 +119,15 @@
         // outputs: 1,
         // outputLabels: ['HTML payload'],
         icon: 'font-awesome/fa-floppy-o',
-        paletteLabel: nodeLabel,
         label: function () {
             return this.name || this.url || moduleName
         },
+        paletteLabel: moduleName,
+        category: uibuilder.paletteCategory,
+        color: 'var(--uib-node-colour)', // '#E6E0F8'
 
         /** Prepares the Editor panel */
         oneditprepare: function () { onEditPrepare(this) },
-
     }) // ---- End of registerType() ---- //
 
 }())

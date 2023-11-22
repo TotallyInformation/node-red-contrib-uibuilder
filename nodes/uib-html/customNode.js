@@ -32,6 +32,8 @@ const { JSDOM } = jsdom
 
 // Ui class copied from src/front-end-module/ui.js
 const Ui = require('../libs/ui.js')
+// uibuilder file handler
+const fs = require('../libs/fs.js')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -61,11 +63,19 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // const RED = mod.RED
 
+    // TODO: Add config switch to wrap in template
+
     // If msg has _ui property - is it from the client? If so, remove it.
     if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
 
+    let template = /*html*/'<!DOCTYPE html>'
+    if (this.useTemplate === true) {
+        if (msg.template && (typeof msg.template) === 'string') template = msg.template
+        else template = await fs.getTemplateFile('blank', 'src/index.html')
+    }
+
     if (msg._ui) {
-        const dom = new JSDOM(/*html*/`<!DOCTYPE html>`)
+        const dom = new JSDOM(template)
 
         // Create instance of ui class
         const ui = new Ui(dom.window, null, null)
@@ -74,7 +84,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         ui.ui(msg._ui)
 
         // Copy the input msg
-        const out = {...msg}
+        const out = { ...msg }
         // remove _ui
         delete out._ui
 
@@ -87,7 +97,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         } catch (err) {
             mod.RED.log.error(`[uib-html:inputMsgHandler] Cannot serialise the DOM. ${err.message} `, err)
         }
-        
+
         // And send it on its way
         send(out)
 
@@ -117,33 +127,9 @@ function nodeInstance(config) {
     /** Transfer config items from the Editor panel to the runtime */
     this.name = config.name ?? ''
     this.topic = config.topic ?? ''
+    this.useTemplate = config.useTemplate ?? false
 
-    // this.tagSource = config.tag ?? ''
-    // this.tagSourceType = config.tagSourceType ?? 'str'
-    // this.tag = undefined
-
-    // this.elementIdSource = config.elementId ?? ''
-    // this.elementIdSourceType = config.elementIdSourceType ?? 'str'
-    // this.elementId = undefined
-
-    // this.parentSource = config.parent ?? 'body'
-    // this.parentSourceType = config.parentSourceType ?? 'str'
-    // this.parent = undefined
-
-    // this.positionSource = config.position ?? 'body'
-    // this.positionSourceType = config.positionSourceType ?? 'str'
-    // this.position = undefined
-
-    // this.slotContentSource = config.slotSourceProp ?? ''
-    // this.slotContentSourceType = config.slotSourcePropType ?? 'msg'
-    // this.slotContent = undefined
-
-    // this.slotPropMarkdown = config.slotPropMarkdown ?? false
-
-    // this.attribsSource = config.attribsSource ?? ''
-    // this.attribsSourceType = config.attribsSourceType ?? 'msg'
-
-    this._ui = undefined // set in buildUI()
+    this._ui = undefined // set in inputMsgHandler
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)

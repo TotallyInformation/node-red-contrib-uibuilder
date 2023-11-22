@@ -4,20 +4,22 @@
 (function () {
     'use strict'
 
+    // const mylog = window['uibuilder'].log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-html'
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel = moduleName
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory = 'uibuilder'
+    const paletteCategory  = window['uibuilder'].paletteCategory
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor = '#E6E0F8'
+    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function onEditPrepare(node) {
-
+        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     // @ts-ignore
@@ -27,6 +29,7 @@
         defaults: {
             name: { value: '' },
             topic: { value: '' },
+            useTemplate: { value: false },
         },
         align: 'left',
         inputs: 1,

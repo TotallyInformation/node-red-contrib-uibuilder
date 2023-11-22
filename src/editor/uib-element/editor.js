@@ -4,14 +4,16 @@
 ;(function () {
     'use strict'
 
+    const mylog = window['uibuilder'].log
+
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-element'
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel = moduleName
     /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory = 'uibuilder'
+    const paletteCategory  = window['uibuilder'].paletteCategory
     /** Node's background color @constant {string} paletteColor */
-    const paletteColor = '#E6E0F8'
+    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
     /** Element Types definitions */
     const elTypes = {
@@ -254,25 +256,6 @@
     // Standard width for typed input fields
     const tiWidth = '68.5%'
 
-    /** Add jQuery UI formatted tooltips */
-    function doTooltips() {
-        // Select our page elements
-        $('#uib-el').tooltip({
-            items: 'img[alt], [aria-label], [title]',
-            track: true,
-            content: function() {
-                const element = $( this )
-                if ( element.is( '[title]' ) ) {
-                    return element.attr( 'title' )
-                } else if ( element.is( '[aria-label]' ) ) {
-                    return element.attr( 'aria-label' )
-                } else if ( element.is( 'img[alt]' ) ) {
-                    return element.attr( 'alt' )
-                } else return ''
-            },
-        })
-    }
-
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
@@ -368,7 +351,7 @@
         // } )
 
         // Make position of aria-labels dynamic to cursor
-        // $('#uib-el *[aria-label]').on('mousemove', function(event) {
+        // $('#ti-edit-panel *[aria-label]').on('mousemove', function(event) {
         //     document.documentElement.style.setProperty('--x', event.pageX )
         //     document.documentElement.style.setProperty('--y', event.pageY )
         //     document.documentElement.style.setProperty('--moveX', event.originalEvent.movementX )
@@ -447,8 +430,7 @@
             label: 'Element Config'
         })
 
-        doTooltips()
-
+        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     /** Prep for save

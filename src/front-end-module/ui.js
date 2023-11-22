@@ -20,7 +20,6 @@
   limitations under the License.
  */
 /* globals module:true */
-// ts-nocheck 
 
 const Ui = class Ui {
     version = '6.6.0-src'
@@ -294,7 +293,6 @@ const Ui = class Ui {
                 if (toaster.childElementCount < 1) toaster.remove()
             }, ui.autoHideDelay)
         }
-
     } // --- End of showDialog ---
 
     /** Show a browser notification if the browser and the user allows it
@@ -627,7 +625,6 @@ const Ui = class Ui {
                 this._uiExtendEl(newEl, compToAdd.components, compToAdd.ns)
             }
         })
-
     } // --- end of _uiAdd ---
 
     // TODO Add better tests for failures (see comments)
@@ -720,7 +717,6 @@ const Ui = class Ui {
                 this._uiExtendEl(newEl, compToReplace.components, compToReplace.ns)
             }
         })
-
     } // --- end of _uiReplace ---
 
     // TODO Allow single add without using components array
@@ -782,7 +778,6 @@ const Ui = class Ui {
             }
 
         })
-
     } // --- end of _uiUpdate ---
 
     // TODO Add more error handling and parameter validation
@@ -1173,10 +1168,11 @@ const Ui = class Ui {
 
         Ui.log('trace', `Ui:include:${type}`, txtReturn)()
         return txtReturn
-
     } // ---- End of include() ---- //
 }
 
 module.exports = Ui
-// window['ui'] = new Ui()
+
+// if (window) window['$ui'] = new Ui(window)
+
 // export Ui

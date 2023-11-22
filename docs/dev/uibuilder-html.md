@@ -3,18 +3,14 @@ title: Developer documentation for `uibuilder.html`
 description: >
    Documents the processing of the html file that defines the Node-RED admin UI panel for uibuilder. Shown when double-clicking on a uibuilder node in a flow.
 created: 2019-06-15 14:26:00
-lastUpdated: 2022-11-26 16:26:48
+lastUpdated: 2023-11-03 17:55:25
 ---
 
 !> This document needs updating, it is incomplete.
 
 - [Variables](#variables)
-  - [Properties](#properties)
-  - [Pseudo Settings](#pseudo-settings)
 - [Package List](#package-list)
-  - [packageList Function](#packagelist-function)
-  - [Add button](#add-button)
-  - [addPackageRow(element,index,data) Function](#addpackagerowelementindexdata-function)
+- [Editor common global variable](#editor-common-global-variable)
 
 ## Variables
 
@@ -79,3 +75,22 @@ If `data` is non-zero, the assumption is that we are adding known entries (proba
 
 If the "Install" button is pressed, the uibuilder `installPackage` API is called with the package name.
 
+
+## Editor common global variable
+
+All uibuilder nodes load 2 resource files:
+
+```html
+<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/ti-common.css" media="all">
+<script src="./resources/node-red-contrib-uibuilder/ti-common.js"></script>
+```
+
+These define some common styles and a global variable `window.uibuilder`.
+
+The global can be accessed from the developer console on the Node-RED Editor page as `uibuilder`. It contains the following:
+
+* `debug` - set to true to see more debugging information from the uibuilder nodes Editor components. Is set to true automatically if running/accessing Node-RED on `localhost`.
+* `log` - Is set to `console.log` only if `debug` is true, otherwise is a null function.
+* `packages` - The list of all installed front-end libraries (visible on a uibuilder node's Libraries tab) with their details.
+* `urlsByNodeId` - These are all of the URL's defined in the editor - note that these can be different than the deployed list of URL's if something has not yet been deployed.
+* `doTooltips` - A utility function used by uib nodes to give better tooltips. Uses jQueryUI tooltips and display's tooltips in the following order of preference: Image alt labels > Aria Labels > title attribute. Only applies to anything inside a div with an ID of `ti-edit-panel`. All uibuilder nodes wrap the entire configuration panel in a div with this id.

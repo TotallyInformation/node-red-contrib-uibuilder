@@ -14,42 +14,11 @@
     limitations under the License.
 -->
 
-<style>
-    #uib-upd *[aria-label] {
-        position:relative;
-    }
-    #uib-upd *[aria-label]:after {
-        content: attr(aria-label);
-        position:absolute;
-        top:100%;left:50px;
-        box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--red-ui-form-input-border-color);
-        padding: 10px;
-        z-index: 999;
-        background-color: var(--red-ui-popover-background);
-        color: var(--red-ui-popover-color);
-        max-width: 350px;
-        text-decoration: none;
-        text-align: center;
-        border-radius: 6px;
-        white-space: break-spaces;
-        
-        visibility: hidden;
-        opacity: 0;
-        transition: all 0.5s ease-out;
-    }
-    #uib-upd *[aria-label]:hover:after {
-        visibility: visible;
-        opacity: 1;
-        transition: all 0.5s ease-in 1s;
-    }
-    #uib-upd .red-ui-typedInput-container {
-        width:69% !important;
-    }
-</style>
+<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/ti-common.css" media="all">
+<script src="./resources/node-red-contrib-uibuilder/ti-common.js"></script>
 
-<script type="text/html" class="uib-tooltip" data-template-name="uib-update">
-<div id="uib-upd">
+<script type="text/html" data-template-name="uib-update">
+<div id="ti-edit-panel">
 
     <div aria-label="Choose update (default) or delete mode" class="form-row">
         <label for="node-input-mode">Mode</label>
@@ -109,11 +78,11 @@
 <script type="text/html" data-help-name="uib-update">
 
 <p>
-    Zero-code UI updater. Updates HTML elements from simple input data.<br><br>
+    Zero-code UI updater for <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>. Updates HTML elements from simple input data.<br><br>
     Requires the "new" front-end client library (either the IIFE or ESM version).
 </p>
 <p>
-    Please try out the example in the import library.
+    Please try out the example in the import library. <a href="./uibuilder/docs/#/nodes/uib-update" target="_blank">Documentation</a>.
 </p>
 
 <h3>Inputs</h3>
@@ -227,14 +196,16 @@
     (function () {
         'use strict'
     
+        // const mylog = window['uibuilder'].log
+    
         /** Module name must match this nodes html file @constant {string} moduleName */
         const moduleName = 'uib-update'
         /** Node's label @constant {string} paletteCategory */
         const nodeLabel = moduleName
         /** Node's palette category @constant {string} paletteCategory */
-        const paletteCategory = 'uibuilder'
+        const paletteCategory  = window['uibuilder'].paletteCategory
         /** Node's background color @constant {string} paletteColor */
-        const paletteColor = '#E6E0F8'
+        const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
     
         const inputTypes = [
             'msg', 'flow', 'global',
@@ -313,6 +284,7 @@
                 typeField: $('#node-input-attribsSourceType')
             })
     
+            window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
         } // ----- end of onEditPrepare() ----- //
     
         /** Validate a typed input as a string
@@ -383,9 +355,7 @@
     
             /** Prepares the Editor panel */
             oneditprepare: function () { onEditPrepare(this) },
-    
         }) // ---- End of registerType() ---- //
-    
     }())
     
 </script>

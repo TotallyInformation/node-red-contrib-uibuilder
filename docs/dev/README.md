@@ -71,3 +71,7 @@ lastUpdated: 2023-10-08 15:12:02
 Some information on testing uibuilder. Unfortunately, I have no real clue about automated testing and TLD, if you would like to contribute something, please do!
 
 * [Regression Tests](dev/regression-tests.md)
+
+## Node edit panel global variable
+
+* [uibuilder.html#Editor common global variable](dev/uibuilder-html#editor-common-global-variable)

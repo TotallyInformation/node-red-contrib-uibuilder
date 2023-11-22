@@ -70,7 +70,7 @@ const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra
 
 /** @type {uibConfig} */
 const uib = {
-    me: fs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
+    me: uibFs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
     moduleName: 'uibuilder',
     nodeRoot: '',
     deployments: {},
@@ -322,6 +322,7 @@ function nodeInstance(config) {
     }
 
     // Does the custom folder exist? If not, create it and copy template to it. Otherwise make sure it is accessible.
+    // TODO replace with uibFs.ensureFolder()
     let customFoldersOK = true
     if ( !fs.existsSync(this.customFolder) ) {
         // Does not exist so check whether built-in or external template wanted
@@ -594,12 +595,6 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     }
     // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
     if (uibRootFolderOK === true) {
-        // ! TODO - No longer needed?
-        // Check if uibRoot/package.json exists and if not, create it
-        // const uibRootPkgJson = path.join(uib.rootFolder, 'package.json')
-        // if ( !fs.existsSync( uibRootPkgJson ) ) {
-        //     fs.writeJsonSync( uibRootPkgJson, { name: 'uib-root' } )
-        // }
         // We want to always overwrite the .config template files
         const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
         try {
@@ -674,7 +669,7 @@ function Uib(RED) {
             uibuilderCurrentVersion: { value: (uib.version), exportable: true },
             // Should the editor tell the user that a redeploy is needed (based on uib versions)
             uibuilderRedeployNeeded: { value: uib.reDeployNeeded, exportable: true },
-            // List of the deployed uib instances [{node_id: url}]
+            // TODO REMOVE? since only correct at first load and an API is needed anyway. List of the deployed uib instances [{node_id: url}]
             uibuilderInstances: { value: uib.instances, exportable: true },
             // uibRoot
             uibuilderRootFolder: { value: uib.rootFolder, exportable: true },

@@ -253,7 +253,7 @@ class UibSockets {
         return this._isConfigured
     }
 
-    // ? Consider adding isConfigered checks on each method?
+    // ? Consider adding isConfigured checks on each method?
 
     /** Output a msg to the front-end.
      * @param {object} msg The message to output, include msg._socketId to send to a single client
@@ -293,7 +293,6 @@ class UibSockets {
             log.trace(`[uibuilder:socket.js:sendToFe:${url}] msg sent on to ALL clients. Channel: ${channel}. ${JSON.stringify(msg)}`)
             ioNs.emit(channel, msg)
         }
-
     } // ---- End of sendToFe ---- //
 
     /** Output a normal msg to the front-end. Can override socketid

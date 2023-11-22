@@ -4,33 +4,82 @@ typora-root-url: docs/images
 
 # Changelog
 
-Please see the documentation for archived changelogs - a new archive is produced for each major version.
-
-## To do/In-progress
-
-Check the [roadmap](./docs/roadmap.md) for future developments.
-
-* Outdated examples - some of the included example flows such as the "remote-commands" example are now out of date. What is there will still work but they are no longer comprehensive. Will try to catch them up as soon as I can.
-* Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
-
-  Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
-
-### TO FIX
-
-* Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
-* uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
-* uib-tag - Attribs Source - should be "None" as default
-* Editor (all nodes) - Use jQueryUI tooltips instead of uib custom (see `uib-element`)
-* Templates - add eslint dev dependencies to package.json
-  * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
-
-
+Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.7.0...main)
 
 Nothing currently.
+
+## [v6.7.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...v6.7.0)
+
+### Highlights
+
+* The new front-end routing library is available. Easy to use, robust and reasonably comprehensive. It is not dependent on uibuilder but offered with it to enable Single-Page Apps (SPA's) to be easily created with uibuilder.
+* The `uib-html` node now allows an HTML string wrapper. This defaults to uibuilder's default "Blank" template HTML or can be overridden using `msg.template`. This lets you create a fully working page from no-code and low-code configurations that can be fed direct to `uib-save` or used in Dashboard or with http-in/-out nodes. Or indeed with external web server tools.
+
+### New client library - uibrouter - front-end routing library
+
+A complete, standalone library for doing front-end routing with both internal and external templates. Lightweight and simple to use. See the [documentation](docs/client-docs/fe-router.md) for details.
+
+### `uib-html` improvements
+
+* The `uib-html` node now accepts a `msg.template` property which, if provided, MUST contain a valid HTML page template.
+
+  This allows you to grab an existing page using the `htmlSend` command, add new elements/updates and save it back to a uibuilder instance either as the default page or another page, for example, using the `uib-save` node. Overwriting a page is a way of ensuring that new accesses get a known page with structure and potentially data.
+
+  You can, of course, use this node to produce HTML for use outside of UIBUILDER. For example, use uib-element/uib-update, add a template and use this node to create a complete web page for use with http-in/-out, a static website or some other web service.
+
+  You probably don't need/want the template if outputting for the Node-RED Dashboard `ui_template` node.
+
+### `uib-save` improvements
+
+* The reload client flag now actually works.
+* The new "Use pageName" flag allows you to save to the uibuilder node's live folder using the page name returned from the front-end or manually set in `msg._ui.pageName` or `msg.uib.pageName`. This makes it easier to save an updated page via the `htmlSend` command (either from Node-RED or from front-end code). See the example flow to see how this works. It means that you don't need to know the folder or the pageName at all.
+* The filename can include folders (use `/` as separator) and missing folders will be created automatically if the "Create Folder" flag is set. Note that you cannot have any `..` in the filename, this is to prevent escaping from the instance root folder and causing mayhem elsewhere. By default, new folders cannot be created (this is a safety feature), select the "Create Folder?" flag to allow creation.
+* The Editor js has been moved out of the html file and put into `resources/uib-save.js`. It is loaded by the html file in a link. This makes development a lot easier. The code also references `resources/ti-common.js` to ensure consistency.
+
+### `uib-tag` improvements
+
+* **FIXED** - Tag name input would only accept string. Now correctly processes other types.
+
+### Client library improvements
+
+* **FIXED** Client `htmlSend`, when called as a Node-RED command, was returning 2 messages. Now returns the HTML string and sends it to Node-RED directly only if the new 2nd argument is TRUE (the default so that direct calls will still work without changes).
+* **FIXED** `eventSend` when attached to a change event returns the `value` property that all `input` tags have - except when they don't! When input is used as a checkbox, it has a `checked` property instead. Function changed to return the checked value if it exists (`true` or `false`), the value property otherwise.
+* **NEW function and command** `watchUrlHash` - Toggle (or manually set on/off) sending URL Hash changes back to Node-RED in a standard msg.
+* **NEW watched variable** `urlHash` Set on load and updated as it changes. URL Hashes are used by front-end routing for Single-Page-Apps (SPA's). They do not reload the page.
+* **New utility function** `truthy` Takes a truthy/falsy input (e.g. text, number, boolean) and returns true or false (boolean). If input is neither truthy or falsy, can take a 2nd parameter which is the default return.
+* Function added to watch for url hash changes.
+
+### `uibuilder` node improvements
+
+* `uibuilder` - Reduce code complexity by moving more fs actions out into `libs/fs.js`.
+* Some common Node-RED Editor code and styles moved to common libraries (`resources/ti-common.js` & `resources/ti-common.css`) loaded as resources. Making the editor code smaller and more consistent.
+
+#### Editor panel improvements
+
+* Major rework of tracking node instances. Custom events are now fired: 'uibuilder:node-added', 'uibuilder:node-changed', 'uibuilder:node-deleted'. With the node in question passed as data in the event. For added nodes, an extra property `addType` is added to the node object and set to either "load" (fired when the Editor is loaded which adds all nodes), "new" (when a brand new instance is added, eg from the palette), or "paste/import". The tracking code is also now only ever instanciated once when the Editor is loaded.
+* Better and more consistent removal of URL setting when pasting or importing existing uibuilder nodes.
+* The Editor js has been moved out of the html file and put into `resources/uibuilder.js`. It is loaded by the html file in a link. This makes development a lot easier. The code also references `resources/ti-common.js` to ensure consistency.
+* Improved debug information. Debug output to Editor page console is automatic if environment variable NODE_ENV is set to 'dev' or 'development' (it used to be if running on localhost). Otherwise can be turned on by manually issueing `uibuilder.debug = true` on the browser console on the Editor page.
+
+### Examples
+
+* `uib-save` and `uib-html` example flows added.
+* `uib-var-web-component` example flow added. Contains several examples of showing uibuilder managed variables dynamically in your HTML code. Including several no-code examples.
+* `uib-tag` example flow added.
+
+### Other improvements
+
+* **NEW node Library** `libs/lowcode.js` - The beginnings of moving the zero- to low-code element translations (e.g. uib-element, uib-update and uib-tag) to their own library. With the possibility of eventually making that library available as a stand-alone front-end library as well. Not yet in use.
+* `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
+* **NEW utility function** `getSource(propName, node, msg, RED, src, srcType)` in `libs/uiblib.js` - this is an ASYNC function that returns a promise. It is a standardised way of getting the current value from a Node-RED Typed Input field.
+* Enhanced tooltips not applied to the Monaco/Ace edit panel.
+
+
+
 
 ## [v6.6.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.5.0...v6.6.0)
 

@@ -28,7 +28,8 @@
 //#region ----- Module level variables ---- //
 
 const uibFs  = require('../libs/fs')   // File/folder handling library (by Totally Information)
-const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
+// const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
+const { setNodeStatus } = require('../libs/uiblib')  // Utility library for uibuilder
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -59,28 +60,44 @@ const mod = {
  */
 async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
 
-    // const RED = mod.RED
+    const RED = mod.RED
+    let statusColor = 'blue'
 
-    // TODO check if msg.payload exists
-    // TODO msg/config overrides
-    // TODO Check the _ui pagename property if fname not set - to allow auto-updates to pages
-
-    // TODO Make the folder name in Editor default to `src`
-
-    // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
-
-    // Call uibuilder shared library to save file
-    try {
-        await uibFs.writeInstanceFile(this.url, this.folder, this.fname, msg.payload)
-        this.counters.success++
-        this.statusDisplay = { fill: 'green', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
-    } catch (err) {
+    if (!msg.payload) {
         this.counters.fail++
-        this.statusDisplay = { fill: 'red', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
-        this.error(`🛑${err.message}`, err)
+        statusColor = 'red'
+        this.error('🛑 msg.payload not present or empty. File not saved.')
+    } else {
+        let folder = this.folder
+        let fname = this.fname
+
+        // If "Use pageName"
+        if (this.usePageName === true && ( (msg._uib && msg._uib.pageName) || (msg._ui && msg._ui.pageName) )) {
+            fname = msg._uib ? msg._uib.pageName : msg._ui.pageName
+            const srcNode = RED.nodes.getNode(this.uibId)
+            folder = srcNode.sourceFolder
+        } else {
+            this.warn('Use pageName requested but neither msg._uib nor msg._ui exists')
+        }
+
+        // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
+        if (!folder && msg.folder) folder = msg.folder
+        if (!fname && msg.fname) fname = msg.fname
+
+        // Call uibuilder shared library to save file (optional sub-folder creation and client reload)
+        try {
+            await uibFs.writeInstanceFile(this.url, folder, fname, msg.payload, this.createFolder, this.reload)
+            this.counters.success++
+            statusColor = 'green'
+        } catch (err) {
+            this.counters.fail++
+            statusColor = 'red'
+            this.error(`🛑 ${err.message}`, err)
+        }
     }
 
-    uiblib.setNodeStatus( this )
+    this.statusDisplay = { fill: statusColor, shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
+    setNodeStatus( this )
 
     // We are done
     done()
@@ -107,6 +124,7 @@ function nodeInstance(config) {
     this.fname = config.fname ?? ''
     this.createFolder = config.createFolder ?? false
     this.reload = config.reload ?? false
+    this.usePageName = config.usePageName ?? false
     this.encoding = config.encoding ?? 'utf8'
     this.mode = config.mode ?? 0o666
     this.uibId = config.uibId ?? ''
@@ -118,17 +136,12 @@ function nodeInstance(config) {
         return
     }
 
-    // Get reference to the uibuilder node instance
-    const uibNode = RED.nodes.getNode(this.uibId)
-    // Get reference to the instance root folder
-    this.instanceRoot = uibNode.customFolder
-
     this.counters = {
         success: 0,
         fail: 0,
     }
     this.statusDisplay = { fill: 'blue', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
-    uiblib.setNodeStatus( this )
+    setNodeStatus( this )
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)

@@ -3,7 +3,7 @@ title: uib-cache - Cache and replay data
 description: >
    Usage and configuration.
 created: 2023-02-05 16:31:39
-lastUpdated: 2023-03-04 15:32:55
+lastUpdated: 2023-10-28 15:57:45
 ---
 
 The cache node was added in uibuilder v5. It provides an easy method of saving messages in a cache and replaying them
@@ -71,3 +71,30 @@ Using `flow` or `global` cache types exposes the data to other nodes which could
 
 Also, when using `flow` or `global` types, you are able to change the name of the variable. Make sure that the name does not clash with other use.
 
+## Alternatives
+
+There are a couple of important alternatives to using the cache node that may, in some circumstances, be better.
+
+### Using the uib-save node with the current UI
+
+In some cases, you may want to persist the whole UI back to a static file. This may give you a significant performance boost for complex pages and large numbers of connected users.
+
+To do this, you can send an `sendHtml` command to one of the connected clients. Feed the resulting `msg` directly into the `uib-save` node remembering to set the output file to `index.html` if you want to replace the default page.
+
+### Using the uib-save node with UI generated in Node-RED
+
+Another alternative is to create a UI completely in Node-RED. You can use the `uib-html` node to do this with both no-code and low-code configurations.
+
+The html node has an flag to "Merge HTML Template?" which should be checked. If no `msg.template` is supplied and this flag is set, the node will wrap the resulting HTML in uibuilder's current "Blank" template. Alternatively, you can provide your own template string.
+
+### Using a context variable
+
+By connecting the output from uibuilder's port #2 to a switch node to filter on `msg.uibuilderCtrl` being equal to "client connect" (and optionally filtering for specific pages/clients) and then using that to trigger a change node that outputs back into the uibuilder node with settings like this:
+
+![Cache change node](image-3.png)
+
+You can set up a manual cache using a context variable.
+
+Obviously, this does have some dangers that need to be managed. Namely that some other flow process could change the cache context variable. But this could also be an advantage since many things could now update the cache if needed.
+
+Of course, since the cache would only be delivered on a page load, you would also need to deal with dynamic updates if needed.
