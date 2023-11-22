@@ -13,7 +13,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### TO FIX
 
-* Remove tooltip from ace/monaco wrapper.
 * Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
 * uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
 
@@ -96,6 +95,7 @@ A complete, standalone library for doing front-end routing with both internal an
 * **NEW node Library** `libs/lowcode.js` - The beginnings of moving the zero- to low-code element translations (e.g. uib-element, uib-update and uib-tag) to their own library. With the possibility of eventually making that library available as a stand-alone front-end library as well. Not yet in use.
 * `libs/fs.js` - More replacements towards removing dependency on fs-extra. More move of filing system actions out of other nodes and libraries.
 * **NEW utility function** `getSource(propName, node, msg, RED, src, srcType)` in `libs/uiblib.js` - this is an ASYNC function that returns a promise. It is a standardised way of getting the current value from a Node-RED Typed Input field.
+* Enhanced tooltips not applied to the Monaco/Ace edit panel.
 
 
 

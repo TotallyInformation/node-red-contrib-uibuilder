@@ -1871,7 +1871,7 @@
 
         fileEditor()
 
-        uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
+        uibuilder.doTooltips('.ti-edit-panel') // Do this at the end
     } // ---- End of oneditprepare ---- //
 
     //#endregion ------------------------------------------------- //
