@@ -6,25 +6,6 @@ typora-root-url: docs/images
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
-## To do/In-progress
-
-* Outdated examples - some of the included example flows such as the "remote-commands" example are now out of date. What is there will still work but they are no longer comprehensive. Will try to catch them up as soon as I can.
-* Add uib.var function as a test of using a proxy to manage vars and work with the uib-var component.
-
-### TO FIX
-
-* Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
-* uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
-
-* Templates - add eslint dev dependencies to package.json
-  * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
-
-* uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
-
-* Dev Docs
-  * http://127.0.0.1:1880/red/uibuilder/admin/api-test?cmd=checkfolder - is called each loaded instance on load of editor
-
-
 ------------
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.7.0...main)

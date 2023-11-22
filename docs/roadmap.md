@@ -46,17 +46,17 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Node Refactoring:
 
-  | Node        | Mv src editor.js<br>to resources   | jQ Tooltips | getSource | Notes                               |
-  | ----------- | :--------------------------------: | :---------: | :-------: | ----------------------------------- |
-  | uibuilder   |                                    |      ✔️     |           |                                     |
-  | uib-cache   |                                    |             |           |                                     |
-  | uib-element |                                    |             |     ✔️    |                                     |
-  | uib-html    |                                    |             |           |                                     |
-  | uib-save    |                 ✔️                 |      ✔️    |           |                                     |
-  | uib-sender  |                                    |             |           |                                     |
-  | uib-tag     |                                    |      ✔️    |     ✔️    |                                     |
-  | uib-update  |                                    |             |           |                                     |
-  | uib-uplot   |                                    |             |           | check this for other needed updates |
+  | Node        | Mv src editor.js<br>to resources   | jQ Tooltips | jQ Tt class not id | getSource | Notes                               |
+  | ----------- | :--------------------------------: | :---------: | :-------: | :---------------------------------: | :---------------------------------: |
+  | uibuilder   |                                    |      ✔️     |    ✔️     |           |                                     |
+  | uib-cache   |                                    |             |             |           |                                     |
+  | uib-element |                                    |             |             |     ✔️    |                                     |
+  | uib-html    |                                    |             |             |           |                                     |
+  | uib-save    |                 ✔️                 |      ✔️    |          |           |                                     |
+  | uib-sender  |                                    |             |             |           |                                     |
+  | uib-tag     |                                    |      ✔️    |          |     ✔️    |                                     |
+  | uib-update  |                                    |             |             |           |                                     |
+  | *uib-uplot* |                                    |             |             |           | check this for other needed updates |
 
   Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId]
 
@@ -65,7 +65,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
 
-* Use alt logging for websocket disconnects, sleep, error, etc
 
 * Editor: Add panel of links to all instances of uibuilder.
 
@@ -79,8 +78,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Updates to `uibuilder` node
 
+* **FIX NEEDED** Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
+
 * Allow file uploads
 * Add instance title and description fields. Extend record of instances to include these and update the `apps` page.
+* Use alt logging for websocket disconnects, sleep, error, etc
 
 * [**STARTED**] Move all filing system handling to a separate library module `libs/fs.js`. Should help work out how to support implementations with limited filing systems.
 * Move all uibRoot package.json handling to `libs/package-mgt.js`
@@ -148,6 +150,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Rationalise the file editor. [Ref](https://discourse.nodered.org/t/code-editor-isnt-saving-text/80836)
 
 #### Templates
+
+* Add eslint dev dependencies to package.json
+  * .eslintrc.js: 	Configuration for rule "sonarjs/no-duplicate-string" is invalid: 	Value 6 should be object. 
 
 * Add template description to display.
 * Add dependency version handling to templates (e.g. vue 2/3)
@@ -247,10 +252,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add checks to prevent non-string cache by property values.
 * Add empty cache button.
 * Think about impact of a cache clear (affects all connected clients)
-
-### Extensions to `uib-sender` node
-
-* CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 
 ### Extensions to the `uib-element` node
 
@@ -375,7 +376,26 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Pill list, scrollable search - https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/layout-grids/
 * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
-### Extensions to the `uib-update` node
+### Extensions to the `uib-html` node
+
+* Add option to remove the page tags, leaving just the document body fragment.
+* Add options for DOMpurify and Markdown-IT
+* Consider adding an HTML editor for the template?
+
+### `uib-save` node
+
+* Allow msg overrides of input fields
+
+### `uib-sender` node
+
+* CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
+
+### `uib-tag` node
+
+* Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
+* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+
+### `uib-update` node
 
 * Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
@@ -385,22 +405,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
 
 
-### Extensions to the `uib-tag` node
-
-* Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
-* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-
-### Extensions to the `uib-html` node
-
-* Add option to remove the page tags, leaving just the document body fragment.
-* Add options for DOMpurify and Markdown-IT
-* Consider adding an HTML editor for the template?
-
-### Extensions to the `uib-save` node
-
-* Allow msg overrides of input fields
-
-### Extensions to client Library
+### client Library
 * Add client time offset from server to standard client metadata. [ref](https://discourse.nodered.org/t/time-zone-in-a-z-in-node-red/82537/7?u=totallyinformation)
 * Restrict `onChange` to only watch watched variables? Optionally make the watched var managed automatically (checking to make sure it doesn't start with `_` or `#`)
 * [**STARTED**] Ability to visually show all uibuilder managed variables.
@@ -491,7 +496,16 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Check all auto-added elements for accessibility
   * Add count of current errors to title
 
-### Improvements to `uib-brand.css`
+### `ui.js` library
+
+* uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
+
+### `uib-var` web component
+
+* Allow no var attrib but instead allow ID to create a new managed variable
+* Add uib.var function as a test of using a proxy to manage vars and work with the uib-var component.
+
+### `uib-brand.css`
 
 * Forms:
   * Allow for blank line spanning the form width.
@@ -509,7 +523,14 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * bigger spaces between lines (1.5 spacing in a word processor for example) - already done in the base.
     * 1 idea per image
 
-### Updates to Documentation (including videos)
+### Server libraries
+
+#### `libs/package-mgt.js`
+
+* uibRoot package.json - add check if dependencies blank but `node_modules` is not empty, if so, repopulate? Need to decide when to check - on commit at least.
+
+
+### Documentation (including videos)
 
 * New doc for using `ui.js` outside of uibuilder.
 * `README.md`: Add more links to the Features section so that each feature points to appropriate documentation. Add a landing-page link to "includes many helper features" to signpost to relavent detailed documentation.
