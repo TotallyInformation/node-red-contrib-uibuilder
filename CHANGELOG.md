@@ -6,11 +6,22 @@ typora-root-url: docs/images
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
+## To Fix
+
+
+
 ------------
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.7.0...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### `uibrouter`
+
+* [Issue #232](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/232) - Ensure origin script is removed after re-applying to ensure only 1 instance shows instead of 2.
+
+
+
 
 ## [v6.7.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...v6.7.0)
 

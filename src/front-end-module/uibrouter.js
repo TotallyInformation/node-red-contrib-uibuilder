@@ -214,10 +214,10 @@ class UibRouter { // eslint-disable-line no-unused-vars
     _applyScripts(tempContainer) {
         const scripts = tempContainer.querySelectorAll('script')
         scripts.forEach( scr => {
-            if (scr.parentElement) scr.parentElement.removeChild(scr)
             const newScript = document.createElement('script')
             newScript.textContent = scr.innerText
             tempContainer.append(newScript)
+            scr.remove() // remove the origin
         })
     }
     //#endregion --- ----- --
