@@ -47,16 +47,16 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Node Refactoring:
 
   | Node        | Mv src editor.js<br>to resources   | jQ Tooltips | jQ Tt class not id | getSource | Notes                               |
-  | ----------- | :--------------------------------: | :---------: | :-------: | :---------------------------------: | :---------------------------------: |
-  | uibuilder   |                                    |      ✔️     |    ✔️     |           |                                     |
-  | uib-cache   |                                    |             |             |           |                                     |
-  | uib-element |                                    |             |             |     ✔️    |                                     |
-  | uib-html    |                                    |             |             |           |                                     |
-  | uib-save    |                 ✔️                 |      ✔️    |          |           |                                     |
-  | uib-sender  |                                    |             |             |           |                                     |
-  | uib-tag     |                                    |      ✔️    |          |     ✔️    |                                     |
-  | uib-update  |                                    |             |             |           |                                     |
-  | *uib-uplot* |                                    |             |             |           | check this for other needed updates |
+  | ----------- | :--------------------------------: | :---------: | :----------------: | :-------: | :---------------------------------: |
+  | uibuilder   |                                    |      ✔️     |    ✔️             |           |                                     |
+  | uib-cache   |                                    |             |                    |           |                                     |
+  | uib-element |                                    |             |                    |     ✔️    |                                     |
+  | uib-html    |                                    |             |                    |           |                                     |
+  | uib-save    |                 ✔️                 |      ✔️    |                    |           |                                     |
+  | uib-sender  |                                    |             |                    |           |                                     |
+  | uib-tag     |                                    |      ✔️    |                    |     ✔️    |                                     |
+  | uib-update  |                                    |             |                    |           |                                     |
+  | *uib-uplot* |                                    |             |                    |           | check this for other needed updates |
 
   Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId]
 
@@ -407,13 +407,11 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### client Library
 * Add client time offset from server to standard client metadata. [ref](https://discourse.nodered.org/t/time-zone-in-a-z-in-node-red/82537/7?u=totallyinformation)
-* Restrict `onChange` to only watch watched variables? Optionally make the watched var managed automatically (checking to make sure it doesn't start with `_` or `#`)
 * [**STARTED**] Ability to visually show all uibuilder managed variables.
 * A way to show and change uib-brand variables visually?
 * Add extra optional flag to set() to allow saving to localStorage - where set, auto-load on (re)load
 
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).    
-* Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
 
 * Add Node-RED command to find out if a front-end library is installed.
 
@@ -429,19 +427,15 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Get _uib/_ui notify features to use Notification API if available
 
 * *New Functions* (all to be callable from Node-RED):
-  * [ ] `uibuilder.watchLocation()` - sends control msgs back to node-red if location changes but page not loaded - e.g. from SPA routers.
   * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
   * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
   * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others) buttons. [ref](https://codereview.stackexchange.com/questions/192138/buttons-that-expand-or-collapse-all-the-details-within-the-document)
-  * [ ] `uibuilder.navigate(locationUrl)` - change page. Ensure it works with SPA routers and with anchor links. Probably won't work with router libraries as they have to intercept link calls.
   * [ ] **HARD - may be impossible?** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
 
 * Control from Node-RED. Functions to implement:
   * [ ] watchDom(startStop), uiWatch(cssSelector) [add custom event outputs]
   * [ ] setPing
-  * [ ] `elementExists(selector)`, `elementIsVisible(selector)`
-  * [ ] `navigate(url)`
   * [ ] `loadui()`
   * [ ] `clearHtmlCache()`, `saveHtmlCache()`, `restoreHtmlFromCache()`
   * [ ] getStore, setStore, removeStore - control browser local storage
@@ -461,7 +455,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * _started_ (manual request is done) Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
 
 * _UI - improvements to the config-/data-driven UI creation features
-  * **Started** Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process - needs list and wildcard capabilities.
+  * **Started** Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process - *needs list and wildcard capabilities*.
   * Content editor capability - to set editable content blocks. [ref 1](https://editorjs.io/)
   * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special 
      name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
@@ -485,7 +479,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add functions for manipulating SVG's.
 
 * Allow for PWA use:
-  * Check for OFFLINE use and supress transport errors
+  * Check for OFFLINE use and suppress transport errors
   * Add check for online/offline - make available to user code
   * Auto-generate manifest and sw.js - need icon and to set names/urls/etc
   * https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/web-app-manifests
@@ -504,6 +498,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Allow no var attrib but instead allow ID to create a new managed variable
 * Add uib.var function as a test of using a proxy to manage vars and work with the uib-var component.
+
+### `uibrouter.js` FE router
+
+* Add option to auto scroll to a css selector on route change.
 
 ### `uib-brand.css`
 
@@ -631,6 +629,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Minimum node-red v4
 * Removal of uib-list node
 * Remove Pollyfills from uibuilder editor code
+* Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
 * Switch to default of case sensitive URL's for ExpressJS. Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6)
 * Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently. 
 
@@ -638,7 +637,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
   Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6). 
 
-
+* Restrict `onChange` to only watch watched variables? (checking to make sure it doesn't start with `_` or `#`)
 
 ## Ideas for releases further out
 
@@ -801,6 +800,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Consider implementing at Kroki diagram service node - https://kroki.io/ - enables delivery of diagrams from text descriptions using many different libraries.
 
 * Create a `uib-router` node. This would connect a route handler flow to an existing `uibuilder` node. A bit like an `http-in` node but not needing an `http-out` because the out is via the `uibuilder` node. Would allow wildcard routing and ability to restrict by method. The defined path(s) would be added as a new router to the uibuilder routes. Consider whether this needs to be a `uib-router-in`/`uib-router-out` pair instead? 
+
+* Revisit `elementIsVisible` - requires probably 2 fns at least. A monitor and a one-off check. One-off requires a separate observer function for each.
 
 ### Templates
 

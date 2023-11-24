@@ -8,7 +8,10 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Fix
 
+## To Do
 
+* update the `remote-commands` example
+* Update docs for ctrl msgs and msg._uib return data to say that anything set via the socket.io auth can only update when the client reconnects. Also document clientTimeDifference
 
 ------------
 
@@ -16,11 +19,31 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 <!-- Nothing currently. -->
 
+### Highlights
+
+* New `navigate` function and command. Triggers a page change or a route change either from front-end JavaScript or via a command message in Node-RED.
+* New `scrollTo` function and command. Scrolls the visible page to a specific location either from front-end JavaScript or via a command message in Node-RED.
+* Front-end commands issued from Node-RED can now take a `quiet` option set to `true` to prevent the return message. e.g. `{"_uib": {"command":"navigate","prop":"#newroute","quiet":true}}`
+
 ### `uibrouter`
 
 * [Issue #232](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/232) - Ensure origin script is removed after re-applying to ensure only 1 instance shows instead of 2.
 
+### Client library
 
+* **FIXED** - Some reported client data was incorrect. Notably the `connections`, and `lastNavType` properties. The `connections` property has now been corrected. The `lastNavType`, I now realise will never be correctly updated by the client and therefore it has been removed. Fixing these has also resulted in some simplification of the client code.
+
+* **NEW Function and Command** - `navigate(url)` - Load a new web page or change routes. Can be triggered from Node-RED with msg `{"_uib": {"command":"navigate","prop":"#newroute"}}`. See [Client Functions (navigate) in the docs](client-docs/functions#navigate) for details. URL's can be full, relative (to the current page) or routing (hashes). Obviously, can be called in front-end JavaScript as well as `uibuilder.navigate('./page2.html')` etc.
+* **NEW Function and Command** - `scrollTo(cssSelector)` - Scroll visible page to an element based on a CSS Selector. See [Client Functions (scrollTo) in the docs](client-docs/functions#scrollTo) for details. `top`, `start`, `bottom`, `end` can be used as shortcuts for the top/bottom of the page. An optional 2nd parameter gives more control.
+
+* Added `quiet` property to remote command processing. Set `msg._uib.quiet` to `true` to stop the library returning a message to Node-RED on completion of the command.
+
+* **DEPRECATED Function** - `elementIsVisible` - Was not working correctly and a fix is complex. Will revisit in the future. Let me know if you need this function. This would normally be a breaking change but the function is still there - it returns a console msg and a node-red msg still - and as it wasn't working, I doubt anyone has used it.
+
+### Documentation
+
+* Heading levels 3+ have been made lighter to better differentiate them visually.
+* The front-end client functions page now has an alphabetical list of functions.
 
 
 ## [v6.7.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...v6.7.0)
