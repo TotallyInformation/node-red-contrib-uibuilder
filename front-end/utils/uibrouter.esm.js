@@ -326,7 +326,7 @@ _startDone = new WeakMap();
 // eslint-disable-line no-unused-vars
 //#region --- Variables ---
 /** Class version */
-__publicField(UibRouter, "version", "1.0.0");
+__publicField(UibRouter, "version", "1.0.1");
 var uibrouter_default = UibRouter;
 if (!window["UibRouter"]) {
   window["UibRouter"] = UibRouter;

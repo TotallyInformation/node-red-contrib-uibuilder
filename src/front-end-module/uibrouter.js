@@ -50,7 +50,7 @@
 class UibRouter { // eslint-disable-line no-unused-vars
     //#region --- Variables ---
     /** Class version */
-    static version = '1.0.0'
+    static version = '1.0.1'
 
     /** Configuration settings @type {UibRouterConfig} */
     config
