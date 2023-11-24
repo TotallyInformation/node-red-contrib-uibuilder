@@ -343,37 +343,45 @@ class UibSockets {
             pageName = getClientPageName(socket, node)
         }
 
-        return {
+        // @ts-ignore
+        const clientTimeDifference = (new Date(socket.handshake.issued)) - (new Date(socket.handshake.auth.browserConnectTimestamp))
+
+        // WARNING: The socket.handshake data can only ever be changed by the client when it (re)connects
+        const out = {
+            /** What was the originating uibuilder URL */
+            'url': node.url,
+
             '_socketId': socket.id,
-            // Let the flow know what v of uib client is in use
-            'version': socket.handshake.auth.clientVersion,
+            /** Is this client reconnected after temp loss? */
+            'recovered': socket.recovered,
             /** Do our best to get the actual IP addr of client despite any Proxies */
             'ip': getClientRealIpAddress(socket),
+            /** THe referring webpage, should be the full URL of the uibuilder page */
+            'referer': socket.request.headers.referer,
+
+            // Let the flow know what v of uib client is in use
+            'version': socket.handshake.auth.clientVersion,
             /** What is the stable client id (set by uibuilder, retained till browser restart) */
             'clientId': socket.handshake.auth.clientId,
             /** What is the client tab identifier (set by uibuilder modern client) */
             'tabId': socket.handshake.auth.tabId,
-            /** What was the originating uibuilder URL */
-            'url': node.url,
             /** What was the originating page name (for SPA's) */
             'pageName': pageName,
             /** The browser's URL parameters */
             'urlParams': socket.handshake.auth.urlParams,
             /** How many times has this client reconnected (e.g. after sleep) */
             'connections': socket.handshake.auth.connectedNum,
-            /** What type of client nav happened previously */
-            'lastNavType': socket.handshake.auth.lastNavType,
             /** True if https/wss */
             'tls': socket.handshake.secure,
             /** When the client connected to the server */
             'connectedTimestamp': (new Date(socket.handshake.issued)).toISOString(),
-            /** THe referring webpage, should be the full URL of the uibuilder page */
-            'referer': socket.request.headers.referer,
-            /** Is this client reconnected after temp loss? */
-            'recovered': socket.recovered,
-
-            // ? client time offset ?
+            // 'browserConnectTimestamp': socket.handshake.auth.browserConnectTimestamp,
         }
+
+        // Only include this if The difference between the timestamps is > 1 minute - output is in milliseconds
+        if (clientTimeDifference > 60000) out.clientTimeDifference = clientTimeDifference
+
+        return out
     }
 
     /** Get a uib node instance namespace
