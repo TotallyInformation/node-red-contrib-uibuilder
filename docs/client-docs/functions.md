@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the UIBUILDER front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-10-30 17:58:51
+lastUpdated: 2023-11-24 19:54:49
 ---
 
 Functions accessible in client-side user code.
@@ -17,6 +17,7 @@ Functions accessible in client-side user code.
 - [Event Handling](#event-handling)
 - [Utility](#utility)
 - [Startup](#startup)
+- [Alphabetical function list](#alphabetical-function-list)
 
 > [!NOTE]
 > Where functions are marked as being accessible as Node-RED command messages, details can be found in [Controling From Node-RED](client-docs/control-from-node-red).
@@ -210,17 +211,23 @@ In addition, internal message handling will recognise standard messages from nod
 
 For functions with no descriptions, please refer to the code. In general, these will not need to be used in your own code.
 
-### `convertMarkdown(mdText)` - Convert's Markdown text input to HTML
+### `convertMarkdown(mdText)` - Convert's Markdown text input to HTML :id=convertMarkdown
 
 Returns an HTML string converted from the Markdown input text. Only if the Markdown-IT library is loaded, otherwise just returns the input text.
 
-### `elementExists(cssSelector, msg = true)` - Does the element exist on the page?
+### `elementExists(cssSelector, msg = true)` - Does the element exist on the page? :id=elementExists
 
 Returns a payload of true or false depending on whether the selected element exists on the page.
 
 Available as a command. Can be called from Node-RED with a message like: `{"command":"elementExists","prop":"#more"}`.
 
-### `elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Can an HTML element currently be seen by the user?
+### **TEMPORARILY DEPRECATED** Do not use ~~`elementIsVisible(cssSelector, stop = false, threshold = 0.1)` - Can an HTML element currently be seen by the user?~~ :id=elementIsVisible
+
+> [!NOTE]
+> This function was not working correctly and the complexities of using the Intersection Observer API mean that a resolution would take more time than is currently warrented.
+> So, for now, this function is not usable.
+>
+> Info retained for future use.
 
 When the selected element is showing at least 10% in the users browser view, sends a message to Node-RED with `msg.isVisible` set to `true`. Will send another message if the elements shows less than 10%. Will continue to send messages when the element moves in and out of visibility.
 
@@ -289,7 +296,7 @@ Any file type that the browser cannot handle will trigger the browser to automat
 
 Can be called from Node-RED with a message like: `{"command":"include","prop":"./test.html","value":{"id":"incHtm","parent":"#more","attributes":{"style":"width:50%;"}}}`.
 
-### `loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously
+### `loadScriptSrc(url)`, `loadStyleSrc(url)`, `loadScriptTxt(string)`, `loadStyleTxt(string)` - Attach a new script or CSS stylesheet to the end of HEAD synchronously :id=load
 
 Either from a remote URL or from a text string.
 
@@ -375,6 +382,18 @@ Directly calls `_ui.replaceSlotMarkdown` from the `ui.js` library.
 ### `sanitiseHTML(htmlText)` - Ensures that input HTML text is safe
 
 Returns a safe, sanitised HTML string IF the DOMPurify library is loaded. Otherwise returns the input.
+
+### `scrollTo(cssSelector)` - Scroll visible page to an element based on a CSS Selector :id=scrollTo
+
+If the top of the selected element is not currently visible in the browser window, will scroll (the top by default) to make it visible.
+
+An optional 2nd argument can be added to better control what becomes visible. Please see the options for the [`scrollIntoView`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView) DOM API for details of the options. The options object is passed through to that API.
+
+In addition, the cssSelector string `top` or `start` will scroll to the top of the page and `bottom` or `end` will scroll to the bottom of the page.
+
+Returns `true` if the element was found, false otherwise.
+
+Can also be called from Node-RED with a command message: `{"_uib": {command: "scrollTo", "prop": "cssSelector"}}` or, with options: `{"_uib": {command: "scrollTo", "prop": "#mydivid", "value": {"block": "bottom"}}}`.
 
 ### `showDialog(type, ui, msg)` - Show a toast or alert style message on the UI
 
@@ -624,6 +643,36 @@ To set the log level to display in your code, use `uibuilder.logLevel = 5` or `u
 
 Future versions of this function after v6.1 will extend it to output to an on-page visible log and/or log back to Node-RED.
 
+### `navigate(url)` - Either show a new route or navigate to a new page :id=navigate
+
+Returns the current URL after navigation (if any).
+
+The URL can be:
+
+1. A full URL (e.g. `https://example.com/somewhere`)
+2. A relative URL (e.g. `./anotherpage.html`)
+3. A routing hash (e.g. `#route02`)
+
+Or a combination of (1 OR 2) and 3.
+
+#### Relative URLs
+
+Are relative to the CURRENT PAGE. So if that is 
+`index.html`, `./page2.html` would be in the same
+source folder as would `./folder` (which would move to
+`./folder/index.html`).
+
+Similarly, if on the `folder` page, `../` would move up
+a level to the main index html page.
+
+#### Routing Hashes
+
+For pure front-end routing, using `uibrouter` or similar
+library, simply send `#newroute` to move to the new route
+without reloading the page.
+
+Putting a hash on the end of a full or relative URL will
+trigger the route on the resulting page load.
 
 ### `truthy(val, [default])` - Returns true or false or the optional default value depending on the value
 
@@ -653,3 +702,63 @@ While multiple properties can be given in the options object, only the following
 * `ioPath` - As above.
 * `loadStylesheet` - (default=true). Set to false if you don't want the UIBUILDER default stylesheet (`uib-brand.css`) to be loaded if you haven't loaded your own. Checks to see if any stylesheet has already been loaded and if it has, does not load.
 
+## Alphabetical function list
+
+Those marked with `*` can be triggered with a command message from Node-RED flows. Those marked with `§` are low-code _ui functions and so can be triggered from Node-RED using messages containing [suitable `_ui` properties](client-docs/config-driven-ui).
+
+If examining the library code, please remember that functions starting with `_` are for *internal* use.
+
+* [`$`](#$)
+* [`$$`](#$$)
+* [`beaconLog`](#beaconLog)
+* [`cancelChange`](#cancelChange)
+* [`cancelTopic`](#cancelTopic)
+* [`clearHtmlCache`](#clearHtmlCache)
+* [`convertMarkdown`](#convertMarkdown)
+* [`copyToClipboard`](#copyToClipboard)
+* [`elementExists`](#elementExists)*
+* ~~[`elementIsVisible`](#elementIsVisible)~~ - Temporarily deprecated
+* [`eventSend`](#eventSend)
+* [`get`](#get)*
+* [`getManagedVarList`](#getManagedVarList)*
+* [`getStore`](#getStore)
+* [`getWatchedVars`](#getWatchedVars)*
+* [`htmlSend`](#htmlSend)*
+* [`include`](#include)*
+* [`keepHashFromUrl`](#keepHashFromUrl)
+* [`loadScriptSrc`](#load)§
+* [`loadScriptTxt`](#load)§
+* [`loadStyleSrc`](#load)§
+* [`loadStyleTxt`](#load)§
+* [`loadui`](#loadui)§
+* [`log`](#log)
+* [`logToServer`](#logToServer)
+* [`navigate`](#navigate)*
+* [`notify`](#notify)
+* [`onChange`](#onChange)
+* [`onTopic`](#onTopic)
+* [`removeStore`](#removeStore)
+* [`replaceSlot`](#replaceSlot)§
+* [`replaceSlotMarkdown`](#replaceSlotMarkdown)§
+* [`restoreHtmlFromCache`](#restoreHtmlFromCache)
+* [`sanitiseHTML`](#sanitiseHTML)
+* [`saveHtmlCache`](#savehtmlcache)
+* [`scrollTo`](#scrollTo)*
+* [`send`](#send)
+* [`sendCtrl`](#sendCtrl)
+* [`set`](#set)*
+* [`setOriginator`](#setOriginator)
+* [`setPing`](#setPing)
+* [`setStore`](#setStore)
+* [`showDialog`](#showDialog)
+* [`showMsg`](#showMsg)*
+* [`showStatus`](#showStatus)*
+* [`start`](#start)
+* [`syntaxHighlight`](#syntaxHighlight)
+* [`truthy`](#truthy)
+* [`ui`](#ui)
+* [`uiEnhanceElement`](#uiEnhanceElement)
+* [`uiGet`](#uiGet)*
+* [`uiWatch`](#uiWatch)*
+* [`watchDom`](#watchDom)
+* [`watchUrlHash`](#watchUrlHash)*
