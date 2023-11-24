@@ -27,6 +27,20 @@ The easiest way to include the router is to use the `../uibuilder/utils/uibroute
 
 ## Triggering a route change
 
+### From Node-RED
+
+Route changes can be triggered from Node-RED flows by sending a message to the uibuilder node with msg content such as:
+
+```json
+{"_uib": {"command":"navigate","prop":"#newroute"}}
+```
+
+See [Client Functions (navigate)](client-docs/functions#navigate) for details.
+
+Don't forget that there is also a `watchUrlHash` function, also callable as a command. That will send a message to Node-RED on every route change.
+
+### In the browser
+
 There are three ways to trigger a route change:
 
 * Manually changing the URL, adding `#routeid`
