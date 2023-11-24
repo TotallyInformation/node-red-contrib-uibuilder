@@ -63,7 +63,7 @@
          * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
          */
         constructor(win, extLog, jsonHighlight) {
-          __publicField(this, "version", "6.6.0-src");
+          __publicField(this, "version", "6.8.0-src");
           // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
           __publicField(this, "sanitiseExtraTags", ["uib-var"]);
           __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -2361,6 +2361,9 @@
     "anchor"
   ];
   function parse(str) {
+    if (str.length > 2e3) {
+      throw "URI too long";
+    }
     const src = str, b = str.indexOf("["), e = str.indexOf("]");
     if (b != -1 && e != -1) {
       str = str.substring(0, b) + str.substring(b, e).replace(/:/g, ";") + str.substring(e, str.length);
@@ -4473,7 +4476,7 @@
   });
 
   // src/front-end-module/uibuilder.module.js
-  var version = "6.6.0-iife";
+  var version = "6.8.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
   var logLevel = isMinified ? 0 : 1;
@@ -4651,7 +4654,7 @@
     return json;
   }
   var _ui = new import_ui.default(window, log, syntaxHighlight);
-  var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers;
+  var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers;
   var Uib = (_a = class {
     // ---- End of ioSetup ---- //
     //#endregion -------- ------------ -------- //
@@ -4689,23 +4692,24 @@
       __privateAdd(this, _isShowMsg, false);
       // Has showStatus been turned on?
       __privateAdd(this, _isShowStatus, false);
-      // Has an IntersectionObserver been created? If so, this will hold the reference to it
-      __privateAdd(this, _intersectionObserver, void 0);
       // If true, URL hash changes send msg back to node-red. Controlled by watchUrlHash()
       __privateAdd(this, _sendUrlHash, false);
       // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
       __privateAdd(this, _extCommands, [
+        "elementExists",
         "get",
-        "set",
+        "getManagedVarList",
+        "getWatchedVars",
         "htmlSend",
+        "include",
+        "navigate",
+        "scrollTo",
+        "set",
         "showMsg",
         "showStatus",
         "uiGet",
         "uiWatch",
-        "include",
-        "elementExists",
-        "getManagedVarList",
-        "getWatchedVars"
+        "watchUrlHash"
       ]);
       /** @type {{[key: string]: string}} Managed uibuilder variables */
       __privateAdd(this, _managedVars, {});
@@ -4806,17 +4810,26 @@
       __publicField(this, "storePrefix", "uib_");
       // Prefix for all uib-related localStorage
       __publicField(this, "started", false);
+      // NOTE: These can only change when a client (re)connects
       __publicField(this, "socketOptions", {
         path: this.ioPath,
         transports: ["polling", "websocket"],
-        auth: {
-          clientVersion: version,
-          clientId: this.clientId,
-          pathName: window.location.pathname,
-          urlParams: Object.fromEntries(new URLSearchParams(location.search)),
-          pageName: void 0,
-          tabId: void 0,
-          lastNavType: void 0
+        // Using callback so that they are updated automatically on (re)connect
+        // Only put things in here that will be valid for a websocket connected session
+        auth: (cb) => {
+          cb({
+            // eslint-disable-line n/no-callback-literal
+            clientVersion: version,
+            clientId: this.clientId,
+            pathName: window.location.pathname,
+            urlParams: Object.fromEntries(new URLSearchParams(location.search)),
+            pageName: this.pageName,
+            tabId: this.tabId,
+            lastNavType: this.lastNavType,
+            connectedNum: ++this.connectedNum,
+            // Used to calculate the diff between the server and client connection timestamps - reported if >1 minute
+            browserConnectTimestamp: (/* @__PURE__ */ new Date()).toISOString()
+          });
         },
         transportOptions: {
           // Can only set headers when polling
@@ -5244,45 +5257,17 @@
       navigator.clipboard.writeText(data);
     }
     // --- End of copyToClipboard --- //
-    /** Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
+    /** DEPRECATED FOR NOW - wasn't working properly.
+     * Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
      * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
      * Automatically sends a msg back to Node-RED.
      * Requires the element to already exist.
-     * @param {string} cssSelector Required. CSS Selector to examine for visibility
-     * @param {boolean} stop Optional. Default=false. If TRUE, stop the observer for this cssSelector
-     * @param {number} threshold Optional. Default=0.1. Between 0 and 1, the % visibility before trigger
      */
-    elementIsVisible(cssSelector, stop = false, threshold = 0.1) {
-      if (!IntersectionObserver)
-        return;
-      if (!__privateGet(this, _intersectionObserver)) {
-        __privateSet(this, _intersectionObserver, new IntersectionObserver((ioEntries) => {
-          const entries = [];
-          ioEntries.forEach((entry) => {
-            entry.target.dataset.isvisible = entry.isIntersecting;
-            entries.push({
-              isIntersecting: entry.isIntersecting
-            });
-          });
-          this.send({
-            payload: entries[0].isIntersecting,
-            isVisible: entries[0].isIntersecting,
-            cssSelector,
-            entries
-          });
-          log("info", "uib:elementIsVisible", `Element "${cssSelector}" is now ${entries[0].isIntersecting ? "more than 10%" : "NOT (<10%)"} visible`)();
-        }, { threshold }));
-      }
-      const el = document.querySelector(cssSelector);
-      if (el === null) {
-        log("error", "uib:elementIsVisible", `Element "${cssSelector}" not found`)();
-        return;
-      }
-      if (stop === true) {
-        __privateGet(this, _intersectionObserver).unobserve(el);
-        return;
-      }
-      __privateGet(this, _intersectionObserver).observe(el);
+    elementIsVisible() {
+      const info = "elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex";
+      log("error", "uib:elementIsVisible", info)();
+      this.send({ payload: "elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex" });
+      return false;
     }
     // --- End of elementIsVisible --- //
     /** Does the chosen CSS Selector currently exist?
@@ -5348,6 +5333,15 @@
     watchUrlHash(toggle) {
       __privateSet(this, _sendUrlHash, this.truthy(toggle, __privateGet(this, _sendUrlHash) !== true));
       return __privateGet(this, _sendUrlHash);
+    }
+    /** Navigate to a new page or a new route (hash)
+     * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
+     * @returns {Location} The new window.location string
+     */
+    navigate(url2) {
+      if (url2)
+        window.location.href = url2;
+      return window.location;
     }
     //#endregion -------- -------- -------- //
     //#region ------- UI handlers --------- //
@@ -5558,6 +5552,28 @@
         log("error", "Uib:notification", "Notification error event", err)();
       });
       return null;
+    }
+    /** Scroll the page
+     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+     * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
+     * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
+     * @returns {boolean} True if element was found, false otherwise
+     */
+    scrollTo(cssSelector, opts) {
+      if (!opts)
+        opts = {};
+      if (!cssSelector || cssSelector === "top" || cssSelector === "start")
+        cssSelector = "body";
+      else if (cssSelector === "bottom" || cssSelector === "end") {
+        cssSelector = "body";
+        opts.block = "end";
+      }
+      const el = this.$(cssSelector);
+      if (el) {
+        el.scrollIntoView(opts);
+        return true;
+      }
+      return false;
     }
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
      * The card has the id `uib_status`.
@@ -5770,9 +5786,6 @@
         msgToSend.from = "client";
       }
       msgToSend._socketId = this._socket.id;
-      this.socketOptions.auth.tabId = this.tabId;
-      this.socketOptions.auth.lastNavType = this.lastNavType;
-      this.socketOptions.auth.connectedNum = this.connectedNum;
       if (originator === "" && this.originator !== "")
         originator = this.originator;
       if (originator !== "")
@@ -5997,6 +6010,12 @@ ${document.documentElement.outerHTML}`;
      * @param {object} msg Msg from Node-RED containing a msg._uib object
      */
     _uibCommand(msg) {
+      if (!msg._uib || !msg._uib.command) {
+        log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg })();
+        msg.payload = msg.error = "Invalid command message received";
+        this.send(msg);
+        return;
+      }
       const cmd = msg._uib.command;
       if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
         log("error", "Uib:_uibCommand", `Command '${cmd} is not allowed to be called externally`)();
@@ -6004,8 +6023,13 @@ ${document.documentElement.outerHTML}`;
       }
       const prop = msg._uib.prop;
       const value2 = msg._uib.value;
+      const quiet = msg._uib.quiet ?? false;
       let response, info;
       switch (cmd) {
+        case "elementIsVisible": {
+          response = this.elementIsVisible(prop);
+          break;
+        }
         case "elementExists": {
           response = this.elementExists(prop, false);
           info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
@@ -6035,6 +6059,19 @@ ${document.documentElement.outerHTML}`;
         }
         case "include": {
           response = _ui.include(prop, value2);
+          break;
+        }
+        case "navigate": {
+          let newUrl;
+          if (prop)
+            newUrl = prop;
+          else if (value2)
+            newUrl = value2;
+          response = this.navigate(newUrl);
+          break;
+        }
+        case "scrollTo": {
+          response = this.scrollTo(prop, value2);
           break;
         }
         case "set": {
@@ -6074,26 +6111,28 @@ ${document.documentElement.outerHTML}`;
           break;
         }
       }
-      if (response === void 0) {
-        response = `'${prop}' is undefined`;
-      }
-      if (Object(response).constructor === Promise) {
-        response.then((data) => {
-          msg.payload = msg._uib.response = data;
+      if (quiet !== true) {
+        if (response === void 0) {
+          response = `'${prop}' is undefined`;
+        }
+        if (Object(response).constructor === Promise) {
+          response.then((data) => {
+            msg.payload = msg._uib.response = data;
+            msg.info = msg._uib.info = info;
+            if (!msg.topic)
+              msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+            this.send(msg);
+            return true;
+          }).catch((err) => {
+            log(0, "Uib:_uibCommand", "Error: ", err)();
+          });
+        } else {
+          msg.payload = msg._uib.response = response;
           msg.info = msg._uib.info = info;
           if (!msg.topic)
             msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
           this.send(msg);
-          return true;
-        }).catch((err) => {
-          log(0, "Uib:_uibCommand", "Error: ", err)();
-        });
-      } else {
-        msg.payload = msg._uib.response = response;
-        msg.info = msg._uib.info = info;
-        if (!msg.topic)
-          msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
-        this.send(msg);
+        }
       }
     }
     // --- end of _uibCommand ---
@@ -6221,7 +6260,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       navigator.sendBeacon("./_clientLog", `${logLevel2}::${txtToSend}`);
     }
     /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
-     * -@param {...*} arguments All arguments passed to the function are added to the msg.payload
+     * @param {...*} arguments All arguments passed to the function are added to the msg.payload
      */
     logToServer() {
       this.sendCtrl({
@@ -6307,11 +6346,6 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     // See message handling section for msg receipt handlers
     /** Called by _ioSetup when Socket.IO connects to Node-RED */
     _onConnect() {
-      this.set("connectedNum", this.connectedNum++);
-      this.socketOptions.auth.connectedNum = this.connectedNum;
-      this.socketOptions.auth.lastNavType = this.lastNavType;
-      this.socketOptions.auth.tabId = this.tabId;
-      this.socketOptions.auth.more = this.tabId;
       log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
 Namespace: ${this.ioNamespace}`)();
       this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
@@ -6346,12 +6380,6 @@ Namespace: ${this.ioNamespace}`)();
         this.set("ioConnected", false);
       }
       this.socketOptions.path = this.ioPath;
-      this.socketOptions.auth.pageName = this.pageName;
-      this.socketOptions.auth.clientId = this.clientId;
-      this.socketOptions.transportOptions.polling.extraHeaders["x-clientid"] = `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`;
-      this.socketOptions.auth.tabId = this.tabId;
-      this.socketOptions.auth.lastNavType = this.lastNavType;
-      this.socketOptions.auth.connectedNum = this.connectedNum;
       log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
       this._socket = lookup2(this.ioNamespace, this.socketOptions);
       this._socket.on("connect", this._onConnect.bind(this));
@@ -6450,7 +6478,7 @@ ioPath: ${this.ioPath}`)();
       this._dispatchCustomEvent("uibuilder:startComplete");
     }
     //#endregion -------- ------------ -------- //
-  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _intersectionObserver = new WeakMap(), _sendUrlHash = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
   __publicField(_a, "_meta", {
     version,
     type: "module",

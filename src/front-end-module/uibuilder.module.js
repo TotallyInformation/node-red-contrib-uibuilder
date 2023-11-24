@@ -63,7 +63,7 @@ import io from 'socket.io-client'
 // if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
 //#endregion -------- -------- -------- //
 
-const version = '6.6.0-src'
+const version = '6.8.0-src'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -364,14 +364,12 @@ export const Uib = class Uib {
     #isShowMsg = false
     // Has showStatus been turned on?
     #isShowStatus = false
-    // Has an IntersectionObserver been created? If so, this will hold the reference to it
-    #intersectionObserver = undefined
     // If true, URL hash changes send msg back to node-red. Controlled by watchUrlHash()
     #sendUrlHash = false
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
-        'get', 'set', 'htmlSend', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'include', 'elementExists',
-        'getManagedVarList', 'getWatchedVars',
+        'elementExists', 'get', 'getManagedVarList', 'getWatchedVars', 'htmlSend', 'include',
+        'navigate', 'scrollTo', 'set', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'watchUrlHash',
     ]
 
     /** @type {{[key: string]: string}} Managed uibuilder variables */
@@ -480,17 +478,25 @@ export const Uib = class Uib {
     retryMs = 2000          // starting retry ms period for manual socket reconnections workaround
     storePrefix = 'uib_'    // Prefix for all uib-related localStorage
     started = false
+    // NOTE: These can only change when a client (re)connects
     socketOptions = {
         path: this.ioPath,
         transports: ['polling', 'websocket'],
-        auth: {
-            clientVersion: version,
-            clientId: this.clientId,
-            pathName: window.location.pathname,
-            urlParams: Object.fromEntries(new URLSearchParams(location.search)),
-            pageName: undefined,
-            tabId: undefined,
-            lastNavType: undefined,
+        // Using callback so that they are updated automatically on (re)connect
+        // Only put things in here that will be valid for a websocket connected session
+        auth: (cb) => {
+            cb({ // eslint-disable-line n/no-callback-literal
+                clientVersion: version,
+                clientId: this.clientId,
+                pathName: window.location.pathname,
+                urlParams: Object.fromEntries(new URLSearchParams(location.search)),
+                pageName: this.pageName,
+                tabId: this.tabId,
+                lastNavType: this.lastNavType,
+                connectedNum: ++this.connectedNum,
+                // Used to calculate the diff between the server and client connection timestamps - reported if >1 minute
+                browserConnectTimestamp: (new Date()).toISOString(),
+            })
         },
         transportOptions: {
             // Can only set headers when polling
@@ -795,7 +801,7 @@ export const Uib = class Uib {
         if (Object.prototype.hasOwnProperty.call(receivedMsg, 'serverTimestamp')) {
             const serverTimestamp = new Date(receivedMsg.serverTimestamp)
             // @ts-ignore
-            const offset = Math.round(((new Date()) - serverTimestamp) / 3600000) // in ms / 3.6m to get hours
+            const offset = Math.round(((new Date()) - serverTimestamp) / 3600000) // in ms /3.6m to get hours
             if (offset !== this.serverTimeOffset) {
                 log('trace', `Uib:checkTimestamp:${this._ioChannels.server} (server)`, `Offset changed to: ${offset} from: ${this.serverTimeOffset}`)()
                 this.set('serverTimeOffset', offset)
@@ -911,58 +917,17 @@ export const Uib = class Uib {
         navigator.clipboard.writeText(data)
     } // --- End of copyToClipboard --- //
 
-    /** Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
+    /** DEPRECATED FOR NOW - wasn't working properly.
+     * Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
      * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
      * Automatically sends a msg back to Node-RED.
      * Requires the element to already exist.
-     * @param {string} cssSelector Required. CSS Selector to examine for visibility
-     * @param {boolean} stop Optional. Default=false. If TRUE, stop the observer for this cssSelector
-     * @param {number} threshold Optional. Default=0.1. Between 0 and 1, the % visibility before trigger
      */
-    elementIsVisible(cssSelector, stop = false, threshold = 0.1) {
-        if (!IntersectionObserver) return
-
-        // TODO Return a promise? - make return message optional?
-        // https://blog.bitsrc.io/angular-maximizing-performance-with-the-intersection-observer-api-23d81312f178#:~:text=Let%E2%80%99s%20define%20a%20function%20named%20isVisible%20and%20returns,resolve%20%28entry.isIntersecting%29%3B%20observer.disconnect%20%28%29%3B%20%7D%29%3B%20observer.observe%20%28element%29%3B%20%7D%29%3B
-
-        if (!this.#intersectionObserver) {
-            this.#intersectionObserver = new IntersectionObserver( (ioEntries) => {
-                const entries = []
-                // Stupid DOM API's, we have to explicitly loop through the data to be able to use it
-                ioEntries.forEach((entry) => {
-                    // Markup the element (data-isvisible)
-                    entry.target.dataset.isvisible = entry.isIntersecting
-                    // Each entry describes an intersection change for one observed
-                    entries.push({
-                        isIntersecting: entry.isIntersecting,
-                    })
-                })
-
-                // console.log('IntersectionObserver: Entries ', ioEntries, entries)
-                this.send({
-                    payload: entries[0].isIntersecting,
-                    isVisible: entries[0].isIntersecting,
-                    cssSelector,
-                    entries: entries,
-                })
-
-                log('info', 'uib:elementIsVisible', `Element "${cssSelector}" is now ${entries[0].isIntersecting ? 'more than 10%' : 'NOT (<10%)'} visible`)()
-            }, { threshold: threshold })
-        }
-
-        const el = document.querySelector(cssSelector)
-
-        if (el === null) {
-            log('error', 'uib:elementIsVisible', `Element "${cssSelector}" not found`)()
-            return
-        }
-
-        if (stop === true) {
-            this.#intersectionObserver.unobserve(el)
-            return
-        }
-
-        this.#intersectionObserver.observe(el)
+    elementIsVisible() {
+        const info = 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'
+        log('error', 'uib:elementIsVisible', info)()
+        this.send({payload: 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'})
+        return false
     } // --- End of elementIsVisible --- //
 
     /** Does the chosen CSS Selector currently exist?
@@ -1029,6 +994,15 @@ export const Uib = class Uib {
     watchUrlHash(toggle) {
         this.#sendUrlHash = this.truthy(toggle, this.#sendUrlHash !== true)
         return this.#sendUrlHash
+    }
+
+    /** Navigate to a new page or a new route (hash)
+     * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
+     * @returns {Location} The new window.location string
+     */
+    navigate(url) {
+        if (url) window.location.href = url
+        return window.location
     }
 
     //#endregion -------- -------- -------- //
@@ -1264,6 +1238,28 @@ export const Uib = class Uib {
                 log('error', 'Uib:notification', 'Notification error event', err)()
             })
         return null
+    }
+
+    /** Scroll the page
+     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+     * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
+     * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
+     * @returns {boolean} True if element was found, false otherwise
+     */
+    scrollTo(cssSelector, opts) {
+        // @ts-ignore
+        if (!opts) opts = {}
+        if (!cssSelector || cssSelector === 'top'  || cssSelector === 'start') cssSelector = 'body'
+        else if (cssSelector === 'bottom' || cssSelector === 'end') {
+            cssSelector = 'body'
+            opts.block = 'end'
+        }
+        const el = this.$(cssSelector)
+        if (el) {
+            el.scrollIntoView(opts)
+            return true
+        }
+        return false
     }
 
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
@@ -1524,14 +1520,7 @@ export const Uib = class Uib {
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
         msgToSend._socketId = this._socket.id
 
-        //#region ---- Update socket.io metadata ---- //
-        // Session tab id
-        this.socketOptions.auth.tabId = this.tabId
-        // How was the page last loaded?
-        this.socketOptions.auth.lastNavType = this.lastNavType
-        // How many times has the client (re)connected since page load
-        this.socketOptions.auth.connectedNum = this.connectedNum
-        //#endregion ---- ---- ---- //
+        // WARNING: You cannot change any of the this._socket.auth settings at this point
 
         // Add the originator metadata if required
         if (originator === '' && this.originator !== '') originator = this.originator
@@ -1804,6 +1793,12 @@ export const Uib = class Uib {
      * @param {object} msg Msg from Node-RED containing a msg._uib object
      */
     _uibCommand(msg) {
+        if (!msg._uib || !msg._uib.command) {
+            log('error', 'uibuilder:_uibCommand', 'Invalid command message received', { msg })()
+            msg.payload = msg.error = 'Invalid command message received'
+            this.send(msg)
+            return
+        }
         const cmd = msg._uib.command
         // Disallowed command request outputs error and ignores the msg (NB: Case must match)
         if (!this.#extCommands.includes(cmd.trim())) {
@@ -1812,10 +1807,17 @@ export const Uib = class Uib {
         }
         const prop = msg._uib.prop
         const value = msg._uib.value
+        const quiet = msg._uib.quiet ?? false
         let response, info
 
-        // Don't forget to update `docs/client-docs/control-from-node-red.md`
+        // Don't forget to update `#extCommands`, `docs/client-docs/control-from-node-red.md` & `functions.md`
         switch (cmd) {
+            case 'elementIsVisible': {
+                response = this.elementIsVisible(prop)
+                // info = `Element "${prop}" ${response ? 'is visible' : 'is not visible'}`
+                break
+            }
+
             case 'elementExists': {
                 response = this.elementExists(prop, false)
                 info = `Element "${prop}" ${response ? 'exists' : 'does not exist'}`
@@ -1847,6 +1849,19 @@ export const Uib = class Uib {
             case 'include': {
                 // include is async
                 response = _ui.include(prop, value)
+                break
+            }
+
+            case 'navigate': {
+                let newUrl
+                if (prop) newUrl = prop
+                else if (value) newUrl = value
+                response = this.navigate(newUrl)
+                break
+            }
+
+            case 'scrollTo': {
+                response = this.scrollTo(prop, value)
                 break
             }
 
@@ -1892,29 +1907,30 @@ export const Uib = class Uib {
             }
         }
 
-        if (response === undefined) {
-            response = `'${prop}' is undefined`
+        if (quiet !== true) {
+            if (response === undefined) {
+                response = `'${prop}' is undefined`
+            }
+            if (Object(response).constructor === Promise) {
+                // response = `'${cmd} ${prop}' submitted. Cmd is async, no response available`
+                response
+                    .then( (/** @type {any} */ data) => {
+                        msg.payload = msg._uib.response = data
+                        msg.info = msg._uib.info = info
+                        if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
+                        this.send(msg)
+                        return true
+                    })
+                    .catch( err => {
+                        log(0, 'Uib:_uibCommand', 'Error: ', err)()
+                    })
+            } else {
+                msg.payload = msg._uib.response = response
+                msg.info = msg._uib.info = info
+                if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
+                this.send(msg)
+            }
         }
-        if (Object(response).constructor === Promise) {
-            // response = `'${cmd} ${prop}' submitted. Cmd is async, no response available`
-            response
-                .then( (/** @type {any} */ data) => {
-                    msg.payload = msg._uib.response = data
-                    msg.info = msg._uib.info = info
-                    if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
-                    this.send(msg)
-                    return true
-                })
-                .catch( err => {
-                    log(0, 'Uib:_uibCommand', 'Error: ', err)()
-                })
-        } else {
-            msg.payload = msg._uib.response = response
-            msg.info = msg._uib.info = info
-            if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
-            this.send(msg)
-        }
-
     } // --- end of _uibCommand ---
 
     /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
@@ -2100,7 +2116,7 @@ export const Uib = class Uib {
     }
 
     /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
-     * -@param {...*} arguments All arguments passed to the function are added to the msg.payload
+     * @param {...*} arguments All arguments passed to the function are added to the msg.payload
      */
     logToServer() {
         this.sendCtrl({
@@ -2219,15 +2235,7 @@ export const Uib = class Uib {
 
     /** Called by _ioSetup when Socket.IO connects to Node-RED */
     _onConnect() {
-        this.set('connectedNum', this.connectedNum++)
-        // How many times has the client (re)connected since page load
-        this.socketOptions.auth.connectedNum = this.connectedNum
-        // How was the page last loaded?
-        this.socketOptions.auth.lastNavType = this.lastNavType
-        // Session tab id
-        this.socketOptions.auth.tabId = this.tabId
-        this.socketOptions.auth.more = this.tabId
-
+        // WARNING: You cannot change any of the this._socket.auth settings at this point
         log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. \nNamespace: ${this.ioNamespace}`)()
         this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered })
 
@@ -2277,19 +2285,7 @@ export const Uib = class Uib {
         // Update the URL path to make sure we have the right one
         this.socketOptions.path = this.ioPath
 
-        //#region --- custom meta-data ---
-        // Add the pageName
-        this.socketOptions.auth.pageName = this.pageName
-        // Add stable client id (static unless browser closed)
-        this.socketOptions.auth.clientId = this.clientId
-        this.socketOptions.transportOptions.polling.extraHeaders['x-clientid'] = `${Uib._meta.displayName}; ${Uib._meta.type}; ${Uib._meta.version}; ${this.clientId}`
-        // Session tab id
-        this.socketOptions.auth.tabId = this.tabId
-        // How was the page last loaded?
-        this.socketOptions.auth.lastNavType = this.lastNavType
-        // How many times has the client (re)connected since page load
-        this.socketOptions.auth.connectedNum = this.connectedNum
-        //#endregion --- ---- ---
+        // NOTE: this._socket.auth is now set by callback and so automatically updated for each client (re)connection. No need to set here
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         log('trace', 'Uib:ioSetup', `About to create IO object. Transports: [${this.socketOptions.transports.join(', ')}]`)()
