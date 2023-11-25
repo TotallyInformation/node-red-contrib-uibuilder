@@ -3,7 +3,7 @@ title: UIBUILDER Front-End Router Library
 description: >
   Details on the configuration and use of UIBUILDER's front-end router.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-11-19 17:21:15
+lastUpdated: 2023-11-25 14:09:19
 ---
 
 The `uibrouter` front-end library defines a `UibRouter` class. This allows both internal and external content to be dynamically shown, allowing the creation of "Single-Page Apps" (SPA's) or simply keeping parts of the UI hidden from the users until they need them.
