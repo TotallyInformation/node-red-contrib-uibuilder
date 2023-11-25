@@ -106,6 +106,18 @@ In addition, if using UIBUILDER, the managed variable `uibrouter` will be update
 * `uibrouter:route-change-failed` - when a route change fails and is rolled back. Details contain new and old route id's. (`uibuilder.set('uibrouter', 'route change failed')`)
 * `uibrouter:routes-added` - When new routes added (via `router.addRoutes()`). (`uibuilder.set('uibrouter', 'routes added')`)
 
+### Example (route change)
+
+```javascript
+// Assumes use of uibuilder and assumes `const router = new uibrouter(config)`
+uibuilder.onChange('uibrouter', (eventname) => {
+    if (eventname === 'route changed') {
+        // Uses 2 of the router variables - see below for the full list
+        console.log(`ROUTE CHANGED. New Route: ${router.currentRouteId}, Old Route: ${router.previousRouteId}`)
+    }
+})
+```
+
 ## Variables
 
 * `config` - A copy of the input configuration used to create the router.
