@@ -387,6 +387,10 @@ const Ui = class Ui2 {
       this.replaceSlotMarkdown(el, comp);
     }
   }
+  /** External alias for _uiComposeComponent
+   * @param {*} el HTML Element to enhance
+   * @param {*} comp Individual uibuilder ui component spec
+   */
   uiEnhanceElement(el, comp) {
     this._uiComposeComponent(el, comp);
   }
