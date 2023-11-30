@@ -59,7 +59,6 @@ const mod = {
  * @this {runtimeNode & uibSaveNode}
  */
 async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
-
     const RED = mod.RED
     let statusColor = 'blue'
 
@@ -72,12 +71,14 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         let fname = this.fname
 
         // If "Use pageName"
-        if (this.usePageName === true && ( (msg._uib && msg._uib.pageName) || (msg._ui && msg._ui.pageName) )) {
-            fname = msg._uib ? msg._uib.pageName : msg._ui.pageName
-            const srcNode = RED.nodes.getNode(this.uibId)
-            folder = srcNode.sourceFolder
-        } else {
-            this.warn('Use pageName requested but neither msg._uib nor msg._ui exists')
+        if (this.usePageName === true) {
+            if ( (msg._uib && msg._uib.pageName) || (msg._ui && msg._ui.pageName) ) {
+                fname = msg._uib ? msg._uib.pageName : msg._ui.pageName
+                const srcNode = RED.nodes.getNode(this.uibId)
+                folder = srcNode.sourceFolder
+            } else {
+                this.warn('Use pageName requested but neither msg._uib nor msg._ui exists')
+            }
         }
 
         // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
