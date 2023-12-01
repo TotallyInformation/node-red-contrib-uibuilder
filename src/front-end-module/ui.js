@@ -286,14 +286,6 @@ const Ui = class Ui {
         //#endregion
     }
 
-    /** External alias for _uiComposeComponent
-     * @param {*} el HTML Element to enhance
-     * @param {*} comp Individual uibuilder ui component spec
-     */
-    uiEnhanceElement(el, comp) {
-        this._uiComposeComponent(el, comp)
-    }
-
     /** Extend an HTML Element with appended elements using ui components
      * NOTE: This fn follows a strict hierarchy of added components.
      * @param {HTMLElement} parentEl The parent HTML Element we want to append to
@@ -612,6 +604,51 @@ const Ui = class Ui {
     //#endregion ---- -------- ----
     //#region ---- External Methods ----
 
+    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+     * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
+     * If the selected element is a <template>, returns the first child element.
+     * type {HTMLElement}
+     * @param {string} cssSelector A CSS Selector that identifies the element to return
+     * @returns {HTMLElement|null} Selected HTML element or null
+     */
+    $(cssSelector) {
+        /** @type {*} Some kind of HTML element */
+        let el = document.querySelector(cssSelector)
+
+        if (!el) {
+            Ui.log(1, 'Uib:$', `No element found for CSS selector ${cssSelector}`)()
+            return null
+        }
+
+        if ( el.nodeName === 'TEMPLATE' ) {
+            el = el.content.firstElementChild
+            if (!el) {
+                Ui.log(0, 'Uib:$', `Template selected for CSS selector ${cssSelector} but it is empty`)()
+                return null
+            }
+        }
+
+        return el
+    }
+
+    /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
+     * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
+     * @param {string} cssSelector A CSS Selector that identifies the elements to return
+     * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
+     */
+    $$(cssSelector) {
+        return Array.from(document.querySelectorAll(cssSelector))
+    }
+
+    /** Add 1 or several class names to an element
+     * @param {string|string[]} classNames Single or array of classnames
+     * @param {HTMLElement} el HTML Element to add class(es) to
+     */
+    addClass(classNames, el) {
+        if (!Array.isArray(classNames)) classNames = [classNames]
+        if (el) el.classList.add(...classNames)
+    }
+
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
      * @param {string} mdText The input markdown string
@@ -927,6 +964,7 @@ const Ui = class Ui {
                 if (attrib.name !== 'id') {
                     thisOut.attributes[attrib.name] = node.attributes[attrib.name].value
                 }
+                if (attrib.name === 'class') thisOut.classes = Array.from(node.classList)
             }
         }
         if (node.nodeName === '#text') {
@@ -966,6 +1004,19 @@ const Ui = class Ui {
             }
             return Promise.reject(new Error('Notifications not permitted by user'))
         }
+    }
+
+    /** Remove All, 1 or more class names from an element
+     * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
+     * @param {HTMLElement} el HTML Element to add class(es) to
+     */
+    removeClass(classNames, el) {
+        if (!classNames) {
+            el.removeAttribute('class')
+            return
+        }
+        if (!Array.isArray(classNames)) classNames = [classNames]
+        if (el) el.classList.remove(...classNames)
     }
 
     // TODO Add multi-slot
@@ -1028,8 +1079,8 @@ const Ui = class Ui {
 
         let content = ''
         // Main body content
-        if (msg.payload && typeof msg.payload === 'string') content += msg.payload
-        if (ui.content) content += ui.content
+        if (msg.payload && typeof msg.payload === 'string') content += `<div>${msg.payload}</div>`
+        if (ui.content) content += `<div>${ui.content}</div>`
         // Toast wont show anyway if content is empty, may as well warn user
         if (content === '') {
             Ui.log(1, 'Ui:showDialog', 'Toast content is blank. Not shown.')()
@@ -1118,6 +1169,7 @@ const Ui = class Ui {
         if (json._ui) msg = json
         else msg._ui = json
 
+        console.log(this)
         this._uiManager(msg)
     }
 
@@ -1134,7 +1186,8 @@ const Ui = class Ui {
 
         selection.forEach(node => {
             // Specific property asked for ...
-            if (propName !== null && propName !== '') {
+            if (propName) {
+                if (propName === 'classes') propName = 'class'
                 // Try assuming the prop is an attribute first (will return null or "" if not present)
                 let prop = node.getAttribute(propName)
                 // If not an attribute, try getting as a property of the element
@@ -1149,28 +1202,26 @@ const Ui = class Ui {
                     if (propName.toLowerCase() === 'value') out.push(node.innerText)
                     else out.push(`Property '${propName}' not found`)
                 } else {
+                    const p = {}
                     // Nightmare of different object types in a DOM Element!
-                    if (prop.constructor.name === 'NamedNodeMap') { // Attributes
-                        const p = {}
+                    const cType = prop.constructor.name.toLowerCase()
+                    if (cType === 'namednodemap') {
                         for (const key of prop) {
                             // @ts-ignore
                             p[key.name] = prop[key.name].value
                         }
-                        out.push(p)
-                    } else if (!prop.constructor.name.toLowerCase().includes('map')) { // Ordinary properties
-                        out.push({
-                            [propName]: prop
-                        })
+                    } else if (!cType.includes('map')) { // Ordinary properties (not a mapped type)
+                        p[propName] = prop
                     } else { // Other MAP types
                         const p = {}
                         // @ts-ignore
                         for (const key in prop) {
                             p[key] = prop[key]
                         }
-                        out.push(p)
                     }
+                    if (p.class) p.classes = Array.from(node.classList)
+                    out.push(p)
                 }
-
             } else { // Otherwise, grab everything useful
                 out.push(this.nodeGet(node, cssSelector))
             }
@@ -1178,6 +1229,14 @@ const Ui = class Ui {
 
         return out
     } // --- end of uiGet --- //
+
+    /** External alias for _uiComposeComponent
+     * @param {*} el HTML Element to enhance
+     * @param {*} comp Individual uibuilder ui component spec
+     */
+    uiEnhanceElement(el, comp) {
+        this._uiComposeComponent(el, comp)
+    }
 
     //#endregion ---- -------- ----
 }

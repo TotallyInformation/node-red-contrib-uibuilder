@@ -193,13 +193,6 @@ const Ui = class Ui2 {
       this.replaceSlotMarkdown(el, comp);
     }
   }
-  /** External alias for _uiComposeComponent
-   * @param {*} el HTML Element to enhance
-   * @param {*} comp Individual uibuilder ui component spec
-   */
-  uiEnhanceElement(el, comp) {
-    this._uiComposeComponent(el, comp);
-  }
   /** Extend an HTML Element with appended elements using ui components
    * NOTE: This fn follows a strict hierarchy of added components.
    * @param {HTMLElement} parentEl The parent HTML Element we want to append to
@@ -451,6 +444,46 @@ const Ui = class Ui2 {
   // --- end of _uiUpdate ---
   //#endregion ---- -------- ----
   //#region ---- External Methods ----
+  /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+   * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
+   * If the selected element is a <template>, returns the first child element.
+   * type {HTMLElement}
+   * @param {string} cssSelector A CSS Selector that identifies the element to return
+   * @returns {HTMLElement|null} Selected HTML element or null
+   */
+  $(cssSelector) {
+    let el = document.querySelector(cssSelector);
+    if (!el) {
+      Ui2.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
+      return null;
+    }
+    if (el.nodeName === "TEMPLATE") {
+      el = el.content.firstElementChild;
+      if (!el) {
+        Ui2.log(0, "Uib:$", `Template selected for CSS selector ${cssSelector} but it is empty`)();
+        return null;
+      }
+    }
+    return el;
+  }
+  /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
+   * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
+   * @param {string} cssSelector A CSS Selector that identifies the elements to return
+   * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
+   */
+  $$(cssSelector) {
+    return Array.from(document.querySelectorAll(cssSelector));
+  }
+  /** Add 1 or several class names to an element
+   * @param {string|string[]} classNames Single or array of classnames
+   * @param {HTMLElement} el HTML Element to add class(es) to
+   */
+  addClass(classNames, el) {
+    if (!Array.isArray(classNames))
+      classNames = [classNames];
+    if (el)
+      el.classList.add(...classNames);
+  }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
    * Otherwise simply returns the text
    * @param {string} mdText The input markdown string
@@ -737,6 +770,8 @@ const Ui = class Ui2 {
         if (attrib.name !== "id") {
           thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
         }
+        if (attrib.name === "class")
+          thisOut.classes = Array.from(node.classList);
       }
     }
     if (node.nodeName === "#text") {
@@ -775,6 +810,20 @@ const Ui = class Ui2 {
       }
       return Promise.reject(new Error("Notifications not permitted by user"));
     }
+  }
+  /** Remove All, 1 or more class names from an element
+   * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
+   * @param {HTMLElement} el HTML Element to add class(es) to
+   */
+  removeClass(classNames, el) {
+    if (!classNames) {
+      el.removeAttribute("class");
+      return;
+    }
+    if (!Array.isArray(classNames))
+      classNames = [classNames];
+    if (el)
+      el.classList.remove(...classNames);
   }
   // TODO Add multi-slot
   /** Replace or add an HTML element's slot from text or an HTML string
@@ -829,9 +878,9 @@ const Ui = class Ui2 {
   showDialog(type, ui, msg) {
     let content = "";
     if (msg.payload && typeof msg.payload === "string")
-      content += msg.payload;
+      content += `<div>${msg.payload}</div>`;
     if (ui.content)
-      content += ui.content;
+      content += `<div>${ui.content}</div>`;
     if (content === "") {
       Ui2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
       return;
@@ -904,6 +953,7 @@ const Ui = class Ui2 {
       msg = json;
     else
       msg._ui = json;
+    console.log(this);
     this._uiManager(msg);
   }
   /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
@@ -918,7 +968,9 @@ const Ui = class Ui2 {
     );
     const out = [];
     selection.forEach((node) => {
-      if (propName !== null && propName !== "") {
+      if (propName) {
+        if (propName === "classes")
+          propName = "class";
         let prop = node.getAttribute(propName);
         if (prop === void 0 || prop === null) {
           try {
@@ -932,23 +984,23 @@ const Ui = class Ui2 {
           else
             out.push(`Property '${propName}' not found`);
         } else {
-          if (prop.constructor.name === "NamedNodeMap") {
-            const p = {};
+          const p = {};
+          const cType = prop.constructor.name.toLowerCase();
+          if (cType === "namednodemap") {
             for (const key of prop) {
               p[key.name] = prop[key.name].value;
             }
-            out.push(p);
-          } else if (!prop.constructor.name.toLowerCase().includes("map")) {
-            out.push({
-              [propName]: prop
-            });
+          } else if (!cType.includes("map")) {
+            p[propName] = prop;
           } else {
-            const p = {};
+            const p2 = {};
             for (const key in prop) {
-              p[key] = prop[key];
+              p2[key] = prop[key];
             }
-            out.push(p);
           }
+          if (p.class)
+            p.classes = Array.from(node.classList);
+          out.push(p);
         }
       } else {
         out.push(this.nodeGet(node, cssSelector));
@@ -957,6 +1009,13 @@ const Ui = class Ui2 {
     return out;
   }
   // --- end of uiGet --- //
+  /** External alias for _uiComposeComponent
+   * @param {*} el HTML Element to enhance
+   * @param {*} comp Individual uibuilder ui component spec
+   */
+  uiEnhanceElement(el, comp) {
+    this._uiComposeComponent(el, comp);
+  }
   //#endregion ---- -------- ----
 };
 module.exports = Ui;
