@@ -809,42 +809,6 @@ export const Uib = class Uib {
         }
     }
 
-    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
-     * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
-     * If the selected element is a <template>, returns the first child element.
-     * type {HTMLElement}
-     * @param {string} cssSelector A CSS Selector that identifies the element to return
-     * @returns {*} Selected HTML element or null
-     */
-    $(cssSelector) {
-        /** @type {*} Some kind of HTML element */
-        let el = document.querySelector(cssSelector)
-
-        if (!el) {
-            log(1, 'Uib:$', `No element found for CSS selector ${cssSelector}`)()
-            return null
-        }
-
-        if ( el.nodeName === 'TEMPLATE' ) {
-            el = el.content.firstElementChild
-            if (!el) {
-                log(0, 'Uib:$', `Template selected for CSS selector ${cssSelector} but it is empty`)()
-                return null
-            }
-        }
-
-        return el
-    }
-
-    /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
-     * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
-     * @param {*} cssSelector A CSS Selector that identifies the elements to return
-     * @returns {Array} Array of DOM elements/nodes. Array is empty if selector is not found.
-     */
-    $$(cssSelector) {
-        return Array.from(document.querySelectorAll(cssSelector))
-    }
-
     /** Set the default originator. Set to '' to ignore. Used with uib-sender.
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
@@ -922,6 +886,7 @@ export const Uib = class Uib {
      * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
      * Automatically sends a msg back to Node-RED.
      * Requires the element to already exist.
+     * @returns {false}
      */
     elementIsVisible() {
         const info = 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'
@@ -1010,33 +975,32 @@ export const Uib = class Uib {
     //#region ------- UI handlers --------- //
 
     //#region -- Direct to _ui --
+    // ! NOTE: Direct assignments change the target `this` to here. Use with caution
 
-    /** Directly manage UI via JSON
-     * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
+    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+     * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
+     * If the selected element is a <template>, returns the first child element.
+     * type {HTMLElement}
+     * @param {string} cssSelector A CSS Selector that identifies the element to return
+     * @returns {HTMLElement|null} Selected HTML element or null
      */
-    ui(json) {
-        _ui.ui(json)
-    }
+    $ = _ui.$
 
-    /** Replace or add an HTML element's slot from text or an HTML string
-     * Will use DOMPurify if that library has been loaded to window.
-     * param {*} ui Single entry from the msg._ui property
-     * @param {Element} el Reference to the element that we want to update
-     * @param {*} component The component we are trying to add/replace
+    /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
+     * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
+     * @param {string} cssSelector A CSS Selector that identifies the elements to return
+     * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
      */
-    replaceSlot(el, component) {
-        _ui.replaceSlot(el, component)
-    }
+    $$ = _ui.$$
 
-    /** Replace or add an HTML element's slot from a Markdown string
-     * Only does something if the markdownit library has been loaded to window.
-     * Will use DOMPurify if that library has been loaded to window.
-     * @param {Element} el Reference to the element that we want to update
-     * @param {*} component The component we are trying to add/replace
+    /** Reference to the full ui library */
+    $ui = _ui
+
+    /** Add 1 or several class names to an element
+     * @param {string|string[]} classNames Single or array of classnames
+     * @param {HTMLElement} el HTML Element to add class(es) to
      */
-    replaceSlotMarkdown(el, component) {
-        _ui.replaceSlotMarkdown(el, component)
-    }
+    addClass = _ui.addClass
 
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
@@ -1044,16 +1008,19 @@ export const Uib = class Uib {
      * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
      */
     convertMarkdown(mdText) {
-        return _ui.convertMarkdown(mdText)
+        return _ui.convertMarkdown
     }
 
-    /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
-     * Otherwise just returns that HTML as-is.
-     * @param {string} html The input HTML string
-     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+    /** ASYNC: Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
+     * Wraps the included object in a div tag.
+     * PDF's, text or unknown MIME types are also wrapped in an iFrame.
+     * @param {string} url The URL of the source file to include
+     * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
+     * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
+     * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
      */
-    sanitiseHTML(html) {
-        return _ui.sanitiseHTML(html)
+    async include(url, uiOptions) {
+        await _ui.include(url, uiOptions)
     }
 
     /** Attach a new remote script to the end of HEAD synchronously
@@ -1092,6 +1059,48 @@ export const Uib = class Uib {
         _ui.loadStyleTxt(textFn)
     }
 
+    /** Load a dynamic UI from a JSON web reponse
+     * @param {string} url URL that will return the ui JSON
+     */
+    loadui(url) {
+        _ui.loadui(url)
+    }
+
+    /** Remove All, 1 or more class names from an element
+     * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
+     * @param {HTMLElement} el HTML Element to add class(es) to
+     */
+    removeClass = _ui.removeClass
+
+    /** Replace or add an HTML element's slot from text or an HTML string
+     * Will use DOMPurify if that library has been loaded to window.
+     * param {*} ui Single entry from the msg._ui property
+     * @param {Element} el Reference to the element that we want to update
+     * @param {*} component The component we are trying to add/replace
+     */
+    replaceSlot(el, component) {
+        _ui.replaceSlot(el, component)
+    }
+
+    /** Replace or add an HTML element's slot from a Markdown string
+     * Only does something if the markdownit library has been loaded to window.
+     * Will use DOMPurify if that library has been loaded to window.
+     * @param {Element} el Reference to the element that we want to update
+     * @param {*} component The component we are trying to add/replace
+     */
+    replaceSlotMarkdown(el, component) {
+        _ui.replaceSlotMarkdown(el, component)
+    }
+
+    /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+     * Otherwise just returns that HTML as-is.
+     * @param {string} html The input HTML string
+     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+     */
+    sanitiseHTML(html) {
+        return _ui.sanitiseHTML(html)
+    }
+
     /** Show a pop-over "toast" dialog or a modal alert
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
@@ -1105,11 +1114,11 @@ export const Uib = class Uib {
         _ui.showDialog(type, ui, msg)
     }
 
-    /** Load a dynamic UI from a JSON web reponse
-     * @param {string} url URL that will return the ui JSON
+    /** Directly manage UI via JSON
+     * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
      */
-    loadui(url) {
-        _ui.loadui(url)
+    ui(json) {
+        _ui.ui(json)
     }
 
     /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
@@ -1119,18 +1128,6 @@ export const Uib = class Uib {
      */
     uiGet(cssSelector, propName = null) {
         return _ui.uiGet(cssSelector, propName)
-    }
-
-    /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
-     * Wraps the included object in a div tag.
-     * PDF's, text or unknown MIME types are also wrapped in an iFrame.
-     * @param {string} url The URL of the source file to include
-     * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
-     * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
-     * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
-     */
-    async include(url, uiOptions) {
-        _ui.include(url, uiOptions)
     }
 
     /** Enhance an HTML element that is being composed with ui data
@@ -1496,6 +1493,141 @@ export const Uib = class Uib {
 
     //#region ------- Message Handling (To/From Node-RED) -------- //
 
+    /** Handles original control msgs (not to be confused with "new" msg._uib controls)
+     * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
+     */
+    _ctrlMsgFromServer(receivedCtrlMsg) {
+
+        // Make sure that msg is an object & not null
+        if (receivedCtrlMsg === null) {
+            receivedCtrlMsg = {}
+        } else if (typeof receivedCtrlMsg !== 'object') {
+            const msg = {}
+            msg['uibuilderCtrl:' + this._ioChannels.control] = receivedCtrlMsg
+            receivedCtrlMsg = msg
+        }
+
+        // @since 2018-10-07 v1.0.9: Work out local time offset from server
+        this._checkTimestamp(receivedCtrlMsg)
+
+        this.set('ctrlMsg', receivedCtrlMsg)
+        this.set('msgsCtrlReceived', ++this.msgsCtrlReceived)
+
+        log('trace', 'Uib:ioSetup:_ctrlMsgFromServer', `Channel '${this._ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)()
+
+        /** Process control msg types */
+        switch (receivedCtrlMsg.uibuilderCtrl) {
+            // Node-RED is shutting down
+            case 'shutdown': {
+                log('info', `Uib:ioSetup:${this._ioChannels.control}`, '❌ Received "shutdown" from server')()
+                this.set('serverShutdown', undefined)
+                break
+            }
+
+            /** We are connected to the server - 1st msg from server */
+            case 'client connect': {
+                log('trace', `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')()
+                log('info', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)()
+
+                if ( !Uib._meta.version.startsWith(receivedCtrlMsg.version.split('-')[0]) ) {
+                    log('warn', `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${Uib._meta.version})`)()
+                }
+
+                if (this.autoSendReady === true) { // eslint-disable-line no-lonely-if
+                    log('trace', `Uib:ioSetup:${this._ioChannels.control}/client connect`, 'Auto-sending ready-for-content/replay msg to server')
+                    // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
+                    // @since 6.1.0 Don't bother, we use the "client connect" msg
+                    // this._send({
+                    //     'uibuilderCtrl': 'ready for content',
+                    //     'cacheControl': 'REPLAY',
+                    // }, this._ioChannels.control)
+                }
+
+                break
+            }
+
+            default: {
+                log('trace', `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
+                // Anything else to do for other control msgs?
+            }
+        } // ---- End of process control msg types ---- //
+    } // -- End of websocket receive CONTROL msg from Node-RED -- //
+
+    /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
+     * @param {*} obj Either a msg._ui or msg._uib object to check
+     * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+     */
+    _forThis(obj) {
+        let r = true
+
+        // Is this msg for this pageName?
+        if (obj.pageName && obj.pageName !== this.pageName) {
+            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this page')()
+            r = false
+        }
+
+        // Is this msg for this clientId?
+        if (obj.clientId && obj.clientId !== this.clientId) {
+            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this clientId')()
+            r = false
+        }
+
+        // Is this msg for this tabId?
+        if (obj.tabId && obj.tabId !== this.tabId) {
+            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this tabId')()
+            r = false
+        }
+
+        return r
+    }
+
+    // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
+    _msgRcvdEvents(msg) {
+        // Message received
+        this._dispatchCustomEvent('uibuilder:stdMsgReceived', msg)
+
+        // Topic
+        if ( msg.topic ) this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg)
+
+        // Handle msg._uib special requests
+        if (msg._uib) {
+            // Don't process if the inbound msg is not for us
+            if (!this._forThis(msg._uib)) return
+
+            /** Process a client reload request from Node-RED - as the page is reloaded, everything else is ignored
+             * Note that msg._ui.reload is also actioned via the _ui processing below */
+            if (msg._uib.reload === true) {
+                log('trace', 'Uib:_msgRcvdEvents:_uib:reload', 'reloading')()
+                location.reload()
+                return
+            }
+
+            // Process msg._uib.command messages - allows Node-RED to run uibuilder FE functions
+            if (msg._uib.command) {
+                this._uibCommand(msg)
+                return
+            }
+
+            // Better to request via msg._ui - these are for backwards compatibility
+            if ( msg._uib.componentRef === 'globalNotification' ) {
+                _ui.showDialog('notify', msg._uib.options, msg)
+            }
+            if ( msg._uib.componentRef === 'globalAlert' ) {
+                _ui.showDialog('alert', msg._uib.options, msg)
+            }
+        }
+
+        // Handle msg._ui requests
+        if ( msg._ui ) {
+            // Don't process if the inbound msg is not for us
+            if (!this._forThis(msg._ui)) return
+
+            log('trace', 'Uib:_msgRcvdEvents:_ui', 'Calling _uiManager')()
+            this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
+            _ui._uiManager(msg)
+        }
+    } // --- end of _msgRcvdEvents ---
+
     /** Internal send fn. Send a standard or control msg back to Node-RED via Socket.IO
      * NR will generally expect the msg to contain a payload topic
      * @param {object} msgToSend The msg object to send.
@@ -1555,20 +1687,232 @@ export const Uib = class Uib {
         this._socket.emit(channel, msgToSend)
     } // --- End of Send Msg Fn --- //
 
-    /** Send a standard message to NR
-     * @example uibuilder.send({payload:'Hello'})
-     * @param {object} msg Message to send
-     * @param {string} [originator] A Node-RED node ID to return the message to
+    /** Callback handler for messages from Node-RED
+     * NOTE: `this` is the class here rather the `socket` as would be normal since we bind the correct `this` in the call.
+     *       Use this._socket if needing reference to the socket.
+     * @callback ioSetupFromServer Called from ioSetup/this._socket.on(this.#ioChannels.server, this.stdMsgFromServer.bind(this))
+     * @param {object} receivedMsg The msg object from Node-RED
+     * @this Uib
      */
-    send(msg, originator = '') {
-        this._send(msg, this._ioChannels.client, originator)
+    _stdMsgFromServer(receivedMsg) {
+
+        // Make sure that msg is an object & not null
+        receivedMsg = makeMeAnObject(receivedMsg, 'payload')
+
+        // Don't process if the inbound msg is not for us
+        if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
+        if (receivedMsg._ui && !this._forThis(receivedMsg._ui)) return
+
+        // @since 2018-10-07 v1.0.9: Work out local time offset from server
+        this._checkTimestamp(receivedMsg)
+
+        // Track how many messages have been received
+        this.set('msgsReceived', ++this.msgsReceived)
+
+        // Emit specific document events on msg receipt that make it easy for coders to use
+        this._msgRcvdEvents(receivedMsg)
+
+        if ( !('_ui' in receivedMsg && !('payload' in receivedMsg)) ) {
+            // Save the msg for further processing
+            this.set('msg', receivedMsg)
+        }
+
+        log('info', 'Uib:ioSetup:stdMsgFromServer', `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)()
+
+        // ! NOTE: Don't try to handle specialist messages here. See _msgRcvdEvents.
+    } // -- End of websocket receive DATA msg from Node-RED -- //
+
+    /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
+     * @param {object} msg Msg from Node-RED containing a msg._uib object
+     */
+    _uibCommand(msg) {
+        if (!msg._uib || !msg._uib.command) {
+            log('error', 'uibuilder:_uibCommand', 'Invalid command message received', { msg })()
+            msg.payload = msg.error = 'Invalid command message received'
+            this.send(msg)
+            return
+        }
+        const cmd = msg._uib.command
+        // Disallowed command request outputs error and ignores the msg (NB: Case must match)
+        if (!this.#extCommands.includes(cmd.trim())) {
+            log('error', 'Uib:_uibCommand', `Command '${cmd} is not allowed to be called externally`)()
+            return
+        }
+        const prop = msg._uib.prop
+        const value = msg._uib.value
+        const quiet = msg._uib.quiet ?? false
+        let response, info
+
+        // Don't forget to update `#extCommands`, `docs/client-docs/control-from-node-red.md` & `functions.md`
+        switch (cmd) {
+            case 'elementIsVisible': {
+                response = this.elementIsVisible(prop)
+                // info = `Element "${prop}" ${response ? 'is visible' : 'is not visible'}`
+                break
+            }
+
+            case 'elementExists': {
+                response = this.elementExists(prop, false)
+                info = `Element "${prop}" ${response ? 'exists' : 'does not exist'}`
+                break
+            }
+
+            case 'get': {
+                response = this.get(prop)
+                break
+            }
+
+            case 'getManagedVarList': {
+                if (prop === 'full') response = this.getManagedVarList()
+                else response = Object.values(this.getManagedVarList())
+                break
+            }
+
+            case 'getWatchedVars': {
+                if (prop === 'full') response = this.getWatchedVars()
+                else response = Object.values(this.getWatchedVars())
+                break
+            }
+
+            case 'htmlSend': {
+                response = this.htmlSend('', false)
+                break
+            }
+
+            case 'include': {
+                // include is async
+                response = _ui.include(prop, value)
+                break
+            }
+
+            case 'navigate': {
+                let newUrl
+                if (prop) newUrl = prop
+                else if (value) newUrl = value
+                response = this.navigate(newUrl)
+                break
+            }
+
+            case 'scrollTo': {
+                response = this.scrollTo(prop, value)
+                break
+            }
+
+            case 'set': {
+                let store = false
+                let autoload = false
+                if (msg._uib.options && msg._uib.options.store) {
+                    if (msg._uib.options.store === true) store = true
+                    if (msg._uib.options.autoload === true) autoload = true
+                }
+                response = this.set(prop, value, store, autoload)
+                break
+            }
+
+            case 'showMsg': {
+                response = this.showMsg(value, prop)
+                break
+            }
+
+            case 'showStatus': {
+                response = this.showStatus(value, prop)
+                break
+            }
+
+            case 'uiGet': {
+                response = _ui.uiGet(prop, value)
+                break
+            }
+
+            case 'uiWatch': {
+                response = this.uiWatch(prop)
+                break
+            }
+
+            case 'watchUrlHash': {
+                response = this.watchUrlHash(prop)
+                break
+            }
+
+            default: {
+                log('warning', 'Uib:_uibCommand', `Command '${cmd}' not yet implemented`)()
+                break
+            }
+        }
+
+        if (quiet !== true) {
+            if (response === undefined) {
+                response = `'${prop}' is undefined`
+            }
+            if (Object(response).constructor === Promise) {
+                // response = `'${cmd} ${prop}' submitted. Cmd is async, no response available`
+                response
+                    .then( (/** @type {any} */ data) => {
+                        msg.payload = msg._uib.response = data
+                        msg.info = msg._uib.info = info
+                        if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
+                        this.send(msg)
+                        return true
+                    })
+                    .catch( err => {
+                        log(0, 'Uib:_uibCommand', 'Error: ', err)()
+                    })
+            } else {
+                msg.payload = msg._uib.response = response
+                msg.info = msg._uib.info = info
+                if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
+                this.send(msg)
+            }
+        }
+    } // --- end of _uibCommand ---
+
+    /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
+     * @param {string} txtToSend Text string to send
+     * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
+     */
+    beaconLog(txtToSend, logLevel) {
+        if (!logLevel) logLevel = 'debug'
+        navigator.sendBeacon('./_clientLog', `${logLevel}::${txtToSend}`)
     }
 
-    /** Send a control msg to NR
-     * @param {object} msg Message to send
+    /** Easily send the entire DOM/HTML msg back to Node-RED
+     * @param {string} [originator] A Node-RED node ID to return the message to
+     * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
+     * @returns {string} The HTML as a string
      */
-    sendCtrl(msg) {
-        this._send(msg, this._ioChannels.control)
+    htmlSend(originator = '', send = true) {
+        const out = `<!doctype html>\n${document.documentElement.outerHTML}`
+
+        // Set up the msg to send - NB: Topic may be added by this._send
+        const msg = {
+            payload: out,
+            length: out.length,
+            topic: this.topic,
+        }
+
+        log('trace', 'Uib:htmlSend', 'Sending full HTML to Node-RED', msg)()
+
+        if (send === true) this._send(msg, this._ioChannels.client, originator)
+        return out
+    }
+
+    /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
+     * @param {...*} arguments All arguments passed to the function are added to the msg.payload
+     */
+    logToServer() {
+        this.sendCtrl({
+            uibuilderCtrl: 'client log message',
+            payload: arguments,
+            // "version":"6.1.0-iife.min",
+            _socketId: this._socket.id,
+            // "ip":"::1",
+            clientId: this.clientId,
+            tabId: this.tabId,
+            // "url":"esp-test",
+            pageName: this.pageName,
+            connections: this.connectedNum,
+            lastNavType: this.lastNavType,
+        })
     }
 
     /** Easily send a msg back to Node-RED on a DOM event
@@ -1768,370 +2112,20 @@ export const Uib = class Uib {
         this._send(msg, this._ioChannels.client, originator)
     }
 
-    /** Easily send the entire DOM/HTML msg back to Node-RED
+    /** Send a standard message to NR
+     * @example uibuilder.send({payload:'Hello'})
+     * @param {object} msg Message to send
      * @param {string} [originator] A Node-RED node ID to return the message to
-     * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
-     * @returns {string} The HTML as a string
      */
-    htmlSend(originator = '', send = true) {
-        const out = `<!doctype html>\n${document.documentElement.outerHTML}`
-
-        // Set up the msg to send - NB: Topic may be added by this._send
-        const msg = {
-            payload: out,
-            length: out.length,
-            topic: this.topic,
-        }
-
-        log('trace', 'Uib:htmlSend', 'Sending full HTML to Node-RED', msg)()
-
-        if (send === true) this._send(msg, this._ioChannels.client, originator)
-        return out
+    send(msg, originator = '') {
+        this._send(msg, this._ioChannels.client, originator)
     }
 
-    /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
-     * @param {object} msg Msg from Node-RED containing a msg._uib object
+    /** Send a control msg to NR
+     * @param {object} msg Message to send
      */
-    _uibCommand(msg) {
-        if (!msg._uib || !msg._uib.command) {
-            log('error', 'uibuilder:_uibCommand', 'Invalid command message received', { msg })()
-            msg.payload = msg.error = 'Invalid command message received'
-            this.send(msg)
-            return
-        }
-        const cmd = msg._uib.command
-        // Disallowed command request outputs error and ignores the msg (NB: Case must match)
-        if (!this.#extCommands.includes(cmd.trim())) {
-            log('error', 'Uib:_uibCommand', `Command '${cmd} is not allowed to be called externally`)()
-            return
-        }
-        const prop = msg._uib.prop
-        const value = msg._uib.value
-        const quiet = msg._uib.quiet ?? false
-        let response, info
-
-        // Don't forget to update `#extCommands`, `docs/client-docs/control-from-node-red.md` & `functions.md`
-        switch (cmd) {
-            case 'elementIsVisible': {
-                response = this.elementIsVisible(prop)
-                // info = `Element "${prop}" ${response ? 'is visible' : 'is not visible'}`
-                break
-            }
-
-            case 'elementExists': {
-                response = this.elementExists(prop, false)
-                info = `Element "${prop}" ${response ? 'exists' : 'does not exist'}`
-                break
-            }
-
-            case 'get': {
-                response = this.get(prop)
-                break
-            }
-
-            case 'getManagedVarList': {
-                if (prop === 'full') response = this.getManagedVarList()
-                else response = Object.values(this.getManagedVarList())
-                break
-            }
-
-            case 'getWatchedVars': {
-                if (prop === 'full') response = this.getWatchedVars()
-                else response = Object.values(this.getWatchedVars())
-                break
-            }
-
-            case 'htmlSend': {
-                response = this.htmlSend('', false)
-                break
-            }
-
-            case 'include': {
-                // include is async
-                response = _ui.include(prop, value)
-                break
-            }
-
-            case 'navigate': {
-                let newUrl
-                if (prop) newUrl = prop
-                else if (value) newUrl = value
-                response = this.navigate(newUrl)
-                break
-            }
-
-            case 'scrollTo': {
-                response = this.scrollTo(prop, value)
-                break
-            }
-
-            case 'set': {
-                let store = false
-                let autoload = false
-                if (msg._uib.options && msg._uib.options.store) {
-                    if (msg._uib.options.store === true) store = true
-                    if (msg._uib.options.autoload === true) autoload = true
-                }
-                response = this.set(prop, value, store, autoload)
-                break
-            }
-
-            case 'showMsg': {
-                response = this.showMsg(value, prop)
-                break
-            }
-
-            case 'showStatus': {
-                response = this.showStatus(value, prop)
-                break
-            }
-
-            case 'uiGet': {
-                response = _ui.uiGet(prop, value)
-                break
-            }
-
-            case 'uiWatch': {
-                response = this.uiWatch(prop)
-                break
-            }
-
-            case 'watchUrlHash': {
-                response = this.watchUrlHash(prop)
-                break
-            }
-
-            default: {
-                log('warning', 'Uib:_uibCommand', `Command '${cmd}' not yet implemented`)()
-                break
-            }
-        }
-
-        if (quiet !== true) {
-            if (response === undefined) {
-                response = `'${prop}' is undefined`
-            }
-            if (Object(response).constructor === Promise) {
-                // response = `'${cmd} ${prop}' submitted. Cmd is async, no response available`
-                response
-                    .then( (/** @type {any} */ data) => {
-                        msg.payload = msg._uib.response = data
-                        msg.info = msg._uib.info = info
-                        if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
-                        this.send(msg)
-                        return true
-                    })
-                    .catch( err => {
-                        log(0, 'Uib:_uibCommand', 'Error: ', err)()
-                    })
-            } else {
-                msg.payload = msg._uib.response = response
-                msg.info = msg._uib.info = info
-                if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`
-                this.send(msg)
-            }
-        }
-    } // --- end of _uibCommand ---
-
-    /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
-     * @param {*} obj Either a msg._ui or msg._uib object to check
-     * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
-     */
-    _forThis(obj) {
-        let r = true
-
-        // Is this msg for this pageName?
-        if (obj.pageName && obj.pageName !== this.pageName) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this page')()
-            r = false
-        }
-
-        // Is this msg for this clientId?
-        if (obj.clientId && obj.clientId !== this.clientId) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this clientId')()
-            r = false
-        }
-
-        // Is this msg for this tabId?
-        if (obj.tabId && obj.tabId !== this.tabId) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this tabId')()
-            r = false
-        }
-
-        return r
-    }
-
-    // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
-    _msgRcvdEvents(msg) {
-        // Message received
-        this._dispatchCustomEvent('uibuilder:stdMsgReceived', msg)
-
-        // Topic
-        if ( msg.topic ) this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg)
-
-        // Handle msg._uib special requests
-        if (msg._uib) {
-            // Don't process if the inbound msg is not for us
-            if (!this._forThis(msg._uib)) return
-
-            /** Process a client reload request from Node-RED - as the page is reloaded, everything else is ignored
-             * Note that msg._ui.reload is also actioned via the _ui processing below */
-            if (msg._uib.reload === true) {
-                log('trace', 'Uib:_msgRcvdEvents:_uib:reload', 'reloading')()
-                location.reload()
-                return
-            }
-
-            // Process msg._uib.command messages - allows Node-RED to run uibuilder FE functions
-            if (msg._uib.command) {
-                this._uibCommand(msg)
-                return
-            }
-
-            // Better to request via msg._ui - these are for backwards compatibility
-            if ( msg._uib.componentRef === 'globalNotification' ) {
-                _ui.showDialog('notify', msg._uib.options, msg)
-            }
-            if ( msg._uib.componentRef === 'globalAlert' ) {
-                _ui.showDialog('alert', msg._uib.options, msg)
-            }
-        }
-
-        // Handle msg._ui requests
-        if ( msg._ui ) {
-            // Don't process if the inbound msg is not for us
-            if (!this._forThis(msg._ui)) return
-
-            log('trace', 'Uib:_msgRcvdEvents:_ui', 'Calling _uiManager')()
-            this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
-            _ui._uiManager(msg)
-        }
-    } // --- end of _msgRcvdEvents ---
-
-    /** Callback handler for messages from Node-RED
-     * NOTE: `this` is the class here rather the `socket` as would be normal since we bind the correct `this` in the call.
-     *       Use this._socket if needing reference to the socket.
-     * @callback ioSetupFromServer Called from ioSetup/this._socket.on(this.#ioChannels.server, this.stdMsgFromServer.bind(this))
-     * @param {object} receivedMsg The msg object from Node-RED
-     * @this Uib
-     */
-    _stdMsgFromServer(receivedMsg) {
-
-        // Make sure that msg is an object & not null
-        receivedMsg = makeMeAnObject(receivedMsg, 'payload')
-
-        // Don't process if the inbound msg is not for us
-        if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
-        if (receivedMsg._ui && !this._forThis(receivedMsg._ui)) return
-
-        // @since 2018-10-07 v1.0.9: Work out local time offset from server
-        this._checkTimestamp(receivedMsg)
-
-        // Track how many messages have been received
-        this.set('msgsReceived', ++this.msgsReceived)
-
-        // Emit specific document events on msg receipt that make it easy for coders to use
-        this._msgRcvdEvents(receivedMsg)
-
-        if ( !('_ui' in receivedMsg && !('payload' in receivedMsg)) ) {
-            // Save the msg for further processing
-            this.set('msg', receivedMsg)
-        }
-
-        log('info', 'Uib:ioSetup:stdMsgFromServer', `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)()
-
-        // ! NOTE: Don't try to handle specialist messages here. See _msgRcvdEvents.
-
-    } // -- End of websocket receive DATA msg from Node-RED -- //
-
-    /** Handles original control msgs (not to be confused with "new" msg._uib controls)
-     * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
-     */
-    _ctrlMsgFromServer(receivedCtrlMsg) {
-
-        // Make sure that msg is an object & not null
-        if (receivedCtrlMsg === null) {
-            receivedCtrlMsg = {}
-        } else if (typeof receivedCtrlMsg !== 'object') {
-            const msg = {}
-            msg['uibuilderCtrl:' + this._ioChannels.control] = receivedCtrlMsg
-            receivedCtrlMsg = msg
-        }
-
-        // @since 2018-10-07 v1.0.9: Work out local time offset from server
-        this._checkTimestamp(receivedCtrlMsg)
-
-        this.set('ctrlMsg', receivedCtrlMsg)
-        this.set('msgsCtrlReceived', ++this.msgsCtrlReceived)
-
-        log('trace', 'Uib:ioSetup:_ctrlMsgFromServer', `Channel '${this._ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)()
-
-        /** Process control msg types */
-        switch (receivedCtrlMsg.uibuilderCtrl) {
-            // Node-RED is shutting down
-            case 'shutdown': {
-                log('info', `Uib:ioSetup:${this._ioChannels.control}`, '❌ Received "shutdown" from server')()
-                this.set('serverShutdown', undefined)
-                break
-            }
-
-            /** We are connected to the server - 1st msg from server */
-            case 'client connect': {
-                log('trace', `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')()
-                log('info', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)()
-
-                if ( !Uib._meta.version.startsWith(receivedCtrlMsg.version.split('-')[0]) ) {
-                    log('warn', `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${Uib._meta.version})`)()
-                }
-
-                if (this.autoSendReady === true) { // eslint-disable-line no-lonely-if
-                    log('trace', `Uib:ioSetup:${this._ioChannels.control}/client connect`, 'Auto-sending ready-for-content/replay msg to server')
-                    // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
-                    // @since 6.1.0 Don't bother, we use the "client connect" msg
-                    // this._send({
-                    //     'uibuilderCtrl': 'ready for content',
-                    //     'cacheControl': 'REPLAY',
-                    // }, this._ioChannels.control)
-                }
-
-                break
-            }
-
-            default: {
-                log('trace', `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
-                // Anything else to do for other control msgs?
-            }
-
-        } // ---- End of process control msg types ---- //
-
-    } // -- End of websocket receive CONTROL msg from Node-RED -- //
-
-    /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
-     * @param {string} txtToSend Text string to send
-     * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
-     */
-    beaconLog(txtToSend, logLevel) {
-        if (!logLevel) logLevel = 'debug'
-        navigator.sendBeacon('./_clientLog', `${logLevel}::${txtToSend}`)
-    }
-
-    /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
-     * @param {...*} arguments All arguments passed to the function are added to the msg.payload
-     */
-    logToServer() {
-        this.sendCtrl({
-            uibuilderCtrl: 'client log message',
-            payload: arguments,
-            // "version":"6.1.0-iife.min",
-            _socketId: this._socket.id,
-            // "ip":"::1",
-            clientId: this.clientId,
-            tabId: this.tabId,
-            // "url":"esp-test",
-            pageName: this.pageName,
-            connections: this.connectedNum,
-            lastNavType: this.lastNavType,
-        })
+    sendCtrl(msg) {
+        this._send(msg, this._ioChannels.control)
     }
 
     //#endregion -------- ------------ -------- //
@@ -2604,7 +2598,7 @@ if (!window['$']) {
     /** @type {HTMLElement} */
     window['$'] = window['uibuilder'].$ // document.querySelector.bind(document)
 } else {
-    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.')
+    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` or `uib.$` instead.')
 }
 // Assign `$$` to global window object unless it is already in use.
 // Note that this is also available as `uibuilder.$$`.
@@ -2612,7 +2606,16 @@ if (!window['$$']) {
     /** @type {HTMLElement} */
     window['$$'] = window['uibuilder'].$$ // document.querySelectorAll.bind(document)
 } else {
-    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$$`, it is already in use. Use `uibuilder.$$` instead.')
+    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$$`, it is already in use. Use `uibuilder.$$` or `uib.$$` instead.')
+}
+
+// Assign `$ui` to global window object unless it is already in use.
+// Note that this is also available as `uibuilder.$$`.
+if (!window['$ui']) {
+    /** @type {HTMLElement} */
+    window['$ui'] = window['uibuilder'].$ui // document.querySelectorAll.bind(document)
+} else {
+    log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$ui`, it is already in use. Use `uibuilder.$ui` or `uib.$ui` instead.')
 }
 
 // Can import as `import uibuilder from ...` OR `import {uibuilder} from ...`
