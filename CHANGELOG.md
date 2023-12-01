@@ -8,10 +8,30 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Fix
 
+* `uib-save` import - initial deployment does not connect to node - need to clear the entry
+* `jsdom` v22 is pinned to node.js v16
+
 ## To Do
 
 * update the `remote-commands` example
+* Add new low-code example
 * Update docs for ctrl msgs and msg._uib return data to say that anything set via the socket.io auth can only update when the client reconnects. Also document clientTimeDifference
+* Fixup CSS for showDialog (notifications/alerts) - left/right margin on p and svg need removing. Maybe on toast-head class too. Parent class is "toast"
+
+* More flexible low-code class attribute handling.
+  * In ui.js
+    * [ ] Update the low-code schema's with add/remove/replace `classes` property
+    * Update all fns to use the extra property
+  * In nodes - update to allow using array of classes and to have add/remove class arrays
+    * In uib-update
+    * In uib-element
+    * In uib-tag
+
+## Ideas
+
+* `uib-template` - New node to take a msg._ui template input and update parts of it belore sending (e.g. parent, id, ...). `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation)
+* `<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation)
+* Enhance `uib-save` - allow URL to be driven by msg or context (just add new options to select, don't bother with typed input)
 
 ------------
 
@@ -23,27 +43,49 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 * New `navigate` function and command. Triggers a page change or a route change either from front-end JavaScript or via a command message in Node-RED.
 * New `scrollTo` function and command. Scrolls the visible page to a specific location either from front-end JavaScript or via a command message in Node-RED.
+* No-code and low-code features now all allow more flexible class handling (add, remove, and replace using lists). HTML element data outputs also now return an array of class names, not just a combined string.
 * Front-end commands issued from Node-RED can now take a `quiet` option set to `true` to prevent the return message. e.g. `{"_uib": {"command":"navigate","prop":"#newroute","quiet":true}}`
+* Front-end developers now have full access to the `ui.js` library via the `$ui` global.
 
 ### `uibrouter`
 
 * [Issue #232](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/232) - Ensure origin script is removed after re-applying to ensure only 1 instance shows instead of 2.
 
+### `uib-save`
+
+* **FIXED** usePageName logic.
+
 ### Client library
 
 * **FIXED** - Some reported client data was incorrect. Notably the `connections`, and `lastNavType` properties. The `connections` property has now been corrected. The `lastNavType`, I now realise will never be correctly updated by the client and therefore it has been removed. Fixing these has also resulted in some simplification of the client code.
+
+* **NEW** - `$ui` is a new global created by the library which gives full access to the `ui.js` library, that library presents an instance of the `Ui` class. So typing `$ui.version` in the browser dev console will return the current version of the ui library. Also available as `uibuilder.$ui` just in case `$ui` was already taken when the uibuilder library is loaded.
+
+* **NEW ui functions** - `addClass(classNames, el)`, `removeClass(classNames, el)` - see `ui.js` below for details.
 
 * **NEW Function and Command** - `navigate(url)` - Load a new web page or change routes. Can be triggered from Node-RED with msg `{"_uib": {"command":"navigate","prop":"#newroute"}}`. See [Client Functions (navigate) in the docs](client-docs/functions#navigate) for details. URL's can be full, relative (to the current page) or routing (hashes). Obviously, can be called in front-end JavaScript as well as `uibuilder.navigate('./page2.html')` etc.
 * **NEW Function and Command** - `scrollTo(cssSelector)` - Scroll visible page to an element based on a CSS Selector. See [Client Functions (scrollTo) in the docs](client-docs/functions#scrollTo) for details. `top`, `start`, `bottom`, `end` can be used as shortcuts for the top/bottom of the page. An optional 2nd parameter gives more control.
 
 * Added `quiet` property to remote command processing. Set `msg._uib.quiet` to `true` to stop the library returning a message to Node-RED on completion of the command.
+* When using `uiGet` or `nodeGet` functions/commands, if class attribute is present, an additional `classes` property is returned which is an array of the class names.
 
 * **DEPRECATED Function** - `elementIsVisible` - Was not working correctly and a fix is complex. Will revisit in the future. Let me know if you need this function. This would normally be a breaking change but the function is still there - it returns a console msg and a node-red msg still - and as it wasn't working, I doubt anyone has used it.
+* Moved  `$` and `$$` functions to `ui.js` library. This library references them. So no change to usage.
+
+### `ui.js` low-code->HTML hydration library
+
+* **NEW functions** - `addClass(classNames, el)`, `removeClass(classNames, el)` - Add/remove classes individually. `classNames` can be a single class name, or an array of class names. For `removeClass`, an empty string, null or undefined can be used to remove all classes (removes the class attribute).
+* When using `uiGet` or `nodeGet` functions/commands, if class attribute is present, an additional `classes` property is returned which is an array of the class names.
+* Improved separation between `payload` and `content` in "alert" and "notify" methods.
+
+* Allowed low-code `attributes` property to be an array when specifying classes to apply. All classes in the array will be applied.
+* Moved `$` and `$$` functions to this library from uibuilder.
 
 ### Documentation
 
 * Heading levels 3+ have been made lighter to better differentiate them visually.
 * The front-end client functions page now has an alphabetical list of functions.
+* Improved low-code documentation for the `notify` and `alert` methods.
 
 
 ## [v6.7.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...v6.7.0)

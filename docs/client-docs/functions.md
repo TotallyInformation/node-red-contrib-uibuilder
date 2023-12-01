@@ -211,6 +211,21 @@ In addition, internal message handling will recognise standard messages from nod
 
 For functions with no descriptions, please refer to the code. In general, these will not need to be used in your own code.
 
+### `addClass(classNames, el)` - Add one or more classes to an element :id=addClass
+
+`classNames` can be a string to add a single class or an array of strings for multiple classes.
+
+`el` must be a single HTML element, e.g. `$('#more')`
+
+```javascript
+uibuilder.addClass('myclass', $('#more'))
+uibuilder.addClass(['class1', 'class2'], $('#more'))
+```
+
+See also [removeClass](#removeClass). Uses [`el.classList.add`](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)
+
+Note that if you want to _toggle_ a class on/off, use the HTML DOM: `$('#more').classList.toggle('myclass')`. See [MDN DOMTokenList/toggle](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle) for details.
+
 ### `convertMarkdown(mdText)` - Convert's Markdown text input to HTML :id=convertMarkdown
 
 Returns an HTML string converted from the Markdown input text. Only if the Markdown-IT library is loaded, otherwise just returns the input text.
@@ -352,6 +367,22 @@ When returning the response to Node-RED, the following style of msg is output:
   "_socketId":"RlLfI6HDnhbcttB5AAAH","topic":"title","_msgid":"64a614702ff90fff"
 }
 ```
+
+### `removeClass(classNames, el)` - Remove all, one or more classes from an element :id=removeClass
+
+`classNames` can be a string to remove a single class, an array of strings for multiple classes. Or can be an empty string, `null` or `undefined` to remove all classes (will remove the `class` attribute).
+
+`el` must be a single HTML element, e.g. `$('#more')`
+
+```javascript
+uibuilder.removeClass(null, $('#more')) // remove all
+uibuilder.removeClass('myclass', $('#more')) // remove 1
+uibuilder.removeClass(['class1', 'class2'], $('#more')) // remove multiple
+```
+
+See also [addClass](#addClass). Uses [`el.classList.remove`](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)
+
+Note that if you want to _toggle_ a class on/off, use the HTML DOM: `$('#more').classList.toggle('myclass')`. See [MDN DOMTokenList/toggle](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle) for details.
 
 ### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string
 
@@ -710,6 +741,8 @@ If examining the library code, please remember that functions starting with `_` 
 
 * [`$`](#$)
 * [`$$`](#$$)
+* [`$ui`](#$ui)§ - Reference to the ui.js library, not a function
+* [`addClass`](#addClass)§
 * [`beaconLog`](#beaconLog)
 * [`cancelChange`](#cancelChange)
 * [`cancelTopic`](#cancelTopic)
@@ -737,6 +770,7 @@ If examining the library code, please remember that functions starting with `_` 
 * [`notify`](#notify)
 * [`onChange`](#onChange)
 * [`onTopic`](#onTopic)
+* [`removeClass`](#removeClass)§
 * [`removeStore`](#removeStore)
 * [`replaceSlot`](#replaceSlot)§
 * [`replaceSlotMarkdown`](#replaceSlotMarkdown)§

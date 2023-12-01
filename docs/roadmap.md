@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: >
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-11-21 18:12:36
+lastUpdated: 2023-11-25 15:13:55
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues).
@@ -74,6 +74,10 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * probably chart
   * How to pass data through?
 
+* New node: `uib-template` -  New node to take a msg._ui template input and update parts of it belore sending (e.g. parent, id, ...). `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
+
+* New node: `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance.
+
 
 
 ### Updates to `uibuilder` node
@@ -115,7 +119,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Auto-generate web manifest.
 * Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
 
-* Switch tooltips to using aria-label with hover CSS as in the new node.
 * Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
 * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
 * Consider adding an action for when a `uibuilder` node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
@@ -404,10 +407,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
 * New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
 
+### Shared Editor Code Library `ti-common.js` and `ti-common.css`
+
+* Add `isNew` flag that indicates if a node instance has not yet been deployed. (e.g. new paste or import or drag from palatte)
 
 ### client Library
-* Add client time offset from server to standard client metadata. [ref](https://discourse.nodered.org/t/time-zone-in-a-z-in-node-red/82537/7?u=totallyinformation)
-* [**STARTED**] Ability to visually show all uibuilder managed variables.
+* [**STARTED**] Ability to visually show all uibuilder managed variables. 
 * A way to show and change uib-brand variables visually?
 * Add extra optional flag to set() to allow saving to localStorage - where set, auto-load on (re)load
 
