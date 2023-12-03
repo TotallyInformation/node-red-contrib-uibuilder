@@ -30,9 +30,7 @@
  */
 
 const path = require('path')
-const fs = require('fs')
-// const fs = require('fs-extra') // only used for ensureDirSync
-const fg = require('fast-glob')
+const fslib = require('./fs.js')
 const serveIndex = require('serve-index')
 const express = require('express')
 const tilib = require('./tilib')
@@ -396,11 +394,11 @@ class UibWeb {
         const log = this.log
 
         try {
-            fs.accessSync( path.join(uib.masterStaticFeFolder, defaultPageName), fs.constants.R_OK )
-            log.trace(`[uibuilder:web:setMasterStaticFolder] Using master production build folder. ${uib.masterStaticFeFolder}`)
+            fslib.accessSync( path.join(uib.masterStaticFeFolder, defaultPageName), 'r' )
+            log.trace(`[uibuilder:web:setMasterStaticFolder] Using master production build folder. '${uib.masterStaticFeFolder}'`)
             this.masterStatic = uib.masterStaticFeFolder
         } catch (e) {
-            throw new Error(`setMasterStaticFolder: Cannot serve master production build folder. ${uib.masterStaticFeFolder}`)
+            throw new Error(`setMasterStaticFolder: Cannot serve master production build folder, cannot access to read: '${uib.masterStaticFeFolder}'`)
         }
     } // --- End of setMasterStaticFolder() --- //
 
@@ -613,7 +611,7 @@ class UibWeb {
 
             if (this.app.get('view engine')) {
                 filePath = path.join(pathRoot, `${requestedView.name}.ejs`)
-                if (fs.existsSync(filePath)) {
+                if (fslib.existsSync(filePath)) {
                     // console.log('>> render >>', requestedView.name, filePath) //! TODO - remove
                     try {
                         // res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
@@ -788,7 +786,7 @@ class UibWeb {
         if ( node.sourceFolder === undefined ) {
             try {
                 // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
-                fs.accessSync( path.join(node.customFolder, 'dist', defaultPageName), fs.constants.R_OK )
+                fslib.accessSync( path.join(node.customFolder, 'dist', defaultPageName), 'r' )
                 // If the ./dist/index.html exists use the dist folder...
                 customStatic = 'dist'
                 log.trace(`[uibuilder:web:setupInstanceStatic:${node.url}] Using local dist folder`)
@@ -806,15 +804,15 @@ class UibWeb {
         // Does the customStatic folder exist? If not, then create it
         try {
             // With recursive, will create missing parents and does not error if parents already exist
-            fs.mkdirSync( customFull, {recursive:true} )
-            // fs.ensureDirSync( customFull ) // requires fs-extra
+            fslib.mkdirSync( customFull, { recursive: true } )
+            // fslib.ensureDirSync( customFull )
             log.trace(`[uibuilder:web:setupInstanceStatic:${node.url}] Using local ${customStatic} folder`)
         } catch (e) {
             node.warn(`[uibuilder:web:setupInstanceStatic:${node.url}] Cannot create or access ${customFull} folder, no pages can be shown. Error: ${e.message}`)
         }
 
         // Does it contain an index.html file? If not, then issue a warn
-        if ( !fs.existsSync( path.join(customFull, defaultPageName) ) ) {
+        if ( !fslib.existsSync( path.join(customFull, defaultPageName) ) ) {
             node.warn(`[uibuilder:web:setupInstanceStatic:${node.url}] Cannot show default page, index.html does not exist in ${customFull}.`)
         }
 
@@ -837,7 +835,7 @@ class UibWeb {
         const log = this.log
 
         // Allow all .js files in api folder to be loaded, always returns an array - NB: Fast Glob requires fwd slashes even on Windows
-        const apiFiles = fg.sync(`${uib.rootFolder}/${node.url}/api/*.js`)
+        const apiFiles = fslib.fgSync(`${uib.rootFolder}/${node.url}/api/*.js`)
         // console.log('>> apiFiles >>', `${uib.rootFolder}/${node.url}/api/*.js`, apiFiles)
         apiFiles.forEach( instanceApiPath => {
             // console.log('>> api file >>', instanceApiPath)
@@ -1132,7 +1130,9 @@ class UibWeb {
         this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client beacon log back to Node-RED', type: 'POST', folder: 'N/A' } )
     }
 
-    /** If allowed and if any exist, add instance custom routes from <uibRoot>/<node.url>/routes/*.js */
+    /** If allowed and if any exist, add instance custom routes from <uibRoot>/<node.url>/routes/*.js
+     * @param {uibNode} node configuration data for this instance
+     */
     addInstanceCustomRoutes(node) {
         // Reference static vars
         const uib = this.uib
@@ -1142,7 +1142,7 @@ class UibWeb {
         // Is this capability turned on in settings.js?
 
         // Add routers from each <uibRoot>/<node.url>/routes/*.js file (Empty list if fldr doesn't exist or no files)
-        const routeFiles = fg.sync(`${uib.rootFolder}/${node.url}/routes/*.js`)
+        const routeFiles = fslib.fgSync(`${uib.rootFolder}/${node.url}/routes/*.js`)
         routeFiles.forEach( routeFilePath => {
             let instanceRouteFile = {}
             let routeKeys = []
