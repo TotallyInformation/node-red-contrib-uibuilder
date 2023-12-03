@@ -10,6 +10,28 @@ lastUpdated: 2023-10-08 15:12:02
 
 * [Processes](processes/README.md)
 
+## Dependencies
+
+Due to its complexity, UIBUILDER has a higher than Node-RED average of external dependencies. Over time, these are reduced (e.g. `nanoid` can be replaced by a native library from node.js v19).
+
+### Client library dependencies
+
+* [Socket.IO Client](https://www.npmjs.com/package/socket.io-client) - This is the only dependency for the client. It is built into the client library and kept in step with the Socket.IO server library. It is required to manage secure communications between the client and Node-RED server.
+
+### Server dependencies
+
+* [@totallyinformation/ti-common-event-handler](https://www.npmjs.com/package/@totallyinformation/ti-common-event-handler) - My own shared library for doing extended event handling in Node.js. Allows for wildcards and is faster than Node's native event handler.
+* [degit](https://www.npmjs.com/package/degit) - Used to enable external uibuilder templates to be utilised from Git repositories - notably GitHub or GitLab.
+* [ejs](https://www.npmjs.com/package/ejs) - Embedded JavaScript Templates - an option in uibuilder that allows server-side templating.
+* [execa](https://www.npmjs.com/package/execa) - Process execution, used to run `npm` scripts/installs/updates/etc. Limited to v5 since later versions do not support CommonJS.
+* [ExpressJS](https://www.npmjs.com/package/express) - Node.js standard web server. Also used by Node-RED.
+* [fast-glob](https://www.npmjs.com/package/fast-glob) - Fast file find and traversal. Used in `libs/fs.js` only. **TO BE REMOVED IN THE FUTURE**
+* [fs-extra](https://www.npmjs.com/package/fs-extra) - Additional filing system methods. Used in several modules but is being slowly moved to `libs/fs.js` only. **IN THE PROCESS OF BEING REMOVED**
+* [jsdom](https://www.npmjs.com/package/jsdom) - Industry std Node.js module to simulate the browser DOM on the server. Used for the `uib-html` node to hydrate uibuilder's low-code JSON to HTML.
+* [nanoid](https://www.npmjs.com/package/nanoid) - Generate a short UUID as a stable client ID. Currently limited to v3 as that was the last version to support CommonJS. **To be replaced with native crypto uuid after Node.js is baseline**
+* [serve-index](https://www.npmjs.com/package/serve-index) - Simple module to enable serving of directory listings. Used in `libs/web.js`.
+* [Socket.IO](https://www.npmjs.com/package/socket.io) - Enhanced websockets.
+
 ## Server Libraries
 
 * [Server Libraries](dev/server-libs/README.md) - Information on each of the server libraries
