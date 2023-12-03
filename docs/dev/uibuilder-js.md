@@ -9,27 +9,9 @@ lastUpdated: 2022-11-26 16:28:09
 !> This document needs updating, it is incomplete.
 
 - [Key processing elements](#key-processing-elements)
-  - [Installation](#installation)
-  - [Global Initialisation](#global-initialisation)
-  - [Instance Initialisation](#instance-initialisation)
-  - [Adding staticServer paths for vendor packages](#adding-staticserver-paths-for-vendor-packages)
-  - [Client Connection](#client-connection)
-  - [Client Disconnection](#client-disconnection)
-- [Global/Module Variables](#globalmodule-variables)
-  - [`uib` {Object} \[Module global\]](#uib-object-module-global)
-  - [Other variables](#other-variables)
-- [uibuilder Node Instance Variables](#uibuilder-node-instance-variables)
-  - [From the admin Editor ui](#from-the-admin-editor-ui)
-    - [Advanced Settings](#advanced-settings)
-    - [Security Related](#security-related)
-    - [Credentials](#credentials)
-  - [Locally configured (not set in Editor)](#locally-configured-not-set-in-editor)
-  - [Internals \& Typedef](#internals--typedef)
+- [Global/Module properties](#globalmodule-properties)
+- [uibuilder Node Instance properties](#uibuilder-node-instance-properties)
 - [Functions/Methods](#functionsmethods)
-  - [Module level](#module-level)
-  - [Instance level](#instance-level)
-  - [Utility Classes](#utility-classes)
-  - [Utility Functions](#utility-functions)
 - [Admin API's](#admin-apis)
 
 ## Key processing elements
@@ -94,7 +76,7 @@ When a client disconnects for any reason (page reload, tab closed, browser crash
 
 Note that if a client disconnects then reconnects it will have a different `_socketId` property.
 
-## Global/Module Variables
+## Global/Module properties
 
 ### `uib` {Object} [Module global]
 
@@ -190,11 +172,11 @@ Note that if a client disconnects then reconnects it will have a different `_soc
 
 * `degitEmitter` {Function}: Event emitter for degit, populated on 1st use. See POST admin API. Only used if an external template is loaded.
 
-### Other variables
+### Other properties
 
 * `userDir` {String}: The current userDir folder. `RED.settings.userDir`.
   
-## uibuilder Node Instance Variables
+## uibuilder Node Instance properties
 
 Each instance of the uibuilder node has the following variables.
 
@@ -229,18 +211,6 @@ Each instance of the uibuilder node has the following variables.
   an index page view showing the source files available. Turning this on in production would be
   unwise as it would be a security issue. If turned on, resulting URL is `<httpNodeRoot>/<node.url>/idx`.
 
-#### Security Related
-
-* `node.useSecurity` {Boolean}: Default `false`. Whether to use uibuilder's security architecture.
-* `node.tokenAutoExtend`: Whether to use client `ping` messages (every 25-30 sec) to automatically extend the token lifespan.
-* `node.sessionLength` {Integer}: Default `1.8e6`. (1.8e6 milliseconds = 30*60000 = 30min). How long without the client sending a msg will it be until a login is automatically logged out.
-
-#### Credentials
-
-Credentials in Node-RED are node configuration settings that are stored encrypted in a separate json file from your flows. They are _not_ exported when you export a flow.
-
-* `node.jwtSecret` {String}: The secret used to sign/verify the JWT token.
-
 ### Locally configured (not set in Editor)
 
 * `node.customFolder` {String}: Default `<uib.rootFolder>/<node.url>`. 
@@ -270,42 +240,59 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
 ```javascript
 /** uibNode
  * @typedef {object} uibNode Local copy of the node instance config + other info
- * @property {String} uibNode.id Unique identifier for this instance
- * @property {String} uibNode.type What type of node is this an instance of? (uibuilder)
- * @property {String} uibNode.name Descriptive name, only used by Editor
- * @property {String} uibNode.topic msg.topic overrides incoming msg.topic
- * @property {String} uibNode.url The url path (and folder path) to be used by this instance
- * @property {String} uibNode.oldUrl The PREVIOUS url path (and folder path) after a url rename
- * @property {boolean} uibNode.fwdInMessages Forward input msgs to output #1?
- * @property {boolean} uibNode.allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
- * @property {boolean} uibNode.allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
- * @property {boolean} uibNode.copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist? 
- * @property {String}  uibNode.templateFolder Folder name for the source of the chosen template
- * @property {String}  uibNode.extTemplate Degit url reference for an external template (e.g. from GitHub)
- * @property {boolean} uibNode.showfolder Provide a folder index web page?
- * @property {boolean} uibNode.useSecurity Use uibuilder's built-in security features?
- * @property {boolean} uibNode.tokenAutoExtend Extend token life when msg's received from client?
- * @property {Number} uibNode.sessionLength Lifespan of token (in seconds)
- * @property {boolean} uibNode.reload If true, notify all clients to reload on a change to any source file
- * @property {String} uibNode.jwtSecret Seed string for encryption of JWT
- * @property {String} uibNode.customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
- * @property {Number} uibNode.ioClientsCount How many Socket clients connected to this instance?
- * @property {Number} uibNode.rcvMsgCount How many msg's received since last reset or redeploy?
- * @property {Object} uibNode.ioChannels The channel names for Socket.IO
- * @property {String} uibNode.ioChannels.control SIO Control channel name 'uiBuilderControl'
- * @property {String} uibNode.ioChannels.client SIO Client channel name 'uiBuilderClient'
- * @property {String} uibNode.ioChannels.server SIO Server channel name 'uiBuilder'
- * @property {String} uibNode.ioNamespace Make sure each node instance uses a separate Socket.IO namespace
- * @property {Function} uibNode.send Send a Node-RED msg to an output port
- * @property {Function=} uibNode.done Dummy done function for pre-Node-RED 1.0 servers
- * @property {Function=} uibNode.on Event handler
- * @property {Function=} uibNode.removeListener Event handling
- * @property {Object=} uibNode.credentials Optional secured credentials
- * @property {Object=} uibNode.z Internal
- * @property {Object=} uibNode.wires Internal. The wires attached to this node instance (uid's)
- * 
- * @property {boolean} uibNode.commonStaticLoaded Whether the common static folder has been added
- * @property {boolean} uibNode.initCopyDone Has the initial template copy been done?
+ * @property {string} id Unique identifier for this instance
+ * @property {string} type What type of node is this an instance of? (uibuilder)
+ *
+ * @property {string} name Descriptive name, only used by Editor
+ * @property {string} topic msg.topic overrides incoming msg.topic
+ * @property {string} url The url path (and folder path) to be used by this instance
+ * @property {string} oldUrl The PREVIOUS url path (and folder path) after a url rename
+ * @property {boolean} fwdInMessages Forward input msgs to output #1?
+ * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
+ * @property {boolean} copyIndex DEPRECATED Copy index.(html|js|css) files from templates if they don't exist?
+ * @property {string}  templateFolder Folder name for the source of the chosen template
+ * @property {string}  extTemplate Degit url reference for an external template (e.g. from GitHub)
+ * @property {boolean} showfolder Provide a folder index web page?
+ * @property {boolean} reload If true, notify all clients to reload on a change to any source file
+ * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
+ * @property {string} deployedVersion The version of uibuilder when this node was last deployed
+ * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
+ *
+ * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {number} ioClientsCount How many Socket clients connected to this instance?
+ * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
+ * @property {object} ioChannels The channel names for Socket.IO
+ * @property {string} ioChannels.control SIO Control channel name 'uiBuilderControl'
+ * @property {string} ioChannels.client SIO Client channel name 'uiBuilderClient'
+ * @property {string} ioChannels.server SIO Server channel name 'uiBuilder'
+ * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
+ *
+ * @property {Function} send Send a Node-RED msg to an output port
+ * @property {Function=} done Dummy done Function for pre-Node-RED 1.0 servers
+ * @property {Function=} on Event handler
+ * @property {Function=} removeListener Event handling
+ * @property {Function=} context Function that accesses the nodes context vars or the flow/global vars
+ * @property {Function=} emit Function that emits an event
+ * @property {Function=} receive Function that ???
+ * @property {object=} credentials Optional secured credentials
+ * @property {object=} z Internal
+ * @property {object=} wires Internal. The wires attached to this node instance (uid's)
+ *
+ * @property {boolean} commonStaticLoaded Whether the common static folder has been added
+ * @property {boolean} initCopyDone Has the initial template copy been done?
+ *
+ * @property {Function} warn Output warn level info to node-red console and to editor debug
+ *
+ * @property {object} statusDisplay Settings for the uibuilder node status
+ * @property {string} statusDisplay.text Text to display
+ * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
+ * @property {string} statusDisplay.shape dot or ring
+ *
+ * @property {string} title Short descriptive title for the instance
+ * @property {string} descr Longer description for the instance
+ *
+ * @property {Function} sendToFe Ref to sockets.sendToFe
  */
 ```
 
@@ -322,6 +309,7 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
 
 * `ioNs`: Reference to Socket.IO namespace used for the instance.
 * `nodeInputHandler`: Function that handles incoming messages for a uibuilder instance.
+* `sendToFe`: A reference to sockets.sendToFe which allows a msg to be sent directly to attached clients.
 
 ### Utility Classes
 

@@ -32,7 +32,7 @@ const uiblib = require('./libs/uiblib')  // Utility library for uibuilder
 const tilib = require('./libs/tilib')   // General purpose library (by Totally Information)
 const packageMgt = require('./libs/package-mgt')
 const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
-const uibFs  = require('./libs/fs')   // File/folder handling library (by Totally Information)
+const fslib  = require('./libs/fs')   // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {
     // Template configuration metadata
@@ -70,7 +70,7 @@ const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra
 
 /** @type {uibConfig} */
 const uib = {
-    me: uibFs.readJSONSync(path.join( __dirname, '..', 'package.json' )),
+    me: fslib.readJSONSync(path.join( __dirname, '..', 'package.json' )),
     moduleName: 'uibuilder',
     nodeRoot: '',
     deployments: {},
@@ -324,7 +324,7 @@ function nodeInstance(config) {
     // Does the custom folder exist? If not, create it and copy template to it. Otherwise make sure it is accessible.
     // TODO replace with uibFs.ensureFolder()
     let customFoldersOK = true
-    if ( !fs.existsSync(this.customFolder) ) {
+    if ( !fslib.existsSync(this.customFolder) ) {
         // Does not exist so check whether built-in or external template wanted
         if ( this.templateFolder !== 'external' ) {
 
@@ -366,7 +366,7 @@ function nodeInstance(config) {
     } else {
 
         try {
-            fs.accessSync(this.customFolder, fs.constants.W_OK)
+            fslib.accessSync(this.customFolder, 'w')
         } catch (e) {
             log.error(`🛑[uibuilder:nodeInstance:${this.url}] Local custom folder ERROR`, e.message)
             customFoldersOK = false
@@ -394,6 +394,9 @@ function nodeInstance(config) {
 
     /** Socket.IO instance configuration. Each deployed instance has it's own namespace */
     sockets.addNS(this) // NB: Namespace is set from url
+
+    // Save a reference to sendToFe to allow this and other nodes referencing this to send direct to clients
+    this.sendToFe = sockets.sendToFe.bind(sockets)
 
     log.trace(`[uibuilder:nodeInstance:${this.url}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
     log.trace(`[uibuilder:nodeInstance:${this.url}] Source files . : ${this.customFolder}`)
@@ -569,7 +572,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     // TODO: Move all file handling to separate uibFs lib
     // Configure the UibFs handler class
-    uibFs.setup(uib)
+    fslib.setup(uib)
 
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
@@ -587,7 +590,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     }
     // Try to access the root folder (read/write) - if we can, create and serve the common resource folder
     try {
-        fs.accessSync( uib.rootFolder, fs.constants.R_OK | fs.constants.W_OK ) // try to access read/write
+        fslib.accessSync( uib.rootFolder, 'rw' ) // try to access read/write
         log.trace(`[uibuilder:runtimeSetup] uibRoot folder is read/write accessible. ${uib.rootFolder}` )
     } catch (e) {
         RED.log.error(`🛑[uibuilder:runtimeSetup] Root folder is not accessible, path: ${uib.rootFolder}. ${e.message}`)
@@ -638,7 +641,6 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     web.setup(uib) // Singleton wrapper for ExpressJS
 
     /** Pass core objects to the Socket.IO handler module */
-    // @ts-ignore
     sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
 } // --- end of runtimeSetup --- //
 
