@@ -25,10 +25,9 @@
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
 
-const path = require('path')
-// const util = require('util')
-const fs = require('fs-extra')
-// const tilib = require('./tilib')
+const { join } = require('path')
+const { copy, readJsonSync, writeJson, writeJsonSync } = require('fs-extra')
+const { existsSync } = require('./fs.js')
 const execa = require('execa')
 
 class UibPackages {
@@ -150,7 +149,7 @@ class UibPackages {
             const pkg = pj.uibuilder.packages[pkgName]
             if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
             // The actual location of the package folder
-            pkg.installFolder = path.join(this.uib.rootFolder, 'node_modules', pkgName)
+            pkg.installFolder = join(this.uib.rootFolder, 'node_modules', pkgName)
             // The base url used by uib - note this is changed if this is a scoped package
             pkg.packageUrl = '/' + pkgName
             // this.log.debug(`[uibuilder:package-mgt:pkgsQuickUpd] Updating '${pkgName}'. Fldr: '${pkg.installFolder}', URL: '${pkg.packageUrl}'.`)
@@ -172,10 +171,10 @@ class UibPackages {
 
         let file = null
         try {
-            //! TODO: Replace fs-extra
+            // ! TODO: Replace fs-extra
             // const data = fs.readFileSync('./example.json')
             // const obj = JSON.parse(data)
-            file = fs.readJsonSync( path.join(folder, this.packageJson), 'utf8' )
+            file = readJsonSync( join(folder, this.packageJson), 'utf8' )
             this.log.trace(`[uibuilder:package-mgt:readPackageJson] package.json file read successfully from ${folder}`)
         } catch (err) {
             this.log.error(`[uibuilder:package-mgt:readPackageJson] Failed to read package.json file from  ${folder}`, this.packageJson, err)
@@ -191,17 +190,17 @@ class UibPackages {
     async writePackageJson(folder, json) {
         // Does not need setup to have finished running
 
-        const fileName = path.join( folder, this.packageJson )
+        const fileName = join( folder, this.packageJson )
 
         try { // Make a backup copy
-            await fs.copy(fileName, `${fileName}.bak`)
+            await copy(fileName, `${fileName}.bak`)
             this.log.trace(`[uibuilder:package-mgt:writePackageJson] package.json file successfully backed up in ${folder}`)
         } catch (err) {
             this.log.error(`[uibuilder:package-mgt:writePackageJson] Failed to copy package.json to backup.  ${folder}`, this.packageJson, err)
         }
 
         try {
-            await fs.writeJson(fileName, json, { spaces: 2 })
+            await writeJson(fileName, json, { spaces: 2 })
             this.log.trace(`[uibuilder:package-mgt:writePackageJson] package.json file written successfully in ${folder}`)
         } catch (err) {
             this.log.error(`[uibuilder:package-mgt:writePackageJson] Failed to write package.json.  ${folder}`, this.packageJson, err)
@@ -221,7 +220,7 @@ class UibPackages {
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
         const uibRoot = this.uib.rootFolder
 
-        const fileName = path.join( uibRoot, this.packageJson )
+        const fileName = join( uibRoot, this.packageJson )
 
         // Get it to class var or create minimal class var
         let res = this.readPackageJson(uibRoot)
@@ -382,10 +381,10 @@ class UibPackages {
         }
 
         const uibRoot = this.uib.rootFolder
-        const fileName = path.join( uibRoot, this.packageJson )
+        const fileName = join( uibRoot, this.packageJson )
 
-        // Make sure it exists & contains valid JSON - 
-        if ( !fs.existsSync(fileName) ) {
+        // Make sure it exists & contains valid JSON -
+        if ( !existsSync(fileName) ) {
             log.warn('[uibuilder:package-mgt:getUibRootPackageJson] No uibRoot/package.json file, creating minimal file.')
             this.setUibRootPackageJson()
         }
@@ -408,7 +407,7 @@ class UibPackages {
         pj.uibuilder.packages = {}
 
         if (this.uibPackageJson.dependencies !== pj.dependencies ) {
-            log.info(`[uibuilder:package-mgt:getUibRootPackageJson] package.json dependencies changed`)
+            log.info('[uibuilder:package-mgt:getUibRootPackageJson] package.json dependencies changed')
             // console.info({'pkg-deps': this.uibPackageJson.dependencies, 'memory-deps': pj.dependencies})
         }
 
@@ -432,14 +431,14 @@ class UibPackages {
 
         // Update the <uibRoot>/package.json file with updated details & Return it
         if (this.setUibRootPackageJson(pj) === true) return pj
-        
+
         // Failed
         return null
     } // ----- End of getUibRootPackageJson() ----- //
 
     /** Write updated <uibRoot>/package.json
      * @param {object} json The Object data to write to the file
-     * @returns {boolean} True if write was successful
+     * @returns {boolean|undefined} True if write was successful
      */
     setUibRootPackageJson(json) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -452,10 +451,10 @@ class UibPackages {
         }
 
         const uibRoot = this.uib.rootFolder
-        const fileName = path.join( uibRoot, this.packageJson )
+        const fileName = join( uibRoot, this.packageJson )
 
         if (!json) {
-            log.warn('[uibuilder:package-mgt:setUibRootPackageJson] Using dummy json')
+            this.log.warn('[uibuilder:package-mgt:setUibRootPackageJson] Using dummy json')
             json = {
                 'name': 'uib_root',
                 'version': this.uib.version,
@@ -474,12 +473,12 @@ class UibPackages {
         }
 
         try {
-            fs.writeJsonSync(fileName, json, { spaces: 2 })
+            writeJsonSync(fileName, json, { spaces: 2 })
             // Save it for use elsewhere
             this.uibPackageJson = json
             return true
         } catch (e) {
-            log.error(`[uibuilder:package-mgt:setUibRootPackageJson] Error writing ${fileName}. ${e.message}`)
+            this.log.error(`[uibuilder:package-mgt:setUibRootPackageJson] Error writing ${fileName}. ${e.message}`)
             this.uibPackageJson = null
             return false
         }
@@ -508,8 +507,8 @@ class UibPackages {
         if ( !Array.isArray(installRoot) ) installRoot = [installRoot]
 
         for (const r of installRoot) {
-            const loc = path.join(r, 'node_modules', packageName)
-            if (fs.existsSync( loc )) return loc
+            const loc = join(r, 'node_modules', packageName)
+            if (existsSync( loc )) return loc
         }
 
         this.log.warn(`[uibuilder:package-mgt:getPackagePath2] PACKAGE ${packageName} NOT FOUND`)
