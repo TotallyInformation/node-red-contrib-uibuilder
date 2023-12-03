@@ -30,7 +30,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 ## Ideas
 
 * `uib-template` - New node to take a msg._ui template input and update parts of it belore sending (e.g. parent, id, ...). `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation)
-* `<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation)
+* `<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation) - A web component that takes a variable to loop over.
 * Enhance `uib-save` - allow URL to be driven by msg or context (just add new options to select, don't bother with typed input)
 
 ------------
@@ -87,6 +87,10 @@ Please see the documentation for archived changelogs - a new archive is produced
 * The front-end client functions page now has an alphabetical list of functions.
 * Improved low-code documentation for the `notify` and `alert` methods.
 
+## Other
+
+* More work done to move all filing system access into the single `libs/fs.js` library.
+* Usual ongoing work to tidy, clarify and simplify code & eliminate any small issues.
 
 ## [v6.7.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...v6.7.0)
 
