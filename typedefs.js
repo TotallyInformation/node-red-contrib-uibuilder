@@ -281,6 +281,8 @@
  *
  * @property {string} title Short descriptive title for the instance
  * @property {string} descr Longer description for the instance
+ *
+ * @property {Function} sendToFe Ref to sockets.sendToFe
  */
 
 /** uibConfig - THe module-level `uib` configuration variable
