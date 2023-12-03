@@ -24,16 +24,16 @@
  * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
- * @typedef {import('Express')} Express
+ * @typedef {import('express')} Express
  */
 
-const path     = require('path')
-const fs = require('fs-extra')
+const { join }     = require('path')
+const { existsSync } = require('./fs')
 const socketio = require('socket.io')
-const tilib    = require('./tilib')    // General purpose library (by Totally Information)
-const uiblib   = require('./uiblib')   // Utility library for uibuilder
+const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
+const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
 // const security = require('./sec-lib') // uibuilder security module
-const tiEventManager = require('@totallyinformation/ti-common-event-handler')
+const { emit } = require('@totallyinformation/ti-common-event-handler')
 
 /** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
  * @param {socketio.Socket} socket Socket.IO socket object
@@ -167,8 +167,8 @@ class UibSockets {
         // If available, set up optional outbound msg middleware
         this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null }
         // Try to load the sioMsgOut middleware function - sioMsgOut applies to all outgoing msgs
-        const mwfile = path.join(uib.configFolder, uib.sioMsgOutMwName)
-        if ( fs.existsSync(mwfile) ) { // not interested if the file doesn't exist
+        const mwfile = join(uib.configFolder, uib.sioMsgOutMwName)
+        if ( existsSync(mwfile) ) { // not interested if the file doesn't exist
             try {
                 const sioMsgOut = require( mwfile )
                 if ( typeof sioMsgOut === 'function' ) { // if exported, has to be a function
@@ -204,7 +204,7 @@ class UibSockets {
         if (RED === undefined) throw new Error('RED is undefined')
         if (log === undefined) throw new Error('log is undefined')
 
-        const uibSocketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
+        const uibSocketPath = this.uib_socketPath = urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
         log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uibSocketPath}, CORS Origin=*` )
         // Socket.Io server options, see https://socket.io/docs/v4/server-options/
@@ -399,7 +399,7 @@ class UibSockets {
     sendIt(msg, node) {
         if ( msg._uib && msg._uib.originator && (typeof msg._uib.originator === 'string') ) {
             // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
-            tiEventManager.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
+            emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
         }
@@ -479,8 +479,8 @@ class UibSockets {
          * Applies ONCE on a new client connection.
          * Had to move to addNS since MW no longer globally loadable since sio v3
          */
-        const sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
-        if ( fs.existsSync(sioMwPath) ) { // not interested if the file doesn't exist
+        const sioMwPath = join(uib.configFolder, 'sioMiddleware.js')
+        if ( existsSync(sioMwPath) ) { // not interested if the file doesn't exist
             try {
                 const sioMiddleware = require(sioMwPath)
                 if ( typeof sioMiddleware === 'function' ) {
@@ -502,7 +502,6 @@ class UibSockets {
 
             // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
             socket.on('disconnect', (reason, description) => {
-
                 // ioNs.clientLog[socket.handshake.auth.clientId].connected = false
 
                 node.ioClientsCount = ioNs.sockets.size
@@ -510,7 +509,7 @@ class UibSockets {
                     `[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
                 )
                 node.statusDisplay.text = 'connected ' + ioNs.sockets.size
-                uiblib.setNodeStatus( node )
+                setNodeStatus( node )
 
                 // Let the control output port know a client has disconnected
                 const ctrlMsg = {
@@ -530,8 +529,7 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node)
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
-                tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientDisconnect`, ctrlMsg)
-
+                emit(`node-red-contrib-uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
             }) // --- End of on-connection::on-disconnect() --- //
 
             // Listen for msgs from clients on standard channel
@@ -561,12 +559,10 @@ class UibSockets {
                 if ( !msg.topic ) msg.topic = node.topic
 
                 that.sendCtrlMsg(msg, node)
-
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
             // Listen for socket.io errors - output a control msg
             socket.on('error', function(err) {
-
                 log.error(`[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
 
                 // Let the control output port (port #2) know there has been an error
@@ -580,7 +576,6 @@ class UibSockets {
                 }
 
                 that.sendCtrlMsg(ctrlMsg, node)
-
             }) // --- End of on-connection::on-error() --- //
 
             //#endregion ----- Event Handlers ----- //
@@ -597,8 +592,8 @@ class UibSockets {
             if (uib.configFolder === null) throw new Error('uib.configFolder is undefined')
 
             // Try to load the sioUse middleware function - sioUse applies to all incoming msgs
-            const mwfile = path.join(uib.configFolder, uib.sioUseMwName)
-            if ( fs.existsSync(mwfile) ) { // not interested if the file doesn't exist
+            const mwfile = join(uib.configFolder, uib.sioUseMwName)
+            if ( existsSync(mwfile) ) { // not interested if the file doesn't exist
                 try {
                     const sioUseMw = require( mwfile )
                     if ( typeof sioUseMw === 'function' ) { // if exported, has to be a function
@@ -613,7 +608,7 @@ class UibSockets {
             }
 
             node.statusDisplay.text = `connected ${ioNs.sockets.size}`
-            uiblib.setNodeStatus( node )
+            setNodeStatus( node )
 
             // Initial connect message to client
             const msgClient = {
@@ -650,7 +645,7 @@ class UibSockets {
             that.sendCtrlMsg(ctrlMsg, node)
 
             // Let other nodes know a client is connecting (via custom event manager)
-            tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientConnect`, ctrlMsg)
+            emit(`node-red-contrib-uibuilder/${node.url}/clientConnect`, ctrlMsg)
 
             //#endregion ---- run when client connects ---- //
 
