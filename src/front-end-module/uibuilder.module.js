@@ -873,7 +873,6 @@ export const Uib = class Uib {
     copyToClipboard(varToCopy) {
         let data = ''
         try {
-            console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)))
             data = JSON.stringify(this.get(varToCopy))
         } catch (e) {
             log('error', 'copyToClipboard', `Could not copy "${varToCopy}" to clipboard.`, e.message)()
@@ -886,12 +885,12 @@ export const Uib = class Uib {
      * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
      * Automatically sends a msg back to Node-RED.
      * Requires the element to already exist.
-     * @returns {false}
+     * @returns {false} False if not visible
      */
     elementIsVisible() {
         const info = 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'
         log('error', 'uib:elementIsVisible', info)()
-        this.send({payload: 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'})
+        this.send({ payload: 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex' })
         return false
     } // --- End of elementIsVisible --- //
 
@@ -2492,8 +2491,9 @@ export const Uib = class Uib {
 
         // Handle options
         if (options) {
-            if (options.ioNamespace !== undefined && options.ioNamespace !== null && options.ioNamespace !== '') this.set('ioNamespace', options.ioNamespace)
-            if (options.ioPath !== undefined && options.ioPath !== null && options.ioPath !== '') this.set('ioPath', options.ioPath)
+            if (options.ioNamespace) this.set('ioNamespace', options.ioNamespace)
+            if (options.ioPath) this.set('ioPath', options.ioPath)
+            if (options.nopolling && this.socketOptions.transports[0] === 'polling') this.socketOptions.transports.shift()
             // See below for handling of options.loadStylesheet
         }
 
@@ -2511,6 +2511,7 @@ export const Uib = class Uib {
         /** Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents */
 
         // Track last browser navigation type: navigate, reload, back_forward, prerender
+        // TODO Needs more work - updates on navigation needed?
         const [entry] = performance.getEntriesByType('navigation')
         // @ts-ignore
         this.set('lastNavType', entry.type)

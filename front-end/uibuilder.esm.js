@@ -5309,7 +5309,6 @@ var Uib = (_a = class {
   copyToClipboard(varToCopy) {
     let data = "";
     try {
-      console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)));
       data = JSON.stringify(this.get(varToCopy));
     } catch (e) {
       log("error", "copyToClipboard", `Could not copy "${varToCopy}" to clipboard.`, e.message)();
@@ -5322,7 +5321,7 @@ var Uib = (_a = class {
    * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
    * Automatically sends a msg back to Node-RED.
    * Requires the element to already exist.
-   * @returns {false}
+   * @returns {false} False if not visible
    */
   elementIsVisible() {
     const info = "elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex";
@@ -6480,10 +6479,12 @@ Client ID: ${this.clientId}`)();
     log("trace", "Uib:start", "ioNamespace: ", this.ioNamespace, `
 ioPath: ${this.ioPath}`)();
     if (options) {
-      if (options.ioNamespace !== void 0 && options.ioNamespace !== null && options.ioNamespace !== "")
+      if (options.ioNamespace)
         this.set("ioNamespace", options.ioNamespace);
-      if (options.ioPath !== void 0 && options.ioPath !== null && options.ioPath !== "")
+      if (options.ioPath)
         this.set("ioPath", options.ioPath);
+      if (options.nopolling && this.socketOptions.transports[0] === "polling")
+        this.socketOptions.transports.shift();
     }
     if (document.styleSheets.length >= 1 || document.styleSheets.length === 1 && document.styleSheets[0].cssRules.length === 0) {
       log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
