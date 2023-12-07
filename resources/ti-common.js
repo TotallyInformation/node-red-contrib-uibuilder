@@ -33,6 +33,8 @@
             deployedUibInstances: {},
             /** Tracks uibuilder's installed front-end packages - changes as packages added/removed (in uibuilder node) */
             packages: [],
+            /** List of uib node names */
+            uibNodeTypes: ['uibuilder', 'uib-cache', 'uib-element', 'uib-html', 'uib-save', 'uib-sender', 'uib-tag', 'uib-update'],
 
             // Debug output via log() - turn on/off with true/false
             get debug() { return _dbg },
@@ -131,11 +133,14 @@
          *  as these can contain duplicate urls before deployment.
          */
         RED.events.on('nodes:add', function(node) {
-            if ( node.type === 'uibuilder') {
-                // Track what type of addition this is
+            // For any newly added uib node, track what type of addition this is
+            if ( uibuilder.uibNodeTypes.includes(node.type) ) {
                 if (node.changed === false && !('moved' in node)) node.addType = 'load'
                 else if (!('_config' in node)) node.addType = 'new'
                 else if (node.changed === true && ('_config' in node)) node.addType = 'paste/import'
+            }
+
+            if ( node.type === 'uibuilder') {
                 // Remove the URL on paste or import
                 if (node.addType === 'paste/import') {
                     delete node.url
@@ -143,7 +148,7 @@
                     // We have to change this if we want the display version to change (if the prop is part of the label)
                     delete node._config.url
                 }
-                // Keep a list of ALL uib nodes in the editor incl disabled, undeployed, etc. Different to the deployed list
+                // Keep a list of ALL uibuilder nodes in the editor incl disabled, undeployed, etc. Different to the deployed list
                 if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 // Inform interested functions that something was added (and why)
                 RED.events.emit('uibuilder:node-added', node)
