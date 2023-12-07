@@ -621,6 +621,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
 
+* NEW NODE: `uib-room` - linked to a uibuilder node, creates a socket.io room. Will need a way to tell the connected clients to subscribe to the romm (optional) and FE fns to connect/disconnect from rooms.
+
 
 #### Questions that need answers
 
@@ -676,6 +678,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What's New In Node.js 16?](https://www.howtogeek.com/devops/whats-new-in-node-js-16/)
 
   * Changes due once Node.js v18 live
+    * [Socket.IO with WebTransport](https://socket.io/get-started/webtransport) - requires https
     * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
     * Top-level await (experimental in v14 - behind flag, full in v18)
     * V8 updates

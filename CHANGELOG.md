@@ -9,14 +9,14 @@ Please see the documentation for archived changelogs - a new archive is produced
 ## To Fix
 
 * `uib-save` import - initial deployment does not connect to node - need to clear the entry
-* `jsdom` v22 is pinned to node.js v16
 
 ## To Do
 
 * update the `remote-commands` example
 * Add new low-code example
 * Update docs for ctrl msgs and msg._uib return data to say that anything set via the socket.io auth can only update when the client reconnects. Also document clientTimeDifference
-* Fixup CSS for showDialog (notifications/alerts) - left/right margin on p and svg need removing. Maybe on toast-head class too. Parent class is "toast"
+* Fixup CSS for showDialog (notifications/alerts) - left/right margin on p and svg need removing. Maybe on toast-head class too. Parent class is "toast".
+* Add client msg filter for URL Hash.
 
 * More flexible low-code class attribute handling.
   * In ui.js
@@ -50,6 +50,10 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### `uibrouter`
 
 * [Issue #232](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/232) - Ensure origin script is removed after re-applying to ensure only 1 instance shows instead of 2.
+
+### `uib-html`
+
+* Downgrade `jsdom` version to 21.* as that is the last version that supports Node.js v14.
 
 ### `uib-save`
 
@@ -91,6 +95,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 * More work done to move all filing system access into the single `libs/fs.js` library.
 * Usual ongoing work to tidy, clarify and simplify code & eliminate any small issues.
+* All nodes now have an Editor property `addType` which is set to 1 of 'load', 'new', or 'paste/import'. Allowing processing to differentiate between different circumstances that add nodes to the flow.
 
 ## [v6.7.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.6.0...v6.7.0)
 
