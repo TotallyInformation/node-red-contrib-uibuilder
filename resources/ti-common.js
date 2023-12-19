@@ -12,6 +12,7 @@
          * To contain common functions, variables and constants for UIBUILDER nodes
          */
         const uibuilder = window['uibuilder'] = {
+            // Standard palette category for all uibuilder nodes
             paletteCategory: 'uibuilder',
             // Standard width for typed input fields
             typedInputWidth: '68.5%',
@@ -45,7 +46,8 @@
                 this.log = _dbg ? console.log : function() {}
             },
             log: function(...args) {},
-            /** Add jQuery UI formatted tooltips
+
+            /** Add jQuery UI formatted tooltips - add as the last line of oneditprepare in a node
              * @param {string} baseSelector CSS Selector that is the top of the hierarchy to impact
              */
             doTooltips: function doTooltips(baseSelector) {
@@ -65,12 +67,11 @@
                     },
                 })
             },
-            /** Get all of the currently deployed uibuilder URL's
+            /** Get all of the currently deployed uibuilder URL's & updates this.deployedUibInstances
              * NOTE that the uibuilder.editorUibInstances cannot be used as that includes disabled nodes/flows
              * @returns {{string,string}} URLs by node id of deployed uibuilder nodes
              */
             getDeployedUrls: function getDeployedUrls() {
-                let out
                 $.ajax({
                     type: 'GET',
                     async: false,
@@ -79,13 +80,28 @@
                     data: {
                         'cmd': 'listinstances',
                     },
-                    success: function(instances) {
-                        // uibuilder.log('[uibuilder] Deployed Instances >>', instances )
-                        out = instances
+                    success: (instances) => {
+                        this.deployedUibInstances = this.sortInstances(instances)
+                        // uibuilder.log('[uibuilder] Deployed Instances >>', instances, this )
                     }
                 })
-                return out
-            } // ---- end of getDeployedUrls ---- //
+                return this.deployedUibInstances
+            }, // ---- end of getDeployedUrls ---- //
+            /** Sort an instances object by url instead of the natural order added
+             * @param {*} instances The instances object to sort
+             * @returns {*} instances sorted by url
+             */
+            sortInstances: function sortInstances(instances) {
+                return Object.fromEntries(
+                    Object.entries(instances).sort(([,a],[,b]) => {
+                        const nameA = a.toUpperCase()
+                        const nameB = b.toUpperCase()
+                        if (nameA < nameB) return -1
+                        if (nameA > nameB) return 1
+                        return 0
+                    })
+                )
+            },
         }
 
         //#region --- Calculate the node url root & the uibuilder FE url prefix
@@ -127,7 +143,7 @@
         })
 
         /** Get initial list of deployed uibuilder instances */
-        uibuilder.deployedUibInstances =  uibuilder.getDeployedUrls()
+        uibuilder.getDeployedUrls()
 
         /** Track which urls have been used - required to handle copy/paste and import
          *  as these can contain duplicate urls before deployment.
