@@ -36,13 +36,13 @@ const include = require('gulp-include')
 const once = require('gulp-once')
 // const prompt = require('gulp-prompt')
 const greplace = require('gulp-replace')
-const debug = require('gulp-debug')
+// const debug = require('gulp-debug')
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 // const gulpEsbuild = require('gulp-esbuild')
-const {createGulpEsbuild} = require('gulp-esbuild')
+const { createGulpEsbuild } = require('gulp-esbuild')
 const gulpEsbuild = createGulpEsbuild({
-	pipe: true,
+    pipe: true,
 })
 const cleanCSS = require('gulp-clean-css')
 
