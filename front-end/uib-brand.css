@@ -63,6 +63,9 @@
     --lightness: calc(var(--lightness-value) + var(--lightness-bias));
 
     --border-radius: 0.5rem; /*8px;*/
+    --border-pad: 0.5rem;
+    --border-margin: 0;
+
     /* For the .grid-fit class, the minimum child element size */
     --grid-fit-min: 15rem;
 
@@ -326,7 +329,6 @@
     );
     --secondary: var(--secondary-bg);
     /*#endregion --- --- */
-
 }
 
 /* If the browser reports it, we can adjust for light/dark theme preferences
@@ -691,6 +693,8 @@ form > label:focus-within {
 .border {
     border: 1px solid var(--text3);
     border-radius: var(--border-radius);
+    padding: var(--border-pad);
+    margin: var(--border-margin);
 }
 
 .box {
