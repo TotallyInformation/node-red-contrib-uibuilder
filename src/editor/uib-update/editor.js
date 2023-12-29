@@ -141,7 +141,7 @@
             cssSelector: { value: '', validate: (v) => tiValidateOptString(v, 'cssSelector', false, true) },
             cssSelectorType: { value: 'str', required: true },
 
-            slotSourceProp: { value: '' },
+            slotSourceProp: { value: '', validate: (v) => tiValidateOptString(v, 'slotSourceProp', true, true) },
             slotSourcePropType: { value: 'msg' },
 
             attribsSource: { value: '' },
