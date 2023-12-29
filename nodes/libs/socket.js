@@ -132,7 +132,6 @@ class UibSockets {
         this.ioNamespaces = {}
 
         //#endregion ---- ---- //
-
     } // --- End of constructor() --- //
 
     /** Assign uibuilder and Node-RED core vars to Class static vars.
@@ -183,7 +182,6 @@ class UibSockets {
         }
 
         this._isConfigured = true
-
     } // --- End of setup() --- //
 
     /**  Holder for Socket.IO - we want this to survive redeployments of each node instance
@@ -243,7 +241,6 @@ class UibSockets {
 
         // @ts-ignore ts(2769)
         this.io = new socketio.Server(server, ioOptions) // listen === attach
-
     } // --- End of socketIoSetup() --- //
 
     /** Allow the isConfigured flag to be read (not written) externally
@@ -442,7 +439,6 @@ class UibSockets {
         // Send out the message for downstream flows
         // TODO: This should probably have safety validations!
         this.sendIt(msg, node)
-
     } // ---- End of listenFromClient ---- //
 
     /** Add a new Socket.IO NAMESPACE
@@ -494,8 +490,56 @@ class UibSockets {
             }
         }
 
+        //#region -- trace room events --
+        // NB: Only sockets can join rooms, not the server
+        { // eslint-disable-line no-lone-blocks
+            const thislog = log.trace
+            // const thislog = console.log
+            ioNs.adapter.on('create-room', (room) => {
+                thislog(
+                    `[uibuilder:socket:addNS:${url}] Room "${room}" was created`
+                )
+            })
+            ioNs.adapter.on('delete-room', (room) => {
+                thislog(
+                    `[uibuilder:socket:addNS:${url}] Room "${room}" was deleted`
+                )
+            })
+            ioNs.adapter.on('join-room', (room, id) => {
+                thislog(
+                    `[uibuilder:socket:addNS:${url}] Socket ID "${id}" has joined room "${room}"`
+                )
+            })
+            ioNs.adapter.on('leave-room', (room, id) => {
+                thislog(
+                    `[uibuilder:socket:addNS:${url}] Socket ID "${id}" has left room "${room}"`
+                )
+            })
+        }
+        //#endregion -- -- --
+
+        // ! TODO TEST REMOVE
+        if (url === 'uib-router-eg') {
+            setInterval(() => {
+                // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
+                ioNs.to('uibuilder:fred').emit('uibuilder:fred', `Hello from the server. NS: "${url}"`)
+            }, 60000)
+            setInterval(() => {
+                // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
+                this.io.of('/').emit('uibuilder:global', 'Hello from the server. NS: "/"')
+            }, 60000)
+            // ioNs.join('uibuilder:fred')
+            ioNs.on('uibuilder:fred', (room, msg) => {
+                console.log('uibuilder:fred', room, msg)
+            })
+            this.io.on('uibuilder:fred', (room, msg) => {
+                console.log('[this.io] uibuilder:fred', room, msg)
+            })
+        }
+
         const that = this
 
+        // When a client connects to the server
         ioNs.on('connection', (socket) => {
 
             //#region ----- Event Handlers ----- //
@@ -578,6 +622,27 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node)
             }) // --- End of on-connection::on-error() --- //
 
+            // Custom room handling (clientId & pageId rooms are always joined)
+            // - NB: Clients don't understand rooms, they simply receive
+            //       all messages send to all joined rooms.
+            //       Messages have to include room name if need to differentiate at client.
+            //       Server cannot listen to rooms but can send
+            // To send to a custom room from server: ioNs.to("project:4321").emit("project updated")
+
+            // Allow client to request to create/join a room
+            socket.on('uib-room-join', (room) => {
+                socket.join(room)
+            })
+            // Allow clients to request to leave a room
+            socket.on('uib-room-leave', (room) => {
+                socket.leave(room)
+            })
+            // Allow clients to send message to a custom room
+            socket.on('uib-room-send', (room, msg) => {
+                console.log('uib-room-send', { room, msg })
+                ioNs.to(room).emit(room, msg, socket.handshake.auth)
+                // TODO Option to send on as a node-red msg
+            })
             //#endregion ----- Event Handlers ----- //
 
             //#region ---- run when client connects ---- //
@@ -649,8 +714,14 @@ class UibSockets {
 
             //#endregion ---- run when client connects ---- //
 
+            //#region ---- Rooms ----
+            // console.log('socket auth: ', socket.handshake.auth)
+            socket.join(`clientId:${socket.handshake.auth.clientId}`)
+            socket.join(`pageName:${socket.handshake.auth.pageName}`)
+            // Not bothering with a tabId room - gets filtered at client anyway
+            // rooms for pathName not needed as each path has own namespace
+            //#endregion ---- ---- ----
         }) // --- End of on-connection() --- //
-
     } // --- End of addNS() --- //
 
     /** Remove the current clients and namespace for this node.
@@ -667,9 +738,7 @@ class UibSockets {
         ioNs.removeAllListeners() // Remove all Listeners for the event emitter
 
         // No longer works from socket.io v3+ //delete this.io.nsps[`/${node.url}`] // Remove from the server namespaces
-
     } // --- End of removeNS() --- //
-
 } // ==== End of UibSockets Class Definition ==== //
 
 /** Singleton model. Only 1 instance of UibSockets should ever exist.
