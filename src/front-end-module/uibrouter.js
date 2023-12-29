@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // @ts-nocheck
 /** A simple, vanilla JavaScript front-end router class
  * Included in node-red-contrib-uibuilder but is not dependent on it.
@@ -322,9 +323,17 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // Record the current route on the route container
         container.dataset.currentRoute = newRouteId
 
+        // Update any existing HTML menu items
+        this.setCurrentMenuItems()
+
         // Events on route changed ...
         document.dispatchEvent(new CustomEvent('uibrouter:route-changed', { detail: { newRouteId, oldRouteId } }))
-        if (uibuilder) uibuilder.set('uibrouter', 'route changed') // eslint-disable-line no-undef
+        if (uibuilder) {
+            uibuilder.set('uibrouter', 'route changed')
+            uibuilder.set('uibrouter_CurrentRoute', newRouteId)
+            uibuilder.set('uibrouter_CurrentHeading', this.routeHeading())
+            uibuilder.set('uibrouter_CurrentDetails', this.getRouteConfigById(newRouteId))
+        }
     }
 
     /** Return a route config given a route id (returns undefined if route not found)
@@ -394,6 +403,31 @@ class UibRouter { // eslint-disable-line no-unused-vars
                 if (uibuilder) uibuilder.set('uibrouter', 'routes added') // eslint-disable-line no-undef, promise/always-return
             } )
     }
+
+    //#region --- utils for page display & processing ---
+    setCurrentMenuItems() {
+        // const items = document.querySelectorAll(`li[data-route="${this.currentRouteId}"]`)
+        const items = document.querySelectorAll('li[data-route]')
+        items.forEach( item => {
+            if (item.dataset.route === this.currentRouteId) {
+                item.classList.add('currentRoute')
+                item.setAttribute('aria-current', 'page')
+            } else {
+                item.classList.remove('currentRoute')
+                item.removeAttribute('aria-current')
+            }
+        })
+    }
+
+    routeHeading() {
+        const thisRoute = this.currentRoute() || {}
+        return thisRoute.heading || thisRoute.title || thisRoute.description || thisRoute.id || '[ROUTE NOT FOUND]'
+    }
+
+    currentRoute() {
+        return this.getRouteConfigById(this.currentRouteId)
+    }
+    //#endregion ---- ----- ----
 
     // TODO
     // deleteRoutes(aRoutes) {
