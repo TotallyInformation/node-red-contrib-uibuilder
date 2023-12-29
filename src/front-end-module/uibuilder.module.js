@@ -5,7 +5,7 @@
   Please use the default index.js file for your own code and leave this as-is.
   See Uib._meta for client version string
 
-  Copyright (c) 2022-2023 Julian Knight (Totally Information)
+  Copyright (c) 2022-2024 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -27,41 +27,11 @@
  */
 //#endregion --- Type Defs --- //
 
-//#region --- We need the Socket.IO & ui libraries & the uib-var component  --- //
+// We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui'
-import UibVar from '../components/uib-var'
 import io from 'socket.io-client'
-
-// TODO - Maybe - check if already loaded as window['io']?
-// TODO - Maybe - Should this be moved to inside the class - would know the httpRoot then so less need to guess?
-// TODO           Or, could pull the cookie processing out of the class
-// const ioLocns = [ // Likely locations of the Socket.IO client library
-//     // Where it should normally be
-//     '../uibuilder/vendor/socket.io-client/socket.io.esm.min.js',
-//     // Where it might be if using a custom uib Express server and haven't changed httpNodeRoot
-//     '/uibuilder/vendor/socket.io-client/socket.io.esm.min.js',
-//     // Where it might be if using a custom uib Express server and have changed httpNodeRoot
-//     '../../../../../uibuilder/vendor/socket.io-client/socket.io.esm.min.js',
-//     '../../../../uibuilder/vendor/socket.io-client/socket.io.esm.min.js',
-//     '../../../uibuilder/vendor/socket.io-client/socket.io.esm.min.js',
-//     '../../uibuilder/vendor/socket.io-client/socket.io.esm.min.js',
-//     // Direct from the Internet - last ditch attempt
-//     'https://cdn.jsdelivr.net/npm/socket.io-client/+esm',
-// ]
-
-// let io
-// for (const locn of ioLocns) {
-//     try {
-//         ({ io } = await import(locn))
-//         log('trace', 'uibuilder.module.js:io', `Socket.IO client library found at '${locn}'`)()
-//     } catch (e) {
-//         log('trace', 'uibuilder.module.js:io', `Socket.IO client library not found at '${locn}'`)()
-//     }
-//     if (io) break
-// }
-// if (!io) log('error', 'uibuilder.module.js', 'Socket.IO client failed to load')()
-//#endregion -------- -------- -------- //
+import UibVar from '../components/uib-var'
 
 const version = '6.8.0-src'
 
@@ -967,6 +937,35 @@ export const Uib = class Uib {
     navigate(url) {
         if (url) window.location.href = url
         return window.location
+    }
+
+    /** Format a number using the INTL standard library - compatible with uib-var filter function
+     * @param {number} value Number to format
+     * @param {number} decimalPlaces Number of decimal places to include. Default=no default
+     * @param {string} intl standard locale spec, e.g. "ja-JP" or "en-GB". Default=navigator.language
+     * @param {object} opts INTL library options object. Optional
+     * @returns {string} formatted number
+     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
+     */
+    formatNumber(value, decimalPlaces, intl, opts) {
+        if (isNaN(value)) {
+            log('error', 'formatNumber', `Value must be a number. Value type: "${typeof value}"`)()
+            return 'NaN'
+        }
+        if (!opts) opts = {}
+        if (!intl) intl = navigator.language ? navigator.language : 'en-GB'
+        if (decimalPlaces) {
+            opts.minimumFractionDigits = decimalPlaces
+            opts.maximumFractionDigits = decimalPlaces
+        }
+        let out
+        try {
+            out = Number(value).toLocaleString(intl, opts)
+        } catch (e) {
+            log('error', 'formatNumber', `${e.message}. value=${value}, dp=${decimalPlaces}, intl="${intl}", opts=${JSON.stringify(opts)}`)()
+            return 'NaN'
+        }
+        return out
     }
 
     //#endregion -------- -------- -------- //
@@ -2120,6 +2119,28 @@ export const Uib = class Uib {
         this._send(msg, this._ioChannels.client, originator)
     }
 
+    // ! TODO: Rooms do not auto-reconnect. Add tracking and update _onConnect
+
+    // NOTE: Rooms only understood by server not client so we have to use custom emits
+    //       They do not auto-reconnect
+
+    /** Send a msg to a pre-defined Socket.IO room
+     * @link https://socket.io/docs/v4/rooms/
+     * @param {string} room Name of a Socket.IO pre-defined room.
+     * @param {*} msg Message to send
+     */
+    sendRoom(room, msg) {
+        this._socket.emit('uib-room-send', room, msg )
+    }
+
+    joinRoom(room) {
+        this._socket.emit('uib-room-join', room)
+    }
+
+    leaveRoom(room) {
+        this._socket.emit('uib-room-leave', room)
+    }
+
     /** Send a control msg to NR
      * @param {object} msg Message to send
      */
@@ -2209,7 +2230,7 @@ export const Uib = class Uib {
             log('warn', 'Uib:checkConnect:setTimeout', `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}`)()
 
             // this is necessary sometimes when the socket fails to connect on startup
-            this._socket.close()
+            this._socket.disconnect()
 
             // Try to reconnect
             this._socket.connect()
@@ -2283,6 +2304,8 @@ export const Uib = class Uib {
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         log('trace', 'Uib:ioSetup', `About to create IO object. Transports: [${this.socketOptions.transports.join(', ')}]`)()
         this._socket = io(this.ioNamespace, this.socketOptions)
+
+        this._connectGlobal()
 
         /** When the socket is connected - set ioConnected flag and reset connect timer  */
         this._socket.on('connect', this._onConnect.bind(this))
@@ -2358,6 +2381,27 @@ export const Uib = class Uib {
             }) // --- End of socket pong processing ---
             */
     } // ---- End of ioSetup ---- //
+
+    /** Connect to global namespace & create global listener that updates the `globalMsg` var */
+    _connectGlobal() {
+        this._socketGlobal = io('/', this.socketOptions)
+        this._socketGlobal.onAny( (...args) => {
+            this.set('globalMsg', args.slice(0, -1))
+        })
+    }
+
+    /** Manually (re)connect socket.io */
+    connect() {
+        // ? Should I use this._checkConnect()?
+        this._socket.connect()
+    }
+
+    /** Manually disconnect socket.io and stop any auto-reconnect timer */
+    disconnect() {
+        this._socket.disconnect()
+        // As this is a manual disconnect, stop any reconnect timers
+        if (this.#timerid) window.clearTimeout(this.#timerid)
+    }
 
     //#endregion -------- ------------ -------- //
 
