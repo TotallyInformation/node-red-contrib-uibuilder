@@ -121,8 +121,10 @@
         uibuilder.urlPrefix = `${eUrlSplit.join(':')}/${uibuilder.nodeRoot}`
         //#endregion ---- ---- ----
 
-        uibuilder.debug = RED.settings.uibuilderNodeEnv.toLowerCase() === 'development' || RED.settings.uibuilderNodeEnv.toLowerCase() === 'dev' // uibuilder.localHost
-        uibuilder.log(`[uibuilder] DEBUG ON (because env NODE_ENV is '${RED.settings.uibuilderNodeEnv}')`)
+        if (RED.settings.uibuilderNodeEnv) {
+            uibuilder.debug = RED.settings.uibuilderNodeEnv.toLowerCase() === 'development' || RED.settings.uibuilderNodeEnv.toLowerCase() === 'dev' // uibuilder.localHost
+            uibuilder.log(`[uibuilder] DEBUG ON (because env NODE_ENV is '${RED.settings.uibuilderNodeEnv}')`)
+        }
 
         /** Get initial list of installed FE packages via v2 API - save to master list */
         $.ajax({
