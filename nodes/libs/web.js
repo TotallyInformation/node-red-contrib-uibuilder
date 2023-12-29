@@ -32,8 +32,9 @@
 const { join, dirname, parse } = require('path')
 const serveIndex = require('serve-index')
 const express = require('express')
-const { getNs } = require('./socket.js')
-const { getClientId } = require('./uiblib')
+const socketjs = require('./socket.js')
+// const { getNs } = require('./socket.js') // NO! This gives an error because of incorrect `this` binding
+const { getClientId, sortApps } = require('./uiblib')
 const { accessSync, existsSync, mkdirSync, fgSync } = require('./fs.js')
 const { mylog, urlJoin } = require('./tilib') // dumpReq, mylog
 // WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
@@ -173,6 +174,23 @@ class UibWeb {
 
         /** Serve up the admin root for uibuilder on /<httpAdminRoot>/uibuilder/ */
         this.RED.httpAdmin.use('/uibuilder', this.adminRouter, this.adminRouterV2)
+    }
+
+    /** Add routes for master user-facing APIs */
+    _userApiSetup() {
+        if ( this.#isConfigured !== true ) {
+            this.log.warn('[uibuilder:web.js:_userApiSetup] Cannot run. Setup has not been called.')
+            return
+        }
+        if (!this.uibRouter) throw new Error('this.uibRouter is undefined')
+
+        /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
+        this.userApiRouter = require('./user-apis')(this.uib, this.log)
+        this.userApiRouter.myname = 'uibUserApiRouter'
+        this.uibRouter.use('/api', this.userApiRouter)
+        this.routers.admin.push( { name: 'User-facing APIs', path: `${this.uib.httpRoot}/uibuilder/api/*`, desc: 'User-facing APIs accessible to any valid user', type: 'Router' } )
+
+        this.log.trace(`[uibuilder:web:serveVendorPackages] Vendor Router created at '${this.uib.httpRoot}/uibuilder/vendor/*.`)
     }
 
     /** Set up the appropriate ExpressJS web server references
@@ -315,8 +333,7 @@ class UibWeb {
         this.app.use( urlJoin(uib.moduleName), this.uibRouter )
     } // --- End of webSetup() --- //
 
-    // TODO Add instance title & description to uibuilder node.
-    /** Return a dynamic index page of all uibuilder user-accessible endpoints
+    /** Return a dynamic index page of all uibuilder user-accessible endpoints on /uibuilder/apps
      * param {express.Request} req Express request object
      * param {express.Response} res Express response object
      * param {Function} next Function to pass to next handler
@@ -345,7 +362,7 @@ class UibWeb {
             if ( Object.keys(this.uib.instances).length === 0 ) {
                 page += '<p>Instance list not yet ready, please try again</p>'
             } else {
-                for (let [url, data] of Object.entries(this.uib.apps)) { // eslint-disable-line prefer-const
+                for ( let [url, data] of sortApps(Object.entries(this.uib.apps)) ) { // eslint-disable-line prefer-const
                     const title = data.title.length === 0 ? '' : `: ${data.title}`
                     const descr = data.descr.length === 0 ? '' : `<div>${data.descr}</div>`
                     page += `
@@ -361,15 +378,15 @@ class UibWeb {
                 </div></body></html>
             `
 
-            res.statusMessage = 'Instances listed'
+            res.statusMessage = 'Apps listed'
             res.status(200).send( page )
         })
 
         // Record this endpoint for use on details page
         this.routers.user.push( {
-            name: 'Endpoints',
-            path: `${this.uib.httpRoot}/uibuilder/endpoints`,
-            desc: 'List of all uibuilder endpoints',
+            name: 'Apps (Instances)',
+            path: `${this.uib.httpRoot}/uibuilder/apps`,
+            desc: 'List of all uibuilder apps (instances)',
             type: 'Get',
             // folder: uib.commonFolder
         } )
@@ -904,8 +921,11 @@ class UibWeb {
         let page = ''
 
         // If using own Express server, correct the URL's
-        if (!req.headers.referer) throw new Error('req.headers.referer does not exist')
-        const url = new URL(req.headers.referer)
+        // if (!req.headers.referer) throw new Error('req.headers.referer does not exist')
+        let url = {}
+        try {
+            url = new URL(req.headers.referer)
+        } catch (error) { }
         url.pathname = ''
         // @ts-expect-error
         if (uib.customServer && uib.customServer.port && uib.customServer.port != RED.settings.uiPort ) { // eslint-disable-line eqeqeq
@@ -925,10 +945,8 @@ class UibWeb {
             'sessionLength', 'tokenAutoExtend', 'customFolder',
             'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
         ]
-        // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]
-        // Keep secret: ['jwtSecret', ]
 
-        const ns = getNs(node.url)
+        const ns = socketjs.getNs(node.url)
 
         page += `
             <!doctype html><html lang="en"><head>
