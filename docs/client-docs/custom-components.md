@@ -19,28 +19,106 @@ However, some components may also be built so that they can be loaded as a linke
 > [!NOTE]
 > UIBUILDER's no-code `uib-element` node currently sends out low-code JSON data that describes each element. While this is reasonably efficient since no actual HTML/JavaScript code is sent, it could be even more efficient by having a corresponding web component for each element. This is something that is likely to happen in a future release.
 
-## Built-in components
+## Built-in components: `uib-var` - include easily updated output in the page :id=uib-var
 
-### uib-var - include a managed variable in the page
+This component provides another way to make it easy to include dynamic data in your web UI and to update it. It is roughly equivalent to the "mustache" style brackets found in many front-end frameworks (<code>&#123;{myvariable}}</code>). However, unlike those, it is 100% standard HTML. The component reference is replaced in the web page by a uibuilder managed variable value, msg topic payload, or the returned value of a filter function - depending on the attributes provided.
 
-A built-in web component `<uib-var>`, used in your HTML as `<uib-var variable="uibVarName"></uib-var>`.
+Included in your page using the `<uib-var>`, see the examples below on how to include this in your HTML. You can also use the no-code `uib-tag` node to add it to your HTML. 
+
+There is no need to separately load the component, that is done automatically by the uibuilder client library.
+
+
+### Attributes
+
+These attributes can be added to the `<uib-var>` tag. Noting that attributes must always have _string_ values, e.g. `topic="my/topic/#1"`.
+
+#### `topic` :id=topic
+
+Adds a background "listener" for messages from Node-RED via UIBUILDER that have the `topic` property matching this attribute. For example, the HTML `<uib-var topic="my/topic/#1"></uib-var>` will be automatically updated to show `42` when the corresponding uibuilder node is sent a message containing `{topic: 'my/topic/#1', payload: 42}`.
+
+This is the easiest way to use the `uib-var` component with UIBUILDER.
+
+This approach is especially useful to be able to display MQTT topic values in your UI
+
+> Cannot be used in conjunction with the `variable` attribute.
+
+#### `variable` :id=variable
 
 Displays the *value* of the given variable name in your web page and *dynamically updates* as long as the variable is changed using `uibuilder.set()`; or from Node-RED using the appropriate uib set command, e.g. `msg = {"command":"set","prop":"myVar","value":"42"}`. By default, the tag inserts the variable value inline with other text. Class and Style attributes can be added as for any other HTML.
 
-Other attributes are available on the component tag:
+> Cannot be used in conjunction with the `topic` attribute.
 
-- `undefined`: If present or set to `on`, or `true`, the component will show even if the variable is undefined. 
+#### `filter` :id=filter
+
+Takes a string representation of a function to run before display. It can be used on its own or in conjunction with either the `variable` or `topic` attributes.
+
+When used with the `variable` or `topic` attributes, the function will be passed the corresponding value as its first parameter. Any additional parameters provided on this attribute will be merged _after_ the value.
+
+The function must be accessible from the global `window` environment and return valid text or HTML which will be used as the displayed content.
+
+The attribute string may include simple arguments only (e.g. strings, booleans and numbers - `filter="myfunc('text', 42, true)"`).
+
+Dotted notation for the function name is allowed (e.g. `uibuilder.get('version')`) but the array style (e.g. `uibuilder['get']('version')`) is not permitted.
+
+If the function name is not found in the global window context, the `uibuilder` context is searched so `get('version')` will call `uibuilder.get('version')` so long as `get` is not defined as `window.get` which would take preference.
+
+Generally, it will be best to define your own function. Further standard filters may be added in future releases of UIBUILDER. Until then, a list of standard filters included in the uibuilder is provided [lower-down](#useful-filter-functions).
+
+> [!NOTE]
+> If having problems getting your filter functions recognised, try adding them earlier in the HTML, for example, defining the `lang` filter:
+> ```html
+  <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
+  <script>
+    // Some filter functions
+    globalThis.lang = () => navigator.language
+    globalThis.yen = (v) => uibuilder.formatNumber( v, 2, 'ja-JP', { style: 'currency', currency: 'JPY' } )
+  </script>
+  <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+  <script defer src="./index.js"></script>
+  <!-- #endregion -->
+> ```
+
+#### `undefined` :id=undefined
+
+If present or set to `on`, or `true`, the component will show even if the variable is undefined. 
   
-  If not present or set to anything else, an undefined variable will show the _slot content_ (anything put between the open and close tag). This lets you have an initial value showing that is replaced as soon as the variable is actually set.
+If not present or set to anything else, an undefined variable will show the _slot content_ (anything put between the open and close tag). This lets you have an initial value showing that is replaced as soon as the variable is actually set.
 
-- `report`: If present or set to `on`, or `true`, the component will return a standard message back to Node-RED when the variable changes value.
-- `type`: Must be one of 'plain', 'html', 'markdown', or 'object'. `plain` and `html` simply insert the variable as-is. `markdown` allows the insertion of Markdown as long as the Markdown-IT library is loaded (it will also sanitise the resulting HTML if the DOMPurify library is loaded). `object` does some basic formatting to allow object or array variables to be more easily read.
+#### `report` :id=report
+
+If present or set to `on`, or `true`, the component will return a standard message back to Node-RED when the variable changes value.
+
+#### `type` :id=type
+
+Must be one of 'plain', 'html', 'markdown', or 'object'. `plain` and `html` simply insert the variable as-is. `markdown` allows the insertion of Markdown as long as the Markdown-IT library is loaded (it will also sanitise the resulting HTML if the DOMPurify library is loaded). `object` does some basic formatting to allow object or array variables to be more easily read.
+
 
 This works with Markdown via the `uib-element` node as well and even works if DOMPurify is loaded as overrides to its filters are provided.
 
-There is no need to load the component, that is done automatically in the uibuilder client library.
 
-Examples: 
+### Styling
+
+The component tries to load `./index.css` as a stylesheet so that your own styling can be used in any output.
+
+Simply ensure that the file is served from the same URL location as your main page.
+
+This is the standard method for UIBUILDER instances but this feature is not dependent on UIBUILDER.
+
+### Useful filter functions
+
+#### `uibuilder.formatNumber` :id=format-number
+
+Formats a number to a given locale and optionally, a set number of decimal places.
+
+Example, formatting to 2dp using the Japanese locale: `<uib-var topic="mynumber" filter="uibuilder.formatNumber(2, 'ja-JP')"></uib-var>`.
+
+Note that the value is passed automatically so the first provided argument is the number of decimal places.
+
+Parameters: `formatNumber(value, decimalPlaces, intl, opts)`. Where `opts` is an INTL formatting object.
+
+See details in the [client functions doc](client-docs/functions#formatNumber).
+
+### Examples
 
 ```html
 <p>
@@ -65,9 +143,19 @@ The version of the uibuilder client library currently
 loaded is `<uib-var variable="version"></uib-var>`.
 ```
 
+#### Adding a tag to your page using no-code from Node-RED
+
+Use a `uib-tag` node:
+
+![example uib-tag node](image.png)
+
 ## External components
 
 Web components can be challenging to build but are often fairly simple. There are plenty of web resources to get you started with development of them. However, there are also a lot of existing components that you can easily make use of with Node-RED and UIBUILDER.
+
+Such components can be manually added to your `index.html` file OR they can be dynamically added using UIBUILDER's no-code `uib-tag` node.
+
+Some potentially useful components are shown below.
 
 ### Totally Information experimental web components
 

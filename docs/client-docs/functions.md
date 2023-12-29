@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the UIBUILDER front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-11-24 19:54:49
+lastUpdated: 2023-12-10 15:02:22
 ---
 
 Functions accessible in client-side user code.
@@ -37,7 +37,7 @@ UIBUILDER also allows you to issue control commands from Node-RED to your front-
 
 ## Sending Messages to Node-RED
 
-### `eventSend(domevent, originator = '')` - Send a standard message back to Node-RED in response to a DOM event
+### `eventSend(domevent, originator = '')` - Send a standard message back to Node-RED in response to a DOM event :id=eventSend
 
 This is a convenience function that is useful to attach as an event handler on an HTML DOM event (e.g. the click event of a button). Since it only requires the DOM event object that the DOM provides automatically.
 
@@ -59,7 +59,7 @@ If the source event type is `change` (e.g. a user changed an input field and the
 > The input element validity property can contain any of the following: badInput, customError, patternMismatch, rangeOverflow, rangeUnderflow, stepMismatch, tooLong, tooShort, typeMismatch, valueMissing. See [ValidityState](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) for details of the meanings.
 
 
-### `beaconLog(txtToSend, logLevel)` - Send a short log message to Node-RED
+### `beaconLog(txtToSend, logLevel)` - Send a short log message to Node-RED :id=beaconLog
 
 This has the advantage of working even if Socket.IO is not connected. It uses a logging API provided by UIBUILDER.
 
@@ -67,7 +67,7 @@ However, only text strings can be sent and messages need to be kept short. It on
 
 The `logLevel` matches both Node-RED and UIBUILDER defined log levels (e.g. error, warn, info, debug, trace ).
 
-### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
+### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED :id=htmlSend
 
 Results in a standard message sent to Node-RED where the `msg.payload` contains the whole current HTML page as a string.
 
@@ -77,27 +77,27 @@ The returned message includes `msg.length` to allow checking that the returned h
 
 This can also be triggered from Node-RED. Send a message to the `uibuilder` node containing `msg._uib.command` set to "htmlSend". [Reference](client-docs/control-from-node-red?id=get-complete-copy-of-the-current-web-page)
 
-### ~~logToServer()~~ - Not yet reliable. Will cause the input to appear in Node-RED logs
+### ~~logToServer()~~ - Not yet reliable. Will cause the input to appear in Node-RED logs :id=logToServer
 
-### `send(msg, originator = '')` - Send a custom message back to Node-RED
+### `send(msg, originator = '')` - Send a custom message back to Node-RED :id=send
 
 The `msg` format is the same as used in Node-RED. 
 
 The `originator` is optional and if used, should match the id from a `uib-sender` node. That allows you to specifically return a message into a flow that uses one of those nodes. However, ensure that the `uib-sender` node has turned on the flag to allow returned messages.
 
-### `sendCtrl(msg)` - Send a custom control message back to Node-RED
+### `sendCtrl(msg)` - Send a custom control message back to Node-RED :id=sendCtrl
 
 The message will be assessed by UIBUILDER and passed to its #2 (bottom) output port if considered acceptible.
 
 This lets you create your own control custom messages should you wish to. Use with caution.
 
-### `setOriginator(originator = '')` - Set/clear the default originator
+### `setOriginator(originator = '')` - Set/clear the default originator :id=setOriginator
 
 Will automatically be used by `send` and `eventSend`.
 
 Set to an empty string to remove.
 
-### `setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED
+### `setPing(ms)` - Set a repeating ping/keep-alive HTTP call to Node-RED :id=setPing
 
 This uses an HTTP API call to a custom UIBUILDER API endpoint in Node-RED. So it works even if the Socket.IO connection is not working. It is used to check that the Node-RED server and the UIBUILDER instance are both still working.
 
@@ -117,7 +117,7 @@ uibuilder.onChange('ping', function(data) {
 > [!NOTE]
 > See [client variables](client-docs/variables) for details of what uibuilder variables are available.
 
-### `copyToClipboard(varToCopy)` - Copy the specified UIBUILDER variable to the browser clipboard
+### `copyToClipboard(varToCopy)` - Copy the specified UIBUILDER variable to the browser clipboard :id=copyToClipboard
 
 Can only be used as an event handler because browsers do not allow unrestricted JavaScript access to the browser clipboard.
 
@@ -127,7 +127,7 @@ Can only be used as an event handler because browsers do not allow unrestricted 
 <button onclick="copyToClipboard('version')">Copy UIBUILDER client version string to clipboard</button>
 ```
 
-### `get(prop)` - Get a UIBUILDER property
+### `get(prop)` - Get a UIBUILDER property :id=get
 
 This is the preferred method to get an exposed UIBUILDER variable or property. Do not try to access variables and properties directly unless explicitly shared in this documentation. This function can also be called from Node-RED via `msg._uib.command` - `get` with `msg._uib.prop` set to the variable name to get.
 
@@ -137,13 +137,13 @@ This is the preferred method to get an exposed UIBUILDER variable or property. D
 console.log( uibuilder.get('version') )
 ```
 
-### `getManagedVarList()` - Get a list of all UIBUILDER managed variables
+### `getManagedVarList()` - Get a list of all UIBUILDER managed variables :id=getManagedVarList
 
 A UIBUILDER managed variable is one that has been created with `uibuilder.set()` (or changed from Node-RED with the equivalent command msg). As such, it can be watched for changes with `uibuilder.onChange()`.
 
 This function can also be called from Node-RED via `msg._uib.command` - `getManagedVarList`. The returned `msg.payload` contains the list. Optionally, you can also add `msg._uib.prop` set to `full` which will return an object where each key/value is the variable name. This can be usefull for some types of processing.
 
-### `getWatchedVars()` - Get a list of all UIBUILDER watched variables
+### `getWatchedVars()` - Get a list of all UIBUILDER watched variables :id=getWatchedVars
 
 Shows all variables that are being watched using `uibuilder.onChange()`.
 
@@ -152,7 +152,7 @@ This function can also be called from Node-RED via `msg._uib.command` - `getWatc
 > [!WARNING]
 > `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables.
 
-### `getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage
+### `getStore(id)` - Attempt to get and re-hydrate a key value from browser localStorage :id=getStore
 
 Note that browser localStorage is persisted even after a browser closes. It can be manually cleared from the browser's settings. You can also remove an item using the `removeStore` function.
 
@@ -162,14 +162,14 @@ All `id`s have a pre-defined UIBUILDER prefix added to the key name to help ensu
 
 Because the browser storage API only allows strings as values, the data has to be serialised. This function attempts to unserialise (re-hydrate). It should be noted that sometimes, this process results in values that may differ from the original. For example, `uibuilder.setStore('mydate',new Date()); console.log( uibuilder.getStore('mydate') )` will return the saved date as an ISO8602 date string, not a JavaScript Date object.
 
-### `removeStore(id)` - Attempt to remove a UIBUILDER key from browser localStorage
+### `removeStore(id)` - Attempt to remove a UIBUILDER key from browser localStorage :id=removeStore
 
 Does not return anything. Does not generate an error if the key does not exist.
 
 > [!WARNING]
 > `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
 
-### `set(prop, val, store, autoload)` - Set a UIBUILDER property and dispatch a change event
+### `set(prop, val, store, autoload)` - Set a UIBUILDER property and dispatch a change event :id=set
 
 This is the preferred method to set an exposed UIBUILDER variable or property. Do not try to set variables and properties directly.
 
@@ -188,7 +188,7 @@ This function can also be called from Node-RED via `msg._uib.command` - `set` wi
 uibuilder.set('logLevel', 3)
 ```
 
-### `setStore(id, val, autoload)` - Attempt to save to the browsers localStorage
+### `setStore(id, val, autoload)` - Attempt to save to the browsers localStorage :id=setStore
 
 Write a value to the given id to localStorage. Will fail if localStorage has been turned off or is full.
 
@@ -258,11 +258,11 @@ Notes:
 * Turn on the optional `msg._uib` feature in the UIBUILDER node to see which client is sending the messages.
 * Due to the nature of the IntersectionObserver API, this fn is not available as a command for now.
 
-### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED
+### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED :id=htmlSend
 
 See under [Message Handling](#message-handling) above for details.
 
-### `include(url, uiOptions)` - insert an external file into the web page
+### `include(url, uiOptions)` - insert an external file into the web page :id=include
 
 Requires a browser supporting the [`fetch` API](https://caniuse.com/fetch). This function is asynchronous, that should be allowed for when using in custom front-end code.
 
@@ -317,13 +317,13 @@ Either from a remote URL or from a text string.
 
 Directly call the functions of the same name from the `ui.js` library.
 
-### `loadui(url)` - Load a dynamic UI from a JSON web response
+### `loadui(url)` - Load a dynamic UI from a JSON web response :id=loadui
 
 Requires a valid URL that returns correct _ui data. For example, a JSON file delivered via static web server or a dynamic API that returns JSON as the body response.
 
 Directly calls `_ui.loadui` from the `ui.js` library.
 
-### `notify(config)` - Use the browser and OS notification API to show a message to the user
+### `notify(config)` - Use the browser and OS notification API to show a message to the user :id=notify
 
 Requires a browser that supports the [Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification).
 
@@ -384,7 +384,7 @@ See also [addClass](#addClass). Uses [`el.classList.remove`](https://developer.m
 
 Note that if you want to _toggle_ a class on/off, use the HTML DOM: `$('#more').classList.toggle('myclass')`. See [MDN DOMTokenList/toggle](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle) for details.
 
-### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string
+### `replaceSlot(el, component)` - Replace or add an HTML element's slot from text or an HTML string :id=replaceSlot
 
 This function is mostly for internal use.
 
@@ -396,7 +396,7 @@ Will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-sa
 
 Directly calls `_ui.replaceSlot` from the `ui.js` library.
 
-### `replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string
+### `replaceSlotMarkdown(el, component)` - Replace or add an HTML element's slot from a Markdown string :id=replaceSlotMarkdown
 
 This function is mostly for internal use.
 
@@ -410,7 +410,7 @@ Will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-sa
 
 Directly calls `_ui.replaceSlotMarkdown` from the `ui.js` library.
 
-### `sanitiseHTML(htmlText)` - Ensures that input HTML text is safe
+### `sanitiseHTML(htmlText)` - Ensures that input HTML text is safe :id=sanitiseHTML
 
 Returns a safe, sanitised HTML string IF the DOMPurify library is loaded. Otherwise returns the input.
 
@@ -426,7 +426,7 @@ Returns `true` if the element was found, false otherwise.
 
 Can also be called from Node-RED with a command message: `{"_uib": {command: "scrollTo", "prop": "cssSelector"}}` or, with options: `{"_uib": {command: "scrollTo", "prop": "#mydivid", "value": {"block": "bottom"}}}`.
 
-### `showDialog(type, ui, msg)` - Show a toast or alert style message on the UI
+### `showDialog(type, ui, msg)` - Show a toast or alert style message on the UI :id=showDialog
 
 Directly calls `_ui.showDialog` from the `ui.js` library.
 
@@ -456,7 +456,7 @@ Directly calls `_ui.showDialog` from the `ui.js` library.
 }
 ```
 
-### `showMsg(boolean, parent=body)` - Show/hide a card that automatically updates and shows the last incoming msg from Node-RED
+### `showMsg(boolean, parent=body)` - Show/hide a card that automatically updates and shows the last incoming msg from Node-RED :id=showMsg
 
 Simply add `uibuilder.showMsg(true)` early in your index.js custom code and a box will be added to the end of your page that will automatically show the last message sent from Node-RED. Use `uibuilder.showMsg()` to toggle the display.
 
@@ -468,7 +468,7 @@ This function can also be called from Node-RED via `msg._uib.command` - `showMsg
 
 Adds/removes `<div id="uib_last_msg">` to/from the page.
 
-### `showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the UIBUILDER client library
+### `showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the UIBUILDER client library :id=showStatus
 
 Simply add `uibuilder.showStatus(true)` early in your index.js custom code and a box will be added to the end of your page that will show all of the important settings in the UIBUILDER client. Use `uibuilder.showStatus()` to toggle the display.
 
@@ -480,7 +480,7 @@ This function can also be called from Node-RED via `msg._uib.command` - `showSta
 
 Adds/removes `<div id="uib_status">` to/from the page.
 
-### `syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as formatted HTML
+### `syntaxHighlight(json)` - Takes a JavaScript object (or JSON) and outputs as formatted HTML :id=syntaxHighlight
 
 Is used internally by the `showMsg` function but may be useful for custom processing. If used in custom code, make sure to wrap the output in a `<pre>` tag.
 
@@ -493,13 +493,13 @@ const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
 
-### `ui(json)` - Directly manage UI via JSON
+### `ui(json)` - Directly manage UI via JSON :id=ui
 
 Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
 
 Directly calls `_ui.ui` from the `ui.js` library.
 
-### `uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element
+### `uiGet(cssSelector, propName=null)` - Get most useful information, or specific property from a DOM element :id=uiGet
 
 Will return an array of found elements with properties.
 
@@ -513,7 +513,7 @@ Can be called from Node-RED with a message like: `{"_uib: {"command": "uiGet", "
 
 Uses `nodeGet` internally.
 
-### `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements
+### `uiWatch(cssSelector, startStop=true/false/'toggle', send=true, showLog=true)` - watches for any changes to the selected HTML elements :id=uiWatch
 
 Uses [Mutation Observer](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver/MutationObserver) to watch for and report on any changes to the DOM (the page).
 
@@ -530,16 +530,16 @@ Can be called from Node-RED with a message like: `{"_uib: {"command": "uiWatch",
 
 ## HTML/DOM Cacheing
 
-### `clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage
-### `restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage
+### `clearHtmlCache()` - Clears the HTML previously saved to the browser localStorage :id=clearHtmlCache
+### `restoreHtmlFromCache()` - Swaps the currently displayed HTML to the version last saved in the browser localStorage :id=restoreHtmlFromCache
 
-### `saveHtmlCache()` - Manually saves the currently displayed HTML to the browser localStorage
+### `saveHtmlCache()` - Manually saves the currently displayed HTML to the browser localStorage :id=saveHtmlCache
 
 > [!NOTE]
 > Browser local cache is generally limited to 10MB for the whole source domain.
 > Therefore, it is quite easy to exceed this - use with caution.
 
-### `watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage
+### `watchDom(startStop)` - Start/stop watching for DOM changes. Changes automatically saved to browser localStorage :id=watchDom
 
 `uibuilder.watchDom(true)` will start the browser watching for any changes to the displayed HTML. When it detects a change, it automatically saves the new HTML (the whole page) to the browser's `localStorage`. This persists across browser and device restarts.
 
@@ -558,7 +558,7 @@ You can ensure that the page display looks exactly like the last update upon pag
 > to control whether a specific page, client or browser tab will process an inbound message.
 > Use this where you have multiple pages or clients and need to target a message to a specific one.
 
-### `onChange(prop, callbackFn)` - Register on-change event listeners for UIBUILDER tracked properties
+### `onChange(prop, callbackFn)` - Register on-change event listeners for UIBUILDER tracked properties :id=onChange
 
 Returns a reference to the callback so that it can be cancelled if needed.
 
@@ -574,7 +574,7 @@ const msgChgEvt = uibuilder.onChange('msg', (msg) => {
 })
 ```
 
-### `cancelChange(prop, cbRef)` - remove all the onChange listeners for a given property
+### `cancelChange(prop, cbRef)` - remove all the onChange listeners for a given property :id=cancelChange
 
 Both arguments must be provided. With `cbRef` having been saved when the listener was set up.
 
@@ -582,7 +582,7 @@ Both arguments must be provided. With `cbRef` having been saved when the listene
 uibuilder.cancelChange('msg', msgChgEvt)
 ```
 
-### `onTopic(topic, callbackFn)` - like onChange but directly listens for a specific topic
+### `onTopic(topic, callbackFn)` - like onChange but directly listens for a specific topic :id=onTopic
 
 ```javascript
 const topicChgEvt = uibuilder.onTopic('my topic', (msg) => {
@@ -591,7 +591,7 @@ const topicChgEvt = uibuilder.onTopic('my topic', (msg) => {
 })
 ```
 
-### `cancelTopic(topic, cbRef)` - like cancelChange for for onTopic
+### `cancelTopic(topic, cbRef)` - like cancelChange for for onTopic :id=cancelTopic
 
 Both arguments must be provided. With `cbRef` having been saved when the listener was set up.
 
@@ -599,7 +599,7 @@ Both arguments must be provided. With `cbRef` having been saved when the listene
 uibuilder.cancelTopic('my topic', topicChgEvt)
 ```
 
-### `watchUrlHash` - Toggle (or manually set on/off) sending URL Hash changes back to Node-RED in a standard msg.
+### `watchUrlHash` - Toggle (or manually set on/off) sending URL Hash changes back to Node-RED in a standard msg :id=watchUrlHash
 
 Manually set on/off using the parameter, e.g. `watchUrlHash(true)`. Or toggle by not sending the parameter.
 
@@ -611,27 +611,11 @@ This function uses the `truthy` utility function for the optional parameter and 
 
 ### Custom Events
 
-The UIBUILDER library also issues a number of custom events. These can be handled using the standard `document.addEventListener` JavaScript function.
-
-* `uibuilder:stdMsgReceived` - triggered whenever a normal msg is received from Node-RED. Passes the msg in the data parameter. Happens before any processing of `msg._uib`, `msg._ui` or page/client/tab filtering.
-* `uibuilder:msg:topic:${msg.topic}` - triggered immediately after the above event if the `msg.topic` property is set. Passes the msg in the data parameter.
-* `uibuilder:msg:_ui` - triggered immediately before the library processes `msg._ui`. Passes the msg in the data parameter.
-* `uibuilder:socket:connected` - triggered when a socket.io (websocket) connection is made to Node-RED. Passes some custom data for debugging connection issues.
-* `uibuilder:socket:disconnected` - triggered whenever the socket.io connection to Node-RED is lost. Passes either the disconnect reason text or a JavaScript error object. Can be used for debugging connection issues. Note that it is normal for disconnections to happen if the client device goes to sleep.
-* `uibuilder:constructorComplete` - triggered when the library is at the end of its construction phase. No data is passed.
-* `uibuilder:startComplete` - triggered when the library is at the end of its startup phase. No data is passed. At this point, communications with Node-RED are either established or could not be established.
-* `uibuilder:propertyChanged` - triggered when any managed property is changed. The `uibuilder.set` function is used to trigger managed property updates. Passes the object `{ 'prop': prop, 'value': val }` as data which can be used to filter actions if needed. It is generally easier to use the `uibuilder.onChange` function.
-* `uibuilder:domChange` - triggered if `uibuilder.uiWatch` has been set, if a watched HTML element is changed. The passed data is the same object as would be passed back to Node-RED. Allows easy processing of DOM changes in front-end code if needed. Avoids the need to juggle with the complex Mutation Observer browser API.
-
-```javascript
-document.addEventListener("uibuilder:propertyChanged", (event) => {
-    console.log("uibuilder:propertyChanged. ", 'Property: ', event.details.prop, 'Value: ', event.details.value)
-})
-```
+The UIBUILDER library also issues a number of custom events. These can be handled using the standard `document.addEventListener` JavaScript function. See [Custom Events](client-docs/custom-events.md) for details.
 
 ## Utility
 
-### `$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element
+### `$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element :id=dollar
 
 This is a convenience method to help you select HTML DOM elements in your own custom code. All it does is use ` document.querySelector(cssSelector)`. So any errors are the same as the native function.
 
@@ -653,7 +637,7 @@ const eMsg = $('#msg')
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
 
-### `$$(cssSelector)` - Returns an array of HTML elements properties
+### `$$(cssSelector)` - Returns an array of HTML elements properties :id=dollar2
 
 This function is a convenience wrapper around `Array.from(document.querySelectorAll(cssSelector))`. So it returns an array. The array has an entry for each found element (an empty array if nothing found). Each entry in the array returns the _properties_ of the found element.
 
@@ -661,7 +645,28 @@ This means that it returns different data to the `$()` function.
 
 This is very similar to the function of the same name in the Chromium DevTools. The only difference being that UIBUILDER's function does not accept a 2nd parameter. UIBUILDER's function supercedes that of the DevTools.
 
-### `log` - output log messages like the library does
+### `connect()` - Manually (re)connect Socket.IO communications between the browser and Node-RED :id=connect
+
+Allows fine control of the communications.
+
+### `disconnect()` - Manually disconnect Socket.IO communications between the browser and Node-RED :id=disconnect
+
+Allows fine control of the communications. Also stops the auto-reconnect timer.
+
+### `formatNumber(value, decimalPlaces, intl, opts)` - Format an input number to a given locale and decimal places :id=formatNumber
+
+Takes numeric input and formats it using the JavaScript standard [`INTL` library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString).
+
+Allows optional setting of the number of decimal places.
+
+The `intl` argument takes the form like `en-GB`, `de-DE` (German), `ja-JP` (Japanese), etc. If not provided, the function takes the browser's current locale using `navigator.language` so that the number defaults to being formatted in the browser's current locale.
+
+The `opts` argument allows passing INTL number formatting options, for example: `{ style: 'currency', currency: 'JPY' }` to get currency formatted as Japanese Yen.
+
+> [!NOTE]
+> This function is compatible with the [`uib-var` web component's `filter` attribute](client-docs/custom-components#filter). e.g. `<uib-var topic="mytopic/#1" filter="uibuilder.formatNumber(2, 'de-DE')">[...]</uib-var>`
+
+### `log` - output log messages like the library does :id=log
 
 Use as `uibuilder.log(1, 'my:prefix', 'Some text', {some:'optional data'})` which produces:
 ![Example log output](../images/example-log-output.png)
@@ -705,7 +710,7 @@ without reloading the page.
 Putting a hash on the end of a full or relative URL will
 trigger the route on the resulting page load.
 
-### `truthy(val, [default])` - Returns true or false or the optional default value depending on the value
+### `truthy(val, [default])` - Returns true or false or the optional default value depending on the value :id=truthy
 
 True accepts 'on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1
 False accepts 'off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0
@@ -714,7 +719,7 @@ If neither truthy or falsy, the optional default value is returned or `undefined
 
 ## Startup
 
-### `start(options)` - Mostly no longer needed - Starts Socket.IO communications with Node-RED
+### `start(options)` - Mostly no longer needed - Starts Socket.IO communications with Node-RED :id=start
 
 > [!NOTE]
 > In most cases, you no longer need to call this yourself. The client startup is now more robust and should rarely need any help. The exception will be if you are loading a page from an external server instead of from Node-RED.
@@ -739,19 +744,21 @@ Those marked with `*` can be triggered with a command message from Node-RED flow
 
 If examining the library code, please remember that functions starting with `_` are for *internal* use.
 
-* [`$`](#$)
-* [`$$`](#$$)
-* [`$ui`](#$ui)§ - Reference to the ui.js library, not a function
+* [`$`](#dollar)
+* [`$$`](#dollar2)
+* `$ui`§ - Reference to the ui.js library, not a function
 * [`addClass`](#addClass)§
 * [`beaconLog`](#beaconLog)
 * [`cancelChange`](#cancelChange)
 * [`cancelTopic`](#cancelTopic)
 * [`clearHtmlCache`](#clearHtmlCache)
+* [`connect()`]() - Manually (re)connect Socket.IO communications between the browser and Node-RED
 * [`convertMarkdown`](#convertMarkdown)
 * [`copyToClipboard`](#copyToClipboard)
 * [`elementExists`](#elementExists)*
 * ~~[`elementIsVisible`](#elementIsVisible)~~ - Temporarily deprecated
 * [`eventSend`](#eventSend)
+* [`formatNumber`](#formatNumber)
 * [`get`](#get)*
 * [`getManagedVarList`](#getManagedVarList)*
 * [`getStore`](#getStore)

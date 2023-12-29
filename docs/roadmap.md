@@ -413,6 +413,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### client Library
 * [**STARTED**] Ability to visually show all uibuilder managed variables. 
+
+* Add client `tag()` function that creates a new HTML element similar to the Node-RED side `uib-tag` node. (See https://redom.js.org for refs)
+
 * A way to show and change uib-brand variables visually?
 * Add extra optional flag to set() to allow saving to localStorage - where set, auto-load on (re)load
 
@@ -560,6 +563,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 #### Videos
 
+* Updating content/attributes (see [ref](how-to/change-element.md))
 * Each release
 * Each node
 * Snapshots (grab html and save somewhere)
@@ -607,6 +611,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Ideas
 
+* *STARTED* How to add FILTERs (text formaters) to `<uib-var>`? They should be a collection of JS functions that are auto-given the var as a value, add any other args and return a formatted version of the value. Filters should be chainable. Reflect.apply(target, thisArgument, argumentsList)
+
 * PAGE CREATOR: Something that creates a new page file from template. Could be an extension to uib-save?
   * Maybe also a way to track pages? A catalogue? Maybe also an API to return all HTML file names as an array?
   * Consider scraping all .html files in each uibuilder instance and building an auto-list that can be added to the `../uibuilder/apps` page. Possibly with a manual override list option.
@@ -621,7 +627,12 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 * Change fixed text to use `RED._` for l8n. See: https://discourse.nodered.org/t/flexdash-alpha-release-a-dashboard-for-node-red/65861/48. [ref](https://discourse.nodered.org/t/question-on-internationalisation-can-i-have-1-json-file-for-several-nodes/76300/2)
 
-* NEW NODE: `uib-room` - linked to a uibuilder node, creates a socket.io room. Will need a way to tell the connected clients to subscribe to the romm (optional) and FE fns to connect/disconnect from rooms.
+* NEW NODE: `uib-room` - linked to a uibuilder node, creates a socket.io room. Will need a way to tell the connected clients to subscribe to the room (optional) and FE fns to connect/disconnect from rooms.
+
+* UIB index page - new node? Default to root url. Show all instances by default, optional pages? Include descriptions. Selectable list of instances/pages. Allow for multiple instances of the node with different settings. CSS.
+
+* ?For no-code nodes that might have class selectors - add a search button that searches the uib-brand.css?
+* ?Have a toggled UI button that opens the Node-RED Editor to the correct location for the URL?
 
 
 #### Questions that need answers

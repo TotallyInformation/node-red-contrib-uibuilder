@@ -64,6 +64,13 @@ Due to its complexity, UIBUILDER has a higher than Node-RED average of external 
     
     This is not developed directly. The actual code to edit is in `src/editor/uibuilder/` and is built using `gulp` scripts.
 
+## Node-RED Editor Libraries
+
+These libraries provide common Node-RED Editor data, functions and styling for all UIBUILDER nodes.
+
+* [`/resources/ti-common.js`](dev/editor-libs/ti-common) - Common JavaScript library for the Editor.
+* [`/resources/ti-common.css`](dev/editor-libs/ti-common-css) - Common style sheet library for the Editor.
+
 ## uibuilder front-end client library
 
   For details, see the Client Libraries list above.

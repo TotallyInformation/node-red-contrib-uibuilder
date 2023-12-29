@@ -8,15 +8,87 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Fix
 
-* `uib-save` import - initial deployment does not connect to node - need to clear the entry
+* uib router - if no routerConfig.defaultRoute set, use the first (zeroth) defined route.
+* `uib-save` import - initial deployment does not connect to node - need to clear the entry & mark as invalid. Also, no url = invalid
+* To reproduce: [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/4)
+
+  Pull a uibuilder node in a flow.
+  Press Deploy.
+  The editor complains that the node just dropped isn't configured correctly. Deploy anyway.
+  Open the property editor of the uibuilder node, enter a valid URL ( like uibtest), close the property pane with Done.
+  First observation: The uibuilder node still shows the red triangle - despite correctly configured now.
+  Press Deploy.
+  The editor complains that the node still isn't configured correctly. Deploy anyway.
+  Second observation: The uibuilder node still shows the red triangle - which is definitely unexpected now. Node status displays "Node Initialised" @ blue.
+
+* Looks like it's validateVersion that triggers this red triangle.. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/7?u=totallyinformation)
+
+## Started
+
+* Socket.IO rooms. [ref](https://socket.io/docs/v4/rooms/) - Rooms can be used to filter messages for specific destinations (e.g. client or page id) or to create client-to-client comms.
+  * Need a way to join rooms from Node-RED
+  * socket.js
+    * [x] Auto-join `clientId:xxxxxxx` & `pageName:xxxxxxx` rooms
+    * [x] socket.on uib-room-join/-leave-send
+    * [ ] Change send functions to use rooms where clientId/pageName is specified in `msg._uib`
+    * [ ] `socket.on('uib-room-send', ...)` Add option to also send a uibuilder msg.
+    * [ ] Incorporate `msg._uib.roomId` for sending to custom rooms
+    * [ ] ? Allow sending to different uib namespaces? would likely need an option flag for security?
+    * [ ] ? Allow global as well as NS rooms? - allow sending between different uib connected clients? may req client to connect to the default NS as well. 
+          [ref](https://socket.io/docs/v4/socket-io-protocol/#introduction)
+    * [ ] Line 525 - remove test code
+    * [ ] Remove console.log from addNs
+  * client
+    * [x] joinRoom, leaveRoom, sendRoom
+    * [ ] Add listener when joining a room, remove when leaving
+    * [x] Add additional listener for the default namespace
+    * [ ] Document new managed var: `globalMsg`.
+
+* `uib-var`
+  * Add filter attribute. A filter is a JavaScript function accessible from `window` global or `uibuilder` contexts. The filter is applied to the variable value before display.
+    * [x] Apply args
+    * [x] filter the input - at least limit the length of the attr (limited to 126 chars)
+    * Test filters with
+      * [x] `uibuilder.xxxxx`
+      * [x] `mything.myfunc`
+      * [x] `mything.myfunc(1,2,3)`
+      * [x] `mything.myfunc()`
+    * [x] Test filters with arguments
+    * [x] Test passing another global var as an argument
+    * [ ] Test different order of uib-var attributes
+    * [x] Document changes
+  * [x] Add `topic` attribute - automatically listens for msgs with given topic and updates.
 
 ## To Do
 
+* uib-router
+  * For convenience, add current route details and curr/prev route id to data when route changes.
+  * Add 1st show marker to route change to allow client to ask for cache update
+  * Update docs to allow for description and other props on route array.
+  * if no routerConfig.defaultRoute set, use the first (zeroth) defined route.
+  * Add preload option so that updates to ui can happen before display.
+  * Document standards for navigation menus.
+  * Add optional nav menu list css selector (css class) allowing auto-mark of current page & add `aria-current="page"`
+
+* uibuilder node
+  * Add manual entry field to editor config for a URL scheme to open the instanceRoot folder in an editor new window. Pre-fill with vscode entry for localhost. Partially fill with vscode-remote otherwise (or maybe have a button).
+
+* uibuilder fe
+  * Add `formateDate` standard utility fn. [ref](https://discourse.nodered.org/t/format-date-at-yyyydd-hh-mm-ss/83130/12?u=totallyinformation)
+
+* Consider special variable `managedTags`? where each entry update will automatically update the matching element ID and if the element doesn't yet exist, will watch for it and update as soon as it is added.
+
 * update the `remote-commands` example
+* Add/update the `text updates` example
 * Add new low-code example
 * Update docs for ctrl msgs and msg._uib return data to say that anything set via the socket.io auth can only update when the client reconnects. Also document clientTimeDifference
 * Fixup CSS for showDialog (notifications/alerts) - left/right margin on p and svg need removing. Maybe on toast-head class too. Parent class is "toast".
 * Add client msg filter for URL Hash.
+* Incorporate ideas from: https://www.htmhell.dev/adventcalendar/2023/2/
+* Add uibuilder.tag()
+* Add example save current page to file
+
+* ??? uib.setAttr(selector, attr, val)? 
 
 * More flexible low-code class attribute handling.
   * In ui.js
@@ -41,11 +113,13 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### Highlights
 
-* New `navigate` function and command. Triggers a page change or a route change either from front-end JavaScript or via a command message in Node-RED.
+* New `navigate` function and command. Triggers a page change or a route change either from front-end JavaScript or via a command message in Node-RED. Put a client into Kiosk mode and rotate pages or route displays all from Node-RED!
 * New `scrollTo` function and command. Scrolls the visible page to a specific location either from front-end JavaScript or via a command message in Node-RED.
 * No-code and low-code features now all allow more flexible class handling (add, remove, and replace using lists). HTML element data outputs also now return an array of class names, not just a combined string.
 * Front-end commands issued from Node-RED can now take a `quiet` option set to `true` to prevent the return message. e.g. `{"_uib": {"command":"navigate","prop":"#newroute","quiet":true}}`
 * Front-end developers now have full access to the `ui.js` library via the `$ui` global.
+* `addClass(classNames, el)` and `removeClass(classNames, el)` UI functions added to the client library
+* `connect()` and `disconnect()` functions added to the client library to manually connect/disconnect the Socket.IO connections
 
 ### `uibrouter`
 
@@ -58,6 +132,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### `uib-save`
 
 * **FIXED** usePageName logic.
+* URL (uibuilder instance) drop-down list is now sorted
 
 ### Client library
 
@@ -68,13 +143,24 @@ Please see the documentation for archived changelogs - a new archive is produced
 * **NEW ui functions** - `addClass(classNames, el)`, `removeClass(classNames, el)` - see `ui.js` below for details.
 
 * **NEW Function and Command** - `navigate(url)` - Load a new web page or change routes. Can be triggered from Node-RED with msg `{"_uib": {"command":"navigate","prop":"#newroute"}}`. See [Client Functions (navigate) in the docs](client-docs/functions#navigate) for details. URL's can be full, relative (to the current page) or routing (hashes). Obviously, can be called in front-end JavaScript as well as `uibuilder.navigate('./page2.html')` etc.
+
 * **NEW Function and Command** - `scrollTo(cssSelector)` - Scroll visible page to an element based on a CSS Selector. See [Client Functions (scrollTo) in the docs](client-docs/functions#scrollTo) for details. `top`, `start`, `bottom`, `end` can be used as shortcuts for the top/bottom of the page. An optional 2nd parameter gives more control.
+
+* **NEW Functions** - `connect()`, `disconnect()` - These manually connect and disconnect the Socket.IO communications between the browser and Node-RED.
 
 * Added `quiet` property to remote command processing. Set `msg._uib.quiet` to `true` to stop the library returning a message to Node-RED on completion of the command.
 * When using `uiGet` or `nodeGet` functions/commands, if class attribute is present, an additional `classes` property is returned which is an array of the class names.
 
 * **DEPRECATED Function** - `elementIsVisible` - Was not working correctly and a fix is complex. Will revisit in the future. Let me know if you need this function. This would normally be a breaking change but the function is still there - it returns a console msg and a node-red msg still - and as it wasn't working, I doubt anyone has used it.
 * Moved  `$` and `$$` functions to `ui.js` library. This library references them. So no change to usage.
+
+### `uib-var` custom web component
+
+* Auto load `./index.css` instead of `../uibuilder/uib-brand.min.css` - enables your own custom styling to be used. Not dependent on UIBUILDER, simply serve `index.css` from the same location as your main page.
+* Added `topic` attribute - auto-monitors for messages from Node-RED with the given topic. `msg.payload` contains the value to show. Applies filter if present. Just send a msg from Node-RED with the appropriate topic and the display will automatically update! (requires UIBUILDER)
+* Can now supply ONLY the `filter` attribute (without `variable` or `topic`). This allows arbitrarily complex processing.
+* If using UIBUILDER, the resulting HTML output is sanitised if you have the DOMPurify library loaded. If the output is a JavaScript object, it will be highlighted using uibuilder's standard JSON highlighter.
+* Improved error handling, especially for the `filter` attribute and its processing.
 
 ### `ui.js` low-code->HTML hydration library
 
@@ -85,6 +171,12 @@ Please see the documentation for archived changelogs - a new archive is produced
 * Allowed low-code `attributes` property to be an array when specifying classes to apply. All classes in the array will be applied.
 * Moved `$` and `$$` functions to this library from uibuilder.
 
+### `uib-brand.css`
+
+* `body` left/right margins are now set by a CSS var `--base-margin` so they can be adjusted more easily.
+* Added `li.check` (AKA `li.completed`), `li.uncheck` (AKA `li.unstarted`), and `li.started` classes which change list bullets to ✅, ❌, and ✔️ respectively.
+* Added `ui.checklist` with `--base-margin` left/right margins and a little more space for the check bullets.
+
 ### Documentation
 
 * Heading levels 3+ have been made lighter to better differentiate them visually.
@@ -93,6 +185,8 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Other
 
+* **FIXED** uibuilder's instance debug page was not working. Now fixed.
+* The list of all uibuilder apps available at `/uibuilder/apps` is now sorted by URL. Don't forget that it also uses the description fields of each uibuilder node.
 * More work done to move all filing system access into the single `libs/fs.js` library.
 * Usual ongoing work to tidy, clarify and simplify code & eliminate any small issues.
 * All nodes now have an Editor property `addType` which is set to 1 of 'load', 'new', or 'paste/import'. Allowing processing to differentiate between different circumstances that add nodes to the flow.
