@@ -1081,146 +1081,6 @@ var require_ui = __commonJS({
 // src/front-end-module/uibuilder.module.js
 var import_ui = __toESM(require_ui());
 
-// src/components/uib-var.js
-var _UibVar = class _UibVar extends HTMLElement {
-  //#endregion --- Class Properties ---
-  constructor() {
-    super();
-    //#region --- Class Properties ---
-    /** @type {string} Name of the uibuilder mangaged variable to use */
-    __publicField(this, "variable");
-    /** Current value of the watched variable */
-    __publicField(this, "value");
-    /** Whether to output if the variable is undefined */
-    __publicField(this, "undefined", false);
-    /** Whether to send update value to Node-RED on change */
-    __publicField(this, "report", false);
-    /** What is the value type */
-    __publicField(this, "type", "plain");
-    /** what are the available types? */
-    __publicField(this, "types", ["plain", "html", "markdown", "object"]);
-    /** Mini jQuery-like shadow dom selector (see constructor) */
-    __publicField(this, "$");
-    this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
-    this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
-    this.css = document.createElement("link");
-    this.css.setAttribute("type", "text/css");
-    this.css.setAttribute("rel", "stylesheet");
-    this.css.setAttribute("href", "../uibuilder/uib-brand.min.css");
-    this.dispatchEvent(new Event(`uib-var:construction`, { bubbles: true, composed: true }));
-  }
-  // Makes HTML attribute change watched
-  static get observedAttributes() {
-    return _UibVar.props;
-  }
-  /** NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called  */
-  attributeChangedCallback(attrib, oldVal, newVal) {
-    if (oldVal === newVal)
-      return;
-    switch (attrib) {
-      case "variable": {
-        if (newVal === "")
-          throw new Error('[uib-var] Attribute "variable" MUST be set to a UIBUILDER managed variable name');
-        this.variable = newVal;
-        this.doWatch();
-        break;
-      }
-      case "undefined": {
-        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
-          this.undefined = true;
-        else
-          this.undefined = false;
-        break;
-      }
-      case "report": {
-        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
-          this.report = true;
-        else
-          this.report = false;
-        break;
-      }
-      case "type": {
-        if (newVal === "" || !this.types.includes(newVal.toLowerCase()))
-          this.type = "plain";
-        else
-          this.type = newVal;
-        break;
-      }
-      default: {
-        this[attrib] = newVal;
-        break;
-      }
-    }
-  }
-  // --- end of attributeChangedCallback --- //
-  // Runs when an instance is added to the DOM
-  connectedCallback() {
-    if (!this.id) {
-      if (!this.name)
-        this.name = this.getAttribute("name");
-      if (this.name)
-        this.id = this.name.toLowerCase().replace(/\s/g, "_");
-      else
-        this.id = `uib-var-${++_UibVar._iCount}`;
-    }
-  }
-  // ---- end of connectedCallback ---- //
-  // Runs when an instance is removed from the DOM
-  // disconnectedCallback() {} // ---- end of disconnectedCallback ---- //
-  /** Process changes to the required uibuilder variable */
-  doWatch() {
-    if (!this.variable)
-      throw new Error("No variable name provided");
-    this.value = window["uibuilder"].get(this.variable);
-    this.varDom();
-    window["uibuilder"].onChange(this.variable, (val) => {
-      this.value = val;
-      this.varDom();
-      if (this.report === true)
-        window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
-    });
-  }
-  /** Convert this.value to DOM output */
-  varDom() {
-    if (this.value === void 0 && this.undefined !== true) {
-      this.shadow.innerHTML = "<slot></slot>";
-      return;
-    }
-    let val = this.value;
-    switch (this.type) {
-      case "markdown": {
-        this.shadow.innerHTML = window["uibuilder"].sanitiseHTML(window["uibuilder"].convertMarkdown(val));
-        break;
-      }
-      case "object": {
-        this.shadow.innerHTML = `<pre class="syntax-highlight">${window["uibuilder"].syntaxHighlight(val)}</pre>`;
-        break;
-      }
-      case "plain":
-      case "html":
-      default: {
-        const t = typeof val;
-        if (Array.isArray(val) || t === "[object Object]" || t === "object") {
-          try {
-            this.shadow.innerHTML = JSON.stringify(val);
-          } catch (e) {
-            this.shadow.innerHTML = val;
-          }
-        } else {
-          this.shadow.innerHTML = val;
-        }
-        break;
-      }
-    }
-    this.shadow.appendChild(this.css);
-  }
-};
-/** Holds a count of how many instances of this component are on the page */
-__publicField(_UibVar, "_iCount", 0);
-/** @type {Array<string>} List of all of the html attribs (props) listened to */
-__publicField(_UibVar, "props", ["name", "id", "variable", "undefined", "report", "type"]);
-var UibVar = _UibVar;
-
 // node_modules/engine.io-parser/build/esm/commons.js
 var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
 PACKET_TYPES["open"] = "0";
@@ -4535,6 +4395,251 @@ Object.assign(lookup2, {
   connect: lookup2
 });
 
+// src/components/uib-var.js
+var _UibVar = class _UibVar extends HTMLElement {
+  //#endregion --- Class Properties ---
+  constructor() {
+    super();
+    //#region --- Class Properties ---
+    /** @type {string} Name of the uibuilder mangaged variable to use */
+    __publicField(this, "variable");
+    /** Current value of the watched variable */
+    __publicField(this, "value");
+    /** Whether to output if the variable is undefined */
+    __publicField(this, "undef", false);
+    /** Whether to send update value to Node-RED on change */
+    __publicField(this, "report", false);
+    /** What is the value type */
+    __publicField(this, "type", "plain");
+    /** what are the available types? */
+    __publicField(this, "types", ["plain", "html", "markdown", "object"]);
+    /** Holds uibuilder.onTopic listeners */
+    __publicField(this, "topicMonitors", {});
+    /** Is UIBUILDER loaded? */
+    __publicField(this, "uib", !!window["uibuilder"]);
+    /** Mini jQuery-like shadow dom selector (see constructor) */
+    __publicField(this, "$");
+    this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
+    this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
+    this.css = document.createElement("link");
+    this.css.setAttribute("type", "text/css");
+    this.css.setAttribute("rel", "stylesheet");
+    this.css.setAttribute("href", "./index.css");
+    this.dispatchEvent(new Event("uib-var:construction", { bubbles: true, composed: true }));
+  }
+  // Makes HTML attribute change watched
+  static get observedAttributes() {
+    return _UibVar.props;
+  }
+  /** Handle watched attributes
+   * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
+   * Attribute values can only ever be strings
+   * @param {string} attrib The name of the attribute that is changing
+   * @param {string} newVal The new value of the attribute
+   * @param {string} oldVal The old value of the attribute
+   */
+  attributeChangedCallback(attrib, oldVal, newVal) {
+    if (oldVal === newVal)
+      return;
+    switch (attrib) {
+      case "variable": {
+        if (newVal === "")
+          throw new Error('[uib-var] Attribute "variable" MUST be set to a UIBUILDER managed variable name');
+        this.variable = newVal;
+        this.doWatch();
+        break;
+      }
+      case "undefined": {
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
+          this.undef = true;
+        else
+          this.undef = false;
+        break;
+      }
+      case "report": {
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
+          this.report = true;
+        else
+          this.report = false;
+        break;
+      }
+      case "type": {
+        if (newVal === "" || !this.types.includes(newVal.toLowerCase()))
+          this.type = "plain";
+        else
+          this.type = newVal;
+        break;
+      }
+      case "topic": {
+        if (!newVal)
+          break;
+        if (!this.uib)
+          break;
+        if (this.variable) {
+          console.warn("\u26A0\uFE0F [uib-var] Cannot process both variable and topic attributes, use only 1. Using variable");
+          break;
+        }
+        this.topic = newVal;
+        if (this.topicMonitors[newVal])
+          uibuilder.cancelTopic(newVal, this.topicMonitors[newVal]);
+        this.topicMonitors[newVal] = uibuilder.onTopic(newVal, (msg) => {
+          this.value = msg.payload;
+          this.varDom();
+          if (this.report === true)
+            window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+        });
+        this.varDom();
+        break;
+      }
+      case "filter": {
+        this.filter = void 0;
+        this.filterArgs = [];
+        if (!newVal)
+          break;
+        this.filter = newVal;
+        newVal = newVal.slice(0, 127);
+        const f = newVal.replace(/\s/g, "").match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/);
+        if (!f) {
+          console.warn(`\u26A0\uFE0F [uib-var] Filter function "${newVal}" invalid. Cannot process.`);
+          break;
+        }
+        this.filter = f[1];
+        if (f[3]) {
+          try {
+            this.filterArgs = JSON.parse(f[3]);
+          } catch (e) {
+          }
+          this.filterArgs = f[3].split(",").map((x) => {
+            x = x.trim();
+            if (isNaN(x)) {
+              let y = x.replace(/^["'`]/, "").replace(/["'`]$/, "");
+              try {
+                y = new Function(`return ${y}`)();
+              } catch (e) {
+              }
+              return y;
+            }
+            return Number(x);
+          });
+        }
+        if (!this.variable && !this.topic)
+          this.varDom(false);
+        break;
+      }
+      default: {
+        this[attrib] = newVal;
+        break;
+      }
+    }
+  }
+  // --- end of attributeChangedCallback --- //
+  // Runs when an instance is added to the DOM
+  connectedCallback() {
+    if (!this.id) {
+      if (!this.name)
+        this.name = this.getAttribute("name");
+      if (this.name)
+        this.id = this.name.toLowerCase().replace(/\s/g, "_");
+      else
+        this.id = `uib-var-${++_UibVar._iCount}`;
+    }
+  }
+  // ---- end of connectedCallback ---- //
+  // Runs when an instance is removed from the DOM
+  disconnectedCallback() {
+    if (this.uib) {
+      Object.keys(this.topicMonitors).forEach((topic) => {
+        uibuilder.cancelTopic(topic, this.topicMonitors[topic]);
+      });
+    }
+  }
+  // ---- end of disconnectedCallback ---- //
+  /** Process changes to the required uibuilder variable */
+  doWatch() {
+    if (!this.variable)
+      throw new Error("No variable name provided");
+    this.value = window["uibuilder"].get(this.variable);
+    this.varDom();
+    window["uibuilder"].onChange(this.variable, (val) => {
+      this.value = val;
+      this.varDom();
+      if (this.report === true)
+        window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+    });
+  }
+  /** Convert this.value to DOM output (applies output filter if needed)
+   * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
+   */
+  varDom(chkVal = true) {
+    if (chkVal === true && !this.value && this.undef !== true) {
+      this.shadow.innerHTML = "<slot></slot>";
+      return;
+    }
+    const val = chkVal ? this.doFilter(this.value) : this.doFilter();
+    let out = val;
+    switch (this.type) {
+      case "markdown": {
+        if (this.uib)
+          out = window["uibuilder"].convertMarkdown(val);
+        break;
+      }
+      case "object": {
+        out = `<pre class="syntax-highlight">${this.uib ? window["uibuilder"].syntaxHighlight(val) : val}</pre>`;
+        break;
+      }
+      case "plain":
+      case "html":
+      default: {
+        const t = typeof val;
+        if (Array.isArray(val) || t === "[object Object]" || t === "object") {
+          try {
+            out = JSON.stringify(val);
+          } catch (e) {
+          }
+        }
+        break;
+      }
+    }
+    if (this.uib)
+      this.shadow.innerHTML = window["uibuilder"].sanitiseHTML(out);
+    else
+      this.shadow.innerHTML = out;
+    this.shadow.appendChild(this.css);
+  }
+  /** Apply value filter if specified
+   * @param {*} value The value to change
+   * @returns {*} The amended value that will be displayed
+   */
+  doFilter(value2) {
+    if (this.filter) {
+      const splitFilter = this.filter.split(".");
+      let globalFn = globalThis[splitFilter[0]];
+      if (globalFn && splitFilter.length > 1) {
+        const parts2 = [splitFilter.pop()];
+        parts2.forEach((part) => {
+          globalFn = globalFn[part];
+        });
+      }
+      if (!globalFn && this.uib === true)
+        globalFn = globalThis["uibuilder"][splitFilter[0]];
+      if (globalFn && typeof globalFn !== "function")
+        globalFn = void 0;
+      if (globalFn) {
+        const argList = value2 === void 0 ? [...this.filterArgs] : [value2, ...this.filterArgs];
+        value2 = Reflect.apply(globalFn, value2 ?? globalFn, argList);
+      } else {
+        console.warn(`\u26A0\uFE0F [uib-var] Filter function "${this.filter}" ${typeof globalFn === "object" ? "is an object not a function" : "not found"}`);
+      }
+    }
+    return value2;
+  }
+};
+/** Holds a count of how many instances of this component are on the page */
+__publicField(_UibVar, "_iCount", 0);
+/** @type {Array<string>} List of all of the html attribs (props) listened to */
+__publicField(_UibVar, "props", ["filter", "id", "name", "report", "topic", "type", "undefined", "variable"]);
+var UibVar = _UibVar;
+
 // src/front-end-module/uibuilder.module.js
 var version = "6.8.0-esm";
 var isMinified = !/param/.test(function(param) {
@@ -4716,7 +4821,6 @@ function syntaxHighlight(json) {
 var _ui = new import_ui.default(window, log, syntaxHighlight);
 var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers;
 var Uib = (_a = class {
-  // ---- End of ioSetup ---- //
   //#endregion -------- ------------ -------- //
   //#region ------- Class construction & startup method -------- //
   constructor() {
@@ -5402,6 +5506,36 @@ var Uib = (_a = class {
     if (url2)
       window.location.href = url2;
     return window.location;
+  }
+  /** Format a number using the INTL standard library - compatible with uib-var filter function
+   * @param {number} value Number to format
+   * @param {number} decimalPlaces Number of decimal places to include. Default=no default
+   * @param {string} intl standard locale spec, e.g. "ja-JP" or "en-GB". Default=navigator.language
+   * @param {object} opts INTL library options object. Optional
+   * @returns {string} formatted number
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
+   */
+  formatNumber(value2, decimalPlaces, intl, opts) {
+    if (isNaN(value2)) {
+      log("error", "formatNumber", `Value must be a number. Value type: "${typeof value2}"`)();
+      return "NaN";
+    }
+    if (!opts)
+      opts = {};
+    if (!intl)
+      intl = navigator.language ? navigator.language : "en-GB";
+    if (decimalPlaces) {
+      opts.minimumFractionDigits = decimalPlaces;
+      opts.maximumFractionDigits = decimalPlaces;
+    }
+    let out;
+    try {
+      out = Number(value2).toLocaleString(intl, opts);
+    } catch (e) {
+      log("error", "formatNumber", `${e.message}. value=${value2}, dp=${decimalPlaces}, intl="${intl}", opts=${JSON.stringify(opts)}`)();
+      return "NaN";
+    }
+    return out;
   }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
    * Otherwise simply returns the text
@@ -6328,6 +6462,23 @@ ${document.documentElement.outerHTML}`;
   send(msg, originator = "") {
     this._send(msg, this._ioChannels.client, originator);
   }
+  // ! TODO: Rooms do not auto-reconnect. Add tracking and update _onConnect
+  // NOTE: Rooms only understood by server not client so we have to use custom emits
+  //       They do not auto-reconnect
+  /** Send a msg to a pre-defined Socket.IO room
+   * @link https://socket.io/docs/v4/rooms/
+   * @param {string} room Name of a Socket.IO pre-defined room.
+   * @param {*} msg Message to send
+   */
+  sendRoom(room, msg) {
+    this._socket.emit("uib-room-send", room, msg);
+  }
+  joinRoom(room) {
+    this._socket.emit("uib-room-join", room);
+  }
+  leaveRoom(room) {
+    this._socket.emit("uib-room-leave", room);
+  }
   /** Send a control msg to NR
    * @param {object} msg Message to send
    */
@@ -6392,7 +6543,7 @@ ${document.documentElement.outerHTML}`;
       window.clearTimeout(__privateGet(this, _timerid));
     __privateSet(this, _timerid, window.setTimeout(() => {
       log("warn", "Uib:checkConnect:setTimeout", `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}`)();
-      this._socket.close();
+      this._socket.disconnect();
       this._socket.connect();
       __privateSet(this, _timerid, null);
       this._checkConnect(delay * factor, factor, depth++);
@@ -6439,6 +6590,7 @@ Namespace: ${this.ioNamespace}`)();
     this.socketOptions.path = this.ioPath;
     log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
     this._socket = lookup2(this.ioNamespace, this.socketOptions);
+    this._connectGlobal();
     this._socket.on("connect", this._onConnect.bind(this));
     this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this));
     this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this));
@@ -6459,6 +6611,24 @@ Namespace: ${this.ioNamespace}`)();
     });
     this._checkConnect();
     return true;
+  }
+  // ---- End of ioSetup ---- //
+  /** Connect to global namespace & create global listener that updates the `globalMsg` var */
+  _connectGlobal() {
+    this._socketGlobal = lookup2("/", this.socketOptions);
+    this._socketGlobal.onAny((...args) => {
+      this.set("globalMsg", args.slice(0, -1));
+    });
+  }
+  /** Manually (re)connect socket.io */
+  connect() {
+    this._socket.connect();
+  }
+  /** Manually disconnect socket.io and stop any auto-reconnect timer */
+  disconnect() {
+    this._socket.disconnect();
+    if (__privateGet(this, _timerid))
+      window.clearTimeout(__privateGet(this, _timerid));
   }
   /** Start up Socket.IO comms and listeners
    * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
@@ -6543,14 +6713,14 @@ __publicField(_a, "_meta", {
   type: "module",
   displayName: "uibuilder"
 }), _a);
-var uibuilder = new Uib();
+var uibuilder2 = new Uib();
 if (!window["uibuilder"]) {
-  window["uibuilder"] = uibuilder;
+  window["uibuilder"] = uibuilder2;
 } else {
   log("error", "uibuilder.module.js", "`uibuilder` already assigned to window. Have you tried to load it more than once?");
 }
 if (!window["uib"]) {
-  window["uib"] = uibuilder;
+  window["uib"] = uibuilder2;
 } else {
   log("warn", "uibuilder.module.js", "`uib` shortcut already assigned to window.");
 }
@@ -6569,11 +6739,11 @@ if (!window["$ui"]) {
 } else {
   log("warn", "uibuilder.module.js", "Cannot allocate the global `$ui`, it is already in use. Use `uibuilder.$ui` or `uib.$ui` instead.");
 }
-var uibuilder_module_default = uibuilder;
-uibuilder.start();
+var uibuilder_module_default = uibuilder2;
+uibuilder2.start();
 customElements.define("uib-var", UibVar);
 export {
   Uib,
   uibuilder_module_default as default,
-  uibuilder
+  uibuilder2 as uibuilder
 };
