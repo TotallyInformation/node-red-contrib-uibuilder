@@ -70,6 +70,11 @@
     /* For the .grid-fit class, the minimum child element size */
     --grid-fit-min: 15rem;
 
+    /* For nicer emoji's use this as the font-family */
+    --emoji-fonts: "Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji", "EmojiOne Color", "Android Emoji",
+        sans-serif;
+
     /*#region --- Brand --- */
     --brand: hsl(
         var(--brand-hue)
@@ -673,6 +678,49 @@ form > label:focus-within {
 
 /*#endregion --- Forms --- */
 
+/*#region --- Menus --- */
+nav a {
+    text-decoration: none;
+    color: inherit;
+    background-color: inherit;
+}
+nav li:not([aria-current]):hover {
+    font-weight: bold;
+}
+nav [aria-current=page] {
+	font-weight: bolder;
+    text-decoration: underline;
+}
+/* identifiable nav entries (li): nav [data-route] */
+/*#region -- Horizontal menu -- */
+nav.horizontal {
+    display: inline-block;
+    padding: 0.5rem;
+}
+nav.horizontal > h2 {
+    display: inline-block;
+    line-height: inherit;
+    font-size: inherit;
+    margin: 0;
+}
+nav.horizontal [role="menubar"] { /* ul */
+    list-style-type: none;
+    display: inline-block;
+    margin: 0;
+    padding: 0 0 0 0.5rem;
+
+}
+nav.horizontal li { /* [role="menuitem"], [data-route], li */
+    display: inline-block;
+    padding: 0 0.4rem 0 0.1rem;
+}
+nav.horizontal li:not(:last-child) {
+    border-right: 2px solid;
+    border-right-color: inherit;
+}
+/*#endregion -- ---- -- */
+/*#endregion --- Menus --- */
+
 /*#region --- Lists --- */
 .checklist {
     margin-inline-start: var(--base-margin);
@@ -682,29 +730,24 @@ form > label:focus-within {
 li.check, li.completed {
     list-style-type: "✅";
     padding-left: 0.4rem;
+    font-family: var(--emoji-fonts);
 }
 li.uncheck, li.unstarted {
     list-style-type: "❌";
     padding-left: 0.4rem;
+    font-family: var(--emoji-fonts);
 }
 li.started {
     list-style-type: "✔️";
     padding-left: 0.4rem;
+    font-family: var(--emoji-fonts);
 }
 /*#endregion --- Lists --- */
 
 /*#region ---- Utility ---- */
 
 .emoji { /* Nicer, cross-platform emoji's */
-    font-family: 
-        "Twemoji Mozilla",
-        "Apple Color Emoji",
-        "Segoe UI Emoji",
-        "Segoe UI Symbol",
-        "Noto Color Emoji",
-        "EmojiOne Color",
-        "Android Emoji",
-        sans-serif;
+    font-family: var(--emoji-fonts);
 }
 
 .noborder {
