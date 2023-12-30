@@ -1,7 +1,7 @@
 /* eslint-disable strict, sonarjs/no-duplicate-string */
 
 // Isolate this code
-(function () {
+;(function () {
     'use strict'
 
     // NOTE: window.uibuilder is added - see `resources` folder
