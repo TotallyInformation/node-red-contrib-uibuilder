@@ -779,6 +779,105 @@ export const Uib = class Uib {
         }
     }
 
+    /** Set up an event listener to watch for hash changes
+     * and set the watchable urlHash variable
+     */
+    _watchHashChanges() {
+        this.set('urlHash', location.hash)
+        window.addEventListener('hashchange', (event) => {
+            this.set('urlHash', location.hash)
+            if (this.#sendUrlHash === true) {
+                this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL) })
+            }
+        })
+    }
+
+    /** Copies a uibuilder variable to the browser clipboard
+     * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
+     */
+    copyToClipboard(varToCopy) {
+        let data = ''
+        try {
+            data = JSON.stringify(this.get(varToCopy))
+        } catch (e) {
+            log('error', 'copyToClipboard', `Could not copy "${varToCopy}" to clipboard.`, e.message)()
+        }
+        navigator.clipboard.writeText(data)
+    } // --- End of copyToClipboard --- //
+
+    /** Does the chosen CSS Selector currently exist?
+     * Automatically sends a msg back to Node-RED unless turned off.
+     * @param {string} cssSelector Required. CSS Selector to examine for visibility
+     * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
+     * @returns {boolean} True if the element exists
+     */
+    elementExists(cssSelector, msg = true) {
+        const el = document.querySelector(cssSelector)
+
+        let exists = false
+        if (el !== null) exists = true
+
+        if (msg === true) {
+            this.send({
+                payload: exists,
+                info: `Element "${cssSelector}" ${exists ? 'exists' : 'does not exist'}`
+            })
+        }
+
+        return exists
+    } // --- End of elementExists --- //
+
+    /** Format a number using the INTL standard library - compatible with uib-var filter function
+     * @param {number} value Number to format
+     * @param {number} decimalPlaces Number of decimal places to include. Default=no default
+     * @param {string} intl standard locale spec, e.g. "ja-JP" or "en-GB". Default=navigator.language
+     * @param {object} opts INTL library options object. Optional
+     * @returns {string} formatted number
+     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
+     */
+    formatNumber(value, decimalPlaces, intl, opts) {
+        if (isNaN(value)) {
+            log('error', 'formatNumber', `Value must be a number. Value type: "${typeof value}"`)()
+            return 'NaN'
+        }
+        if (!opts) opts = {}
+        if (!intl) intl = navigator.language ? navigator.language : 'en-GB'
+        if (decimalPlaces) {
+            opts.minimumFractionDigits = decimalPlaces
+            opts.maximumFractionDigits = decimalPlaces
+        }
+        let out
+        try {
+            out = Number(value).toLocaleString(intl, opts)
+        } catch (e) {
+            log('error', 'formatNumber', `${e.message}. value=${value}, dp=${decimalPlaces}, intl="${intl}", opts=${JSON.stringify(opts)}`)()
+            return 'NaN'
+        }
+        return out
+    }
+
+    /** Only keep the URL Hash & ignoring query params
+     * @param {string} url URL to extract the hash from
+     * @returns {string} Just the route id
+     */
+    keepHashFromUrl(url) {
+        if (!url) return ''
+        return '#' + url.replace(/^.*#(.*)/, '$1').replace(/\?.*$/, '')
+    }
+
+    log() {
+        log(...arguments)()
+    }
+
+    /** Navigate to a new page or a new route (hash)
+     * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
+     * @returns {Location} The new window.location string
+     */
+    navigate(url) {
+        if (url) window.location.href = url
+        return window.location
+    }
+
     /** Set the default originator. Set to '' to ignore. Used with uib-sender.
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
@@ -825,10 +924,6 @@ export const Uib = class Uib {
         }
     } // ---- End of ping ---- //
 
-    log() {
-        log(...arguments)()
-    }
-
     /** Convert JSON to Syntax Highlighted HTML
      * @param {object} json A JSON/JavaScript Object
      * @returns {html} Object reformatted as highlighted HTML
@@ -836,77 +931,6 @@ export const Uib = class Uib {
     syntaxHighlight(json) {
         return syntaxHighlight(json)
     } // --- End of syntaxHighlight --- //
-
-    /** Copies a uibuilder variable to the browser clipboard
-     * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
-     */
-    copyToClipboard(varToCopy) {
-        let data = ''
-        try {
-            data = JSON.stringify(this.get(varToCopy))
-        } catch (e) {
-            log('error', 'copyToClipboard', `Could not copy "${varToCopy}" to clipboard.`, e.message)()
-        }
-        navigator.clipboard.writeText(data)
-    } // --- End of copyToClipboard --- //
-
-    /** DEPRECATED FOR NOW - wasn't working properly.
-     * Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
-     * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
-     * Automatically sends a msg back to Node-RED.
-     * Requires the element to already exist.
-     * @returns {false} False if not visible
-     */
-    elementIsVisible() {
-        const info = 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'
-        log('error', 'uib:elementIsVisible', info)()
-        this.send({ payload: 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex' })
-        return false
-    } // --- End of elementIsVisible --- //
-
-    /** Does the chosen CSS Selector currently exist?
-     * Automatically sends a msg back to Node-RED unless turned off.
-     * @param {string} cssSelector Required. CSS Selector to examine for visibility
-     * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
-     * @returns {boolean} True if the element exists
-     */
-    elementExists(cssSelector, msg = true) {
-        const el = document.querySelector(cssSelector)
-
-        let exists = false
-        if (el !== null) exists = true
-
-        if (msg === true) {
-            this.send({
-                payload: exists,
-                info: `Element "${cssSelector}" ${exists ? 'exists' : 'does not exist'}`
-            })
-        }
-
-        return exists
-    } // --- End of elementExists --- //
-
-    /** Only keep the URL Hash & ignoring query params
-     * @param {string} url URL to extract the hash from
-     * @returns {string} Just the route id
-     */
-    keepHashFromUrl(url) {
-        if (!url) return ''
-        return '#' + url.replace(/^.*#(.*)/, '$1').replace(/\?.*$/, '')
-    }
-
-    /** Set up an event listener to watch for hash changes
-     * and set the watchable urlHash variable
-     */
-    _watchHashChanges() {
-        this.set('urlHash', location.hash)
-        window.addEventListener('hashchange', (event) => {
-            this.set('urlHash', location.hash)
-            if (this.#sendUrlHash === true) {
-                this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL) })
-            }
-        })
-    }
 
     /** Returns true/false or a default value for truthy/falsy and other values
      * @param {string|number|boolean|*} val The value to test
@@ -930,43 +954,19 @@ export const Uib = class Uib {
         return this.#sendUrlHash
     }
 
-    /** Navigate to a new page or a new route (hash)
-     * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
-     * @returns {Location} The new window.location string
+    /** DEPRECATED FOR NOW - wasn't working properly.
+     * Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
+     * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
+     * Automatically sends a msg back to Node-RED.
+     * Requires the element to already exist.
+     * @returns {false} False if not visible
      */
-    navigate(url) {
-        if (url) window.location.href = url
-        return window.location
-    }
-
-    /** Format a number using the INTL standard library - compatible with uib-var filter function
-     * @param {number} value Number to format
-     * @param {number} decimalPlaces Number of decimal places to include. Default=no default
-     * @param {string} intl standard locale spec, e.g. "ja-JP" or "en-GB". Default=navigator.language
-     * @param {object} opts INTL library options object. Optional
-     * @returns {string} formatted number
-     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
-     */
-    formatNumber(value, decimalPlaces, intl, opts) {
-        if (isNaN(value)) {
-            log('error', 'formatNumber', `Value must be a number. Value type: "${typeof value}"`)()
-            return 'NaN'
-        }
-        if (!opts) opts = {}
-        if (!intl) intl = navigator.language ? navigator.language : 'en-GB'
-        if (decimalPlaces) {
-            opts.minimumFractionDigits = decimalPlaces
-            opts.maximumFractionDigits = decimalPlaces
-        }
-        let out
-        try {
-            out = Number(value).toLocaleString(intl, opts)
-        } catch (e) {
-            log('error', 'formatNumber', `${e.message}. value=${value}, dp=${decimalPlaces}, intl="${intl}", opts=${JSON.stringify(opts)}`)()
-            return 'NaN'
-        }
-        return out
-    }
+    elementIsVisible() {
+        const info = 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'
+        log('error', 'uib:elementIsVisible', info)()
+        this.send({ payload: 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex' })
+        return false
+    } // --- End of elementIsVisible --- //
 
     //#endregion -------- -------- -------- //
 
@@ -2120,6 +2120,7 @@ export const Uib = class Uib {
     }
 
     // ! TODO: Rooms do not auto-reconnect. Add tracking and update _onConnect
+    // ! TODO: Add receipt handler on joining a room.
 
     // NOTE: Rooms only understood by server not client so we have to use custom emits
     //       They do not auto-reconnect
