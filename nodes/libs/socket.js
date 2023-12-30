@@ -519,23 +519,23 @@ class UibSockets {
         //#endregion -- -- --
 
         // ! TODO TEST REMOVE
-        if (url === 'uib-router-eg') {
-            setInterval(() => {
-                // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
-                ioNs.to('uibuilder:fred').emit('uibuilder:fred', `Hello from the server. NS: "${url}"`)
-            }, 60000)
-            setInterval(() => {
-                // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
-                this.io.of('/').emit('uibuilder:global', 'Hello from the server. NS: "/"')
-            }, 60000)
-            // ioNs.join('uibuilder:fred')
-            ioNs.on('uibuilder:fred', (room, msg) => {
-                console.log('uibuilder:fred', room, msg)
-            })
-            this.io.on('uibuilder:fred', (room, msg) => {
-                console.log('[this.io] uibuilder:fred', room, msg)
-            })
-        }
+        // if (url === 'uib-router-eg') {
+        //     setInterval(() => {
+        //         // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
+        //         ioNs.to('uibuilder:fred').emit('uibuilder:fred', `Hello from the server. NS: "${url}"`)
+        //     }, 60000)
+        //     setInterval(() => {
+        //         // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
+        //         this.io.of('/').emit('uibuilder:global', 'Hello from the server. NS: "/"')
+        //     }, 60000)
+        //     // ioNs.join('uibuilder:fred')
+        //     ioNs.on('uibuilder:fred', (room, msg) => {
+        //         console.log('uibuilder:fred', room, msg)
+        //     })
+        //     this.io.on('uibuilder:fred', (room, msg) => {
+        //         console.log('[this.io] uibuilder:fred', room, msg)
+        //     })
+        // }
 
         const that = this
 
@@ -639,7 +639,7 @@ class UibSockets {
             })
             // Allow clients to send message to a custom room
             socket.on('uib-room-send', (room, msg) => {
-                console.log('uib-room-send', { room, msg })
+                // console.log('uib-room-send', { room, msg })
                 ioNs.to(room).emit(room, msg, socket.handshake.auth)
                 // TODO Option to send on as a node-red msg
             })
@@ -715,6 +715,7 @@ class UibSockets {
             //#endregion ---- run when client connects ---- //
 
             //#region ---- Rooms ----
+            // Ensures uib is listening to all clients and pages
             // console.log('socket auth: ', socket.handshake.auth)
             socket.join(`clientId:${socket.handshake.auth.clientId}`)
             socket.join(`pageName:${socket.handshake.auth.pageName}`)
