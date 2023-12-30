@@ -3,7 +3,7 @@ title: Custom web components
 description: >
    Web components built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-lastUpdated: 2023-10-08 14:59:10
+lastUpdated: 2023-12-29 17:25:31
 ---
 
 UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of components that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc.

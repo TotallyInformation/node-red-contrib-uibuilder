@@ -37,6 +37,15 @@ Forms are bordered with a horizontal layout (labels on the same row as the input
 
 For screen widths below 600px, the labels are moved above the inputs.
 
+## Navigation menus
+
+Basic nav menu formatting is including via the `nav` tag. Including basic horizontal menu (`nav.horizontal` class) formatting. Assumes list embedded in a nav tag and that the list has correct aria roles set.
+
+## Lists
+
+* `.checklist` - designed to work with custom bullet lists using the following types or similar.
+* `li.check`/`li.completed`, `li.uncheck`/`li.unstarted`, `li.started` Use these bullets respectively: ✅, ❌, ✔️. Specifies `font-family: var(--emoji-fonts);`
+
 ## Tables
 
 * Tables are bordered (using collapsed borders). The colour for the table border is `--text3`. Inner borders use `--surface4`. The table has a top & bottom margin of 1rem.
@@ -223,9 +232,11 @@ Note that shadows are notoriously difficult to get right in dark modes. The defa
 
 ### Other
 
+* `--base-margin` (`1rem`) - Applies to `body`, `div > p` left & right margins. `img`, `picture`, `video`, `canvas`, `svg` all margins. `main` left & right padding. `.checklist` margin-inline start & end.
 * `--border-margin` (`0`) - Applies to `border` class only. How much `margin` to add to a bordered element.
 * `--border-pad` (`0.5rem`) - Applies to `border` class only. How much `padding` to add to a bordered element.
 * `--border-radius` (`0.5rem`) - Used for all styles that have rounded corners. (buttons, inputs, borders, etc.)
+* `--emoji-fonts` ("Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "EmojiOne Color", "Android Emoji", sans-serif) - Use as `font-family: var(--emoji-fonts);` for better emoji's on different platforms.
 * `--font-family` (`sans-serif`) - Sans-serif is much easier to read on-screen, the actual font is left up to the browser/OS.
 * `--grid-fit-min` (`15rem`) - Used by the `.grid-fit` class to specify the minimum child component size. That defines when contents will wrap.
 * `--mode` - `light` or `dark` according to the current browser preference or html class override.

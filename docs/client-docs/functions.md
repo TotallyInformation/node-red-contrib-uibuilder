@@ -4,7 +4,7 @@ description: >
    Details about the functions/methods used in the UIBUILDER front-end client library.
    Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-12-10 15:02:22
+lastUpdated: 2023-12-29 17:26:05
 ---
 
 Functions accessible in client-side user code.
@@ -34,6 +34,25 @@ You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-
 You can use one or more of the `msg._uib.pageName`, `msg._uib.clientId`, or `msg._uib.tabId` properties to control whether a specific page, client or browser tab will process an inbound message. Use this where you have multiple pages or clients and need to target a message to a specific one.
 
 UIBUILDER also allows you to issue control commands from Node-RED to your front-end app by sending messages to the `uibuilder` node containing `msg._uib.command` which must be set to [one of the recognised commands](/client-docs/control-from-node-red).
+
+### Rooms
+
+Rooms are a Socket.IO server concept. For UIBUILDER, they are simulated on the client by using standard message titles. Their use allows flexible messaging from any uibuilder connected client or a custom uibuilder node to any other uibuilder connected client or custom uibuilder node.
+
+UIBUILDER clients are automatically subscribed to a number of rooms based on the client socket ID, page name and client ID. They are also subscribed to a "global" channel.
+
+See also [sendRoom](#sendRoom) for sending messages to an arbitrary room.
+
+#### `joinRoom(room)` - Join an arbitrary socket.io room to receive messages from it :id=joinRoom
+
+This simulates joining a specified room on the client side, uibuilder will start forwarding messages sent to the room to this client.
+
+> [!WARNING]
+> As yet, the client has no way of handling messages from the server in these rooms.
+
+#### `leaveRoom(room)` - Leave an arbitrary socket.io room to stop receiving messages from it :id=leaveRoom
+
+This simulates leaving a specified room on the client side, uibuilder will stop forwarding messages sent to the room to this client.
 
 ## Sending Messages to Node-RED
 
@@ -90,6 +109,12 @@ The `originator` is optional and if used, should match the id from a `uib-sender
 The message will be assessed by UIBUILDER and passed to its #2 (bottom) output port if considered acceptible.
 
 This lets you create your own control custom messages should you wish to. Use with caution.
+
+### `sendRoom(room, msg)` - Send a message to an arbitrary socket.io room :id=sendRoom
+
+Socket.IO rooms are server-side concepts for partitioning messages. This simulates the feature on the client side.
+
+See also [joinRoom](#joinRoom) and [leaveRoom](#leaveRoom) for controlling receipt of room messages.
 
 ### `setOriginator(originator = '')` - Set/clear the default originator :id=setOriginator
 
@@ -765,7 +790,9 @@ If examining the library code, please remember that functions starting with `_` 
 * [`getWatchedVars`](#getWatchedVars)*
 * [`htmlSend`](#htmlSend)*
 * [`include`](#include)*
+* [`joinRoom(room)`](#joinRoom) - join an arbitrary socket.io room to receive messages from it
 * [`keepHashFromUrl`](#keepHashFromUrl)
+* [`leaveRoom(room)`](#leaveRoom) - leave an arbitrary socket.io room to stop receiving messages from it
 * [`loadScriptSrc`](#load)§
 * [`loadScriptTxt`](#load)§
 * [`loadStyleSrc`](#load)§
@@ -787,6 +814,7 @@ If examining the library code, please remember that functions starting with `_` 
 * [`scrollTo`](#scrollTo)*
 * [`send`](#send)
 * [`sendCtrl`](#sendCtrl)
+* [`sendRoom(room, msg)`](#sendRoom) - Send a message to an arbitrary socket.io room
 * [`set`](#set)*
 * [`setOriginator`](#setOriginator)
 * [`setPing`](#setPing)
