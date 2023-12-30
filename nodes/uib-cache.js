@@ -1,8 +1,8 @@
 /** Takes a msg input and caches it then passes it through.
  *  If it receives a cache-replay control msg, it dumps the cache.
- *  If it receives a caech-empty control msg, it empties the cache.
+ *  If it receives a cache-empty control msg, it empties the cache.
  *
- * Copyright (c) 2022-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2022-2024 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -177,7 +177,7 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
 
     // Only send if connection is really new (connections=0) - if newcache is selected
     let sendit = true
-    if ( this.newcache === true && msg.connections && msg.connections > 0 ) sendit = false
+    if ( this.newcache === true && msg.connections && msg.connections > 2 ) sendit = false
 
     // Is this a control msg?
     if ( msg.uibuilderCtrl ) {
