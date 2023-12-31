@@ -1,9 +1,10 @@
 ---
 title: uibuilder Security Documentation
-description: >
-   Some thoughts on how to correctly and safely secure a uibuilder app.
+description: |
+  Some thoughts on how to correctly and safely secure a uibuilder app.
 created: 2020-01-05 20:45:00
 lastUpdated: 2022-04-01 17:53:58
+updated: 2023-12-30 17:01:42
 ---
 
 As at uibuilder v5, many of the security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication. Such services can be independently tested and verified.

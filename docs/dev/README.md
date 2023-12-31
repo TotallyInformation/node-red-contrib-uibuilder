@@ -1,9 +1,10 @@
 ---
 title: Developer Documentation
-description: >
+description: |
   Deep dives into the internals of UIBUILDER. This is where to go if you need to understand how things work. These documents may lag behind the actual code however, so it is always worth also referencing the current codebase.
 created: 2019-06-16 16:16:00
 lastUpdated: 2023-10-08 15:12:02
+updated: 2023-12-30 17:01:41
 ---
 
 ## Processes

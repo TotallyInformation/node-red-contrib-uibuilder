@@ -1,9 +1,10 @@
 ---
 title: uib-cache - Cache and replay data
-description: >
-   Usage and configuration.
+description: |
+  Usage and configuration.
 created: 2023-02-05 16:31:39
 lastUpdated: 2023-10-28 15:57:45
+updated: 2023-12-30 17:01:41
 ---
 
 The cache node was added in uibuilder v5. It provides an easy method of saving messages in a cache and replaying them

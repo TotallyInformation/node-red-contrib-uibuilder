@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER's Server Libraries
-description: >
+description: |
   UIBUILDER includes a number of server and client libraries. This section of the documentation provides developer information on the server libraries.
 created: 2023-09-16 19:02:31
 lastUpdated: 2023-09-30 15:59:03
+updated: 2023-12-30 17:01:42
 ---
 
 These libraries are used by some or all of the uibuilder nodes.

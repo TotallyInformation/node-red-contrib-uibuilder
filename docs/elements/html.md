@@ -1,9 +1,10 @@
 ---
 title: Insert raw HTML into a web page
-description: >
-   The HTML element type passes raw HTML string input to the output.
+description: |
+  The HTML element type passes raw HTML string input to the output.
 created: 2023-02-24 16:49:49
 lastUpdated: 2023-09-01 17:02:44
+updated: 2023-12-30 17:01:41
 ---
 
 No optional heading is allowed, headings can be defined in the HTML. The inserted HTML is wrapped in a `<div>`.

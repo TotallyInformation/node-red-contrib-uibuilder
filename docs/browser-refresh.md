@@ -1,9 +1,10 @@
 ---
 title: Auto-refresh the browser when developing
-description: >
-   Describes how to make your page refresh automatically when developing front-end code.
+description: |
+  Describes how to make your page refresh automatically when developing front-end code.
 created: 2022-02-15 20:56:20
 lastUpdated: 2023-09-30 13:03:51
+updated: 2023-12-30 17:01:41
 ---
 
 ## Reload message

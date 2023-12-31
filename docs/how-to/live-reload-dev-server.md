@@ -1,9 +1,10 @@
 ---
 title: Create a live-reloading dev server with uibuilder
-description: >
-   Many build tools provide live dev servers. When working with uibuilder, we can craft that in Node-RED!
+description: |
+  Many build tools provide live dev servers. When working with uibuilder, we can craft that in Node-RED!
 created: 2023-08-26 16:21:23
 lastUpdated: 2023-08-26 16:21:40
+updated: 2023-12-30 17:01:41
 ---
 
 All that is needed is a small flow using 1 or more `watch` nodes to listen for changes to key files. When a change is detected, send a reload ._ui command to your uibuilder node.

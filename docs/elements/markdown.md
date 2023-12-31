@@ -1,9 +1,10 @@
 ---
 title: Insert Markdown into a web page
-description: >
-   The Markdown element type passes a Markdown string input to the output. No optional heading is allowed. The Markdown is converted to HTML in the client browser.
+description: |
+  The Markdown element type passes a Markdown string input to the output. No optional heading is allowed. The Markdown is converted to HTML in the client browser.
 created: 2023-02-24 16:49:49
 lastUpdated: 2023-09-01 17:02:54
+updated: 2023-12-30 17:01:41
 ---
 
 No optional heading is allowed, headings can be defined in the Markdown. The inserted HTML is wrapped in a `<div>`.

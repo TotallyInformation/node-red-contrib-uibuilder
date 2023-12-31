@@ -1,9 +1,10 @@
 ---
 title: Technical details for the modern, modular front-end client `uibuilder.esm.js` and `uibuilder.iife.js`
-description: >
-   In general, uibuilder is very robust and will rarely give any problems. However, here are a few issues that have been seen in the past.
+description: |
+  In general, uibuilder is very robust and will rarely give any problems. However, here are a few issues that have been seen in the past.
 created: 2022-06-11 14:15:26
 lastUpdated: 2023-01-04 15:40:54
+updated: 2023-12-30 17:01:41
 ---
 
 ## Vendor files are not loading

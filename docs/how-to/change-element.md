@@ -1,9 +1,10 @@
 ---
 title: Change attributes and content of a UI element
-description: >
-   Various ways to easily change either the attributes or content of a UI element either from Node-RED or from front-end code.
+description: |
+  Various ways to easily change either the attributes or content of a UI element either from Node-RED or from front-end code.
 created: 2023-12-09 14:03:57
 lastUpdated: 2023-12-09 14:04:02
+updated: 2023-12-30 17:01:41
 ---
 
 When using frameworks such as Vue, REACT, etc. Including Node-RED's Dashboard, changable content is usually represented by a managed variable and included in the UI using something like `<p>{{varname}}</p>`. With UIBUILDER, this is unnecessary. HTML already has everything required to do easy updates.

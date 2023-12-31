@@ -1,9 +1,10 @@
 ---
 title: uibuilder Security Documentation
-description: >
-   Some thoughts on how to correctly and safely secure a uibuilder app.
+description: |
+  Some thoughts on how to correctly and safely secure a uibuilder app.
 created: 2020-01-05 20:45:00
 lastUpdated: 2021-06-27 18:19:13
+updated: 2023-12-30 17:01:41
 ---
 
 uibuilder provides its own security process based on simple standards.

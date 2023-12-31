@@ -1,9 +1,10 @@
 ---
 title: Custom document events used in the modern client
-description: >
-   Details about the custom `document` events used in the uibuilder modern front-end client library.
+description: |
+  Details about the custom `document` events used in the uibuilder modern front-end client library.
 created: 2023-01-28 15:56:57
 lastUpdated: 2023-09-30 13:02:53
+updated: 2023-12-30 17:01:41
 ---
 
 

@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER's Common Node-RED Editor support library
-description: >
+description: |
   Provides common, standard, functions and data to all UIBUILDER nodes in the Node-RED Editor.
 created: 2023-12-19 16:22:27
 lastUpdated: 2023-12-19 16:22:32
+updated: 2023-12-30 17:01:42
 ---
 
 ## Editor page globals

@@ -1,9 +1,10 @@
 ---
 title: How to load external files using uibuilder
-description: >
-   Include external HTML, styles, JavaScript and ECMA web components from external files.
+description: |
+  Include external HTML, styles, JavaScript and ECMA web components from external files.
 created: 2023-01-04 20:27:33
 lastUpdated: 2023-03-20 20:34:52
+updated: 2023-12-30 17:01:41
 ---
 
 > [!NOTE]

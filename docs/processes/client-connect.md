@@ -1,9 +1,10 @@
 ---
 title: Client connection process
-description: >
+description: |
   The process when a new client (browser tab) connects to a uibuilder endpoint.
 created: 2022-06-28
 lastUpdated: 2022-06-28 18:08:03
+updated: 2023-12-30 17:01:41
 ---
 
 ## Process

@@ -1,9 +1,10 @@
 ---
 title: Developer documentation for `uibuilder.js`
-description: >
-   `uibuilder.js` is the main file that defines the uibuilder node. It is this that is _required_ into Node-RED when it starts.
+description: |
+  `uibuilder.js` is the main file that defines the uibuilder node. It is this that is _required_ into Node-RED when it starts.
 created: 2019-05-18 18:25:00
 lastUpdated: 2022-11-26 16:28:09
+updated: 2023-12-30 17:01:41
 ---
 
 !> This document needs updating, it is incomplete.

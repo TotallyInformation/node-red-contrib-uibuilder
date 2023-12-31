@@ -1,9 +1,10 @@
 ---
 title: Developer documentation for `uibuilder.html`
-description: >
-   Documents the processing of the html file that defines the Node-RED admin UI panel for uibuilder. Shown when double-clicking on a uibuilder node in a flow.
+description: |
+  Documents the processing of the html file that defines the Node-RED admin UI panel for uibuilder. Shown when double-clicking on a uibuilder node in a flow.
 created: 2019-06-15 14:26:00
 lastUpdated: 2023-11-03 17:55:25
+updated: 2023-12-30 17:01:41
 ---
 
 !> This document needs updating, it is incomplete.

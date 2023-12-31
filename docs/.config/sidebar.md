@@ -63,7 +63,7 @@
 * [REST API's](apis/)
 * [Glossary of terms](glossary.md)
 * [Changelog <sup>🔗</sup>](changelog)
-* [Roadmap](roadmap)
+* [Roadmap](roadmap/)
 * [Main readme <sup>🔗</sup>](uibhome)
 * Archives
   * [v5 Changelog](archived/CHANGELOG-v5)

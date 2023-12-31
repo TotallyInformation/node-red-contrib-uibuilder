@@ -1,9 +1,10 @@
 ---
 title: Working with the uibuilderfe Front-End Library
-description: >
-   How to work with UIBUILDER's front-end library in your own UI code.
+description: |
+  How to work with UIBUILDER's front-end library in your own UI code.
 created: 2021-02-17 14:28:00
 lastUpdated: 2023-09-30 17:16:17
+updated: 2023-12-30 17:01:41
 ---
 
 > [!WARNING]

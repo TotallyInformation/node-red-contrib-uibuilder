@@ -1,9 +1,10 @@
 ---
 title: Features of the modern, modular front-end client `uibuilder.esm.js` and `uibuilder.iife.js`
-description: >
-   Description of the main features.
+description: |
+  Description of the main features.
 created: 2022-06-11 14:15:26
 lastUpdated: 2023-10-08 13:39:09
+updated: 2023-12-30 17:01:41
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)

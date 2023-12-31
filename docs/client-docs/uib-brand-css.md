@@ -1,9 +1,10 @@
 ---
 title: Documentation for the uibuilder standard CSS file
-description: >
-   Details of the different styles and their usage.
+description: |
+  Details of the different styles and their usage.
 created: 2023-02-25 13:54:50
 lastUpdated: 2023-12-11 17:36:55
+updated: 2023-12-30 17:01:41
 ---
 
 *(This document is a work-in-progress, it is not complete)*

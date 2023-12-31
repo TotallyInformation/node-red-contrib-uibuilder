@@ -1,9 +1,10 @@
 ---
 title: Configuring UIBUILDER Templates
-description: >
-   Describes the structure of a template package and how to deploy them.
+description: |
+  Describes the structure of a template package and how to deploy them.
 created: 2022-04-09 19:06:00
 lastUpdated: 2023-09-30 13:04:09
+updated: 2023-12-30 17:01:41
 ---
 
 UIBUILDER has a feature that lets you quickly create a web app based on a template configuration.

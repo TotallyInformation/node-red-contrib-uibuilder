@@ -1,10 +1,10 @@
 ---
 title: Variables used in the modern client
-description: >
-   Details about the variables used in the uibuilder modern front-end client library.
-   Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
+description: |
+  Details about the variables used in the uibuilder modern front-end client library. Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
 lastUpdated: 2023-10-30 17:18:40
+updated: 2023-12-30 17:01:41
 ---
 
 ## Read/write

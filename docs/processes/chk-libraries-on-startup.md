@@ -1,9 +1,10 @@
 ---
 title: Check all libraries on node-red startup process
-description: >
+description: |
   The process to check for manually installed libraries and check for updates when node-red starts up
 created: 2022-09-17 16:05:22
 lastUpdated: 2022-09-17 16:05:28
+updated: 2023-12-30 17:01:41
 ---
 
 ## Overview

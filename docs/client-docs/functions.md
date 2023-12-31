@@ -1,10 +1,10 @@
 ---
 title: Functions available in the modern client
-description: >
-   Details about the functions/methods used in the UIBUILDER front-end client library.
-   Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
+description: |
+  Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
 lastUpdated: 2023-12-29 17:26:05
+updated: 2023-12-30 17:01:41
 ---
 
 Functions accessible in client-side user code.

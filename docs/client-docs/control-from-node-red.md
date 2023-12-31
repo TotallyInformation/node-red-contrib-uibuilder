@@ -1,10 +1,10 @@
 ---
 title: Controlling UIBUILDER's client from Node-RED
-description: >
-   How to send specially formatted messages from Node-RED to the uibuilder node that
-   get information from the client and control how it works.
+description: |
+  How to send specially formatted messages from Node-RED to the uibuilder node that get information from the client and control how it works.
 created: 2023-02-23 11:59:44
 lastUpdated: 2023-10-14 17:00:54
+updated: 2023-12-30 17:01:41
 ---
 
 The UIBUILDER client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.

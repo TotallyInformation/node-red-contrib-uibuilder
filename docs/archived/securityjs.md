@@ -1,3 +1,7 @@
+---
+created: 2022-04-02 19:09:31
+updated: 2023-12-30 17:01:41
+---
 # security.js Technical Documentation
 
 The `security.js` file is the custom part of uibuilder's security architecture. 

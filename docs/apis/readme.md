@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER REST API's
-description: >
+description: |
   UIBUILDER exposes a number of REST API's. This is an index of them.
 created: 2023-09-14 19:39:52
 lastUpdated: 2023-09-16 12:36:36
+updated: 2023-12-30 17:01:41
 ---
 
 Most of UIBUILDER's standard REST API's are common across all instances of `uibuilder` nodes added to your Node-RED flows. However, see below for the instance API's features.

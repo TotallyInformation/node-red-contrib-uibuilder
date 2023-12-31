@@ -1,10 +1,10 @@
 ---
 title: How to use Instance API's
-description: >
-   Instance API's can be defined for each uibuilder node added to your flows. They run on the Node-RED server and are 
-   designed to provide server-side compute functions for your data-driven user interfaces.
+description: |
+  Instance API's can be defined for each uibuilder node added to your flows. They run on the Node-RED server and are  designed to provide server-side compute functions for your data-driven user interfaces.
 created: 2022-01-17 01:45:24
 lastUpdated: 2022-01-17 20:04:17
+updated: 2023-12-30 17:01:41
 ---
 
 Notes:

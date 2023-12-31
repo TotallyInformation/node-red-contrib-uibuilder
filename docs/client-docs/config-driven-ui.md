@@ -1,10 +1,10 @@
 ---
 title: Dynamic, configuration-driven UI's (low-code)
-description: >
-   This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a `uibuilder` node where the messages contain a `msg._ui` property.
-   This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
+description: |
+  This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a `uibuilder` node where the messages contain a `msg._ui` property. This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
 lastUpdated: 2023-09-30 13:02:29
+updated: 2023-12-30 17:01:41
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)

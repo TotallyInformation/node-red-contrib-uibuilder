@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER Documentation
-description: >
+description: |
   UIBUILDER provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.
 created: 2019-06-16 16:16:00
 lastUpdated: 2023-09-30 13:06:56
+updated: 2023-12-30 20:02:01
 ---
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces for Node-RED.
@@ -47,7 +48,7 @@ WIKI, code (PR's), documentation, and examples are all welcome contributions and
 
 ## Content Index
 
-[index](-sidebar.md ':include')
+[index](.config/sidebar.md ':include')
 
 ## Additional Links
 

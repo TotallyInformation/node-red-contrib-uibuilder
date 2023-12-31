@@ -1,9 +1,10 @@
 ---
 title: Generate input forms from simple input data
-description: >
-   Turns an array/object of objects into a simple, accessible form.
+description: |
+  Turns an array/object of objects into a simple, accessible form.
 created: 2023-02-24 16:49:49
 lastUpdated: 2023-08-19 17:01:20
+updated: 2023-12-30 17:01:41
 ---
 
 The `uib-element` node, set to the "Simple Form" type, outputs a simple but accessible Form with inputs and buttons. Most HTML features of inputs and forms are supported.

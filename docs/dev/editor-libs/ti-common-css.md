@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER's Common Node-RED Editor style library
-description: >
+description: |
   Provides common, standard, styling to all UIBUILDER nodes in the Node-RED Editor.
 created: 2023-12-19 16:22:27
 lastUpdated: 2023-12-19 16:22:32
+updated: 2023-12-30 17:01:42
 ---
 
 Location: `/resources/ti-common.css`

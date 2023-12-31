@@ -1,9 +1,10 @@
 ---
 title: Avoiding build steps for front-end development
-description: >
+description: |
   What ways are there to avoid having a build step (transpile, compile) when developing front-end code?
 created: 2022-02-15 15:27:05
 lastUpdated: 2022-02-15 16:25:08
+updated: 2023-12-30 17:01:41
 ---
 
 A build step is simply a way to take things that your browser wont understand directly (like .vue, .jsx files)
