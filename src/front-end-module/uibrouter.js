@@ -73,6 +73,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         // Save the config
         this.config = routerConfig
+        // If no default set in config, set to the first entry
+        if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id) this.config.defaultRoute = this.config.routes[0].id
         // Create/access the route container element, sets this.routeContainerEl
         this._setRouteContainer()
 
@@ -225,6 +227,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
      */
     doRoute(routeSource) {
+        if (!routeSource) routeSource = this.config.defaultRoute
+
         const container = this.routeContainerEl
         if (!container) throw new Error('[uibrouter:doRoute] Cannot route, has router.setup() been called yet?')
 

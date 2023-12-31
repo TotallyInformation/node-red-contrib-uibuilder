@@ -8,7 +8,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Fix
 
-* uib router - if no routerConfig.defaultRoute set, use the first (zeroth) defined route.
 * `uib-save` import - initial deployment does not connect to node - need to clear the entry & mark as invalid. Also, no url = invalid
 
 * To reproduce: [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/4)
@@ -22,7 +21,7 @@ Please see the documentation for archived changelogs - a new archive is produced
   The editor complains that the node still isn't configured correctly. Deploy anyway.
   Second observation: The uibuilder node still shows the red triangle - which is definitely unexpected now. Node status displays "Node Initialised" @ blue.
 
-* Looks like it's validateVersion that triggers this red triangle.. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/7?u=totallyinformation)
+  Looks like it's validateVersion that triggers this red triangle.. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/7?u=totallyinformation)
 
 ## To Do
 
@@ -32,8 +31,8 @@ Please see the documentation for archived changelogs - a new archive is produced
   * Add client msg filter for URL Hash.
 
 * Examples
-  * update the `remote-commands` example
-  * Add/update the `text updates` example
+  * update the remote-commands example
+  * Add a "FE Router Test" example
   * Add new low-code example
   * Add example save current page to file
 
@@ -61,7 +60,6 @@ Docs
     * [ ] Document new managed var: `globalMsg`.
 
 * uib-router
-  * [ ] if no routerConfig.defaultRoute set, use the first (zeroth) defined route.
   * add `rotate` method to auto-rotate through routes. Needs ms and stop/start args.
   * Add 1st show marker to route change to allow client to ask for cache update
   * Update example
@@ -109,7 +107,10 @@ Docs
 
 ### 📌 Highlights
 
-* The `uibrouter` library gets some serious updates in this version. Including automatic menu updates (to highlight the current route) and new uibuilder variables to use with `<uib-var>` to show titles and descriptions that update automatically.
+* The `uibrouter` library gets some serious updates in this version. Including:
+
+  * Automatic menu updates (to highlight the current route) and new uibuilder variables to use with `<uib-var>` to show titles and descriptions that update automatically.
+  * A fix for a missing default route - the first defined route is used in this case.
 
 * The `<uib-var>` HTML component gets
 
@@ -127,6 +128,8 @@ Docs
   * A new `scrollTo` function and command. Scrolls the visible page to a specific location either from front-end JavaScript or via a command message in Node-RED.
   * New UI functions `addClass(classNames, el)` and `removeClass(classNames, el)` to make class handling easier.
   * New `connect()` and `disconnect()` functions to manually connect/disconnect the Socket.IO connections.
+
+* The importable example flows have been re-organised for easier access. Some new examples added: "Text Update - Different Methods", "FE Router Test"
 
 * No-code and low-code features now all allow more flexible class handling (add, remove, and replace using lists). HTML element data outputs also now return an array of class names, not just a combined string.
 * Front-end commands issued from Node-RED can now take a `quiet` option set to `true` to prevent the return message. e.g. `{"_uib": {"command":"navigate","prop":"#newroute","quiet":true}}`
@@ -194,6 +197,7 @@ Docs
 ### `uibrouter` library
 
 * **FIXED** [Issue #232](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/232) - Ensure origin script is removed after re-applying to ensure only 1 instance shows instead of 2.
+* **FIXED** - If no routerConfig.defaultRoute set, now uses the first (zeroth) defined route.
 * Version bumped to v1.0.1
 * **NEW** uibuilder managed variables added to make it easier to use with `<uib-var>`. [`uibrouter_CurrentRoute`, `uibrouter_CurrentTitle`, `uibrouter_CurrentDescription`, `uibrouter_CurrentDetails`]. These are automatically updated whenever a route change occurs.
 * **NEW Functions** - `routeTitle`, `routeDescription` - return the current route's title and description properties if set or the ID if not.
@@ -225,11 +229,17 @@ Docs
 * Added `ui.checklist` with `--base-margin` left/right margins and a little more space for the check bullets.
 * Added basic nav menu formatting using `nav` tag. Including basic horizontal menu (`nav.horizontal` class) formatting. Assumes list embedded in a nav tag and that the list has correct aria roles set.
 
+### Examples (import flows from Node-RED library)
+
+* Re-organised & renamed examples now there are more of them.
+* **NEW** - "Text Update - Different Methods" example
+
 ### Documentation
 
 * Heading levels 3+ have been made lighter to better differentiate them visually.
 * The front-end client functions page now has an alphabetical list of functions.
 * Improved low-code documentation for the `notify` and `alert` methods.
+* Restructured config files for better future updates. Fixed some niggles.
 
 ## Other
 

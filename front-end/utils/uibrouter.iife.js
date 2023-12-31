@@ -54,6 +54,8 @@
       if (!routerConfig2.routeContainer)
         routerConfig2.routeContainer = "#uibroutecontainer";
       this.config = routerConfig2;
+      if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id)
+        this.config.defaultRoute = this.config.routes[0].id;
       this._setRouteContainer();
       this._updateRouteIds();
       Promise.all(Object.values(routerConfig2.routes).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then(this._appendExternalTemplates).then(() => {
@@ -176,6 +178,8 @@
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
      */
     doRoute(routeSource) {
+      if (!routeSource)
+        routeSource = this.config.defaultRoute;
       const container = this.routeContainerEl;
       if (!container)
         throw new Error("[uibrouter:doRoute] Cannot route, has router.setup() been called yet?");
