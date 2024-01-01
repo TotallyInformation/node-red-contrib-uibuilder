@@ -6,11 +6,11 @@ typora-root-url: docs/images
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
-## To Fix
+## Issues
 
-* `uib-save` import - initial deployment does not connect to node - need to clear the entry & mark as invalid. Also, no url = invalid
-
-* To reproduce: [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/4)
+* uibuilder node - Issues if user deploys without entering a url
+  
+  To reproduce: [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/4)
 
   Pull a uibuilder node in a flow.
   Press Deploy.
@@ -25,79 +25,20 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Do
 
-* uibuilder client
-  * Add `formateDate` standard utility fn. [ref](https://discourse.nodered.org/t/format-date-at-yyyydd-hh-mm-ss/83130/12?u=totallyinformation)
-  * Add uibuilder.tag()
-  * Add client msg filter for URL Hash.
-
 * Examples
   * update the remote-commands example
   * Add a "FE Router Test" example
   * Add new low-code example
   * Add example save current page to file
 
+* uibuilder client
+  * Add `formateDate` standard utility fn. [ref](https://discourse.nodered.org/t/format-date-at-yyyydd-hh-mm-ss/83130/12?u=totallyinformation)
+  * Add uibuilder.tag()
+  * Add client msg filter for URL Hash.
+
 Docs
   * Update docs for ctrl msgs and msg._uib return data to say that anything set via the socket.io auth can only update when the client reconnects. 
   * document clientTimeDifference
-
-* Socket.IO rooms. [ref](https://socket.io/docs/v4/rooms/) - Rooms can be used to filter messages for specific destinations (e.g. client or page id) or to create client-to-client comms.
-  * Need a way to join rooms from Node-RED
-  * socket.js
-    * [x] Auto-join `clientId:xxxxxxx` & `pageName:xxxxxxx` rooms
-    * [x] socket.on uib-room-join/-leave-send
-    * [ ] Change send functions to use rooms where clientId/pageName is specified in `msg._uib`
-    * [ ] `socket.on('uib-room-send', ...)` Add option to also send a uibuilder msg.
-    * [ ] Incorporate `msg._uib.roomId` for sending to custom rooms
-    * [ ] ? Allow sending to different uib namespaces? would likely need an option flag for security?
-    * [ ] Allow global as well as NS rooms - allow sending between different uib connected clients. 
-          [ref](https://socket.io/docs/v4/socket-io-protocol/#introduction) - `this.io.of('/').emit('uibuilder:global', 'Hello from the server. NS: "/"')`
-    * [ ] Remove console.log from addNs
-  * client
-    * [x] joinRoom, leaveRoom, sendRoom - allows clients to join/leave/message any arbitrary room
-    * [x] Add additional listener for the default (global) namespace
-    * [ ] Add `globalSend` function
-    * [ ] Add listener when joining a room, remove when leaving
-    * [ ] Document new managed var: `globalMsg`.
-
-* uib-router
-  * add `rotate` method to auto-rotate through routes. Needs ms and stop/start args.
-  * Add 1st show marker to route change to allow client to ask for cache update
-  * Update example
-  * Make this.config.routes a SET to prevent duplicates. Or possibly an object. Needs some code changes.
-  * Methods needed:
-    * Delete route - need to update routeIds
-    * Update/reload route
-    * shutdown - that removes all elements
-    * delete templates - unloads a list of (or all) templates
-    * reload templates - to facilitate updates of a list of (or all) templates
-    * auto-rotation of routes - uib..navigate(nextRoute)
-    * next/prev route navigation
-  * Additional options:
-    * Add pre-load option early load of all routes instead of default lazy-load.
-    * unload templates after they are added to the route container. Only if hide=true. `unload: true`
-    * Maybe: options to auto-load js and css files with the same name as a template file.
-
-* uibuilder node
-  * Add manual entry field to editor config for a URL scheme to open the instanceRoot folder in an editor new window. Pre-fill with vscode entry for localhost. Partially fill with vscode-remote otherwise (or maybe have a button).
-
-* Incorporate ideas from: https://www.htmhell.dev/adventcalendar/2023/2/
-
-* More flexible low-code class attribute handling.
-  * In ui.js
-    * [ ] Update the low-code schema's with add/remove/replace `classes` property
-    * Update all fns to use the extra property
-  * In nodes - update to allow using array of classes and to have add/remove class arrays
-    * In uib-update
-    * In uib-element
-    * In uib-tag
-
-## Ideas
-
-* `uib-template` - New node to take a msg._ui template input and update parts of it belore sending (e.g. parent, id, ...). `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation)
-* `<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation) - A web component that takes a variable to loop over.
-* Enhance `uib-save` - allow URL to be driven by msg or context (just add new options to select, don't bother with typed input)
-* ??? uib.setAttr(selector, attr, val)? 
-* Consider special variable `managedTags`? where each entry update will automatically update the matching element ID and if the element doesn't yet exist, will watch for it and update as soon as it is added.
 
 ------------
 
@@ -107,11 +48,6 @@ Docs
 
 ### 📌 Highlights
 
-* The `uibrouter` library gets some serious updates in this version. Including:
-
-  * Automatic menu updates (to highlight the current route) and new uibuilder variables to use with `<uib-var>` to show titles and descriptions that update automatically.
-  * A fix for a missing default route - the first defined route is used in this case.
-
 * The `<uib-var>` HTML component gets
 
   * **This is BIG!** - A `topic` attribute (use instead of the `variable` attribute) that automatically watches for messages from Node-RED matching the topic and outputs the payload onto the page. This becomes the _easiest_ way to automatically update the page! It is similar to mustache tags (`{{varname}}`) in frameworks but has the advantage that it is 100% vanilla standard HTML.
@@ -119,6 +55,14 @@ Docs
   * A `filter` attribute that can be used along-side `variable` or `topic` or on its own. The attribute receives the name of a function to run whenever the source data changes. Use for formatting output. A new function `uibuilder.formatNumber` has been added that is compatible, it outputs a formatted version of an input number according to the locale and number of decimal places specified. `<uib-var topic="mytopic" filter="uibuilder.formatNumber(2, 'de-DE')">[...]</uib-var>`. You can, of course, create your own filter functions.
   
   * Access to your `./index.css` style sheet file. This lets output be styled like the rest of your page.
+
+* The `uibrouter` library gets some serious updates in this version. Including:
+
+  * Automatic menu updates (to highlight the current route). Just make sure to use list items (li) for menu items and give them a `data-route="routerid"` attribute (where `routeid` is the actual route id). The `currentRoute` class & `aria-current="page"` attribute are both added to entries matching the current route.
+  * Route definitions now support `title` & `description` properties.
+  * New uibuilder variables to use with `<uib-var>` to show titles and descriptions that update automatically.
+  * A fix for a missing default route - the first defined route is used in this case.
+  * Other small bug fixes and improvements to the logic.
 
 * The client library gets
 
@@ -147,6 +91,7 @@ Docs
 ### `uib-save`
 
 * **FIXED** - usePageName logic.
+* **FIXED** - import - initial deployment does not connect to node - need to clear the entry & mark as invalid. Also, no url = invalid
 * URL (uibuilder instance) drop-down list is now sorted
 * On copy/paste or import, link to uibuilder node is now cleared.
 
@@ -199,10 +144,12 @@ Docs
 * **FIXED** [Issue #232](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/232) - Ensure origin script is removed after re-applying to ensure only 1 instance shows instead of 2.
 * **FIXED** - If no routerConfig.defaultRoute set, now uses the first (zeroth) defined route.
 * Version bumped to v1.0.1
+* **NEW** - Route definitions now support `title` & `description` properties.
 * **NEW** uibuilder managed variables added to make it easier to use with `<uib-var>`. [`uibrouter_CurrentRoute`, `uibrouter_CurrentTitle`, `uibrouter_CurrentDescription`, `uibrouter_CurrentDetails`]. These are automatically updated whenever a route change occurs.
+* **NEW** - `routeIds` variable is a JavaScript `Set` containing the list of unique route IDs.
 * **NEW Functions** - `routeTitle`, `routeDescription` - return the current route's title and description properties if set or the ID if not.
 * **NEW Function** - `currentRoute` - returns the current routes configuration object.
-* **NEW Function** - `setCurrentMenuItems` - Updates any on-page elements matching the selector `li[data-route]` such that any having a data-route attribute matching the current route id have the `currentRoute` class added. It is removed from all other matches. This makes it very easy to highlight the current route in any on-page menu's.
+* **NEW Function** - `setCurrentMenuItems` - Updates any on-page elements matching the selector `li[data-route]` such that any having a data-route attribute matching the current route id have the `currentRoute` class & `aria-current="page"` attribute added. It is removed from all other matches. This makes it very easy to highlight the current route in any on-page menu's.
 
 ### `uib-var` custom web component
 
