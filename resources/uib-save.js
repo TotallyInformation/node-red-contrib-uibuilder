@@ -15,13 +15,14 @@
     const moduleName = 'uib-save'
 
     /** Copy of deployed uibuilder node instances populated by getUrls() */
-    let uibInstances
+    // let uibInstances
+    const uibInstances = uibuilder.editorUibInstances
 
     /** Get all of the currently deployed uibuilder URL's
      * NOTE that the uibuilder.urlsByNodeId cannot be used as that includes disabled nodes/flows
      */
     function getUrls() {
-        uibInstances = uibuilder.getDeployedUrls()
+        // uibInstances = uibuilder.getDeployedUrls()
         Object.keys(uibInstances).forEach( (key, i, arr) => {
             $('#node-input-url').append($('<option>', {
                 value: uibInstances[key],
@@ -42,26 +43,6 @@
 
         // Deal with the url
         getUrls()
-
-        if ( node.uibId in uibInstances ) {
-            // console.log( 'uibuilder node ID is known', node.url, node.uibId)
-            // We know the ID, always look up the latest name
-            const chkUrl = uibInstances[node.uibId]
-            if (chkUrl !== node.url) { // The url for this node changed so force a re-deploy
-                RED.nodes.dirty(true)
-                node.changed = true
-            }
-            node.url = uibInstances[node.uibId]
-        } else if ( Object.values(uibInstances).includes(node.url) ) {
-            // console.log( 'We didnt know the id but we found the url', node.url, node.uibId, Object.keys(uibInstances)[Object.values(uibInstances).indexOf(node.url)])
-            // We didn't know the ID but we know the last url so set the ID - always force a redeploy in this case
-            node.uibId = uibInstances[Object.keys(uibInstances)[Object.values(uibInstances).indexOf(node.url)]]
-            RED.nodes.dirty(true)
-            node.changed = true
-        } else {
-            // console.log( 'Neither id nor url found', node.url, node.uibId)
-            node.valid = false
-        }
 
         $('#node-input-url')
             .on('change', function() {
@@ -98,10 +79,46 @@
         uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
+    /** Validation function for the URL field - Also updates uibId or url if needed - incl blank on import
+     * @param {*} v Value
+     * @param {undefined} opt Enables none-bool returns
+     * @returns {boolean|string} TRUE if the URL is valid
+     */
+    function chkUrl(v, opt) {
+        this.valid = true
+        // @ts-ignore If a new import or paste, blank the url and uibId
+        if (this.addType && this.addType === 'paste/import') {
+            this.url = ''
+            this.uibId = ''
+            this.valid = false
+        } else if ( this.uibId && this.uibId in uibInstances ) {
+            // console.log( 'uibuilder node ID is known', this.url, this.uibId)
+            // We know the ID, always look up the latest name
+            const chkUrl = uibInstances[this.uibId]
+            if (chkUrl !== this.url) { // The url for this node changed so force a re-deploy
+                RED.this.dirty(true)
+                this.changed = true
+            }
+            this.url = uibInstances[this.uibId]
+        } else if ( Object.values(uibInstances).includes(this.url) ) {
+            // console.log( 'We didn't know the id but we found the url', this.url, this.uibId, Object.keys(uibInstances)[Object.values(uibInstances).indexOf(this.url)])
+            // We didn't know the ID but we know the last url so set the ID - always force a redeploy in this case
+            this.uibId = uibInstances[Object.keys(uibInstances)[Object.values(uibInstances).indexOf(this.url)]]
+            RED.nodes.dirty(true)
+            this.changed = true
+        } else {
+            // console.log( 'Neither id nor url found', this.url, this.uibId)
+            this.valid = false
+            RED.nodes.dirty(true)
+            this.changed = true
+        }
+        return this.valid !== false
+    }
+
     // @ts-ignore
     RED.nodes.registerType(moduleName, {
         defaults: {
-            url: { value: '', required: true },
+            url: { value: '', required: true, validate: chkUrl },
             uibId: { value: '' }, // ID of selected uibuilder instance
             folder: { value: 'src', },
             fname: { value: '', },
