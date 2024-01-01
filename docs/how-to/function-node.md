@@ -1,10 +1,10 @@
 ---
 title: Manipulating msg._ui using a Node-RED function node
-description: >
-   How to make changes to msg._ui "manually" in a function node. Particularly useful to be able to make
-   tweaks to the output of the zero-code nodes.
+description: |
+  How to make changes to msg._ui "manually" in a function node. Particularly useful to be able to make tweaks to the output of the zero-code nodes.
 created: 2023-08-23 09:33:45
 lastUpdated: 2023-08-23 11:12:24
+updated: 2023-12-30 17:01:41
 ---
 
 **_TO-DO_**

@@ -193,7 +193,7 @@
  * @property {object=} type Internal. Type of node instance.
  * @property {object=} x Internal
  * @property {object=} y Internal
- * @property {object=} z Internal
+ * @property {object=} z Internal. ID of the flow the node belongs to.
  * @property {object=} wires Internal. The wires attached to this node instance (uid's)
  */
 
@@ -203,6 +203,7 @@
  * @property {string} name Descriptive name, only used by Editor
  * @property {string} topic msg.topic overrides incoming msg.topic
  * @property {string} url The url path (and folder path) to be used by this instance
+ * @property {boolean} urlValid Is the url valid for this node or not?
  * @property {string} oldUrl The PREVIOUS url path (and folder path) after a url rename
  * @property {boolean} fwdInMessages Forward input msgs to output #1?
  * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
@@ -281,6 +282,8 @@
  *
  * @property {string} title Short descriptive title for the instance
  * @property {string} descr Longer description for the instance
+ *
+ * @property {Function} sendToFe Ref to sockets.sendToFe
  */
 
 /** uibConfig - THe module-level `uib` configuration variable

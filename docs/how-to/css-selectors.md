@@ -1,9 +1,10 @@
 ---
 title: CSS Selectors
-description: >
-   How to make use of them with uibuilder and some typical examples.
+description: |
+  How to make use of them with uibuilder and some typical examples.
 created: 2023-04-02 17:34:58
 lastUpdated: 2023-04-02 18:47:50
+updated: 2023-12-30 17:01:41
 ---
 
 [CSS Selectors](https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Selectors) are now the main generic way of selecting one or more specific elements on a web page.

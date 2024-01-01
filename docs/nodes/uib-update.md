@@ -1,9 +1,10 @@
 ---
 title: uib-update - Update the attributes, properties or slot content of an existing element
-description: >
-   Zero-code UI updates from Node-RED flows.
+description: |
+  Zero-code UI updates from Node-RED flows.
 created: 2023-02-05 16:31:39
 lastUpdated: 2023-11-14 20:24:30
+updated: 2023-12-30 17:01:41
 ---
 
 Outputs msg._ui low-code config data that the uibuilder client library can turn into full HTML. (Same format as the `uib-element` node)

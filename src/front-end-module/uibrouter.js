@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // @ts-nocheck
 /** A simple, vanilla JavaScript front-end router class
  * Included in node-red-contrib-uibuilder but is not dependent on it.
@@ -19,25 +20,14 @@
  * limitations under the License.
  */
 
-/** ---------------------------------------------------------------------
- * TODO
- * Methods needed:
- *   Delete route
- *   Update/reload route
- *   shutdown - that removes all elements
- *   delete templates - unloads a list of (or all) templates
- *   reload templates - to facilitate updates of a list of (or all) templates
- * Additional options:
- *   unload templates after they are added to the route container. Only if hide=true. `unload: true`
- *   Maybe: options to auto-load js and css files with the same name as a template file.
- * ---------------------------------------------------------------------  */
-
 /** Type definitions
- * routeConfig
+ * routeDefinition
  * @typedef {object} routeDefinition Single route configuration
  * @property {string} id REQUIRED. Route ID
  * @property {string} src REQUIRED. CSS Selector for template tag routes, url for external routes
  * @property {"url"|undefined} [type] OPTIONAL. "url" for external routes
+ * @property {string} [title] OPTIONAL. Text to use as a short title for the route
+ * @property {string} [description] OPTIONAL. Text to use as a long description for the route
  * UibRouterConfig
  * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
  * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
@@ -50,7 +40,7 @@
 class UibRouter { // eslint-disable-line no-unused-vars
     //#region --- Variables ---
     /** Class version */
-    static version = '1.0.0'
+    static version = '1.0.1'
 
     /** Configuration settings @type {UibRouterConfig} */
     config
@@ -60,6 +50,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
     currentRouteId
     /** The previous route id after doRoute() has been called */
     previousRouteId
+    /** Array of route ID's (created in constructor) */
+    routeIds = []
 
     /** Internal only. Set to true when the _start() method has been called */
     #startDone = false
@@ -81,12 +73,16 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         // Save the config
         this.config = routerConfig
+        // If no default set in config, set to the first entry
+        if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id) this.config.defaultRoute = this.config.routes[0].id
         // Create/access the route container element, sets this.routeContainerEl
         this._setRouteContainer()
 
+        this._updateRouteIds()
+
         // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
         // Note that final `then` is called even if no external routes are given
-        Promise.all(Object.values(routerConfig.routes).filter(r => r.type === 'url').map(this._loadExternal)) // eslint-disable-line promise/catch-or-return
+        Promise.all(Object.values(routerConfig.routes).filter(r => r.type && r.type === 'url').map(this._loadExternal)) // eslint-disable-line promise/catch-or-return
             .then(this._appendExternalTemplates)
             .then( () => { // eslint-disable-line promise/always-return
                 // Everything is loaded so we can start
@@ -214,11 +210,16 @@ class UibRouter { // eslint-disable-line no-unused-vars
     _applyScripts(tempContainer) {
         const scripts = tempContainer.querySelectorAll('script')
         scripts.forEach( scr => {
-            if (scr.parentElement) scr.parentElement.removeChild(scr)
             const newScript = document.createElement('script')
             newScript.textContent = scr.innerText
             tempContainer.append(newScript)
+            scr.remove() // remove the origin
         })
+    }
+
+    /** Update this.routeIds array from this.config (on start and after add/remove routes) */
+    _updateRouteIds() {
+        this.routeIds = new Set(Object.values(routerConfig.routes).map( r => r.id ))
     }
     //#endregion --- ----- --
 
@@ -226,6 +227,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
      */
     doRoute(routeSource) {
+        if (!routeSource) routeSource = this.config.defaultRoute
+
         const container = this.routeContainerEl
         if (!container) throw new Error('[uibrouter:doRoute] Cannot route, has router.setup() been called yet?')
 
@@ -270,7 +273,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         let routeShown = false
 
         // If no defined valid route, undo and throw error
-        if (!newRouteId || !this.routeList().includes(newRouteId)) {
+        if (!newRouteId || !this.routeIds.has(newRouteId)) {
             // Events on route change fail ...
             document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
             if (uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
@@ -322,9 +325,18 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // Record the current route on the route container
         container.dataset.currentRoute = newRouteId
 
+        // Update any existing HTML menu items
+        this.setCurrentMenuItems()
+
         // Events on route changed ...
         document.dispatchEvent(new CustomEvent('uibrouter:route-changed', { detail: { newRouteId, oldRouteId } }))
-        if (uibuilder) uibuilder.set('uibrouter', 'route changed') // eslint-disable-line no-undef
+        if (uibuilder) {
+            uibuilder.set('uibrouter', 'route changed')
+            uibuilder.set('uibrouter_CurrentRoute', newRouteId)
+            uibuilder.set('uibrouter_CurrentTitle', this.routeTitle())
+            uibuilder.set('uibrouter_CurrentDescription', this.routeDescription())
+            uibuilder.set('uibrouter_CurrentDetails', this.getRouteConfigById(newRouteId))
+        }
     }
 
     /** Return a route config given a route id (returns undefined if route not found)
@@ -350,6 +362,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         if (this.config.defaultRoute) this.doRoute(this.config.defaultRoute)
     }
 
+    /** Remove the hash from the browser URL */
     removeHash() {
         history.pushState('', document.title, window.location.pathname + window.location.search)
     }
@@ -374,26 +387,59 @@ class UibRouter { // eslint-disable-line no-unused-vars
      * @returns {string[]} Array of route id's or route url hashes
      */
     routeList(returnHash) {
-        return Object.values(this.config.routes).map((r) => returnHash === true ? `#${r.id}` : r.id)
+        if (returnHash === true) return this.routeIds.map((r) => returnHash === true ? `#${r.id}` : r.id)
+        return this.routeIds
     }
 
     /** Add new route definitions to the existing ones
-     * @param {routeDefinition|routeDefinition[]} routeConfig Single or array of route definitions to add
+     * @param {routeDefinition|routeDefinition[]} routeDefn Single or array of route definitions to add
      */
-    addRoutes(routeConfig) {
-        if (!Array.isArray(routeConfig)) routeConfig = [routeConfig]
+    addRoutes(routeDefn) {
+        if (!Array.isArray(routeDefn)) routeDefn = [routeDefn]
         // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
         // Note that final `then` is called even if no external routes are given
-        Promise.all(Object.values(routeConfig).filter(r => r.type === 'url').map(this._loadExternal)) // eslint-disable-line promise/catch-or-return
+        Promise.all(Object.values(routeDefn).filter(r => r.type && r.type === 'url').map(this._loadExternal)) // eslint-disable-line promise/catch-or-return
             .then(this._appendExternalTemplates)
             .then( () => { // eslint-disable-line promise/always-return
                 // Everything is loaded - Add new routes to config
-                this.config.routes.push(...routeConfig)
+                this.config.routes.push(...routeDefn)
+                // and update the routeIds list
+                this._updateRouteIds()
                 // Let everyone know it all finished
-                document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeConfig }))
+                document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn }))
                 if (uibuilder) uibuilder.set('uibrouter', 'routes added') // eslint-disable-line no-undef, promise/always-return
             } )
     }
+
+    //#region --- utils for page display & processing ---
+    setCurrentMenuItems() {
+        // const items = document.querySelectorAll(`li[data-route="${this.currentRouteId}"]`)
+        const items = document.querySelectorAll('li[data-route]')
+        items.forEach( item => {
+            if (item.dataset.route === this.currentRouteId) {
+                item.classList.add('currentRoute')
+                item.setAttribute('aria-current', 'page')
+            } else {
+                item.classList.remove('currentRoute')
+                item.removeAttribute('aria-current')
+            }
+        })
+    }
+
+    routeTitle() {
+        const thisRoute = this.currentRoute() || {}
+        return thisRoute.title || thisRoute.id || '[ROUTE NOT FOUND]'
+    }
+
+    routeDescription() {
+        const thisRoute = this.currentRoute() || {}
+        return thisRoute.description || thisRoute.id || '[ROUTE NOT FOUND]'
+    }
+
+    currentRoute() {
+        return this.getRouteConfigById(this.currentRouteId)
+    }
+    //#endregion ---- ----- ----
 
     // TODO
     // deleteRoutes(aRoutes) {

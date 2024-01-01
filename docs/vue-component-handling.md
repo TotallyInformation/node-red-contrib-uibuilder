@@ -1,10 +1,10 @@
 ---
 title: Special VueJS component handling in uibuilderfe
-description: >
-   For a while, VueJS along with bootstrap-vue were the default frameworks supplied with uibuilder.
-   As such, a few extra handlers were build into the uibuilderfe library. This page describes those features.
+description: |
+  For a while, VueJS along with bootstrap-vue were the default frameworks supplied with uibuilder. As such, a few extra handlers were build into the uibuilderfe library. This page describes those features.
 created: 2020-12-11 16:38:00
 lastUpdated: 2023-09-30 13:10:18
+updated: 2023-12-30 17:01:41
 ---
 
 Note that these do not impact the use of uibuilder with other (or no) frameworks and in those cases, the extra features will do nothing and won't get in the way.

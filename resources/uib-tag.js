@@ -146,10 +146,10 @@
             position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true) },
             positionSourceType: { value: 'str' },
 
-            slotSourceProp: { value: '' },
+            slotSourceProp: { value: '', validate: () => true }, // allow anything including blank
             slotSourcePropType: { value: 'msg' },
 
-            attribsSource: { value: '' },
+            attribsSource: { value: '', validate: () => true },
             attribsSourceType: { value: 'msg' },
 
             slotPropMarkdown: { value: false },

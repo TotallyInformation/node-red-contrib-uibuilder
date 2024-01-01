@@ -1,5 +1,5 @@
 const Ui = class Ui2 {
-  version = "6.6.0-node";
+  version = "6.8.0-node";
   // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
   sanitiseExtraTags = ["uib-var"];
   sanitiseExtraAttribs = ["variable", "report", "undefined"];
@@ -35,210 +35,7 @@ const Ui = class Ui2 {
       this.syntaxHighlight = function() {
       };
   }
-  /** Directly manage UI via JSON
-   * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
-   */
-  ui(json) {
-    let msg = {};
-    if (json._ui)
-      msg = json;
-    else
-      msg._ui = json;
-    this._uiManager(msg);
-  }
-  // TODO Add multi-slot
-  /** Replace or add an HTML element's slot from text or an HTML string
-   * Will use DOMPurify if that library has been loaded to window.
-   * param {*} ui Single entry from the msg._ui property
-   * @param {Element} el Reference to the element that we want to update
-   * @param {*} component The component we are trying to add/replace
-   */
-  replaceSlot(el, component) {
-    if (!component.slot)
-      return;
-    if (!el)
-      return;
-    if (this.window["DOMPurify"])
-      component.slot = this.window["DOMPurify"].sanitize(component.slot);
-    el.innerHTML = component.slot;
-  }
-  /** Converts markdown text input to HTML if the Markdown-IT library is loaded
-   * Otherwise simply returns the text
-   * @param {string} mdText The input markdown string
-   * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
-   */
-  convertMarkdown(mdText) {
-    if (!mdText)
-      return "";
-    if (!this.window["markdownit"])
-      return mdText;
-    const opts = {
-      // eslint-disable-line object-shorthand
-      html: true,
-      linkify: true,
-      _highlight: true,
-      langPrefix: "language-",
-      highlight(str, lang) {
-        if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
-          try {
-            return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
-          } finally {
-          }
-        }
-        return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-      }
-    };
-    const md = this.window["markdownit"](opts);
-    return md.render(mdText);
-  }
-  /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
-   * Otherwise just returns that HTML as-is.
-   * @param {string} html The input HTML string
-   * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
-   */
-  sanitiseHTML(html) {
-    if (!this.window["DOMPurify"])
-      return html;
-    return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
-  }
-  /** Replace or add an HTML element's slot from a Markdown string
-   * Only does something if the markdownit library has been loaded to window.
-   * Will use DOMPurify if that library has been loaded to window.
-   * @param {Element} el Reference to the element that we want to update
-   * @param {*} component The component we are trying to add/replace
-   */
-  replaceSlotMarkdown(el, component) {
-    if (!el)
-      return;
-    if (!component.slotMarkdown)
-      return;
-    component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
-    component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
-    el.innerHTML = component.slotMarkdown;
-  }
-  /** Attach a new remote script to the end of HEAD synchronously
-   * NOTE: It takes too long for most scripts to finish loading
-   *       so this is pretty useless to work with the dynamic UI features directly.
-   * @param {string} url The url to be used in the script src attribute
-   */
-  loadScriptSrc(url) {
-    const newScript = this.document.createElement("script");
-    newScript.src = url;
-    newScript.async = false;
-    this.document.head.appendChild(newScript);
-  }
-  /** Attach a new remote stylesheet link to the end of HEAD synchronously
-   * NOTE: It takes too long for most scripts to finish loading
-   *       so this is pretty useless to work with the dynamic UI features directly.
-   * @param {string} url The url to be used in the style link href attribute
-   */
-  loadStyleSrc(url) {
-    const newStyle = this.document.createElement("link");
-    newStyle.href = url;
-    newStyle.rel = "stylesheet";
-    newStyle.type = "text/css";
-    this.document.head.appendChild(newStyle);
-  }
-  /** Attach a new text script to the end of HEAD synchronously
-   * NOTE: It takes too long for most scripts to finish loading
-   *       so this is pretty useless to work with the dynamic UI features directly.
-   * @param {string} textFn The text to be loaded as a script
-   */
-  loadScriptTxt(textFn) {
-    const newScript = this.document.createElement("script");
-    newScript.async = false;
-    newScript.textContent = textFn;
-    this.document.head.appendChild(newScript);
-  }
-  /** Attach a new text stylesheet to the end of HEAD synchronously
-   * NOTE: It takes too long for most scripts to finish loading
-   *       so this is pretty useless to work with the dynamic UI features directly.
-   * @param {string} textFn The text to be loaded as a stylesheet
-   */
-  loadStyleTxt(textFn) {
-    const newStyle = this.document.createElement("style");
-    newStyle.textContent = textFn;
-    this.document.head.appendChild(newStyle);
-  }
-  /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
-   * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
-   *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
-   *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-   * @param {"notify"|"alert"} type Dialog type
-   * @param {object} ui standardised ui data
-   * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
-   * @returns {void}
-   */
-  showDialog(type, ui, msg) {
-    let content = "";
-    if (msg.payload && typeof msg.payload === "string")
-      content += msg.payload;
-    if (ui.content)
-      content += ui.content;
-    if (content === "") {
-      Ui2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
-      return;
-    }
-    if (!ui.title && msg.topic)
-      ui.title = msg.topic;
-    if (ui.title)
-      content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
-    if (ui.noAutohide)
-      ui.noAutoHide = ui.noAutohide;
-    if (ui.noAutoHide)
-      ui.autohide = !ui.noAutoHide;
-    if (ui.autoHideDelay) {
-      if (!ui.autohide)
-        ui.autohide = true;
-      ui.delay = ui.autoHideDelay;
-    } else
-      ui.autoHideDelay = 1e4;
-    if (!Object.prototype.hasOwnProperty.call(ui, "autohide"))
-      ui.autohide = true;
-    if (type === "alert") {
-      ui.modal = true;
-      ui.autohide = false;
-      content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
-    }
-    let toaster = this.document.getElementById("toaster");
-    if (toaster === null) {
-      toaster = this.document.createElement("div");
-      toaster.id = "toaster";
-      toaster.title = "Click to clear all notifcations";
-      toaster.setAttribute("class", "toaster");
-      toaster.setAttribute("role", "dialog");
-      toaster.setAttribute("arial-label", "Toast message");
-      toaster.onclick = function() {
-        toaster.remove();
-      };
-      this.document.body.insertAdjacentElement("afterbegin", toaster);
-    }
-    const toast = this.document.createElement("div");
-    toast.title = "Click to clear this notifcation";
-    toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
-    toast.innerHTML = content;
-    toast.setAttribute("role", "alertdialog");
-    if (ui.modal)
-      toast.setAttribute("aria-modal", ui.modal);
-    toast.onclick = function(evt) {
-      evt.stopPropagation();
-      toast.remove();
-      if (toaster.childElementCount < 1)
-        toaster.remove();
-    };
-    if (type === "alert") {
-    }
-    toaster.insertAdjacentElement(ui.appendToast === true ? "beforeend" : "afterbegin", toast);
-    if (ui.autohide === true) {
-      setInterval(() => {
-        toast.remove();
-        if (toaster.childElementCount < 1)
-          toaster.remove();
-      }, ui.autoHideDelay);
-    }
-  }
-  // --- End of showDialog ---
+  //#region ---- Internal Methods ----
   /** Show a browser notification if the browser and the user allows it
    * @param {object} config Notification config data
    * @returns {Promise} Resolves on close or click event, returns the event.
@@ -271,152 +68,6 @@ const Ui = class Ui2 {
     } catch (e) {
       return Promise.reject(new Error("Browser refused to create a Notification"));
     }
-  }
-  /** Show a browser notification if possible. Returns a promise
-   * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
-   * or a Notifications API options object + config.title string.
-   * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
-   * @param {object|string} config Notification config object or simple message string
-   * @returns {Promise} Resolves on close or click event, returns the event.
-   */
-  async notification(config) {
-    if (typeof config === "string") {
-      config = { body: config };
-    }
-    if (typeof Notification === "undefined")
-      return Promise.reject(new Error("Notifications not available in this browser"));
-    let permit = Notification.permission;
-    if (permit === "denied") {
-      return Promise.reject(new Error("Notifications not permitted by user"));
-    } else if (permit === "granted") {
-      return this._showNotification(config);
-    } else {
-      permit = await Notification.requestPermission();
-      if (permit === "granted") {
-        return this._showNotification(config);
-      }
-      return Promise.reject(new Error("Notifications not permitted by user"));
-    }
-  }
-  /** Load a dynamic UI from a JSON web reponse
-   * @param {string} url URL that will return the ui JSON
-   */
-  loadui(url) {
-    if (!fetch) {
-      Ui2.log(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
-      return;
-    }
-    if (!url) {
-      Ui2.log(0, "Ui:loadui", "url parameter must be provided, skipping.")();
-      return;
-    }
-    fetch(url).then((response) => {
-      if (response.ok === false) {
-        throw new Error(`Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`);
-      }
-      Ui2.log("trace", "Ui:loadui:then1", `Loaded '${url}'. Status ${response.status}, ${response.statusText}`)();
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new TypeError(`Fetch '${url}' did not return JSON, ignoring`);
-      }
-      return response.json();
-    }).then((data) => {
-      if (data !== void 0) {
-        Ui2.log("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
-        this._uiManager({ _ui: data });
-        return true;
-      }
-      return false;
-    }).catch((err) => {
-      Ui2.log("warn", "Ui:loadui:catch", "Error. ", err)();
-    });
-  }
-  // --- end of loadui
-  // Namespaces - See https://stackoverflow.com/a/52572048/1309986
-  // const NAMESPACES = {
-  //     svg: 'http://www.w3.org/2000/svg',
-  //     html: 'http://www.w3.org/1999/xhtml',
-  //     xml: 'http://www.w3.org/XML/1998/namespace',
-  //     xlink: 'http://www.w3.org/1999/xlink',
-  //     xmlns: 'http://www.w3.org/2000/xmlns/' // sic for the final slash...
-  // }
-  /** Enhance an HTML element that is being composed with ui data
-   *  such as ID, attribs, event handlers, custom props, etc.
-   * @param {*} el HTML Element to enhance
-   * @param {*} comp Individual uibuilder ui component spec
-   */
-  _uiComposeComponent(el, comp) {
-    if (comp.attributes) {
-      Object.keys(comp.attributes).forEach((attrib) => {
-        if (attrib === "value")
-          el.value = comp.attributes[attrib];
-        if (attrib.startsWith("xlink:"))
-          el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
-        else
-          el.setAttribute(attrib, comp.attributes[attrib]);
-      });
-    }
-    if (comp.id)
-      el.setAttribute("id", comp.id);
-    if (comp.type === "svg") {
-      el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
-      el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
-    }
-    if (comp.events) {
-      Object.keys(comp.events).forEach((type) => {
-        if (type.toLowerCase === "onclick")
-          type = "click";
-        try {
-          el.addEventListener(type, (evt) => {
-            new Function("evt", `${comp.events[type]}(evt)`)(evt);
-          });
-        } catch (err) {
-          Ui2.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
-        }
-      });
-    }
-    if (comp.properties) {
-      Object.keys(comp.properties).forEach((prop) => {
-        el[prop] = comp.properties[prop];
-      });
-    }
-    if (comp.slot) {
-      this.replaceSlot(el, comp);
-    }
-    if (comp.slotMarkdown) {
-      this.replaceSlotMarkdown(el, comp);
-    }
-  }
-  uiEnhanceElement(el, comp) {
-    this._uiComposeComponent(el, comp);
-  }
-  /** Extend an HTML Element with appended elements using ui components
-   * NOTE: This fn follows a strict hierarchy of added components.
-   * @param {HTMLElement} parentEl The parent HTML Element we want to append to
-   * @param {*} components The ui component(s) we want to add
-   * @param {string} [ns] Optional. The namespace to use.
-   */
-  _uiExtendEl(parentEl, components, ns = "") {
-    components.forEach((compToAdd, i) => {
-      Ui2.log("trace", `Ui:_uiExtendEl:components-forEach:${i}`, compToAdd)();
-      let newEl;
-      compToAdd.ns = ns;
-      if (compToAdd.ns === "html") {
-        newEl = parentEl;
-        parentEl.innerHTML = compToAdd.slot;
-      } else if (compToAdd.ns === "svg") {
-        newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
-        this._uiComposeComponent(newEl, compToAdd);
-        parentEl.appendChild(newEl);
-      } else {
-        newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
-        this._uiComposeComponent(newEl, compToAdd);
-        parentEl.appendChild(newEl);
-      }
-      if (compToAdd.components) {
-        this._uiExtendEl(newEl, compToAdd.components, compToAdd.ns);
-      }
-    });
   }
   // Vue dynamic inserts Don't really work ...
   // _uiAddVue(ui, isRecurse) {
@@ -493,6 +144,188 @@ const Ui = class Ui2 {
     });
   }
   // --- end of _uiAdd ---
+  /** Enhance an HTML element that is being composed with ui data
+   *  such as ID, attribs, event handlers, custom props, etc.
+   * @param {*} el HTML Element to enhance
+   * @param {*} comp Individual uibuilder ui component spec
+   */
+  _uiComposeComponent(el, comp) {
+    if (comp.attributes) {
+      Object.keys(comp.attributes).forEach((attrib) => {
+        if (attrib === "class" && Array.isArray(comp.attributes[attrib]))
+          comp.attributes[attrib].join(" ");
+        if (attrib === "value")
+          el.value = comp.attributes[attrib];
+        if (attrib.startsWith("xlink:"))
+          el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
+        else
+          el.setAttribute(attrib, comp.attributes[attrib]);
+      });
+    }
+    if (comp.id)
+      el.setAttribute("id", comp.id);
+    if (comp.type === "svg") {
+      el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
+      el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+    }
+    if (comp.events) {
+      Object.keys(comp.events).forEach((type) => {
+        if (type.toLowerCase === "onclick")
+          type = "click";
+        try {
+          el.addEventListener(type, (evt) => {
+            new Function("evt", `${comp.events[type]}(evt)`)(evt);
+          });
+        } catch (err) {
+          Ui2.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+        }
+      });
+    }
+    if (comp.properties) {
+      Object.keys(comp.properties).forEach((prop) => {
+        el[prop] = comp.properties[prop];
+      });
+    }
+    if (comp.slot) {
+      this.replaceSlot(el, comp);
+    }
+    if (comp.slotMarkdown) {
+      this.replaceSlotMarkdown(el, comp);
+    }
+  }
+  /** Extend an HTML Element with appended elements using ui components
+   * NOTE: This fn follows a strict hierarchy of added components.
+   * @param {HTMLElement} parentEl The parent HTML Element we want to append to
+   * @param {*} components The ui component(s) we want to add
+   * @param {string} [ns] Optional. The namespace to use.
+   */
+  _uiExtendEl(parentEl, components, ns = "") {
+    components.forEach((compToAdd, i) => {
+      Ui2.log("trace", `Ui:_uiExtendEl:components-forEach:${i}`, compToAdd)();
+      let newEl;
+      compToAdd.ns = ns;
+      if (compToAdd.ns === "html") {
+        newEl = parentEl;
+        parentEl.innerHTML = compToAdd.slot;
+      } else if (compToAdd.ns === "svg") {
+        newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
+        this._uiComposeComponent(newEl, compToAdd);
+        parentEl.appendChild(newEl);
+      } else {
+        newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+        this._uiComposeComponent(newEl, compToAdd);
+        parentEl.appendChild(newEl);
+      }
+      if (compToAdd.components) {
+        this._uiExtendEl(newEl, compToAdd.components, compToAdd.ns);
+      }
+    });
+  }
+  // TODO Add more error handling and parameter validation
+  /** Handle incoming _ui load requests
+   * Can load JavaScript modules, JavaScript scripts and CSS.
+   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+   */
+  _uiLoad(ui) {
+    if (ui.components) {
+      if (!Array.isArray(ui.components))
+        ui.components = [ui.components];
+      ui.components.forEach(async (component) => {
+        await import(component);
+      });
+    }
+    if (ui.srcScripts) {
+      if (!Array.isArray(ui.srcScripts))
+        ui.srcScripts = [ui.srcScripts];
+      ui.srcScripts.forEach((script) => {
+        this.loadScriptSrc(script);
+      });
+    }
+    if (ui.txtScripts) {
+      if (!Array.isArray(ui.txtScripts))
+        ui.txtScripts = [ui.txtScripts];
+      this.loadScriptTxt(ui.txtScripts.join("\n"));
+    }
+    if (ui.srcStyles) {
+      if (!Array.isArray(ui.srcStyles))
+        ui.srcStyles = [ui.srcStyles];
+      ui.srcStyles.forEach((sheet) => {
+        this.loadStyleSrc(sheet);
+      });
+    }
+    if (ui.txtStyles) {
+      if (!Array.isArray(ui.txtStyles))
+        ui.txtStyles = [ui.txtStyles];
+      this.loadStyleTxt(ui.txtStyles.join("\n"));
+    }
+  }
+  // --- end of _uiLoad ---
+  /** Handle incoming _ui messages and loaded UI JSON files
+   * Called from start()
+   * @param {*} msg Standardised msg object containing a _ui property object
+   */
+  _uiManager(msg) {
+    if (!msg._ui)
+      return;
+    if (!Array.isArray(msg._ui))
+      msg._ui = [msg._ui];
+    msg._ui.forEach((ui, i) => {
+      if (!ui.method) {
+        Ui2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring`)();
+        return;
+      }
+      ui.payload = msg.payload;
+      ui.topic = msg.topic;
+      switch (ui.method) {
+        case "add": {
+          this._uiAdd(ui, false);
+          break;
+        }
+        case "remove": {
+          this._uiRemove(ui, false);
+          break;
+        }
+        case "removeAll": {
+          this._uiRemove(ui, true);
+          break;
+        }
+        case "replace": {
+          this._uiReplace(ui);
+          break;
+        }
+        case "update": {
+          this._uiUpdate(ui);
+          break;
+        }
+        case "load": {
+          this._uiLoad(ui);
+          break;
+        }
+        case "reload": {
+          this._uiReload();
+          break;
+        }
+        case "notify": {
+          this.showDialog("notify", ui, msg);
+          break;
+        }
+        case "alert": {
+          this.showDialog("alert", ui, msg);
+          break;
+        }
+        default: {
+          Ui2.log("error", "Ui:_uiManager", `Invalid msg._ui[${i}].method (${ui.method}). Ignoring`)();
+          break;
+        }
+      }
+    });
+  }
+  // --- end of _uiManager ---
+  /** Handle a reload request */
+  _uiReload() {
+    Ui2.log("trace", "Ui:uiManager:reload", "reloading")();
+    location.reload();
+  }
   // TODO Add better tests for failures (see comments)
   /** Handle incoming _ui remove requests
    * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
@@ -609,233 +442,78 @@ const Ui = class Ui2 {
     });
   }
   // --- end of _uiUpdate ---
-  // TODO Add more error handling and parameter validation
-  /** Handle incoming _ui load requests
-   * Can load JavaScript modules, JavaScript scripts and CSS.
-   * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+  //#endregion ---- -------- ----
+  //#region ---- External Methods ----
+  /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+   * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
+   * If the selected element is a <template>, returns the first child element.
+   * type {HTMLElement}
+   * @param {string} cssSelector A CSS Selector that identifies the element to return
+   * @returns {HTMLElement|null} Selected HTML element or null
    */
-  _uiLoad(ui) {
-    if (ui.components) {
-      if (!Array.isArray(ui.components))
-        ui.components = [ui.components];
-      ui.components.forEach(async (component) => {
-        await import(component);
-      });
+  $(cssSelector) {
+    let el = document.querySelector(cssSelector);
+    if (!el) {
+      Ui2.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
+      return null;
     }
-    if (ui.srcScripts) {
-      if (!Array.isArray(ui.srcScripts))
-        ui.srcScripts = [ui.srcScripts];
-      ui.srcScripts.forEach((script) => {
-        this.loadScriptSrc(script);
-      });
-    }
-    if (ui.txtScripts) {
-      if (!Array.isArray(ui.txtScripts))
-        ui.txtScripts = [ui.txtScripts];
-      this.loadScriptTxt(ui.txtScripts.join("\n"));
-    }
-    if (ui.srcStyles) {
-      if (!Array.isArray(ui.srcStyles))
-        ui.srcStyles = [ui.srcStyles];
-      ui.srcStyles.forEach((sheet) => {
-        this.loadStyleSrc(sheet);
-      });
-    }
-    if (ui.txtStyles) {
-      if (!Array.isArray(ui.txtStyles))
-        ui.txtStyles = [ui.txtStyles];
-      this.loadStyleTxt(ui.txtStyles.join("\n"));
-    }
-  }
-  // --- end of _uiLoad ---
-  /** Handle a reload request */
-  _uiReload() {
-    Ui2.log("trace", "Ui:uiManager:reload", "reloading")();
-    location.reload();
-  }
-  /** Handle incoming _ui messages and loaded UI JSON files
-   * Called from start()
-   * @param {*} msg Standardised msg object containing a _ui property object
-   */
-  _uiManager(msg) {
-    if (!msg._ui)
-      return;
-    if (!Array.isArray(msg._ui))
-      msg._ui = [msg._ui];
-    msg._ui.forEach((ui, i) => {
-      if (!ui.method) {
-        Ui2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring`)();
-        return;
+    if (el.nodeName === "TEMPLATE") {
+      el = el.content.firstElementChild;
+      if (!el) {
+        Ui2.log(0, "Uib:$", `Template selected for CSS selector ${cssSelector} but it is empty`)();
+        return null;
       }
-      ui.payload = msg.payload;
-      ui.topic = msg.topic;
-      switch (ui.method) {
-        case "add": {
-          this._uiAdd(ui, false);
-          break;
-        }
-        case "remove": {
-          this._uiRemove(ui, false);
-          break;
-        }
-        case "removeAll": {
-          this._uiRemove(ui, true);
-          break;
-        }
-        case "replace": {
-          this._uiReplace(ui);
-          break;
-        }
-        case "update": {
-          this._uiUpdate(ui);
-          break;
-        }
-        case "load": {
-          this._uiLoad(ui);
-          break;
-        }
-        case "reload": {
-          this._uiReload();
-          break;
-        }
-        case "notify": {
-          this.showDialog("notify", ui, msg);
-          break;
-        }
-        case "alert": {
-          this.showDialog("alert", ui, msg);
-          break;
-        }
-        default: {
-          Ui2.log("error", "Ui:_uiManager", `Invalid msg._ui[${i}].method (${ui.method}). Ignoring`)();
-          break;
-        }
-      }
-    });
+    }
+    return el;
   }
-  // --- end of _uiManager ---
-  /** Get standard data from a DOM node.
-   * @param {*} node DOM node to examine
-   * @param {string} cssSelector Identify the DOM element to get data from
-   * @returns {object} Standardised data object
+  /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
+   * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
+   * @param {string} cssSelector A CSS Selector that identifies the elements to return
+   * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
    */
-  nodeGet(node, cssSelector) {
-    const thisOut = {
-      id: node.id === "" ? void 0 : node.id,
-      name: node.name,
-      children: node.childNodes.length,
-      type: node.nodeName,
-      attributes: void 0,
-      isUserInput: node.validity ? true : false,
-      // eslint-disable-line no-unneeded-ternary
-      userInput: !node.validity ? void 0 : {
-        // eslint-disable-line multiline-ternary
-        value: node.value,
-        validity: void 0,
-        willValidate: node.willValidate,
-        valueAsDate: node.valueAsDate,
-        valueAsNumber: node.valueAsNumber,
-        type: node.type
+  $$(cssSelector) {
+    return Array.from(document.querySelectorAll(cssSelector));
+  }
+  /** Add 1 or several class names to an element
+   * @param {string|string[]} classNames Single or array of classnames
+   * @param {HTMLElement} el HTML Element to add class(es) to
+   */
+  addClass(classNames, el) {
+    if (!Array.isArray(classNames))
+      classNames = [classNames];
+    if (el)
+      el.classList.add(...classNames);
+  }
+  /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+   * Otherwise simply returns the text
+   * @param {string} mdText The input markdown string
+   * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+   */
+  convertMarkdown(mdText) {
+    if (!mdText)
+      return "";
+    if (!this.window["markdownit"])
+      return mdText;
+    const opts = {
+      // eslint-disable-line object-shorthand
+      html: true,
+      linkify: true,
+      _highlight: true,
+      langPrefix: "language-",
+      highlight(str, lang) {
+        if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
+          try {
+            return `<pre class="highlight" data-language="${lang.toUpperCase()}">
+                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
+          } finally {
+          }
+        }
+        return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
       }
     };
-    if (["UL", "OL"].includes(node.nodeName)) {
-      const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
-      if (listEntries) {
-        thisOut.list = {
-          "entries": listEntries.length
-        };
-      }
-    }
-    if (node.nodeName === "DL") {
-      const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
-      if (listEntries) {
-        thisOut.list = {
-          "entries": listEntries.length
-        };
-      }
-    }
-    if (node.nodeName === "TABLE") {
-      const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
-      const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
-      const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
-      if (bodyEntries || headEntries || cols) {
-        thisOut.table = {
-          "headRows": headEntries ? headEntries.length : 0,
-          "bodyRows": bodyEntries ? bodyEntries.length : 0,
-          "columns": cols ? cols.length : 0
-        };
-      }
-    }
-    if (node.nodeName !== "#text" && node.attributes && node.attributes.length > 0) {
-      thisOut.attributes = {};
-      for (const attrib of node.attributes) {
-        if (attrib.name !== "id") {
-          thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
-        }
-      }
-    }
-    if (node.nodeName === "#text") {
-      thisOut.text = node.textContent;
-    }
-    if (node.validity)
-      thisOut.userInput.validity = {};
-    for (const v in node.validity) {
-      thisOut.userInput.validity[v] = node.validity[v];
-    }
-    return thisOut;
+    const md = this.window["markdownit"](opts);
+    return md.render(mdText);
   }
-  // --- end of nodeGet --- //
-  /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
-   * @param {string} cssSelector Identify the DOM element to get data from
-   * @param {string} [propName] Optional. Specific name of property to get from the element
-   * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
-   */
-  uiGet(cssSelector, propName = null) {
-    const selection = (
-      /** @type {NodeListOf<HTMLInputElement>} */
-      this.document.querySelectorAll(cssSelector)
-    );
-    const out = [];
-    selection.forEach((node) => {
-      if (propName !== null && propName !== "") {
-        let prop = node.getAttribute(propName);
-        if (prop === void 0 || prop === null) {
-          try {
-            prop = node[propName];
-          } catch (error) {
-          }
-        }
-        if (prop === void 0 || prop === null) {
-          if (propName.toLowerCase() === "value")
-            out.push(node.innerText);
-          else
-            out.push(`Property '${propName}' not found`);
-        } else {
-          if (prop.constructor.name === "NamedNodeMap") {
-            const p = {};
-            for (const key of prop) {
-              p[key.name] = prop[key.name].value;
-            }
-            out.push(p);
-          } else if (!prop.constructor.name.toLowerCase().includes("map")) {
-            out.push({
-              [propName]: prop
-            });
-          } else {
-            const p = {};
-            for (const key in prop) {
-              p[key] = prop[key];
-            }
-            out.push(p);
-          }
-        }
-      } else {
-        out.push(this.nodeGet(node, cssSelector));
-      }
-    });
-    return out;
-  }
-  // --- end of uiGet --- //
   /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
    * Wraps the included object in a div tag.
    * PDF's, text or unknown MIME types are also wrapped in an iFrame.
@@ -956,5 +634,388 @@ const Ui = class Ui2 {
     return txtReturn;
   }
   // ---- End of include() ---- //
+  /** Attach a new remote script to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} url The url to be used in the script src attribute
+   */
+  loadScriptSrc(url) {
+    const newScript = this.document.createElement("script");
+    newScript.src = url;
+    newScript.async = false;
+    this.document.head.appendChild(newScript);
+  }
+  /** Attach a new text script to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} textFn The text to be loaded as a script
+   */
+  loadScriptTxt(textFn) {
+    const newScript = this.document.createElement("script");
+    newScript.async = false;
+    newScript.textContent = textFn;
+    this.document.head.appendChild(newScript);
+  }
+  /** Attach a new remote stylesheet link to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} url The url to be used in the style link href attribute
+   */
+  loadStyleSrc(url) {
+    const newStyle = this.document.createElement("link");
+    newStyle.href = url;
+    newStyle.rel = "stylesheet";
+    newStyle.type = "text/css";
+    this.document.head.appendChild(newStyle);
+  }
+  /** Attach a new text stylesheet to the end of HEAD synchronously
+   * NOTE: It takes too long for most scripts to finish loading
+   *       so this is pretty useless to work with the dynamic UI features directly.
+   * @param {string} textFn The text to be loaded as a stylesheet
+   */
+  loadStyleTxt(textFn) {
+    const newStyle = this.document.createElement("style");
+    newStyle.textContent = textFn;
+    this.document.head.appendChild(newStyle);
+  }
+  /** Load a dynamic UI from a JSON web reponse
+   * @param {string} url URL that will return the ui JSON
+   */
+  loadui(url) {
+    if (!fetch) {
+      Ui2.log(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
+      return;
+    }
+    if (!url) {
+      Ui2.log(0, "Ui:loadui", "url parameter must be provided, skipping.")();
+      return;
+    }
+    fetch(url).then((response) => {
+      if (response.ok === false) {
+        throw new Error(`Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`);
+      }
+      Ui2.log("trace", "Ui:loadui:then1", `Loaded '${url}'. Status ${response.status}, ${response.statusText}`)();
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new TypeError(`Fetch '${url}' did not return JSON, ignoring`);
+      }
+      return response.json();
+    }).then((data) => {
+      if (data !== void 0) {
+        Ui2.log("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
+        this._uiManager({ _ui: data });
+        return true;
+      }
+      return false;
+    }).catch((err) => {
+      Ui2.log("warn", "Ui:loadui:catch", "Error. ", err)();
+    });
+  }
+  // --- end of loadui
+  /** Get standard data from a DOM node.
+   * @param {*} node DOM node to examine
+   * @param {string} cssSelector Identify the DOM element to get data from
+   * @returns {object} Standardised data object
+   */
+  nodeGet(node, cssSelector) {
+    const thisOut = {
+      id: node.id === "" ? void 0 : node.id,
+      name: node.name,
+      children: node.childNodes.length,
+      type: node.nodeName,
+      attributes: void 0,
+      isUserInput: node.validity ? true : false,
+      // eslint-disable-line no-unneeded-ternary
+      userInput: !node.validity ? void 0 : {
+        // eslint-disable-line multiline-ternary
+        value: node.value,
+        validity: void 0,
+        willValidate: node.willValidate,
+        valueAsDate: node.valueAsDate,
+        valueAsNumber: node.valueAsNumber,
+        type: node.type
+      }
+    };
+    if (["UL", "OL"].includes(node.nodeName)) {
+      const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
+      if (listEntries) {
+        thisOut.list = {
+          "entries": listEntries.length
+        };
+      }
+    }
+    if (node.nodeName === "DL") {
+      const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
+      if (listEntries) {
+        thisOut.list = {
+          "entries": listEntries.length
+        };
+      }
+    }
+    if (node.nodeName === "TABLE") {
+      const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
+      const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
+      const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+      if (bodyEntries || headEntries || cols) {
+        thisOut.table = {
+          "headRows": headEntries ? headEntries.length : 0,
+          "bodyRows": bodyEntries ? bodyEntries.length : 0,
+          "columns": cols ? cols.length : 0
+        };
+      }
+    }
+    if (node.nodeName !== "#text" && node.attributes && node.attributes.length > 0) {
+      thisOut.attributes = {};
+      for (const attrib of node.attributes) {
+        if (attrib.name !== "id") {
+          thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
+        }
+        if (attrib.name === "class")
+          thisOut.classes = Array.from(node.classList);
+      }
+    }
+    if (node.nodeName === "#text") {
+      thisOut.text = node.textContent;
+    }
+    if (node.validity)
+      thisOut.userInput.validity = {};
+    for (const v in node.validity) {
+      thisOut.userInput.validity[v] = node.validity[v];
+    }
+    return thisOut;
+  }
+  // --- end of nodeGet --- //
+  /** Show a browser notification if possible. Returns a promise
+   * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+   * or a Notifications API options object + config.title string.
+   * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+   * @param {object|string} config Notification config object or simple message string
+   * @returns {Promise} Resolves on close or click event, returns the event.
+   */
+  async notification(config) {
+    if (typeof config === "string") {
+      config = { body: config };
+    }
+    if (typeof Notification === "undefined")
+      return Promise.reject(new Error("Notifications not available in this browser"));
+    let permit = Notification.permission;
+    if (permit === "denied") {
+      return Promise.reject(new Error("Notifications not permitted by user"));
+    } else if (permit === "granted") {
+      return this._showNotification(config);
+    } else {
+      permit = await Notification.requestPermission();
+      if (permit === "granted") {
+        return this._showNotification(config);
+      }
+      return Promise.reject(new Error("Notifications not permitted by user"));
+    }
+  }
+  /** Remove All, 1 or more class names from an element
+   * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
+   * @param {HTMLElement} el HTML Element to add class(es) to
+   */
+  removeClass(classNames, el) {
+    if (!classNames) {
+      el.removeAttribute("class");
+      return;
+    }
+    if (!Array.isArray(classNames))
+      classNames = [classNames];
+    if (el)
+      el.classList.remove(...classNames);
+  }
+  // TODO Add multi-slot
+  /** Replace or add an HTML element's slot from text or an HTML string
+   * Will use DOMPurify if that library has been loaded to window.
+   * param {*} ui Single entry from the msg._ui property
+   * @param {Element} el Reference to the element that we want to update
+   * @param {*} component The component we are trying to add/replace
+   */
+  replaceSlot(el, component) {
+    if (!component.slot)
+      return;
+    if (!el)
+      return;
+    if (this.window["DOMPurify"])
+      component.slot = this.window["DOMPurify"].sanitize(component.slot);
+    el.innerHTML = component.slot;
+  }
+  /** Replace or add an HTML element's slot from a Markdown string
+   * Only does something if the markdownit library has been loaded to window.
+   * Will use DOMPurify if that library has been loaded to window.
+   * @param {Element} el Reference to the element that we want to update
+   * @param {*} component The component we are trying to add/replace
+   */
+  replaceSlotMarkdown(el, component) {
+    if (!el)
+      return;
+    if (!component.slotMarkdown)
+      return;
+    component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
+    component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
+    el.innerHTML = component.slotMarkdown;
+  }
+  /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+   * Otherwise just returns that HTML as-is.
+   * @param {string} html The input HTML string
+   * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+   */
+  sanitiseHTML(html) {
+    if (!this.window["DOMPurify"])
+      return html;
+    return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
+  }
+  /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
+   * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
+   *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
+   *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
+   * @param {"notify"|"alert"} type Dialog type
+   * @param {object} ui standardised ui data
+   * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+   * @returns {void}
+   */
+  showDialog(type, ui, msg) {
+    let content = "";
+    if (msg.payload && typeof msg.payload === "string")
+      content += `<div>${msg.payload}</div>`;
+    if (ui.content)
+      content += `<div>${ui.content}</div>`;
+    if (content === "") {
+      Ui2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
+      return;
+    }
+    if (!ui.title && msg.topic)
+      ui.title = msg.topic;
+    if (ui.title)
+      content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
+    if (ui.noAutohide)
+      ui.noAutoHide = ui.noAutohide;
+    if (ui.noAutoHide)
+      ui.autohide = !ui.noAutoHide;
+    if (ui.autoHideDelay) {
+      if (!ui.autohide)
+        ui.autohide = true;
+      ui.delay = ui.autoHideDelay;
+    } else
+      ui.autoHideDelay = 1e4;
+    if (!Object.prototype.hasOwnProperty.call(ui, "autohide"))
+      ui.autohide = true;
+    if (type === "alert") {
+      ui.modal = true;
+      ui.autohide = false;
+      content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
+    }
+    let toaster = this.document.getElementById("toaster");
+    if (toaster === null) {
+      toaster = this.document.createElement("div");
+      toaster.id = "toaster";
+      toaster.title = "Click to clear all notifcations";
+      toaster.setAttribute("class", "toaster");
+      toaster.setAttribute("role", "dialog");
+      toaster.setAttribute("arial-label", "Toast message");
+      toaster.onclick = function() {
+        toaster.remove();
+      };
+      this.document.body.insertAdjacentElement("afterbegin", toaster);
+    }
+    const toast = this.document.createElement("div");
+    toast.title = "Click to clear this notifcation";
+    toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
+    toast.innerHTML = content;
+    toast.setAttribute("role", "alertdialog");
+    if (ui.modal)
+      toast.setAttribute("aria-modal", ui.modal);
+    toast.onclick = function(evt) {
+      evt.stopPropagation();
+      toast.remove();
+      if (toaster.childElementCount < 1)
+        toaster.remove();
+    };
+    if (type === "alert") {
+    }
+    toaster.insertAdjacentElement(ui.appendToast === true ? "beforeend" : "afterbegin", toast);
+    if (ui.autohide === true) {
+      setInterval(() => {
+        toast.remove();
+        if (toaster.childElementCount < 1)
+          toaster.remove();
+      }, ui.autoHideDelay);
+    }
+  }
+  // --- End of showDialog ---
+  /** Directly manage UI via JSON
+   * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
+   */
+  ui(json) {
+    let msg = {};
+    if (json._ui)
+      msg = json;
+    else
+      msg._ui = json;
+    console.log(this);
+    this._uiManager(msg);
+  }
+  /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
+   * @param {string} cssSelector Identify the DOM element to get data from
+   * @param {string} [propName] Optional. Specific name of property to get from the element
+   * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+   */
+  uiGet(cssSelector, propName = null) {
+    const selection = (
+      /** @type {NodeListOf<HTMLInputElement>} */
+      this.document.querySelectorAll(cssSelector)
+    );
+    const out = [];
+    selection.forEach((node) => {
+      if (propName) {
+        if (propName === "classes")
+          propName = "class";
+        let prop = node.getAttribute(propName);
+        if (prop === void 0 || prop === null) {
+          try {
+            prop = node[propName];
+          } catch (error) {
+          }
+        }
+        if (prop === void 0 || prop === null) {
+          if (propName.toLowerCase() === "value")
+            out.push(node.innerText);
+          else
+            out.push(`Property '${propName}' not found`);
+        } else {
+          const p = {};
+          const cType = prop.constructor.name.toLowerCase();
+          if (cType === "namednodemap") {
+            for (const key of prop) {
+              p[key.name] = prop[key.name].value;
+            }
+          } else if (!cType.includes("map")) {
+            p[propName] = prop;
+          } else {
+            const p2 = {};
+            for (const key in prop) {
+              p2[key] = prop[key];
+            }
+          }
+          if (p.class)
+            p.classes = Array.from(node.classList);
+          out.push(p);
+        }
+      } else {
+        out.push(this.nodeGet(node, cssSelector));
+      }
+    });
+    return out;
+  }
+  // --- end of uiGet --- //
+  /** External alias for _uiComposeComponent
+   * @param {*} el HTML Element to enhance
+   * @param {*} comp Individual uibuilder ui component spec
+   */
+  uiEnhanceElement(el, comp) {
+    this._uiComposeComponent(el, comp);
+  }
+  //#endregion ---- -------- ----
 };
 module.exports = Ui;

@@ -64,8 +64,11 @@
             margin: auto;
             float: none!important;
         }
-        .markdown-section h1, .markdown-section h2, .markdown-section h3, .markdown-section h4, .markdown-section h5 { 
+        .markdown-section h1, .markdown-section h2 { 
             color: var(--sidebar-nav-link-color--active, var(--sidebar-nav-link-color));
+        }
+        .markdown-section h3, .markdown-section h4, .markdown-section h5 { 
+            color: hsl(204 89% 70%);
         }
         .markdown-section h2 { border-bottom-width: thick;}
         .markdown-section h3 { border-bottom-width: thin;}
@@ -118,15 +121,30 @@
             max-width: 100%; 
         } */
     </style>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/main.min.js" type="text/javascript"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/index.min.js" type="text/javascript"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-nginx.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/front-matter.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify-mustache/dist/docsify-mustache.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts/dist/docsify-plugin-flexible-alerts.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+
 </head><body>
     <div id="app">Loading ...</div>
     <script src="https://cdn.jsdelivr.net/npm/docsify-edit-on-github/index.min.js"></script>
     <script>
         'use strict'
         window.$docsify = { //  eslint-disable-line no-undef
+            loadSidebar: '.config/sidebar.md',
             name: 'UIBUILDER Documentation v6',
             repo: 'TotallyInformation/node-red-contrib-uibuilder',
-            coverpage: true,
+            // coverpage: true,
+            coverpage: '.config/coverpage.md',
             onlyCover: false,
             // homepage: 'README.md',
 
@@ -136,7 +154,6 @@
             autoHeader: false,
             logo: '/images/node-lblue-125x125.png',
             auto2top: true,
-            loadSidebar: './-sidebar.md',
             alias: {
                 // Moved pages
                 '/dev/socket-js.*': '/dev/server-libs/socket.md',
@@ -145,9 +162,8 @@
                 '/dev/web-js.*': '/dev/server-libs/web.md',
                 '/dev/uibuilderfe-js.*': '/dev/client-libs/uibuilderfe.md',
                 '/front-end-library.*': '/client-docs/uibuilderfe-library.md',
+                // '/roadmap.*': '/roadmap/readme.md',
 
-                '/.*/_sidebar.md': '/-sidebar.md', // use the same sidebar everywhere. See #301
-                '/.*/-sidebar.md': '/-sidebar.md', // use the same sidebar everywhere. See #301
                 '.*?/changelog': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/CHANGELOG.md',
                 '.*?/uibhome': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/README.md',
                 '/docs/(.*)': '/$1',
@@ -162,7 +178,8 @@
                 crossChapter: true,
                 crossChapterText: true,
             },
-            notFoundPage: true,
+            // notFoundPage: true,
+            notFoundPage: '.config/404.md',
 
             mustache: {
                 noPackage: true,
@@ -223,11 +240,11 @@
                                 yearFrom = mydate.getFullYear()
                             }
 
-                            if ( vm.frontmatter.lastUpdated ) { // uib/IT Stds docs
-                                mydate = new Date(vm.frontmatter.lastUpdated)
-                                yearTo = mydate.getFullYear()
-                            } else if ( vm.frontmatter.updated ) { // Obsidian
+                            if ( vm.frontmatter.updated ) { // Obsidian
                                 mydate = new Date(vm.frontmatter.updated)
+                                yearTo = mydate.getFullYear()
+                            } else if ( vm.frontmatter.lastUpdated ) { // uib/IT Stds docs
+                                mydate = new Date(vm.frontmatter.lastUpdated)
                                 yearTo = mydate.getFullYear()
                             } else if ( vm.frontmatter.Lastmod ) { // Hugo
                                 mydate = new Date(vm.frontmatter.Lastmod)
@@ -262,15 +279,4 @@
             ],
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/main.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/index.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-nginx.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/front-matter.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-mustache/dist/docsify-mustache.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts/dist/docsify-plugin-flexible-alerts.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
 </body></html>

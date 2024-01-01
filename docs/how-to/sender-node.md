@@ -1,9 +1,10 @@
 ---
 title: Using the Sender node
-description: >
-   Describes how and why to use the uib-sender node and how to return messages from your front-end code.
+description: |
+  Describes how and why to use the uib-sender node and how to return messages from your front-end code.
 created: 2021-12-31 15:31:06
 lastUpdated: 2021-12-31 15:31:11
+updated: 2023-12-30 17:01:41
 ---
 
 The sender node was added in uibuilder v5. It provides an easy method of sending messages to your front-end

@@ -1,9 +1,9 @@
 ---
 title: Did You Know?
-description: >
+description: |
   Things you might not know about UIBUILDER.
 created: 2022-11-30 17:35:40
-lastUpdated: 2023-09-30 13:04:46
+updated: 2023-12-30 17:40:33
 ---
 
 * *There is a set of new client (front-end) libraries*

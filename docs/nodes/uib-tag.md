@@ -1,9 +1,10 @@
 ---
 title: uib-tag - Zero-code web UI creation of a single HTML tag
-description: >
-   Create `msg._ui` configuration data that adds a single HTML or web component element (tag) to the browser UI.
+description: |
+  Create `msg._ui` configuration data that adds a single HTML or web component element (tag) to the browser UI.
 created: 2023-08-23 09:30:13
 lastUpdated: 2023-11-10 15:05:05
+updated: 2023-12-30 17:01:41
 ---
 
 *(This document is a work-in-progress, it is not complete)*

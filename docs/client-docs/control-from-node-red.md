@@ -1,20 +1,26 @@
 ---
 title: Controlling UIBUILDER's client from Node-RED
-description: >
-   How to send specially formatted messages from Node-RED to the uibuilder node that
-   get information from the client and control how it works.
+description: |
+  How to send specially formatted messages from Node-RED to the uibuilder node that get information from the client and control how it works.
 created: 2023-02-23 11:59:44
 lastUpdated: 2023-10-14 17:00:54
+updated: 2023-12-30 17:01:41
 ---
 
 The UIBUILDER client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
 
 These ways are all summarised here. They all use a pre-formatted message sent to the appropriate `uibuilder` node in Node-RED.
 
-> [!INFO]
-> This feature was introduced in uibuilder v6.1 with only the get/set commands. Other commands are introduced in later versions.
-
 Please load the "remote-commands" example from the library to test all of these out.
+
+> [!NOTE]
+> Most of these commands will return a message to Node-RED on execution.
+>
+> If you want to surpress that, you can use the `quiet` property set to `true`, e.g.
+>
+> ```json
+> {"_uib": {"command": "scrollTo", "prop": "top", "quiet": true}}
+> ```
 
 ### A summary of the commands available
 
@@ -26,6 +32,8 @@ Possible `msg._uib.command` values.
 * `getWatchedVars` - gets the list of uibuilder client managed variables that are currently being watched for changes.
 * `htmlSend` - gets the current full HTML as text.
 * `include` - Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API.
+* [`navigate`](#navigation-control) - Triggers a page change or a route change.
+* [`scrollTo`](#scrolling) - Scroll visible page to an element based on a CSS Selector.
 * `set` - set a uibuilder client managed variable.
 * `showMsg` - Turn on/off the display of the latest msg from Node-RED.
 * `showStatus` - Turn on/off the display of the uibuilder client library settings.
@@ -52,6 +60,14 @@ A message containing a `msg._ui` property will be processed internally by the li
 
 Please see the [Dynamic, data-driven HTML content](config-driven-ui.md) content for details.
 
+### Scrolling
+
+The page can be scrolled dynamically by Node-RED using the `scrollTo` command. Send a message like `{"_uib": {"command": "scrollTo", "prop": "cssSelector"}}` Where `cssSelector` is a selector that will select a specific element on the page (e.g. `body` or `#myid` or `.myclass`). If found, the top of that element will be scrolled to the top of the browser window.
+
+`cssSelector` can also be `top`/`start` or `bottom`/`end` which will scroll to the top or bottom of the page.
+
+An optional 2nd object can be passed in the optional `value` property which gives more control. e.g. `{"_uib": {"command": "scrollTo", "prop": "#mydivid", "value": {"block": "bottom"}}}`. See [Client Functions (scrollTo) in the docs](client-docs/functions#scrollTo) for details. See the definition of the [`scrollIntoView`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView) DOM API for details of the options.
+
 ## Navigation & routing
 
 ### `watchUrlHash` Watch for URL Hash changes
@@ -73,7 +89,21 @@ Set `msg._ui` to:
 
 ### Navigation control
 
-Currently, only a page reload control is available. Set `msg._ui` to `{"method": "reload"}`.
+Trigger a page change with a message like:
+
+```json
+{"_uib": {"command":"navigate","prop":"./page2.html"}}
+```
+
+Or, if using a front-end router such as the [`uibrouter` library](client-docs/fe-router):
+
+```json
+{"_uib": {"command":"navigate","prop":"#newroute"}}
+```
+
+See [Client Functions (navigate)](client-docs/functions#navigate) for details.
+
+A page reload can also be done using low-code. Set `msg._ui` to `{"method": "reload"}`.
 
 ## Getting UI information
 

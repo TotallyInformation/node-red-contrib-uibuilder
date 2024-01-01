@@ -12,6 +12,7 @@
          * To contain common functions, variables and constants for UIBUILDER nodes
          */
         const uibuilder = window['uibuilder'] = {
+            // Standard palette category for all uibuilder nodes
             paletteCategory: 'uibuilder',
             // Standard width for typed input fields
             typedInputWidth: '68.5%',
@@ -33,6 +34,8 @@
             deployedUibInstances: {},
             /** Tracks uibuilder's installed front-end packages - changes as packages added/removed (in uibuilder node) */
             packages: [],
+            /** List of uib node names */
+            uibNodeTypes: ['uibuilder', 'uib-cache', 'uib-element', 'uib-html', 'uib-save', 'uib-sender', 'uib-tag', 'uib-update'],
 
             // Debug output via log() - turn on/off with true/false
             get debug() { return _dbg },
@@ -43,7 +46,8 @@
                 this.log = _dbg ? console.log : function() {}
             },
             log: function(...args) {},
-            /** Add jQuery UI formatted tooltips
+
+            /** Add jQuery UI formatted tooltips - add as the last line of oneditprepare in a node
              * @param {string} baseSelector CSS Selector that is the top of the hierarchy to impact
              */
             doTooltips: function doTooltips(baseSelector) {
@@ -63,12 +67,11 @@
                     },
                 })
             },
-            /** Get all of the currently deployed uibuilder URL's
+            /** Get all of the currently deployed uibuilder URL's & updates this.deployedUibInstances
              * NOTE that the uibuilder.editorUibInstances cannot be used as that includes disabled nodes/flows
              * @returns {{string,string}} URLs by node id of deployed uibuilder nodes
              */
             getDeployedUrls: function getDeployedUrls() {
-                let out
                 $.ajax({
                     type: 'GET',
                     async: false,
@@ -77,13 +80,28 @@
                     data: {
                         'cmd': 'listinstances',
                     },
-                    success: function(instances) {
-                        // uibuilder.log('[uibuilder] Deployed Instances >>', instances )
-                        out = instances
+                    success: (instances) => {
+                        this.deployedUibInstances = this.sortInstances(instances)
+                        // uibuilder.log('[uibuilder] Deployed Instances >>', instances, this )
                     }
                 })
-                return out
-            } // ---- end of getDeployedUrls ---- //
+                return this.deployedUibInstances
+            }, // ---- end of getDeployedUrls ---- //
+            /** Sort an instances object by url instead of the natural order added
+             * @param {*} instances The instances object to sort
+             * @returns {*} instances sorted by url
+             */
+            sortInstances: function sortInstances(instances) {
+                return Object.fromEntries(
+                    Object.entries(instances).sort(([,a],[,b]) => {
+                        const nameA = a.toUpperCase()
+                        const nameB = b.toUpperCase()
+                        if (nameA < nameB) return -1
+                        if (nameA > nameB) return 1
+                        return 0
+                    })
+                )
+            },
         }
 
         //#region --- Calculate the node url root & the uibuilder FE url prefix
@@ -103,8 +121,10 @@
         uibuilder.urlPrefix = `${eUrlSplit.join(':')}/${uibuilder.nodeRoot}`
         //#endregion ---- ---- ----
 
-        uibuilder.debug = RED.settings.uibuilderNodeEnv.toLowerCase() === 'development' || RED.settings.uibuilderNodeEnv.toLowerCase() === 'dev' // uibuilder.localHost
-        uibuilder.log(`[uibuilder] DEBUG ON (because env NODE_ENV is '${RED.settings.uibuilderNodeEnv}')`)
+        if (RED.settings.uibuilderNodeEnv) {
+            uibuilder.debug = RED.settings.uibuilderNodeEnv.toLowerCase() === 'development' || RED.settings.uibuilderNodeEnv.toLowerCase() === 'dev' // uibuilder.localHost
+            uibuilder.log(`[uibuilder] DEBUG ON (because env NODE_ENV is '${RED.settings.uibuilderNodeEnv}')`)
+        }
 
         /** Get initial list of installed FE packages via v2 API - save to master list */
         $.ajax({
@@ -125,17 +145,20 @@
         })
 
         /** Get initial list of deployed uibuilder instances */
-        uibuilder.deployedUibInstances =  uibuilder.getDeployedUrls()
+        uibuilder.getDeployedUrls()
 
         /** Track which urls have been used - required to handle copy/paste and import
          *  as these can contain duplicate urls before deployment.
          */
         RED.events.on('nodes:add', function(node) {
-            if ( node.type === 'uibuilder') {
-                // Track what type of addition this is
+            // For any newly added uib node, track what type of addition this is
+            if ( uibuilder.uibNodeTypes.includes(node.type) ) {
                 if (node.changed === false && !('moved' in node)) node.addType = 'load'
                 else if (!('_config' in node)) node.addType = 'new'
                 else if (node.changed === true && ('_config' in node)) node.addType = 'paste/import'
+            }
+
+            if ( node.type === 'uibuilder') {
                 // Remove the URL on paste or import
                 if (node.addType === 'paste/import') {
                     delete node.url
@@ -143,7 +166,7 @@
                     // We have to change this if we want the display version to change (if the prop is part of the label)
                     delete node._config.url
                 }
-                // Keep a list of ALL uib nodes in the editor incl disabled, undeployed, etc. Different to the deployed list
+                // Keep a list of ALL uibuilder nodes in the editor incl disabled, undeployed, etc. Different to the deployed list
                 if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 // Inform interested functions that something was added (and why)
                 RED.events.emit('uibuilder:node-added', node)

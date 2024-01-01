@@ -1,9 +1,10 @@
 ---
 title: Using the List node
-description: >
-   Describes how and why to use the uib-list node and how to create a list in your web page from an array.
+description: |
+  Describes how and why to use the uib-list node and how to create a list in your web page from an array.
 created: 2022-06-28
 lastUpdated: 2022-06-28 15:53:13
+updated: 2023-12-30 17:01:41
 ---
 
 The `uib-list` node was added in uibuilder v5.1 as an experimental version. 

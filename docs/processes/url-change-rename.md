@@ -1,9 +1,10 @@
 ---
 title: uibuilder url change - rename
-description: >
+description: |
   The process to change the url of a previously deployed instance of uibuilder. Also needing to rename the underlying folder.
 created: 2022-06-26
 lastUpdated: 2022-06-27 10:28:19
+updated: 2023-12-30 17:01:41
 ---
 
 ## Editor (`nodes/uibuilder.html`, `src/editor/uibuilder/editor.js`)

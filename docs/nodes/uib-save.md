@@ -1,9 +1,10 @@
 ---
 title: uib-save - Save files to a uibuilder instance folder
-description: >
-   Usage and configuration.
+description: |
+  Usage and configuration.
 created: 2023-02-05 16:31:39
 lastUpdated: 2023-11-10 13:48:13
+updated: 2023-12-30 17:01:41
 ---
 
 Available since uibuilder v6.6.

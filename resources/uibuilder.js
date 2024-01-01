@@ -1034,8 +1034,8 @@
         if ( value !== undefined && value !== '') {
             this.folderExists = queryFolderExists(value)
 
-            /** If the folder already exists - lock out the editor panel. */
-            if ( this.folderExists === true && this.urlChanged === true ) {
+            /** If the folder already exists but not in another node */
+            if ( this.urlEditorDup === false && this.folderExists === true && this.urlChanged === true ) {
                 log('>> folder already exists >>', this.url, this.id)
                 RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, { type: 'warning' })
             }
@@ -1883,6 +1883,7 @@
             name: { value: '' },
             topic: { value: '' },
             url: { required: true, validate: validateUrl },
+            urlValid: {},
             fwdInMessages: { value: false },   // Should we send input msg's direct to output as well as the front-end?
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?

@@ -1,9 +1,10 @@
 ---
 title: Pre-defined UIBUILDER messages
-description: >
-   Documents the different types of UIBUILDER messages between a Node-RED `uibuilder` node and a UIBUILDER front-end.
+description: |
+  Documents the different types of UIBUILDER messages between a Node-RED `uibuilder` node and a UIBUILDER front-end.
 created: 2020-09-24 18:14:00
 lastUpdated: 2023-09-30 13:06:44
+updated: 2023-12-30 17:01:41
 ---
 
 - [Message types](#message-types)

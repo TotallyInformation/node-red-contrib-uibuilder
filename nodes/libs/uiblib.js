@@ -302,6 +302,35 @@ module.exports = {
         }
     },
 
+    /** Sort a uibuilder instances object by url instead of the natural order added
+     * @param {*} instances The instances object to sort
+     * @returns {*} instances sorted by url
+     */
+    sortInstances: function sortInstances(instances) {
+        return Object.fromEntries(
+            Object.entries(instances).sort(([,a],[,b]) => {
+                const nameA = a.toUpperCase()
+                const nameB = b.toUpperCase()
+                if (nameA < nameB) return -1
+                if (nameA > nameB) return 1
+                return 0
+            })
+        )
+    },
+    /** Sort a uibuilder apps object by url instead of the natural order added
+     * @param {*} apps The apps object to sort
+     * @returns {*} apps sorted by url
+     */
+    sortApps: function sortApps(apps) {
+        return apps.sort((a, b) => {
+            const nameA = a[0].toUpperCase()
+            const nameB = b[0].toUpperCase()
+            if (nameA < nameB) return -1
+            if (nameA > nameB) return 1
+            return 0
+        })
+    },
+
 } // ---- End of module.exports ---- //
 
 // EOF

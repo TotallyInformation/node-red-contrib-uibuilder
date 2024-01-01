@@ -1,10 +1,10 @@
 ---
 title: A first-timers walkthrough of using uibuilder
-description: >
-   If you haven't used uibuilder before, it can be a little confusing as it brings together concepts from
-   several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
+description: |
+  If you haven't used uibuilder before, it can be a little confusing as it brings together concepts from several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
 lastUpdated: 2023-02-12 02:25:49
+updated: 2023-12-30 17:01:42
 ---
 
 Like uibuilder itself, this walkthrough may look complex. But you should bear in mind that if you follow the 7 <font color="#2DC26B">(or is it 4?)</font> steps in the [How to get started](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.

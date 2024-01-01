@@ -1,3 +1,7 @@
+---
+created: 2022-04-02 19:09:31
+updated: 2023-12-30 17:01:41
+---
 This page aims to document all of the breaking and potentially breaking changes in v2.0.0 since v1.2.6.
 
 While this may seem like a lot of breaking changes. In reality it breaks down to just a few and you only need to do them on existing installations that you have altered from the defaults.

@@ -1,9 +1,10 @@
 ---
 title: Changing the uibuilder master root folder (uibRoot) in settings.js
-description: >
-   Describes how to change uibRoot and what happens when you do.
+description: |
+  Describes how to change uibRoot and what happens when you do.
 created: 2021-07-03 20:46:33
 lastUpdated: 2021-07-03 22:21:56
+updated: 2023-12-30 17:01:41
 ---
 
 ## What is the uibRoot folder?

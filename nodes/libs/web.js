@@ -23,25 +23,22 @@
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs.js').uibPackageJsonPackage} uibPackageJsonPackage
- * @typedef {import('Express')} Express
- * @typedef {import('Express').Request} ExpressRequest
- * @typedef {import('Express').NextFunction} ExpressNextFunction
- * @typedef {import('Express').Router} ExpressRouter
+ * @typedef {import('express')} Express
+ * @typedef {import('express').Request} ExpressRequest
+ * @typedef {import('express').NextFunction} ExpressNextFunction
+ * @typedef {import('express').Router} ExpressRouter
  */
 
-const path = require('path')
-const fs = require('fs')
-// const fs = require('fs-extra') // only used for ensureDirSync
-const fg = require('fast-glob')
+const { join, dirname, parse } = require('path')
 const serveIndex = require('serve-index')
 const express = require('express')
-const tilib = require('./tilib')
-const uiblib = require('./uiblib')
+const socketjs = require('./socket.js')
+// const { getNs } = require('./socket.js') // NO! This gives an error because of incorrect `this` binding
+const { getClientId, sortApps } = require('./uiblib')
+const { accessSync, existsSync, mkdirSync, fgSync } = require('./fs.js')
+const { mylog, urlJoin } = require('./tilib') // dumpReq, mylog
+// WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
 const packageMgt = require('./package-mgt.js')
-const socket = require('./socket.js')
-const { mylog } = require('./tilib') // dumpReq, mylog
-// const { isBuffer } = require('util')
-// const { type } = require('os')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
@@ -144,7 +141,6 @@ class UibWeb {
         this._webSetup()
 
         log.trace('[uibuilder:web:setup] Web setup end')
-
     } // --- End of setup() --- //
 
     //#region ==== Setup - these are called AFTER #isConfigured=true ==== //
@@ -166,7 +162,7 @@ class UibWeb {
         /** Serve up the package docs folder on /<httpAdminRoot>/uibuilder/techdocs (uses docsify) - also make available on /uibuilder/docs
          * @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108
          */
-        const techDocsPath = path.join(__dirname, '..', '..', 'docs')
+        const techDocsPath = join(__dirname, '..', '..', 'docs')
         this.adminRouter.use('/docs', express.static( techDocsPath, this.uib.staticOpts ) )
         this.routers.admin.push( { name: 'Documentation', path: `${this.RED.settings.httpAdminRoot}uibuilder/docs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
         this.adminRouter.use('/techdocs', express.static( techDocsPath, this.uib.staticOpts ) )
@@ -178,6 +174,23 @@ class UibWeb {
 
         /** Serve up the admin root for uibuilder on /<httpAdminRoot>/uibuilder/ */
         this.RED.httpAdmin.use('/uibuilder', this.adminRouter, this.adminRouterV2)
+    }
+
+    /** Add routes for master user-facing APIs */
+    _userApiSetup() {
+        if ( this.#isConfigured !== true ) {
+            this.log.warn('[uibuilder:web.js:_userApiSetup] Cannot run. Setup has not been called.')
+            return
+        }
+        if (!this.uibRouter) throw new Error('this.uibRouter is undefined')
+
+        /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
+        this.userApiRouter = require('./user-apis')(this.uib, this.log)
+        this.userApiRouter.myname = 'uibUserApiRouter'
+        this.uibRouter.use('/api', this.userApiRouter)
+        this.routers.admin.push( { name: 'User-facing APIs', path: `${this.uib.httpRoot}/uibuilder/api/*`, desc: 'User-facing APIs accessible to any valid user', type: 'Router' } )
+
+        this.log.trace(`[uibuilder:web:serveVendorPackages] Vendor Router created at '${this.uib.httpRoot}/uibuilder/vendor/*.`)
     }
 
     /** Set up the appropriate ExpressJS web server references
@@ -281,8 +294,8 @@ class UibWeb {
         if (uib.rootFolder === null) throw new Error('uib.rootFolder is null')
         // Set views folder to uibRoot (but only if not overridden in settings)
         if ( !uib.customServer.serverOptions.views ) {
-            this.app.set('views', path.join(uib.rootFolder, 'views') )
-            log.trace(`[uibuilder:web:_webSetup] ExpressJS Views folder set to '${path.join(uib.rootFolder, 'views')}'`)
+            this.app.set('views', join(uib.rootFolder, 'views') )
+            log.trace(`[uibuilder:web:_webSetup] ExpressJS Views folder set to '${join(uib.rootFolder, 'views')}'`)
         } else {
             log.trace(`[uibuilder:web:_webSetup] ExpressJS Views folder is '${uib.customServer.serverOptions.views}'`)
         }
@@ -313,19 +326,17 @@ class UibWeb {
         // TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
         if (uib.commonFolder === null) throw new Error('uib.commonFolder is null')
         // Serve up the master common folder (e.g. <httpNodeRoute>/uibuilder/common/)
-        this.uibRouter.use( tilib.urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
+        this.uibRouter.use( urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
         this.routers.user.push( { name: 'Central Common Resources', path: `${this.uib.httpRoot}/uibuilder/${uib.commonFolderName}/*`, desc: 'Common resource library', type: 'Static', folder: uib.commonFolder } )
 
         // Assign the uibRouter to the ../uibuilder url path
-        this.app.use( tilib.urlJoin(uib.moduleName), this.uibRouter )
-
+        this.app.use( urlJoin(uib.moduleName), this.uibRouter )
     } // --- End of webSetup() --- //
 
-    // TODO Add instance title & description to uibuilder node.
-    /** Return a dynamic index page of all uibuilder user-accessible endpoints
-     * @param {express.Request} req Express request object
-     * @param {express.Response} res Express response object
-     * @param {Function} next Function to pass to next handler
+    /** Return a dynamic index page of all uibuilder user-accessible endpoints on /uibuilder/apps
+     * param {express.Request} req Express request object
+     * param {express.Response} res Express response object
+     * param {Function} next Function to pass to next handler
      */
     _serveUserUibIndex() {
         this.uibRouter.get('/apps', (req, res, next) => {
@@ -351,7 +362,7 @@ class UibWeb {
             if ( Object.keys(this.uib.instances).length === 0 ) {
                 page += '<p>Instance list not yet ready, please try again</p>'
             } else {
-                for (let [url, data] of Object.entries(this.uib.apps)) {
+                for ( let [url, data] of sortApps(Object.entries(this.uib.apps)) ) { // eslint-disable-line prefer-const
                     const title = data.title.length === 0 ? '' : `: ${data.title}`
                     const descr = data.descr.length === 0 ? '' : `<div>${data.descr}</div>`
                     page += `
@@ -367,15 +378,15 @@ class UibWeb {
                 </div></body></html>
             `
 
-            res.statusMessage = 'Instances listed'
+            res.statusMessage = 'Apps listed'
             res.status(200).send( page )
         })
 
         // Record this endpoint for use on details page
         this.routers.user.push( {
-            name: 'Endpoints',
-            path: `${this.uib.httpRoot}/uibuilder/endpoints`,
-            desc: 'List of all uibuilder endpoints',
+            name: 'Apps (Instances)',
+            path: `${this.uib.httpRoot}/uibuilder/apps`,
+            desc: 'List of all uibuilder apps (instances)',
             type: 'Get',
             // folder: uib.commonFolder
         } )
@@ -396,11 +407,11 @@ class UibWeb {
         const log = this.log
 
         try {
-            fs.accessSync( path.join(uib.masterStaticFeFolder, defaultPageName), fs.constants.R_OK )
-            log.trace(`[uibuilder:web:setMasterStaticFolder] Using master production build folder. ${uib.masterStaticFeFolder}`)
+            accessSync( join(uib.masterStaticFeFolder, defaultPageName), 'r' )
+            log.trace(`[uibuilder:web:setMasterStaticFolder] Using master production build folder. '${uib.masterStaticFeFolder}'`)
             this.masterStatic = uib.masterStaticFeFolder
         } catch (e) {
-            throw new Error(`setMasterStaticFolder: Cannot serve master production build folder. ${uib.masterStaticFeFolder}`)
+            throw new Error(`setMasterStaticFolder: Cannot serve master production build folder, cannot access to read: '${uib.masterStaticFeFolder}'`)
         }
     } // --- End of setMasterStaticFolder() --- //
 
@@ -414,12 +425,12 @@ class UibWeb {
         }
 
         // Add socket.io client - look both in uibuilder master folder, then uibRoot, then userDir
-        let sioPath = packageMgt.getPackagePath2( 'socket.io-client', [path.join(__dirname, '..', '..'), this.uib.rootFolder, this.RED.settings.userDir] )
+        let sioPath = packageMgt.getPackagePath2( 'socket.io-client', [join(__dirname, '..', '..'), this.uib.rootFolder, this.RED.settings.userDir] )
 
         // If it can't be found the usual way - probably because Docker being used & socket.io not in usual place
         if ( sioPath === null ) {
             try {
-                sioPath = path.join(path.dirname(require.resolve('socket.io-client')), '..')
+                sioPath = join(dirname(require.resolve('socket.io-client')), '..')
             } catch (e) {
                 this.log.error(`[uibuilder:web:serveVendorSocketIo] Cannot find socket.io-client. ${e.message}`)
             }
@@ -453,10 +464,10 @@ class UibWeb {
 
         log.trace('[uibuilder:web:serveVendorPackages] Serve Vendor Packages started')
 
-        // Update the <uibRoot>/package.json file & packageMgt.uibPackageJson in case a package was manually installed then node-red restarted
+        // Update the <uibRoot>/package.json file & uibPackageJson in case a package was manually installed then node-red restarted
         // Get the installed packages from the `<uibRoot>/package.json` file. If it doesn't exist, this will create it.
         const pj = packageMgt.uibPackageJson
-        if (pj === null) throw new Error('web.js:serveVendorPackages: pj is null')
+        if (!pj) throw new Error('web.js:serveVendorPackages: pj is undefined or null')
         if ( pj.dependencies === undefined ) throw new Error('web.js:serveVendorPackages: pj.dependencies is undefined')
 
         /** Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
@@ -607,17 +618,17 @@ class UibWeb {
          * ? TODO change instance static to optional render
          */
         this.instanceRouters[node.url].use( (req, res, next) => {
-            const pathRoot = path.join(rootFolder, node.url, 'views')
-            const requestedView = path.parse(req.path)
-            let filePath = path.join(pathRoot, requestedView.base)
+            const pathRoot = join(rootFolder, node.url, 'views')
+            const requestedView = parse(req.path)
+            let filePath = join(pathRoot, requestedView.base)
 
             if (this.app.get('view engine')) {
-                filePath = path.join(pathRoot, `${requestedView.name}.ejs`)
-                if (fs.existsSync(filePath)) {
+                filePath = join(pathRoot, `${requestedView.name}.ejs`)
+                if (existsSync(filePath)) {
                     // console.log('>> render >>', requestedView.name, filePath) //! TODO - remove
                     try {
-                        // res.render( path.join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
-                        res.render( path.join(rootFolder, node.url, 'views', requestedView.name), { _env: node.context().global.get('_env') } )
+                        // res.render( join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
+                        res.render( join(rootFolder, node.url, 'views', requestedView.name), { _env: node.context().global.get('_env') } )
                     } catch (e) {
                         res.sendFile( requestedView.base, { root: pathRoot } )
                     }
@@ -649,12 +660,12 @@ class UibWeb {
         if (uib.commonFolder === null) throw new Error('uib.commonFolder is null')
 
         // (5) Serve up the uibuilder static common folder on `<httpNodeRoot>/<url>/<commonFolderName>` (it is already available on `<httpNodeRoot>/uibuilder/<commonFolderName>/`, see _webSetup()
-        this.instanceRouters[node.url].use( tilib.urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
+        this.instanceRouters[node.url].use( urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
         // Track routes
         this.routers.instances[node.url].push( { name: 'Common Code', path: `${this.uib.httpRoot}/${node.url}/common/`, desc: 'Shared FE code, same for all instances', type: 'Static', folder: uib.commonFolder } )
 
         // Apply this instances router to the url path on `<httpNodeRoot>/<url>/`
-        this.app.use( tilib.urlJoin(node.url), this.instanceRouters[node.url])
+        this.app.use( urlJoin(node.url), this.instanceRouters[node.url])
 
         // this.dumpUserRoutes(true)
         // this.dumpInstanceRoutes(true, node.url)
@@ -676,7 +687,7 @@ class UibWeb {
         if (uib.configFolder === null) throw new Error('uib.configFolder is null')
 
         /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
-        const uibMwPath = path.join(uib.configFolder, 'uibMiddleware.js')
+        const uibMwPath = join(uib.configFolder, 'uibMiddleware.js')
         try {
             const uibMiddleware = require(uibMwPath)
             if ( typeof uibMiddleware === 'function' ) {
@@ -714,7 +725,7 @@ class UibWeb {
          */
         function masterMiddleware (req, res, next) {
             // Check for client id from client - if it exists, reuse it otherwise create one
-            const clientId = uiblib.getClientId(req)
+            const clientId = getClientId(req)
 
             // TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             res
@@ -788,7 +799,7 @@ class UibWeb {
         if ( node.sourceFolder === undefined ) {
             try {
                 // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
-                fs.accessSync( path.join(node.customFolder, 'dist', defaultPageName), fs.constants.R_OK )
+                accessSync( join(node.customFolder, 'dist', defaultPageName), 'r' )
                 // If the ./dist/index.html exists use the dist folder...
                 customStatic = 'dist'
                 log.trace(`[uibuilder:web:setupInstanceStatic:${node.url}] Using local dist folder`)
@@ -801,20 +812,20 @@ class UibWeb {
             }
         }
 
-        const customFull = path.join(node.customFolder, customStatic)
+        const customFull = join(node.customFolder, customStatic)
 
         // Does the customStatic folder exist? If not, then create it
         try {
             // With recursive, will create missing parents and does not error if parents already exist
-            fs.mkdirSync( customFull, {recursive:true} )
-            // fs.ensureDirSync( customFull ) // requires fs-extra
+            mkdirSync( customFull, { recursive: true } )
+            // fslib.ensureDirSync( customFull )
             log.trace(`[uibuilder:web:setupInstanceStatic:${node.url}] Using local ${customStatic} folder`)
         } catch (e) {
             node.warn(`[uibuilder:web:setupInstanceStatic:${node.url}] Cannot create or access ${customFull} folder, no pages can be shown. Error: ${e.message}`)
         }
 
         // Does it contain an index.html file? If not, then issue a warn
-        if ( !fs.existsSync( path.join(customFull, defaultPageName) ) ) {
+        if ( !existsSync( join(customFull, defaultPageName) ) ) {
             node.warn(`[uibuilder:web:setupInstanceStatic:${node.url}] Cannot show default page, index.html does not exist in ${customFull}.`)
         }
 
@@ -837,7 +848,7 @@ class UibWeb {
         const log = this.log
 
         // Allow all .js files in api folder to be loaded, always returns an array - NB: Fast Glob requires fwd slashes even on Windows
-        const apiFiles = fg.sync(`${uib.rootFolder}/${node.url}/api/*.js`)
+        const apiFiles = fgSync(`${uib.rootFolder}/${node.url}/api/*.js`)
         // console.log('>> apiFiles >>', `${uib.rootFolder}/${node.url}/api/*.js`, apiFiles)
         apiFiles.forEach( instanceApiPath => {
             // console.log('>> api file >>', instanceApiPath)
@@ -910,8 +921,11 @@ class UibWeb {
         let page = ''
 
         // If using own Express server, correct the URL's
-        if (!req.headers.referer) throw new Error('req.headers.referer does not exist')
-        const url = new URL(req.headers.referer)
+        // if (!req.headers.referer) throw new Error('req.headers.referer does not exist')
+        let url = {}
+        try {
+            url = new URL(req.headers.referer)
+        } catch (error) { }
         url.pathname = ''
         // @ts-expect-error
         if (uib.customServer && uib.customServer.port && uib.customServer.port != RED.settings.uiPort ) { // eslint-disable-line eqeqeq
@@ -931,10 +945,8 @@ class UibWeb {
             'sessionLength', 'tokenAutoExtend', 'customFolder',
             'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
         ]
-        // functions: ['_closeCallbacks', '_inputCallback', '_inputCallbacks', 'send', ]
-        // Keep secret: ['jwtSecret', ]
 
-        const ns = socket.getNs(node.url)
+        const ns = socketjs.getNs(node.url)
 
         page += `
             <!doctype html><html lang="en"><head>
@@ -969,7 +981,7 @@ class UibWeb {
                         </tr>
                         <tr>
                             <th>URL for the front-end resources</th>
-                            <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, node.url).replace('/', '')}" target="_blank">.${tilib.urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
+                            <td><a href="${urlPrefix}${urlJoin(uib.nodeRoot, node.url).replace('/', '')}" target="_blank">.${urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
                         </tr>
                         <tr>
                             <th>Node-RED userDir folder</th>
@@ -1075,7 +1087,7 @@ class UibWeb {
 
     /** Creates a route for logging to NR from the front-end via HTTP Beacons
      * In FE code, use as: navigator.sendBeacon('./_clientLog', `pageshow. From Cache?: ${event.persisted}`)
-     * Only text can be sent. This fn attempts to split the text on "::". If it succedes, the 1st entry
+     * Only text can be sent. This fn attempts to split the text on "::". If it succeeds, the 1st entry
      * is assumed to be the log level. If no level provided, assumes "debug" level so it won't show in NR logs by default.
      * @param {uibNode} node configuration data for this instance
      */
@@ -1132,7 +1144,9 @@ class UibWeb {
         this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client beacon log back to Node-RED', type: 'POST', folder: 'N/A' } )
     }
 
-    /** If allowed and if any exist, add instance custom routes from <uibRoot>/<node.url>/routes/*.js */
+    /** If allowed and if any exist, add instance custom routes from <uibRoot>/<node.url>/routes/*.js
+     * @param {uibNode} node configuration data for this instance
+     */
     addInstanceCustomRoutes(node) {
         // Reference static vars
         const uib = this.uib
@@ -1142,7 +1156,7 @@ class UibWeb {
         // Is this capability turned on in settings.js?
 
         // Add routers from each <uibRoot>/<node.url>/routes/*.js file (Empty list if fldr doesn't exist or no files)
-        const routeFiles = fg.sync(`${uib.rootFolder}/${node.url}/routes/*.js`)
+        const routeFiles = fgSync(`${uib.rootFolder}/${node.url}/routes/*.js`)
         routeFiles.forEach( routeFilePath => {
             let instanceRouteFile = {}
             let routeKeys = []
@@ -1360,14 +1374,14 @@ class UibWeb {
             ip: r.ip, // remote ip of request, proxy dependent
             ips: r.ips, // list of forwarded ips if proxy set
             method: r.method,
-            orginalUrl: r.originalUrl,
+            originalUrl: r.originalUrl,
             params: r.params,
             path: r.path,
             protocol: r.protocol,
             query: r.query,
             route: r.route,
             secure: r.secure,
-            stale: r.stale, // oposite of fresh
+            stale: r.stale, // opposite of fresh
             subdomains: r.subdomains,
             url: r.url, // from node.js url
             xhr: r.xhr,

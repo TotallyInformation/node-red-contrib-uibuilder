@@ -1,10 +1,11 @@
 ---
 title: What can I do with uibuilder?
-description: >
-   A summary of some of the key things that can be done by combining uibuilder with Node-RED.
+description: |
+  A summary of some of the key things that can be done by combining uibuilder with Node-RED.
 created: 2023-03-06 10:04:37
 lastUpdated: 2023-03-06 10:04:42
 author: Julian Knight (Totally Information)
+updated: 2023-12-30 17:01:41
 ---
 
 * Use my data in Node-RED (or in front-end code) to generate standard or custom user-interfaces (UI's, web pages). I don't have to learn the details of how to create HTML elements.

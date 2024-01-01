@@ -1,10 +1,10 @@
 ---
 title: Dynamic, configuration-driven UI's (low-code)
-description: >
-   This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a `uibuilder` node where the messages contain a `msg._ui` property.
-   This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
+description: |
+  This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a `uibuilder` node where the messages contain a `msg._ui` property. This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
 lastUpdated: 2023-09-30 13:02:29
+updated: 2023-12-30 17:01:41
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
@@ -491,8 +491,9 @@ This is the method used by the `uib-update` node. Dump output from that node to 
         // List of component instances to update on the page - results in 1 or more HTML custom elements being selected and updated
         "components": [
             {
-                // Only 1 of these four properties will be used to search. 
-                // In the order of preference id > selector > name > type
+                /** Only 1 of these four properties will be used to search. 
+                 *  In the order of preference id > selector > name > type
+                 */
 
                 // The most direct way to select a single element
                 "id": "...",
@@ -503,6 +504,10 @@ This is the method used by the `uib-update` node. Dump output from that node to 
                 // A generic CSS selector can be specified here as well. e.g. "div" or "p#classname", etc.
                 "type": "...",
                 
+                /** You can use as many or as few of the following as you like in an update.
+                 *  For example, only updating a single attribute.
+                 */
+
                 // Optional. Text or HTML to add to slot - if not present, the contents of msg.payload will be used. 
                 // This allows multi-components to have their own slot content. 
                 // However, the payload is not passed on to sub-components
@@ -517,6 +522,23 @@ This is the method used by the `uib-update` node. Dump output from that node to 
                     "data-myattrib": "Data driven!"
                     // ... not recommended to include `onClick or similar event handlers, specify those in the events property below ...
                 },
+
+                // Optional. Update the elements classes - USE ONLY ONE STYLE (object or array)
+                "classes": {
+                    // Optional. Add a set of classes - processed in order with remove
+                    "add": [
+                        "myclass1", "myclass2",
+                    ],
+                    // Optional. Remove a set of classes - processed in order with add
+                    "remove": [
+                        "myclass2", "myclass3",
+                    ],
+                }
+                // OR - use an array to replace all existing classes
+                //      a convenient alternative to setting a class attribute string
+                // "classes": [
+                //     "myclass1", "myclass3",
+                // ],
 
                 // Optional. properties to be added to/replaced on the element. Unlike attributes, these can contain any data.
                 // Take care to avoid name clashes with internal properties or bad things are likely to happen!
@@ -557,9 +579,13 @@ Same as sending `msg._uib.reload`. But this method is preferred.
 
 Overlay a pop-over notification.
 
-Old-style `msg._uib.componentRef = 'globalNotification'` also works. But this method is preferred.
+Old-style `msg._uib.componentRef = 'globalNotification'` also works. But this method is preferred. Note that this is different to the `notification` command which shows an OS toast notification, this shows an on-page notification. Also note that you can use `uibuilder.showDialog(type, ui, msg)` in front-end code for the same effect.
 
-Defaults to auto-timeout.
+Defaults to auto-timeout after a 10 seconds.
+
+For accessibility, the wrapper element for all notifications is given `role="dialog"` and `aria-label="Toast message`. The wrapper element for each individual notification is given `role="alertdialog"` and `aria-modal="true"`.
+
+Note that the "alert" method (see next section) is similar but does not autohide and has an additional warning icon.
 
 ### HTML Tags
 
@@ -569,15 +595,37 @@ A new `<div id="toast">` element is added to `toaster`.
 
 #### Schema
 
-variant, title/topic, payload/content, autohide, noAutoHide/autohide, autoHideDelay/delay, appendToast, modal
+```jsonc
+{
+    "_ui": {
+        // REQUIRED
+        "method": "notify",
+
+        // Colour variant: error, warn, info, success, etc - can be ANY class name
+        "variant": "warn",
+
+        // Overrides msg.topic which is used if this isn't specified
+        "title": "My Title",
+        // msg.payload is used as message content, this is appended
+        "content": "Some content to show",
+        // Defaults to true, set to false to require user to cancel
+        "autohide": true,
+        // Delay time in milliseconds for autohide, default is 10s
+        // If present, automatically turns on `autohide`
+        "autoHideDelay": 10000,
+    }
+}
+```
 
 ## Method: alert
 
-Overlay an alert notification
+Overlay an alert notification. Alerts can be stacked. Click anywhere on-page to dismiss all alerts, on an individual alert to dismiss only it.
 
 Old-style `msg._uib.componentRef = 'globalAlert'` also works. But this method is preferred.
 
 Uses the same schema and styles as the `notify` method. Except that autohide is set to false, modal is set to true and the content is prefixed by an alert symbol.
+
+For accessibility, the wrapper element for all notifications is given `role="dialog"` and `aria-label="Toast message`. The wrapper element for each individual notification is given `role="alertdialog"` and `aria-modal="true"`.
 
 ---
 

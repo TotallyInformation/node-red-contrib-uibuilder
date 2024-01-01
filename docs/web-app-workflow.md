@@ -1,9 +1,10 @@
 ---
 title: Creating a web app using uibuilder and Node-RED
-description: >
-   Some recommendations on how to use uibuilder to create data-driven web applications.
+description: |
+  Some recommendations on how to use uibuilder to create data-driven web applications.
 created: 2022-01-05 14:36:24
 lastUpdated: 2023-09-30 13:10:57
+updated: 2023-12-30 17:01:41
 ---
 
 While it does a few other things to help as well, uibuilder primarily provides these services:

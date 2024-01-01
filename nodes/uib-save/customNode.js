@@ -27,7 +27,7 @@
 
 //#region ----- Module level variables ---- //
 
-const uibFs  = require('../libs/fs')   // File/folder handling library (by Totally Information)
+const fslib  = require('../libs/fs')   // File/folder handling library (by Totally Information)
 // const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
 const { setNodeStatus } = require('../libs/uiblib')  // Utility library for uibuilder
 
@@ -59,7 +59,6 @@ const mod = {
  * @this {runtimeNode & uibSaveNode}
  */
 async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
-
     const RED = mod.RED
     let statusColor = 'blue'
 
@@ -71,13 +70,16 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         let folder = this.folder
         let fname = this.fname
 
+        const srcNode = RED.nodes.getNode(this.uibId)
+
         // If "Use pageName"
-        if (this.usePageName === true && ( (msg._uib && msg._uib.pageName) || (msg._ui && msg._ui.pageName) )) {
-            fname = msg._uib ? msg._uib.pageName : msg._ui.pageName
-            const srcNode = RED.nodes.getNode(this.uibId)
-            folder = srcNode.sourceFolder
-        } else {
-            this.warn('Use pageName requested but neither msg._uib nor msg._ui exists')
+        if (this.usePageName === true) {
+            if ( (msg._uib && msg._uib.pageName) || (msg._ui && msg._ui.pageName) ) {
+                fname = msg._uib ? msg._uib.pageName : msg._ui.pageName
+                folder = srcNode.sourceFolder
+            } else {
+                this.warn('Use pageName requested but neither msg._uib nor msg._ui exists')
+            }
         }
 
         // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
@@ -86,7 +88,18 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
         // Call uibuilder shared library to save file (optional sub-folder creation and client reload)
         try {
-            await uibFs.writeInstanceFile(this.url, folder, fname, msg.payload, this.createFolder, this.reload)
+            await fslib.writeInstanceFile(this.url, folder, fname, msg.payload, this.createFolder, this.reload)
+            if (this.reload === true ) {
+                // Reload connected clients if required by sending them a reload msg
+                srcNode.sendToFe(
+                    {
+                        _ui: { 'method': 'reload' },
+                        topic: 'uib-save reload'
+                    },
+                    this.url,
+                    'uiBuilder'
+                )
+            }
             this.counters.success++
             statusColor = 'green'
         } catch (err) {

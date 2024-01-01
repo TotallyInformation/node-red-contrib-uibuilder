@@ -1,10 +1,10 @@
 ---
 title: Future multi-node communications
-description: >
-   Initially, UIBUILDER was a single node. However, there was always the intent to offer wider communications from other packages and nodes
-   to UIBUILDER-based front-end's. This document lays out a proposal for how that may happen.
+description: |
+  Initially, UIBUILDER was a single node. However, there was always the intent to offer wider communications from other packages and nodes to UIBUILDER-based front-end's. This document lays out a proposal for how that may happen.
 created: 2021-09-29 20:04:36
 lastUpdated: 2023-09-30 13:09:32
+updated: 2023-12-30 17:01:41
 ---
 
 Status: **Draft**

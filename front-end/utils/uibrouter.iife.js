@@ -32,7 +32,7 @@
     /** Class constructor
      * @param {UibRouterConfig} routerConfig Configuration object
      */
-    constructor(routerConfig) {
+    constructor(routerConfig2) {
       /** Configuration settings @type {UibRouterConfig} */
       __publicField(this, "config");
       /** Reference to the container DOM element - set in setup() @type {HTMLDivElement} */
@@ -41,19 +41,24 @@
       __publicField(this, "currentRouteId");
       /** The previous route id after doRoute() has been called */
       __publicField(this, "previousRouteId");
+      /** Array of route ID's (created in constructor) */
+      __publicField(this, "routeIds", []);
       /** Internal only. Set to true when the _start() method has been called */
       __privateAdd(this, _startDone, false);
       if (!fetch)
         throw new Error("[uibrouter:constructor] UibRouter requires `fetch`. Please use a current browser or load a fetch polyfill.");
-      if (!routerConfig)
+      if (!routerConfig2)
         throw new Error("[uibrouter:constructor] No config provided");
-      if (!routerConfig.routes)
+      if (!routerConfig2.routes)
         throw new Error("[uibrouter:constructor] No routes provided in routerConfig");
-      if (!routerConfig.routeContainer)
-        routerConfig.routeContainer = "#uibroutecontainer";
-      this.config = routerConfig;
+      if (!routerConfig2.routeContainer)
+        routerConfig2.routeContainer = "#uibroutecontainer";
+      this.config = routerConfig2;
+      if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id)
+        this.config.defaultRoute = this.config.routes[0].id;
       this._setRouteContainer();
-      Promise.all(Object.values(routerConfig.routes).filter((r) => r.type === "url").map(this._loadExternal)).then(this._appendExternalTemplates).then(() => {
+      this._updateRouteIds();
+      Promise.all(Object.values(routerConfig2.routes).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then(this._appendExternalTemplates).then(() => {
         this._start();
       });
     }
@@ -158,18 +163,23 @@
     _applyScripts(tempContainer) {
       const scripts = tempContainer.querySelectorAll("script");
       scripts.forEach((scr) => {
-        if (scr.parentElement)
-          scr.parentElement.removeChild(scr);
         const newScript = document.createElement("script");
         newScript.textContent = scr.innerText;
         tempContainer.append(newScript);
+        scr.remove();
       });
+    }
+    /** Update this.routeIds array from this.config (on start and after add/remove routes) */
+    _updateRouteIds() {
+      this.routeIds = new Set(Object.values(routerConfig.routes).map((r) => r.id));
     }
     //#endregion --- ----- --
     /** Process a routing request
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
      */
     doRoute(routeSource) {
+      if (!routeSource)
+        routeSource = this.config.defaultRoute;
       const container = this.routeContainerEl;
       if (!container)
         throw new Error("[uibrouter:doRoute] Cannot route, has router.setup() been called yet?");
@@ -202,7 +212,7 @@
         }
       }
       let routeShown = false;
-      if (!newRouteId || !this.routeList().includes(newRouteId)) {
+      if (!newRouteId || !this.routeIds.has(newRouteId)) {
         document.dispatchEvent(new CustomEvent("uibrouter:route-change-failed", { detail: { newRouteId, oldRouteId } }));
         if (uibuilder)
           uibuilder.set("uibrouter", "route change failed");
@@ -236,9 +246,15 @@
       this.currentRouteId = newRouteId;
       this.previousRouteId = oldRouteId;
       container.dataset.currentRoute = newRouteId;
+      this.setCurrentMenuItems();
       document.dispatchEvent(new CustomEvent("uibrouter:route-changed", { detail: { newRouteId, oldRouteId } }));
-      if (uibuilder)
+      if (uibuilder) {
         uibuilder.set("uibrouter", "route changed");
+        uibuilder.set("uibrouter_CurrentRoute", newRouteId);
+        uibuilder.set("uibrouter_CurrentTitle", this.routeTitle());
+        uibuilder.set("uibrouter_CurrentDescription", this.routeDescription());
+        uibuilder.set("uibrouter_CurrentDetails", this.getRouteConfigById(newRouteId));
+      }
     }
     /** Return a route config given a route id (returns undefined if route not found)
      * @param {string} routeId Route ID to search for
@@ -261,6 +277,7 @@
       if (this.config.defaultRoute)
         this.doRoute(this.config.defaultRoute);
     }
+    /** Remove the hash from the browser URL */
     removeHash() {
       history.pushState("", document.title, window.location.pathname + window.location.search);
     }
@@ -283,21 +300,49 @@
      * @returns {string[]} Array of route id's or route url hashes
      */
     routeList(returnHash) {
-      return Object.values(this.config.routes).map((r) => returnHash === true ? `#${r.id}` : r.id);
+      if (returnHash === true)
+        return this.routeIds.map((r) => returnHash === true ? `#${r.id}` : r.id);
+      return this.routeIds;
     }
     /** Add new route definitions to the existing ones
-     * @param {routeDefinition|routeDefinition[]} routeConfig Single or array of route definitions to add
+     * @param {routeDefinition|routeDefinition[]} routeDefn Single or array of route definitions to add
      */
-    addRoutes(routeConfig) {
-      if (!Array.isArray(routeConfig))
-        routeConfig = [routeConfig];
-      Promise.all(Object.values(routeConfig).filter((r) => r.type === "url").map(this._loadExternal)).then(this._appendExternalTemplates).then(() => {
-        this.config.routes.push(...routeConfig);
-        document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeConfig }));
+    addRoutes(routeDefn) {
+      if (!Array.isArray(routeDefn))
+        routeDefn = [routeDefn];
+      Promise.all(Object.values(routeDefn).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then(this._appendExternalTemplates).then(() => {
+        this.config.routes.push(...routeDefn);
+        this._updateRouteIds();
+        document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeDefn }));
         if (uibuilder)
           uibuilder.set("uibrouter", "routes added");
       });
     }
+    //#region --- utils for page display & processing ---
+    setCurrentMenuItems() {
+      const items = document.querySelectorAll("li[data-route]");
+      items.forEach((item) => {
+        if (item.dataset.route === this.currentRouteId) {
+          item.classList.add("currentRoute");
+          item.setAttribute("aria-current", "page");
+        } else {
+          item.classList.remove("currentRoute");
+          item.removeAttribute("aria-current");
+        }
+      });
+    }
+    routeTitle() {
+      const thisRoute = this.currentRoute() || {};
+      return thisRoute.title || thisRoute.id || "[ROUTE NOT FOUND]";
+    }
+    routeDescription() {
+      const thisRoute = this.currentRoute() || {};
+      return thisRoute.description || thisRoute.id || "[ROUTE NOT FOUND]";
+    }
+    currentRoute() {
+      return this.getRouteConfigById(this.currentRouteId);
+    }
+    //#endregion ---- ----- ----
     // TODO
     // deleteRoutes(aRoutes) {
     //     // Delete all if no list provided
@@ -328,7 +373,7 @@
   // eslint-disable-line no-unused-vars
   //#region --- Variables ---
   /** Class version */
-  __publicField(UibRouter, "version", "1.0.0");
+  __publicField(UibRouter, "version", "1.0.1");
   var uibrouter_default = UibRouter;
   if (!window["UibRouter"]) {
     window["UibRouter"] = UibRouter;

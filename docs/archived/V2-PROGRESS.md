@@ -1,3 +1,7 @@
+---
+created: 2022-04-02 19:09:31
+updated: 2023-12-30 17:01:41
+---
 This is the design note for part 2 of enabling source file editing from the Node-RED admin ui.
 
 The [main To Do list is now in the WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/To-Do).

@@ -1,20 +1,17 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-/* eslint-disable strict */
 
 // Isolate this code
-(function () {
+;(function () {
     'use strict'
 
-    const mylog = window['uibuilder'].log
+    // NOTE: window.uibuilder is added - see `resources` folder
+    // RED._debug({topic: 'RED.settings', payload:RED.settings})
+
+    const uibuilder = window['uibuilder']
+    const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName  = 'uib-cache'
-    /** Node's label @constant {string} paletteCategory */
-    const nodeLabel  = moduleName
-    /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = window['uibuilder'].paletteCategory
-    /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
     /** Populate the store dropdown */
     function populateUseStoreDropdown() {
@@ -112,12 +109,10 @@
             }
         })
 
-        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
+        uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     RED.nodes.registerType(moduleName, {
-        category: paletteCategory,
-        color: paletteColor,
         defaults: {
             cacheall: { value: false },
             cacheKey: { value: 'topic' },
@@ -137,11 +132,13 @@
         outputs: 1,
         outputLabels: ['Through msg or msg from cache'],
         icon: 'parser-json.svg',
-        paletteLabel: nodeLabel,
         label: function () {
             if ( this.cacheall === true ) return this.name || `Cache All (${this.num})`
             return this.name || `Cache by msg.${this.cacheKey} (${this.num})`
         },
+        paletteLabel: moduleName,
+        category: uibuilder.paletteCategory,
+        color: 'var(--uib-node-colour)', // '#E6E0F8'
 
         oneditprepare: function() { onEditPrepare(this) },
     }) // ---- End of registerType() ---- //

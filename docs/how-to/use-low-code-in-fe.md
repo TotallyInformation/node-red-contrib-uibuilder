@@ -1,10 +1,10 @@
 ---
 title: Define and update elements in the browser using low-code
-description: >
-   Some front-end code as an example of using UIBUILDER's low-code capabilities in your front-end (browser) code to create an on-screen element dynamically.
-   In this case, a single select drop-down box.
+description: |
+  Some front-end code as an example of using UIBUILDER's low-code capabilities in your front-end (browser) code to create an on-screen element dynamically. In this case, a single select drop-down box.
 created: 2023-11-18 17:38:16
 lastUpdated: 2023-11-18 17:38:22
+updated: 2023-12-30 17:01:41
 ---
 
 

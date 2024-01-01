@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "6.7.0",
+  "version": "6.8.0",
   "description": "Easily create data-driven web UI's for Node-RED using any (or no) front-end library.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -23,7 +23,7 @@
     "express": "^4.17.1",
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
-    "jsdom": "^22.1.0",
+    "jsdom": "^21",
     "nanoid": "^3",
     "serve-index": "^1.9.1",
     "socket.io": "^4.3.2",
@@ -40,14 +40,13 @@
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^7.1.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^46.4.2",
+    "eslint-plugin-jsdoc": "^47.0.2",
     "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-sonarjs": "^0",
     "gulp": "^4.0.2",
     "gulp-clean-css": "^4.3.0",
-    "gulp-debug": "^4.0.0",
-    "gulp-esbuild": "^0.11.1",
+    "gulp-esbuild": "^0.12.0",
     "gulp-htmlmin": "^5.0.1",
     "gulp-include": "^2.4.1",
     "gulp-json-editor": "^2.5.6",
@@ -86,60 +85,93 @@
   "style": "./front-end/uib-styles.css",
   "types": "index.d.ts",
   "type": "commonjs",
-  "browserslist": ["> 0.5%", "maintained node versions", "last 2 versions", "not dead", "not ie > 0"],
-  "keywords": ["node-red", "ui", "gui", "dashboard", "SPA", "web", "website", "data-driven", "webpage", "web-app"],
+  "browserslist": [
+    "> 0.5%",
+    "maintained node versions",
+    "last 2 versions",
+    "not dead",
+    "not ie > 0"
+  ],
+  "keywords": [
+    "node-red",
+    "ui",
+    "gui",
+    "dashboard",
+    "SPA",
+    "web",
+    "website",
+    "data-driven",
+    "webpage",
+    "web-app"
+  ],
   "homepage": "https://totallyinformation.github.io/node-red-contrib-uibuilder/#/",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
   "author": {
     "name": "Julian Knight (TotallyInformation)",
     "url": "https://github.com/TotallyInformation"
   },
-  "contributors": [{
-    "name": "Julian Knight",
-    "url": "https://github.com/TotallyInformation"
-  }, {
-    "name": "Colin Law",
-    "url": "https://github.com/colinl"
-  }, {
-    "name": "Steve Rickus",
-    "url": "https://github.com/shrickus"
-  }, {
-    "name": "Ellie Lee",
-    "url": "https://github.com/ellieejlee"
-  }, {
-    "name": "Thomas Wagner",
-    "url": "https://github.com/Thomseeen"
-  }, {
-    "name": "Arlena Derksen",
-    "url": "https://github.com/boisei0"
-  }, {
-    "name": "cflurin",
-    "url": "https://discourse.nodered.org/u/cflurin"
-  }, {
-    "name": "Scott Page - IndySoft",
-    "url": "https://github.com/scottpageindysoft"
-  }, {
-    "name": "Stephen McLaughlin - Steve-Mcl",
-    "url": "https://discourse.nodered.org/u/Steve-Mcl"
-  }, {
-    "name": "Sergio Rius",
-    "url": "https://github.com/SergioRius"
-  }, {
-    "name": "Thorsten von Eicken",
-    "url": "https://github.com/tve"
-  }, {
-    "name": "meeki007",
-    "url": "https://github.com/meeki007"
-  }, {
-    "name": "talltechdude",
-    "url": "https://github.com/talltechdude"
-  }, {
-    "name": "Harold Peters Inskipp",
-    "url": "https://github.com/HaroldPetersInskipp"
-  }, {
-    "name": "Mudwalker (Colin J)",
-    "url": "https://github.com/mudwalkercj"
-  }],
+  "contributors": [
+    {
+      "name": "Julian Knight",
+      "url": "https://github.com/TotallyInformation"
+    },
+    {
+      "name": "Colin Law",
+      "url": "https://github.com/colinl"
+    },
+    {
+      "name": "Steve Rickus",
+      "url": "https://github.com/shrickus"
+    },
+    {
+      "name": "Ellie Lee",
+      "url": "https://github.com/ellieejlee"
+    },
+    {
+      "name": "Thomas Wagner",
+      "url": "https://github.com/Thomseeen"
+    },
+    {
+      "name": "Arlena Derksen",
+      "url": "https://github.com/boisei0"
+    },
+    {
+      "name": "cflurin",
+      "url": "https://discourse.nodered.org/u/cflurin"
+    },
+    {
+      "name": "Scott Page - IndySoft",
+      "url": "https://github.com/scottpageindysoft"
+    },
+    {
+      "name": "Stephen McLaughlin - Steve-Mcl",
+      "url": "https://discourse.nodered.org/u/Steve-Mcl"
+    },
+    {
+      "name": "Sergio Rius",
+      "url": "https://github.com/SergioRius"
+    },
+    {
+      "name": "Thorsten von Eicken",
+      "url": "https://github.com/tve"
+    },
+    {
+      "name": "meeki007",
+      "url": "https://github.com/meeki007"
+    },
+    {
+      "name": "talltechdude",
+      "url": "https://github.com/talltechdude"
+    },
+    {
+      "name": "Harold Peters Inskipp",
+      "url": "https://github.com/HaroldPetersInskipp"
+    },
+    {
+      "name": "Mudwalker (Colin J)",
+      "url": "https://github.com/mudwalkercj"
+    }
+  ],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

@@ -24,16 +24,16 @@
  * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
- * @typedef {import('Express')} Express
+ * @typedef {import('express')} Express
  */
 
-const path     = require('path')
-const fs = require('fs-extra')
+const { join }     = require('path')
+const { existsSync } = require('./fs')
 const socketio = require('socket.io')
-const tilib    = require('./tilib')    // General purpose library (by Totally Information)
-const uiblib   = require('./uiblib')   // Utility library for uibuilder
+const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
+const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
 // const security = require('./sec-lib') // uibuilder security module
-const tiEventManager = require('@totallyinformation/ti-common-event-handler')
+const { emit } = require('@totallyinformation/ti-common-event-handler')
 
 /** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
  * @param {socketio.Socket} socket Socket.IO socket object
@@ -132,7 +132,6 @@ class UibSockets {
         this.ioNamespaces = {}
 
         //#endregion ---- ---- //
-
     } // --- End of constructor() --- //
 
     /** Assign uibuilder and Node-RED core vars to Class static vars.
@@ -167,8 +166,8 @@ class UibSockets {
         // If available, set up optional outbound msg middleware
         this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null }
         // Try to load the sioMsgOut middleware function - sioMsgOut applies to all outgoing msgs
-        const mwfile = path.join(uib.configFolder, uib.sioMsgOutMwName)
-        if ( fs.existsSync(mwfile) ) { // not interested if the file doesn't exist
+        const mwfile = join(uib.configFolder, uib.sioMsgOutMwName)
+        if ( existsSync(mwfile) ) { // not interested if the file doesn't exist
             try {
                 const sioMsgOut = require( mwfile )
                 if ( typeof sioMsgOut === 'function' ) { // if exported, has to be a function
@@ -183,7 +182,6 @@ class UibSockets {
         }
 
         this._isConfigured = true
-
     } // --- End of setup() --- //
 
     /**  Holder for Socket.IO - we want this to survive redeployments of each node instance
@@ -204,7 +202,7 @@ class UibSockets {
         if (RED === undefined) throw new Error('RED is undefined')
         if (log === undefined) throw new Error('log is undefined')
 
-        const uibSocketPath = this.uib_socketPath = tilib.urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
+        const uibSocketPath = this.uib_socketPath = urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
         log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uibSocketPath}, CORS Origin=*` )
         // Socket.Io server options, see https://socket.io/docs/v4/server-options/
@@ -243,7 +241,6 @@ class UibSockets {
 
         // @ts-ignore ts(2769)
         this.io = new socketio.Server(server, ioOptions) // listen === attach
-
     } // --- End of socketIoSetup() --- //
 
     /** Allow the isConfigured flag to be read (not written) externally
@@ -343,37 +340,45 @@ class UibSockets {
             pageName = getClientPageName(socket, node)
         }
 
-        return {
+        // @ts-ignore
+        const clientTimeDifference = (new Date(socket.handshake.issued)) - (new Date(socket.handshake.auth.browserConnectTimestamp))
+
+        // WARNING: The socket.handshake data can only ever be changed by the client when it (re)connects
+        const out = {
+            /** What was the originating uibuilder URL */
+            'url': node.url,
+
             '_socketId': socket.id,
-            // Let the flow know what v of uib client is in use
-            'version': socket.handshake.auth.clientVersion,
+            /** Is this client reconnected after temp loss? */
+            'recovered': socket.recovered,
             /** Do our best to get the actual IP addr of client despite any Proxies */
             'ip': getClientRealIpAddress(socket),
+            /** THe referring webpage, should be the full URL of the uibuilder page */
+            'referer': socket.request.headers.referer,
+
+            // Let the flow know what v of uib client is in use
+            'version': socket.handshake.auth.clientVersion,
             /** What is the stable client id (set by uibuilder, retained till browser restart) */
             'clientId': socket.handshake.auth.clientId,
             /** What is the client tab identifier (set by uibuilder modern client) */
             'tabId': socket.handshake.auth.tabId,
-            /** What was the originating uibuilder URL */
-            'url': node.url,
             /** What was the originating page name (for SPA's) */
             'pageName': pageName,
             /** The browser's URL parameters */
             'urlParams': socket.handshake.auth.urlParams,
             /** How many times has this client reconnected (e.g. after sleep) */
             'connections': socket.handshake.auth.connectedNum,
-            /** What type of client nav happened previously */
-            'lastNavType': socket.handshake.auth.lastNavType,
             /** True if https/wss */
             'tls': socket.handshake.secure,
             /** When the client connected to the server */
             'connectedTimestamp': (new Date(socket.handshake.issued)).toISOString(),
-            /** THe referring webpage, should be the full URL of the uibuilder page */
-            'referer': socket.request.headers.referer,
-            /** Is this client reconnected after temp loss? */
-            'recovered': socket.recovered,
-
-            // ? client time offset ?
+            // 'browserConnectTimestamp': socket.handshake.auth.browserConnectTimestamp,
         }
+
+        // Only include this if The difference between the timestamps is > 1 minute - output is in milliseconds
+        if (clientTimeDifference > 60000) out.clientTimeDifference = clientTimeDifference
+
+        return out
     }
 
     /** Get a uib node instance namespace
@@ -391,7 +396,7 @@ class UibSockets {
     sendIt(msg, node) {
         if ( msg._uib && msg._uib.originator && (typeof msg._uib.originator === 'string') ) {
             // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
-            tiEventManager.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
+            emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
         }
@@ -434,7 +439,6 @@ class UibSockets {
         // Send out the message for downstream flows
         // TODO: This should probably have safety validations!
         this.sendIt(msg, node)
-
     } // ---- End of listenFromClient ---- //
 
     /** Add a new Socket.IO NAMESPACE
@@ -471,8 +475,8 @@ class UibSockets {
          * Applies ONCE on a new client connection.
          * Had to move to addNS since MW no longer globally loadable since sio v3
          */
-        const sioMwPath = path.join(uib.configFolder, 'sioMiddleware.js')
-        if ( fs.existsSync(sioMwPath) ) { // not interested if the file doesn't exist
+        const sioMwPath = join(uib.configFolder, 'sioMiddleware.js')
+        if ( existsSync(sioMwPath) ) { // not interested if the file doesn't exist
             try {
                 const sioMiddleware = require(sioMwPath)
                 if ( typeof sioMiddleware === 'function' ) {
@@ -486,15 +490,62 @@ class UibSockets {
             }
         }
 
+        //#region -- trace room events --
+        // NB: Only sockets can join rooms, not the server
+        { // eslint-disable-line no-lone-blocks
+            const thislog = log.trace
+            // const thislog = console.log
+            ioNs.adapter.on('create-room', (room) => {
+                thislog(
+                    `[uibuilder:socket:addNS:${url}] Room "${room}" was created`
+                )
+            })
+            ioNs.adapter.on('delete-room', (room) => {
+                thislog(
+                    `[uibuilder:socket:addNS:${url}] Room "${room}" was deleted`
+                )
+            })
+            ioNs.adapter.on('join-room', (room, id) => {
+                thislog(
+                    `[uibuilder:socket:addNS:${url}] Socket ID "${id}" has joined room "${room}"`
+                )
+            })
+            ioNs.adapter.on('leave-room', (room, id) => {
+                thislog(
+                    `[uibuilder:socket:addNS:${url}] Socket ID "${id}" has left room "${room}"`
+                )
+            })
+        }
+        //#endregion -- -- --
+
+        // ! TODO TEST REMOVE
+        // if (url === 'uib-router-eg') {
+        //     setInterval(() => {
+        //         // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
+        //         ioNs.to('uibuilder:fred').emit('uibuilder:fred', `Hello from the server. NS: "${url}"`)
+        //     }, 60000)
+        //     setInterval(() => {
+        //         // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
+        //         this.io.of('/').emit('uibuilder:global', 'Hello from the server. NS: "/"')
+        //     }, 60000)
+        //     // ioNs.join('uibuilder:fred')
+        //     ioNs.on('uibuilder:fred', (room, msg) => {
+        //         console.log('uibuilder:fred', room, msg)
+        //     })
+        //     this.io.on('uibuilder:fred', (room, msg) => {
+        //         console.log('[this.io] uibuilder:fred', room, msg)
+        //     })
+        // }
+
         const that = this
 
+        // When a client connects to the server
         ioNs.on('connection', (socket) => {
 
             //#region ----- Event Handlers ----- //
 
             // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
             socket.on('disconnect', (reason, description) => {
-
                 // ioNs.clientLog[socket.handshake.auth.clientId].connected = false
 
                 node.ioClientsCount = ioNs.sockets.size
@@ -502,7 +553,7 @@ class UibSockets {
                     `[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
                 )
                 node.statusDisplay.text = 'connected ' + ioNs.sockets.size
-                uiblib.setNodeStatus( node )
+                setNodeStatus( node )
 
                 // Let the control output port know a client has disconnected
                 const ctrlMsg = {
@@ -522,8 +573,7 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node)
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
-                tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientDisconnect`, ctrlMsg)
-
+                emit(`node-red-contrib-uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
             }) // --- End of on-connection::on-disconnect() --- //
 
             // Listen for msgs from clients on standard channel
@@ -553,12 +603,10 @@ class UibSockets {
                 if ( !msg.topic ) msg.topic = node.topic
 
                 that.sendCtrlMsg(msg, node)
-
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
             // Listen for socket.io errors - output a control msg
             socket.on('error', function(err) {
-
                 log.error(`[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
 
                 // Let the control output port (port #2) know there has been an error
@@ -572,9 +620,29 @@ class UibSockets {
                 }
 
                 that.sendCtrlMsg(ctrlMsg, node)
-
             }) // --- End of on-connection::on-error() --- //
 
+            // Custom room handling (clientId & pageId rooms are always joined)
+            // - NB: Clients don't understand rooms, they simply receive
+            //       all messages send to all joined rooms.
+            //       Messages have to include room name if need to differentiate at client.
+            //       Server cannot listen to rooms but can send
+            // To send to a custom room from server: ioNs.to("project:4321").emit("project updated")
+
+            // Allow client to request to create/join a room
+            socket.on('uib-room-join', (room) => {
+                socket.join(room)
+            })
+            // Allow clients to request to leave a room
+            socket.on('uib-room-leave', (room) => {
+                socket.leave(room)
+            })
+            // Allow clients to send message to a custom room
+            socket.on('uib-room-send', (room, msg) => {
+                // console.log('uib-room-send', { room, msg })
+                ioNs.to(room).emit(room, msg, socket.handshake.auth)
+                // TODO Option to send on as a node-red msg
+            })
             //#endregion ----- Event Handlers ----- //
 
             //#region ---- run when client connects ---- //
@@ -589,8 +657,8 @@ class UibSockets {
             if (uib.configFolder === null) throw new Error('uib.configFolder is undefined')
 
             // Try to load the sioUse middleware function - sioUse applies to all incoming msgs
-            const mwfile = path.join(uib.configFolder, uib.sioUseMwName)
-            if ( fs.existsSync(mwfile) ) { // not interested if the file doesn't exist
+            const mwfile = join(uib.configFolder, uib.sioUseMwName)
+            if ( existsSync(mwfile) ) { // not interested if the file doesn't exist
                 try {
                     const sioUseMw = require( mwfile )
                     if ( typeof sioUseMw === 'function' ) { // if exported, has to be a function
@@ -605,7 +673,7 @@ class UibSockets {
             }
 
             node.statusDisplay.text = `connected ${ioNs.sockets.size}`
-            uiblib.setNodeStatus( node )
+            setNodeStatus( node )
 
             // Initial connect message to client
             const msgClient = {
@@ -642,12 +710,19 @@ class UibSockets {
             that.sendCtrlMsg(ctrlMsg, node)
 
             // Let other nodes know a client is connecting (via custom event manager)
-            tiEventManager.emit(`node-red-contrib-uibuilder/${this.url}/clientConnect`, ctrlMsg)
+            emit(`node-red-contrib-uibuilder/${node.url}/clientConnect`, ctrlMsg)
 
             //#endregion ---- run when client connects ---- //
 
+            //#region ---- Rooms ----
+            // Ensures uib is listening to all clients and pages
+            // console.log('socket auth: ', socket.handshake.auth)
+            socket.join(`clientId:${socket.handshake.auth.clientId}`)
+            socket.join(`pageName:${socket.handshake.auth.pageName}`)
+            // Not bothering with a tabId room - gets filtered at client anyway
+            // rooms for pathName not needed as each path has own namespace
+            //#endregion ---- ---- ----
         }) // --- End of on-connection() --- //
-
     } // --- End of addNS() --- //
 
     /** Remove the current clients and namespace for this node.
@@ -664,9 +739,7 @@ class UibSockets {
         ioNs.removeAllListeners() // Remove all Listeners for the event emitter
 
         // No longer works from socket.io v3+ //delete this.io.nsps[`/${node.url}`] // Remove from the server namespaces
-
     } // --- End of removeNS() --- //
-
 } // ==== End of UibSockets Class Definition ==== //
 
 /** Singleton model. Only 1 instance of UibSockets should ever exist.

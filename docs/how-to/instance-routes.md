@@ -1,9 +1,10 @@
 ---
 title: Instance-specific Routes
-description: >
-   How to make ExpressJS routes for an individual instance of a uibuilder node.
+description: |
+  How to make ExpressJS routes for an individual instance of a uibuilder node.
 created: 2023-05-07 13:27:12
 lastUpdated: 2023-05-07 13:27:17
+updated: 2023-12-30 17:01:41
 ---
 
 ## Summary

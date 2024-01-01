@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER's Newer Admin API Library
-description: >
+description: |
   Provides data to the Node-RED Editor from the uibuilder runtime.
 created: 2023-09-30 15:58:31
 lastUpdated: 2023-10-01 12:13:13
+updated: 2023-12-30 17:01:42
 ---
 
 TBC

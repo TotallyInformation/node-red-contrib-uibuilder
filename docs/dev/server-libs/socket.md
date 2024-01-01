@@ -1,9 +1,10 @@
 ---
 title: Websocket Handling Library
-description: >
-   A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
+description: |
+  A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
 created: 2021-06-27 21:35:00
 lastUpdated: 2023-09-30 16:44:10
+updated: 2023-12-30 17:01:42
 ---
 
 `nodes/libs/socket.js`

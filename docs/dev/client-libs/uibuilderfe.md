@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER's Deprecated Client Library
-description: >
+description: |
   This describes the now deprecated old version of the client library. Provides the link from the front-end to Node-RED and many helper functions that make uibuilder a complete, lightweight framework.
 created: 2019-05-25 19:05:00
 lastUpdated: 2023-09-30 15:58:36
+updated: 2023-12-30 17:01:42
 ---
 
 > [!WARNING]

@@ -1,10 +1,10 @@
 ---
 title: Some complexities when using VueJS
-description: >
-   While VueJS is a powerful and flexible front-end framework, it isn't without its issues.
-   This page outlines some things to be wary of.
+description: |
+  While VueJS is a powerful and flexible front-end framework, it isn't without its issues. This page outlines some things to be wary of.
 created: 2022-02-15 16:28:47
 lastUpdated: 2022-02-15 16:54:48
+updated: 2023-12-30 17:01:41
 ---
 
 ## Reactive Variables

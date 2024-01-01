@@ -32,10 +32,13 @@
  */
 
 const path = require('path')
-// const fs = require('fs-extra')
+// Async
 const fs = require('fs/promises')
-const { readFileSync } = require('fs')
-const sockets = require('./socket') // Socket.io handler library for uibuilder
+// Sync
+const { existsSync, accessSync, constants: fsConstants, mkdirSync, readFileSync } = require('fs')
+// TODO Remove in future?
+const fg = require('fast-glob')
+// WARNING: Take care not to end up with circular requires. e.g. libs/socket.js cannot be required here
 
 // ! TODO: Move other file-handling functions into this class
 // !       In readiness for move to mono-repo (need node.js v16+ as a base)
@@ -88,7 +91,7 @@ class UibFs {
 
     /** returns true if the filename contains / or \ else false
      * @param {string} fname filename to test
-     * @returns {boolean}
+     * @returns {boolean} True if fname contains / or \
      */
     hasFolder(fname) {
         return /[/|\\]/.test(fname)
@@ -100,7 +103,7 @@ class UibFs {
      */
     throwOnFolderEscape(fname, note) {
         if (fname.includes('..')) {
-            throw new Error(`Path includes '..'. Folder traversal not permitted. '${folder}' [uibuilder:UibFs:throwOnFolderEscape] ${note}`)
+            throw new Error(`Path includes '..'. Folder traversal not permitted. '${fname}' [uibuilder:UibFs:throwOnFolderEscape] ${note}`)
         }
     }
 
@@ -171,7 +174,7 @@ class UibFs {
 
     async getUibInstanceRootFolders() {
         // const chkInstances = Object.values(uib.instances).includes(params.url)
-        // const chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+        // const chkFolders = existsSync(path.join(uib.rootFolder, params.url))
     }
 
     // TODO chk params
@@ -237,18 +240,6 @@ class UibFs {
         }
 
         log.trace(`📗[uibuilder:UibFs:writeInstanceFile] File write SUCCESS. url=${url}, file=${folder}/${fname}`)
-
-        // Reload connected clients if required by sending them a reload msg
-        if ( reload === true ) {
-            sockets.sendToFe(
-                {
-                    _ui: { 'method': 'reload' },
-                    topic: 'uib-save reload'
-                },
-                url,
-                'uiBuilder'
-            )
-        }
     } // -- End of writeFile -- //
 
     /** Get a text file from uibuilder's master template folders
@@ -264,21 +255,74 @@ class UibFs {
 
     //#region ---- Synchronous methods ----
 
-    ensureFolder({ folder, copyFrom,  }) {
-        // const cpyOpts = { 'preserveTimestamps': true }
-        // Make sure folder exists, create if not
-        // Make sure that the folder can be read/write
-        // If copyFrom not undefined/null/'', copy to folder
+    /** Synchronously try access and error if fail.
+     * @param {string} path Path to try to access
+     * @param {'r'|'w'|'rw'|number} mode Modes required to work: r, w or rw
+     */
+    accessSync(path, mode) {
+        switch (mode) {
+            case 'r': {
+                mode = fsConstants.R_OK
+                break
+            }
+
+            case 'w': {
+                mode = fsConstants.W_OK
+                break
+            }
+
+            case 'rw': {
+                mode = fsConstants.R_OK || fsConstants.W_OK
+                break
+            }
+
+            default: {
+                mode = fsConstants.R_OK || fsConstants.W_OK
+                break
+            }
+        }
+        accessSync(path, mode)
+    }
+
+    // ensureFolder({ folder, copyFrom,  }) {
+    // const cpyOpts = { 'preserveTimestamps': true }
+    // Make sure folder exists, create if not
+    // Make sure that the folder can be read/write
+    // If copyFrom not undefined/null/'', copy to folder
+    // }
+
+    /** Does the path exist?
+     * @param {string} path FS Path to check
+     * @returns {boolean} True if path exists
+     */
+    existsSync(path) {
+        return existsSync(path)
+    }
+
+    /** Return a list of files matching the glob specification
+     * @param {string} glob The pattern to match - see fast-glob for details
+     * @returns {string[]} A list of files
+     */
+    fgSync(glob) {
+        if (!glob) return []
+        return fg.sync(glob)
+    }
+
+    /** Synchronously create a folder
+     * @param {string} path The folder to create - creates intermediates only if recursive option is set
+     * @param {{recursive:boolean}|{recursive:boolean,mode:string|number}|number} [options] Options
+     * @returns {string|undefined} Returns undefined unless recursive is set in which case the 1st created path is returned
+     */
+    mkdirSync(path, options) {
+        return mkdirSync(path, options)
     }
 
     //#endregion ---- ---- ----
 
     /* TODO
         moveSync
-        existsSync
         copySync
         copy
-        accessSync (constants.W_OK, constants.R_OK)
         ensureDirSync
     */
 
@@ -290,7 +334,7 @@ class UibFs {
     /** Read a JSON file and return as a JavaScript object - can use instead of fs-extra
      * @throws If reading or parsing fails
      * @param {string} file JSON file path/name to read
-     * @returns {Object} The parsed JSON file as an object
+     * @returns {object} The parsed JSON file as an object
      */
     readJSONSync(file) {
         try {

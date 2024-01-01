@@ -36,13 +36,13 @@ const include = require('gulp-include')
 const once = require('gulp-once')
 // const prompt = require('gulp-prompt')
 const greplace = require('gulp-replace')
-const debug = require('gulp-debug')
+// const debug = require('gulp-debug') // Don't use - force changed to ESM only
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 // const gulpEsbuild = require('gulp-esbuild')
-const {createGulpEsbuild} = require('gulp-esbuild')
+const { createGulpEsbuild } = require('gulp-esbuild')
 const gulpEsbuild = createGulpEsbuild({
-	pipe: true,
+    pipe: true,
 })
 const cleanCSS = require('gulp-clean-css')
 
@@ -71,7 +71,7 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '6.7.0'
+const release = '6.8.0'
 // Wanted node.js version - used for ESBUILD
 const nodeVersion = 'node14.14'
 

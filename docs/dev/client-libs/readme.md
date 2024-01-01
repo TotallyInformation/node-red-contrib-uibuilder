@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER's Front-End Client Libraries
-description: >
+description: |
   UIBUILDER includes a number of server and client libraries. This section of the documentation provides developer information on the front-end client libraries.
 created: 2023-09-30 16:10:25
 lastUpdated: 2023-09-30 17:12:42
+updated: 2023-12-30 17:01:42
 ---
 
 These libraries support client (browser) HTML interactions with Node-RED.

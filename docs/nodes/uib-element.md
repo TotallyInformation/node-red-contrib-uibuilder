@@ -1,9 +1,10 @@
 ---
 title: uib-element - Zero-code web UI creation
-description: >
-   Create `msg._ui` configuration data from simple inputs. This can be easily turned into HTML by the uibuilder client library. All that is needed is to send the data to a uibuilder node and the UI will be built dynamically.
+description: |
+  Create `msg._ui` configuration data from simple inputs. This can be easily turned into HTML by the uibuilder client library. All that is needed is to send the data to a uibuilder node and the UI will be built dynamically.
 created: 2023-02-05 16:31:39
 lastUpdated: 2023-02-22 09:01:47
+updated: 2023-12-30 17:01:41
 ---
 
 *(This document is a work-in-progress, it is not complete)*

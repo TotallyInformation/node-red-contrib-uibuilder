@@ -4,10 +4,16 @@
 ;(function () {
     'use strict'
 
-    const mylog = window['uibuilder'].log
+    // NOTE: window.uibuilder is added - see `resources` folder
+
+    // RED._debug({topic: 'RED.settings', payload:RED.settings})
+
+    const uibuilder = window['uibuilder']
+    const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-element'
+
     /** Node's label @constant {string} paletteCategory */
     const nodeLabel = moduleName
     /** Node's palette category @constant {string} paletteCategory */
@@ -430,7 +436,7 @@
             label: 'Element Config'
         })
 
-        window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
+        uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
     /** Prep for save
@@ -481,8 +487,6 @@
     //#endregion ---- Validation functions ---- //
 
     RED.nodes.registerType(moduleName, {
-        category: paletteCategory,
-        color: paletteColor,
         defaults: {
             name: { value: '' },
             topic: { value: '' },
@@ -518,10 +522,12 @@
         outputs: 1,
         outputLabels: ['uibuilder dynamic UI configuration'],
         icon: 'pencilBoxMultipleWhite.svg',
-        paletteLabel: nodeLabel,
         label: function () {
             return this.name || `[${this.elementtype}] ${this.parent ? `${this.parent}.` : ''}${this.elementid || moduleName}`
         },
+        paletteLabel: moduleName,
+        category: uibuilder.paletteCategory,
+        color: 'var(--uib-node-colour)', // '#E6E0F8'
 
         /** Prepares the Editor panel */
         oneditprepare: function () { onEditPrepare(this) },

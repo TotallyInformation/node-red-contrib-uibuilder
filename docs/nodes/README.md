@@ -1,9 +1,10 @@
 ---
 title: Description of uibuilder's nodes
-description: >
-   Each node has a specific purpose. The main uibuilder node will always be needed. The other nodes play a supporting role.
+description: |
+  Each node has a specific purpose. The main uibuilder node will always be needed. The other nodes play a supporting role.
 created: 2023-08-23 10:44:10
 lastUpdated: 2023-08-23 11:05:19
+updated: 2023-12-30 17:01:41
 ---
 
 * [`uibuilder`](nodes/uibuilder.md) - The main node. You need at least one of these in order to make full use of all of the features.

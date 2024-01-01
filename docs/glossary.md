@@ -1,9 +1,10 @@
 ---
 title: UIBUILDER Glossary
-description: >
-   Terms used in this documentation and their meanings.
+description: |
+  Terms used in this documentation and their meanings.
 created: 2019-05-27 17:13:00
 lastUpdated: 2023-09-30 13:05:48
+updated: 2023-12-30 17:01:41
 ---
 
 | Term         | Meaning                                                      |

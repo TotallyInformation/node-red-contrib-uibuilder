@@ -1,10 +1,10 @@
 ---
 title: Why would I want to use UIBUILDER?
-description: >
-   Node-RED has several ways to deliver web pages already. Why would I want to use UIBUILDER instead?
-   And are there any times I might not want to use it?
+description: |
+  Node-RED has several ways to deliver web pages already. Why would I want to use UIBUILDER instead? And are there any times I might not want to use it?
 created: 2023-09-24 02:18:26
 lastUpdated: 2023-09-24 20:39:51
+updated: 2023-12-30 17:01:42
 ---
 
 ## UIBUILDER potential benefits

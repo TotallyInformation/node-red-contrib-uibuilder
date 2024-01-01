@@ -1,9 +1,10 @@
 ---
 title: Documentation for the uibuilder standard CSS file
-description: >
-   Details of the different styles and their usage.
+description: |
+  Details of the different styles and their usage.
 created: 2023-02-25 13:54:50
-lastUpdated: 2023-05-23 15:15:52
+lastUpdated: 2023-12-11 17:36:55
+updated: 2023-12-30 17:01:41
 ---
 
 *(This document is a work-in-progress, it is not complete)*
@@ -36,6 +37,15 @@ Each of the colour classes have matching sets of CSS variables. The main colour 
 Forms are bordered with a horizontal layout (labels on the same row as the inputs). Layouts currently done using floats but this will change in a future release to use Flex or Grid layouts.
 
 For screen widths below 600px, the labels are moved above the inputs.
+
+## Navigation menus
+
+Basic nav menu formatting is including via the `nav` tag. Including basic horizontal menu (`nav.horizontal` class) formatting. Assumes list embedded in a nav tag and that the list has correct aria roles set.
+
+## Lists
+
+* `.checklist` - designed to work with custom bullet lists using the following types or similar.
+* `li.check`/`li.completed`, `li.uncheck`/`li.unstarted`, `li.started` Use these bullets respectively: ✅, ❌, ✔️. Specifies `font-family: var(--emoji-fonts);`
 
 ## Tables
 
@@ -86,9 +96,9 @@ Designed to be small rounded boxes with a left-hand coloured panel (no text) sho
 ## Utility Styles
 
 * `.animate-pulse` - A standard pulse animation. Useful with `.status-side-panel`.
-* `.border` - Turn on a border with a standard color and corner radius.
+* `.border` - Turn on a border with a standard color and corner radius. Margin, padding and corner radius are controlled by variables.
 * `.box` - Similar to border but with internal padding. The box class has matching `h2`-`h6` sub-classes that reduce top margin to 0.5rem.
-* `.centre` (`.center`) - Centres blocks within their parent block (by applying left & right auto margins).
+* `.centre`, `.center` - Centres blocks within their parent block (by applying left & right auto margins).
 * `.emoji` - Apply to a `<span>` containing an emoji to make it look a lot nicer on most platforms.
 * `.noborder` - Turn off a border
 * `.status-side-panel` - A narrow, full-height block designed to show a vertical coloured status bar (no text). Apply one of the standard colour classes as well. Use with `.animate-pulse` to get an eye-catching effect.
@@ -223,11 +233,15 @@ Note that shadows are notoriously difficult to get right in dark modes. The defa
 
 ### Other
 
-* `--mode` - `light` or `dark` according to the current browser preference or html class override.
-* `--font-family` (`sans-serif`) - Sans-serif is much easier to read on-screen, the actual font is left up to the browser/OS.
-* `--uib-css` - Can be used in JavaScript to know if this style sheet is loaded. See the definition for details on use.
+* `--base-margin` (`1rem`) - Applies to `body`, `div > p` left & right margins. `img`, `picture`, `video`, `canvas`, `svg` all margins. `main` left & right padding. `.checklist` margin-inline start & end.
+* `--border-margin` (`0`) - Applies to `border` class only. How much `margin` to add to a bordered element.
+* `--border-pad` (`0.5rem`) - Applies to `border` class only. How much `padding` to add to a bordered element.
 * `--border-radius` (`0.5rem`) - Used for all styles that have rounded corners. (buttons, inputs, borders, etc.)
+* `--emoji-fonts` ("Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "EmojiOne Color", "Android Emoji", sans-serif) - Use as `font-family: var(--emoji-fonts);` for better emoji's on different platforms.
+* `--font-family` (`sans-serif`) - Sans-serif is much easier to read on-screen, the actual font is left up to the browser/OS.
 * `--grid-fit-min` (`15rem`) - Used by the `.grid-fit` class to specify the minimum child component size. That defines when contents will wrap.
+* `--mode` - `light` or `dark` according to the current browser preference or html class override.
+* `--uib-css` - Can be used in JavaScript to know if this style sheet is loaded. See the definition for details on use.
 
 Many other variables are defined that control levels of saturation, light/dark, border radii, shadows, colours, etc.
 

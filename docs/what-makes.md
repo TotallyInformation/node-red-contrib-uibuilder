@@ -1,9 +1,10 @@
 ---
 title: What makes a good Node-RED Dashboard framework?
-description: >
-   Lays out what I think a good framework for building Node-RED dashboards would look like and what features it would have.
+description: |
+  Lays out what I think a good framework for building Node-RED dashboards would look like and what features it would have.
 created: 2021-09-17 09:28:09
 lastUpdated: 2023-09-30 15:01:50
+updated: 2023-12-30 17:01:41
 ---
 
 Status: **Incomplete**

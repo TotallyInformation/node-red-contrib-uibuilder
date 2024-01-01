@@ -1,3 +1,7 @@
+---
+created: 2022-04-02 19:09:31
+updated: 2023-12-30 17:01:41
+---
 ## Changelog Archive for v1
 
 Current major version changelog can be found in the root of this package: `../CHANGELOG.md`.

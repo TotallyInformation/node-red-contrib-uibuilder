@@ -62,7 +62,7 @@ var require_ui = __commonJS({
        * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
        */
       constructor(win, extLog, jsonHighlight) {
-        __publicField(this, "version", "6.6.0-src");
+        __publicField(this, "version", "6.8.0-src");
         // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
         __publicField(this, "sanitiseExtraTags", ["uib-var"]);
         __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -88,210 +88,7 @@ var require_ui = __commonJS({
           this.syntaxHighlight = function() {
           };
       }
-      /** Directly manage UI via JSON
-       * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
-       */
-      ui(json) {
-        let msg = {};
-        if (json._ui)
-          msg = json;
-        else
-          msg._ui = json;
-        this._uiManager(msg);
-      }
-      // TODO Add multi-slot
-      /** Replace or add an HTML element's slot from text or an HTML string
-       * Will use DOMPurify if that library has been loaded to window.
-       * param {*} ui Single entry from the msg._ui property
-       * @param {Element} el Reference to the element that we want to update
-       * @param {*} component The component we are trying to add/replace
-       */
-      replaceSlot(el, component) {
-        if (!component.slot)
-          return;
-        if (!el)
-          return;
-        if (this.window["DOMPurify"])
-          component.slot = this.window["DOMPurify"].sanitize(component.slot);
-        el.innerHTML = component.slot;
-      }
-      /** Converts markdown text input to HTML if the Markdown-IT library is loaded
-       * Otherwise simply returns the text
-       * @param {string} mdText The input markdown string
-       * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
-       */
-      convertMarkdown(mdText) {
-        if (!mdText)
-          return "";
-        if (!this.window["markdownit"])
-          return mdText;
-        const opts = {
-          // eslint-disable-line object-shorthand
-          html: true,
-          linkify: true,
-          _highlight: true,
-          langPrefix: "language-",
-          highlight(str, lang) {
-            if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
-              try {
-                return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
-              } finally {
-              }
-            }
-            return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-          }
-        };
-        const md = this.window["markdownit"](opts);
-        return md.render(mdText);
-      }
-      /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
-       * Otherwise just returns that HTML as-is.
-       * @param {string} html The input HTML string
-       * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
-       */
-      sanitiseHTML(html) {
-        if (!this.window["DOMPurify"])
-          return html;
-        return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
-      }
-      /** Replace or add an HTML element's slot from a Markdown string
-       * Only does something if the markdownit library has been loaded to window.
-       * Will use DOMPurify if that library has been loaded to window.
-       * @param {Element} el Reference to the element that we want to update
-       * @param {*} component The component we are trying to add/replace
-       */
-      replaceSlotMarkdown(el, component) {
-        if (!el)
-          return;
-        if (!component.slotMarkdown)
-          return;
-        component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
-        component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
-        el.innerHTML = component.slotMarkdown;
-      }
-      /** Attach a new remote script to the end of HEAD synchronously
-       * NOTE: It takes too long for most scripts to finish loading
-       *       so this is pretty useless to work with the dynamic UI features directly.
-       * @param {string} url The url to be used in the script src attribute
-       */
-      loadScriptSrc(url2) {
-        const newScript = this.document.createElement("script");
-        newScript.src = url2;
-        newScript.async = false;
-        this.document.head.appendChild(newScript);
-      }
-      /** Attach a new remote stylesheet link to the end of HEAD synchronously
-       * NOTE: It takes too long for most scripts to finish loading
-       *       so this is pretty useless to work with the dynamic UI features directly.
-       * @param {string} url The url to be used in the style link href attribute
-       */
-      loadStyleSrc(url2) {
-        const newStyle = this.document.createElement("link");
-        newStyle.href = url2;
-        newStyle.rel = "stylesheet";
-        newStyle.type = "text/css";
-        this.document.head.appendChild(newStyle);
-      }
-      /** Attach a new text script to the end of HEAD synchronously
-       * NOTE: It takes too long for most scripts to finish loading
-       *       so this is pretty useless to work with the dynamic UI features directly.
-       * @param {string} textFn The text to be loaded as a script
-       */
-      loadScriptTxt(textFn) {
-        const newScript = this.document.createElement("script");
-        newScript.async = false;
-        newScript.textContent = textFn;
-        this.document.head.appendChild(newScript);
-      }
-      /** Attach a new text stylesheet to the end of HEAD synchronously
-       * NOTE: It takes too long for most scripts to finish loading
-       *       so this is pretty useless to work with the dynamic UI features directly.
-       * @param {string} textFn The text to be loaded as a stylesheet
-       */
-      loadStyleTxt(textFn) {
-        const newStyle = this.document.createElement("style");
-        newStyle.textContent = textFn;
-        this.document.head.appendChild(newStyle);
-      }
-      /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
-       * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
-       *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
-       *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-       * @param {"notify"|"alert"} type Dialog type
-       * @param {object} ui standardised ui data
-       * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
-       * @returns {void}
-       */
-      showDialog(type, ui, msg) {
-        let content = "";
-        if (msg.payload && typeof msg.payload === "string")
-          content += msg.payload;
-        if (ui.content)
-          content += ui.content;
-        if (content === "") {
-          _a2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
-          return;
-        }
-        if (!ui.title && msg.topic)
-          ui.title = msg.topic;
-        if (ui.title)
-          content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
-        if (ui.noAutohide)
-          ui.noAutoHide = ui.noAutohide;
-        if (ui.noAutoHide)
-          ui.autohide = !ui.noAutoHide;
-        if (ui.autoHideDelay) {
-          if (!ui.autohide)
-            ui.autohide = true;
-          ui.delay = ui.autoHideDelay;
-        } else
-          ui.autoHideDelay = 1e4;
-        if (!Object.prototype.hasOwnProperty.call(ui, "autohide"))
-          ui.autohide = true;
-        if (type === "alert") {
-          ui.modal = true;
-          ui.autohide = false;
-          content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
-        }
-        let toaster = this.document.getElementById("toaster");
-        if (toaster === null) {
-          toaster = this.document.createElement("div");
-          toaster.id = "toaster";
-          toaster.title = "Click to clear all notifcations";
-          toaster.setAttribute("class", "toaster");
-          toaster.setAttribute("role", "dialog");
-          toaster.setAttribute("arial-label", "Toast message");
-          toaster.onclick = function() {
-            toaster.remove();
-          };
-          this.document.body.insertAdjacentElement("afterbegin", toaster);
-        }
-        const toast = this.document.createElement("div");
-        toast.title = "Click to clear this notifcation";
-        toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
-        toast.innerHTML = content;
-        toast.setAttribute("role", "alertdialog");
-        if (ui.modal)
-          toast.setAttribute("aria-modal", ui.modal);
-        toast.onclick = function(evt) {
-          evt.stopPropagation();
-          toast.remove();
-          if (toaster.childElementCount < 1)
-            toaster.remove();
-        };
-        if (type === "alert") {
-        }
-        toaster.insertAdjacentElement(ui.appendToast === true ? "beforeend" : "afterbegin", toast);
-        if (ui.autohide === true) {
-          setInterval(() => {
-            toast.remove();
-            if (toaster.childElementCount < 1)
-              toaster.remove();
-          }, ui.autoHideDelay);
-        }
-      }
-      // --- End of showDialog ---
+      //#region ---- Internal Methods ----
       /** Show a browser notification if the browser and the user allows it
        * @param {object} config Notification config data
        * @returns {Promise} Resolves on close or click event, returns the event.
@@ -324,152 +121,6 @@ var require_ui = __commonJS({
         } catch (e) {
           return Promise.reject(new Error("Browser refused to create a Notification"));
         }
-      }
-      /** Show a browser notification if possible. Returns a promise
-       * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
-       * or a Notifications API options object + config.title string.
-       * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
-       * @param {object|string} config Notification config object or simple message string
-       * @returns {Promise} Resolves on close or click event, returns the event.
-       */
-      async notification(config) {
-        if (typeof config === "string") {
-          config = { body: config };
-        }
-        if (typeof Notification === "undefined")
-          return Promise.reject(new Error("Notifications not available in this browser"));
-        let permit = Notification.permission;
-        if (permit === "denied") {
-          return Promise.reject(new Error("Notifications not permitted by user"));
-        } else if (permit === "granted") {
-          return this._showNotification(config);
-        } else {
-          permit = await Notification.requestPermission();
-          if (permit === "granted") {
-            return this._showNotification(config);
-          }
-          return Promise.reject(new Error("Notifications not permitted by user"));
-        }
-      }
-      /** Load a dynamic UI from a JSON web reponse
-       * @param {string} url URL that will return the ui JSON
-       */
-      loadui(url2) {
-        if (!fetch) {
-          _a2.log(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
-          return;
-        }
-        if (!url2) {
-          _a2.log(0, "Ui:loadui", "url parameter must be provided, skipping.")();
-          return;
-        }
-        fetch(url2).then((response) => {
-          if (response.ok === false) {
-            throw new Error(`Could not load '${url2}'. Status ${response.status}, Error: ${response.statusText}`);
-          }
-          _a2.log("trace", "Ui:loadui:then1", `Loaded '${url2}'. Status ${response.status}, ${response.statusText}`)();
-          const contentType = response.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            throw new TypeError(`Fetch '${url2}' did not return JSON, ignoring`);
-          }
-          return response.json();
-        }).then((data) => {
-          if (data !== void 0) {
-            _a2.log("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
-            this._uiManager({ _ui: data });
-            return true;
-          }
-          return false;
-        }).catch((err) => {
-          _a2.log("warn", "Ui:loadui:catch", "Error. ", err)();
-        });
-      }
-      // --- end of loadui
-      // Namespaces - See https://stackoverflow.com/a/52572048/1309986
-      // const NAMESPACES = {
-      //     svg: 'http://www.w3.org/2000/svg',
-      //     html: 'http://www.w3.org/1999/xhtml',
-      //     xml: 'http://www.w3.org/XML/1998/namespace',
-      //     xlink: 'http://www.w3.org/1999/xlink',
-      //     xmlns: 'http://www.w3.org/2000/xmlns/' // sic for the final slash...
-      // }
-      /** Enhance an HTML element that is being composed with ui data
-       *  such as ID, attribs, event handlers, custom props, etc.
-       * @param {*} el HTML Element to enhance
-       * @param {*} comp Individual uibuilder ui component spec
-       */
-      _uiComposeComponent(el, comp) {
-        if (comp.attributes) {
-          Object.keys(comp.attributes).forEach((attrib) => {
-            if (attrib === "value")
-              el.value = comp.attributes[attrib];
-            if (attrib.startsWith("xlink:"))
-              el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
-            else
-              el.setAttribute(attrib, comp.attributes[attrib]);
-          });
-        }
-        if (comp.id)
-          el.setAttribute("id", comp.id);
-        if (comp.type === "svg") {
-          el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
-          el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
-        }
-        if (comp.events) {
-          Object.keys(comp.events).forEach((type) => {
-            if (type.toLowerCase === "onclick")
-              type = "click";
-            try {
-              el.addEventListener(type, (evt) => {
-                new Function("evt", `${comp.events[type]}(evt)`)(evt);
-              });
-            } catch (err) {
-              _a2.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
-            }
-          });
-        }
-        if (comp.properties) {
-          Object.keys(comp.properties).forEach((prop) => {
-            el[prop] = comp.properties[prop];
-          });
-        }
-        if (comp.slot) {
-          this.replaceSlot(el, comp);
-        }
-        if (comp.slotMarkdown) {
-          this.replaceSlotMarkdown(el, comp);
-        }
-      }
-      uiEnhanceElement(el, comp) {
-        this._uiComposeComponent(el, comp);
-      }
-      /** Extend an HTML Element with appended elements using ui components
-       * NOTE: This fn follows a strict hierarchy of added components.
-       * @param {HTMLElement} parentEl The parent HTML Element we want to append to
-       * @param {*} components The ui component(s) we want to add
-       * @param {string} [ns] Optional. The namespace to use.
-       */
-      _uiExtendEl(parentEl, components, ns = "") {
-        components.forEach((compToAdd, i2) => {
-          _a2.log("trace", `Ui:_uiExtendEl:components-forEach:${i2}`, compToAdd)();
-          let newEl;
-          compToAdd.ns = ns;
-          if (compToAdd.ns === "html") {
-            newEl = parentEl;
-            parentEl.innerHTML = compToAdd.slot;
-          } else if (compToAdd.ns === "svg") {
-            newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
-            this._uiComposeComponent(newEl, compToAdd);
-            parentEl.appendChild(newEl);
-          } else {
-            newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
-            this._uiComposeComponent(newEl, compToAdd);
-            parentEl.appendChild(newEl);
-          }
-          if (compToAdd.components) {
-            this._uiExtendEl(newEl, compToAdd.components, compToAdd.ns);
-          }
-        });
       }
       // Vue dynamic inserts Don't really work ...
       // _uiAddVue(ui, isRecurse) {
@@ -546,6 +197,188 @@ var require_ui = __commonJS({
         });
       }
       // --- end of _uiAdd ---
+      /** Enhance an HTML element that is being composed with ui data
+       *  such as ID, attribs, event handlers, custom props, etc.
+       * @param {*} el HTML Element to enhance
+       * @param {*} comp Individual uibuilder ui component spec
+       */
+      _uiComposeComponent(el, comp) {
+        if (comp.attributes) {
+          Object.keys(comp.attributes).forEach((attrib) => {
+            if (attrib === "class" && Array.isArray(comp.attributes[attrib]))
+              comp.attributes[attrib].join(" ");
+            if (attrib === "value")
+              el.value = comp.attributes[attrib];
+            if (attrib.startsWith("xlink:"))
+              el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
+            else
+              el.setAttribute(attrib, comp.attributes[attrib]);
+          });
+        }
+        if (comp.id)
+          el.setAttribute("id", comp.id);
+        if (comp.type === "svg") {
+          el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
+          el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+        }
+        if (comp.events) {
+          Object.keys(comp.events).forEach((type) => {
+            if (type.toLowerCase === "onclick")
+              type = "click";
+            try {
+              el.addEventListener(type, (evt) => {
+                new Function("evt", `${comp.events[type]}(evt)`)(evt);
+              });
+            } catch (err) {
+              _a2.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+            }
+          });
+        }
+        if (comp.properties) {
+          Object.keys(comp.properties).forEach((prop) => {
+            el[prop] = comp.properties[prop];
+          });
+        }
+        if (comp.slot) {
+          this.replaceSlot(el, comp);
+        }
+        if (comp.slotMarkdown) {
+          this.replaceSlotMarkdown(el, comp);
+        }
+      }
+      /** Extend an HTML Element with appended elements using ui components
+       * NOTE: This fn follows a strict hierarchy of added components.
+       * @param {HTMLElement} parentEl The parent HTML Element we want to append to
+       * @param {*} components The ui component(s) we want to add
+       * @param {string} [ns] Optional. The namespace to use.
+       */
+      _uiExtendEl(parentEl, components, ns = "") {
+        components.forEach((compToAdd, i2) => {
+          _a2.log("trace", `Ui:_uiExtendEl:components-forEach:${i2}`, compToAdd)();
+          let newEl;
+          compToAdd.ns = ns;
+          if (compToAdd.ns === "html") {
+            newEl = parentEl;
+            parentEl.innerHTML = compToAdd.slot;
+          } else if (compToAdd.ns === "svg") {
+            newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
+            this._uiComposeComponent(newEl, compToAdd);
+            parentEl.appendChild(newEl);
+          } else {
+            newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+            this._uiComposeComponent(newEl, compToAdd);
+            parentEl.appendChild(newEl);
+          }
+          if (compToAdd.components) {
+            this._uiExtendEl(newEl, compToAdd.components, compToAdd.ns);
+          }
+        });
+      }
+      // TODO Add more error handling and parameter validation
+      /** Handle incoming _ui load requests
+       * Can load JavaScript modules, JavaScript scripts and CSS.
+       * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+       */
+      _uiLoad(ui) {
+        if (ui.components) {
+          if (!Array.isArray(ui.components))
+            ui.components = [ui.components];
+          ui.components.forEach(async (component) => {
+            await import(component);
+          });
+        }
+        if (ui.srcScripts) {
+          if (!Array.isArray(ui.srcScripts))
+            ui.srcScripts = [ui.srcScripts];
+          ui.srcScripts.forEach((script) => {
+            this.loadScriptSrc(script);
+          });
+        }
+        if (ui.txtScripts) {
+          if (!Array.isArray(ui.txtScripts))
+            ui.txtScripts = [ui.txtScripts];
+          this.loadScriptTxt(ui.txtScripts.join("\n"));
+        }
+        if (ui.srcStyles) {
+          if (!Array.isArray(ui.srcStyles))
+            ui.srcStyles = [ui.srcStyles];
+          ui.srcStyles.forEach((sheet) => {
+            this.loadStyleSrc(sheet);
+          });
+        }
+        if (ui.txtStyles) {
+          if (!Array.isArray(ui.txtStyles))
+            ui.txtStyles = [ui.txtStyles];
+          this.loadStyleTxt(ui.txtStyles.join("\n"));
+        }
+      }
+      // --- end of _uiLoad ---
+      /** Handle incoming _ui messages and loaded UI JSON files
+       * Called from start()
+       * @param {*} msg Standardised msg object containing a _ui property object
+       */
+      _uiManager(msg) {
+        if (!msg._ui)
+          return;
+        if (!Array.isArray(msg._ui))
+          msg._ui = [msg._ui];
+        msg._ui.forEach((ui, i2) => {
+          if (!ui.method) {
+            _a2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
+            return;
+          }
+          ui.payload = msg.payload;
+          ui.topic = msg.topic;
+          switch (ui.method) {
+            case "add": {
+              this._uiAdd(ui, false);
+              break;
+            }
+            case "remove": {
+              this._uiRemove(ui, false);
+              break;
+            }
+            case "removeAll": {
+              this._uiRemove(ui, true);
+              break;
+            }
+            case "replace": {
+              this._uiReplace(ui);
+              break;
+            }
+            case "update": {
+              this._uiUpdate(ui);
+              break;
+            }
+            case "load": {
+              this._uiLoad(ui);
+              break;
+            }
+            case "reload": {
+              this._uiReload();
+              break;
+            }
+            case "notify": {
+              this.showDialog("notify", ui, msg);
+              break;
+            }
+            case "alert": {
+              this.showDialog("alert", ui, msg);
+              break;
+            }
+            default: {
+              _a2.log("error", "Ui:_uiManager", `Invalid msg._ui[${i2}].method (${ui.method}). Ignoring`)();
+              break;
+            }
+          }
+        });
+      }
+      // --- end of _uiManager ---
+      /** Handle a reload request */
+      _uiReload() {
+        _a2.log("trace", "Ui:uiManager:reload", "reloading")();
+        location.reload();
+      }
       // TODO Add better tests for failures (see comments)
       /** Handle incoming _ui remove requests
        * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
@@ -662,233 +495,78 @@ var require_ui = __commonJS({
         });
       }
       // --- end of _uiUpdate ---
-      // TODO Add more error handling and parameter validation
-      /** Handle incoming _ui load requests
-       * Can load JavaScript modules, JavaScript scripts and CSS.
-       * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
+      //#endregion ---- -------- ----
+      //#region ---- External Methods ----
+      /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+       * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
+       * If the selected element is a <template>, returns the first child element.
+       * type {HTMLElement}
+       * @param {string} cssSelector A CSS Selector that identifies the element to return
+       * @returns {HTMLElement|null} Selected HTML element or null
        */
-      _uiLoad(ui) {
-        if (ui.components) {
-          if (!Array.isArray(ui.components))
-            ui.components = [ui.components];
-          ui.components.forEach(async (component) => {
-            await import(component);
-          });
+      $(cssSelector) {
+        let el = document.querySelector(cssSelector);
+        if (!el) {
+          _a2.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
+          return null;
         }
-        if (ui.srcScripts) {
-          if (!Array.isArray(ui.srcScripts))
-            ui.srcScripts = [ui.srcScripts];
-          ui.srcScripts.forEach((script) => {
-            this.loadScriptSrc(script);
-          });
-        }
-        if (ui.txtScripts) {
-          if (!Array.isArray(ui.txtScripts))
-            ui.txtScripts = [ui.txtScripts];
-          this.loadScriptTxt(ui.txtScripts.join("\n"));
-        }
-        if (ui.srcStyles) {
-          if (!Array.isArray(ui.srcStyles))
-            ui.srcStyles = [ui.srcStyles];
-          ui.srcStyles.forEach((sheet) => {
-            this.loadStyleSrc(sheet);
-          });
-        }
-        if (ui.txtStyles) {
-          if (!Array.isArray(ui.txtStyles))
-            ui.txtStyles = [ui.txtStyles];
-          this.loadStyleTxt(ui.txtStyles.join("\n"));
-        }
-      }
-      // --- end of _uiLoad ---
-      /** Handle a reload request */
-      _uiReload() {
-        _a2.log("trace", "Ui:uiManager:reload", "reloading")();
-        location.reload();
-      }
-      /** Handle incoming _ui messages and loaded UI JSON files
-       * Called from start()
-       * @param {*} msg Standardised msg object containing a _ui property object
-       */
-      _uiManager(msg) {
-        if (!msg._ui)
-          return;
-        if (!Array.isArray(msg._ui))
-          msg._ui = [msg._ui];
-        msg._ui.forEach((ui, i2) => {
-          if (!ui.method) {
-            _a2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
-            return;
+        if (el.nodeName === "TEMPLATE") {
+          el = el.content.firstElementChild;
+          if (!el) {
+            _a2.log(0, "Uib:$", `Template selected for CSS selector ${cssSelector} but it is empty`)();
+            return null;
           }
-          ui.payload = msg.payload;
-          ui.topic = msg.topic;
-          switch (ui.method) {
-            case "add": {
-              this._uiAdd(ui, false);
-              break;
-            }
-            case "remove": {
-              this._uiRemove(ui, false);
-              break;
-            }
-            case "removeAll": {
-              this._uiRemove(ui, true);
-              break;
-            }
-            case "replace": {
-              this._uiReplace(ui);
-              break;
-            }
-            case "update": {
-              this._uiUpdate(ui);
-              break;
-            }
-            case "load": {
-              this._uiLoad(ui);
-              break;
-            }
-            case "reload": {
-              this._uiReload();
-              break;
-            }
-            case "notify": {
-              this.showDialog("notify", ui, msg);
-              break;
-            }
-            case "alert": {
-              this.showDialog("alert", ui, msg);
-              break;
-            }
-            default: {
-              _a2.log("error", "Ui:_uiManager", `Invalid msg._ui[${i2}].method (${ui.method}). Ignoring`)();
-              break;
-            }
-          }
-        });
+        }
+        return el;
       }
-      // --- end of _uiManager ---
-      /** Get standard data from a DOM node.
-       * @param {*} node DOM node to examine
-       * @param {string} cssSelector Identify the DOM element to get data from
-       * @returns {object} Standardised data object
+      /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
+       * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
+       * @param {string} cssSelector A CSS Selector that identifies the elements to return
+       * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
        */
-      nodeGet(node, cssSelector) {
-        const thisOut = {
-          id: node.id === "" ? void 0 : node.id,
-          name: node.name,
-          children: node.childNodes.length,
-          type: node.nodeName,
-          attributes: void 0,
-          isUserInput: node.validity ? true : false,
-          // eslint-disable-line no-unneeded-ternary
-          userInput: !node.validity ? void 0 : {
-            // eslint-disable-line multiline-ternary
-            value: node.value,
-            validity: void 0,
-            willValidate: node.willValidate,
-            valueAsDate: node.valueAsDate,
-            valueAsNumber: node.valueAsNumber,
-            type: node.type
+      $$(cssSelector) {
+        return Array.from(document.querySelectorAll(cssSelector));
+      }
+      /** Add 1 or several class names to an element
+       * @param {string|string[]} classNames Single or array of classnames
+       * @param {HTMLElement} el HTML Element to add class(es) to
+       */
+      addClass(classNames, el) {
+        if (!Array.isArray(classNames))
+          classNames = [classNames];
+        if (el)
+          el.classList.add(...classNames);
+      }
+      /** Converts markdown text input to HTML if the Markdown-IT library is loaded
+       * Otherwise simply returns the text
+       * @param {string} mdText The input markdown string
+       * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+       */
+      convertMarkdown(mdText) {
+        if (!mdText)
+          return "";
+        if (!this.window["markdownit"])
+          return mdText;
+        const opts = {
+          // eslint-disable-line object-shorthand
+          html: true,
+          linkify: true,
+          _highlight: true,
+          langPrefix: "language-",
+          highlight(str, lang) {
+            if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
+              try {
+                return `<pre class="highlight" data-language="${lang.toUpperCase()}">
+                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
+              } finally {
+              }
+            }
+            return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
           }
         };
-        if (["UL", "OL"].includes(node.nodeName)) {
-          const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
-          if (listEntries) {
-            thisOut.list = {
-              "entries": listEntries.length
-            };
-          }
-        }
-        if (node.nodeName === "DL") {
-          const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
-          if (listEntries) {
-            thisOut.list = {
-              "entries": listEntries.length
-            };
-          }
-        }
-        if (node.nodeName === "TABLE") {
-          const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
-          const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
-          const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
-          if (bodyEntries || headEntries || cols) {
-            thisOut.table = {
-              "headRows": headEntries ? headEntries.length : 0,
-              "bodyRows": bodyEntries ? bodyEntries.length : 0,
-              "columns": cols ? cols.length : 0
-            };
-          }
-        }
-        if (node.nodeName !== "#text" && node.attributes && node.attributes.length > 0) {
-          thisOut.attributes = {};
-          for (const attrib of node.attributes) {
-            if (attrib.name !== "id") {
-              thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
-            }
-          }
-        }
-        if (node.nodeName === "#text") {
-          thisOut.text = node.textContent;
-        }
-        if (node.validity)
-          thisOut.userInput.validity = {};
-        for (const v in node.validity) {
-          thisOut.userInput.validity[v] = node.validity[v];
-        }
-        return thisOut;
+        const md = this.window["markdownit"](opts);
+        return md.render(mdText);
       }
-      // --- end of nodeGet --- //
-      /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
-       * @param {string} cssSelector Identify the DOM element to get data from
-       * @param {string} [propName] Optional. Specific name of property to get from the element
-       * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
-       */
-      uiGet(cssSelector, propName = null) {
-        const selection = (
-          /** @type {NodeListOf<HTMLInputElement>} */
-          this.document.querySelectorAll(cssSelector)
-        );
-        const out = [];
-        selection.forEach((node) => {
-          if (propName !== null && propName !== "") {
-            let prop = node.getAttribute(propName);
-            if (prop === void 0 || prop === null) {
-              try {
-                prop = node[propName];
-              } catch (error) {
-              }
-            }
-            if (prop === void 0 || prop === null) {
-              if (propName.toLowerCase() === "value")
-                out.push(node.innerText);
-              else
-                out.push(`Property '${propName}' not found`);
-            } else {
-              if (prop.constructor.name === "NamedNodeMap") {
-                const p = {};
-                for (const key of prop) {
-                  p[key.name] = prop[key.name].value;
-                }
-                out.push(p);
-              } else if (!prop.constructor.name.toLowerCase().includes("map")) {
-                out.push({
-                  [propName]: prop
-                });
-              } else {
-                const p = {};
-                for (const key in prop) {
-                  p[key] = prop[key];
-                }
-                out.push(p);
-              }
-            }
-          } else {
-            out.push(this.nodeGet(node, cssSelector));
-          }
-        });
-        return out;
-      }
-      // --- end of uiGet --- //
       /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
        * Wraps the included object in a div tag.
        * PDF's, text or unknown MIME types are also wrapped in an iFrame.
@@ -1009,6 +687,389 @@ var require_ui = __commonJS({
         return txtReturn;
       }
       // ---- End of include() ---- //
+      /** Attach a new remote script to the end of HEAD synchronously
+       * NOTE: It takes too long for most scripts to finish loading
+       *       so this is pretty useless to work with the dynamic UI features directly.
+       * @param {string} url The url to be used in the script src attribute
+       */
+      loadScriptSrc(url2) {
+        const newScript = this.document.createElement("script");
+        newScript.src = url2;
+        newScript.async = false;
+        this.document.head.appendChild(newScript);
+      }
+      /** Attach a new text script to the end of HEAD synchronously
+       * NOTE: It takes too long for most scripts to finish loading
+       *       so this is pretty useless to work with the dynamic UI features directly.
+       * @param {string} textFn The text to be loaded as a script
+       */
+      loadScriptTxt(textFn) {
+        const newScript = this.document.createElement("script");
+        newScript.async = false;
+        newScript.textContent = textFn;
+        this.document.head.appendChild(newScript);
+      }
+      /** Attach a new remote stylesheet link to the end of HEAD synchronously
+       * NOTE: It takes too long for most scripts to finish loading
+       *       so this is pretty useless to work with the dynamic UI features directly.
+       * @param {string} url The url to be used in the style link href attribute
+       */
+      loadStyleSrc(url2) {
+        const newStyle = this.document.createElement("link");
+        newStyle.href = url2;
+        newStyle.rel = "stylesheet";
+        newStyle.type = "text/css";
+        this.document.head.appendChild(newStyle);
+      }
+      /** Attach a new text stylesheet to the end of HEAD synchronously
+       * NOTE: It takes too long for most scripts to finish loading
+       *       so this is pretty useless to work with the dynamic UI features directly.
+       * @param {string} textFn The text to be loaded as a stylesheet
+       */
+      loadStyleTxt(textFn) {
+        const newStyle = this.document.createElement("style");
+        newStyle.textContent = textFn;
+        this.document.head.appendChild(newStyle);
+      }
+      /** Load a dynamic UI from a JSON web reponse
+       * @param {string} url URL that will return the ui JSON
+       */
+      loadui(url2) {
+        if (!fetch) {
+          _a2.log(0, "Ui:loadui", "Current environment does not include `fetch`, skipping.")();
+          return;
+        }
+        if (!url2) {
+          _a2.log(0, "Ui:loadui", "url parameter must be provided, skipping.")();
+          return;
+        }
+        fetch(url2).then((response) => {
+          if (response.ok === false) {
+            throw new Error(`Could not load '${url2}'. Status ${response.status}, Error: ${response.statusText}`);
+          }
+          _a2.log("trace", "Ui:loadui:then1", `Loaded '${url2}'. Status ${response.status}, ${response.statusText}`)();
+          const contentType = response.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+            throw new TypeError(`Fetch '${url2}' did not return JSON, ignoring`);
+          }
+          return response.json();
+        }).then((data) => {
+          if (data !== void 0) {
+            _a2.log("trace", "Ui:loadui:then2", "Parsed JSON successfully obtained")();
+            this._uiManager({ _ui: data });
+            return true;
+          }
+          return false;
+        }).catch((err) => {
+          _a2.log("warn", "Ui:loadui:catch", "Error. ", err)();
+        });
+      }
+      // --- end of loadui
+      /** Get standard data from a DOM node.
+       * @param {*} node DOM node to examine
+       * @param {string} cssSelector Identify the DOM element to get data from
+       * @returns {object} Standardised data object
+       */
+      nodeGet(node, cssSelector) {
+        const thisOut = {
+          id: node.id === "" ? void 0 : node.id,
+          name: node.name,
+          children: node.childNodes.length,
+          type: node.nodeName,
+          attributes: void 0,
+          isUserInput: node.validity ? true : false,
+          // eslint-disable-line no-unneeded-ternary
+          userInput: !node.validity ? void 0 : {
+            // eslint-disable-line multiline-ternary
+            value: node.value,
+            validity: void 0,
+            willValidate: node.willValidate,
+            valueAsDate: node.valueAsDate,
+            valueAsNumber: node.valueAsNumber,
+            type: node.type
+          }
+        };
+        if (["UL", "OL"].includes(node.nodeName)) {
+          const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
+          if (listEntries) {
+            thisOut.list = {
+              "entries": listEntries.length
+            };
+          }
+        }
+        if (node.nodeName === "DL") {
+          const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
+          if (listEntries) {
+            thisOut.list = {
+              "entries": listEntries.length
+            };
+          }
+        }
+        if (node.nodeName === "TABLE") {
+          const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
+          const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
+          const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+          if (bodyEntries || headEntries || cols) {
+            thisOut.table = {
+              "headRows": headEntries ? headEntries.length : 0,
+              "bodyRows": bodyEntries ? bodyEntries.length : 0,
+              "columns": cols ? cols.length : 0
+            };
+          }
+        }
+        if (node.nodeName !== "#text" && node.attributes && node.attributes.length > 0) {
+          thisOut.attributes = {};
+          for (const attrib of node.attributes) {
+            if (attrib.name !== "id") {
+              thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
+            }
+            if (attrib.name === "class")
+              thisOut.classes = Array.from(node.classList);
+          }
+        }
+        if (node.nodeName === "#text") {
+          thisOut.text = node.textContent;
+        }
+        if (node.validity)
+          thisOut.userInput.validity = {};
+        for (const v in node.validity) {
+          thisOut.userInput.validity[v] = node.validity[v];
+        }
+        return thisOut;
+      }
+      // --- end of nodeGet --- //
+      /** Show a browser notification if possible. Returns a promise
+       * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+       * or a Notifications API options object + config.title string.
+       * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+       * @param {object|string} config Notification config object or simple message string
+       * @returns {Promise} Resolves on close or click event, returns the event.
+       */
+      async notification(config) {
+        if (typeof config === "string") {
+          config = { body: config };
+        }
+        if (typeof Notification === "undefined")
+          return Promise.reject(new Error("Notifications not available in this browser"));
+        let permit = Notification.permission;
+        if (permit === "denied") {
+          return Promise.reject(new Error("Notifications not permitted by user"));
+        } else if (permit === "granted") {
+          return this._showNotification(config);
+        } else {
+          permit = await Notification.requestPermission();
+          if (permit === "granted") {
+            return this._showNotification(config);
+          }
+          return Promise.reject(new Error("Notifications not permitted by user"));
+        }
+      }
+      /** Remove All, 1 or more class names from an element
+       * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
+       * @param {HTMLElement} el HTML Element to add class(es) to
+       */
+      removeClass(classNames, el) {
+        if (!classNames) {
+          el.removeAttribute("class");
+          return;
+        }
+        if (!Array.isArray(classNames))
+          classNames = [classNames];
+        if (el)
+          el.classList.remove(...classNames);
+      }
+      // TODO Add multi-slot
+      /** Replace or add an HTML element's slot from text or an HTML string
+       * Will use DOMPurify if that library has been loaded to window.
+       * param {*} ui Single entry from the msg._ui property
+       * @param {Element} el Reference to the element that we want to update
+       * @param {*} component The component we are trying to add/replace
+       */
+      replaceSlot(el, component) {
+        if (!component.slot)
+          return;
+        if (!el)
+          return;
+        if (this.window["DOMPurify"])
+          component.slot = this.window["DOMPurify"].sanitize(component.slot);
+        el.innerHTML = component.slot;
+      }
+      /** Replace or add an HTML element's slot from a Markdown string
+       * Only does something if the markdownit library has been loaded to window.
+       * Will use DOMPurify if that library has been loaded to window.
+       * @param {Element} el Reference to the element that we want to update
+       * @param {*} component The component we are trying to add/replace
+       */
+      replaceSlotMarkdown(el, component) {
+        if (!el)
+          return;
+        if (!component.slotMarkdown)
+          return;
+        component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
+        component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
+        el.innerHTML = component.slotMarkdown;
+      }
+      /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+       * Otherwise just returns that HTML as-is.
+       * @param {string} html The input HTML string
+       * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+       */
+      sanitiseHTML(html) {
+        if (!this.window["DOMPurify"])
+          return html;
+        return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
+      }
+      /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
+       * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
+       *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
+       *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
+       * @param {"notify"|"alert"} type Dialog type
+       * @param {object} ui standardised ui data
+       * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+       * @returns {void}
+       */
+      showDialog(type, ui, msg) {
+        let content = "";
+        if (msg.payload && typeof msg.payload === "string")
+          content += `<div>${msg.payload}</div>`;
+        if (ui.content)
+          content += `<div>${ui.content}</div>`;
+        if (content === "") {
+          _a2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
+          return;
+        }
+        if (!ui.title && msg.topic)
+          ui.title = msg.topic;
+        if (ui.title)
+          content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
+        if (ui.noAutohide)
+          ui.noAutoHide = ui.noAutohide;
+        if (ui.noAutoHide)
+          ui.autohide = !ui.noAutoHide;
+        if (ui.autoHideDelay) {
+          if (!ui.autohide)
+            ui.autohide = true;
+          ui.delay = ui.autoHideDelay;
+        } else
+          ui.autoHideDelay = 1e4;
+        if (!Object.prototype.hasOwnProperty.call(ui, "autohide"))
+          ui.autohide = true;
+        if (type === "alert") {
+          ui.modal = true;
+          ui.autohide = false;
+          content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
+        }
+        let toaster = this.document.getElementById("toaster");
+        if (toaster === null) {
+          toaster = this.document.createElement("div");
+          toaster.id = "toaster";
+          toaster.title = "Click to clear all notifcations";
+          toaster.setAttribute("class", "toaster");
+          toaster.setAttribute("role", "dialog");
+          toaster.setAttribute("arial-label", "Toast message");
+          toaster.onclick = function() {
+            toaster.remove();
+          };
+          this.document.body.insertAdjacentElement("afterbegin", toaster);
+        }
+        const toast = this.document.createElement("div");
+        toast.title = "Click to clear this notifcation";
+        toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
+        toast.innerHTML = content;
+        toast.setAttribute("role", "alertdialog");
+        if (ui.modal)
+          toast.setAttribute("aria-modal", ui.modal);
+        toast.onclick = function(evt) {
+          evt.stopPropagation();
+          toast.remove();
+          if (toaster.childElementCount < 1)
+            toaster.remove();
+        };
+        if (type === "alert") {
+        }
+        toaster.insertAdjacentElement(ui.appendToast === true ? "beforeend" : "afterbegin", toast);
+        if (ui.autohide === true) {
+          setInterval(() => {
+            toast.remove();
+            if (toaster.childElementCount < 1)
+              toaster.remove();
+          }, ui.autoHideDelay);
+        }
+      }
+      // --- End of showDialog ---
+      /** Directly manage UI via JSON
+       * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
+       */
+      ui(json) {
+        let msg = {};
+        if (json._ui)
+          msg = json;
+        else
+          msg._ui = json;
+        console.log(this);
+        this._uiManager(msg);
+      }
+      /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
+       * @param {string} cssSelector Identify the DOM element to get data from
+       * @param {string} [propName] Optional. Specific name of property to get from the element
+       * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+       */
+      uiGet(cssSelector, propName = null) {
+        const selection = (
+          /** @type {NodeListOf<HTMLInputElement>} */
+          this.document.querySelectorAll(cssSelector)
+        );
+        const out = [];
+        selection.forEach((node) => {
+          if (propName) {
+            if (propName === "classes")
+              propName = "class";
+            let prop = node.getAttribute(propName);
+            if (prop === void 0 || prop === null) {
+              try {
+                prop = node[propName];
+              } catch (error) {
+              }
+            }
+            if (prop === void 0 || prop === null) {
+              if (propName.toLowerCase() === "value")
+                out.push(node.innerText);
+              else
+                out.push(`Property '${propName}' not found`);
+            } else {
+              const p = {};
+              const cType = prop.constructor.name.toLowerCase();
+              if (cType === "namednodemap") {
+                for (const key of prop) {
+                  p[key.name] = prop[key.name].value;
+                }
+              } else if (!cType.includes("map")) {
+                p[propName] = prop;
+              } else {
+                const p2 = {};
+                for (const key in prop) {
+                  p2[key] = prop[key];
+                }
+              }
+              if (p.class)
+                p.classes = Array.from(node.classList);
+              out.push(p);
+            }
+          } else {
+            out.push(this.nodeGet(node, cssSelector));
+          }
+        });
+        return out;
+      }
+      // --- end of uiGet --- //
+      /** External alias for _uiComposeComponent
+       * @param {*} el HTML Element to enhance
+       * @param {*} comp Individual uibuilder ui component spec
+       */
+      uiEnhanceElement(el, comp) {
+        this._uiComposeComponent(el, comp);
+      }
+      //#endregion ---- -------- ----
     }, /** Log function - passed in constructor or will be a dummy function
      * @type {function}
      */
@@ -1019,146 +1080,6 @@ var require_ui = __commonJS({
 
 // src/front-end-module/uibuilder.module.js
 var import_ui = __toESM(require_ui());
-
-// src/components/uib-var.js
-var _UibVar = class _UibVar extends HTMLElement {
-  //#endregion --- Class Properties ---
-  constructor() {
-    super();
-    //#region --- Class Properties ---
-    /** @type {string} Name of the uibuilder mangaged variable to use */
-    __publicField(this, "variable");
-    /** Current value of the watched variable */
-    __publicField(this, "value");
-    /** Whether to output if the variable is undefined */
-    __publicField(this, "undefined", false);
-    /** Whether to send update value to Node-RED on change */
-    __publicField(this, "report", false);
-    /** What is the value type */
-    __publicField(this, "type", "plain");
-    /** what are the available types? */
-    __publicField(this, "types", ["plain", "html", "markdown", "object"]);
-    /** Mini jQuery-like shadow dom selector (see constructor) */
-    __publicField(this, "$");
-    this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
-    this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
-    this.css = document.createElement("link");
-    this.css.setAttribute("type", "text/css");
-    this.css.setAttribute("rel", "stylesheet");
-    this.css.setAttribute("href", "../uibuilder/uib-brand.min.css");
-    this.dispatchEvent(new Event(`uib-var:construction`, { bubbles: true, composed: true }));
-  }
-  // Makes HTML attribute change watched
-  static get observedAttributes() {
-    return _UibVar.props;
-  }
-  /** NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called  */
-  attributeChangedCallback(attrib, oldVal, newVal) {
-    if (oldVal === newVal)
-      return;
-    switch (attrib) {
-      case "variable": {
-        if (newVal === "")
-          throw new Error('[uib-var] Attribute "variable" MUST be set to a UIBUILDER managed variable name');
-        this.variable = newVal;
-        this.doWatch();
-        break;
-      }
-      case "undefined": {
-        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
-          this.undefined = true;
-        else
-          this.undefined = false;
-        break;
-      }
-      case "report": {
-        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
-          this.report = true;
-        else
-          this.report = false;
-        break;
-      }
-      case "type": {
-        if (newVal === "" || !this.types.includes(newVal.toLowerCase()))
-          this.type = "plain";
-        else
-          this.type = newVal;
-        break;
-      }
-      default: {
-        this[attrib] = newVal;
-        break;
-      }
-    }
-  }
-  // --- end of attributeChangedCallback --- //
-  // Runs when an instance is added to the DOM
-  connectedCallback() {
-    if (!this.id) {
-      if (!this.name)
-        this.name = this.getAttribute("name");
-      if (this.name)
-        this.id = this.name.toLowerCase().replace(/\s/g, "_");
-      else
-        this.id = `uib-var-${++_UibVar._iCount}`;
-    }
-  }
-  // ---- end of connectedCallback ---- //
-  // Runs when an instance is removed from the DOM
-  // disconnectedCallback() {} // ---- end of disconnectedCallback ---- //
-  /** Process changes to the required uibuilder variable */
-  doWatch() {
-    if (!this.variable)
-      throw new Error("No variable name provided");
-    this.value = window["uibuilder"].get(this.variable);
-    this.varDom();
-    window["uibuilder"].onChange(this.variable, (val) => {
-      this.value = val;
-      this.varDom();
-      if (this.report === true)
-        window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
-    });
-  }
-  /** Convert this.value to DOM output */
-  varDom() {
-    if (this.value === void 0 && this.undefined !== true) {
-      this.shadow.innerHTML = "<slot></slot>";
-      return;
-    }
-    let val = this.value;
-    switch (this.type) {
-      case "markdown": {
-        this.shadow.innerHTML = window["uibuilder"].sanitiseHTML(window["uibuilder"].convertMarkdown(val));
-        break;
-      }
-      case "object": {
-        this.shadow.innerHTML = `<pre class="syntax-highlight">${window["uibuilder"].syntaxHighlight(val)}</pre>`;
-        break;
-      }
-      case "plain":
-      case "html":
-      default: {
-        const t = typeof val;
-        if (Array.isArray(val) || t === "[object Object]" || t === "object") {
-          try {
-            this.shadow.innerHTML = JSON.stringify(val);
-          } catch (e) {
-            this.shadow.innerHTML = val;
-          }
-        } else {
-          this.shadow.innerHTML = val;
-        }
-        break;
-      }
-    }
-    this.shadow.appendChild(this.css);
-  }
-};
-/** Holds a count of how many instances of this component are on the page */
-__publicField(_UibVar, "_iCount", 0);
-/** @type {Array<string>} List of all of the html attribs (props) listened to */
-__publicField(_UibVar, "props", ["name", "id", "variable", "undefined", "report", "type"]);
-var UibVar = _UibVar;
 
 // node_modules/engine.io-parser/build/esm/commons.js
 var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -2360,6 +2281,9 @@ var parts = [
   "anchor"
 ];
 function parse(str) {
+  if (str.length > 2e3) {
+    throw "URI too long";
+  }
   const src = str, b = str.indexOf("["), e = str.indexOf("]");
   if (b != -1 && e != -1) {
     str = str.substring(0, b) + str.substring(b, e).replace(/:/g, ";") + str.substring(e, str.length);
@@ -4471,8 +4395,253 @@ Object.assign(lookup2, {
   connect: lookup2
 });
 
+// src/components/uib-var.js
+var _UibVar = class _UibVar extends HTMLElement {
+  //#endregion --- Class Properties ---
+  constructor() {
+    super();
+    //#region --- Class Properties ---
+    /** @type {string} Name of the uibuilder mangaged variable to use */
+    __publicField(this, "variable");
+    /** Current value of the watched variable */
+    __publicField(this, "value");
+    /** Whether to output if the variable is undefined */
+    __publicField(this, "undef", false);
+    /** Whether to send update value to Node-RED on change */
+    __publicField(this, "report", false);
+    /** What is the value type */
+    __publicField(this, "type", "plain");
+    /** what are the available types? */
+    __publicField(this, "types", ["plain", "html", "markdown", "object"]);
+    /** Holds uibuilder.onTopic listeners */
+    __publicField(this, "topicMonitors", {});
+    /** Is UIBUILDER loaded? */
+    __publicField(this, "uib", !!window["uibuilder"]);
+    /** Mini jQuery-like shadow dom selector (see constructor) */
+    __publicField(this, "$");
+    this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
+    this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
+    this.css = document.createElement("link");
+    this.css.setAttribute("type", "text/css");
+    this.css.setAttribute("rel", "stylesheet");
+    this.css.setAttribute("href", "./index.css");
+    this.dispatchEvent(new Event("uib-var:construction", { bubbles: true, composed: true }));
+  }
+  // Makes HTML attribute change watched
+  static get observedAttributes() {
+    return _UibVar.props;
+  }
+  /** Handle watched attributes
+   * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
+   * Attribute values can only ever be strings
+   * @param {string} attrib The name of the attribute that is changing
+   * @param {string} newVal The new value of the attribute
+   * @param {string} oldVal The old value of the attribute
+   */
+  attributeChangedCallback(attrib, oldVal, newVal) {
+    if (oldVal === newVal)
+      return;
+    switch (attrib) {
+      case "variable": {
+        if (newVal === "")
+          throw new Error('[uib-var] Attribute "variable" MUST be set to a UIBUILDER managed variable name');
+        this.variable = newVal;
+        this.doWatch();
+        break;
+      }
+      case "undefined": {
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
+          this.undef = true;
+        else
+          this.undef = false;
+        break;
+      }
+      case "report": {
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
+          this.report = true;
+        else
+          this.report = false;
+        break;
+      }
+      case "type": {
+        if (newVal === "" || !this.types.includes(newVal.toLowerCase()))
+          this.type = "plain";
+        else
+          this.type = newVal;
+        break;
+      }
+      case "topic": {
+        if (!newVal)
+          break;
+        if (!this.uib)
+          break;
+        if (this.variable) {
+          console.warn("\u26A0\uFE0F [uib-var] Cannot process both variable and topic attributes, use only 1. Using variable");
+          break;
+        }
+        this.topic = newVal;
+        if (this.topicMonitors[newVal])
+          uibuilder.cancelTopic(newVal, this.topicMonitors[newVal]);
+        this.topicMonitors[newVal] = uibuilder.onTopic(newVal, (msg) => {
+          this.value = msg.payload;
+          this.varDom();
+          if (this.report === true)
+            window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+        });
+        this.varDom();
+        break;
+      }
+      case "filter": {
+        this.filter = void 0;
+        this.filterArgs = [];
+        if (!newVal)
+          break;
+        this.filter = newVal;
+        newVal = newVal.slice(0, 127);
+        const f = newVal.replace(/\s/g, "").match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/);
+        if (!f) {
+          console.warn(`\u26A0\uFE0F [uib-var] Filter function "${newVal}" invalid. Cannot process.`);
+          break;
+        }
+        this.filter = f[1];
+        if (f[3]) {
+          try {
+            this.filterArgs = JSON.parse(f[3]);
+          } catch (e) {
+          }
+          this.filterArgs = f[3].split(",").map((x) => {
+            x = x.trim();
+            if (isNaN(x)) {
+              let y = x.replace(/^["'`]/, "").replace(/["'`]$/, "");
+              try {
+                y = new Function(`return ${y}`)();
+              } catch (e) {
+              }
+              return y;
+            }
+            return Number(x);
+          });
+        }
+        if (!this.variable && !this.topic)
+          this.varDom(false);
+        break;
+      }
+      default: {
+        this[attrib] = newVal;
+        break;
+      }
+    }
+  }
+  // --- end of attributeChangedCallback --- //
+  // Runs when an instance is added to the DOM
+  connectedCallback() {
+    if (!this.id) {
+      if (!this.name)
+        this.name = this.getAttribute("name");
+      if (this.name)
+        this.id = this.name.toLowerCase().replace(/\s/g, "_");
+      else
+        this.id = `uib-var-${++_UibVar._iCount}`;
+    }
+  }
+  // ---- end of connectedCallback ---- //
+  // Runs when an instance is removed from the DOM
+  disconnectedCallback() {
+    if (this.uib) {
+      Object.keys(this.topicMonitors).forEach((topic) => {
+        uibuilder.cancelTopic(topic, this.topicMonitors[topic]);
+      });
+    }
+  }
+  // ---- end of disconnectedCallback ---- //
+  /** Process changes to the required uibuilder variable */
+  doWatch() {
+    if (!this.variable)
+      throw new Error("No variable name provided");
+    this.value = window["uibuilder"].get(this.variable);
+    this.varDom();
+    window["uibuilder"].onChange(this.variable, (val) => {
+      this.value = val;
+      this.varDom();
+      if (this.report === true)
+        window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+    });
+  }
+  /** Convert this.value to DOM output (applies output filter if needed)
+   * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
+   */
+  varDom(chkVal = true) {
+    if (chkVal === true && !this.value && this.undef !== true) {
+      this.shadow.innerHTML = "<slot></slot>";
+      return;
+    }
+    const val = chkVal ? this.doFilter(this.value) : this.doFilter();
+    let out = val;
+    switch (this.type) {
+      case "markdown": {
+        if (this.uib)
+          out = window["uibuilder"].convertMarkdown(val);
+        break;
+      }
+      case "object": {
+        out = `<pre class="syntax-highlight">${this.uib ? window["uibuilder"].syntaxHighlight(val) : val}</pre>`;
+        break;
+      }
+      case "plain":
+      case "html":
+      default: {
+        const t = typeof val;
+        if (Array.isArray(val) || t === "[object Object]" || t === "object") {
+          try {
+            out = JSON.stringify(val);
+          } catch (e) {
+          }
+        }
+        break;
+      }
+    }
+    if (this.uib)
+      this.shadow.innerHTML = window["uibuilder"].sanitiseHTML(out);
+    else
+      this.shadow.innerHTML = out;
+    this.shadow.appendChild(this.css);
+  }
+  /** Apply value filter if specified
+   * @param {*} value The value to change
+   * @returns {*} The amended value that will be displayed
+   */
+  doFilter(value2) {
+    if (this.filter) {
+      const splitFilter = this.filter.split(".");
+      let globalFn = globalThis[splitFilter[0]];
+      if (globalFn && splitFilter.length > 1) {
+        const parts2 = [splitFilter.pop()];
+        parts2.forEach((part) => {
+          globalFn = globalFn[part];
+        });
+      }
+      if (!globalFn && this.uib === true)
+        globalFn = globalThis["uibuilder"][splitFilter[0]];
+      if (globalFn && typeof globalFn !== "function")
+        globalFn = void 0;
+      if (globalFn) {
+        const argList = value2 === void 0 ? [...this.filterArgs] : [value2, ...this.filterArgs];
+        value2 = Reflect.apply(globalFn, value2 ?? globalFn, argList);
+      } else {
+        console.warn(`\u26A0\uFE0F [uib-var] Filter function "${this.filter}" ${typeof globalFn === "object" ? "is an object not a function" : "not found"}`);
+      }
+    }
+    return value2;
+  }
+};
+/** Holds a count of how many instances of this component are on the page */
+__publicField(_UibVar, "_iCount", 0);
+/** @type {Array<string>} List of all of the html attribs (props) listened to */
+__publicField(_UibVar, "props", ["filter", "id", "name", "report", "topic", "type", "undefined", "variable"]);
+var UibVar = _UibVar;
+
 // src/front-end-module/uibuilder.module.js
-var version = "6.6.0-esm";
+var version = "6.8.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
@@ -4650,9 +4819,8 @@ function syntaxHighlight(json) {
   return json;
 }
 var _ui = new import_ui.default(window, log, syntaxHighlight);
-var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _intersectionObserver, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers;
+var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers;
 var Uib = (_a = class {
-  // ---- End of ioSetup ---- //
   //#endregion -------- ------------ -------- //
   //#region ------- Class construction & startup method -------- //
   constructor() {
@@ -4688,23 +4856,24 @@ var Uib = (_a = class {
     __privateAdd(this, _isShowMsg, false);
     // Has showStatus been turned on?
     __privateAdd(this, _isShowStatus, false);
-    // Has an IntersectionObserver been created? If so, this will hold the reference to it
-    __privateAdd(this, _intersectionObserver, void 0);
     // If true, URL hash changes send msg back to node-red. Controlled by watchUrlHash()
     __privateAdd(this, _sendUrlHash, false);
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     __privateAdd(this, _extCommands, [
+      "elementExists",
       "get",
-      "set",
+      "getManagedVarList",
+      "getWatchedVars",
       "htmlSend",
+      "include",
+      "navigate",
+      "scrollTo",
+      "set",
       "showMsg",
       "showStatus",
       "uiGet",
       "uiWatch",
-      "include",
-      "elementExists",
-      "getManagedVarList",
-      "getWatchedVars"
+      "watchUrlHash"
     ]);
     /** @type {{[key: string]: string}} Managed uibuilder variables */
     __privateAdd(this, _managedVars, {});
@@ -4805,17 +4974,26 @@ var Uib = (_a = class {
     __publicField(this, "storePrefix", "uib_");
     // Prefix for all uib-related localStorage
     __publicField(this, "started", false);
+    // NOTE: These can only change when a client (re)connects
     __publicField(this, "socketOptions", {
       path: this.ioPath,
       transports: ["polling", "websocket"],
-      auth: {
-        clientVersion: version,
-        clientId: this.clientId,
-        pathName: window.location.pathname,
-        urlParams: Object.fromEntries(new URLSearchParams(location.search)),
-        pageName: void 0,
-        tabId: void 0,
-        lastNavType: void 0
+      // Using callback so that they are updated automatically on (re)connect
+      // Only put things in here that will be valid for a websocket connected session
+      auth: (cb) => {
+        cb({
+          // eslint-disable-line n/no-callback-literal
+          clientVersion: version,
+          clientId: this.clientId,
+          pathName: window.location.pathname,
+          urlParams: Object.fromEntries(new URLSearchParams(location.search)),
+          pageName: this.pageName,
+          tabId: this.tabId,
+          lastNavType: this.lastNavType,
+          connectedNum: ++this.connectedNum,
+          // Used to calculate the diff between the server and client connection timestamps - reported if >1 minute
+          browserConnectTimestamp: (/* @__PURE__ */ new Date()).toISOString()
+        });
       },
       transportOptions: {
         // Can only set headers when polling
@@ -4826,6 +5004,37 @@ var Uib = (_a = class {
         }
       }
     });
+    // --- End of elementIsVisible --- //
+    //#endregion -------- -------- -------- //
+    //#region ------- UI handlers --------- //
+    //#region -- Direct to _ui --
+    // ! NOTE: Direct assignments change the target `this` to here. Use with caution
+    /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
+     * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
+     * If the selected element is a <template>, returns the first child element.
+     * type {HTMLElement}
+     * @param {string} cssSelector A CSS Selector that identifies the element to return
+     * @returns {HTMLElement|null} Selected HTML element or null
+     */
+    __publicField(this, "$", _ui.$);
+    /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
+     * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
+     * @param {string} cssSelector A CSS Selector that identifies the elements to return
+     * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
+     */
+    __publicField(this, "$$", _ui.$$);
+    /** Reference to the full ui library */
+    __publicField(this, "$ui", _ui);
+    /** Add 1 or several class names to an element
+     * @param {string|string[]} classNames Single or array of classnames
+     * @param {HTMLElement} el HTML Element to add class(es) to
+     */
+    __publicField(this, "addClass", _ui.addClass);
+    /** Remove All, 1 or more class names from an element
+     * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
+     * @param {HTMLElement} el HTML Element to add class(es) to
+     */
+    __publicField(this, "removeClass", _ui.removeClass);
     log("trace", "Uib:constructor", "Starting")();
     window.addEventListener("offline", (e) => {
       this.set("online", false);
@@ -5144,35 +5353,101 @@ var Uib = (_a = class {
       }
     }
   }
-  /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
-   * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
-   * If the selected element is a <template>, returns the first child element.
-   * type {HTMLElement}
-   * @param {string} cssSelector A CSS Selector that identifies the element to return
-   * @returns {*} Selected HTML element or null
+  /** Set up an event listener to watch for hash changes
+   * and set the watchable urlHash variable
    */
-  $(cssSelector) {
-    let el = document.querySelector(cssSelector);
-    if (!el) {
-      log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
-      return null;
-    }
-    if (el.nodeName === "TEMPLATE") {
-      el = el.content.firstElementChild;
-      if (!el) {
-        log(0, "Uib:$", `Template selected for CSS selector ${cssSelector} but it is empty`)();
-        return null;
+  _watchHashChanges() {
+    this.set("urlHash", location.hash);
+    window.addEventListener("hashchange", (event2) => {
+      this.set("urlHash", location.hash);
+      if (__privateGet(this, _sendUrlHash) === true) {
+        this.send({ topic: "hashChange", payload: location.hash, newHash: this.keepHashFromUrl(event2.newURL), oldHash: this.keepHashFromUrl(event2.oldURL) });
       }
-    }
-    return el;
+    });
   }
-  /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
-   * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
-   * @param {*} cssSelector A CSS Selector that identifies the elements to return
-   * @returns {Array} Array of DOM elements/nodes. Array is empty if selector is not found.
+  /** Copies a uibuilder variable to the browser clipboard
+   * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
    */
-  $$(cssSelector) {
-    return Array.from(document.querySelectorAll(cssSelector));
+  copyToClipboard(varToCopy) {
+    let data = "";
+    try {
+      data = JSON.stringify(this.get(varToCopy));
+    } catch (e) {
+      log("error", "copyToClipboard", `Could not copy "${varToCopy}" to clipboard.`, e.message)();
+    }
+    navigator.clipboard.writeText(data);
+  }
+  // --- End of copyToClipboard --- //
+  /** Does the chosen CSS Selector currently exist?
+   * Automatically sends a msg back to Node-RED unless turned off.
+   * @param {string} cssSelector Required. CSS Selector to examine for visibility
+   * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
+   * @returns {boolean} True if the element exists
+   */
+  elementExists(cssSelector, msg = true) {
+    const el = document.querySelector(cssSelector);
+    let exists = false;
+    if (el !== null)
+      exists = true;
+    if (msg === true) {
+      this.send({
+        payload: exists,
+        info: `Element "${cssSelector}" ${exists ? "exists" : "does not exist"}`
+      });
+    }
+    return exists;
+  }
+  // --- End of elementExists --- //
+  /** Format a number using the INTL standard library - compatible with uib-var filter function
+   * @param {number} value Number to format
+   * @param {number} decimalPlaces Number of decimal places to include. Default=no default
+   * @param {string} intl standard locale spec, e.g. "ja-JP" or "en-GB". Default=navigator.language
+   * @param {object} opts INTL library options object. Optional
+   * @returns {string} formatted number
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
+   */
+  formatNumber(value2, decimalPlaces, intl, opts) {
+    if (isNaN(value2)) {
+      log("error", "formatNumber", `Value must be a number. Value type: "${typeof value2}"`)();
+      return "NaN";
+    }
+    if (!opts)
+      opts = {};
+    if (!intl)
+      intl = navigator.language ? navigator.language : "en-GB";
+    if (decimalPlaces) {
+      opts.minimumFractionDigits = decimalPlaces;
+      opts.maximumFractionDigits = decimalPlaces;
+    }
+    let out;
+    try {
+      out = Number(value2).toLocaleString(intl, opts);
+    } catch (e) {
+      log("error", "formatNumber", `${e.message}. value=${value2}, dp=${decimalPlaces}, intl="${intl}", opts=${JSON.stringify(opts)}`)();
+      return "NaN";
+    }
+    return out;
+  }
+  /** Only keep the URL Hash & ignoring query params
+   * @param {string} url URL to extract the hash from
+   * @returns {string} Just the route id
+   */
+  keepHashFromUrl(url2) {
+    if (!url2)
+      return "";
+    return "#" + url2.replace(/^.*#(.*)/, "$1").replace(/\?.*$/, "");
+  }
+  log() {
+    log(...arguments)();
+  }
+  /** Navigate to a new page or a new route (hash)
+   * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
+   * @returns {Location} The new window.location string
+   */
+  navigate(url2) {
+    if (url2)
+      window.location.href = url2;
+    return window.location;
   }
   /** Set the default originator. Set to '' to ignore. Used with uib-sender.
    * @param {string} [originator] A Node-RED node ID to return the message to
@@ -5218,9 +5493,6 @@ var Uib = (_a = class {
     }
   }
   // ---- End of ping ---- //
-  log() {
-    log(...arguments)();
-  }
   /** Convert JSON to Syntax Highlighted HTML
    * @param {object} json A JSON/JavaScript Object
    * @returns {html} Object reformatted as highlighted HTML
@@ -5229,102 +5501,6 @@ var Uib = (_a = class {
     return syntaxHighlight(json);
   }
   // --- End of syntaxHighlight --- //
-  /** Copies a uibuilder variable to the browser clipboard
-   * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
-   */
-  copyToClipboard(varToCopy) {
-    let data = "";
-    try {
-      console.log(this.get(varToCopy), JSON.stringify(this.get(varToCopy)));
-      data = JSON.stringify(this.get(varToCopy));
-    } catch (e) {
-      log("error", "copyToClipboard", `Could not copy "${varToCopy}" to clipboard.`, e.message)();
-    }
-    navigator.clipboard.writeText(data);
-  }
-  // --- End of copyToClipboard --- //
-  /** Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
-   * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
-   * Automatically sends a msg back to Node-RED.
-   * Requires the element to already exist.
-   * @param {string} cssSelector Required. CSS Selector to examine for visibility
-   * @param {boolean} stop Optional. Default=false. If TRUE, stop the observer for this cssSelector
-   * @param {number} threshold Optional. Default=0.1. Between 0 and 1, the % visibility before trigger
-   */
-  elementIsVisible(cssSelector, stop = false, threshold = 0.1) {
-    if (!IntersectionObserver)
-      return;
-    if (!__privateGet(this, _intersectionObserver)) {
-      __privateSet(this, _intersectionObserver, new IntersectionObserver((ioEntries) => {
-        const entries = [];
-        ioEntries.forEach((entry) => {
-          entry.target.dataset.isvisible = entry.isIntersecting;
-          entries.push({
-            isIntersecting: entry.isIntersecting
-          });
-        });
-        this.send({
-          payload: entries[0].isIntersecting,
-          isVisible: entries[0].isIntersecting,
-          cssSelector,
-          entries
-        });
-        log("info", "uib:elementIsVisible", `Element "${cssSelector}" is now ${entries[0].isIntersecting ? "more than 10%" : "NOT (<10%)"} visible`)();
-      }, { threshold }));
-    }
-    const el = document.querySelector(cssSelector);
-    if (el === null) {
-      log("error", "uib:elementIsVisible", `Element "${cssSelector}" not found`)();
-      return;
-    }
-    if (stop === true) {
-      __privateGet(this, _intersectionObserver).unobserve(el);
-      return;
-    }
-    __privateGet(this, _intersectionObserver).observe(el);
-  }
-  // --- End of elementIsVisible --- //
-  /** Does the chosen CSS Selector currently exist?
-   * Automatically sends a msg back to Node-RED unless turned off.
-   * @param {string} cssSelector Required. CSS Selector to examine for visibility
-   * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
-   * @returns {boolean} True if the element exists
-   */
-  elementExists(cssSelector, msg = true) {
-    const el = document.querySelector(cssSelector);
-    let exists = false;
-    if (el !== null)
-      exists = true;
-    if (msg === true) {
-      this.send({
-        payload: exists,
-        info: `Element "${cssSelector}" ${exists ? "exists" : "does not exist"}`
-      });
-    }
-    return exists;
-  }
-  // --- End of elementExists --- //
-  /** Only keep the URL Hash & ignoring query params
-   * @param {string} url URL to extract the hash from
-   * @returns {string} Just the route id
-   */
-  keepHashFromUrl(url2) {
-    if (!url2)
-      return "";
-    return "#" + url2.replace(/^.*#(.*)/, "$1").replace(/\?.*$/, "");
-  }
-  /** Set up an event listener to watch for hash changes
-   * and set the watchable urlHash variable
-   */
-  _watchHashChanges() {
-    this.set("urlHash", location.hash);
-    window.addEventListener("hashchange", (event2) => {
-      this.set("urlHash", location.hash);
-      if (__privateGet(this, _sendUrlHash) === true) {
-        this.send({ topic: "hashChange", payload: location.hash, newHash: this.keepHashFromUrl(event2.newURL), oldHash: this.keepHashFromUrl(event2.oldURL) });
-      }
-    });
-  }
   /** Returns true/false or a default value for truthy/falsy and other values
    * @param {string|number|boolean|*} val The value to test
    * @param {any} deflt Default value to use if the value is not truthy/falsy
@@ -5348,32 +5524,18 @@ var Uib = (_a = class {
     __privateSet(this, _sendUrlHash, this.truthy(toggle, __privateGet(this, _sendUrlHash) !== true));
     return __privateGet(this, _sendUrlHash);
   }
-  //#endregion -------- -------- -------- //
-  //#region ------- UI handlers --------- //
-  //#region -- Direct to _ui --
-  /** Directly manage UI via JSON
-   * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
+  /** DEPRECATED FOR NOW - wasn't working properly.
+   * Is the chosen CSS Selector currently visible to the user? NB: Only finds the FIRST element of the selection.
+   * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
+   * Automatically sends a msg back to Node-RED.
+   * Requires the element to already exist.
+   * @returns {false} False if not visible
    */
-  ui(json) {
-    _ui.ui(json);
-  }
-  /** Replace or add an HTML element's slot from text or an HTML string
-   * Will use DOMPurify if that library has been loaded to window.
-   * param {*} ui Single entry from the msg._ui property
-   * @param {Element} el Reference to the element that we want to update
-   * @param {*} component The component we are trying to add/replace
-   */
-  replaceSlot(el, component) {
-    _ui.replaceSlot(el, component);
-  }
-  /** Replace or add an HTML element's slot from a Markdown string
-   * Only does something if the markdownit library has been loaded to window.
-   * Will use DOMPurify if that library has been loaded to window.
-   * @param {Element} el Reference to the element that we want to update
-   * @param {*} component The component we are trying to add/replace
-   */
-  replaceSlotMarkdown(el, component) {
-    _ui.replaceSlotMarkdown(el, component);
+  elementIsVisible() {
+    const info = "elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex";
+    log("error", "uib:elementIsVisible", info)();
+    this.send({ payload: "elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex" });
+    return false;
   }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
    * Otherwise simply returns the text
@@ -5381,15 +5543,18 @@ var Uib = (_a = class {
    * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
    */
   convertMarkdown(mdText) {
-    return _ui.convertMarkdown(mdText);
+    return _ui.convertMarkdown;
   }
-  /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
-   * Otherwise just returns that HTML as-is.
-   * @param {string} html The input HTML string
-   * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+  /** ASYNC: Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
+   * Wraps the included object in a div tag.
+   * PDF's, text or unknown MIME types are also wrapped in an iFrame.
+   * @param {string} url The URL of the source file to include
+   * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
+   * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
+   * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
    */
-  sanitiseHTML(html) {
-    return _ui.sanitiseHTML(html);
+  async include(url2, uiOptions) {
+    await _ui.include(url2, uiOptions);
   }
   /** Attach a new remote script to the end of HEAD synchronously
    * NOTE: It takes too long for most scripts to finish loading
@@ -5423,6 +5588,38 @@ var Uib = (_a = class {
   loadStyleTxt(textFn) {
     _ui.loadStyleTxt(textFn);
   }
+  /** Load a dynamic UI from a JSON web reponse
+   * @param {string} url URL that will return the ui JSON
+   */
+  loadui(url2) {
+    _ui.loadui(url2);
+  }
+  /** Replace or add an HTML element's slot from text or an HTML string
+   * Will use DOMPurify if that library has been loaded to window.
+   * param {*} ui Single entry from the msg._ui property
+   * @param {Element} el Reference to the element that we want to update
+   * @param {*} component The component we are trying to add/replace
+   */
+  replaceSlot(el, component) {
+    _ui.replaceSlot(el, component);
+  }
+  /** Replace or add an HTML element's slot from a Markdown string
+   * Only does something if the markdownit library has been loaded to window.
+   * Will use DOMPurify if that library has been loaded to window.
+   * @param {Element} el Reference to the element that we want to update
+   * @param {*} component The component we are trying to add/replace
+   */
+  replaceSlotMarkdown(el, component) {
+    _ui.replaceSlotMarkdown(el, component);
+  }
+  /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
+   * Otherwise just returns that HTML as-is.
+   * @param {string} html The input HTML string
+   * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+   */
+  sanitiseHTML(html) {
+    return _ui.sanitiseHTML(html);
+  }
   /** Show a pop-over "toast" dialog or a modal alert
    * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
    *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
@@ -5435,11 +5632,11 @@ var Uib = (_a = class {
   showDialog(type, ui, msg) {
     _ui.showDialog(type, ui, msg);
   }
-  /** Load a dynamic UI from a JSON web reponse
-   * @param {string} url URL that will return the ui JSON
+  /** Directly manage UI via JSON
+   * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
    */
-  loadui(url2) {
-    _ui.loadui(url2);
+  ui(json) {
+    _ui.ui(json);
   }
   /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
    * @param {string} cssSelector Identify the DOM element to get data from
@@ -5448,17 +5645,6 @@ var Uib = (_a = class {
    */
   uiGet(cssSelector, propName = null) {
     return _ui.uiGet(cssSelector, propName);
-  }
-  /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
-   * Wraps the included object in a div tag.
-   * PDF's, text or unknown MIME types are also wrapped in an iFrame.
-   * @param {string} url The URL of the source file to include
-   * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
-   * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
-   * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
-   */
-  async include(url2, uiOptions) {
-    _ui.include(url2, uiOptions);
   }
   /** Enhance an HTML element that is being composed with ui data
    *  such as ID, attribs, event handlers, custom props, etc.
@@ -5557,6 +5743,28 @@ var Uib = (_a = class {
       log("error", "Uib:notification", "Notification error event", err)();
     });
     return null;
+  }
+  /** Scroll the page
+   * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+   * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
+   * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
+   * @returns {boolean} True if element was found, false otherwise
+   */
+  scrollTo(cssSelector, opts) {
+    if (!opts)
+      opts = {};
+    if (!cssSelector || cssSelector === "top" || cssSelector === "start")
+      cssSelector = "body";
+    else if (cssSelector === "bottom" || cssSelector === "end") {
+      cssSelector = "body";
+      opts.block = "end";
+    }
+    const el = this.$(cssSelector);
+    if (el) {
+      el.scrollIntoView(opts);
+      return true;
+    }
+    return false;
   }
   /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
    * The card has the id `uib_status`.
@@ -5750,6 +5958,98 @@ var Uib = (_a = class {
   // ---- End of watchDom ---- //
   //#endregion -------- -------- -------- //
   //#region ------- Message Handling (To/From Node-RED) -------- //
+  /** Handles original control msgs (not to be confused with "new" msg._uib controls)
+   * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
+   */
+  _ctrlMsgFromServer(receivedCtrlMsg) {
+    if (receivedCtrlMsg === null) {
+      receivedCtrlMsg = {};
+    } else if (typeof receivedCtrlMsg !== "object") {
+      const msg = {};
+      msg["uibuilderCtrl:" + this._ioChannels.control] = receivedCtrlMsg;
+      receivedCtrlMsg = msg;
+    }
+    this._checkTimestamp(receivedCtrlMsg);
+    this.set("ctrlMsg", receivedCtrlMsg);
+    this.set("msgsCtrlReceived", ++this.msgsCtrlReceived);
+    log("trace", "Uib:ioSetup:_ctrlMsgFromServer", `Channel '${this._ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)();
+    switch (receivedCtrlMsg.uibuilderCtrl) {
+      case "shutdown": {
+        log("info", `Uib:ioSetup:${this._ioChannels.control}`, '\u274C Received "shutdown" from server')();
+        this.set("serverShutdown", void 0);
+        break;
+      }
+      case "client connect": {
+        log("trace", `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')();
+        log("info", `Uib:ioSetup:${this._ioChannels.control}`, `\u2705 Server connected. Version: ${receivedCtrlMsg.version}
+Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)();
+        if (!_a._meta.version.startsWith(receivedCtrlMsg.version.split("-")[0])) {
+          log("warn", `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${_a._meta.version})`)();
+        }
+        if (this.autoSendReady === true) {
+          log("trace", `Uib:ioSetup:${this._ioChannels.control}/client connect`, "Auto-sending ready-for-content/replay msg to server");
+        }
+        break;
+      }
+      default: {
+        log("trace", `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`);
+      }
+    }
+  }
+  // -- End of websocket receive CONTROL msg from Node-RED -- //
+  /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
+   * @param {*} obj Either a msg._ui or msg._uib object to check
+   * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+   */
+  _forThis(obj) {
+    let r = true;
+    if (obj.pageName && obj.pageName !== this.pageName) {
+      log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this page")();
+      r = false;
+    }
+    if (obj.clientId && obj.clientId !== this.clientId) {
+      log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this clientId")();
+      r = false;
+    }
+    if (obj.tabId && obj.tabId !== this.tabId) {
+      log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this tabId")();
+      r = false;
+    }
+    return r;
+  }
+  // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
+  _msgRcvdEvents(msg) {
+    this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
+    if (msg.topic)
+      this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
+    if (msg._uib) {
+      if (!this._forThis(msg._uib))
+        return;
+      if (msg._uib.reload === true) {
+        log("trace", "Uib:_msgRcvdEvents:_uib:reload", "reloading")();
+        location.reload();
+        return;
+      }
+      if (msg._uib.command) {
+        this._uibCommand(msg);
+        return;
+      }
+      if (msg._uib.componentRef === "globalNotification") {
+        _ui.showDialog("notify", msg._uib.options, msg);
+      }
+      if (msg._uib.componentRef === "globalAlert") {
+        _ui.showDialog("alert", msg._uib.options, msg);
+      }
+    }
+    if (msg._ui) {
+      if (!this._forThis(msg._ui))
+        return;
+      log("trace", "Uib:_msgRcvdEvents:_ui", "Calling _uiManager")();
+      this._dispatchCustomEvent("uibuilder:msg:_ui", msg);
+      _ui._uiManager(msg);
+    }
+  }
+  // --- end of _msgRcvdEvents ---
   /** Internal send fn. Send a standard or control msg back to Node-RED via Socket.IO
    * NR will generally expect the msg to contain a payload topic
    * @param {object} msgToSend The msg object to send.
@@ -5769,9 +6069,6 @@ var Uib = (_a = class {
       msgToSend.from = "client";
     }
     msgToSend._socketId = this._socket.id;
-    this.socketOptions.auth.tabId = this.tabId;
-    this.socketOptions.auth.lastNavType = this.lastNavType;
-    this.socketOptions.auth.connectedNum = this.connectedNum;
     if (originator === "" && this.originator !== "")
       originator = this.originator;
     if (originator !== "")
@@ -5799,19 +6096,202 @@ var Uib = (_a = class {
     this._socket.emit(channel, msgToSend);
   }
   // --- End of Send Msg Fn --- //
-  /** Send a standard message to NR
-   * @example uibuilder.send({payload:'Hello'})
-   * @param {object} msg Message to send
-   * @param {string} [originator] A Node-RED node ID to return the message to
+  /** Callback handler for messages from Node-RED
+   * NOTE: `this` is the class here rather the `socket` as would be normal since we bind the correct `this` in the call.
+   *       Use this._socket if needing reference to the socket.
+   * @callback ioSetupFromServer Called from ioSetup/this._socket.on(this.#ioChannels.server, this.stdMsgFromServer.bind(this))
+   * @param {object} receivedMsg The msg object from Node-RED
+   * @this Uib
    */
-  send(msg, originator = "") {
-    this._send(msg, this._ioChannels.client, originator);
+  _stdMsgFromServer(receivedMsg) {
+    receivedMsg = makeMeAnObject(receivedMsg, "payload");
+    if (receivedMsg._uib && !this._forThis(receivedMsg._uib))
+      return;
+    if (receivedMsg._ui && !this._forThis(receivedMsg._ui))
+      return;
+    this._checkTimestamp(receivedMsg);
+    this.set("msgsReceived", ++this.msgsReceived);
+    this._msgRcvdEvents(receivedMsg);
+    if (!("_ui" in receivedMsg && !("payload" in receivedMsg))) {
+      this.set("msg", receivedMsg);
+    }
+    log("info", "Uib:ioSetup:stdMsgFromServer", `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)();
   }
-  /** Send a control msg to NR
-   * @param {object} msg Message to send
+  // -- End of websocket receive DATA msg from Node-RED -- //
+  /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
+   * @param {object} msg Msg from Node-RED containing a msg._uib object
    */
-  sendCtrl(msg) {
-    this._send(msg, this._ioChannels.control);
+  _uibCommand(msg) {
+    if (!msg._uib || !msg._uib.command) {
+      log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg })();
+      msg.payload = msg.error = "Invalid command message received";
+      this.send(msg);
+      return;
+    }
+    const cmd = msg._uib.command;
+    if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
+      log("error", "Uib:_uibCommand", `Command '${cmd} is not allowed to be called externally`)();
+      return;
+    }
+    const prop = msg._uib.prop;
+    const value2 = msg._uib.value;
+    const quiet = msg._uib.quiet ?? false;
+    let response, info;
+    switch (cmd) {
+      case "elementIsVisible": {
+        response = this.elementIsVisible(prop);
+        break;
+      }
+      case "elementExists": {
+        response = this.elementExists(prop, false);
+        info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
+        break;
+      }
+      case "get": {
+        response = this.get(prop);
+        break;
+      }
+      case "getManagedVarList": {
+        if (prop === "full")
+          response = this.getManagedVarList();
+        else
+          response = Object.values(this.getManagedVarList());
+        break;
+      }
+      case "getWatchedVars": {
+        if (prop === "full")
+          response = this.getWatchedVars();
+        else
+          response = Object.values(this.getWatchedVars());
+        break;
+      }
+      case "htmlSend": {
+        response = this.htmlSend("", false);
+        break;
+      }
+      case "include": {
+        response = _ui.include(prop, value2);
+        break;
+      }
+      case "navigate": {
+        let newUrl;
+        if (prop)
+          newUrl = prop;
+        else if (value2)
+          newUrl = value2;
+        response = this.navigate(newUrl);
+        break;
+      }
+      case "scrollTo": {
+        response = this.scrollTo(prop, value2);
+        break;
+      }
+      case "set": {
+        let store = false;
+        let autoload = false;
+        if (msg._uib.options && msg._uib.options.store) {
+          if (msg._uib.options.store === true)
+            store = true;
+          if (msg._uib.options.autoload === true)
+            autoload = true;
+        }
+        response = this.set(prop, value2, store, autoload);
+        break;
+      }
+      case "showMsg": {
+        response = this.showMsg(value2, prop);
+        break;
+      }
+      case "showStatus": {
+        response = this.showStatus(value2, prop);
+        break;
+      }
+      case "uiGet": {
+        response = _ui.uiGet(prop, value2);
+        break;
+      }
+      case "uiWatch": {
+        response = this.uiWatch(prop);
+        break;
+      }
+      case "watchUrlHash": {
+        response = this.watchUrlHash(prop);
+        break;
+      }
+      default: {
+        log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();
+        break;
+      }
+    }
+    if (quiet !== true) {
+      if (response === void 0) {
+        response = `'${prop}' is undefined`;
+      }
+      if (Object(response).constructor === Promise) {
+        response.then((data) => {
+          msg.payload = msg._uib.response = data;
+          msg.info = msg._uib.info = info;
+          if (!msg.topic)
+            msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+          this.send(msg);
+          return true;
+        }).catch((err) => {
+          log(0, "Uib:_uibCommand", "Error: ", err)();
+        });
+      } else {
+        msg.payload = msg._uib.response = response;
+        msg.info = msg._uib.info = info;
+        if (!msg.topic)
+          msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+        this.send(msg);
+      }
+    }
+  }
+  // --- end of _uibCommand ---
+  /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
+   * @param {string} txtToSend Text string to send
+   * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
+   */
+  beaconLog(txtToSend, logLevel2) {
+    if (!logLevel2)
+      logLevel2 = "debug";
+    navigator.sendBeacon("./_clientLog", `${logLevel2}::${txtToSend}`);
+  }
+  /** Easily send the entire DOM/HTML msg back to Node-RED
+   * @param {string} [originator] A Node-RED node ID to return the message to
+   * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
+   * @returns {string} The HTML as a string
+   */
+  htmlSend(originator = "", send = true) {
+    const out = `<!doctype html>
+${document.documentElement.outerHTML}`;
+    const msg = {
+      payload: out,
+      length: out.length,
+      topic: this.topic
+    };
+    log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg)();
+    if (send === true)
+      this._send(msg, this._ioChannels.client, originator);
+    return out;
+  }
+  /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
+   * @param {...*} arguments All arguments passed to the function are added to the msg.payload
+   */
+  logToServer() {
+    this.sendCtrl({
+      uibuilderCtrl: "client log message",
+      payload: arguments,
+      // "version":"6.1.0-iife.min",
+      _socketId: this._socket.id,
+      // "ip":"::1",
+      clientId: this.clientId,
+      tabId: this.tabId,
+      // "url":"esp-test",
+      pageName: this.pageName,
+      connections: this.connectedNum,
+      lastNavType: this.lastNavType
+    });
   }
   /** Easily send a msg back to Node-RED on a DOM event
    * @example In plain HTML/JavaScript
@@ -5974,268 +6454,37 @@ var Uib = (_a = class {
       log("warn", "Uib:eventSend", "No payload in msg. data-* attributes should be used.")();
     this._send(msg, this._ioChannels.client, originator);
   }
-  /** Easily send the entire DOM/HTML msg back to Node-RED
+  /** Send a standard message to NR
+   * @example uibuilder.send({payload:'Hello'})
+   * @param {object} msg Message to send
    * @param {string} [originator] A Node-RED node ID to return the message to
-   * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
-   * @returns {string} The HTML as a string
    */
-  htmlSend(originator = "", send = true) {
-    const out = `<!doctype html>
-${document.documentElement.outerHTML}`;
-    const msg = {
-      payload: out,
-      length: out.length,
-      topic: this.topic
-    };
-    log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg)();
-    if (send === true)
-      this._send(msg, this._ioChannels.client, originator);
-    return out;
+  send(msg, originator = "") {
+    this._send(msg, this._ioChannels.client, originator);
   }
-  /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
-   * @param {object} msg Msg from Node-RED containing a msg._uib object
+  // ! TODO: Rooms do not auto-reconnect. Add tracking and update _onConnect
+  // ! TODO: Add receipt handler on joining a room.
+  // NOTE: Rooms only understood by server not client so we have to use custom emits
+  //       They do not auto-reconnect
+  /** Send a msg to a pre-defined Socket.IO room
+   * @link https://socket.io/docs/v4/rooms/
+   * @param {string} room Name of a Socket.IO pre-defined room.
+   * @param {*} msg Message to send
    */
-  _uibCommand(msg) {
-    const cmd = msg._uib.command;
-    if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
-      log("error", "Uib:_uibCommand", `Command '${cmd} is not allowed to be called externally`)();
-      return;
-    }
-    const prop = msg._uib.prop;
-    const value2 = msg._uib.value;
-    let response, info;
-    switch (cmd) {
-      case "elementExists": {
-        response = this.elementExists(prop, false);
-        info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
-        break;
-      }
-      case "get": {
-        response = this.get(prop);
-        break;
-      }
-      case "getManagedVarList": {
-        if (prop === "full")
-          response = this.getManagedVarList();
-        else
-          response = Object.values(this.getManagedVarList());
-        break;
-      }
-      case "getWatchedVars": {
-        if (prop === "full")
-          response = this.getWatchedVars();
-        else
-          response = Object.values(this.getWatchedVars());
-        break;
-      }
-      case "htmlSend": {
-        response = this.htmlSend("", false);
-        break;
-      }
-      case "include": {
-        response = _ui.include(prop, value2);
-        break;
-      }
-      case "set": {
-        let store = false;
-        let autoload = false;
-        if (msg._uib.options && msg._uib.options.store) {
-          if (msg._uib.options.store === true)
-            store = true;
-          if (msg._uib.options.autoload === true)
-            autoload = true;
-        }
-        response = this.set(prop, value2, store, autoload);
-        break;
-      }
-      case "showMsg": {
-        response = this.showMsg(value2, prop);
-        break;
-      }
-      case "showStatus": {
-        response = this.showStatus(value2, prop);
-        break;
-      }
-      case "uiGet": {
-        response = _ui.uiGet(prop, value2);
-        break;
-      }
-      case "uiWatch": {
-        response = this.uiWatch(prop);
-        break;
-      }
-      case "watchUrlHash": {
-        response = this.watchUrlHash(prop);
-        break;
-      }
-      default: {
-        log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();
-        break;
-      }
-    }
-    if (response === void 0) {
-      response = `'${prop}' is undefined`;
-    }
-    if (Object(response).constructor === Promise) {
-      response.then((data) => {
-        msg.payload = msg._uib.response = data;
-        msg.info = msg._uib.info = info;
-        if (!msg.topic)
-          msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
-        this.send(msg);
-        return true;
-      }).catch((err) => {
-        log(0, "Uib:_uibCommand", "Error: ", err)();
-      });
-    } else {
-      msg.payload = msg._uib.response = response;
-      msg.info = msg._uib.info = info;
-      if (!msg.topic)
-        msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
-      this.send(msg);
-    }
+  sendRoom(room, msg) {
+    this._socket.emit("uib-room-send", room, msg);
   }
-  // --- end of _uibCommand ---
-  /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
-   * @param {*} obj Either a msg._ui or msg._uib object to check
-   * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+  joinRoom(room) {
+    this._socket.emit("uib-room-join", room);
+  }
+  leaveRoom(room) {
+    this._socket.emit("uib-room-leave", room);
+  }
+  /** Send a control msg to NR
+   * @param {object} msg Message to send
    */
-  _forThis(obj) {
-    let r = true;
-    if (obj.pageName && obj.pageName !== this.pageName) {
-      log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this page")();
-      r = false;
-    }
-    if (obj.clientId && obj.clientId !== this.clientId) {
-      log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this clientId")();
-      r = false;
-    }
-    if (obj.tabId && obj.tabId !== this.tabId) {
-      log("trace", "Uib:_msgRcvdEvents:_uib", "Not for this tabId")();
-      r = false;
-    }
-    return r;
-  }
-  // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
-  _msgRcvdEvents(msg) {
-    this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
-    if (msg.topic)
-      this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
-    if (msg._uib) {
-      if (!this._forThis(msg._uib))
-        return;
-      if (msg._uib.reload === true) {
-        log("trace", "Uib:_msgRcvdEvents:_uib:reload", "reloading")();
-        location.reload();
-        return;
-      }
-      if (msg._uib.command) {
-        this._uibCommand(msg);
-        return;
-      }
-      if (msg._uib.componentRef === "globalNotification") {
-        _ui.showDialog("notify", msg._uib.options, msg);
-      }
-      if (msg._uib.componentRef === "globalAlert") {
-        _ui.showDialog("alert", msg._uib.options, msg);
-      }
-    }
-    if (msg._ui) {
-      if (!this._forThis(msg._ui))
-        return;
-      log("trace", "Uib:_msgRcvdEvents:_ui", "Calling _uiManager")();
-      this._dispatchCustomEvent("uibuilder:msg:_ui", msg);
-      _ui._uiManager(msg);
-    }
-  }
-  // --- end of _msgRcvdEvents ---
-  /** Callback handler for messages from Node-RED
-   * NOTE: `this` is the class here rather the `socket` as would be normal since we bind the correct `this` in the call.
-   *       Use this._socket if needing reference to the socket.
-   * @callback ioSetupFromServer Called from ioSetup/this._socket.on(this.#ioChannels.server, this.stdMsgFromServer.bind(this))
-   * @param {object} receivedMsg The msg object from Node-RED
-   * @this Uib
-   */
-  _stdMsgFromServer(receivedMsg) {
-    receivedMsg = makeMeAnObject(receivedMsg, "payload");
-    if (receivedMsg._uib && !this._forThis(receivedMsg._uib))
-      return;
-    if (receivedMsg._ui && !this._forThis(receivedMsg._ui))
-      return;
-    this._checkTimestamp(receivedMsg);
-    this.set("msgsReceived", ++this.msgsReceived);
-    this._msgRcvdEvents(receivedMsg);
-    if (!("_ui" in receivedMsg && !("payload" in receivedMsg))) {
-      this.set("msg", receivedMsg);
-    }
-    log("info", "Uib:ioSetup:stdMsgFromServer", `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)();
-  }
-  // -- End of websocket receive DATA msg from Node-RED -- //
-  /** Handles original control msgs (not to be confused with "new" msg._uib controls)
-   * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
-   */
-  _ctrlMsgFromServer(receivedCtrlMsg) {
-    if (receivedCtrlMsg === null) {
-      receivedCtrlMsg = {};
-    } else if (typeof receivedCtrlMsg !== "object") {
-      const msg = {};
-      msg["uibuilderCtrl:" + this._ioChannels.control] = receivedCtrlMsg;
-      receivedCtrlMsg = msg;
-    }
-    this._checkTimestamp(receivedCtrlMsg);
-    this.set("ctrlMsg", receivedCtrlMsg);
-    this.set("msgsCtrlReceived", ++this.msgsCtrlReceived);
-    log("trace", "Uib:ioSetup:_ctrlMsgFromServer", `Channel '${this._ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)();
-    switch (receivedCtrlMsg.uibuilderCtrl) {
-      case "shutdown": {
-        log("info", `Uib:ioSetup:${this._ioChannels.control}`, '\u274C Received "shutdown" from server')();
-        this.set("serverShutdown", void 0);
-        break;
-      }
-      case "client connect": {
-        log("trace", `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')();
-        log("info", `Uib:ioSetup:${this._ioChannels.control}`, `\u2705 Server connected. Version: ${receivedCtrlMsg.version}
-Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)();
-        if (!_a._meta.version.startsWith(receivedCtrlMsg.version.split("-")[0])) {
-          log("warn", `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${_a._meta.version})`)();
-        }
-        if (this.autoSendReady === true) {
-          log("trace", `Uib:ioSetup:${this._ioChannels.control}/client connect`, "Auto-sending ready-for-content/replay msg to server");
-        }
-        break;
-      }
-      default: {
-        log("trace", `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`);
-      }
-    }
-  }
-  // -- End of websocket receive CONTROL msg from Node-RED -- //
-  /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
-   * @param {string} txtToSend Text string to send
-   * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
-   */
-  beaconLog(txtToSend, logLevel2) {
-    if (!logLevel2)
-      logLevel2 = "debug";
-    navigator.sendBeacon("./_clientLog", `${logLevel2}::${txtToSend}`);
-  }
-  /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
-   * -@param {...*} arguments All arguments passed to the function are added to the msg.payload
-   */
-  logToServer() {
-    this.sendCtrl({
-      uibuilderCtrl: "client log message",
-      payload: arguments,
-      // "version":"6.1.0-iife.min",
-      _socketId: this._socket.id,
-      // "ip":"::1",
-      clientId: this.clientId,
-      tabId: this.tabId,
-      // "url":"esp-test",
-      pageName: this.pageName,
-      connections: this.connectedNum,
-      lastNavType: this.lastNavType
-    });
+  sendCtrl(msg) {
+    this._send(msg, this._ioChannels.control);
   }
   //#endregion -------- ------------ -------- //
   //#region ------- Socket.IO -------- //
@@ -6295,7 +6544,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       window.clearTimeout(__privateGet(this, _timerid));
     __privateSet(this, _timerid, window.setTimeout(() => {
       log("warn", "Uib:checkConnect:setTimeout", `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}`)();
-      this._socket.close();
+      this._socket.disconnect();
       this._socket.connect();
       __privateSet(this, _timerid, null);
       this._checkConnect(delay * factor, factor, depth++);
@@ -6306,11 +6555,6 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
   // See message handling section for msg receipt handlers
   /** Called by _ioSetup when Socket.IO connects to Node-RED */
   _onConnect() {
-    this.set("connectedNum", this.connectedNum++);
-    this.socketOptions.auth.connectedNum = this.connectedNum;
-    this.socketOptions.auth.lastNavType = this.lastNavType;
-    this.socketOptions.auth.tabId = this.tabId;
-    this.socketOptions.auth.more = this.tabId;
     log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
 Namespace: ${this.ioNamespace}`)();
     this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
@@ -6345,14 +6589,9 @@ Namespace: ${this.ioNamespace}`)();
       this.set("ioConnected", false);
     }
     this.socketOptions.path = this.ioPath;
-    this.socketOptions.auth.pageName = this.pageName;
-    this.socketOptions.auth.clientId = this.clientId;
-    this.socketOptions.transportOptions.polling.extraHeaders["x-clientid"] = `${_a._meta.displayName}; ${_a._meta.type}; ${_a._meta.version}; ${this.clientId}`;
-    this.socketOptions.auth.tabId = this.tabId;
-    this.socketOptions.auth.lastNavType = this.lastNavType;
-    this.socketOptions.auth.connectedNum = this.connectedNum;
     log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
     this._socket = lookup2(this.ioNamespace, this.socketOptions);
+    this._connectGlobal();
     this._socket.on("connect", this._onConnect.bind(this));
     this._socket.on(this._ioChannels.server, this._stdMsgFromServer.bind(this));
     this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this));
@@ -6374,6 +6613,24 @@ Namespace: ${this.ioNamespace}`)();
     this._checkConnect();
     return true;
   }
+  // ---- End of ioSetup ---- //
+  /** Connect to global namespace & create global listener that updates the `globalMsg` var */
+  _connectGlobal() {
+    this._socketGlobal = lookup2("/", this.socketOptions);
+    this._socketGlobal.onAny((...args) => {
+      this.set("globalMsg", args.slice(0, -1));
+    });
+  }
+  /** Manually (re)connect socket.io */
+  connect() {
+    this._socket.connect();
+  }
+  /** Manually disconnect socket.io and stop any auto-reconnect timer */
+  disconnect() {
+    this._socket.disconnect();
+    if (__privateGet(this, _timerid))
+      window.clearTimeout(__privateGet(this, _timerid));
+  }
   /** Start up Socket.IO comms and listeners
    * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
    * necessarily work out the correct ioPath to use.
@@ -6393,10 +6650,12 @@ Client ID: ${this.clientId}`)();
     log("trace", "Uib:start", "ioNamespace: ", this.ioNamespace, `
 ioPath: ${this.ioPath}`)();
     if (options) {
-      if (options.ioNamespace !== void 0 && options.ioNamespace !== null && options.ioNamespace !== "")
+      if (options.ioNamespace)
         this.set("ioNamespace", options.ioNamespace);
-      if (options.ioPath !== void 0 && options.ioPath !== null && options.ioPath !== "")
+      if (options.ioPath)
         this.set("ioPath", options.ioPath);
+      if (options.nopolling && this.socketOptions.transports[0] === "polling")
+        this.socketOptions.transports.shift();
     }
     if (document.styleSheets.length >= 1 || document.styleSheets.length === 1 && document.styleSheets[0].cssRules.length === 0) {
       log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
@@ -6449,38 +6708,43 @@ ioPath: ${this.ioPath}`)();
     this._dispatchCustomEvent("uibuilder:startComplete");
   }
   //#endregion -------- ------------ -------- //
-}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _intersectionObserver = new WeakMap(), _sendUrlHash = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
+}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
 __publicField(_a, "_meta", {
   version,
   type: "module",
   displayName: "uibuilder"
 }), _a);
-var uibuilder = new Uib();
+var uibuilder2 = new Uib();
 if (!window["uibuilder"]) {
-  window["uibuilder"] = uibuilder;
+  window["uibuilder"] = uibuilder2;
 } else {
   log("error", "uibuilder.module.js", "`uibuilder` already assigned to window. Have you tried to load it more than once?");
 }
 if (!window["uib"]) {
-  window["uib"] = uibuilder;
+  window["uib"] = uibuilder2;
 } else {
   log("warn", "uibuilder.module.js", "`uib` shortcut already assigned to window.");
 }
 if (!window["$"]) {
   window["$"] = window["uibuilder"].$;
 } else {
-  log("warn", "uibuilder.module.js", "Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` instead.");
+  log("warn", "uibuilder.module.js", "Cannot allocate the global `$`, it is already in use. Use `uibuilder.$` or `uib.$` instead.");
 }
 if (!window["$$"]) {
   window["$$"] = window["uibuilder"].$$;
 } else {
-  log("warn", "uibuilder.module.js", "Cannot allocate the global `$$`, it is already in use. Use `uibuilder.$$` instead.");
+  log("warn", "uibuilder.module.js", "Cannot allocate the global `$$`, it is already in use. Use `uibuilder.$$` or `uib.$$` instead.");
 }
-var uibuilder_module_default = uibuilder;
-uibuilder.start();
+if (!window["$ui"]) {
+  window["$ui"] = window["uibuilder"].$ui;
+} else {
+  log("warn", "uibuilder.module.js", "Cannot allocate the global `$ui`, it is already in use. Use `uibuilder.$ui` or `uib.$ui` instead.");
+}
+var uibuilder_module_default = uibuilder2;
+uibuilder2.start();
 customElements.define("uib-var", UibVar);
 export {
   Uib,
   uibuilder_module_default as default,
-  uibuilder
+  uibuilder2 as uibuilder
 };

@@ -62,9 +62,18 @@
     --lightness-value: var(--light-lightness);
     --lightness: calc(var(--lightness-value) + var(--lightness-bias));
 
+    --base-margin: 1rem;
     --border-radius: 0.5rem; /*8px;*/
+    --border-pad: 0.5rem;
+    --border-margin: 0;
+
     /* For the .grid-fit class, the minimum child element size */
     --grid-fit-min: 15rem;
+
+    /* For nicer emoji's use this as the font-family */
+    --emoji-fonts: "Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji", "EmojiOne Color", "Android Emoji",
+        sans-serif;
 
     /*#region --- Brand --- */
     --brand: hsl(
@@ -326,7 +335,6 @@
     );
     --secondary: var(--secondary-bg);
     /*#endregion --- --- */
-
 }
 
 /* If the browser reports it, we can adjust for light/dark theme preferences
@@ -466,8 +474,8 @@ html {
     accent-color: var(--brand);
 }
 body {
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin-left: var(--base-margin);
+    margin-right: var(--base-margin);
     /* padding: 0.3rem; */
     font-family: var(--font-family);
 }
@@ -480,7 +488,7 @@ img, picture, video, canvas, svg {
     vertical-align: bottom;
     max-width: 100%;
     background-color: var(--surface2);
-    margin:1rem;
+    margin:var(--base-margin);
 }
 p, h1, h2, h3, h4, h5, h6, heading, li, dl, dt, blockquote {
     overflow-wrap: break-word;
@@ -489,8 +497,8 @@ p, h1, h2, h3, h4, h5, h6, heading, li, dl, dt, blockquote {
     word-break: break-word;
 }
 div > p {
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin-left: var(--base-margin);
+    margin-right: var(--base-margin);
 }
 button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
     /* display: inline-flex; */
@@ -537,8 +545,8 @@ code {
     font-size: 120%;
 }
 main {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: var(--base-margin);
+    padding-right: var(--base-margin);
     max-width: 64rem;
     margin-left:auto;
     margin-right: auto;    
@@ -670,18 +678,76 @@ form > label:focus-within {
 
 /*#endregion --- Forms --- */
 
+/*#region --- Menus --- */
+nav a {
+    text-decoration: none;
+    color: inherit;
+    background-color: inherit;
+}
+nav li:not([aria-current]):hover {
+    font-weight: bold;
+}
+nav [aria-current=page] {
+	font-weight: bolder;
+    text-decoration: underline;
+}
+/* identifiable nav entries (li): nav [data-route] */
+/*#region -- Horizontal menu -- */
+nav.horizontal {
+    display: inline-block;
+    padding: 0.5rem;
+}
+nav.horizontal > h2 {
+    display: inline-block;
+    line-height: inherit;
+    font-size: inherit;
+    margin: 0;
+}
+nav.horizontal [role="menubar"] { /* ul */
+    list-style-type: none;
+    display: inline-block;
+    margin: 0;
+    padding: 0 0 0 0.5rem;
+
+}
+nav.horizontal li { /* [role="menuitem"], [data-route], li */
+    display: inline-block;
+    padding: 0 0.4rem 0 0.1rem;
+}
+nav.horizontal li:not(:last-child) {
+    border-right: 2px solid;
+    border-right-color: inherit;
+}
+/*#endregion -- ---- -- */
+/*#endregion --- Menus --- */
+
+/*#region --- Lists --- */
+.checklist {
+    margin-inline-start: var(--base-margin);
+    margin-inline-end: var(--base-margin);
+    padding-inline-start: .2rem;
+}
+li.check, li.completed {
+    list-style-type: "✅";
+    padding-left: 0.4rem;
+    font-family: var(--emoji-fonts);
+}
+li.uncheck, li.unstarted {
+    list-style-type: "❌";
+    padding-left: 0.4rem;
+    font-family: var(--emoji-fonts);
+}
+li.started {
+    list-style-type: "✔️";
+    padding-left: 0.4rem;
+    font-family: var(--emoji-fonts);
+}
+/*#endregion --- Lists --- */
+
 /*#region ---- Utility ---- */
 
 .emoji { /* Nicer, cross-platform emoji's */
-    font-family: 
-        "Twemoji Mozilla",
-        "Apple Color Emoji",
-        "Segoe UI Emoji",
-        "Segoe UI Symbol",
-        "Noto Color Emoji",
-        "EmojiOne Color",
-        "Android Emoji",
-        sans-serif;
+    font-family: var(--emoji-fonts);
 }
 
 .noborder {
@@ -691,6 +757,8 @@ form > label:focus-within {
 .border {
     border: 1px solid var(--text3);
     border-radius: var(--border-radius);
+    padding: var(--border-pad);
+    margin: var(--border-margin);
 }
 
 .box {
