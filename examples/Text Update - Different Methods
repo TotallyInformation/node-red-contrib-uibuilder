@@ -99,6 +99,7 @@
         "name": "",
         "topic": "",
         "url": "text-update-egs",
+        "urlValid": true,
         "fwdInMessages": false,
         "allowScripts": false,
         "allowStyles": false,
@@ -926,5 +927,15 @@
                 "046d41ddfade6f54"
             ]
         ]
+    },
+    {
+        "id": "eb8221235230f0a2",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Example updated: 2024-01-01",
+        "info": "",
+        "x": 1280,
+        "y": 40,
+        "wires": []
     }
 ]
