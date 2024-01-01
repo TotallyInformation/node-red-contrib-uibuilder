@@ -221,6 +221,12 @@ function nodeInstance(config) {
     if ( uib.RED === null ) return
     const RED = uib.RED
 
+    // If someone deploys but ignored the error about blank URL's - don't set up the node.
+    if (!config.url || config.urlValid === false ) {
+        RED.log.error(`[uibuilder] uibuilder node ${config.id} deployed with invalid URL in flow ${config.z} - not configuring`)
+        return
+    }
+
     /** Create the node instance - `this` can only be referenced AFTER here
      * @param {uibNode} this _
      */
@@ -228,18 +234,18 @@ function nodeInstance(config) {
 
     //#region ====== Create local copies of the node configuration (as defined in the .html file) ====== //
     // NB: this.id and this.type are also available
-    this.name            = config.name  || ''
-    this.topic           = config.topic || ''
+    this.name            = config.name  ?? ''
+    this.topic           = config.topic ?? ''
     this.url             = config.url // Undefined or '' is not valid
     this.oldUrl          = config.oldUrl
-    this.fwdInMessages   = config.fwdInMessages === undefined ? false : config.fwdInMessages
-    this.allowScripts    = config.allowScripts === undefined ? false : config.allowScripts
-    this.allowStyles     = config.allowStyles === undefined ? false : config.allowStyles
-    this.copyIndex       = config.copyIndex === undefined ? true : config.copyIndex // DEPRECATED
-    this.templateFolder  = config.templateFolder || templateConf.blank.folder
+    this.fwdInMessages   = config.fwdInMessages ?? false
+    this.allowScripts    = config.allowScripts ?? false
+    this.allowStyles     = config.allowStyles ?? false
+    this.copyIndex       = config.copyIndex ?? true // DEPRECATED
+    this.templateFolder  = config.templateFolder ?? templateConf.blank.folder
     this.extTemplate     = config.extTemplate
-    this.showfolder      = config.showfolder === undefined ? false : config.showfolder
-    this.reload          = config.reload === undefined ? false : config.reload
+    this.showfolder      = config.showfolder ?? false
+    this.reload          = config.reload ?? false
     this.sourceFolder    = config.sourceFolder // NB: Do not add a default here as undefined triggers a check for index.html in web.js:setupInstanceStatic
     this.deployedVersion = config.deployedVersion
     this.showMsgUib      = config.showMsgUib // Show additional client id in standard msgs (see socket.js)
