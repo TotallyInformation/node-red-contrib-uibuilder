@@ -9,7 +9,7 @@
     // RED._debug({topic: 'RED.settings', payload:RED.settings})
 
     const uibuilder = window['uibuilder']
-    const log = uibuilder.log
+    // const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-save'

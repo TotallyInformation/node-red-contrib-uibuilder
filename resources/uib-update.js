@@ -9,17 +9,10 @@
     // RED._debug({topic: 'RED.settings', payload:RED.settings})
 
     const uibuilder = window['uibuilder']
-    const log = uibuilder.log
+    // const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-update'
-
-    /** Node's label @constant {string} paletteCategory */
-    const nodeLabel = moduleName
-    /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = window['uibuilder'].paletteCategory
-    /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
     const inputTypes = [
         'msg', 'flow', 'global',

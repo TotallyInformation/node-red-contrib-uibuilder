@@ -9,17 +9,10 @@
     // RED._debug({topic: 'RED.settings', payload:RED.settings})
 
     const uibuilder = window['uibuilder']
-    const log = uibuilder.log
+    // const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-element'
-
-    /** Node's label @constant {string} paletteCategory */
-    const nodeLabel = moduleName
-    /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = window['uibuilder'].paletteCategory
-    /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
 
     /** Element Types definitions */
     const elTypes = {
@@ -268,8 +261,8 @@
     function onEditPrepare(node) {
         // Initial config data
         if (!node.confData) node.confData = {}
-        if (!node.parent || node.parent === '') $('#node-input-parent').val('body')
-        if (!node.position || node.position === '') {
+        if (node.parent === '' || !node.parent) $('#node-input-parent').val('body')
+        if (node.position === '' || !node.position ) {
             $('#node-input-position').val('last')
             node.position = 'last'
         }
@@ -414,7 +407,7 @@
                     docFrag = templ.content.cloneNode(true)
                     $('#el-tab-conf').append(docFrag)
                     // Get any required functions for this type from the template (append runs the script tags immediately)
-                    const confFns = window['uibElementConfigFns']
+                    // const confFns = window['uibElementConfigFns']
                     // console.log('confFns', confFns.type, confFns)
                     // Re-constitute node.conf properties and values to the conf tab
                     // TODO Deal with select tags
